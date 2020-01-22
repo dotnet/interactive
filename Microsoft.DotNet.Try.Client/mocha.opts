@@ -1,7 +1,0 @@
---ui bdd
---require ignore-styles
---require source-map-support/register
---webpack-config webpack.config/test/webpack.config.ts
---require babel-polyfill
-"test/**/*.specs.@(tsx|ts)"
---timeout 5000
