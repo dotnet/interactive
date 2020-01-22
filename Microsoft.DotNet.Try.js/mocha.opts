@@ -1,7 +1,0 @@
---ui bdd
- --timeout 10000
---require source-map-support/register
---require ts-node/register 
---require babel-core/register
---require babel-polyfill
-test/**/*.specs.ts
