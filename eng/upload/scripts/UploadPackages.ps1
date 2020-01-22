@@ -10,7 +10,7 @@ $ErrorActionPreference = "Stop"
 
 try {
     $packagePatterns = @(
-        "dotnet-interactive.*.nupkg",
+        "Microsoft.dotnet-interactive.*.nupkg",
         "Microsoft.DotNet.Interactive.*.nupkg", # note that this also matches Microsoft.DotNet.Interactive.Formatting
         "dotnet-try.*.nupkg",
         "Microsoft.DotNet.Try.ProjectTemplate.Tutorial.*.nupkg",
