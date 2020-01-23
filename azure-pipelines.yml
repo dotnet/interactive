@@ -159,3 +159,11 @@ stages:
           displayName: Build / Test
           env:
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+
+#---------------------------------------------------------------------------------------------------------------------#
+#                                                  Package upload                                                     #
+#---------------------------------------------------------------------------------------------------------------------#
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  - template: eng/upload/upload-packages.yml
+    parameters:
+      branchToUpload: refs/heads/master

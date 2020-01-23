@@ -1,0 +1,27 @@
+parameters:
+  branchToUpload: ''
+
+stages:
+- stage: upload
+  dependsOn: build
+  displayName: Upload packages to MyGet
+  jobs:
+  - job: Upload_Packages
+    pool:
+      vmImage: windows-2019
+    variables:
+    - group: dotnet-try-myget-api-keys
+    - name: FeedUrl
+      value: 'https://dotnet.myget.org/F/dotnet-try/api/v2/package'
+    steps:
+    - task: DownloadBuildArtifacts@0
+      displayName: Download package artifacts
+      inputs:
+        buildType: current
+        artifactName: packages
+    - task: PowerShell@2
+      displayName: Upload packages to MyGet
+      inputs:
+        filePath: $(Build.SourcesDirectory)/eng/upload/scripts/UploadPackages.ps1
+        arguments: -apiKey $(MyGetAPIKey) -feedUrl $(FeedUrl) -packagesDir $(Build.ArtifactStagingDirectory)\packages\Shipping
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], '${{ parameters.branchToUpload }}'))
