@@ -62,4 +62,4 @@ into this:
 
 ```[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/try/master?urlpath=lab)```
 
-Return to [README.md](README.md)
+Return to [README.md](/README.md)
