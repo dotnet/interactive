@@ -1,5 +1,5 @@
 # .NET Interactive <img src ="https://user-images.githubusercontent.com/2546640/56708992-deee8780-66ec-11e9-9991-eb85abb1d10a.png" width="80px" alt="dotnet bot in space" align ="right">
-|| [**Contribution Guidelines**](#contribution-guidelines) || [**Table of contents**](#table-of-contents) || [**Customers & Partners**](#customers--partners) ||
+||[**Table of contents**](#table-of-contents) ||[**Install**](#Install)||  ||[**Customers & Partners**](#customers--partners) || [**Contribution Guidelines**](#contribution-guidelines) ||
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab)
 
@@ -23,9 +23,50 @@ There are several ways to get started using .NET with Jupyter.
 
 - [Try sample .NET notebooks online using Binder](docs/NotebooksOnBinder.md). This also allows you try out our daily builds.
 - [Create and run .NET notebooks on your machine](docs/NotebooksLocalExperience.md).
+   - Install instructions [below](#Install)
 - [Share your own .NET notebooks with others online using Binder](docs/CreateBinder.md).
+- [.NET Interactive with nteract](https://nteract.io/kernels/dotnet)
 
+## Install
+### How Install .NET Interactive 
+First, make sure you have the following installed:
 
+- The [.NET 3.0 SDK](https://dotnet.microsoft.com/download).
+- **Jupyter**. Jupyter can be installed using [Anaconda](https://www.anaconda.com/distribution).
+
+- Open the Anaconda Prompt (Windows) or Terminal (macOS) and verify that Jupyter is installed and present on the path:
+
+```console
+> jupyter kernelspec list
+  python3        ~\jupyter\kernels\python3
+```
+
+- Next, in an ordinary console, install the `dotnet interactive` global tool:
+
+```console
+> dotnet tool install -g --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json" dotnet-interactive
+```
+
+- Install the .NET kernel by running the following within your Anaconda Prompt:
+
+```console
+> dotnet interactive jupyter install
+[InstallKernelSpec] Installed kernelspec .net-csharp in ~\jupyter\kernels\.net-csharp
+.NET kernel installation succeeded
+
+[InstallKernelSpec] Installed kernelspec .net-fsharp in ~\jupyter\kernels\.net-fsharp
+.NET kernel installation succeeded
+```
+    
+- You can verify the installation by running the following again in the Anaconda Prompt:
+
+```console
+> jupyter kernelspec list
+  .net-csharp    ~\jupyter\kernels\.net-csharp
+  .net-fsharp    ~\jupyter\kernels\.net-fsharp
+  python3        ~\jupyter\kernels\python3
+```
+For more detailed documentation visit see [table of content](#table-of-contents).
 ## Contribution Guidelines
 
 As we are still in the early stages of our development, we are unable to take any feature PRs at the moment, but we intend to do so in the future.
