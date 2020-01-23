@@ -9,10 +9,8 @@ assignees: ''
 #### Describe the bug
 Please provide as much information as you can.
 
-#### Did this error occur while using `dotnet try` or online?
-- [ ] `dotnet-try`
+#### Did this error occur while using `dotnet interactive`?
 - [ ] .NET Jupyter Notebook 
-- [ ] online
 
 #### What kind of error was it?
 - [ ] User Interface (UI):  For example the output never displayed 
