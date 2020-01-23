@@ -33,7 +33,7 @@ If you find an issue or have a feature suggestion, please open an [issue](https:
 
 ## Customers & Partners
 |    [Azure Synapse Analytics ](https://azure.microsoft.com/en-us/services/synapse-analytics/)   |Azure HDInsight (HDI)  |
-|----------|:-------------:|:-------------:|
+|:-------------:|:-------------:|
 | Azure Synapse Analytics uses the .NET kernel to write and run quick ad-hoc queries in addition to developing complete, end-to-end big data scenarios, such as reading in data, transforming it, and visualizing it|You can launch Jupyter notebooks from your HDInsight cluster to run big data queries against the compute resources in that cluster. |
 
 
