@@ -1,6 +1,6 @@
 # Use our latest version on [Binder](https://mybinder.org/)
 
-## Zero install. Try .NET with Jupyter. 
+## Zero install. .NET Interactive with Jupyter. 
 
 **Requirement:**  All you need is your browser.
 
@@ -15,7 +15,7 @@ To get you started, we created a set of samples in C# and F#.  These samples hav
 
 - This launches the binder service. If this is your first time visiting, it'll take a minute or two to cold start.
 
-    <img src ="https://user-images.githubusercontent.com/2546640/68036481-25c0c980-fc9c-11e9-97bd-1aeab5037453.gif" width ="70%" >
+    <img src ="https://user-images.githubusercontent.com/2546640/72950702-1791bf00-3d5a-11ea-8889-20ff431d04b2.gif">
 
 -  Select one of the .NET folder options, `csharp` (C#) or `fsharp` (F#).
 
@@ -40,6 +40,7 @@ To get you started, we created a set of samples in C# and F#.  These samples hav
     <img src ="https://user-images.githubusercontent.com/2546640/67975582-c48ced80-fbea-11e9-8008-908756af5dd3.png" width = "60%">
       
 - Now, you can run and edit the cells, import and plot data. 
+
     <img src = "https://user-images.githubusercontent.com/2546640/67975878-55fc5f80-fbeb-11e9-9fb8-f4861c5b3dd3.png" width = "70%">
     
     <img src = "https://user-images.githubusercontent.com/2546640/66444747-6b2e0600-ea12-11e9-8934-d352ed07b532.png" width = "70%">

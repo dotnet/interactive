@@ -46,7 +46,7 @@ To launch JupyterLab, you can either type `jupyter lab` in the Anaconda Prompt o
 
 Once Jupyter Lab has launched in your browser, you have the option to create a notebook for C# or F#.
 
-<img src = "https://user-images.githubusercontent.com/2546640/67889988-3b13e780-fb26-11e9-91a1-48d5972b5df2.png" width = "70%">
+<img src = "https://user-images.githubusercontent.com/2546640/72949473-60477900-3d56-11ea-8bc4-47352a613b78.png" width = "80%">
 
 Once the notebook opens, you can start working with .NET in the language you chose.
 
