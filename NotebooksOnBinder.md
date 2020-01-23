@@ -15,7 +15,7 @@ To get you started, we created a set of samples in C# and F#.  These samples hav
 
 - This launches the binder service. If this is your first time visiting, it'll take a minute or two to cold start.
 
-    <img src ="https://user-images.githubusercontent.com/2546640/68036481-25c0c980-fc9c-11e9-97bd-1aeab5037453.gif" width ="70%" >
+    <img src ="https://user-images.githubusercontent.com/2546640/72950702-1791bf00-3d5a-11ea-8889-20ff431d04b2.gif">
 
 -  Select one of the .NET folder options, `csharp` (C#) or `fsharp` (F#).
 
