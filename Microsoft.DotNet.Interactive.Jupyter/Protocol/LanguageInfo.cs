@@ -75,6 +75,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
         }
     }
 
+    public class PowerShellLanguageInfo : LanguageInfo
+    {
+        public PowerShellLanguageInfo(string version = "7.0") : base("PowerShell", version, "text/x-powershell", ".ps1", pygmentsLexer: "powershell")
+        {
+           
+        }
+    }
+
     public class VBnetLanguageInfo : LanguageInfo
     {
         public VBnetLanguageInfo(string version = "15.0") : base("C#", version, "text/x-vbnet", ".vb", pygmentsLexer: "vbnet")
