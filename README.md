@@ -21,9 +21,9 @@
 
 There are several ways to get started using .NET with Jupyter.
 
-- [Try sample .NET notebooks online using Binder](NotebooksOnBinder.md). This also allows you try out our daily builds.
-- [Create and run .NET notebooks on your machine](NotebooksLocalExperience.md).
-- [Share your own .NET notebooks with others online using Binder](CreateBinder.md).
+- [Try sample .NET notebooks online using Binder](docs/NotebooksOnBinder.md). This also allows you try out our daily builds.
+- [Create and run .NET notebooks on your machine](docs/NotebooksLocalExperience.md).
+- [Share your own .NET notebooks with others online using Binder](docs/CreateBinder.md).
 
 
 ## Contribution Guidelines
