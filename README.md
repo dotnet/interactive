@@ -12,8 +12,8 @@
 
 ### Jupyter Notebooks with .NET
 
-<img src="https://user-images.githubusercontent.com/2546640/67889988-3b13e780-fb26-11e9-91a1-48d5972b5df2.png" width="60%">
-<img src="https://user-images.githubusercontent.com/2546640/67912370-1b99b080-fb60-11e9-9839-0058d02488cf.png" width="52%">
+<img src="https://user-images.githubusercontent.com/2546640/72949473-60477900-3d56-11ea-8bc4-47352a613b78.png" width="80%">
+<img src="https://user-images.githubusercontent.com/2546640/67912370-1b99b080-fb60-11e9-9839-0058d02488cf.png" width="62%">
 
 ## Table of Contents
 
