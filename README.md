@@ -1,7 +1,7 @@
 # .NET Interactive <img src ="https://user-images.githubusercontent.com/2546640/56708992-deee8780-66ec-11e9-9991-eb85abb1d10a.png" width="80px" alt="dotnet bot in space" align ="right">
 || [**Contribution Guidelines**](#contribution-guidelines) || [**Table of contents**](#table-of-contents) || [**Customers & Partners**](#customers--partners) ||
 
-[![Binder](https://mybinder.org/badge_logo.svg)](url)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab)
 
 
 [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/try/try-ci?branchName=master)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=495&branchName=master)
