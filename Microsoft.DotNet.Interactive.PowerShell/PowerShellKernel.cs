@@ -3,10 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Management.Automation.Runspaces;
 using System.Reflection;
@@ -14,15 +12,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.PowerShell.Commands;
 
 namespace Microsoft.DotNet.Interactive.PowerShell
 {
+    using System.Management.Automation;
+
     public class PowerShellKernel : KernelBase, IExtensibleKernel
     {
         internal const string DefaultKernelName = "powershell";
 
         private Runspace _runspace;
-        private System.Management.Automation.PowerShell _pwsh;
+        private PowerShell _pwsh;
         private SemaphoreSlim _runspaceSemaphore;
         private CancellationTokenSource _cancellationSource;
         private readonly object _cancellationSourceLock = new object();
@@ -31,11 +32,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             _runspace = RunspaceFactory.CreateRunspace(InitialSessionState.CreateDefault());
             _runspace.Open();
-            _pwsh = System.Management.Automation.PowerShell.Create(_runspace);
+            _pwsh = PowerShell.Create(_runspace);
             _runspaceSemaphore = new SemaphoreSlim(1, 1);
             _cancellationSource = new CancellationTokenSource();
             Name = DefaultKernelName;
 
+            // Add Modules directory that contains the helper modules
             string psModulePath = Environment.GetEnvironmentVariable("PSModulePath");
 
             Environment.SetEnvironmentVariable("PSModulePath",
@@ -140,7 +142,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 // TODO: Should we even output the ErrorRecord? Maybe we should just return
                 // CommandFailed?
                 string stringifiedErrorRecord =
-                    _pwsh.AddCommand(@"Microsoft.PowerShell.Utility\Out-String")
+                    _pwsh.AddCommand(CommandUtils.OutStringCmdletInfo)
                         .AddParameter("InputObject", new ErrorRecord(e, null, ErrorCategory.NotSpecified, null))
                     .InvokeAndClearCommands<string>()[0];
 
@@ -207,8 +209,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             try
             {
-                // using (var ps = System.Management.Automation.PowerShell.Create(_runspace))
-                // {
                 CommandCompletion completion = CommandCompletion.CompleteInput(code, cursorPosition, null, _pwsh);
 
                 return completion.CompletionMatches.Select(c => new CompletionItem(
@@ -216,7 +216,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                     kind: c.ResultType.ToString(),
                     documentation: c.ToolTip
                 ));
-                // }
             }
             finally
             {

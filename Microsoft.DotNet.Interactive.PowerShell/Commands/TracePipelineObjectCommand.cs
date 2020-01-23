@@ -3,11 +3,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 //
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using Microsoft.PowerShell.Commands;
-
 namespace Microsoft.DotNet.Interactive.PowerShell.Commands
 {
     using System.Management.Automation;
@@ -30,13 +25,13 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
         public object InputObject { get; set; }
 
-        private static PowerShell s_pwsh;
+        private static PowerShell _pwsh;
         private SteppablePipeline _stepPipeline;
 
         static TracePipelineObjectCommand()
         {
-            s_pwsh = PowerShell.Create();
-            s_pwsh.AddCommand(CommandUtils.OutStringCmdletInfo).AddParameter("Stream", CommandUtils.BoxedTrue)
+            _pwsh = PowerShell.Create();
+            _pwsh.AddCommand(CommandUtils.OutStringCmdletInfo).AddParameter("Stream", CommandUtils.BoxedTrue)
                   .AddCommand(CommandUtils.WriteInformationCmdletInfo).AddParameter("Tags", "__PipelineObject__");
         }
 
@@ -45,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
         /// </summary>
         protected override void BeginProcessing()
         {
-            _stepPipeline = s_pwsh.GetSteppablePipeline();
+            _stepPipeline = _pwsh.GetSteppablePipeline();
             _stepPipeline.Begin(this);
         }
 
