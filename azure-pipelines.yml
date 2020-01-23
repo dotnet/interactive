@@ -12,7 +12,7 @@ variables:
   - name: _BuildConfig
     value: Release
   - name: _PublishUsingPipelines
-    value: false
+    value: true
   - name: _DotNetArtifactsCategory
     value: .NETCore
   - name: DotNetSdkVersion
@@ -29,7 +29,7 @@ stages:
       enableMicrobuild: true
       enablePublishBuildArtifacts: true
       enablePublishTestResults: true
-      enablePublishBuildAssets: false
+      enablePublishBuildAssets: true
       enablePublishUsingPipelines: $(_PublishUsingPipelines)
       enableTelemetry: true
       helixRepo: dotnet/interactive
@@ -44,21 +44,27 @@ stages:
         variables:
         # Enable signing for internal, non-PR builds
         - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+          - group: DotNet-Blob-Feed
           - group: DotNet-Symbol-Server-Pats
           - name: _SignType
             value: Real
+          - name: _DotNetPublishToBlobFeed
+            value: true
           - name: _BuildArgs
             value: /p:SignType=$(_SignType)
                    /p:DotNetSignType=$(_SignType)
                    /p:MicroBuild_SigningEnabled=true
                    /p:OverridePackageSource=https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
                    /p:TeamName=$(_TeamName)
+                   /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
+                   /p:DotNetPublishBlobFeedUrl=https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
+                   /p:DotNetPublishToBlobFeed=true
                    /p:DotNetPublishUsingPipelines=$(_PublishUsingPipelines)
                    /p:DotNetArtifactsCategory=$(_DotNetArtifactsCategory)
-                   /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-                   /p:PublishToSymbolServer=true
                    /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
                    /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
+                   /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+                   /p:PublishToSymbolServer=true
         # else
         - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
           - name: _SignType
@@ -95,7 +101,7 @@ stages:
           displayName: Build / Test
           env:
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
-       
+
         - task: PublishBuildArtifacts@1
           displayName: Publish packages to artifacts container
           inputs:
@@ -109,7 +115,7 @@ stages:
       enablePublishBuildArtifacts: true
       enablePublishTestResults: true
       enablePublishBuildAssets: false
-      enablePublishUsingPipelines: $(_PublishUsingPipelines)
+      enablePublishUsingPipelines: false
       enableTelemetry: true
       helixRepo: dotnet/interactive
       jobs:
@@ -159,6 +165,17 @@ stages:
           displayName: Build / Test
           env:
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+
+#---------------------------------------------------------------------------------------------------------------------#
+#                                                    Post Build                                                       #
+#---------------------------------------------------------------------------------------------------------------------#
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  - template: eng/common/templates/post-build/post-build.yml
+    parameters:
+      # Symbol validation is not entirely reliable as of yet, so should be turned off until https://github.com/dotnet/arcade/issues/2871 is resolved.
+      enableSymbolValidation: false
+      # SourceLink improperly looks for generated files.  See https://github.com/dotnet/arcade/issues/3069
+      enableSourceLinkValidation: false
 
 #---------------------------------------------------------------------------------------------------------------------#
 #                                                  Package upload                                                     #

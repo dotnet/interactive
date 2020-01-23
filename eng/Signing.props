@@ -1,49 +1,13 @@
 <Project>
 
   <ItemGroup>
-    <FileSignInfo Include="Mono.Security.dll" CertificateName="None" />
-    <FileSignInfo Include="mscorlib.dll" CertificateName="None" />
-    <FileSignInfo Include="netstandard.dll" CertificateName="None" />
-    <FileSignInfo Include="Newtonsoft.Json.dll" CertificateName="None" />
-    <FileSignInfo Include="System.Core.dll" CertificateName="None" />
-    <FileSignInfo Include="System.Data.dll" CertificateName="None" />
-    <FileSignInfo Include="System.dll" CertificateName="None" />
-    <FileSignInfo Include="System.Drawing.dll" CertificateName="None" />
-    <FileSignInfo Include="System.Drawing.Common.dll" CertificateName="None" />
-    <FileSignInfo Include="System.IO.Compression.dll" CertificateName="None" />
-    <FileSignInfo Include="System.IO.Compression.FileSystem.dll" CertificateName="None" />
-    <FileSignInfo Include="System.Linq.dll" CertificateName="None" />
-    <FileSignInfo Include="System.Net.Http.dll" CertificateName="None" />
-    <FileSignInfo Include="System.Numerics.dll" CertificateName="None" />
-    <FileSignInfo Include="System.Runtime.Serialization.dll" CertificateName="None" />
-    <FileSignInfo Include="System.ServiceModel.Internals.dll" CertificateName="None" />
-    <FileSignInfo Include="System.Transactions.dll" CertificateName="None" />
-    <FileSignInfo Include="System.Web.Services.dll" CertificateName="None" />
-    <FileSignInfo Include="System.Xml.dll" CertificateName="None" />
-    <FileSignInfo Include="System.Xml.Linq.dll" CertificateName="None" />
-
-    <FileSignInfo Include="AsyncIO.dll" CertificateName="None" />
-    <FileSignInfo Include="Buildalyzer.dll" CertificateName="None" />
-    <FileSignInfo Include="Buildalyzer.Logger.dll" CertificateName="None" />
-    <FileSignInfo Include="MsBuildPipeLogger.Logger.dll" CertificateName="None" />
-    <FileSignInfo Include="Buildalyzer.Workspaces.dll" CertificateName="None" />
-    <FileSignInfo Include="Clockwise.dll" CertificateName="None" />
-    <FileSignInfo Include="HtmlAgilityPack.dll" CertificateName="None" />
-    <FileSignInfo Include="Markdig.dll" CertificateName="None" />
-    <FileSignInfo Include="MessagePack.dll" CertificateName="None" />
-    <FileSignInfo Include="Mono.Cecil.Mdb.dll" CertificateName="None" />
-    <FileSignInfo Include="Mono.Cecil.Pdb.dll" CertificateName="None" />
-    <FileSignInfo Include="Mono.Cecil.Rocks.dll" CertificateName="None" />
-    <FileSignInfo Include="Mono.Cecil.dll" CertificateName="None" />
-    <FileSignInfo Include="StructuredLogger.dll" CertificateName="None" />
-    <FileSignInfo Include="MsBuildPipeLogger.Server.dll" CertificateName="None" />
-    <FileSignInfo Include="NetMQ.dll" CertificateName="None" />
-    <FileSignInfo Include="Octokit.dll" CertificateName="None" />
-    <FileSignInfo Include="Serilog.dll" CertificateName="None" />
-    <FileSignInfo Include="Serilog.Sinks.RollingFileAlternate.dll" CertificateName="None" />
-    <FileSignInfo Include="XPlot.Plotly.dll" CertificateName="None" />
-
-    <FileSignInfo Include="materialdesignicons-webfont.ttf" CertificateName="None" />
+    <FileSignInfo Include="AsyncIO.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Clockwise.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Markdig.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="NetMQ.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Serilog.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Serilog.Sinks.RollingFileAlternate.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="XPlot.Plotly.dll" CertificateName="3PartySHA2" />
   </ItemGroup>
 
 </Project>

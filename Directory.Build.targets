@@ -20,6 +20,4 @@
     <PackageReference Update="FSharp.Compiler.Service" Version="31.0.0" />
   </ItemGroup>
 
-  <Import Project="eng\targets\Versions.targets" Condition="'$(UseStableVersion)' == 'true'" />
-
 </Project>

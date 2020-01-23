@@ -16,4 +16,4 @@ scriptroot="$( cd -P "$( dirname "$source" )" && pwd)"
 echo "Building this commit:"
 git show --no-patch --pretty=raw HEAD
 
-. "$scriptroot/build.sh" --ci --restore --build --pack --binaryLog "$@"
+. "$scriptroot/build.sh" --ci --restore --build --pack --publish --binaryLog "$@"
