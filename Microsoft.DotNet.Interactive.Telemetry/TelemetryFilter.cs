@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.Telemetry
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                 return null;
             }
 
-            return Rules.Select(rule => 
+            return Rules.Select(rule =>
             {
                 if (rule.CommandName == commandName)
                 {
@@ -71,13 +71,13 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                 {
                     return null;
                 }
-            }).Where(x => x != null).FirstOrDefault();
+            }).FirstOrDefault(x => x != null);
         }
 
         /// <summary>
         /// Tries to see if the tokens follow or match the specified command rule.
         /// </summary>
-        Nullable<ImmutableArray<KeyValuePair<string, string>>> 
+        ImmutableArray<KeyValuePair<string, string>>? 
             TryMatchRule(CommandRule rule, IEnumerable<Token> tokens, CommandResult commandResult)
         {
             var entryItems = ImmutableArray.CreateBuilder<KeyValuePair<string, string>>();

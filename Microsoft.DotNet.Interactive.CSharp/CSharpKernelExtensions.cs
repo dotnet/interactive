@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.CommandLine.Parsing;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -44,8 +45,20 @@ using static {typeof(Kernel).FullName};
 
         public static CSharpKernel UseNugetDirective(this CSharpKernel kernel)
         {
-            var packageRefArg = new Argument<PackageReference>((SymbolResult result, out PackageReference reference) =>
-                                                                        PackageReference.TryParse(result.Token.Value, out reference))
+            var packageRefArg = new Argument<PackageReference>(
+                result =>
+                {
+                    var token = result.Tokens.Select(t => t.Value).SingleOrDefault();
+                    if (PackageReference.TryParse(token, out var reference))
+                    {
+                        return reference;
+                    }
+                    else
+                    {
+                        result.ErrorMessage = $"Could not parse \"{token}\" as a package reference.";
+                        return null;
+                    }
+                })
             {
                 Name = "package"
             };

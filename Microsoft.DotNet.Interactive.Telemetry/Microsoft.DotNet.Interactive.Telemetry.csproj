@@ -9,6 +9,6 @@
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.6.4" />
     <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="2.1.0" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.6.0" />
-    <PackageReference Include="system.commandline.experimental" Version="0.3.0-alpha.19602.1" />
+    <PackageReference Include="System.CommandLine" Version="0.3.0-alpha.20071.1" />
   </ItemGroup>
 </Project>

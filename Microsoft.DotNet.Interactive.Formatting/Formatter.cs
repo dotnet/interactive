@@ -208,11 +208,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return _defaultMimeType;
         }
 
-        public static string PreferredMimeTypeFor(Type type)
-        {
-            return _preferredMimeTypesByType.TryGetValue(type, out var mimeType) ? mimeType : null;
-        }
-
+        public static string PreferredMimeTypeFor(Type type) =>
+            _preferredMimeTypesByType.TryGetValue(type, out var mimeType) 
+                ? mimeType 
+                : _defaultMimeType;
 
         public static string ToDisplayString(
             this object obj,

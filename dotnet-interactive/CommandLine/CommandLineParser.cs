@@ -5,6 +5,8 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
+using System.CommandLine.IO;
+using System.CommandLine.Parsing;
 using System.IO;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -17,6 +19,7 @@ using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.FSharp.Core;
 using Recipes;
 using CommandHandler = System.CommandLine.Invocation.CommandHandler;
 
@@ -77,23 +80,18 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             var filter = new TelemetryFilter(Sha256Hasher.HashWithNormalizedCasing);
             void Track(ParseResult o) => telemetry.SendFiltered(filter, o);
 
-            var verboseOption = new Option(
+            var verboseOption = new Option<bool>(
                 "--verbose",
-                "Enable verbose logging to the console")
-            {
-                Argument = new Argument<bool>()
-            };
+                "Enable verbose logging to the console");
 
-            var logPathOption = new Option(
+            var logPathOption = new Option<DirectoryInfo>(
                 "--log-path",
-                "Enable file logging to the specified directory")
-            {
-                Argument = new Argument<DirectoryInfo>
-                {
-                    Name = "dir"
-                }
-            };
+                "Enable file logging to the specified directory");
 
+            var defaultKernelOption = new Option<string>(
+                "--default-kernel", 
+                description: "The default language for the kernel",
+                defaultValue: "csharp");
             var rootCommand = DotnetInteractive();
 
             rootCommand.AddCommand(Jupyter());
@@ -132,22 +130,16 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             Command Jupyter()
             {
-                var jupyterCommand = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel");
-
-                var defaultKernelOption = new Option("--default-kernel", "The the default language for the kernel")
+                var jupyterCommand = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel")
                 {
-                    Argument = new Argument<string>(defaultValue: () => "csharp")
+                    defaultKernelOption,
+                    logPathOption,
+                    verboseOption,
+                    new Argument<FileInfo>
+                    {
+                        Name = "connection-file"
+                    }.ExistingOnly()
                 };
-                
-                jupyterCommand.AddOption(defaultKernelOption);
-                jupyterCommand.AddOption(logPathOption);
-                jupyterCommand.AddOption(verboseOption);
-                
-                var connectionFileArgument = new Argument<FileInfo>
-                {
-                    Name = "connection-file"
-                }.ExistingOnly();
-                jupyterCommand.AddArgument(connectionFileArgument);
 
                 jupyterCommand.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext>((startupOptions, options, console, context) =>
                 {
@@ -191,11 +183,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             Command KernelServer()
             {
-                var defaultKernelOption = new Option("--default-kernel", "The default .NET kernel language for the notebook.")
-                {
-                    Argument = new Argument<string>(defaultValue: () => "csharp")
-                };
-
                 var startKernelServerCommand = new Command("kernel-server", "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
                 {
                     defaultKernelOption,
@@ -233,7 +220,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                  .UseXplot()
                                  .UseMathAndLaTeX()
                          }
-                         .UseDefaultMagicCommands();
+                         .UseDefaultMagicCommands()
+                         .UseAbout();
 
             kernel.DefaultKernelName = defaultKernelName;
             kernel.Name = ".NET";
