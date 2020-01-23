@@ -9,7 +9,7 @@
                 <dependency id="Microsoft.CodeAnalysis.Analyzers" version="$MicrosoftCodeAnalysisAnalyzersVersion$" />
                 <dependency id="System.Runtime.Loader" version="$SystemRuntimeLoaderVersion$" />
                 <dependency id="System.Reactive" version="$SystemReactiveVersion$" />
-                <dependency id="system.commandline.experimental" version="$SystemCommandlineExperimentalVersion$" />
+                <dependency id="System.CommandLine" version="$SystemCommandLineVersion$" />
 
                 <!-- Dependencies of MLS.Agent.Tools -->
                 <dependency id="Newtonsoft.Json" version="$NewtonsoftJsonVersion$" />

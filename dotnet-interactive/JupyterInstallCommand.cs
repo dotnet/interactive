@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine;
+using System.CommandLine.IO;
 using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;

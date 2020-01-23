@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
-using System.CommandLine.Invocation;
+using System.CommandLine.Parsing;
 using System.Linq;
 using Microsoft.DotNet.Interactive.Commands;
 
@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Interactive
                     }
 
                     var runDirective = new AnonymousKernelCommand(
-                        (_, __) => _directiveParser.InvokeAsync(parseResult));
+                        (_, __) => parseResult.InvokeAsync());
 
                     if (command.Name == "#r")
                     {
@@ -103,7 +103,7 @@ namespace Microsoft.DotNet.Interactive
 
                 hoistedCommands.Add(
                     new AnonymousKernelCommand(
-                        (_, __) => _directiveParser.InvokeAsync(parseResult)));
+                        (_, __) => parseResult.InvokeAsync()));
             }
 
             return hoistedCommands.Concat(commands).ToArray();

@@ -16,13 +16,13 @@
     <MicrosoftCodeAnalysisAnalyzersVersion>2.9.6</MicrosoftCodeAnalysisAnalyzersVersion>	
     <SystemRuntimeLoaderVersion>4.3.0</SystemRuntimeLoaderVersion>	
     <SystemReactiveVersion>4.3.2</SystemReactiveVersion>	
-    <SystemCommandlineExperimentalVersion>0.3.0-alpha.19602.1</SystemCommandlineExperimentalVersion>	
+    <SystemCommandLineVersion>0.3.0-alpha.20071.1</SystemCommandLineVersion>	
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Runtime.Loader" Version="$(SystemRuntimeLoaderVersion)" />
     <PackageReference Include="System.Reactive" Version="$(SystemReactiveVersion)" />
-    <PackageReference Include="system.commandline.experimental" Version="$(SystemCommandlineExperimentalVersion)" />
+    <PackageReference Include="System.CommandLine" Version="$(SystemCommandLineVersion)" />
     <PackageReference Include="PocketLogger" Version="$(PocketLoggerVersion)">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -33,7 +33,7 @@
     <NuspecProperty Include="MicrosoftCodeAnalysisAnalyzersVersion=$(MicrosoftCodeAnalysisAnalyzersVersion)" />	
     <NuspecProperty Include="SystemRuntimeLoaderVersion=$(SystemRuntimeLoaderVersion)" />	
     <NuspecProperty Include="SystemReactiveVersion=$(SystemReactiveVersion)" />	
-    <NuspecProperty Include="SystemCommandlineExperimentalVersion=$(SystemCommandlineExperimentalVersion)" />	
+    <NuspecProperty Include="SystemCommandLineVersion=$(SystemCommandLineVersion)" />	
   </ItemGroup>
 
    <ItemGroup>

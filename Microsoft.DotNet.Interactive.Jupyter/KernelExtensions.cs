@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             {
                 PocketView t = div(
                     h6(directives.KernelName),
-                    pre(directives.Commands.Select(d => d.Name + "\t  ")));
+                    pre(directives.Commands.Select(d => d.Name)));
 
                 t.WriteTo(writer, HtmlEncoder.Default);
             }, "text/html");

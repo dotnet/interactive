@@ -3,6 +3,7 @@
 open System
 open System.CommandLine
 open System.CommandLine.Invocation
+open System.CommandLine.Parsing
 open System.Runtime.CompilerServices
 open System.Threading.Tasks
 open Microsoft.AspNetCore.Html
@@ -60,7 +61,7 @@ open System.Linq"
         let command = Command(detailedName)
         command.Handler <- CommandHandler.Create(
             fun (parseResult: ParseResult) (context: KernelInvocationContext) ->
-                let detailed = parseResult.CommandResult.Token.Value = detailedName
+                let detailed = parseResult.CommandResult.Command.Name = detailedName
                 match context.Command with
                 | :? SubmitCode ->
                     match context.HandlingKernel with

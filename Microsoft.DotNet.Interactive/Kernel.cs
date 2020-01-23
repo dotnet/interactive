@@ -17,22 +17,9 @@ namespace Microsoft.DotNet.Interactive
 
         public static DisplayedValue display(
             object value,
-            string mimeType = HtmlFormatter.MimeType)
+            string mimeType = null)
         {
-            var displayId = DisplayIdGenerator?.Invoke() ?? Guid.NewGuid().ToString();
-
-            mimeType = Formatter.PreferredMimeTypeFor(value.GetType())?? mimeType;
-
-            var formatted = new FormattedValue(
-                mimeType,
-                value.ToDisplayString(mimeType));
-
-            var kernel = KernelInvocationContext.Current.HandlingKernel;
-
-            Task.Run(() =>
-                         kernel.SendAsync(new DisplayValue(value, formatted, displayId)))
-                .Wait();
-            return new DisplayedValue(displayId, mimeType);
+            return Task.Run(() => KernelInvocationContext.Current.DisplayAsync(value, mimeType)).Result;
         }
 
         public static IHtmlContent HTML(string content) => content.ToHtmlContent();
