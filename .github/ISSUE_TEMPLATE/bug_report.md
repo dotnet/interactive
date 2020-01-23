@@ -12,9 +12,6 @@ Please provide as much information as you can.
 #### Did this error occur while using `dotnet interactive`?
 - [ ] .NET Jupyter Notebook 
 
-#### What kind of error was it?
-
-
 #### Screenshots
 If applicable, add screenshots to help explain your problem.
 
