@@ -5,6 +5,7 @@ using System.Linq;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.PowerShell
 {
@@ -12,8 +13,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
     internal class StreamHandler
     {
-        private static readonly PowerShell s_powerShell = PowerShell.Create();
-        private static readonly object s_powerShellLock = new object();
+        private static readonly PowerShell _pwsh = PowerShell.Create();
+        private static readonly object _pwshLock = new object();
         KernelInvocationContext _context;
         IKernelCommand _command;
 
@@ -92,7 +93,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             // DebugRecord
             Formatter<DebugRecord>.Register((record, writer) => {
-                PocketView view = PocketViewTags.pre($"DEBUG: {record.Message}");
+                PocketView view = pre($"DEBUG: {record.Message}");
                 writer.WriteLine(view.ToDisplayString(HtmlFormatter.MimeType));
             }, HtmlFormatter.MimeType);
 
@@ -103,9 +104,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             // ErrorRecord
             Formatter<ErrorRecord>.Register((record, writer) => {
                 string result = null;
-                lock(s_powerShellLock)
+                lock(_pwshLock)
                 {
-                    var errorDetails = s_powerShell.AddCommand("Microsoft.PowerShell.Utility\\Out-String")
+                    var errorDetails = _pwsh.AddCommand("Microsoft.PowerShell.Utility\\Out-String")
                         .AddParameter("InputObject", record)
                         .InvokeAndClearCommands<string>();
                     result = errorDetails.Single();
@@ -113,16 +114,16 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
                 if (result != null)
                 {
-                    PocketView view = PocketViewTags.pre(result);
+                    PocketView view = pre(result);
                     writer.WriteLine(view.ToDisplayString(HtmlFormatter.MimeType));
                 }
             }, HtmlFormatter.MimeType);
 
             Formatter<ErrorRecord>.Register((record, writer) => {
                 string result = null;
-                lock(s_powerShellLock)
+                lock(_pwshLock)
                 {
-                    var errorDetails = s_powerShell.AddCommand("Microsoft.PowerShell.Utility\\Out-String")
+                    var errorDetails = _pwsh.AddCommand("Microsoft.PowerShell.Utility\\Out-String")
                         .AddParameter("InputObject", record)
                         .InvokeAndClearCommands<string>();
                     result = errorDetails.Single();
@@ -137,7 +138,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             // InformationRecord
             Formatter<InformationRecord>.Register((record, writer) => {
                 string prefix = (record.Tags.Count == 1 && record.Tags[0] == "__PipelineObject__") ? "" : "INFORMATION:";
-                PocketView view = PocketViewTags.pre($"{prefix} {record.MessageData}");
+                PocketView view = pre($"{prefix} {record.MessageData}");
                 writer.WriteLine(view.ToDisplayString(HtmlFormatter.MimeType));
             }, HtmlFormatter.MimeType);
 
@@ -148,7 +149,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             // ProgressRecord
             Formatter<ProgressRecord>.Register((record, writer) => {
-                PocketView view = PocketViewTags.pre($"PROGRESS: {record.StatusDescription}");
+                PocketView view = pre($"PROGRESS: {record.StatusDescription}");
                 writer.WriteLine(view.ToDisplayString(HtmlFormatter.MimeType));
             }, HtmlFormatter.MimeType);
 
@@ -158,7 +159,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             // VerboseRecord
             Formatter<VerboseRecord>.Register((record, writer) => {
-                PocketView view = PocketViewTags.pre($"VERBOSE: {record.Message}");
+                PocketView view = pre($"VERBOSE: {record.Message}");
                 writer.WriteLine(view.ToDisplayString(HtmlFormatter.MimeType));
             }, HtmlFormatter.MimeType);
 
@@ -168,7 +169,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             // WarningRecord
             Formatter<WarningRecord>.Register((record, writer) => {
-                PocketView view = PocketViewTags.pre($"WARNING: {record.Message}");
+                PocketView view = pre($"WARNING: {record.Message}");
                 writer.WriteLine(view.ToDisplayString(HtmlFormatter.MimeType));
             }, HtmlFormatter.MimeType);
 

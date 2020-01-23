@@ -14,7 +14,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.PowerShell
 {
@@ -23,23 +22,26 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         internal const string DefaultKernelName = "powershell";
 
         private Runspace _runspace;
+        private System.Management.Automation.PowerShell _pwsh;
         private SemaphoreSlim _runspaceSemaphore;
         private CancellationTokenSource _cancellationSource;
         private readonly object _cancellationSourceLock = new object();
 
         public PowerShellKernel()
         {
-            var iss = InitialSessionState.CreateDefault();
-            _runspace = RunspaceFactory.CreateRunspace(iss);
+            _runspace = RunspaceFactory.CreateRunspace(InitialSessionState.CreateDefault());
             _runspace.Open();
+            _pwsh = System.Management.Automation.PowerShell.Create(_runspace);
             _runspaceSemaphore = new SemaphoreSlim(1, 1);
             _cancellationSource = new CancellationTokenSource();
             Name = DefaultKernelName;
 
             string psModulePath = Environment.GetEnvironmentVariable("PSModulePath");
+
             Environment.SetEnvironmentVariable("PSModulePath",
-                psModulePath + Path.PathSeparator +
-                System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "/Modules");
+                psModulePath + Path.PathSeparator + Path.Join(
+                    Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+                    "Modules"));
         }
 
         #region Overrides
@@ -95,10 +97,11 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 cancellationSource = _cancellationSource;
             }
             
+            // Acknowledge that we received the request.
             var codeSubmissionReceived = new CodeSubmissionReceived(submitCode);
-
             context.Publish(codeSubmissionReceived);
 
+            // Test is the code we got is actually able to run.
             var code = submitCode.Code;
             if (IsCompleteSubmission(code))
             {
@@ -109,58 +112,45 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 context.Publish(new IncompleteCodeSubmissionReceived(submitCode));
             }
 
+            // Do nothing if we get a Diagnose type.
             if (submitCode.SubmissionType == SubmissionType.Diagnose)
             {
                 return;
             }
 
-            Exception exception = null;
-            if (!cancellationSource.IsCancellationRequested)
+            if (cancellationSource.IsCancellationRequested)
             {
-                await _runspaceSemaphore.WaitAsync();
-                try
-                {
-                    using(var ps = System.Management.Automation.PowerShell.Create(_runspace))
-                    {
-                        RegisterPowerShellStreams(ps, context, submitCode);
-                        try
-                        {
-                            ps.AddScript(code)
-                                .AddCommand(@"Microsoft.DotNet.Interactive.PowerShell\Trace-PipelineObject")
-                                .InvokeAndClearCommands();
-                        }
-                        catch (Exception e)
-                        {
-                            string stringifiedErrorRecord =
-                                ps.AddCommand(@"Out-String")
-                                    .AddParameter("InputObject", new ErrorRecord(e, null, ErrorCategory.NotSpecified, null))
-                                .InvokeAndClearCommands<string>()[0];
-
-                            StreamHandler.PublishStreamRecord(stringifiedErrorRecord, context, submitCode);
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    exception = e;
-                }
-                finally
-                {
-                    _runspaceSemaphore.Release();
-                }
+                context.Fail(null, "Command cancelled");
+                return;
             }
+        
+            // Wait until we have access to the runspace since we only can run one cell at a time.
+            await _runspaceSemaphore.WaitAsync();
 
-            if (!cancellationSource.IsCancellationRequested)
+            StreamHandler streamHandler = RegisterPowerShellStreams(context, submitCode);
+            try
             {
-                if (exception != null)
-                {
-                    string message = null;
-                    context.Publish(new CommandFailed(exception, submitCode, message));
-                }
+                _pwsh.AddScript(code)
+                    .AddCommand(@"Microsoft.DotNet.Interactive.PowerShell\Trace-PipelineObject")
+                    .InvokeAndClearCommands();
             }
-            else
+            catch (Exception e)
             {
-                context.Publish(new CommandFailed(null, submitCode, "Command cancelled"));
+                // If a non-terminating error happened, log it and send back CommandFailed.
+                // TODO: Should we even output the ErrorRecord? Maybe we should just return
+                // CommandFailed?
+                string stringifiedErrorRecord =
+                    _pwsh.AddCommand(@"Microsoft.PowerShell.Utility\Out-String")
+                        .AddParameter("InputObject", new ErrorRecord(e, null, ErrorCategory.NotSpecified, null))
+                    .InvokeAndClearCommands<string>()[0];
+
+                StreamHandler.PublishStreamRecord(stringifiedErrorRecord, context, submitCode);
+                context.Publish(new CommandFailed(e, submitCode, e.Message));
+            }
+            finally
+            {
+                UnregisterPowerShellStreams(streamHandler);
+                _runspaceSemaphore.Release();
             }
         }
 
@@ -184,13 +174,17 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             CancelCurrentCommand cancelCurrentCommand,
             KernelInvocationContext context)
         {
-            var reply = new CurrentCommandCancelled(cancelCurrentCommand);
             lock (_cancellationSourceLock)
             {
                 _cancellationSource.Cancel();
                 _cancellationSource = new CancellationTokenSource();
+                if (_pwsh.Runspace.RunspaceAvailability != RunspaceAvailability.Available)
+                {
+                    _pwsh.Stop();
+                }
             }
 
+            var reply = new CurrentCommandCancelled(cancelCurrentCommand);
             context.Publish(reply);
 
             return Task.CompletedTask;
@@ -200,56 +194,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         public bool IsCompleteSubmission(string code)
         {
+            // Parse the PowerShell script. If there are any parse errors, then we return false.
             Parser.ParseInput(code, out Token[] tokens, out ParseError[] errors);
             return errors.Length > 0;
-        }
-
-        private void PublishOutput(
-            string output,
-            KernelInvocationContext context,
-            IKernelCommand command)
-        {
-            var formattedValues = new List<FormattedValue>
-                        {
-                            new FormattedValue(
-                                PlainTextFormatter.MimeType, output)
-                        };
-
-            context.Publish(
-                new StandardOutputValueProduced(
-                    output,
-                    command,
-                    formattedValues));
-        }
-
-        private void PublishStreamRecord(
-            object output,
-            KernelInvocationContext context,
-            IKernelCommand command)
-        {
-            context.Publish(
-                new DisplayedValueProduced(
-                    output,
-                    command,
-                    FormattedValue.FromObject(output)));
-        }
-
-        private void PublishError(
-            string error,
-            KernelInvocationContext context,
-            IKernelCommand command)
-        {
-            var formattedValues = new List<FormattedValue>
-            {
-                new FormattedValue(
-                    PlainTextFormatter.MimeType, error)
-            };
-            
-            context.Publish(
-                new StandardErrorValueProduced(
-                    error,
-                    command,
-                    formattedValues));
         }
 
         private async Task<IEnumerable<CompletionItem>> GetCompletionList(
@@ -260,16 +207,16 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             try
             {
-                using (var ps = System.Management.Automation.PowerShell.Create(_runspace))
-                {
-                    CommandCompletion completion = CommandCompletion.CompleteInput(code, cursorPosition, null, ps);
+                // using (var ps = System.Management.Automation.PowerShell.Create(_runspace))
+                // {
+                CommandCompletion completion = CommandCompletion.CompleteInput(code, cursorPosition, null, _pwsh);
 
-                    return completion.CompletionMatches.Select(c => new CompletionItem(
-                        displayText: c.CompletionText,
-                        kind: c.ResultType.ToString(),
-                        documentation: c.ToolTip
-                    ));
-                }
+                return completion.CompletionMatches.Select(c => new CompletionItem(
+                    displayText: c.CompletionText,
+                    kind: c.ResultType.ToString(),
+                    documentation: c.ToolTip
+                ));
+                // }
             }
             finally
             {
@@ -295,17 +242,32 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 context);
         }
 
-        private void RegisterPowerShellStreams(
-            System.Management.Automation.PowerShell powerShell,
+        private StreamHandler RegisterPowerShellStreams(
             KernelInvocationContext context,
             IKernelCommand command)
         {
             var streamHandler = new StreamHandler(context, command);
-            powerShell.Streams.Debug.DataAdding += streamHandler.DebugDataAdding;
-            powerShell.Streams.Warning.DataAdding += streamHandler.WarningDataAdding;
-            powerShell.Streams.Error.DataAdding += streamHandler.ErrorDataAdding;
-            powerShell.Streams.Verbose.DataAdding += streamHandler.VerboseDataAdding;
-            powerShell.Streams.Information.DataAdding += streamHandler.InformationDataAdding;
+            _pwsh.Streams.Debug.DataAdding += streamHandler.DebugDataAdding;
+            _pwsh.Streams.Warning.DataAdding += streamHandler.WarningDataAdding;
+            _pwsh.Streams.Error.DataAdding += streamHandler.ErrorDataAdding;
+            _pwsh.Streams.Verbose.DataAdding += streamHandler.VerboseDataAdding;
+            _pwsh.Streams.Information.DataAdding += streamHandler.InformationDataAdding;
+            return streamHandler;
+        }
+
+        private void UnregisterPowerShellStreams(
+            StreamHandler streamHandler)
+        {
+            if (streamHandler == null)
+            {
+                return;
+            }
+
+            _pwsh.Streams.Debug.DataAdding -= streamHandler.DebugDataAdding;
+            _pwsh.Streams.Warning.DataAdding -= streamHandler.WarningDataAdding;
+            _pwsh.Streams.Error.DataAdding -= streamHandler.ErrorDataAdding;
+            _pwsh.Streams.Verbose.DataAdding -= streamHandler.VerboseDataAdding;
+            _pwsh.Streams.Information.DataAdding -= streamHandler.InformationDataAdding;
         }
     }
 }

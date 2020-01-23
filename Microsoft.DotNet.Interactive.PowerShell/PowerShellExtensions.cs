@@ -3,6 +3,7 @@
 
 using System.Collections;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.PowerShell
 {
@@ -15,6 +16,19 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             try
             {
                 pwsh.Invoke();
+            }
+            finally
+            {
+                pwsh.Streams.ClearStreams();
+                pwsh.Commands.Clear();
+            }
+        }
+
+        public static async Task InvokeAndClearCommandsAsync(this PowerShell pwsh)
+        {
+            try
+            {
+                await pwsh.InvokeAsync().ConfigureAwait(false);
             }
             finally
             {
