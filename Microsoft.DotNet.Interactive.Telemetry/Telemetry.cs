@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
         private const string InstrumentationKey = "b0dafad5-1430-4852-bc61-95c836b3e612";
         public const string TelemetryOptout = "DOTNET_TRY_CLI_TELEMETRY_OPTOUT";
 
-        public const string WelcomeMessage = @"Welcome to Try .NET!
+        public const string WelcomeMessage = @"Welcome to .NET Interactive!
 ---------------------
 Telemetry
 ---------

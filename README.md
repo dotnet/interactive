@@ -4,7 +4,7 @@
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab)
 
 
-[![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/try/try-ci?branchName=master)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=495&branchName=master)
+[![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/interactive/interactive-ci?branchName=master)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=744&branchName=master)
 
 ## Welcome to the .NET Interactive repo.
 
@@ -70,7 +70,7 @@ For more detailed documentation visit see [table of content](#table-of-contents)
 ## Contribution Guidelines
 
 As we are still in the early stages of our development, we are unable to take any feature PRs at the moment, but we intend to do so in the future.
-If you find an issue or have a feature suggestion, please open an [issue](https://github.com/dotnet/try/issues/new/choose). And if you have any feature suggestions, please submit them using the "community suggestions" label.
+If you find an issue or have a feature suggestion, please open an [issue](https://github.com/dotnet/interactive/issues/new/choose). And if you have any feature suggestions, please submit them using the "community suggestions" label.
 
 ## Customers & Partners
 |    [Azure Synapse Analytics ](https://azure.microsoft.com/en-us/services/synapse-analytics/)   |Azure HDInsight (HDI)  |

@@ -7,6 +7,12 @@
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageDescription>Microsoft.DotNet.Interactive.IKernel implementation for F#</PackageDescription>
+    <PackageTags>interactive fsharp</PackageTags>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <NoWarn>;NU5104;2003</NoWarn>
   </PropertyGroup>
