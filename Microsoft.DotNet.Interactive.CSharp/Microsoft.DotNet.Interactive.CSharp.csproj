@@ -7,6 +7,12 @@
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageDescription>Microsoft.DotNet.Interactive.IKernel implementation for C#</PackageDescription>
+    <PackageTags>interactive csharp</PackageTags>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <NoWarn>;NU5104;2003;8002</NoWarn>
   </PropertyGroup>

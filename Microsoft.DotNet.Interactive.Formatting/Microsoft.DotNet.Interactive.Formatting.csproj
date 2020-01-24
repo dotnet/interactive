@@ -7,6 +7,8 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
+    <PackageDescription>Convention-based and highly configurable .NET object formatting for interactive programming, including support for mime types suitable for building visualizations for Jupyter Notebooks and web browsers.</PackageDescription>
+    <PackageTags>interactive formatting Jupyter mime</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

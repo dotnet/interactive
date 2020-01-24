@@ -10,6 +10,9 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
+    <PackageDescription>Core types for building applications providing interactive programming for .NET.</PackageDescription>
+    <PackageTags>interactive</PackageTags>
+
   </PropertyGroup>
 
   <PropertyGroup>

@@ -52,6 +52,6 @@ Once the notebook opens, you can start working with .NET in the language you cho
 
 <img src = "https://user-images.githubusercontent.com/2546640/67981834-db860c80-fbf7-11e9-89b5-29d2480ed1fa.png" width = "70%">
 
-For more information on the .NET notebook experience, please check out our samples and documentation on [Binder](https://mybinder.org/v2/gh/dotnet/try/master?urlpath=lab).
+For more information on the .NET notebook experience, please check out our samples and documentation on [Binder](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab).
 
  Once you've created a .NET notebook, you might want to share it with others. In the [next document](CreateBinder.md), you will learn how to share your .NET notebook with others using binder. 
