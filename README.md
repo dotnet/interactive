@@ -44,7 +44,7 @@ First, make sure you have the following installed:
 - Next, in an ordinary console, install the `dotnet interactive` global tool:
 
 ```console
-> dotnet tool install -g --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json" dotnet-interactive
+> dotnet tool install -g --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json" Microsoft.dotnet-interactive
 ```
 
 - Install the .NET kernel by running the following within your Anaconda Prompt:
