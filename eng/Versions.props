@@ -14,7 +14,6 @@
     <PreReleaseVersionLabel>beta</PreReleaseVersionLabel>
     <VersionPrefix>$(MajorVersion).$(MinorVersion).$(PatchVersion)</VersionPrefix>
   </PropertyGroup>
-
   <PropertyGroup>
     <!-- package settings -->
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -22,7 +21,6 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <RepositoryUrl>https://github.com/dotnet/interactive</RepositoryUrl>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(UseStableVersion)' == 'true'">
     <AutoGenerateAssemblyVersion>false</AutoGenerateAssemblyVersion>
     <DotNetFinalVersionKind>release</DotNetFinalVersionKind>
