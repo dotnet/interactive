@@ -22,19 +22,19 @@ namespace Microsoft.DotNet.Interactive.PowerShell
     {
         internal const string DefaultKernelName = "powershell";
 
+        private readonly object _cancellationSourceLock = new object();
         private Runspace _runspace;
         private PowerShell _pwsh;
-        private SemaphoreSlim _runspaceSemaphore;
         private CancellationTokenSource _cancellationSource;
-        private readonly object _cancellationSourceLock = new object();
+        private readonly KernelExtensionAssemblyLoader _extensionLoader;
 
         public PowerShellKernel()
         {
             _runspace = RunspaceFactory.CreateRunspace(InitialSessionState.CreateDefault());
             _runspace.Open();
             _pwsh = PowerShell.Create(_runspace);
-            _runspaceSemaphore = new SemaphoreSlim(1, 1);
             _cancellationSource = new CancellationTokenSource();
+            _extensionLoader = new KernelExtensionAssemblyLoader();
             Name = DefaultKernelName;
 
             // Add Modules directory that contains the helper modules
@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             Environment.SetEnvironmentVariable("PSModulePath",
                 psModulePath + Path.PathSeparator + Path.Join(
-                    Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+                    Path.GetDirectoryName(typeof(PowerShellKernel).Assembly.Location),
                     "Modules"));
         }
 
@@ -61,21 +61,21 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                         case SubmitCode submitCode:
                             submitCode.Handler = async (_, invocationContext) =>
                             {
-                                await HandleSubmitCode(submitCode, context);
+                                HandleSubmitCode(submitCode, context);
                             };
                             break;
 
                         case RequestCompletion requestCompletion:
                             requestCompletion.Handler = async (_, invocationContext) =>
                             {
-                                await HandleRequestCompletion(requestCompletion, invocationContext);
+                                HandleRequestCompletion(requestCompletion, invocationContext);
                             };
                             break;
 
                         case CancelCurrentCommand interruptExecution:
                             interruptExecution.Handler = async (_, invocationContext) =>
                             {
-                                await HandleCancelCurrentCommand(interruptExecution, invocationContext);
+                                HandleCancelCurrentCommand(interruptExecution, invocationContext);
                             };
                             break;
                     }
@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         #region Handlers
 
-        private async Task HandleSubmitCode(
+        private void HandleSubmitCode(
                 SubmitCode submitCode,
                 KernelInvocationContext context)
         {
@@ -112,6 +112,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             else
             {
                 context.Publish(new IncompleteCodeSubmissionReceived(submitCode));
+                return;
             }
 
             // Do nothing if we get a Diagnose type.
@@ -125,9 +126,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 context.Fail(null, "Command cancelled");
                 return;
             }
-        
-            // Wait until we have access to the runspace since we only can run one cell at a time.
-            await _runspaceSemaphore.WaitAsync();
 
             StreamHandler streamHandler = RegisterPowerShellStreams(context, submitCode);
             try
@@ -152,11 +150,10 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             finally
             {
                 UnregisterPowerShellStreams(streamHandler);
-                _runspaceSemaphore.Release();
             }
         }
 
-        private async Task HandleRequestCompletion(
+        private void HandleRequestCompletion(
             RequestCompletion requestCompletion,
             KernelInvocationContext context)
         {
@@ -165,14 +162,14 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             context.Publish(completionRequestReceived);
 
             var completionList =
-                await GetCompletionList(
+                GetCompletionList(
                     requestCompletion.Code, 
                     requestCompletion.CursorPosition);
 
             context.Publish(new CompletionRequestCompleted(completionList, requestCompletion));
         }
 
-        private Task HandleCancelCurrentCommand(
+        private void HandleCancelCurrentCommand(
             CancelCurrentCommand cancelCurrentCommand,
             KernelInvocationContext context)
         {
@@ -188,41 +185,33 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             var reply = new CurrentCommandCancelled(cancelCurrentCommand);
             context.Publish(reply);
-
-            return Task.CompletedTask;
         }
 
         #endregion
 
         public bool IsCompleteSubmission(string code)
         {
-            // Parse the PowerShell script. If there are any parse errors, then we return false.
+            // Parse the PowerShell script. If there are any parse errors, check if the input was incomplete.
             Parser.ParseInput(code, out Token[] tokens, out ParseError[] errors);
-            return errors.Length > 0;
+            return errors.Length == 0 || !errors[0].IncompleteInput;
         }
 
-        private async Task<IEnumerable<CompletionItem>> GetCompletionList(
+        private IEnumerable<CompletionItem> GetCompletionList(
             string code,
             int cursorPosition)
         {
-            await _runspaceSemaphore.WaitAsync();
+            CommandCompletion completion = CommandCompletion.CompleteInput(code, cursorPosition, null, _pwsh);
 
-            try
-            {
-                CommandCompletion completion = CommandCompletion.CompleteInput(code, cursorPosition, null, _pwsh);
-
-                return completion.CompletionMatches.Select(c => new CompletionItem(
-                    displayText: c.CompletionText,
-                    kind: c.ResultType.ToString(),
-                    documentation: c.ToolTip
-                ));
-            }
-            finally
-            {
-                _runspaceSemaphore.Release();
-            }
+            return completion.CompletionMatches.Select(c => new CompletionItem(
+                displayText: c.CompletionText,
+                kind: c.ResultType.ToString(),
+                documentation: c.ToolTip
+            ));
         }
 
+        // Load C# extensions that will load types that we want to be available
+        // in the PowerShell runspace.
+        // TODO: Does this make sense for PowerShell?
         public async Task LoadExtensionsFromDirectory(
             DirectoryInfo directory,
             KernelInvocationContext context)
@@ -235,9 +224,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                         "dotnet",
                         "cs"));
 
-            await new KernelExtensionAssemblyLoader().LoadFromAssembliesInDirectory(
+            await _extensionLoader.LoadFromAssembliesInDirectory(
                 extensionsDirectory,
-                context.HandlingKernel,
+                kernel: this,
                 context);
         }
 
