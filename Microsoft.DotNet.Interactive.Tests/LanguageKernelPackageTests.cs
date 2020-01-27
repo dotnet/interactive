@@ -19,7 +19,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    #pragma warning disable 8509
+#pragma warning disable 8509
     public class LanguageKernelPackageTests : LanguageKernelTestBase
     {
         public LanguageKernelPackageTests(ITestOutputHelper output) : base(output)
@@ -250,7 +250,7 @@ json
         {
             using var kernel = CreateKernel(Language.CSharp);
             using var events = kernel.KernelEvents.ToSubscribedList();
-            
+
 
             var command = new SubmitCode("#r \"nuget:Microsoft.ML, 1.3.1\" \nvar a = new List<int>();");
             await kernel.SendAsync(command);
@@ -647,7 +647,7 @@ using Microsoft.ML.AutoML;
         [Fact(Timeout = 45000)]
         public async Task cell_with_nuget_and_code_continues_executions_on_right_kernel()
         {
-            
+
             var kernel =
                 new CompositeKernel {
                         new CSharpKernel()
@@ -680,7 +680,7 @@ using NodaTime;
 using NodaTime.Extensions;
 using XPlot.Plotly;");
 
-            await kernel.SendAsync(command,CancellationToken.None);
+            await kernel.SendAsync(command, CancellationToken.None);
 
             events.Should().NotContainErrors();
 
@@ -838,11 +838,8 @@ tInput.Length"
 
             KernelEvents
                 .Should()
-                .ContainSingle(e => e is ReturnValueProduced);
-
-            KernelEvents
-                .OfType<ReturnValueProduced>()
-                .Single()
+                .ContainSingle<ReturnValueProduced>()
+                .Which
                 .Value
                 .Should()
                 .Be(4);
