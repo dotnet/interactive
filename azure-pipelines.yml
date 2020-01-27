@@ -2,6 +2,7 @@
 trigger:
 - master
 - feature/*
+
 pr:
 - master
 - feature/*
