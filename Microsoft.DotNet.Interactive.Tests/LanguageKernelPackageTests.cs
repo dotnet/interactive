@@ -753,7 +753,7 @@ using XPlot.Plotly;");
             var events = kernel.KernelEvents.ToSubscribedList();
 
             await kernel.SubmitCodeAsync(@"
-#r ""nuget:System.Text.Json""
+#r ""nuget:System.Text.Json, 4.6.0""
 using System.Text.Json;
 ");
             // It should work, no errors and the requested package should be added
@@ -803,6 +803,49 @@ using System.Text.Json;
 
             events.Should()
                   .ContainSingle<DisplayedValueUpdated>(e => e.Value.Equals("Installed package Its.Log version 2.10.1"));
+        }
+
+
+        [Theory(Timeout = 45000)]
+        [InlineData(Language.CSharp)]
+        // [InlineData(Language.FSharp)]    TODO -- Uncomment when FSharp is inserted
+        public async Task it_can_load_assembly_referenced_from_refs_folder_in_nugetpackage(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var source = language switch
+            {
+                Language.FSharp => @"
+#r ""nuget:Microsoft.ML.OnnxTransformer,1.4.0""
+
+open System
+open System.Numerics.Tensors
+let inputValues = [| 12.0; 10.0; 17.0; 5.0 |]
+let tInput = new DenseTensor<float>(inputValues.AsMemory(), new ReadOnlySpan<int>([|4|]))
+tInput.Length
+",
+                Language.CSharp => @"
+#r ""nuget:Microsoft.ML.OnnxTransformer,1.4.0""
+
+using System;
+using System.Numerics.Tensors;
+var inputValues = new[] { 12f, 10f, 17f, 5f };
+var tInput = new DenseTensor<float>(inputValues.AsMemory(), new ReadOnlySpan<int>(new[] { 4 }));
+tInput.Length"
+            };
+
+            await SubmitCode(kernel, source);
+
+            KernelEvents
+                .Should()
+                .ContainSingle(e => e is ReturnValueProduced);
+
+            KernelEvents
+                .OfType<ReturnValueProduced>()
+                .Single()
+                .Value
+                .Should()
+                .Be(4);
         }
     }
 }
