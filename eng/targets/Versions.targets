@@ -1,7 +1,0 @@
-<Project>
-
-  <Target Name="_InitializeAssemblyVersion">
-    <!-- don't let Arcade override assembly versions -->
-  </Target>
-
-</Project>

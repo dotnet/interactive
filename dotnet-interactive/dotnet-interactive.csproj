@@ -15,6 +15,8 @@
     <PackageDescription>Command line tool for interactive programming with C# and F#, including support for Jupyter Notebooks.</PackageDescription>
     <PackageTags>dotnet interactive Jupyter</PackageTags>
     <PackAsTool>true</PackAsTool>
+    <AutoGenerateAssemblyVersion>false</AutoGenerateAssemblyVersion>
+    <PreReleaseVersionLabel></PreReleaseVersionLabel>
     <Description>.NET Interactive</Description>
     <NoWarn>$(NoWarn);8002</NoWarn><!-- Markdig isn't strongly signed -->
     <NoWarn>$(NoWarn);NU5129</NoWarn><!-- Improper warning about missing props file.  See https://github.com/NuGet/Home/issues/8627 -->
