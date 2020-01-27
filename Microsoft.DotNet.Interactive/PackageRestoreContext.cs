@@ -242,30 +242,60 @@ namespace s
             }
 
             string Targets() => @"
-  <Target Name='ComputePackageRoots'
-          BeforeTargets='CoreCompile;WriteNugetAssemblyPaths'
-          DependsOnTargets='CollectPackageReferences'>
+  <Target Name=""ComputePackageRootsForInteractivePackageManagement""
+          DependsOnTargets=""ResolveReferences;ResolveSdkReferences;ResolveTargetingPackAssets;ResolveSDKReferences;GenerateBuildDependencyFile"">
+
       <ItemGroup>
-        <ResolvedFile Include='@(ResolvedCompileFileDefinitions)'>
-           <PackageRootProperty>Pkg$([System.String]::Copy('%(ResolvedCompileFileDefinitions.NugetPackageId)').Replace('.','_'))</PackageRootProperty>
-           <PackageRoot>$(%(ResolvedFile.PackageRootProperty))</PackageRoot>
-           <InitializeSourcePath>$(%(ResolvedFile.PackageRootProperty))\content\%(ResolvedCompileFileDefinitions.FileName)%(ResolvedCompileFileDefinitions.Extension).fsx</InitializeSourcePath>
-        </ResolvedFile>
+        <__InteractiveReferencedAssemblies Include = ""@(ReferencePath)"" />
+        <__InteractiveReferencedAssembliesCopyLocal Include = ""@(RuntimeCopyLocalItems)"" Condition=""'$(TargetFrameworkIdentifier)'!='.NETFramework'"" />
+        <__InteractiveReferencedAssembliesCopyLocal Include = ""@(ReferenceCopyLocalPaths)"" Condition=""'$(TargetFrameworkIdentifier)'=='.NETFramework'"" />
+        <__ConflictsList Include=""%(_ConflictPackageFiles.ConflictItemType)=%(_ConflictPackageFiles.Filename)%(_ConflictPackageFiles.Extension)"" />
+      </ItemGroup>
+      <PropertyGroup>
+        <__Conflicts>@(__ConflictsList, ';')</__Conflicts>
+      </PropertyGroup>
+
+      <ItemGroup>
+        <InteractiveResolvedFile Include=""@(__InteractiveReferencedAssemblies)""
+                                 Condition=""$([System.String]::new($(__Conflicts)).Contains($([System.String]::new('Reference=%(__InteractiveReferencedAssemblies.Filename)%(__InteractiveReferencedAssemblies.Extension)'))))""
+                                 KeepDuplicates=""false"">
+            <NormalizedIdentity Condition=""'%(Identity)'!=''"">$([System.String]::Copy('%(Identity)').Replace('\', '/'))</NormalizedIdentity>
+            <NormalizedPathInPackage Condition=""'%(__InteractiveReferencedAssemblies.PathInPackage)'!=''"">$([System.String]::Copy('%(__InteractiveReferencedAssemblies.PathInPackage)').Replace('\', '/'))</NormalizedPathInPackage>
+            <PositionPathInPackage Condition=""'%(InteractiveResolvedFile.NormalizedPathInPackage)'!=''"">$([System.String]::Copy('%(InteractiveResolvedFile.NormalizedIdentity)').IndexOf('%(InteractiveResolvedFile.NormalizedPathInPackage)'))</PositionPathInPackage>
+            <PackageRoot Condition=""'%(InteractiveResolvedFile.NormalizedPathInPackage)'!='' and '%(InteractiveResolvedFile.PositionPathInPackage)'!='-1'"">$([System.String]::Copy('%(InteractiveResolvedFile.NormalizedIdentity)').Substring(0, %(InteractiveResolvedFile.PositionPathInPackage)))</PackageRoot>
+            <InitializeSourcePath>%(InteractiveResolvedFile.PackageRoot)content\%(__InteractiveReferencedAssemblies.FileName)%(__InteractiveReferencedAssemblies.Extension).fsx</InitializeSourcePath>
+            <IsNotImplementationReference>$([System.String]::Copy('%(__InteractiveReferencedAssemblies.PathInPackage)').StartsWith('ref/'))</IsNotImplementationReference>
+            <NuGetPackageId>%(__InteractiveReferencedAssemblies.NuGetPackageId)</NuGetPackageId>
+            <NuGetPackageVersion>%(__InteractiveReferencedAssemblies.NuGetPackageVersion)</NuGetPackageVersion>
+        </InteractiveResolvedFile>
+
+        <InteractiveResolvedFile Include=""@(__InteractiveReferencedAssembliesCopyLocal)"" KeepDuplicates=""false"">
+            <NormalizedIdentity Condition=""'%(Identity)'!=''"">$([System.String]::Copy('%(Identity)').Replace('\', '/'))</NormalizedIdentity>
+            <NormalizedPathInPackage Condition=""'%(__InteractiveReferencedAssembliesCopyLocal.PathInPackage)'!=''"">$([System.String]::Copy('%(__InteractiveReferencedAssembliesCopyLocal.PathInPackage)').Replace('\', '/'))</NormalizedPathInPackage>
+            <PositionPathInPackage Condition=""'%(InteractiveResolvedFile.NormalizedPathInPackage)'!=''"">$([System.String]::Copy('%(InteractiveResolvedFile.NormalizedIdentity)').IndexOf('%(InteractiveResolvedFile.NormalizedPathInPackage)'))</PositionPathInPackage>
+            <PackageRoot Condition=""'%(InteractiveResolvedFile.NormalizedPathInPackage)'!='' and '%(InteractiveResolvedFile.PositionPathInPackage)'!='-1'"">$([System.String]::Copy('%(InteractiveResolvedFile.NormalizedIdentity)').Substring(0, %(InteractiveResolvedFile.PositionPathInPackage)))</PackageRoot>
+            <InitializeSourcePath>%(InteractiveResolvedFile.PackageRoot)content\%(__InteractiveReferencedAssembliesCopyLocal.FileName)%(__InteractiveReferencedAssembliesCopyLocal.Extension).fsx</InitializeSourcePath>
+            <IsNotImplementationReference>$([System.String]::Copy('%(__InteractiveReferencedAssembliesCopyLocal.PathInPackage)').StartsWith('ref/'))</IsNotImplementationReference>
+            <NuGetPackageId>%(__InteractiveReferencedAssembliesCopyLocal.NuGetPackageId)</NuGetPackageId>
+            <NuGetPackageVersion>%(__InteractiveReferencedAssembliesCopyLocal.NuGetPackageVersion)</NuGetPackageVersion>
+        </InteractiveResolvedFile>
+
         <NativeIncludeRoots
-            Include='@(RuntimeTargetsCopyLocalItems)'
+            Include=""@(RuntimeTargetsCopyLocalItems)""
             Condition=""'%(RuntimeTargetsCopyLocalItems.AssetType)' == 'native'"">
-           <Path>$([System.String]::Copy('%(FullPath)').Substring(0, $([System.String]::Copy('%(FullPath)').LastIndexOf('runtimes'))))</Path>
+            <Path>$([MSBuild]::EnsureTrailingSlash('$([System.String]::Copy('%(FullPath)').Substring(0, $([System.String]::Copy('%(FullPath)').LastIndexOf('runtimes'))))'))</Path>
         </NativeIncludeRoots>
       </ItemGroup>
   </Target>
 
   <Target Name='WriteNugetAssemblyPaths' 
-          DependsOnTargets='ResolvePackageAssets; ResolveReferences; ProcessFrameworkReferences' 
-          AfterTargets='PrepareForBuild'>
+          DependsOnTargets=""ComputePackageRootsForInteractivePackageManagement""
+          BeforeTargets=""CoreCompile""
+          AfterTargets=""PrepareForBuild"">
 
     <ItemGroup>
       <ResolvedReferenceLines Remove='*' />
-      <ResolvedReferenceLines Include='%(ReferencePath.NugetPackageId),%(ReferencePath.NugetPackageVersion),%(ReferencePath.OriginalItemSpec),%(NativeIncludeRoots.Path),$(AppHostRuntimeIdentifier)' />
+      <ResolvedReferenceLines Include='%(InteractiveResolvedFile.NugetPackageId),%(InteractiveResolvedFile.NugetPackageVersion),%(InteractiveResolvedFile.Identity),%(NativeIncludeRoots.Path),$(AppHostRuntimeIdentifier)' />
     </ItemGroup>
 
     <WriteLinesToFile Lines='@(ResolvedReferenceLines)' 
