@@ -59,23 +59,26 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                     switch (command)
                     {
                         case SubmitCode submitCode:
-                            submitCode.Handler = async (_, invocationContext) =>
+                            submitCode.Handler = (_, invocationContext) =>
                             {
                                 HandleSubmitCode(submitCode, context);
+                                return Task.CompletedTask;
                             };
                             break;
 
                         case RequestCompletion requestCompletion:
-                            requestCompletion.Handler = async (_, invocationContext) =>
+                            requestCompletion.Handler = (_, invocationContext) =>
                             {
                                 HandleRequestCompletion(requestCompletion, invocationContext);
+                                return Task.CompletedTask;
                             };
                             break;
 
                         case CancelCurrentCommand interruptExecution:
-                            interruptExecution.Handler = async (_, invocationContext) =>
+                            interruptExecution.Handler = (_, invocationContext) =>
                             {
                                 HandleCancelCurrentCommand(interruptExecution, invocationContext);
+                                return Task.CompletedTask;
                             };
                             break;
                     }
