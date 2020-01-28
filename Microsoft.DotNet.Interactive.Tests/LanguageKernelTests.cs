@@ -797,7 +797,7 @@ Console.Write(2);
 
             using var kernel = new CSharpKernel();
 
-            kernel.Pipeline.AddMiddleware(async (command, context, next) =>
+            kernel.AddMiddleware(async (command, context, next) =>
             {
                 var k = context.HandlingKernel as CSharpKernel;
 
