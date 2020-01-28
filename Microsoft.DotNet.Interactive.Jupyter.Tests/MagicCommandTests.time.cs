@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
                 await kernel.SendAsync(new SubmitCode(
                                            @"
-%%time
+#!time
 
 using System.Threading.Tasks;
 await Task.Delay(500);

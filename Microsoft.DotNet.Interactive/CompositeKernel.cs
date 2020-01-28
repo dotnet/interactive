@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Interactive
                 });
             }
 
-            var chooseKernelCommand = new Command($"%%{kernel.Name}")
+            var chooseKernelCommand = new Command($"#!{kernel.Name}")
             {
                 Handler = CommandHandler.Create<KernelInvocationContext>(
                     context => { context.HandlingKernel = kernel; })

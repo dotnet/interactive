@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                 using var events = kernel.KernelEvents.ToSubscribedList();
 
                 await kernel.SendAsync(new SubmitCode(
-                                           $"%%html\n\n{html}"));
+                                           $"#!html\n\n{html}"));
 
                 var formatted =
                     events

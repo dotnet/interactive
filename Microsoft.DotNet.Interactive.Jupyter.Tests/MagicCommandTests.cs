@@ -4,7 +4,6 @@
 using System;
 using System.CommandLine;
 using FluentAssertions;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -66,6 +65,26 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             await kernel.SubmitCodeAsync("%oops\n123");
 
             events.Should().NotContain(e => e is ReturnValueProduced);
+        }
+
+        [Fact]
+        public void Magic_commands_with_duplicate_aliases_are_not_allowed()
+        {
+            using var kernel = new CompositeKernel
+            {
+            };
+            kernel.Name = "abc";
+
+            kernel.AddDirective(new Command("#dupe"));
+
+            kernel.Invoking(k => 
+                k.AddDirective(new Command("#dupe")))
+                  .Should()
+                  .Throw<ArgumentException>()
+                  .Which
+                  .Message
+                  .Should()
+                  .Be("Directive \"#dupe\" already exists in kernel \"abc\".");
         }
     }
 }

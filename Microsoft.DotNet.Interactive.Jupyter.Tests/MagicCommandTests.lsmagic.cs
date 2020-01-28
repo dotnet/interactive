@@ -27,13 +27,13 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                                    .UseDefaultMagicCommands()
                                    .LogEventsToPocketLogger();
 
-                kernel.AddDirective(new Command("%%one"));
-                kernel.AddDirective(new Command("%%two"));
-                kernel.AddDirective(new Command("%%three"));
+                kernel.AddDirective(new Command("#!one"));
+                kernel.AddDirective(new Command("#!two"));
+                kernel.AddDirective(new Command("#!three"));
 
                 using var events = kernel.KernelEvents.ToSubscribedList();
 
-                await kernel.SendAsync(new SubmitCode("%lsmagic"));
+                await kernel.SendAsync(new SubmitCode("#!lsmagic"));
 
                 events.Should()
                       .ContainSingle(e => e is DisplayedValueProduced)
@@ -42,16 +42,16 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                       .Value
                       .ToDisplayString("text/html")
                       .Should()
-                      .ContainAll("%lsmagic", "%%one", "%%three", "%%two");
+                      .ContainAll("#!lsmagic", "#!one", "#!three", "#!two");
             }
 
             [Fact]
             public async Task lsmagic_lists_registered_magic_commands_in_subkernels()
             {
                 var subkernel1 = new CSharpKernel();
-                subkernel1.AddDirective(new Command("%%from-subkernel-1"));
+                subkernel1.AddDirective(new Command("#!from-subkernel-1"));
                 var subkernel2 = new FSharpKernel();
-                subkernel2.AddDirective(new Command("%%from-subkernel-2"));
+                subkernel2.AddDirective(new Command("#!from-subkernel-2"));
 
                 using var compositeKernel = new CompositeKernel
                                             {
@@ -61,32 +61,32 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                                             .UseDefaultMagicCommands()
                                             .LogEventsToPocketLogger();
 
-                compositeKernel.AddDirective(new Command("%%from-compositekernel"));
+                compositeKernel.AddDirective(new Command("#!from-compositekernel"));
 
                 using var events = compositeKernel.KernelEvents.ToSubscribedList();
 
-                await compositeKernel.SendAsync(new SubmitCode("%lsmagic"));
+                await compositeKernel.SendAsync(new SubmitCode("#!lsmagic"));
 
                 var valueProduceds = events.OfType<DisplayedValueProduced>().ToArray();
 
                 valueProduceds[0].Value
                                  .ToDisplayString("text/html")
                                  .Should()
-                                 .ContainAll("%lsmagic",
-                                             "%%csharp",
-                                             "%%fsharp",
-                                             "%%from-compositekernel");
+                                 .ContainAll("#!lsmagic",
+                                             "#!csharp",
+                                             "#!fsharp",
+                                             "#!from-compositekernel");
 
                 valueProduceds[1].Value
                                  .ToDisplayString("text/html")
                                  .Should()
-                                 .ContainAll("%lsmagic",
-                                             "%%from-subkernel-1");
+                                 .ContainAll("#!lsmagic",
+                                             "#!from-subkernel-1");
                 valueProduceds[2].Value
                                  .ToDisplayString("text/html")
                                  .Should()
-                                 .ContainAll("%lsmagic",
-                                             "%%from-subkernel-2");
+                                 .ContainAll("#!lsmagic",
+                                             "#!from-subkernel-2");
             }
         }
 
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SendAsync(new SubmitCode("%lsmagic"));
+            await kernel.SendAsync(new SubmitCode("#!lsmagic"));
 
             events.Should()
                   .ContainSingle(e => e is DisplayedValueProduced)

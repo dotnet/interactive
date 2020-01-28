@@ -279,7 +279,7 @@ f();"));
         public async Task sends_ExecuteReply_message_when_submission_contains_only_a_directive()
         {
             var scheduler = CreateScheduler();
-            var request = ZeroMQMessage.Create(new ExecuteRequest("%%csharp"));
+            var request = ZeroMQMessage.Create(new ExecuteRequest("#!csharp"));
             var context = new JupyterRequestContext(JupyterMessageSender, request);
             await scheduler.Schedule(context);
 
