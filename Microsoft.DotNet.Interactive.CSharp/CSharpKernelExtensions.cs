@@ -77,7 +77,8 @@ using static {typeof(Kernel).FullName};
 
             var restore = new Command("#!nuget-restore")
             {
-                Handler = CommandHandler.Create(DoNugetRestore(kernel, restoreContext))
+                Handler = CommandHandler.Create(DoNugetRestore(kernel, restoreContext)),
+                IsHidden = true
             };
 
             kernel.AddDirective(restore);

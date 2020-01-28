@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.CommandLine;
 using System.Linq;
 using System.Threading.Tasks;
@@ -87,6 +88,32 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                                  .ContainAll("%lsmagic",
                                              "%%from-subkernel-2");
             }
+        }
+
+        [Fact]
+        public async Task lsmagic_does_not_list_hidden_commands()
+        {
+            using var kernel = new CompositeKernel()
+                               .UseDefaultMagicCommands()
+                               .LogEventsToPocketLogger();
+
+            kernel.AddDirective(new Command("#!hidden")
+            {
+                IsHidden = true
+            });
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SendAsync(new SubmitCode("%lsmagic"));
+
+            events.Should()
+                  .ContainSingle(e => e is DisplayedValueProduced)
+                  .Which
+                  .As<DisplayedValueProduced>()
+                  .Value
+                  .ToDisplayString("text/html")
+                  .Should()
+                  .NotContain("#!hidden");
         }
     }
 }

@@ -161,14 +161,20 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(command));
             }
 
-            if (!command.Name.StartsWith("#") &&
-                !command.Name.StartsWith("%"))
+            if (HasIncorrectPrefix(command.Name) || 
+                command.RawAliases.Any(HasIncorrectPrefix))
             {
                 throw new ArgumentException("Directives must begin with # or %");
             }
 
             _directiveCommands.Add(command);
             _directiveParser = null;
+
+            bool HasIncorrectPrefix(string name)
+            {
+                return !name.StartsWith("#") &&
+                       !name.StartsWith("%");
+            }
         }
     }
 }
