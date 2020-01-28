@@ -35,7 +35,9 @@ namespace Microsoft.DotNet.Interactive
             _disposables.Add(_kernelEvents);
         }
 
-        public KernelCommandPipeline Pipeline { get; }
+        internal KernelCommandPipeline Pipeline { get; }
+
+        public void AddMiddleware(KernelCommandPipelineMiddleware middleware) => Pipeline.AddMiddleware(middleware);
 
         public void DeferCommand(IKernelCommand command)
         {

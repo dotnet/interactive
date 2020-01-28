@@ -221,7 +221,7 @@ x"));
 
             var childKernels = kernel.ChildKernels;
 
-            kernel.Pipeline.AddMiddleware(async (kernelCommand, context, next) =>
+            kernel.AddMiddleware(async (kernelCommand, context, next) =>
             {
                 context.HandlingKernel = childKernels.Single(k => k.Name == "fake");
                 await next(kernelCommand, context);
