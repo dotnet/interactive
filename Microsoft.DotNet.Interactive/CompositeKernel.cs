@@ -29,6 +29,7 @@ namespace Microsoft.DotNet.Interactive
             _extensionLoader = new CompositeKernelExtensionLoader();
             RegisterForDisposal(KernelEvents
                 .OfType<PackageAdded>()
+                .Where(pa => pa?.PackageReference.PackageRoot != null)
                 .Distinct(pa => pa.PackageReference.PackageRoot)
                 .Subscribe(_packages.Enqueue));
         }
