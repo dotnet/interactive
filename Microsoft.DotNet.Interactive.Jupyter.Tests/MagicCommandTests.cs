@@ -70,10 +70,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         [Fact]
         public void Magic_commands_with_duplicate_aliases_are_not_allowed()
         {
-            using var kernel = new CompositeKernel
-            {
-            };
-            kernel.Name = "abc";
+            using var kernel = new CompositeKernel();
 
             kernel.AddDirective(new Command("#dupe"));
 
@@ -84,7 +81,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                   .Which
                   .Message
                   .Should()
-                  .Be("Directive \"#dupe\" already exists in kernel \"abc\".");
+                  .Be("Alias \'#dupe\' is already in use.");
         }
     }
 }

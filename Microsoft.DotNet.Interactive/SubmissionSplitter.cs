@@ -15,9 +15,9 @@ namespace Microsoft.DotNet.Interactive
     {
         private Parser _directiveParser;
 
-        private readonly List<Command> _directiveCommands = new List<Command>();
+        private RootCommand _rootCommand;
 
-        public IReadOnlyCollection<ICommand> Directives => _directiveCommands;
+        public IReadOnlyCollection<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
 
         public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode)
         {
@@ -130,15 +130,10 @@ namespace Microsoft.DotNet.Interactive
         {
             if (_directiveParser == null)
             {
-                var root = new RootCommand();
-
-                foreach (var c in _directiveCommands)
-                {
-                    root.Add(c);
-                }
+                EnsureRootCommandIsInitialized();
 
                 var commandLineBuilder =
-                    new CommandLineBuilder(root)
+                    new CommandLineBuilder(_rootCommand)
                         .ParseResponseFileAs(ResponseFileHandling.Disabled)
                         .UseMiddleware(
                             context => context.BindingContext
@@ -167,13 +162,24 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentException("Directives must begin with # or %");
             }
 
-            _directiveCommands.Add(command);
+            EnsureRootCommandIsInitialized();
+
+            _rootCommand.Add(command);
+
             _directiveParser = null;
 
             bool HasIncorrectPrefix(string name)
             {
                 return !name.StartsWith("#") &&
                        !name.StartsWith("%");
+            }
+        }
+
+        private void EnsureRootCommandIsInitialized()
+        {
+            if (_rootCommand == null)
+            {
+                _rootCommand = new RootCommand();
             }
         }
     }
