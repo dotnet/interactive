@@ -20,7 +20,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
         /// <summary>
         /// The object from pipeline.
         /// </summary>
-        [Parameter(Position = 0, ValueFromPipeline = true)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
+        [AllowNull]
         public object InputObject { get; set; }
 
         private static PowerShell _pwsh;

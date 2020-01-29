@@ -108,15 +108,24 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             // Test is the code we got is actually able to run.
             var code = submitCode.Code;
-            if (IsCompleteSubmission(code))
+            if (IsCompleteSubmission(code, out ParseError[] parseErrors))
             {
                 context.Publish(new CompleteCodeSubmissionReceived(submitCode));
             }
             else
             {
                 context.Publish(new IncompleteCodeSubmissionReceived(submitCode));
-                return;
             }
+
+            // If there were parse errors, publish them and return early.
+            if (parseErrors.Length > 0)
+            {
+                foreach (ParseError parseError in parseErrors)
+                {
+                    context.Publish(new CommandFailed(null, submitCode, message: parseError.ToString()));
+                }
+                return;
+            }        
 
             // Do nothing if we get a Diagnose type.
             if (submitCode.SubmissionType == SubmissionType.Diagnose)
@@ -147,8 +156,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                         .AddParameter("InputObject", new ErrorRecord(e, null, ErrorCategory.NotSpecified, null))
                     .InvokeAndClearCommands<string>()[0];
 
-                StreamHandler.PublishStreamRecord(stringifiedErrorRecord, context, submitCode);
-                context.Publish(new CommandFailed(e, submitCode, e.Message));
+                context.Fail(message: stringifiedErrorRecord);
             }
             finally
             {
@@ -192,12 +200,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         #endregion
 
-        public bool IsCompleteSubmission(string code)
+        public bool IsCompleteSubmission(string code, out ParseError[] errors)
         {
             // Parse the PowerShell script. If there are any parse errors, check if the input was incomplete.
             // We only need to check if the first ParseError has incomplete input. This is consistant with
             // what PowerShell itself does today.
-            Parser.ParseInput(code, out Token[] tokens, out ParseError[] errors);
+            Parser.ParseInput(code, out Token[] tokens, out errors);
             return errors.Length == 0 || !errors[0].IncompleteInput;
         }
 
