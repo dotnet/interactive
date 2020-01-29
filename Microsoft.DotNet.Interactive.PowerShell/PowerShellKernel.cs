@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 {
     using System.Management.Automation;
 
-    public class PowerShellKernel : KernelBase, IExtensibleKernel
+    public class PowerShellKernel : KernelBase
     {
         internal const string DefaultKernelName = "powershell";
 
@@ -120,10 +120,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             // If there were parse errors, publish them and return early.
             if (parseErrors.Length > 0)
             {
-                foreach (ParseError parseError in parseErrors)
-                {
-                    context.Publish(new CommandFailed(null, submitCode, message: parseError.ToString()));
-                }
+                context.Fail(message: string.Join(Environment.NewLine + Environment.NewLine,
+                    parseErrors.Select(pe => pe.ToString())));
                 return;
             }
 
@@ -220,27 +218,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 kind: c.ResultType.ToString(),
                 documentation: c.ToolTip
             ));
-        }
-
-        // Load C# extensions that will load types that we want to be available
-        // in the PowerShell runspace.
-        // TODO: Does this make sense for PowerShell?
-        public async Task LoadExtensionsFromDirectory(
-            DirectoryInfo directory,
-            KernelInvocationContext context)
-        {
-            var extensionsDirectory =
-                new DirectoryInfo(
-                    Path.Combine(
-                        directory.FullName,
-                        "interactive-extensions",
-                        "dotnet",
-                        "cs"));
-
-            await _extensionLoader.LoadFromAssembliesInDirectory(
-                extensionsDirectory,
-                kernel: this,
-                context);
         }
 
         private StreamHandler RegisterPowerShellStreams(
