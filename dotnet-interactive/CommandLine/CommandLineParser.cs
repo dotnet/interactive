@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             var defaultKernelOption = new Option<string>(
                 "--default-kernel", 
                 description: "The default language for the kernel",
-                defaultValue: "csharp");
+                getDefaultValue: () => "csharp");
             var rootCommand = DotnetInteractive();
 
             rootCommand.AddCommand(Jupyter());
