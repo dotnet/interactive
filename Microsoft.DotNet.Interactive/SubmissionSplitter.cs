@@ -156,10 +156,12 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(command));
             }
 
-            if (HasIncorrectPrefix(command.Name) || 
-                command.RawAliases.Any(HasIncorrectPrefix))
+            foreach (var name in new[] { command.Name }.Concat(command.Aliases))
             {
-                throw new ArgumentException("Directives must begin with # or %");
+                if (!name.StartsWith("#"))
+                {
+                    throw new ArgumentException($"Invalid directive name \"{name}\". Directives must begin with \"#\".");
+                }
             }
 
             EnsureRootCommandIsInitialized();
@@ -167,12 +169,6 @@ namespace Microsoft.DotNet.Interactive
             _rootCommand.Add(command);
 
             _directiveParser = null;
-
-            bool HasIncorrectPrefix(string name)
-            {
-                return !name.StartsWith("#") &&
-                       !name.StartsWith("%");
-            }
         }
 
         private void EnsureRootCommandIsInitialized()

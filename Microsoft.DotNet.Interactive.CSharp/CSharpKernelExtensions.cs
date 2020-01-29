@@ -277,13 +277,13 @@ using static {typeof(Kernel).FullName};
 
         private static Command who_and_whos()
         {
-            var command = new Command("%whos")
+            var command = new Command("#!whos")
             {
                 Handler = CommandHandler.Create((ParseResult parseResult, KernelInvocationContext context) =>
                 {
                     var alias = parseResult.CommandResult.Token.Value;
 
-                    var detailed = alias == "%whos";
+                    var detailed = alias == "#!whos";
 
                     if (context.Command is SubmitCode &&
                         context.HandlingKernel is CSharpKernel kernel)
@@ -313,7 +313,7 @@ using static {typeof(Kernel).FullName};
                 })
             };
 
-            command.AddAlias("%who");
+            command.AddAlias("#!who");
 
             return command;
         }

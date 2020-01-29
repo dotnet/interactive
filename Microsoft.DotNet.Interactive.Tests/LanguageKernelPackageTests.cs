@@ -647,9 +647,9 @@ using Microsoft.ML.AutoML;
         [Fact(Timeout = 45000)]
         public async Task cell_with_nuget_and_code_continues_executions_on_right_kernel()
         {
-
             var kernel =
-                new CompositeKernel {
+                new CompositeKernel
+                    {
                         new CSharpKernel()
                             .UseDefaultFormatting()
                             .UseNugetDirective()
@@ -658,11 +658,11 @@ using Microsoft.ML.AutoML;
                             .LogEventsToPocketLogger(),
 
                         new FSharpKernel()
-                        .UseDefaultFormatting()
-                        .UseKernelHelpers()
-                        .UseWho()
-                        .UseDefaultNamespaces()
-                        .LogEventsToPocketLogger()
+                            .UseDefaultFormatting()
+                            .UseKernelHelpers()
+                            .UseWho()
+                            .UseDefaultNamespaces()
+                            .LogEventsToPocketLogger()
                     }
                     .UseDefaultMagicCommands();
 
@@ -683,8 +683,6 @@ using XPlot.Plotly;");
             await kernel.SendAsync(command, CancellationToken.None);
 
             events.Should().NotContainErrors();
-
-
 
             events
                 .Should()

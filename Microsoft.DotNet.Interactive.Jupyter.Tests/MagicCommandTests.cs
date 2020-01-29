@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         [Fact]
         public async Task magic_command_parse_errors_are_displayed()
         {
-            var command = new Command("%oops")
+            var command = new Command("#!oops")
             {
                 new Argument<string>()
             };
@@ -38,20 +38,20 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
             var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync("%oops");
+            await kernel.SubmitCodeAsync("#!oops");
 
             events.Should()
                   .ContainSingle<ErrorProduced>()
                   .Which
                   .Message
                   .Should()
-                  .Be("Required argument missing for command: %oops");
+                  .Be("Required argument missing for command: #!oops");
         }
 
         [Fact]
         public async Task magic_command_parse_errors_prevent_code_submission_from_being_run()
         {
-            var command = new Command("%oops")
+            var command = new Command("#!x")
             {
                 new Argument<string>()
             };
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
             var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync("%oops\n123");
+            await kernel.SubmitCodeAsync("#!x\n123");
 
             events.Should().NotContain(e => e is ReturnValueProduced);
         }

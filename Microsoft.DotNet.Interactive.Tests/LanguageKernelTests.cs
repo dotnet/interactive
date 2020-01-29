@@ -817,7 +817,7 @@ Console.Write(2);
         {
             var kernel = CreateKernel(Language.CSharp);
 
-            var command = new SubmitCode("%whos \nvar x = 1;");
+            var command = new SubmitCode("#!whos \nvar x = 1;");
 
             await kernel.SendAsync(command);
 
