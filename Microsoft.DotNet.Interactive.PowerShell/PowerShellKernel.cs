@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             {
                 cancellationSource = _cancellationSource;
             }
-            
+
             // Acknowledge that we received the request.
             var codeSubmissionReceived = new CodeSubmissionReceived(submitCode);
             context.Publish(codeSubmissionReceived);
@@ -125,7 +125,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                     context.Publish(new CommandFailed(null, submitCode, message: parseError.ToString()));
                 }
                 return;
-            }        
+            }
 
             // Do nothing if we get a Diagnose type.
             if (submitCode.SubmissionType == SubmissionType.Diagnose)
@@ -174,7 +174,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             var completionList =
                 GetCompletionList(
-                    requestCompletion.Code, 
+                    requestCompletion.Code,
                     requestCompletion.CursorPosition);
 
             context.Publish(new CompletionRequestCompleted(completionList, requestCompletion));
