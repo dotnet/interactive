@@ -7,6 +7,7 @@ using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive
@@ -80,7 +81,14 @@ namespace Microsoft.DotNet.Interactive
                                         parseResult.Errors
                                                    .Select(e => e.ToString()));
 
-                        commands.Add(new DisplayError(message));
+                        commands.Clear();
+                        commands.Add(
+                            new AnonymousKernelCommand((kernelCommand, context) =>
+                            {
+                                 context.Fail(message: message);
+                                 return Task.CompletedTask;
+                            }));
+
                     }
                 }
             }

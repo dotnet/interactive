@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             await kernel.SubmitCodeAsync("#!oops");
 
             events.Should()
-                  .ContainSingle<ErrorProduced>()
+                  .ContainSingle<CommandFailed>()
                   .Which
                   .Message
                   .Should()
