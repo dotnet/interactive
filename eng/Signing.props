@@ -5,6 +5,7 @@
     <FileSignInfo Include="Clockwise.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Markdig.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Markdig.Signed.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Microsoft.Management.Infrastructure.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Namotion.Reflection.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="NetMQ.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="NJsonSchema.dll" CertificateName="3PartySHA2" />
