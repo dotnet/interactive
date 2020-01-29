@@ -656,7 +656,6 @@ using Microsoft.ML.AutoML;
                             .UseKernelHelpers()
                             .UseWho()
                             .LogEventsToPocketLogger(),
-
                         new FSharpKernel()
                             .UseDefaultFormatting()
                             .UseKernelHelpers()

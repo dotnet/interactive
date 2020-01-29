@@ -16,8 +16,7 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class 
-        CompositeKernel : KernelBase, IEnumerable<IKernel>, ICompositeKernel, IExtensibleKernel
+    public class CompositeKernel : KernelBase, IEnumerable<IKernel>, IExtensibleKernel
     {
         private readonly ConcurrentQueue<PackageAdded> _packages = new ConcurrentQueue<PackageAdded>();
         private readonly List<IKernel> _childKernels = new List<IKernel>();

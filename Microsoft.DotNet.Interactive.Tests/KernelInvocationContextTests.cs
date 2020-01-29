@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             using var kernel = new CompositeKernel
             {
-                new CSharpKernel().UseKernelHelpers()
+                new CSharpKernel()
             };
 
             using var kernelEvents = kernel.KernelEvents.ToSubscribedList();
@@ -68,15 +68,17 @@ namespace Microsoft.DotNet.Interactive.Tests
                 context.Publish(new DisplayedValueProduced(3, command));
             });
 
-            var result = await kernel.SendAsync(new SubmitCode("display(2);"));
+            var result = await kernel.SendAsync(new SubmitCode("2"));
             var events = new List<IKernelEvent>();
 
             result.KernelEvents.Subscribe(e => events.Add(e));
 
-            events.OfType<DisplayedValueProduced>()
-                  .Select(v => v.Value)
-                  .Should()
-                  .BeEquivalentSequenceTo(1, 2, 3);
+            var values = events.OfType<DisplayEventBase>()
+                               .Select(v => v.Value);
+
+            values
+                .Should()
+                .BeEquivalentSequenceTo(1, 2, 3);
         }
 
         [Fact(Timeout = 45000)]

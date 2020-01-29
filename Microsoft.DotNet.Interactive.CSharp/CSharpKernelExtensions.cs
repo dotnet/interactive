@@ -203,6 +203,8 @@ using static {typeof(Kernel).FullName};
                         var nativeLibraryProbingPaths = result.NativeLibraryProbingPaths;
                         helper?.AddNativeLibraryProbingPaths(nativeLibraryProbingPaths);
 
+                        // FIX: (DoNugetRestore) dead?
+
                         var addedAssemblyPaths =
                             result
                                 .ResolvedReferences

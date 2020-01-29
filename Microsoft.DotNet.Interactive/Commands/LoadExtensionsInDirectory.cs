@@ -18,21 +18,24 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         public DirectoryInfo Directory { get; }
 
-
         public override async Task InvokeAsync(KernelInvocationContext context)
         {
-            if (context.HandlingKernel is IExtensibleKernel extensibleKernel)
-            {
-                await extensibleKernel.LoadExtensionsFromDirectory(
-                    Directory,
-                    context);
-            }
+            await TryExtend(context.HandlingKernel);
 
             await context.HandlingKernel.VisitSubkernelsAsync(async k =>
             {
-                var loadExtensionsInDirectory = new LoadExtensionsInDirectory(Directory, k.Name);
-                await k.SendAsync(loadExtensionsInDirectory);
+                await TryExtend(k);
             });
+
+            async Task TryExtend(IKernel kernel)
+            {
+                if (kernel is IExtensibleKernel extensibleKernel)
+                {
+                    await extensibleKernel.LoadExtensionsFromDirectory(
+                        Directory,
+                        context);
+                }
+            }
         }
     }
 }

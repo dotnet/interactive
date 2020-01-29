@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive
 {

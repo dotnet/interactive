@@ -33,43 +33,32 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact(Timeout = 45000)]
         public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_magic_command()
         {
-            var receivedOnFakeKernel = new List<IKernelCommand>();
-
+            var cSharpKernel = new CSharpKernel();
+            var fSharpKernel = new FSharpKernel();
             using var kernel = new CompositeKernel
             {
-                new CSharpKernel(),
-                new FakeKernel("fake")
-                {
-                    Handle = (command, context) =>
-                    {
-                        receivedOnFakeKernel.Add(command);
-                        return Task.CompletedTask;
-                    }
-                }
+                cSharpKernel,
+                fSharpKernel
             };
+            kernel.DefaultKernelName = fSharpKernel.Name;
 
-            await kernel.SendAsync(
-                new SubmitCode(
-                    @"#!csharp
-var x = 123;"));
-            await kernel.SendAsync(
-                new SubmitCode(
-                    @"#!fake
-hello!"));
-            await kernel.SendAsync(
-                new SubmitCode(
-                    @"#!csharp
-x"));
+            using var events = kernel.KernelEvents.ToSubscribedList();
 
-            receivedOnFakeKernel
-                .Should()
-                .ContainSingle<SubmitCode>()
-                .Which
-                .Code
-                .Should()
-                .Be("hello!");
+            var fsharpCommand = new SubmitCode(@"
+#!fsharp
+[1;2;3]");
+            var csharpCommand = new SubmitCode(@"
+#!csharp
+new [] {1,2,3}");
+
+            await kernel.SendAsync(csharpCommand);
+            await kernel.SendAsync(fsharpCommand);
+
+            events.Should()
+                  .ContainSingle<CommandHandled>(e => e.Command == csharpCommand);
+            events.Should()
+                  .ContainSingle<CommandHandled>(e => e.Command == fsharpCommand);
         }
-
 
         [Theory(Timeout = 45000)]
         [InlineData(0)]
