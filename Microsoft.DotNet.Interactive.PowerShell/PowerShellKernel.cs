@@ -30,6 +30,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         public PowerShellKernel()
         {
+            //Sets the distribution channel to "PSES" so starts can be distinguished in PS7+ telemetry
+            Environment.SetEnvironmentVariable("POWERSHELL_DISTRIBUTION_CHANNEL", "dotnet-interactive-powershell");
+
             _runspace = RunspaceFactory.CreateRunspace(InitialSessionState.CreateDefault());
             _runspace.Open();
             _pwsh = PowerShell.Create(_runspace);
@@ -230,6 +233,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             _pwsh.Streams.Error.DataAdding += streamHandler.ErrorDataAdding;
             _pwsh.Streams.Verbose.DataAdding += streamHandler.VerboseDataAdding;
             _pwsh.Streams.Information.DataAdding += streamHandler.InformationDataAdding;
+            _pwsh.Streams.Progress.DataAdding += streamHandler.ProgressDataAdding;
             return streamHandler;
         }
 
@@ -246,6 +250,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             _pwsh.Streams.Error.DataAdding -= streamHandler.ErrorDataAdding;
             _pwsh.Streams.Verbose.DataAdding -= streamHandler.VerboseDataAdding;
             _pwsh.Streams.Information.DataAdding -= streamHandler.InformationDataAdding;
+            _pwsh.Streams.Progress.DataAdding -= streamHandler.ProgressDataAdding;
         }
     }
 }
