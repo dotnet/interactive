@@ -274,5 +274,27 @@ f();"
                 .And
                 .Contain("the-outer-exception");
         }
+
+        [Theory(Timeout = 45000)]
+        [InlineData("Write-Warning 'I am a warning message'", "<pre>WARNING: I am a warning message</pre>")]
+        [InlineData("Write-Verbose 'I am a verbose message' -Verbose", "<pre>VERBOSE: I am a verbose message</pre>")]
+        [InlineData("'I am output'", "<pre>I am output</pre>")]
+        [InlineData("Write-Debug 'I am a debug message' -Debug", "<pre>DEBUG: I am a debug message</pre>")]
+        [InlineData("Write-Host 'I am an information message'", "<pre>I am an information message</pre>")]
+        [InlineData("Write-Error 'I am a non-terminating error'", "<pre>Write-Error: I am a non-terminating error</pre>")]
+        public async Task powershell_stream_formatting(string code, string output)
+        {
+            var kernel = CreateKernel(Language.PowerShell);
+            var command = new SubmitCode(code);
+            await kernel.SendAsync(command);
+
+            KernelEvents
+                .Should()
+                .ContainSingle<DisplayedValueProduced>()
+                .Which
+                .FormattedValues
+                .Should()
+                .Contain(i => i.Value == output + Environment.NewLine);
+        }
     }
 }

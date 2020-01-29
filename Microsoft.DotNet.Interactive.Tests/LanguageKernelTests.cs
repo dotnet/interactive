@@ -851,13 +851,20 @@ Console.Write(2);
         {
             var kernel = CreateKernel(Language.PowerShell);
 
-            var command = new SubmitCode(@"
-Write-Warning 'I am a warning message'
-Write-Verbose 'I am a verbose message' -Verbose
-'I am output'
-Write-Debug 'I am a debug message' -Debug
-Write-Host 'I am an information message'
-Write-Error 'I am a non-terminating error'
+            var warningMessage = "I am a warning message";
+            var verboseMessage = "I am a verbose message";
+            var outputMessage = "I am output";
+            var debugMessage = "I am a debug message";
+            var infoMessage = "I am a information message";
+            var errorMessage = "I am a non-terminating error";
+
+            var command = new SubmitCode($@"
+Write-Warning '{warningMessage}'
+Write-Verbose '{verboseMessage}' -Verbose
+'{outputMessage}'
+Write-Debug '{debugMessage}' -Debug
+Write-Host '{infoMessage}'
+Write-Error '{errorMessage}'
 ");
 
             await kernel.SendAsync(command);
@@ -865,18 +872,18 @@ Write-Error 'I am a non-terminating error'
             Assert.Collection(KernelEvents,
                 e => e.Should().BeOfType<CodeSubmissionReceived>(),
                 e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-                e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues
-                    .Should().Contain(i => i.Value == "<pre>WARNING: I am a warning message</pre>" + Environment.NewLine),
-                e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues
-                    .Should().Contain(i => i.Value == "<pre>VERBOSE: I am a verbose message</pre>" + Environment.NewLine),
-                e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues
-                    .Should().Contain(i => i.Value == "<pre>I am output</pre>" + Environment.NewLine),
-                e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues
-                    .Should().Contain(i => i.Value == "<pre>DEBUG: I am a debug message</pre>" + Environment.NewLine),
-                e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues
-                    .Should().Contain(i => i.Value == "<pre>I am an information message</pre>" + Environment.NewLine),
-                e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues
-                    .Should().Contain(i => i.Value == "<pre>Write-Error: I am a non-terminating error</pre>" + Environment.NewLine),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                    .Value.ToString().Should().Be(warningMessage),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                    .Value.ToString().Should().Be(verboseMessage),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                    .Value.ToString().Should().Be(outputMessage),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                    .Value.ToString().Should().Be(debugMessage),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                    .Value.ToString().Should().Be(infoMessage),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                    .Value.ToString().Should().Be(errorMessage),
                 e => e.Should().BeOfType<CommandHandled>());
         }
     }
