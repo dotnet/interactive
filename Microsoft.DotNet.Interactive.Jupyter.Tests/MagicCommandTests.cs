@@ -4,7 +4,6 @@
 using System;
 using System.CommandLine;
 using FluentAssertions;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -28,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         [Fact]
         public async Task magic_command_parse_errors_are_displayed()
         {
-            var command = new Command("%oops")
+            var command = new Command("#!oops")
             {
                 new Argument<string>()
             };
@@ -39,20 +38,20 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
             var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync("%oops");
+            await kernel.SubmitCodeAsync("#!oops");
 
             events.Should()
-                  .ContainSingle<ErrorProduced>()
+                  .ContainSingle<CommandFailed>()
                   .Which
                   .Message
                   .Should()
-                  .Be("Required argument missing for command: %oops");
+                  .Be("Required argument missing for command: #!oops");
         }
 
         [Fact]
         public async Task magic_command_parse_errors_prevent_code_submission_from_being_run()
         {
-            var command = new Command("%oops")
+            var command = new Command("#!x")
             {
                 new Argument<string>()
             };
@@ -63,9 +62,26 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
             var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync("%oops\n123");
+            await kernel.SubmitCodeAsync("#!x\n123");
 
             events.Should().NotContain(e => e is ReturnValueProduced);
+        }
+
+        [Fact]
+        public void Magic_commands_with_duplicate_aliases_are_not_allowed()
+        {
+            using var kernel = new CompositeKernel();
+
+            kernel.AddDirective(new Command("#dupe"));
+
+            kernel.Invoking(k => 
+                k.AddDirective(new Command("#dupe")))
+                  .Should()
+                  .Throw<ArgumentException>()
+                  .Which
+                  .Message
+                  .Should()
+                  .Be("Alias \'#dupe\' is already in use.");
         }
     }
 }

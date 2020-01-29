@@ -7,6 +7,7 @@ using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive
@@ -15,9 +16,9 @@ namespace Microsoft.DotNet.Interactive
     {
         private Parser _directiveParser;
 
-        private readonly List<Command> _directiveCommands = new List<Command>();
+        private RootCommand _rootCommand;
 
-        public IReadOnlyCollection<ICommand> Directives => _directiveCommands;
+        public IReadOnlyCollection<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
 
         public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode)
         {
@@ -80,7 +81,14 @@ namespace Microsoft.DotNet.Interactive
                                         parseResult.Errors
                                                    .Select(e => e.ToString()));
 
-                        commands.Add(new DisplayError(message));
+                        commands.Clear();
+                        commands.Add(
+                            new AnonymousKernelCommand((kernelCommand, context) =>
+                            {
+                                 context.Fail(message: message);
+                                 return Task.CompletedTask;
+                            }));
+
                     }
                 }
             }
@@ -130,15 +138,10 @@ namespace Microsoft.DotNet.Interactive
         {
             if (_directiveParser == null)
             {
-                var root = new RootCommand();
-
-                foreach (var c in _directiveCommands)
-                {
-                    root.Add(c);
-                }
+                EnsureRootCommandIsInitialized();
 
                 var commandLineBuilder =
-                    new CommandLineBuilder(root)
+                    new CommandLineBuilder(_rootCommand)
                         .ParseResponseFileAs(ResponseFileHandling.Disabled)
                         .UseMiddleware(
                             context => context.BindingContext
@@ -161,14 +164,27 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(command));
             }
 
-            if (!command.Name.StartsWith("#") &&
-                !command.Name.StartsWith("%"))
+            foreach (var name in new[] { command.Name }.Concat(command.Aliases))
             {
-                throw new ArgumentException("Directives must begin with # or %");
+                if (!name.StartsWith("#"))
+                {
+                    throw new ArgumentException($"Invalid directive name \"{name}\". Directives must begin with \"#\".");
+                }
             }
 
-            _directiveCommands.Add(command);
+            EnsureRootCommandIsInitialized();
+
+            _rootCommand.Add(command);
+
             _directiveParser = null;
+        }
+
+        private void EnsureRootCommandIsInitialized()
+        {
+            if (_rootCommand == null)
+            {
+                _rootCommand = new RootCommand();
+            }
         }
     }
 }

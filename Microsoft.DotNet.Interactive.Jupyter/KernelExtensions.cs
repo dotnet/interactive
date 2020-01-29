@@ -35,14 +35,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         private static T UseHtml<T>(this T kernel)
             where T : KernelBase
         {
-            kernel.AddDirective(new Command("%%html")
+            kernel.AddDirective(new Command("#!html")
             {
                 Handler = CommandHandler.Create((KernelInvocationContext context) =>
                 {
                     if (context.Command is SubmitCode submitCode)
                     {
                         var htmlContent = submitCode.Code
-                                                    .Replace("%%html", "")
+                                                    .Replace("#!html", "")
                                                     .Trim();
 
                         context.Publish(new DisplayedValueProduced(
@@ -69,14 +69,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                    .UseAdvancedExtensions()
                    .Build();
 
-            kernel.AddDirective(new Command("%%markdown")
+            kernel.AddDirective(new Command("#!markdown")
             {
                 Handler = CommandHandler.Create((KernelInvocationContext context) =>
                 {
                     if (context.Command is SubmitCode submitCode)
                     {
                         var markdown = submitCode.Code
-                                                 .Replace("%%markdown", "")
+                                                 .Replace("#!markdown", "")
                                                  .Trim();
 
                         var document = Markdown.Parse(
@@ -153,7 +153,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         private static Command lsmagic()
         {
-            return new Command("%lsmagic")
+            return new Command("#!lsmagic")
             {
                 Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
                 {
@@ -161,13 +161,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
                     var supportedDirectives = new SupportedDirectives(currentKernel.Name);
 
-                    supportedDirectives.Commands.AddRange(currentKernel.Directives);
+                    supportedDirectives.Commands.AddRange(
+                        currentKernel.Directives.Where(d => !d.IsHidden));
 
                     context.Publish(new DisplayedValueProduced(supportedDirectives, context.Command));
 
                     await currentKernel.VisitSubkernelsAsync(async k =>
                     {
-                        if (k.Directives.Any(d => d.Name == "%lsmagic"))
+                        if (k.Directives.Any(d => d.Name == "#!lsmagic"))
                         {
                             await k.SendAsync(new SubmitCode(((SubmitCode) context.Command).Code));
                         }
@@ -178,14 +179,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         private static Command javascript()
         {
-            return new Command("%%javascript")
+            return new Command("#!javascript")
             {
                 Handler = CommandHandler.Create((KernelInvocationContext context) =>
                 {
                     if (context.Command is SubmitCode submitCode)
                     {
                         var scriptContent = submitCode.Code
-                                                      .Replace("%%javascript", string.Empty)
+                                                      .Replace("#!javascript", string.Empty)
                                                       .Trim();
 
                         string value =
@@ -211,14 +212,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         private static Command time()
         {
-            return new Command("%%time")
+            return new Command("#!time")
             {
                 Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
                 {
                     if (context.Command is SubmitCode submitCode)
                     {
                         var code = submitCode.Code
-                                             .Replace("%%time", string.Empty)
+                                             .Replace("#!time", string.Empty)
                                              .Trim();
 
                         var timer = new Stopwatch();

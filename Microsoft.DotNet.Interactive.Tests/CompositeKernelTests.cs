@@ -50,15 +50,15 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             await kernel.SendAsync(
                 new SubmitCode(
-                    @"%%csharp
+                    @"#!csharp
 var x = 123;"));
             await kernel.SendAsync(
                 new SubmitCode(
-                    @"%%fake
+                    @"#!fake
 hello!"));
             await kernel.SendAsync(
                 new SubmitCode(
-                    @"%%csharp
+                    @"#!csharp
 x"));
 
             receivedOnFakeKernel

@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                     await kernel.SendAsync(new SubmitCode(command));
                 }
 
-                await kernel.SendAsync(new SubmitCode(@"%whos"));
+                await kernel.SendAsync(new SubmitCode("#!whos"));
 
                 events.Should()
                       .ContainSingle(e => e is DisplayedValueProduced)
@@ -118,7 +118,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                     await kernel.SendAsync(new SubmitCode(command));
                 }
 
-                await kernel.SendAsync(new SubmitCode(@"%who"));
+                await kernel.SendAsync(new SubmitCode("#!who"));
 
                 events.Should()
                       .ContainSingle(e => e is DisplayedValueProduced)

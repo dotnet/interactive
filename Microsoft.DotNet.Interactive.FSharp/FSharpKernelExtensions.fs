@@ -57,7 +57,7 @@ open System.Linq"
 
     [<Extension>]
     static member UseWho(kernel: FSharpKernel) =
-        let detailedName = "%whos"
+        let detailedName = "#!whos"
         let command = Command(detailedName)
         command.Handler <- CommandHandler.Create(
             fun (parseResult: ParseResult) (context: KernelInvocationContext) ->
@@ -73,7 +73,7 @@ open System.Linq"
                     | _ -> ()
                 | _ -> ()
                 Task.CompletedTask)
-        command.AddAlias("%who")
+        command.AddAlias("#!who")
         kernel.AddDirective(command)
         Formatter.Register(CurrentVariablesFormatter())
         kernel

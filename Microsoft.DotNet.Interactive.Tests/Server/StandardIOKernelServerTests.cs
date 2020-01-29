@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [Fact(Timeout = 45000)]
         public async Task It_produces_a_unique_CommandHandled_for_root_command()
         {
-            var command = new SubmitCode("%%time\ndisplay(1543); display(4567);");
+            var command = new SubmitCode("#!time\ndisplay(1543); display(4567);");
             command.SetToken("abc");
 
             await _standardIOKernelServer.WriteAsync(command);

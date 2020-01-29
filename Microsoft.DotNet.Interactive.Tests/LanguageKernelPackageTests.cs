@@ -371,7 +371,7 @@ catch (Exception e)
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync(@"%%time
+            await kernel.SubmitCodeAsync(@"#!time
 #r ""nuget:RestoreSources=https://dotnet.myget.org/F/dotnet-corefxlab/api/v3/index.json""
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
 #r ""nuget:Microsoft.Data.DataFrame,1.0.0-e190910-1""
@@ -423,7 +423,7 @@ Formatter<DataFrame>.Register((df, writer) =>
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget:""
 ");
 
@@ -444,7 +444,7 @@ Formatter<DataFrame>.Register((df, writer) =>
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget:,1.0.0""
 ");
 
@@ -465,7 +465,7 @@ Formatter<DataFrame>.Register((df, writer) =>
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget:RestoreSources=https://completelyFakerestoreSource""
 ");
 
@@ -481,7 +481,7 @@ Formatter<DataFrame>.Register((df, writer) =>
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget:RestoreSources=https://completelyFakerestoreSource""
 #r ""nuget:RestoreSources=https://completelyFakerestoreSource""
 ");
@@ -498,13 +498,13 @@ Formatter<DataFrame>.Register((df, writer) =>
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget:RestoreSources=https://completelyFakerestoreSource""
 ");
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget:RestoreSources=https://completelyFakerestoreSource""
 ");
 
@@ -520,7 +520,7 @@ Formatter<DataFrame>.Register((df, writer) =>
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget:RestoreSources=https://completelyFakerestoreSource""
 ");
 
@@ -536,14 +536,14 @@ Formatter<DataFrame>.Register((df, writer) =>
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget:RestoreSources=https://completelyFakerestoreSource""
 ");
             events.Should().NotContainErrors();
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget:RestoreSources=https://anotherCompletelyFakerestoreSource""
 ");
 
@@ -559,7 +559,7 @@ Formatter<DataFrame>.Register((df, writer) =>
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
 using Microsoft.ML.AutoML;
@@ -577,14 +577,14 @@ using Microsoft.ML.AutoML;
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview"""
             );
             events.Should().NotContainErrors();
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
 using Microsoft.ML.AutoML;
 ");
@@ -601,7 +601,7 @@ using Microsoft.ML.AutoML;
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
 #r ""nuget:Microsoft.ML.AutoML,0.16.1-preview""
 using Microsoft.ML.AutoML;
@@ -624,14 +624,14 @@ using Microsoft.ML.AutoML;
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
 ");
             events.Should().NotContainErrors();
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget:Microsoft.ML.AutoML,0.16.1-preview""
 using Microsoft.ML.AutoML;
 ");
@@ -647,9 +647,9 @@ using Microsoft.ML.AutoML;
         [Fact(Timeout = 45000)]
         public async Task cell_with_nuget_and_code_continues_executions_on_right_kernel()
         {
-
             var kernel =
-                new CompositeKernel {
+                new CompositeKernel
+                    {
                         new CSharpKernel()
                             .UseDefaultFormatting()
                             .UseNugetDirective()
@@ -658,11 +658,11 @@ using Microsoft.ML.AutoML;
                             .LogEventsToPocketLogger(),
 
                         new FSharpKernel()
-                        .UseDefaultFormatting()
-                        .UseKernelHelpers()
-                        .UseWho()
-                        .UseDefaultNamespaces()
-                        .LogEventsToPocketLogger()
+                            .UseDefaultFormatting()
+                            .UseKernelHelpers()
+                            .UseWho()
+                            .UseDefaultNamespaces()
+                            .LogEventsToPocketLogger()
                     }
                     .UseDefaultMagicCommands();
 
@@ -684,8 +684,6 @@ using XPlot.Plotly;");
 
             events.Should().NotContainErrors();
 
-
-
             events
                 .Should()
                 .ContainSingle<CommandHandled>(ch => ch.Command == command);
@@ -700,7 +698,7 @@ using XPlot.Plotly;");
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget: Microsoft.ML, 1.4.0""
 #r ""nuget:Microsoft.ML.AutoML,0.16.0""
 #r ""nuget:Microsoft.Data.Analysis,0.1.0""
@@ -709,7 +707,7 @@ using XPlot.Plotly;");
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget: Google.Protobuf, 3.10.1""
 ");
 
@@ -730,7 +728,7 @@ using XPlot.Plotly;");
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget: Microsoft.ML, 1.4.0""
 #r ""nuget:Microsoft.ML.AutoML,0.16.0""
 #r ""nuget:Microsoft.Data.Analysis,0.1.0""
@@ -739,7 +737,7 @@ using XPlot.Plotly;");
 
             await kernel.SubmitCodeAsync(
                 @"
-%%time
+#!time
 #r ""nuget: Google.Protobuf, 3.10.0""
 ");
             events.Should().NotContainErrors();

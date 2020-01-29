@@ -238,8 +238,6 @@ namespace Microsoft.DotNet.Interactive
 
                     IntPtr LoadNative(string dll)
                     {
-                        // FIX: (OnAssemblyLoad) 
-
                         try
                         {
                             if (Interlocked.Increment(ref _recursionCount) == 1)

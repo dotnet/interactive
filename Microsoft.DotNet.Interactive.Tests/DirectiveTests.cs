@@ -4,7 +4,6 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -26,17 +25,6 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .NotThrow();
         }
 
-        [Fact(Timeout = 45000)]
-        public void Directives_may_be_prefixed_with_percent()
-        {
-            using var kernel = new CompositeKernel();
-
-            kernel
-                .Invoking(k => k.AddDirective(new Command("%hello")))
-                .Should()
-                .NotThrow();
-        }
-
         [Theory(Timeout = 45000)]
         [InlineData("{")]
         [InlineData(";")]
@@ -53,7 +41,32 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Which
                 .Message
                 .Should()
-                .Be("Directives must begin with # or %");
+                .Be($"Invalid directive name \"{value}hello\". Directives must begin with \"#\".");
+        }
+
+        [Theory(Timeout = 45000)]
+        [InlineData("{")]
+        [InlineData(";")]
+        [InlineData("a")]
+        [InlineData("1")]
+        public void Directives_may_not_have_aliases_that_begin_with_(string value)
+        {
+            using var kernel = new CompositeKernel();
+
+            var command = new Command("#!this-is-fine");
+            command.AddAlias($"{value}hello");
+
+            kernel
+                .Invoking(k =>
+                {
+                    kernel.AddDirective(command);
+                })
+                .Should()
+                .Throw<ArgumentException>()
+                .Which
+                .Message
+                .Should()
+                .Be($"Invalid directive name \"{value}hello\". Directives must begin with \"#\".");
         }
 
         [Fact(Timeout = 45000)]
