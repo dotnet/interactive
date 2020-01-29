@@ -246,6 +246,7 @@ f();"
         [Theory(Timeout = 45000)]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell)]
         public async Task it_returns_diagnostics(Language language)
         {
             var kernel = CreateKernel(language);
@@ -262,7 +263,11 @@ f();"
                 {
                     "using System;",
                     "aaaadd"
-                }
+                },
+                Language.PowerShell => new[]
+                {
+                    "$x ="
+                },
             };
 
             await SubmitCode(kernel, source);
@@ -271,6 +276,10 @@ f();"
             {
                 Language.FSharp => "input.fsx (1,1)-(1,7) typecheck error The value or constructor 'aaaadd' is not defined.",
                 Language.CSharp => "(1,1): error CS0103: The name 'aaaadd' does not exist in the current context",
+                Language.PowerShell => @"At line:1 char:5
++ $x =
++     ~
+You must provide a value expression following the '=' operator.",
             };
 
             KernelEvents
@@ -284,6 +293,7 @@ f();"
 
         [Theory(Timeout = 45000)]
         [InlineData(Language.CSharp)]
+        [InlineData(Language.PowerShell)]
         // no F# equivalent, because it doesn't have the concept of complete/incomplete submissions
         public async Task it_can_analyze_incomplete_submissions(Language language)
         {
@@ -291,13 +301,13 @@ f();"
 
             var source = language switch
             {
-                Language.CSharp => "var a ="
+                Language.CSharp => "var a =",
+                Language.PowerShell => "$a ="
             };
 
             await SubmitCode(kernel, source, submissionType: SubmissionType.Diagnose);
 
             KernelEvents
-                
                 .Single(e => e is IncompleteCodeSubmissionReceived);
 
             KernelEvents
@@ -307,6 +317,7 @@ f();"
 
         [Theory(Timeout = 45000)]
         [InlineData(Language.CSharp)]
+        [InlineData(Language.PowerShell)]
         // no F# equivalent, because it doesn't have the concept of complete/incomplete submissions
         public async Task it_can_analyze_complete_submissions(Language language)
         {
@@ -314,7 +325,8 @@ f();"
 
             var source = language switch
             {
-                Language.CSharp => "25"
+                Language.CSharp => "25",
+                Language.PowerShell => "25",
             };
 
             await SubmitCode(kernel, source, submissionType: SubmissionType.Diagnose);
@@ -552,6 +564,7 @@ Console.Write(""value three"");",
         [Theory(Skip = "flaky")]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell)]
         public async Task it_can_cancel_execution(Language language)
         {
             var kernel = CreateKernel(language);
@@ -559,7 +572,8 @@ Console.Write(""value three"");",
             var source = language switch
             {
                 Language.FSharp => "System.Threading.Thread.Sleep(3000)\r\n2",
-                Language.CSharp => "System.Threading.Thread.Sleep(3000);2"
+                Language.CSharp => "System.Threading.Thread.Sleep(3000);2",
+                Language.PowerShell => "Start-Sleep -Seconds 3; 2"
             };
 
             var submitCodeCommand = new SubmitCode(source);
@@ -763,14 +777,16 @@ Console.Write(2);
         [Theory(Timeout = 45000)]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        public async Task it_returns_completion_list_for_previously_declared_variables(Language language)
+        [InlineData(Language.PowerShell)]
+        public async Task it_returns_completion_list_for_previously_declared_items(Language language)
         {
             var kernel = CreateKernel(language);
 
             var source = language switch
             {
                 Language.FSharp => @"let alpha = new Random()",
-                Language.CSharp => @"var alpha = new Random();"
+                Language.CSharp => @"var alpha = new Random();",
+                Language.PowerShell => @"function alpha { 5 }",
             };
 
             await SubmitCode(kernel, source);
@@ -828,6 +844,40 @@ Console.Write(2);
                 .Command
                 .Should()
                 .Be(command);
+        }
+
+        [Fact(Timeout = 45000)]
+        public async Task PowerShell_streams_handled_in_correct_order()
+        {
+            var kernel = CreateKernel(Language.PowerShell);
+
+            var command = new SubmitCode(@"
+Write-Warning 'I am a warning message'
+Write-Verbose 'I am a verbose message' -Verbose
+'I am output'
+Write-Debug 'I am a debug message' -Debug
+Write-Host 'I am an information message'
+Write-Error 'I am a non-terminating error'
+");
+
+            await kernel.SendAsync(command);
+
+            Assert.Collection(KernelEvents,
+                e => e.Should().BeOfType<CodeSubmissionReceived>(),
+                e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues
+                    .Should().Contain(i => i.Value == "<pre>WARNING: I am a warning message</pre>" + Environment.NewLine),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues
+                    .Should().Contain(i => i.Value == "<pre>VERBOSE: I am a verbose message</pre>" + Environment.NewLine),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues
+                    .Should().Contain(i => i.Value == "<pre>I am output</pre>" + Environment.NewLine),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues
+                    .Should().Contain(i => i.Value == "<pre>DEBUG: I am a debug message</pre>" + Environment.NewLine),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues
+                    .Should().Contain(i => i.Value == "<pre>I am an information message</pre>" + Environment.NewLine),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues
+                    .Should().Contain(i => i.Value == "<pre>Write-Error: I am a non-terminating error</pre>" + Environment.NewLine),
+                e => e.Should().BeOfType<CommandHandled>());
         }
     }
 }

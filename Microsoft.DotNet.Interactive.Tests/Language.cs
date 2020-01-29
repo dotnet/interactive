@@ -6,6 +6,7 @@ namespace Microsoft.DotNet.Interactive.Tests
     public enum Language
     {
         CSharp = 0,
-        FSharp = 1
+        FSharp = 1,
+        PowerShell = 2,
     }
 }

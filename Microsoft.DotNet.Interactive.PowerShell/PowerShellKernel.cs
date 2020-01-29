@@ -198,7 +198,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         #endregion
 
-        public bool IsCompleteSubmission(string code, out ParseError[] errors)
+        public static bool IsCompleteSubmission(string code, out ParseError[] errors)
         {
             // Parse the PowerShell script. If there are any parse errors, check if the input was incomplete.
             // We only need to check if the first ParseError has incomplete input. This is consistant with

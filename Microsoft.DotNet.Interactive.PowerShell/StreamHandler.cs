@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
                 if (result != null)
                 {
-                    PocketView view = pre(result);
+                    PocketView view = pre(result.Trim());
                     writer.WriteLine(view.ToDisplayString(HtmlFormatter.MimeType));
                 }
             }, HtmlFormatter.MimeType);
@@ -131,20 +131,22 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
                 if (result != null)
                 {
-                    writer.WriteLine(result);
+                    writer.WriteLine(result.Trim());
                 }
             }, PlainTextFormatter.MimeType);
 
             // InformationRecord
             Formatter<InformationRecord>.Register((record, writer) => {
-                string prefix = (record.Tags.Count == 1 && record.Tags[0] == "__PipelineObject__") ? "" : "INFORMATION:";
-                PocketView view = pre($"{prefix} {record.MessageData}");
+                string prefix = (record.Tags.Count == 1 &&
+                    (record.Tags[0] == "__PipelineObject__" || record.Tags[0] == "PSHOST")) ? "" : "INFORMATION: ";
+                PocketView view = pre($"{prefix}{record.MessageData}");
                 writer.WriteLine(view.ToDisplayString(HtmlFormatter.MimeType));
             }, HtmlFormatter.MimeType);
 
             Formatter<InformationRecord>.Register((record, writer) => {
-                string prefix = (record.Tags.Count == 1 && record.Tags[0] == "__PipelineObject__") ? "" : "INFORMATION:";
-                writer.WriteLine($"{prefix} {record.MessageData}");
+                string prefix = (record.Tags.Count == 1 &&
+                    (record.Tags[0] == "__PipelineObject__" || record.Tags[0] == "PSHOST")) ? "" : "INFORMATION: ";
+                writer.WriteLine($"{prefix}{record.MessageData}");
             }, PlainTextFormatter.MimeType);
 
             // ProgressRecord
