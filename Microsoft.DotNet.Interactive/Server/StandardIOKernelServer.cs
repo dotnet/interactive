@@ -35,6 +35,10 @@ namespace Microsoft.DotNet.Interactive.Server
 
             _disposables = new CompositeDisposable
             {
+                _input.Subscribe(async line =>
+                {
+                    await DeserializeAndSendCommand(line);
+                }),
                 _kernel.KernelEvents.Subscribe(WriteEventToOutput)
             };
         }
