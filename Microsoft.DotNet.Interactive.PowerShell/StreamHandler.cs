@@ -9,6 +9,7 @@ using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.PowerShell
 {
+    using System.Collections.Concurrent;
     using System.Management.Automation;
 
     internal class StreamHandler
@@ -17,6 +18,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         private static readonly object _pwshLock = new object();
         KernelInvocationContext _context;
         IKernelCommand _command;
+        ConcurrentDictionary<int, DisplayedValue> _progresses;
 
         static StreamHandler()
         {
@@ -27,6 +29,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             _context = context;
             _command = command;
+            _progresses = new ConcurrentDictionary<int, DisplayedValue>();
         }
 
         public void DebugDataAdding(object sender, DataAddingEventArgs e)
@@ -53,11 +56,24 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
         }
 
-        public void ProgressDataAdding(object sender, DataAddingEventArgs e)
+        public async void ProgressDataAdding(object sender, DataAddingEventArgs e)
         {
             if(e.ItemAdded is ProgressRecord record)
             {
-                PublishStreamRecord(record, _context, _command);
+                if (_progresses.TryGetValue(record.ActivityId, out DisplayedValue displayedValue))
+                {
+                    displayedValue.Update(record);
+
+                    if (record.RecordType == ProgressRecordType.Completed)
+                    {
+                        _progresses.TryRemove(record.ActivityId, out DisplayedValue _);
+                    }
+                }
+                else
+                {
+                    DisplayedValue dv = await _context.DisplayAsync(record);
+                    _progresses[record.ActivityId] = dv;
+                }
             }
         }
 
