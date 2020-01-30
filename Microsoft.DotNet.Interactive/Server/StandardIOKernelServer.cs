@@ -43,6 +43,8 @@ namespace Microsoft.DotNet.Interactive.Server
             };
         }
 
+        public bool IsStarted => _input.IsStarted;
+
         public IObservable<string> Input => _input;
 
         public Task WriteAsync(string text) => DeserializeAndSendCommand(text); 
