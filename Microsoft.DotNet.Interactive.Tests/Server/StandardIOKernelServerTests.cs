@@ -61,15 +61,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         }
 
         [Fact(Timeout = 45000)]
-        public void It_starts_the_input_stream()
+        public void The_server_is_started_after_creation()
         {
-            var stream = _standardIOKernelServer.Input as IObservableStream;
-
-            stream
-                .Should()
-                .NotBeNull();
-
-            stream
+            _standardIOKernelServer
                 .IsStarted
                 .Should()
                 .BeTrue();

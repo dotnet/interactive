@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal class InputTextStream : IObservableStream, IDisposable
+    internal class InputTextStream : IObservable<string>, IDisposable
     {
         private readonly object _lock = new object();
         private readonly TextReader _input;
