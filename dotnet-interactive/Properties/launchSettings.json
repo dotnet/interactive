@@ -17,11 +17,16 @@
     },
     "dotnet-interactive": {
       "commandName": "Project",
+      "commandLineArgs": "kernel-server",
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "applicationUrl": "http://localhost:56582/"
+    },
+    "dotnet-interactive-server": {
+      "commandName": "Project",
+      "commandLineArgs": "kernel-server"
     }
   }
 }
