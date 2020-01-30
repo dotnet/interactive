@@ -54,20 +54,23 @@ namespace Microsoft.DotNet.Interactive
                 kernelBase.Pipeline.AddMiddleware(async (command, context, next) =>
                 {
                     await next(command, context);
+
                     while (_packages.TryDequeue(out var packageAdded))
                     {
                         var loadExtensionsInDirectory =
                             new LoadExtensionsInDirectory(packageAdded.PackageReference.PackageRoot, Name);
                         await this.SendAsync(loadExtensionsInDirectory);
                     }
-
                 });
             }
 
             var chooseKernelCommand = new Command($"#!{kernel.Name}")
             {
                 Handler = CommandHandler.Create<KernelInvocationContext>(
-                    context => { context.HandlingKernel = kernel; })
+                    context =>
+                    {
+                        context.HandlingKernel = kernel;
+                    })
             };
 
             AddDirective(chooseKernelCommand);
@@ -79,9 +82,12 @@ namespace Microsoft.DotNet.Interactive
             IKernelCommand command,
             KernelInvocationContext context)
         {
-            var targetKernelName = (command as KernelCommandBase)?.TargetKernelName
+            var commandBase = command as KernelCommandBase;
+
+            var targetKernelName = commandBase?.TargetKernelName
                                    ?? DefaultKernelName;
-            if (context.HandlingKernel == null || context.HandlingKernel.Name != targetKernelName)
+            
+            if (context.HandlingKernel == null)
             {
                 if (targetKernelName != null)
                 {

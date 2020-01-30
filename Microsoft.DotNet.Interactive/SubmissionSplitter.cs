@@ -55,8 +55,7 @@ namespace Microsoft.DotNet.Interactive
                         commands.Add(cmd);
                     }
 
-                    var runDirective = new AnonymousKernelCommand(
-                        (_, __) => parseResult.InvokeAsync());
+                    var runDirective = new DirectiveCommand(parseResult);
 
                     if (command.Name == "#r")
                     {
