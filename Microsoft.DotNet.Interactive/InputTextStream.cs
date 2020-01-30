@@ -9,10 +9,6 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public interface IObservableStream : IObservable<string>
-    {
-        bool IsStarted { get; }
-    }
     internal class InputTextStream : IObservableStream, IDisposable
     {
         private readonly object _lock = new object();
