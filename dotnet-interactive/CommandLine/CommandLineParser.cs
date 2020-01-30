@@ -19,7 +19,6 @@ using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.FSharp.Core;
 using Recipes;
 using CommandHandler = System.CommandLine.Invocation.CommandHandler;
 
