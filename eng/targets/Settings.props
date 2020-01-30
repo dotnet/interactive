@@ -5,5 +5,11 @@
     <Authors>Microsoft</Authors>
     <NuspecBasePath>$(ArtifactsBinDir)</NuspecBasePath>
     <Copyright>$(CopyrightMicrosoft)</Copyright>
+
+    <!-- enable building .snupkg -->
+    <DebugType>portable</DebugType>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
+
 </Project>

@@ -25,6 +25,8 @@
     <files>
         $CommonFileElements$
         <file src="Microsoft.DotNet.Interactive\$Configuration$\$TargetFramework$\Microsoft.DotNet.Interactive.Formatting.dll" target="lib\netstandard2.0" />
+        <file src="Microsoft.DotNet.Interactive\$Configuration$\$TargetFramework$\Microsoft.DotNet.Interactive.Formatting.pdb" target="lib\netstandard2.0" />
         <file src="Microsoft.DotNet.Interactive\$Configuration$\$TargetFramework$\Microsoft.DotNet.Interactive.dll" target="lib\netstandard2.0" />
+        <file src="Microsoft.DotNet.Interactive\$Configuration$\$TargetFramework$\Microsoft.DotNet.Interactive.pdb" target="lib\netstandard2.0" />
     </files>
 </package>
