@@ -78,7 +78,23 @@ namespace Microsoft.DotNet.Interactive
             RegisterForDisposal(kernel);
         }
 
-        protected override void SetHandlingKernel(
+        protected override void SetHandlingKernel(IKernelCommand command, KernelInvocationContext context)
+        {
+            var kernel = GetHandlingKernel(command, context);
+
+            if (command is KernelCommandBase commandBase && 
+                commandBase.HandlingKernel == null)
+            {
+                commandBase.HandlingKernel = kernel;
+            }
+
+            if (context.HandlingKernel == null)
+            {
+                context.HandlingKernel = kernel;
+            }
+        }
+
+        private IKernel GetHandlingKernel(
             IKernelCommand command,
             KernelInvocationContext context)
         {
@@ -86,25 +102,22 @@ namespace Microsoft.DotNet.Interactive
 
             var targetKernelName = commandBase?.TargetKernelName
                                    ?? DefaultKernelName;
-            
-            if (context.HandlingKernel == null)
+
+            if (targetKernelName != null)
             {
-                if (targetKernelName != null)
+                return targetKernelName == Name
+                           ? this
+                           : ChildKernels.FirstOrDefault(k => k.Name == targetKernelName)
+                             ?? throw new NoSuitableKernelException();
+            }
+            else
+            {
+                return _childKernels.Count switch
                 {
-                    context.HandlingKernel = targetKernelName == Name
-                        ? this
-                        : ChildKernels.FirstOrDefault(k => k.Name == targetKernelName)
-                          ?? throw new NoSuitableKernelException();
-                }
-                else
-                {
-                    context.HandlingKernel = _childKernels.Count switch
-                    {
-                        0 => this,
-                        1 => _childKernels[0],
-                        _ => context.HandlingKernel
-                    };
-                }
+                    0 => this,
+                    1 => _childKernels[0],
+                    _ => context.HandlingKernel
+                };
             }
         }
 

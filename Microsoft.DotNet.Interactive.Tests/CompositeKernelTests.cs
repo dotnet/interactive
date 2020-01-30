@@ -33,7 +33,6 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact(Timeout = 45000)]
         public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_magic_command()
         {
-            // FIX: (Handling_kernel_can_be_specified_using_kernel_name_as_a_magic_command) 
             var cSharpKernel = new CSharpKernel();
             var fSharpKernel = new FSharpKernel();
             using var kernel = new CompositeKernel
@@ -50,18 +49,18 @@ namespace Microsoft.DotNet.Interactive.Tests
 new [] {1,2,3}");
             await kernel.SendAsync(csharpCommand);
             
-//             var fsharpCommand = new SubmitCode(@"
-// #!fsharp
-// [1;2;3]");
-//
-//             await kernel.SendAsync(fsharpCommand);
+            var fsharpCommand = new SubmitCode(@"
+#!fsharp
+[1;2;3]");
+
+            await kernel.SendAsync(fsharpCommand);
 
             Pocket.Logger.Log.Info("" , events );
 
             events.Should()
                   .ContainSingle<CommandHandled>(e => e.Command == csharpCommand);
-            // events.Should()
-            //       .ContainSingle<CommandHandled>(e => e.Command == fsharpCommand);
+            events.Should()
+                  .ContainSingle<CommandHandled>(e => e.Command == fsharpCommand);
         }
 
         [Theory(Timeout = 45000)]

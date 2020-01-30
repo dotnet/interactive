@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             {
                 Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
                 {
-                    var currentKernel = context.CurrentKernel;
+                    var currentKernel = context.HandlingKernel;
 
                     var supportedDirectives = new SupportedDirectives(currentKernel.Name);
 
@@ -225,7 +225,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                         var timer = new Stopwatch();
                         timer.Start();
 
-                        await context.CurrentKernel.SendAsync(
+                        await context.HandlingKernel.SendAsync(
                             new SubmitCode(code, submitCode.TargetKernelName));
 
                         var elapsed = timer.Elapsed;
