@@ -6,10 +6,9 @@
     <NuspecBasePath>$(ArtifactsBinDir)</NuspecBasePath>
     <Copyright>$(CopyrightMicrosoft)</Copyright>
 
-    <!-- enable building .snupkg -->
+    <!-- enable building symbol packages -->
     <DebugType>portable</DebugType>
     <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
 </Project>
