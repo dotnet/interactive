@@ -9,7 +9,11 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal class InputTextStream : IObservable<string>, IDisposable
+    public interface IObservableStream : IObservable<string>
+    {
+        bool IsStarted { get; }
+    }
+    internal class InputTextStream : IObservableStream, IDisposable
     {
         private readonly object _lock = new object();
         private readonly TextReader _input;
@@ -67,5 +71,7 @@ namespace Microsoft.DotNet.Interactive
             _channel.OnCompleted();
             _complete = true;
         }
+
+        public bool IsStarted => _started;
     }
 }

@@ -61,6 +61,22 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         }
 
         [Fact(Timeout = 45000)]
+        public void It_starts_the_input_stream()
+        {
+            var stream = _standardIOKernelServer.Input as IObservableStream;
+
+            stream
+                .Should()
+                .NotBeNull();
+
+            stream
+                .IsStarted
+                .Should()
+                .BeTrue();
+        }
+
+
+        [Fact(Timeout = 45000)]
         public async Task It_produces_a_unique_CommandHandled_for_root_command()
         {
             var command = new SubmitCode("#!time\ndisplay(1543); display(4567);");
