@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using System.Management.Automation;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -884,6 +885,36 @@ Write-Error '{errorMessage}'
                     .Value.ToString().Should().Be(infoMessage),
                 e => e.Should().BeOfType<DisplayedValueProduced>().Which
                     .Value.ToString().Should().Be(errorMessage),
+                e => e.Should().BeOfType<CommandHandled>());
+        }
+
+        [Fact(Timeout = 45000)]
+        public async Task PowerShell_progress_sends_updated_display_values()
+        {
+            var kernel = CreateKernel(Language.PowerShell);
+            var command = new SubmitCode(@"
+for ($j = 1; $j -le 4; $j++ ) {
+    Write-Progress -Id 1 -Activity 'Search in Progress' -Status ""$($j*25)% Complete"" -PercentComplete $j;
+    Start-Sleep -Milliseconds 10
+}
+");
+            await kernel.SendAsync(command);
+
+            Assert.Collection(KernelEvents,
+                e => e.Should().BeOfType<CodeSubmissionReceived>(),
+                e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                    .Value.Should().BeOfType<ProgressRecord>().Which
+                    .StatusDescription.Should().Be("25% Complete"),
+                e => e.Should().BeOfType<DisplayedValueUpdated>().Which
+                    .Value.Should().BeOfType<ProgressRecord>().Which
+                    .StatusDescription.Should().Be("50% Complete"),
+                e => e.Should().BeOfType<DisplayedValueUpdated>().Which
+                    .Value.Should().BeOfType<ProgressRecord>().Which
+                    .StatusDescription.Should().Be("75% Complete"),
+                e => e.Should().BeOfType<DisplayedValueUpdated>().Which
+                    .Value.Should().BeOfType<ProgressRecord>().Which
+                    .StatusDescription.Should().Be("100% Complete"),
                 e => e.Should().BeOfType<CommandHandled>());
         }
     }
