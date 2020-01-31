@@ -31,8 +31,9 @@ namespace Microsoft.DotNet.Interactive.App
 
         private static readonly Assembly[] _assembliesEmittingPocketLoggerLogs =
         {
-            typeof(Startup).Assembly,
-            typeof(Shell).Assembly
+            typeof(Startup).Assembly, // dotnet-interactive.dll
+            typeof(KernelBase).Assembly, // Microsoft.DotNet.Interactive.dll
+            typeof(Shell).Assembly, // Microsoft.DotNet.Interactive.Jupyter.dll
         };
 
         internal static IDisposable StartToolLogging(StartupOptions options)
