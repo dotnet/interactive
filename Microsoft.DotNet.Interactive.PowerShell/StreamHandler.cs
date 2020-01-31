@@ -16,9 +16,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell
     {
         private static readonly PowerShell _pwsh = PowerShell.Create();
         private static readonly object _pwshLock = new object();
-        KernelInvocationContext _context;
-        IKernelCommand _command;
-        ConcurrentDictionary<int, DisplayedValue> _progresses;
+        private readonly KernelInvocationContext _context;
+        private readonly IKernelCommand _command;
+        private readonly ConcurrentDictionary<int, DisplayedValue> _progresses;
 
         static StreamHandler()
         {
@@ -173,7 +173,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             Formatter<ProgressRecord>.Register((record, writer) => {
                 writer.WriteLine($"PROGRESS: {record.StatusDescription}");
-            }, PlainTextFormatter.MimeType);            
+            }, PlainTextFormatter.MimeType);
 
             // VerboseRecord
             Formatter<VerboseRecord>.Register((record, writer) => {

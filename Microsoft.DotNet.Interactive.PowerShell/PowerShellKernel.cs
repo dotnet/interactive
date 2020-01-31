@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Management.Automation.Language;
 using System.Management.Automation.Runspaces;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -26,7 +25,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         private Runspace _runspace;
         private PowerShell _pwsh;
         private CancellationTokenSource _cancellationSource;
-        private readonly KernelExtensionAssemblyLoader _extensionLoader;
 
         public PowerShellKernel()
         {
@@ -37,7 +35,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             _runspace.Open();
             _pwsh = PowerShell.Create(_runspace);
             _cancellationSource = new CancellationTokenSource();
-            _extensionLoader = new KernelExtensionAssemblyLoader();
             Name = DefaultKernelName;
 
             // Add Modules directory that contains the helper modules
