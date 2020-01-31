@@ -287,9 +287,11 @@ You must provide a value expression following the '=' operator.",
                 .Should()
                 .ContainSingle<CommandFailed>()
                 .Which
-                .Message
+                // Unfortunately, PowerShell's ParseError type's ToString() hardcoded a \n which means we have
+                // mixed newlines in PowerShell... So we replace \r\n with \n so we have consistant newlines.
+                .Message.Replace("\r\n", "\n")
                 .Should()
-                .Be(error);
+                .Be(error.Replace("\r\n", "\n"));
         }
 
         [Theory(Timeout = 45000)]
