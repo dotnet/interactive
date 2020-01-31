@@ -177,6 +177,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             {
                 "csharp" => new CSharpLanguageInfo(),
                 "fsharp" => new FSharpLanguageInfo(),
+                "powershell" => new PowerShellLanguageInfo(),
                 _ =>  null
             };
     }

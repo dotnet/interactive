@@ -68,7 +68,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.3.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.12.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -79,6 +79,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp\Microsoft.DotNet.Interactive.FSharp.fsproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.PowerShell\Microsoft.DotNet.Interactive.PowerShell.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Jupyter\Microsoft.DotNet.Interactive.Jupyter.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Telemetry\Microsoft.DotNet.Interactive.Telemetry.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />

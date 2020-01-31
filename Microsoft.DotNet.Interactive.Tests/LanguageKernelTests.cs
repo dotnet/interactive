@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using System.Management.Automation;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -246,6 +247,7 @@ f();"
         [Theory(Timeout = 45000)]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell)]
         public async Task it_returns_diagnostics(Language language)
         {
             var kernel = CreateKernel(language);
@@ -262,7 +264,11 @@ f();"
                 {
                     "using System;",
                     "aaaadd"
-                }
+                },
+                Language.PowerShell => new[]
+                {
+                    "$x ="
+                },
             };
 
             await SubmitCode(kernel, source);
@@ -271,19 +277,26 @@ f();"
             {
                 Language.FSharp => "input.fsx (1,1)-(1,7) typecheck error The value or constructor 'aaaadd' is not defined.",
                 Language.CSharp => "(1,1): error CS0103: The name 'aaaadd' does not exist in the current context",
+                Language.PowerShell => @"At line:1 char:5
++ $x =
++     ~
+You must provide a value expression following the '=' operator.",
             };
 
             KernelEvents
                 .Should()
                 .ContainSingle<CommandFailed>()
                 .Which
-                .Message
+                // Unfortunately, PowerShell's ParseError type's ToString() hardcoded a \n which means we have
+                // mixed newlines in PowerShell... So we replace \r\n with \n so we have consistant newlines.
+                .Message.Replace("\r\n", "\n")
                 .Should()
-                .Be(error);
+                .Be(error.Replace("\r\n", "\n"));
         }
 
         [Theory(Timeout = 45000)]
         [InlineData(Language.CSharp)]
+        [InlineData(Language.PowerShell)]
         // no F# equivalent, because it doesn't have the concept of complete/incomplete submissions
         public async Task it_can_analyze_incomplete_submissions(Language language)
         {
@@ -291,13 +304,13 @@ f();"
 
             var source = language switch
             {
-                Language.CSharp => "var a ="
+                Language.CSharp => "var a =",
+                Language.PowerShell => "$a ="
             };
 
             await SubmitCode(kernel, source, submissionType: SubmissionType.Diagnose);
 
             KernelEvents
-                
                 .Single(e => e is IncompleteCodeSubmissionReceived);
 
             KernelEvents
@@ -307,6 +320,7 @@ f();"
 
         [Theory(Timeout = 45000)]
         [InlineData(Language.CSharp)]
+        [InlineData(Language.PowerShell)]
         // no F# equivalent, because it doesn't have the concept of complete/incomplete submissions
         public async Task it_can_analyze_complete_submissions(Language language)
         {
@@ -314,7 +328,8 @@ f();"
 
             var source = language switch
             {
-                Language.CSharp => "25"
+                Language.CSharp => "25",
+                Language.PowerShell => "25",
             };
 
             await SubmitCode(kernel, source, submissionType: SubmissionType.Diagnose);
@@ -552,6 +567,7 @@ Console.Write(""value three"");",
         [Theory(Skip = "flaky")]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell)]
         public async Task it_can_cancel_execution(Language language)
         {
             var kernel = CreateKernel(language);
@@ -559,7 +575,8 @@ Console.Write(""value three"");",
             var source = language switch
             {
                 Language.FSharp => "System.Threading.Thread.Sleep(3000)\r\n2",
-                Language.CSharp => "System.Threading.Thread.Sleep(3000);2"
+                Language.CSharp => "System.Threading.Thread.Sleep(3000);2",
+                Language.PowerShell => "Start-Sleep -Seconds 3; 2"
             };
 
             var submitCodeCommand = new SubmitCode(source);
@@ -763,14 +780,16 @@ Console.Write(2);
         [Theory(Timeout = 45000)]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        public async Task it_returns_completion_list_for_previously_declared_variables(Language language)
+        [InlineData(Language.PowerShell)]
+        public async Task it_returns_completion_list_for_previously_declared_items(Language language)
         {
             var kernel = CreateKernel(language);
 
             var source = language switch
             {
                 Language.FSharp => @"let alpha = new Random()",
-                Language.CSharp => @"var alpha = new Random();"
+                Language.CSharp => @"var alpha = new Random();",
+                Language.PowerShell => @"function alpha { 5 }",
             };
 
             await SubmitCode(kernel, source);
@@ -828,6 +847,77 @@ Console.Write(2);
                 .Command
                 .Should()
                 .Be(command);
+        }
+
+        [Fact()]
+        public async Task PowerShell_streams_handled_in_correct_order()
+        {
+            var kernel = CreateKernel(Language.PowerShell);
+
+            var warningMessage = "I am a warning message";
+            var verboseMessage = "I am a verbose message";
+            var outputMessage = "I am output";
+            var debugMessage = "I am a debug message";
+            var infoMessage = "I am a information message";
+            var errorMessage = "I am a non-terminating error";
+
+            var command = new SubmitCode($@"
+Write-Warning '{warningMessage}'
+Write-Verbose '{verboseMessage}' -Verbose
+'{outputMessage}'
+Write-Debug '{debugMessage}' -Debug
+Write-Host '{infoMessage}'
+Write-Error '{errorMessage}'
+");
+
+            await kernel.SendAsync(command);
+
+            Assert.Collection(KernelEvents,
+                e => e.Should().BeOfType<CodeSubmissionReceived>(),
+                e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                    .Value.ToString().Should().Be(warningMessage),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                    .Value.ToString().Should().Be(verboseMessage),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                    .Value.ToString().Should().Be(outputMessage),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                    .Value.ToString().Should().Be(debugMessage),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                    .Value.ToString().Should().Be(infoMessage),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                    .Value.ToString().Should().Be(errorMessage),
+                e => e.Should().BeOfType<CommandHandled>());
+        }
+
+        [Fact()]
+        public async Task PowerShell_progress_sends_updated_display_values()
+        {
+            var kernel = CreateKernel(Language.PowerShell);
+            var command = new SubmitCode(@"
+for ($j = 1; $j -le 4; $j++ ) {
+    Write-Progress -Id 1 -Activity 'Search in Progress' -Status ""$($j*25)% Complete"" -PercentComplete $j;
+    Start-Sleep -Milliseconds 10
+}
+");
+            await kernel.SendAsync(command);
+
+            Assert.Collection(KernelEvents,
+                e => e.Should().BeOfType<CodeSubmissionReceived>(),
+                e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                    .Value.Should().BeOfType<ProgressRecord>().Which
+                    .StatusDescription.Should().Be("25% Complete"),
+                e => e.Should().BeOfType<DisplayedValueUpdated>().Which
+                    .Value.Should().BeOfType<ProgressRecord>().Which
+                    .StatusDescription.Should().Be("50% Complete"),
+                e => e.Should().BeOfType<DisplayedValueUpdated>().Which
+                    .Value.Should().BeOfType<ProgressRecord>().Which
+                    .StatusDescription.Should().Be("75% Complete"),
+                e => e.Should().BeOfType<DisplayedValueUpdated>().Which
+                    .Value.Should().BeOfType<ProgressRecord>().Which
+                    .StatusDescription.Should().Be("100% Complete"),
+                e => e.Should().BeOfType<CommandHandled>());
         }
     }
 }

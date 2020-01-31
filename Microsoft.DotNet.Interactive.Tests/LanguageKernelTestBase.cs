@@ -9,6 +9,7 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
+using Microsoft.DotNet.Interactive.PowerShell;
 using Pocket;
 using Recipes;
 using Xunit.Abstractions;
@@ -86,6 +87,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                                    .UseNugetDirective()
                                    .UseKernelHelpers()
                                    .UseWho(),
+                Language.PowerShell => new PowerShellKernel(),
                 _ => throw new InvalidOperationException("Unknown language specified")
             };
             

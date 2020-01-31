@@ -5,5 +5,10 @@
     <Authors>Microsoft</Authors>
     <NuspecBasePath>$(ArtifactsBinDir)</NuspecBasePath>
     <Copyright>$(CopyrightMicrosoft)</Copyright>
+
+    <!-- enable building symbol packages -->
+    <DebugType>portable</DebugType>
+    <IncludeSymbols>true</IncludeSymbols>
   </PropertyGroup>
+
 </Project>

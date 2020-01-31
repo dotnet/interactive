@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
+using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
@@ -217,7 +218,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                  .UseWho()
                                  .UseDefaultNamespaces()
                                  .UseXplot()
-                                 .UseMathAndLaTeX()
+                                 .UseMathAndLaTeX(),
+                            new PowerShellKernel()
                          }
                          .UseDefaultMagicCommands()
                          .UseAbout();

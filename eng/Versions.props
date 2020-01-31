@@ -21,28 +21,6 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <RepositoryUrl>https://github.com/dotnet/interactive</RepositoryUrl>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(UseStableVersion)' == 'true'">
-    <AutoGenerateAssemblyVersion>false</AutoGenerateAssemblyVersion>
-    <DotNetFinalVersionKind>release</DotNetFinalVersionKind>
-    <PreReleaseVersionLabel>
-    </PreReleaseVersionLabel>
-    <!--
-    Mimic the build number calculation from here:
-    https://github.com/dotnet/arcade/blob/ce8e852e418ca52d28e562f9697fbb926d0b0bb1/src/Microsoft.DotNet.Arcade.Sdk/tools/Version.BeforeCommonTargets.targets#L24-L36
-    -->
-    <OfficialBuildId Condition="'$(OfficialBuildId)' == ''">42424242.42</OfficialBuildId>
-    <_BuildNumber>$(OfficialBuildId)</_BuildNumber>
-    <_BuildNumberYY>$(_BuildNumber.Substring(2, 2))</_BuildNumberYY>
-    <_BuildNumberMM>$(_BuildNumber.Substring(4, 2))</_BuildNumberMM>
-    <_BuildNumberDD>$(_BuildNumber.Substring(6, 2))</_BuildNumberDD>
-    <_BuildNumberR>$(_BuildNumber.Substring(9))</_BuildNumberR>
-    <VersionSuffixDateStamp>$([MSBuild]::Add($([MSBuild]::Add($([MSBuild]::Multiply($(_BuildNumberYY), 1000)), $([MSBuild]::Multiply($(_BuildNumberMM), 50)))), $(_BuildNumberDD)))</VersionSuffixDateStamp>
-    <!-- Ensure assembly and package verions look like `1.0.19257.1` -->
-    <VersionPrefix>$(MajorVersion).$(MinorVersion).$(VersionSuffixDateStamp)</VersionPrefix>
-    <AssemblyVersion>$(VersionPrefix).$(_BuildNumberR)</AssemblyVersion>
-    <PackageVersion>$(VersionPrefix).$(_BuildNumberR)</PackageVersion>
-    <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
-  </PropertyGroup>
   <PropertyGroup>
     <RestoreSources>
       $(RestoreSources);
