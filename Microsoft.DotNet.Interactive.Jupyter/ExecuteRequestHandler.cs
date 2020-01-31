@@ -57,6 +57,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 case CommandFailed commandFailed:
                     OnCommandFailed(commandFailed, context.JupyterMessageSender);
                     break;
+                case InputRequested inputRequested:
+                    OnInputRequested(context, inputRequested);
+                    break;
             }
         }
 
@@ -64,6 +67,19 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         {
             var transient = new Dictionary<string, object> { { "display_id", displayId ?? Guid.NewGuid().ToString() } };
             return transient;
+        }
+
+        private void OnInputRequested(JupyterRequestContext context, InputRequested inputRequested)
+        {
+            var executeRequest = GetJupyterRequest(context);
+            if (!executeRequest.AllowStdin)
+            {
+                throw new StdInChannelNotSupportedException();
+            }
+
+            var inputReq = new InputRequest(inputRequested.Prompt, inputRequested.Password);
+            var inputValue = context.JupyterMessageSender.Send(inputReq);
+            inputRequested.Input = inputValue;
         }
 
         private void OnCommandFailed(

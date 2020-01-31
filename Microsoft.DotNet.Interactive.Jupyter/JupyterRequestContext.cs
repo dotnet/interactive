@@ -14,14 +14,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     {
         private readonly TaskCompletionSource<Unit> _done = new TaskCompletionSource<Unit>();
 
-        internal JupyterRequestContext(ReplyChannel serverChannel, PubSubChannel ioPubChannel, ZeroMQMessage
- request, string kernelIdentity) : 
-            this(new JupyterMessageSender(ioPubChannel, serverChannel, kernelIdentity, request),request)
+        internal JupyterRequestContext(ReplyChannel serverChannel, PubSubChannel ioPubChannel, StdInChannel stdInChannel, ZeroMQMessage request, string kernelIdentity)
+            : this(new JupyterMessageSender(ioPubChannel, serverChannel, stdInChannel, kernelIdentity, request), request)
         {
         }
 
-        public JupyterRequestContext(IJupyterMessageSender jupyterMessageSender, ZeroMQMessage
- request)
+        public JupyterRequestContext(IJupyterMessageSender jupyterMessageSender, ZeroMQMessage request)
         {
             Token = Guid.NewGuid().ToString("N");
             JupyterMessageSender = jupyterMessageSender ?? throw new ArgumentNullException(nameof(jupyterMessageSender));

@@ -30,8 +30,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         private readonly string _ioPubAddress;
         private readonly SignatureValidator _signatureValidator;
         private readonly CompositeDisposable _disposables;
-        private readonly ReplyChannel _shellSender;
-        private readonly PubSubChannel _ioPubSender;
+        private readonly ReplyChannel _shellChannel;
+        private readonly PubSubChannel _ioPubChannel;
+        private readonly StdInChannel _stdInChannel;
         private readonly string _stdInAddress;
         private readonly string _controlAddress;
         private readonly RouterSocket _stdIn;
@@ -62,8 +63,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             _stdIn = new RouterSocket();
             _control = new RouterSocket();
 
-            _shellSender = new ReplyChannel( new MessageSender(_shell, _signatureValidator));
-            _ioPubSender = new PubSubChannel( new MessageSender(_ioPubSocket, _signatureValidator));
+            _shellChannel = new ReplyChannel(new MessageSender(_shell, _signatureValidator));
+            _ioPubChannel = new PubSubChannel(new MessageSender(_ioPubSocket, _signatureValidator));
+            _stdInChannel = new StdInChannel(new MessageSender(_stdIn, _signatureValidator), new MessageReceiver(_stdIn));
 
             _disposables = new CompositeDisposable
                            {
@@ -108,8 +110,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
                     default:
                         var context = new JupyterRequestContext(
-                            _shellSender,
-                            _ioPubSender,
+                            _shellChannel,
+                            _ioPubChannel,
+                            _stdInChannel,
                             request, 
                             kernelIdentity);
 
@@ -123,8 +126,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 }
             }
 
-            void SetBusy(ZeroMQMessage request) => _ioPubSender.Publish(new Status(StatusValues.Busy), request, kernelIdentity);
-            void SetIdle(ZeroMQMessage request) => _ioPubSender.Publish(new Status(StatusValues.Idle), request, kernelIdentity);
+            void SetBusy(ZeroMQMessage request) => _ioPubChannel.Publish(new Status(StatusValues.Busy), request, kernelIdentity);
+            void SetIdle(ZeroMQMessage request) => _ioPubChannel.Publish(new Status(StatusValues.Idle), request, kernelIdentity);
         }
 
         public static void SetupDefaultMimeTypes()
@@ -157,7 +160,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         {
             var languageInfo = GetLanguageInfo();
             var kernelInfoReply = new KernelInfoReply(Constants.MESSAGE_PROTOCOL_VERSION, ".NET", "5.1.0", languageInfo);
-            _shellSender.Reply(kernelInfoReply, request);
+            _shellChannel.Reply(kernelInfoReply, request);
         }
 
         private LanguageInfo GetLanguageInfo()
