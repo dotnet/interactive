@@ -62,6 +62,11 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             startKernelServer ??= (async (startupOptions, kernel, console) =>
             {
+                var disposable = Program.StartToolLogging(startupOptions);
+                if (kernel is KernelBase kernelBase)
+                {
+                    kernelBase.RegisterForDisposal(disposable);
+                }
                 var server = new StandardIOKernelServer(
                     kernel, 
                     Console.In, 
@@ -187,7 +192,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 {
                     defaultKernelOption,
                     logPathOption,
-                    verboseOption
                 };
 
                 startKernelServerCommand.Handler = CommandHandler.Create<StartupOptions, KernelServerOptions, IConsole, InvocationContext>(
