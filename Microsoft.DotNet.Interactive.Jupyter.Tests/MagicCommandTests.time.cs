@@ -3,7 +3,6 @@
 
 using System;
 using FluentAssertions;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;

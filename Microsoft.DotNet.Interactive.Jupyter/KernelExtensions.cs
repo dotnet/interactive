@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Encodings.Web;
+using System.Threading.Tasks;
 using Markdig;
 using Markdig.Renderers;
 using Microsoft.DotNet.Interactive.Commands;
@@ -124,6 +125,36 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             kernel.AddDirective(time());
 
             return kernel;
+
+            static Command time()
+            {
+                return new Command("#!time")
+                {
+                    Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
+                    {
+                        var timer = new Stopwatch();
+                        timer.Start();
+
+                        await context.QueueAction((command, invocationContext) =>
+                        {
+                            var elapsed = timer.Elapsed;
+
+                            var formattableString = $"Wall time: {elapsed.TotalMilliseconds}ms";
+
+                            invocationContext.Publish(
+                                new DisplayedValueProduced(
+                                    elapsed,
+                                    context.Command,
+                                    new[]
+                                    {
+                                        new FormattedValue(PlainTextFormatter.MimeType, formattableString)
+                                    }));
+
+                            return Task.CompletedTask;
+                        });
+                    })
+                };
+            }
         }
 
         private static T UseLsMagic<T>(this T kernel)
@@ -210,40 +241,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             };
         }
 
-        private static Command time()
-        {
-            return new Command("#!time")
-            {
-                Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
-                {
-                    if (context.Command is SubmitCode submitCode)
-                    {
-                        var code = submitCode
-                                   .Code
-                                   .Replace("#!time", string.Empty)
-                                   .Trim();
-
-                        var timer = new Stopwatch();
-                        timer.Start();
-
-                        await context.HandlingKernel.SendAsync(
-                            new SubmitCode(code, submitCode.TargetKernelName));
-
-                        var elapsed = timer.Elapsed;
-
-                        var formattableString = $"Wall time: {elapsed.TotalMilliseconds}ms";
-
-                        context.Publish(
-                            new DisplayedValueProduced(
-                                elapsed,
-                                context.Command,
-                                new[]
-                                {
-                                    new FormattedValue(PlainTextFormatter.MimeType, formattableString)
-                                }));
-                    }
-                })
-            };
-        }
+     
     }
 }

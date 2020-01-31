@@ -56,10 +56,18 @@ namespace Microsoft.DotNet.Interactive
             });
 
             return invocations.Aggregate(
-                (function, continuation) =>
-                    (cmd1, ctx1, next) =>
-                        function(cmd1, ctx1, (cmd2, ctx2) =>
-                                     continuation(cmd2, ctx2, next)));
+                (middleware, continuation) =>
+                {
+
+                    return (cmd1, ctx1, next) =>
+                    {
+                        return middleware(cmd1, ctx1, (cmd2, ctx2) =>
+                        {
+                            
+                            return continuation(cmd2, ctx2, next);
+                        });
+                    };
+                });
         }
 
         public void AddMiddleware(KernelCommandPipelineMiddleware middleware)

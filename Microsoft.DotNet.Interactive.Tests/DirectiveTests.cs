@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Utility;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
@@ -98,7 +97,6 @@ i");
                 .Be(1);
         }
 
-        
         [Fact]
         public async Task Directive_parse_errors_are_displayed()
         {
@@ -162,7 +160,7 @@ i");
         [Fact]
         public async Task Directives_can_display_help()
         {
-            using var consoleOut = await ConsoleOutput.Capture();
+            // using var consoleOut = await ConsoleOutput.Capture();
 
             using var kernel = new CompositeKernel();
             using var events = kernel.KernelEvents.ToSubscribedList();
