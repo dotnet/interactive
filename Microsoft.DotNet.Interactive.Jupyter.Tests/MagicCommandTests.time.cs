@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Linq;
 using FluentAssertions;
 using System.Threading.Tasks;
+using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -33,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 #!time
 
 using System.Threading.Tasks;
-await Task.Delay(500);
+await Task.Delay(5000);
 display(123);
 "));
 
@@ -47,6 +49,15 @@ display(123);
                                          v.MimeType == "text/plain" &&
                                          v.Value.ToString().StartsWith("Wall time:") &&
                                          v.Value.ToString().EndsWith("ms"));
+
+                events.Should()
+                      .ContainSingle<DisplayedValueProduced>(
+                          e => e.As<DisplayedValueProduced>().Value is TimeSpan)
+                      .Which
+                      .Value
+                      .As<TimeSpan>()
+                      .Should()
+                      .BeGreaterOrEqualTo(5000.Milliseconds());
 
                 events.Should()
                       .ContainSingle<DisplayedValueProduced>(

@@ -139,15 +139,15 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                         {
                             var elapsed = timer.Elapsed;
 
-                            var formattableString = $"Wall time: {elapsed.TotalMilliseconds}ms";
-
                             invocationContext.Publish(
                                 new DisplayedValueProduced(
                                     elapsed,
                                     context.Command,
                                     new[]
                                     {
-                                        new FormattedValue(PlainTextFormatter.MimeType, formattableString)
+                                        new FormattedValue(
+                                            PlainTextFormatter.MimeType,
+                                            $"Wall time: {elapsed.TotalMilliseconds}ms")
                                     }));
 
                             return Task.CompletedTask;

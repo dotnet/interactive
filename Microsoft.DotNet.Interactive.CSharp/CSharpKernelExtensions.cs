@@ -91,15 +91,24 @@ using static {typeof(Kernel).FullName};
                 {
                     Handler = (command, context) =>
                     {
-                        if (restoreContext.ResolvedPackageReferences.SingleOrDefault(r => r.PackageName.Equals(package.PackageName, StringComparison.OrdinalIgnoreCase)) is { }
-                                resolvedRef && !string.IsNullOrWhiteSpace(package.PackageVersion) && package.PackageVersion != resolvedRef.PackageVersion)
+                        var alreadyGotten =
+                            restoreContext.ResolvedPackageReferences
+                                          .Concat(restoreContext.RequestedPackageReferences)
+                                          .FirstOrDefault(r => r.PackageName.Equals(package.PackageName, StringComparison.OrdinalIgnoreCase));
+
+                        if (alreadyGotten is { } &&
+                            !string.IsNullOrWhiteSpace(package.PackageVersion) &&
+                            package.PackageVersion != alreadyGotten.PackageVersion)
                         {
-                            var errorMessage = $"{GenerateErrorMessage(package, resolvedRef)}";
+                            var errorMessage = $"{GenerateErrorMessage(package, alreadyGotten)}";
                             context.Publish(new ErrorProduced(errorMessage));
                         }
                         else
                         {
-                            var added = restoreContext.AddPackageReference(package.PackageName, package.PackageVersion, package.RestoreSources);
+                            var added = restoreContext.AddPackageReference(
+                                package.PackageName,
+                                package.PackageVersion,
+                                package.RestoreSources);
 
                             if (!added)
                             {
@@ -117,7 +126,7 @@ using static {typeof(Kernel).FullName};
 
             static string GenerateErrorMessage(
                 PackageReference requested,
-                ResolvedPackageReference existing = null)
+                PackageReference existing = null)
             {
                 if (existing != null &&
                     !string.IsNullOrEmpty(requested.PackageName) &&
@@ -202,7 +211,7 @@ using static {typeof(Kernel).FullName};
                     {
                         var nativeLibraryProbingPaths = result.NativeLibraryProbingPaths;
                         helper?.AddNativeLibraryProbingPaths(nativeLibraryProbingPaths);
-                  
+
                         if (helper != null)
                         {
                             foreach (var addedReference in result.ResolvedReferences)
