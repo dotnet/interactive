@@ -849,7 +849,7 @@ Console.Write(2);
                 .Be(command);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact()]
         public async Task PowerShell_streams_handled_in_correct_order()
         {
             var kernel = CreateKernel(Language.PowerShell);
@@ -890,7 +890,7 @@ Write-Error '{errorMessage}'
                 e => e.Should().BeOfType<CommandHandled>());
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact()]
         public async Task PowerShell_progress_sends_updated_display_values()
         {
             var kernel = CreateKernel(Language.PowerShell);

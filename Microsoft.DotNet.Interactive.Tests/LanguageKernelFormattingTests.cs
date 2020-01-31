@@ -275,7 +275,7 @@ f();"
                 .Contain("the-outer-exception");
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory()]
         [InlineData("Write-Warning 'I am a warning message'", "<pre>WARNING: I am a warning message</pre>")]
         [InlineData("Write-Verbose 'I am a verbose message' -Verbose", "<pre>VERBOSE: I am a verbose message</pre>")]
         [InlineData("'I am output'", "<pre>I am output</pre>")]
