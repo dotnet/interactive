@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class DirectiveCommand : KernelCommandBase
+    internal class DirectiveCommand : KernelCommandBase
     {
-        internal DirectiveCommand(ParseResult parseResult)
+        public DirectiveCommand(ParseResult parseResult)
         {
             ParseResult = parseResult;
         }
@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         public override string ToString()
         {
-            return ParseResult.CommandResult.Command.ToString();
+            return $"Directive: {ParseResult.CommandResult.Command.Name}";
         }
     }
 }

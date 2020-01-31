@@ -188,7 +188,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             {
                 Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
                 {
-                    var kernel = context.HandlingKernel;
+                    var kernel = context.CurrentKernel;
 
                     var supportedDirectives = new SupportedDirectives(kernel.Name);
 
@@ -240,7 +240,5 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 })
             };
         }
-
-     
     }
 }

@@ -603,7 +603,7 @@ using Microsoft.ML.AutoML;
 
             await kernel.SubmitCodeAsync(
                 @"
-//#!time
+#!time
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
 #r ""nuget:Microsoft.ML.AutoML,0.16.1-preview""
 using Microsoft.ML.AutoML;

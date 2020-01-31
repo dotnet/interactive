@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive
             Pipeline = new KernelCommandPipeline(this);
 
             AddSetKernelMiddleware();
-
+           
             AddDirectiveMiddlewareAndCommonCommandHandlers();
 
             _disposables.Add(_kernelEvents);
@@ -99,15 +99,17 @@ namespace Microsoft.DotNet.Interactive
                 {
                     await next(submitCode, context);
                 }
-                else 
+                else
                 {
-                    if (command is AnonymousKernelCommand anonymous)
+                    switch (command)
                     {
-                        await anonymous.InvokeAsync(context);
-                    }
-                    else
-                    {
-                        await (context.HandlingKernel ?? this).SendAsync(command);
+                        case AnonymousKernelCommand _:
+                        case DirectiveCommand _:
+                            await command.InvokeAsync(context);
+                            break;
+                        default:
+                            await (context.HandlingKernel ?? this).SendAsync(command);
+                            break;
                     }
                 }
             }

@@ -157,7 +157,7 @@ i");
                   .Be("Alias \'#dupe\' is already in use.");
         }
 
-        [Fact]
+        [Fact(Skip = "issue #105")]
         public async Task Directives_can_display_help()
         {
             // using var consoleOut = await ConsoleOutput.Capture();

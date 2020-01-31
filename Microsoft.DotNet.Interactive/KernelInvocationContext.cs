@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Interactive
 
         public IKernel HandlingKernel { get; set; }
 
-        internal IKernel CurrentKernel { get; set; }
+        public IKernel CurrentKernel { get; set; }
         
         public async Task QueueAction(KernelCommandInvocation action)
         {
