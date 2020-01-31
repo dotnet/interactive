@@ -37,10 +37,14 @@
       <SymbolPackageFilesToStrip Include="tools/netcoreapp3.1/any/runtimes/linux-x64/native/libmi.so" />
     </ItemGroup>
     <PropertyGroup>
-      <StripPackageFilesScriptPath>$(RepositoryEngineeringDir)tools\strip-package-files.ps1</StripPackageFilesScriptPath>
-      <PowershellArgs>-noprofile -executionPolicy RemoteSigned -file "$(StripPackageFilesScriptPath)" -packagePath "%(SymbolPackageWithBadFiles.Identity)" @(SymbolPackageFilesToStrip, ' ')</PowershellArgs>
+      <PackageTempPath>$(TEMP)\$([System.Guid]::NewGuid())</PackageTempPath>
     </PropertyGroup>
-    <Exec Command='powershell $(PowershellArgs)' />
+
+    <MakeDir Directories="$(PackageTempPath)" />
+    <Unzip SourceFiles="%(SymbolPackageWithBadFiles.Identity)" DestinationFolder="$(PackageTempPath)" />
+    <Delete Files="$(PackageTempPath)\%(SymbolPackageFilesToStrip.Identity)" />
+    <ZipDirectory SourceDirectory="$(PackageTempPath)" DestinationFile="%(SymbolPackageWithBadFiles.Identity)" Overwrite="true" />
+    <RemoveDir Directories="$(PackageTempPath)" />
   </Target>
 
 </Project>
