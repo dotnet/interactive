@@ -9,5 +9,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     {
         void Send(PubSubMessage message);
         void Send(ReplyMessage message);
+        string Send(InputRequest message);
     }
 }

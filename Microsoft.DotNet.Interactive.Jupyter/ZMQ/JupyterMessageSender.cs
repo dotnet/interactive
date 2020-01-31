@@ -10,10 +10,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
     {
         private readonly PubSubChannel _pubSubChannel;
         private readonly ReplyChannel _replyChannel;
+        private readonly StdInChannel _stdInChannel;
         private readonly string _kernelIdentity;
         private readonly Message _request;
 
-        public JupyterMessageSender(PubSubChannel pubSubChannel, ReplyChannel replyChannel, string kernelIdentity, Message request)
+        public JupyterMessageSender(PubSubChannel pubSubChannel, ReplyChannel replyChannel, StdInChannel stdInChannel, string kernelIdentity, Message request)
         {
             if (string.IsNullOrWhiteSpace(kernelIdentity))
             {
@@ -22,6 +23,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 
             _pubSubChannel = pubSubChannel ?? throw new ArgumentNullException(nameof(pubSubChannel));
             _replyChannel = replyChannel ?? throw new ArgumentNullException(nameof(replyChannel));
+            _stdInChannel = stdInChannel ?? throw new ArgumentNullException(nameof(stdInChannel));
             _kernelIdentity = kernelIdentity;
             _request = request;
         }
@@ -33,6 +35,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
         public void Send(ReplyMessage message)
         {
             _replyChannel.Reply(message, _request);
+        }
+
+        public string Send(InputRequest message)
+        {
+            return _stdInChannel.RequestInput(message, _request);
         }
     }
 }
