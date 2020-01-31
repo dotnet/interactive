@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using FluentAssertions;
 using System.Linq;
 using System.Threading.Tasks;
-using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -35,14 +35,13 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
 using System.Threading.Tasks;
 await Task.Delay(500);
-display(""done!"");
+display(123);
 "));
 
                 events.Should()
-                      .ContainSingle(e => e is DisplayedValueProduced &&
-                                          e.As<DisplayedValueProduced>().Value is TimeSpan)
+                      .ContainSingle<DisplayedValueProduced>(
+                          e => e.As<DisplayedValueProduced>().Value is TimeSpan)
                       .Which
-                      .As<DisplayedValueProduced>()
                       .FormattedValues
                       .Should()
                       .ContainSingle(v =>
@@ -50,10 +49,15 @@ display(""done!"");
                                          v.Value.ToString().StartsWith("Wall time:") &&
                                          v.Value.ToString().EndsWith("ms"));
 
-                events.OfType<DisplayedValueProduced>()
-                      .SelectMany(e => e.FormattedValues)
+                events.Should()
+                      .ContainSingle<DisplayedValueProduced>(
+                          e => e.As<DisplayedValueProduced>().Value is int)
+                      .Which
+                      .FormattedValues
                       .Should()
-                      .Contain(v => v.Value.Equals("done!"));
+                      .ContainSingle(v =>
+                                         v.MimeType == "text/html" &&
+                                         v.Value.ToString() == "123");
             }
         }
     }

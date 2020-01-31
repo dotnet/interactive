@@ -157,16 +157,16 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             {
                 Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
                 {
-                    var currentKernel = context.HandlingKernel;
+                    var kernel = context.HandlingKernel;
 
-                    var supportedDirectives = new SupportedDirectives(currentKernel.Name);
+                    var supportedDirectives = new SupportedDirectives(kernel.Name);
 
                     supportedDirectives.Commands.AddRange(
-                        currentKernel.Directives.Where(d => !d.IsHidden));
+                        kernel.Directives.Where(d => !d.IsHidden));
 
                     context.Publish(new DisplayedValueProduced(supportedDirectives, context.Command));
 
-                    await currentKernel.VisitSubkernelsAsync(async k =>
+                    await kernel.VisitSubkernelsAsync(async k =>
                     {
                         if (k.Directives.Any(d => d.Name == "#!lsmagic"))
                         {
@@ -218,9 +218,10 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 {
                     if (context.Command is SubmitCode submitCode)
                     {
-                        var code = submitCode.Code
-                                             .Replace("#!time", string.Empty)
-                                             .Trim();
+                        var code = submitCode
+                                   .Code
+                                   .Replace("#!time", string.Empty)
+                                   .Trim();
 
                         var timer = new Stopwatch();
                         timer.Start();
@@ -234,7 +235,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
                         context.Publish(
                             new DisplayedValueProduced(
-                                elapsed, 
+                                elapsed,
                                 context.Command,
                                 new[]
                                 {

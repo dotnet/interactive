@@ -87,7 +87,6 @@ namespace Microsoft.DotNet.Interactive
                                  context.Fail(message: message);
                                  return Task.CompletedTask;
                             }));
-
                     }
                 }
             }
@@ -108,9 +107,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 var parseResult = directiveParser.Parse("#!nuget-restore");
 
-                hoistedCommands.Add(
-                    new AnonymousKernelCommand(
-                        (_, __) => parseResult.InvokeAsync()));
+                hoistedCommands.Add(new DirectiveCommand(parseResult));
             }
 
             return hoistedCommands.Concat(commands).ToArray();
@@ -142,11 +139,16 @@ namespace Microsoft.DotNet.Interactive
                 var commandLineBuilder =
                     new CommandLineBuilder(_rootCommand)
                         .ParseResponseFileAs(ResponseFileHandling.Disabled)
+                        .UseTypoCorrections()
+                        .UseHelp()
                         .UseMiddleware(
-                            context => context.BindingContext
-                                              .AddService(
-                                                  typeof(KernelInvocationContext),
-                                                  () => KernelInvocationContext.Current));
+                            context =>
+                            {
+                                context.BindingContext
+                                       .AddService(
+                                           typeof(KernelInvocationContext),
+                                           () => KernelInvocationContext.Current);
+                            });
 
                 commandLineBuilder.EnableDirectives = false;
 

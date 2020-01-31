@@ -194,44 +194,6 @@ new [] {1,2,3}");
         }
 
         [Fact(Timeout = 45000)]
-        public async Task Handling_kernel_can_be_specified_in_middleware()
-        {
-            var receivedOnFakeKernel = new List<IKernelCommand>();
-
-            using var kernel = new CompositeKernel
-            {
-                new CSharpKernel(),
-                new FakeKernel("fake")
-                {
-                    Handle = (kernelCommand, context) =>
-                    {
-                        receivedOnFakeKernel.Add(kernelCommand);
-                        return Task.CompletedTask;
-                    }
-                }
-            };
-
-            var childKernels = kernel.ChildKernels;
-
-            kernel.AddMiddleware(async (kernelCommand, context, next) =>
-            {
-                context.HandlingKernel = childKernels.Single(k => k.Name == "fake");
-                await next(kernelCommand, context);
-            });
-
-            await kernel.SendAsync(new SubmitCode("hello!"));
-
-            receivedOnFakeKernel
-                .Should()
-                .ContainSingle(c => c is SubmitCode)
-                .Which
-                .As<SubmitCode>()
-                .Code
-                .Should()
-                .Be("hello!");
-        }
-
-        [Fact(Timeout = 45000)]
         public async Task Handling_kernel_can_be_specified_as_a_default()
         {
             var receivedOnFakeKernel = new List<IKernelCommand>();

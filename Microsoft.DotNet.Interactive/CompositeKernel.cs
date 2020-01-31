@@ -103,22 +103,25 @@ namespace Microsoft.DotNet.Interactive
             var targetKernelName = commandBase?.TargetKernelName
                                    ?? DefaultKernelName;
 
+            IKernel kernel;
+
             if (targetKernelName != null)
             {
-                return targetKernelName == Name
-                           ? this
-                           : ChildKernels.FirstOrDefault(k => k.Name == targetKernelName)
-                             ?? throw new NoSuitableKernelException();
+                kernel = targetKernelName == Name
+                             ? this
+                             : ChildKernels.FirstOrDefault(k => k.Name == targetKernelName);
             }
             else
             {
-                return _childKernels.Count switch
+                kernel = _childKernels.Count switch
                 {
                     0 => this,
                     1 => _childKernels[0],
                     _ => context.HandlingKernel
                 };
             }
+
+            return kernel ?? throw new NoSuitableKernelException(command);
         }
 
         protected internal override async Task HandleAsync(
@@ -143,7 +146,7 @@ namespace Microsoft.DotNet.Interactive
                 return;
             }
 
-            throw new NoSuitableKernelException();
+            throw new NoSuitableKernelException(command);
         }
 
         internal override Task HandleInternalAsync(IKernelCommand command, KernelInvocationContext context)
