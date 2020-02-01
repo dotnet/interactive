@@ -212,7 +212,7 @@ namespace Microsoft.DotNet.Interactive
         {
             if (commandQueue.TryDequeue(out var currentOperation))
             {
-                var x = Task.Run(async () =>
+                Task.Run(async () =>
                 {
                     await ExecuteCommand(currentOperation);
 
@@ -228,9 +228,12 @@ namespace Microsoft.DotNet.Interactive
         internal Task RunDeferredCommandsAsync()
         {
             var tcs = new TaskCompletionSource<Unit>();
-                UndeferCommands();
-                ProcessCommandQueue(_commandQueue, CancellationToken.None, () => tcs.SetResult(Unit.Default));
-                return tcs.Task;
+            UndeferCommands();
+            ProcessCommandQueue(
+                _commandQueue, 
+                CancellationToken.None, 
+                () => tcs.SetResult(Unit.Default));
+            return tcs.Task;
         }
 
         private void UndeferCommands()

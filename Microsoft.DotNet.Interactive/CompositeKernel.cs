@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (kernel is KernelBase kernelBase)
             {
-                kernelBase.Pipeline.AddMiddleware(async (command, context, next) =>
+                kernelBase.AddMiddleware(async (command, context, next) =>
                 {
                     await next(command, context);
 
