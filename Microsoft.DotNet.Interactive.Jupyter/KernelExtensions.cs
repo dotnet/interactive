@@ -134,8 +134,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                     {
                         var timer = new Stopwatch();
                         timer.Start();
-
-                        await context.QueueAction((command, invocationContext) =>
+                        
+                        context.OnComplete(invocationContext =>
                         {
                             var elapsed = timer.Elapsed;
 

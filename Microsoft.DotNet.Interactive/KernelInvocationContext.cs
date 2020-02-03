@@ -11,13 +11,15 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class KernelInvocationContext : IDisposable
+    public class KernelInvocationContext : IAsyncDisposable
     {
         private static readonly AsyncLocal<KernelInvocationContext> _current = new AsyncLocal<KernelInvocationContext>();
 
         private readonly ReplaySubject<IKernelEvent> _events = new ReplaySubject<IKernelEvent>();
 
         private readonly HashSet<IKernelCommand> _childCommands = new HashSet<IKernelCommand>();
+
+        private readonly List<Func<KernelInvocationContext, Task>> _onCompleteActions = new List<Func<KernelInvocationContext, Task>>();
 
         private KernelInvocationContext(IKernelCommand command)
         {
@@ -34,7 +36,10 @@ namespace Microsoft.DotNet.Interactive
             if (command == Command)
             {
                 Publish(new CommandHandled(Command));
-                _events.OnCompleted();
+                if (!_events.IsDisposed)
+                {
+                    _events.OnCompleted();
+                }
                 IsComplete = true;
             }
             else
@@ -53,6 +58,11 @@ namespace Microsoft.DotNet.Interactive
             IsComplete = true;
         }
 
+        public void OnComplete(Func<KernelInvocationContext, Task> onComplete)
+        {
+            _onCompleteActions.Add(onComplete);
+        }
+
         public void Publish(IKernelEvent @event)
         {
             var command = @event.Command;
@@ -61,7 +71,10 @@ namespace Microsoft.DotNet.Interactive
                 Command == command ||
                 _childCommands.Contains(command))
             {
-                _events.OnNext(@event);
+                if (!_events.IsDisposed)
+                {
+                    _events.OnNext(@event);
+                }
             }
         }
 
@@ -88,21 +101,27 @@ namespace Microsoft.DotNet.Interactive
         public IKernel HandlingKernel { get; set; }
 
         public IKernel CurrentKernel { get; set; }
-        
-        public async Task QueueAction(KernelCommandInvocation action)
+
+        public async Task QueueAction(
+            KernelCommandInvocation action)
         {
             var command = new AnonymousKernelCommand(action);
 
             await HandlingKernel.SendAsync(command);
         }
 
-        void IDisposable.Dispose()
+        async ValueTask IAsyncDisposable.DisposeAsync()
         {
             if (_current.Value is {} active)
             {
                 _current.Value = null;
+
+                foreach (var action in _onCompleteActions)
+                {
+                    await action.Invoke(this);
+                }
+
                 active.Complete(Command);
-                active._events.Dispose();
             }
         }
     }

@@ -4,8 +4,11 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Xunit;
@@ -155,6 +158,35 @@ i");
                   .Message
                   .Should()
                   .Be("Alias \'#dupe\' is already in use.");
+        }
+
+        [Fact]
+        public async Task OnComplete_can_be_used_to_act_completion_of_commands()
+        {
+            using var kernel = new FakeKernel();
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            kernel.AddDirective(new Command("#!wrap")
+            {
+                Handler = CommandHandler.Create(async (KernelInvocationContext c) =>
+                {
+                    await c.DisplayAsync("hello!");
+
+                    c.OnComplete(async context =>
+                    {
+                        await context.DisplayAsync("goodbye!");
+                    });
+                })
+            });
+
+            await kernel.SubmitCodeAsync("#!wrap");
+
+            events
+                .OfType<DisplayedValueProduced>()
+                .Select(e => e.Value)
+                .Should()
+                .BeEquivalentSequenceTo("hello!", "goodbye!");
         }
 
         [Fact(Skip = "issue #105")]

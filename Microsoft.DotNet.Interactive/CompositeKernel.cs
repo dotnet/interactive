@@ -51,17 +51,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (kernel is KernelBase kernelBase)
             {
-                kernelBase.AddMiddleware(async (command, context, next) =>
-                {
-                    await next(command, context);
-
-                    while (_packages.TryDequeue(out var packageAdded))
-                    {
-                        var loadExtensionsInDirectory =
-                            new LoadExtensionsInDirectory(packageAdded.PackageReference.PackageRoot, Name);
-                        await this.SendAsync(loadExtensionsInDirectory);
-                    }
-                });
+                kernelBase.AddMiddleware(LoadExtensions);
             }
 
             var chooseKernelCommand = new Command($"#!{kernel.Name}")
@@ -76,6 +66,20 @@ namespace Microsoft.DotNet.Interactive
             AddDirective(chooseKernelCommand);
             RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));
             RegisterForDisposal(kernel);
+        }
+
+        private async Task LoadExtensions(
+            IKernelCommand command, 
+            KernelInvocationContext context,
+            KernelPipelineContinuation next)
+        {
+            await next(command, context);
+
+            while (_packages.TryDequeue(out var packageAdded))
+            {
+                var loadExtensionsInDirectory = new LoadExtensionsInDirectory(packageAdded.PackageReference.PackageRoot, Name);
+                await this.SendAsync(loadExtensionsInDirectory);
+            }
         }
 
         protected override void SetHandlingKernel(IKernelCommand command, KernelInvocationContext context)

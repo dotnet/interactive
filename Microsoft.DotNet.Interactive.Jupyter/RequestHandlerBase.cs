@@ -16,9 +16,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     public abstract class RequestHandlerBase<T> : IDisposable
         where T : RequestMessage
     {
-
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
-        protected IObservable<IKernelEvent> KernelEvents { get; }
 
         protected RequestHandlerBase(IKernel kernel, IScheduler scheduler)
         {
@@ -27,20 +25,22 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             KernelEvents = Kernel.KernelEvents.ObserveOn(scheduler ?? throw new ArgumentNullException(nameof(scheduler)));
         }
 
+        protected IObservable<IKernelEvent> KernelEvents { get; }
+
         protected async Task SendAsync(
             JupyterRequestContext context,
             IKernelCommand command)
         {
             command.SetToken(context.Token);
 
-            var sub = Kernel.KernelEvents
-                            .Where(e => e.Command?.GetToken() == context.Token)
-                            .Subscribe(e => OnKernelEventReceived(e, context));
+            using var sub = Kernel
+                      .KernelEvents
+                      .Where(e => e.Command?.GetToken() == context.Token)
+                      .Subscribe(e => OnKernelEventReceived(e, context));
 
             await ((KernelBase) Kernel).SendAsync(
                 command,
-                CancellationToken.None,
-                onDone: () => sub.Dispose());
+                CancellationToken.None);
         }
 
         protected abstract void OnKernelEventReceived(

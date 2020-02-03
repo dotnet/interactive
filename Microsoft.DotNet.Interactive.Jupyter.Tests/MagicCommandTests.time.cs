@@ -11,6 +11,7 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {
@@ -18,6 +19,13 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
     {
         public class time
         {
+            private readonly ITestOutputHelper _output;
+
+            public time(ITestOutputHelper output)
+            {
+                _output = output;
+            }
+
             [Fact]
             public async Task time_produces_time_elapsed_to_run_the_code_submission()
             {
@@ -25,8 +33,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                                    {
                                        new CSharpKernel().UseKernelHelpers()
                                    }
-                                   .UseDefaultMagicCommands()
-                                   .LogEventsToPocketLogger();
+                                   .UseDefaultMagicCommands();
 
                 using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -52,15 +59,6 @@ display(123);
 
                 events.Should()
                       .ContainSingle<DisplayedValueProduced>(
-                          e => e.As<DisplayedValueProduced>().Value is TimeSpan)
-                      .Which
-                      .Value
-                      .As<TimeSpan>()
-                      .Should()
-                      .BeGreaterOrEqualTo(5000.Milliseconds());
-
-                events.Should()
-                      .ContainSingle<DisplayedValueProduced>(
                           e => e.As<DisplayedValueProduced>().Value is int)
                       .Which
                       .FormattedValues
@@ -68,6 +66,15 @@ display(123);
                       .ContainSingle(v =>
                                          v.MimeType == "text/html" &&
                                          v.Value.ToString() == "123");
+
+                events.Should()
+                      .ContainSingle<DisplayedValueProduced>(
+                          e => e.As<DisplayedValueProduced>().Value is TimeSpan)
+                      .Which
+                      .Value
+                      .As<TimeSpan>()
+                      .Should()
+                      .BeGreaterOrEqualTo(5000.Milliseconds());
             }
         }
     }

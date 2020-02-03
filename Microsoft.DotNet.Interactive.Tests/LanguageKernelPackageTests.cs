@@ -599,11 +599,9 @@ using Microsoft.ML.AutoML;
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            // FIX: (Pound_r_nuget_disallows_package_specifications_with_different_versions_single_cell) 
-
             await kernel.SubmitCodeAsync(
                 @"
-//#!time
+#!time
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
 #r ""nuget:Microsoft.ML.AutoML,0.16.1-preview""
 using Microsoft.ML.AutoML;
