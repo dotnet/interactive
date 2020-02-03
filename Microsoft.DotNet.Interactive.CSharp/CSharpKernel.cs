@@ -175,9 +175,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
 
             Exception exception = null;
-            using var console = await ConsoleOutput.Capture();
-            using (console.SubscribeToStandardOutput(std => PublishOutput(std, context, submitCode)))
-            using (console.SubscribeToStandardError(std => PublishError(std, context, submitCode)))
+            using var console = await ConsoleOutput.CaptureAsync();
+            using (console.SubscribeToStandardOutput(std => context.PublishStandardOut(std, submitCode)))
+            using (console.SubscribeToStandardError(std => context.PublishStandardError(std, submitCode)))
             {
                 if (!cancellationSource.IsCancellationRequested)
                 {
@@ -252,42 +252,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             {
                 context.Fail(null, "Command cancelled");
             }
-        }
-
-        private void PublishOutput(
-            string output,
-            KernelInvocationContext context,
-            IKernelCommand command)
-        {
-            var formattedValues = new List<FormattedValue>
-                        {
-                            new FormattedValue(
-                                PlainTextFormatter.MimeType, output)
-                        };
-
-            context.Publish(
-                new StandardOutputValueProduced(
-                    output,
-                    command,
-                    formattedValues));
-        }
-
-        private void PublishError(
-            string error,
-            KernelInvocationContext context,
-            IKernelCommand command)
-        {
-            var formattedValues = new List<FormattedValue>
-            {
-                new FormattedValue(
-                    PlainTextFormatter.MimeType, error)
-            };
-
-            context.Publish(
-                new StandardErrorValueProduced(
-                    error,
-                    command,
-                    formattedValues));
         }
 
         private async Task HandleRequestCompletion(

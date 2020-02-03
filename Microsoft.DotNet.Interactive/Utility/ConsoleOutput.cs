@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         {
         }
 
-        public static async Task<ConsoleOutput> Capture()
+        public static async Task<ConsoleOutput> CaptureAsync()
         {
             var redirector = new ConsoleOutput();
             await _consoleLock.WaitAsync();

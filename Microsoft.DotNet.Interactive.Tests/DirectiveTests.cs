@@ -189,11 +189,9 @@ i");
                 .BeEquivalentSequenceTo("hello!", "goodbye!");
         }
 
-        [Fact(Skip = "issue #105")]
+        [Fact]
         public async Task Directives_can_display_help()
         {
-            // using var consoleOut = await ConsoleOutput.Capture();
-
             using var kernel = new CompositeKernel();
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -209,17 +207,15 @@ i");
 
             await kernel.SubmitCodeAsync("#!hello -h");
 
-            events.Should()
-                  .ContainSingle<DisplayedValueProduced>()
-                  .Which
-                  .FormattedValues
-                  .Should()
-                  .ContainSingle(e => e.MimeType == "text/html")
-                  .Which
-                  .Value
-                  .As<string>()
-                  .Should()
-                  .ContainAll("Usage", "#!hello [options]", "--loudness");
+            var stdOut = string.Join(
+                "",
+                events
+                    .OfType<StandardOutputValueProduced>()
+                    .Select(e => e.Value.As<string>()));
+
+            stdOut
+                .Should()
+                .ContainAll("Usage", "#!hello [options]", "--loudness");
         }
     }
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -32,6 +33,42 @@ namespace Microsoft.DotNet.Interactive
                     displayId));
 
             return Task.FromResult(new DisplayedValue(displayId, mimeType, context));
+        }
+        
+        public static void PublishStandardOut(
+            this KernelInvocationContext context,
+            string output,
+            IKernelCommand command)
+        {
+            var formattedValues = new List<FormattedValue>
+            {
+                new FormattedValue(
+                    PlainTextFormatter.MimeType, output)
+            };
+
+            context.Publish(
+                new StandardOutputValueProduced(
+                    output,
+                    command,
+                    formattedValues));
+        }
+
+        public static void PublishStandardError(
+            this KernelInvocationContext context,
+            string error,
+            IKernelCommand command)
+        {
+            var formattedValues = new List<FormattedValue>
+            {
+                new FormattedValue(
+                    PlainTextFormatter.MimeType, error)
+            };
+
+            context.Publish(
+                new StandardErrorValueProduced(
+                    error,
+                    command,
+                    formattedValues));
         }
     }
 }

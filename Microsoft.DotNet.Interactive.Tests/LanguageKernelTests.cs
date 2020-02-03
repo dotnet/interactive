@@ -626,7 +626,7 @@ Console.Write(""value three"");",
                 .Be(error);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task it_produces_a_final_value_if_the_code_expression_evaluates(Language language)
