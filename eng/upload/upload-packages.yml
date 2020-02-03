@@ -18,10 +18,10 @@ stages:
       displayName: Download package artifacts
       inputs:
         buildType: current
-        artifactName: packages
+        artifactName: PackageArtifacts
     - task: PowerShell@2
       displayName: Upload packages to MyGet
       inputs:
         filePath: $(Build.SourcesDirectory)/eng/upload/scripts/UploadPackages.ps1
-        arguments: -apiKey $(MyGetAPIKey) -feedUrl $(FeedUrl) -packagesDir $(Build.ArtifactStagingDirectory)\packages\Shipping
+        arguments: -apiKey $(MyGetAPIKey) -feedUrl $(FeedUrl) -packagesDir $(Build.ArtifactStagingDirectory)\PackageArtifacts
       condition: and(succeeded(), eq(variables['Build.SourceBranch'], '${{ parameters.branchToUpload }}'))
