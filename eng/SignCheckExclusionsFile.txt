@@ -1,0 +1,1 @@
+Microsoft.Management.Infrastructure.dll;Microsoft.dotnet-interactive.*.nupkg;
