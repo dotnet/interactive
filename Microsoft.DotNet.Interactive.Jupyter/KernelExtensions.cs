@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Encodings.Web;
+using System.Threading.Tasks;
 using Markdig;
 using Markdig.Renderers;
 using Microsoft.DotNet.Interactive.Commands;
@@ -124,6 +125,38 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             kernel.AddDirective(time());
 
             return kernel;
+
+            static Command time()
+            {
+                return new Command("#!time")
+                {
+                    Handler = CommandHandler.Create((KernelInvocationContext context) =>
+                    {
+                        var timer = new Stopwatch();
+                        timer.Start();
+                        
+                        context.OnComplete(invocationContext =>
+                        {
+                            var elapsed = timer.Elapsed;
+
+                            invocationContext.Publish(
+                                new DisplayedValueProduced(
+                                    elapsed,
+                                    context.Command,
+                                    new[]
+                                    {
+                                        new FormattedValue(
+                                            PlainTextFormatter.MimeType,
+                                            $"Wall time: {elapsed.TotalMilliseconds}ms")
+                                    }));
+
+                            return Task.CompletedTask;
+                        });
+
+                        return Task.CompletedTask;
+                    })
+                };
+            }
         }
 
         private static T UseLsMagic<T>(this T kernel)
@@ -157,16 +190,16 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             {
                 Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
                 {
-                    var currentKernel = context.CurrentKernel;
+                    var kernel = context.CurrentKernel;
 
-                    var supportedDirectives = new SupportedDirectives(currentKernel.Name);
+                    var supportedDirectives = new SupportedDirectives(kernel.Name);
 
                     supportedDirectives.Commands.AddRange(
-                        currentKernel.Directives.Where(d => !d.IsHidden));
+                        kernel.Directives.Where(d => !d.IsHidden));
 
                     context.Publish(new DisplayedValueProduced(supportedDirectives, context.Command));
 
-                    await currentKernel.VisitSubkernelsAsync(async k =>
+                    await kernel.VisitSubkernelsAsync(async k =>
                     {
                         if (k.Directives.Any(d => d.Name == "#!lsmagic"))
                         {
@@ -205,41 +238,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                                             }));
 
                         context.Complete(submitCode);
-                    }
-                })
-            };
-        }
-
-        private static Command time()
-        {
-            return new Command("#!time")
-            {
-                Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
-                {
-                    if (context.Command is SubmitCode submitCode)
-                    {
-                        var code = submitCode.Code
-                                             .Replace("#!time", string.Empty)
-                                             .Trim();
-
-                        var timer = new Stopwatch();
-                        timer.Start();
-
-                        await context.CurrentKernel.SendAsync(
-                            new SubmitCode(code, submitCode.TargetKernelName));
-
-                        var elapsed = timer.Elapsed;
-
-                        var formattableString = $"Wall time: {elapsed.TotalMilliseconds}ms";
-
-                        context.Publish(
-                            new DisplayedValueProduced(
-                                elapsed, 
-                                context.Command,
-                                new[]
-                                {
-                                    new FormattedValue(PlainTextFormatter.MimeType, formattableString)
-                                }));
                     }
                 })
             };

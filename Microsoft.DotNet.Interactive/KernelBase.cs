@@ -5,9 +5,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -29,7 +31,7 @@ namespace Microsoft.DotNet.Interactive
             Pipeline = new KernelCommandPipeline(this);
 
             AddSetKernelMiddleware();
-
+           
             AddDirectiveMiddlewareAndCommonCommandHandlers();
 
             _disposables.Add(_kernelEvents);
@@ -37,7 +39,9 @@ namespace Microsoft.DotNet.Interactive
 
         internal KernelCommandPipeline Pipeline { get; }
 
-        public void AddMiddleware(KernelCommandPipelineMiddleware middleware) => Pipeline.AddMiddleware(middleware);
+        public void AddMiddleware(
+            KernelCommandPipelineMiddleware middleware,
+            [CallerMemberName] string caller = null) => Pipeline.AddMiddleware(middleware, caller);
 
         public void DeferCommand(IKernelCommand command)
         {
@@ -51,7 +55,7 @@ namespace Microsoft.DotNet.Interactive
 
         private void AddSetKernelMiddleware()
         {
-            Pipeline.AddMiddleware(async (command, context, next) =>
+            AddMiddleware(async (command, context, next) =>
             {
                 SetHandlingKernel(command, context);
 
@@ -67,7 +71,7 @@ namespace Microsoft.DotNet.Interactive
 
         private void AddDirectiveMiddlewareAndCommonCommandHandlers()
         {
-            Pipeline.AddMiddleware(
+            AddMiddleware(
                 (command, context, next) =>
                     command switch
                     {
@@ -87,7 +91,7 @@ namespace Microsoft.DotNet.Interactive
             KernelPipelineContinuation next)
         {
             var commands = _submissionSplitter.SplitSubmission(submitCode);
-            var handlingKernel = context.HandlingKernel;
+
             foreach (var command in commands)
             {
                 if (context.IsComplete)
@@ -99,15 +103,17 @@ namespace Microsoft.DotNet.Interactive
                 {
                     await next(submitCode, context);
                 }
-                else 
+                else
                 {
-                    if (command is AnonymousKernelCommand anonymous)
+                    switch (command)
                     {
-                        await anonymous.InvokeAsync(context);
-                    }
-                    else
-                    {
-                        await (handlingKernel ?? context.HandlingKernel).SendAsync(command);
+                        case AnonymousKernelCommand _:
+                        case DirectiveCommand _:
+                            await command.InvokeAsync(context);
+                            break;
+                        default:
+                            await (context.HandlingKernel ?? this).SendAsync(command);
+                            break;
                     }
                 }
             }
@@ -148,7 +154,14 @@ namespace Microsoft.DotNet.Interactive
             {
                 await Pipeline.SendAsync(operation.Command, context);
 
-                context.Complete(operation.Command);
+                if (operation.Command == context.Command)
+                {
+                    await context.DisposeAsync();
+                }
+                else
+                {
+                    context.Complete(operation.Command);
+                }
 
                 operation.TaskCompletionSource.SetResult(context.Result);
             }
@@ -181,7 +194,7 @@ namespace Microsoft.DotNet.Interactive
             return SendAsync(command, cancellationToken, null);
         }
 
-        public Task<IKernelCommandResult> SendAsync(
+        internal Task<IKernelCommandResult> SendAsync(
             IKernelCommand command,
             CancellationToken cancellationToken, 
             Action onDone)
@@ -204,13 +217,14 @@ namespace Microsoft.DotNet.Interactive
             return tcs.Task;
         }
 
-        private void ProcessCommandQueue(ConcurrentQueue<KernelOperation> commandQueue,
+        private void ProcessCommandQueue(
+            ConcurrentQueue<KernelOperation> commandQueue,
             CancellationToken cancellationToken,
             Action onDone)
         {
             if (commandQueue.TryDequeue(out var currentOperation))
             {
-                var x = Task.Run(async () =>
+                Task.Run(async () =>
                 {
                     await ExecuteCommand(currentOperation);
 
@@ -226,9 +240,12 @@ namespace Microsoft.DotNet.Interactive
         internal Task RunDeferredCommandsAsync()
         {
             var tcs = new TaskCompletionSource<Unit>();
-                UndeferCommands();
-                ProcessCommandQueue(_commandQueue, CancellationToken.None, () => tcs.SetResult(Unit.Default));
-                return tcs.Task;
+            UndeferCommands();
+            ProcessCommandQueue(
+                _commandQueue, 
+                CancellationToken.None,
+                () => tcs.SetResult(Unit.Default));
+            return tcs.Task;
         }
 
         private void UndeferCommands()

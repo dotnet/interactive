@@ -16,8 +16,7 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class 
-        CompositeKernel : KernelBase, IEnumerable<IKernel>, ICompositeKernel, IExtensibleKernel
+    public class CompositeKernel : KernelBase, IEnumerable<IKernel>, IExtensibleKernel
     {
         private readonly ConcurrentQueue<PackageAdded> _packages = new ConcurrentQueue<PackageAdded>();
         private readonly List<IKernel> _childKernels = new List<IKernel>();
@@ -52,23 +51,16 @@ namespace Microsoft.DotNet.Interactive
 
             if (kernel is KernelBase kernelBase)
             {
-                kernelBase.Pipeline.AddMiddleware(async (command, context, next) =>
-                {
-                    await next(command, context);
-                    while (_packages.TryDequeue(out var packageAdded))
-                    {
-                        var loadExtensionsInDirectory =
-                            new LoadExtensionsInDirectory(packageAdded.PackageReference.PackageRoot, Name);
-                        await this.SendAsync(loadExtensionsInDirectory);
-                    }
-
-                });
+                kernelBase.AddMiddleware(LoadExtensions);
             }
 
             var chooseKernelCommand = new Command($"#!{kernel.Name}")
             {
                 Handler = CommandHandler.Create<KernelInvocationContext>(
-                    context => { context.HandlingKernel = kernel; })
+                    context =>
+                    {
+                        context.HandlingKernel = kernel;
+                    })
             };
 
             AddDirective(chooseKernelCommand);
@@ -76,31 +68,64 @@ namespace Microsoft.DotNet.Interactive
             RegisterForDisposal(kernel);
         }
 
-        protected override void SetHandlingKernel(
+        private async Task LoadExtensions(
+            IKernelCommand command, 
+            KernelInvocationContext context,
+            KernelPipelineContinuation next)
+        {
+            await next(command, context);
+
+            while (_packages.TryDequeue(out var packageAdded))
+            {
+                var loadExtensionsInDirectory = new LoadExtensionsInDirectory(packageAdded.PackageReference.PackageRoot, Name);
+                await this.SendAsync(loadExtensionsInDirectory);
+            }
+        }
+
+        protected override void SetHandlingKernel(IKernelCommand command, KernelInvocationContext context)
+        {
+            var kernel = GetHandlingKernel(command, context);
+
+            if (command is KernelCommandBase commandBase && 
+                commandBase.HandlingKernel == null)
+            {
+                commandBase.HandlingKernel = kernel;
+            }
+
+            if (context.HandlingKernel == null)
+            {
+                context.HandlingKernel = kernel;
+            }
+        }
+
+        private IKernel GetHandlingKernel(
             IKernelCommand command,
             KernelInvocationContext context)
         {
-            var targetKernelName = (command as KernelCommandBase)?.TargetKernelName
+            var commandBase = command as KernelCommandBase;
+
+            var targetKernelName = commandBase?.TargetKernelName
                                    ?? DefaultKernelName;
-            if (context.HandlingKernel == null || context.HandlingKernel.Name != targetKernelName)
+
+            IKernel kernel;
+
+            if (targetKernelName != null)
             {
-                if (targetKernelName != null)
-                {
-                    context.HandlingKernel = targetKernelName == Name
-                        ? this
-                        : ChildKernels.FirstOrDefault(k => k.Name == targetKernelName)
-                          ?? throw new NoSuitableKernelException();
-                }
-                else
-                {
-                    context.HandlingKernel = _childKernels.Count switch
-                    {
-                        0 => this,
-                        1 => _childKernels[0],
-                        _ => context.HandlingKernel
-                    };
-                }
+                kernel = targetKernelName == Name
+                             ? this
+                             : ChildKernels.FirstOrDefault(k => k.Name == targetKernelName);
             }
+            else
+            {
+                kernel = _childKernels.Count switch
+                {
+                    0 => this,
+                    1 => _childKernels[0],
+                    _ => context.HandlingKernel
+                };
+            }
+
+            return kernel ?? throw new NoSuitableKernelException(command);
         }
 
         protected internal override async Task HandleAsync(
@@ -125,7 +150,7 @@ namespace Microsoft.DotNet.Interactive
                 return;
             }
 
-            throw new NoSuitableKernelException();
+            throw new NoSuitableKernelException(command);
         }
 
         internal override Task HandleInternalAsync(IKernelCommand command, KernelInvocationContext context)

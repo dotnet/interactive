@@ -55,8 +55,7 @@ namespace Microsoft.DotNet.Interactive
                         commands.Add(cmd);
                     }
 
-                    var runDirective = new AnonymousKernelCommand(
-                        (_, __) => parseResult.InvokeAsync());
+                    var runDirective = new DirectiveCommand(parseResult);
 
                     if (command.Name == "#r")
                     {
@@ -88,7 +87,6 @@ namespace Microsoft.DotNet.Interactive
                                  context.Fail(message: message);
                                  return Task.CompletedTask;
                             }));
-
                     }
                 }
             }
@@ -109,9 +107,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 var parseResult = directiveParser.Parse("#!nuget-restore");
 
-                hoistedCommands.Add(
-                    new AnonymousKernelCommand(
-                        (_, __) => parseResult.InvokeAsync()));
+                hoistedCommands.Add(new DirectiveCommand(parseResult));
             }
 
             return hoistedCommands.Concat(commands).ToArray();
@@ -143,11 +139,16 @@ namespace Microsoft.DotNet.Interactive
                 var commandLineBuilder =
                     new CommandLineBuilder(_rootCommand)
                         .ParseResponseFileAs(ResponseFileHandling.Disabled)
+                        .UseTypoCorrections()
+                        .UseHelp()
                         .UseMiddleware(
-                            context => context.BindingContext
-                                              .AddService(
-                                                  typeof(KernelInvocationContext),
-                                                  () => KernelInvocationContext.Current));
+                            context =>
+                            {
+                                context.BindingContext
+                                       .AddService(
+                                           typeof(KernelInvocationContext),
+                                           () => KernelInvocationContext.Current);
+                            });
 
                 commandLineBuilder.EnableDirectives = false;
 

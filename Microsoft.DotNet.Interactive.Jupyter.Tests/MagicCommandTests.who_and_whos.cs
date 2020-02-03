@@ -121,9 +121,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                 await kernel.SendAsync(new SubmitCode("#!who"));
 
                 events.Should()
-                      .ContainSingle(e => e is DisplayedValueProduced)
+                      .ContainSingle<DisplayedValueProduced>()
                       .Which
-                      .As<DisplayedValueProduced>()
                       .FormattedValues
                       .Should()
                       .ContainSingle(v => v.MimeType == "text/html")
