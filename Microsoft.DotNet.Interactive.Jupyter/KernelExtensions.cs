@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             {
                 return new Command("#!time")
                 {
-                    Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
+                    Handler = CommandHandler.Create((KernelInvocationContext context) =>
                     {
                         var timer = new Stopwatch();
                         timer.Start();
@@ -152,6 +152,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
                             return Task.CompletedTask;
                         });
+
+                        return Task.CompletedTask;
                     })
                 };
             }
