@@ -102,7 +102,6 @@ namespace Microsoft.DotNet.Interactive
         protected override void SetHandlingKernel(IKernelCommand command, KernelInvocationContext context)
         {
             var kernel = GetHandlingKernel(command, context);
-         
             if (context.HandlingKernel == null)
             {
                 context.HandlingKernel = kernel;
