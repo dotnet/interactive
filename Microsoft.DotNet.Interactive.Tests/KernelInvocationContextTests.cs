@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using FluentAssertions;
 using System.Linq;
 using System.Threading;
@@ -221,12 +222,17 @@ namespace Microsoft.DotNet.Interactive.Tests
             events.Should().NotContain(e => e is ErrorProduced);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task After_disposal_Current_is_null()
         {
             var context = KernelInvocationContext.Establish(new SubmitCode("123"));
 
-            await ((IAsyncDisposable) context).DisposeAsync();
+            context.OnComplete(async invocationContext =>
+            {
+                await Task.Delay(10);
+            });
+
+            await context.DisposeAsync();
 
             KernelInvocationContext.Current.Should().BeNull();
         }

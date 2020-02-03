@@ -65,16 +65,18 @@ namespace Microsoft.DotNet.Interactive
 
         public void Publish(IKernelEvent @event)
         {
+            if (IsComplete)
+            {
+                return;
+            }
+
             var command = @event.Command;
 
             if (command == null ||
                 Command == command ||
                 _childCommands.Contains(command))
             {
-                if (!_events.IsDisposed)
-                {
-                    _events.OnNext(@event);
-                }
+                _events.OnNext(@event);
             }
         }
 
@@ -84,9 +86,11 @@ namespace Microsoft.DotNet.Interactive
 
         public static KernelInvocationContext Establish(IKernelCommand command)
         {
-            if (_current.Value == null)
+            if (_current.Value == null || _current.Value.IsComplete)
             {
-                _current.Value = new KernelInvocationContext(command);
+                var context = new KernelInvocationContext(command);
+
+                _current.Value = context;
             }
             else
             {
@@ -110,19 +114,29 @@ namespace Microsoft.DotNet.Interactive
             await HandlingKernel.SendAsync(command);
         }
 
-        async ValueTask IAsyncDisposable.DisposeAsync()
+        public ValueTask DisposeAsync()
         {
             if (_current.Value is {} active)
             {
                 _current.Value = null;
 
-                foreach (var action in _onCompleteActions)
+                if (_onCompleteActions.Count > 0)
                 {
-                    await action.Invoke(this);
+                    Task.Run(async () =>
+                        {
+                            foreach (var action in _onCompleteActions)
+                            {
+                                await action.Invoke(this);
+                            }
+                        })
+                        .Wait();
                 }
 
                 active.Complete(Command);
             }
+
+            // This method is not async because it would prevent the setting of _current.Value to null from flowing up to the caller.
+            return new ValueTask(Task.CompletedTask);
         }
     }
 }

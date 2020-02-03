@@ -7,7 +7,6 @@ using FluentAssertions;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
-using Pocket;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -83,17 +82,17 @@ namespace Microsoft.DotNet.Interactive.Tests
             kernel.AddMiddleware(async (command, context, next) => {
                 middeware1Count++;
                 await next(command, context);
-            });
+            },"one");
             kernel.AddMiddleware(async (command, context, next) =>
             {
                 middeware2Count++;
                 await next(command, context);
-            });
+            },"two");
             kernel.AddMiddleware(async (command, context, next) =>
             {
                 middeware3Count++;
                 await next(command, context);
-            });
+            }, "three");
 
             await kernel.SendAsync(new SubmitCode("123"));
 

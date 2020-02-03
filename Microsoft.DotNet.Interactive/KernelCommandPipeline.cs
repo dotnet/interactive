@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Interactive
                             {
                                 await first.func(cmd1, ctx1, async (cmd2, ctx2) =>
                                 {
-                                    // Debug.WriteLine($"{first.name}: {cmd1}", cmd1);
+                                    Debug.WriteLine($"{first.name}: {cmd1}");
 
                                     await second.func(cmd2, ctx2, next);
                                 });

@@ -11,7 +11,6 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {
@@ -19,13 +18,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
     {
         public class time
         {
-            private readonly ITestOutputHelper _output;
-
-            public time(ITestOutputHelper output)
-            {
-                _output = output;
-            }
-
             [Fact]
             public async Task time_produces_time_elapsed_to_run_the_code_submission()
             {
@@ -42,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 #!time
 
 using System.Threading.Tasks;
-await Task.Delay(5000);
+await Task.Delay(500);
 display(123);
 "));
 
@@ -74,7 +66,7 @@ display(123);
                       .Value
                       .As<TimeSpan>()
                       .Should()
-                      .BeGreaterOrEqualTo(5000.Milliseconds());
+                      .BeGreaterOrEqualTo(500.Milliseconds());
             }
         }
     }

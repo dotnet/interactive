@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
@@ -155,7 +156,7 @@ namespace Microsoft.DotNet.Interactive
 
                 if (operation.Command == context.Command)
                 {
-                    await ((IAsyncDisposable) context).DisposeAsync();
+                    await context.DisposeAsync();
                 }
                 else
                 {

@@ -161,7 +161,7 @@ i");
         }
 
         [Fact]
-        public async Task OnComplete_can_be_used_to_act_completion_of_commands()
+        public async Task OnComplete_can_be_used_to_act_on_completion_of_commands()
         {
             using var kernel = new FakeKernel();
 
