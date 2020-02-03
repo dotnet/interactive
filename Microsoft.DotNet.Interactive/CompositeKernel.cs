@@ -35,16 +35,11 @@ namespace Microsoft.DotNet.Interactive
 
         public string DefaultKernelName { get; set; }
 
-        public void Add(IKernel kernel)
+        public void Add(IKernel kernel, IEnumerable<string> aliases = null)
         {
             if (kernel == null)
             {
                 throw new ArgumentNullException(nameof(kernel));
-            }
-
-            if (ChildKernels.Any(k => k.Name == kernel.Name))
-            {
-                throw new ArgumentException($"Kernel \"{kernel.Name}\" already registered", nameof(kernel));
             }
 
             _childKernels.Add(kernel);
@@ -57,11 +52,16 @@ namespace Microsoft.DotNet.Interactive
             var chooseKernelCommand = new Command($"#!{kernel.Name}")
             {
                 Handler = CommandHandler.Create<KernelInvocationContext>(
-                    context =>
-                    {
-                        context.HandlingKernel = kernel;
-                    })
+                    context => { context.HandlingKernel = kernel; })
             };
+
+            if (aliases is { })
+            {
+                foreach (var alias in aliases)
+                {
+                    chooseKernelCommand.AddAlias(alias);
+                }
+            }
 
             AddDirective(chooseKernelCommand);
             RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));

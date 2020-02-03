@@ -30,8 +30,8 @@ namespace Microsoft.DotNet.Interactive.Tests
             _disposables.Dispose();
         }
 
-        [Fact(Timeout = 45000)]
-        public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_magic_command()
+        [Fact]
+        public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_directive()
         {
             var cSharpKernel = new CSharpKernel();
             var fSharpKernel = new FSharpKernel();
@@ -55,7 +55,34 @@ new [] {1,2,3}");
 
             await kernel.SendAsync(fsharpCommand);
 
-            Pocket.Logger.Log.Info("" , events );
+            events.Should()
+                  .ContainSingle<CommandHandled>(e => e.Command == csharpCommand);
+            events.Should()
+                  .ContainSingle<CommandHandled>(e => e.Command == fsharpCommand);
+        }
+        
+        [Fact]
+        public async Task Handling_kernel_can_be_specified_using_kernel_alias_as_a_directive()
+        {
+            var cSharpKernel = new CSharpKernel();
+            var fSharpKernel = new FSharpKernel();
+            using var kernel = new CompositeKernel();
+            kernel.Add(cSharpKernel, new[] { "#!C#" });
+            kernel.Add(fSharpKernel, new[] { "#!F#" });
+            kernel.DefaultKernelName = fSharpKernel.Name;
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            var csharpCommand = new SubmitCode(@"
+#!C#
+new [] {1,2,3}");
+            await kernel.SendAsync(csharpCommand);
+            
+            var fsharpCommand = new SubmitCode(@"
+#!F#
+[1;2;3]");
+
+            await kernel.SendAsync(fsharpCommand);
 
             events.Should()
                   .ContainSingle<CommandHandled>(e => e.Command == csharpCommand);
@@ -99,7 +126,7 @@ new [] {1,2,3}");
                 .Which
                 .Message
                 .Should()
-                .Be("Kernel \"csharp\" already registered (Parameter 'kernel')");
+                .Be("Alias '#!csharp' is already in use.");
 
         }
 

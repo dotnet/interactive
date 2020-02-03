@@ -22,8 +22,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         internal const string DefaultKernelName = "powershell";
 
         private readonly object _cancellationSourceLock = new object();
-        private Runspace _runspace;
-        private PowerShell _pwsh;
+        private readonly PowerShell _pwsh;
         private CancellationTokenSource _cancellationSource;
 
         public PowerShellKernel()
@@ -31,9 +30,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             //Sets the distribution channel to "PSES" so starts can be distinguished in PS7+ telemetry
             Environment.SetEnvironmentVariable("POWERSHELL_DISTRIBUTION_CHANNEL", "dotnet-interactive-powershell");
 
-            _runspace = RunspaceFactory.CreateRunspace(InitialSessionState.CreateDefault());
-            _runspace.Open();
-            _pwsh = PowerShell.Create(_runspace);
+            var runspace = RunspaceFactory.CreateRunspace(InitialSessionState.CreateDefault());
+            runspace.Open();
+            _pwsh = PowerShell.Create(runspace);
             _cancellationSource = new CancellationTokenSource();
             Name = DefaultKernelName;
 
@@ -45,8 +44,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                     Path.GetDirectoryName(typeof(PowerShellKernel).Assembly.Location),
                     "Modules"));
         }
-
-        #region Overrides
 
         protected override Task HandleAsync(
             IKernelCommand command,
@@ -87,10 +84,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             return Task.CompletedTask;
         }
-
-        #endregion
-
-        #region Handlers
 
         private void HandleSubmitCode(
                 SubmitCode submitCode,
@@ -195,8 +188,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             var reply = new CurrentCommandCancelled(cancelCurrentCommand);
             context.Publish(reply);
         }
-
-        #endregion
 
         public static bool IsCompleteSubmission(string code, out ParseError[] errors)
         {

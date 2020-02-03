@@ -203,24 +203,30 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
         private static IKernel CreateKernel(string defaultKernelName)
         {
-            var kernel = new CompositeKernel
-                         {
-                             new CSharpKernel()
-                                 .UseDefaultFormatting()
-                                 .UseNugetDirective()
-                                 .UseKernelHelpers()
-                                 .UseWho()
-                                 .UseXplot()
-                                 .UseMathAndLaTeX(),
-                             new FSharpKernel()
-                                 .UseDefaultFormatting()
-                                 .UseKernelHelpers()
-                                 .UseWho()
-                                 .UseDefaultNamespaces()
-                                 .UseXplot()
-                                 .UseMathAndLaTeX(),
-                            new PowerShellKernel()
-                         }
+            var compositeKernel = new CompositeKernel();
+
+            compositeKernel.Add(
+                new CSharpKernel()
+                    .UseDefaultFormatting()
+                    .UseNugetDirective()
+                    .UseKernelHelpers()
+                    .UseWho()
+                    .UseXplot()
+                    .UseMathAndLaTeX());
+
+            compositeKernel.Add(
+                new FSharpKernel()
+                    .UseDefaultFormatting()
+                    .UseKernelHelpers()
+                    .UseWho()
+                    .UseDefaultNamespaces()
+                    .UseXplot()
+                    .UseMathAndLaTeX());
+
+            compositeKernel.Add(
+                new PowerShellKernel(), new[] { "#!pwsh" });
+
+            var kernel = compositeKernel
                          .UseDefaultMagicCommands()
                          .UseAbout();
 
