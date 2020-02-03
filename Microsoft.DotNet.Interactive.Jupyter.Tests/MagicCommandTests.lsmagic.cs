@@ -60,6 +60,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                                             }
                                             .UseDefaultMagicCommands()
                                             .LogEventsToPocketLogger();
+                compositeKernel.DefaultKernelName = "csharp";
 
                 compositeKernel.AddDirective(new Command("#!from-compositekernel"));
 

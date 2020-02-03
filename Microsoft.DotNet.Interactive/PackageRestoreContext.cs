@@ -43,7 +43,6 @@ namespace Microsoft.DotNet.Interactive
             AssemblyLoadContext.Default.Resolving += OnResolving;
         }
 
-
         private Assembly OnResolving(AssemblyLoadContext loadContext, AssemblyName assemblyName)
         {
             var data = _resolvedPackageReferences.Values

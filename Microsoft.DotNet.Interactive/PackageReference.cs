@@ -45,5 +45,15 @@ namespace Microsoft.DotNet.Interactive
 
             return true;
         }
+
+        public override string ToString()
+        {
+            if (string.IsNullOrWhiteSpace(PackageVersion))
+            {
+                return PackageName;
+            }
+
+            return $"{PackageName},{PackageVersion}";
+        }
     }
 }

@@ -3,18 +3,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class KernelCommandPipeline
+    internal class KernelCommandPipeline
     {
         private readonly KernelBase _kernel;
 
-        private readonly List<KernelCommandPipelineMiddleware> _middlewares = new List<KernelCommandPipelineMiddleware>();
+        private readonly List<(KernelCommandPipelineMiddleware func, string name)> _middlewares = new List<(KernelCommandPipelineMiddleware func, string name)>();
 
         private KernelCommandPipelineMiddleware _pipeline;
 
@@ -49,23 +49,41 @@ namespace Microsoft.DotNet.Interactive
 
         private KernelCommandPipelineMiddleware BuildPipeline()
         {
-            var invocations = new List<KernelCommandPipelineMiddleware>(_middlewares);
+            var invocations = new List<(KernelCommandPipelineMiddleware func, string name)>(_middlewares);
 
-            invocations.Add(async (command, context, _) =>
-            {
-                await _kernel.HandleInternalAsync(command, context);
-            });
+            invocations.Add(
+                (
+                    func: async (command, context, _) => await _kernel.HandleInternalAsync(command, context),
+                    name: nameof(KernelBase.HandleAsync) + $"({_kernel.Name})"
+                ));
 
-            return invocations.Aggregate(
-                (function, continuation) =>
-                    (cmd1, ctx1, next) =>
-                        function(cmd1, ctx1, (cmd2, ctx2) =>
-                                     continuation(cmd2, ctx2, next)));
+            var combined =
+                invocations
+                    .Aggregate(
+                        (first, second) =>
+                        {
+                            return (Combine, first.name + "->" + second.name);
+
+                            async Task Combine(IKernelCommand cmd1, KernelInvocationContext ctx1, KernelPipelineContinuation next)
+                            {
+                                await first.func(cmd1, ctx1, async (cmd2, ctx2) =>
+                                {
+                                    Debug.WriteLine($"{first.name}: {cmd1}");
+
+                                    await second.func(cmd2, ctx2, next);
+                                });
+                            }
+                        })
+                    .func;
+
+            return combined;
         }
 
-        public void AddMiddleware(KernelCommandPipelineMiddleware middleware)
+        public void AddMiddleware(
+            KernelCommandPipelineMiddleware middleware,
+            string caller)
         {
-            _middlewares.Add(middleware);
+            _middlewares.Add((middleware, caller));
             _pipeline = null;
         }
     }
