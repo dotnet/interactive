@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             var executeInputPayload = new ExecuteInput(executeRequest.Code, _executionCount);
             context.JupyterMessageSender.Send(executeInputPayload);
 
-            var command = new SubmitCode(executeRequest.Code);
+            var command = new SubmitCode(executeRequest.Code) { AllowStdin = executeRequest.AllowStdin };
 
             await SendAsync(context, command);
         }
@@ -71,14 +71,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         private void OnInputRequested(JupyterRequestContext context, InputRequested inputRequested)
         {
-            var executeRequest = GetJupyterRequest(context);
-            inputRequested.AllowStdin = executeRequest.AllowStdin;
-
-            if (executeRequest.AllowStdin)
-            {
-                var inputReq = new InputRequest(inputRequested.Prompt, inputRequested.IsPassword);
-                inputRequested.Content = context.JupyterMessageSender.Send(inputReq);
-            }
+            var inputReq = new InputRequest(inputRequested.Prompt, inputRequested.IsPassword);
+            inputRequested.Content = context.JupyterMessageSender.Send(inputReq);
         }
 
         private void OnCommandFailed(

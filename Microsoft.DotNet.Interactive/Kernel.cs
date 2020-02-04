@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive
             var inputReqEvent = new InputRequested(
                 prompt,
                 isPassword,
-                KernelInvocationContext.Current.Command);
+                KernelInvocationContext.Current?.Command);
 
             KernelInvocationContext.Current.Publish(inputReqEvent);
             return inputReqEvent.Content;
