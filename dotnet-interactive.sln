@@ -37,11 +37,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotnet-interactive.Tests", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XPlot.DotNet.Interactive.KernelExtensions", "XPlot.DotNet.Interactive.KernelExtensions\XPlot.DotNet.Interactive.KernelExtensions.csproj", "{F3479E07-528D-42FD-829B-5A801A1C8562}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnet-interactive.Profiler", "dotnet-interactive.Profiler\dotnet-interactive.Profiler.csproj", "{71098504-D54D-4F2B-AF1F-FD54C471067B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotnet-interactive.Profiler", "dotnet-interactive.Profiler\dotnet-interactive.Profiler.csproj", "{71098504-D54D-4F2B-AF1F-FD54C471067B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.Interactive.PowerShell", "Microsoft.DotNet.Interactive.PowerShell\Microsoft.DotNet.Interactive.PowerShell.csproj", "{CE412E28-8660-43CA-8E0B-293EAC624623}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.PowerShell", "Microsoft.DotNet.Interactive.PowerShell\Microsoft.DotNet.Interactive.PowerShell.csproj", "{CE412E28-8660-43CA-8E0B-293EAC624623}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.Interactive.PowerShell.Tests", "Microsoft.DotNet.Interactive.PowerShell.Tests\Microsoft.DotNet.Interactive.PowerShell.Tests.csproj", "{30DE6920-EA82-4E4F-BFCA-1FF179FAA2DA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.PowerShell.Tests", "Microsoft.DotNet.Interactive.PowerShell.Tests\Microsoft.DotNet.Interactive.PowerShell.Tests.csproj", "{30DE6920-EA82-4E4F-BFCA-1FF179FAA2DA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -290,6 +290,8 @@ Global
 		{5AA74BE6-5D52-43E5-8654-5F5640F65B8F} = {11BA3480-4584-435C-BA9A-8C554DB60E9F}
 		{F3479E07-528D-42FD-829B-5A801A1C8562} = {B95A8485-8C53-4F56-B0CE-19C0726B5805}
 		{71098504-D54D-4F2B-AF1F-FD54C471067B} = {11BA3480-4584-435C-BA9A-8C554DB60E9F}
+		{CE412E28-8660-43CA-8E0B-293EAC624623} = {B95A8485-8C53-4F56-B0CE-19C0726B5805}
+		{30DE6920-EA82-4E4F-BFCA-1FF179FAA2DA} = {11BA3480-4584-435C-BA9A-8C554DB60E9F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6D05A9AF-CFFB-4187-8599-574387B76727}
