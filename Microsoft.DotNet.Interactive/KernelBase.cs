@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -31,6 +32,8 @@ namespace Microsoft.DotNet.Interactive
             Pipeline = new KernelCommandPipeline(this);
 
             AddSetKernelMiddleware();
+
+            AddCaptureConsoleMiddleware();
            
             AddDirectiveMiddlewareAndCommonCommandHandlers();
 
@@ -66,6 +69,22 @@ namespace Microsoft.DotNet.Interactive
                 await next(command, context);
 
                 context.CurrentKernel = previousKernel;
+            });
+        }
+
+        private void AddCaptureConsoleMiddleware()
+        {
+            AddMiddleware(async (command, context, next) =>
+            {
+                using var console = await ConsoleOutput.CaptureAsync();
+                using var _ = console.Out.Subscribe(s => context.PublishStandardOut(s, command));
+                using var __ = console.Error.Subscribe(s => context.PublishStandardError(s, command));
+
+                await next(command, context);
+
+
+
+
             });
         }
 

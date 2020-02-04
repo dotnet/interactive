@@ -3,6 +3,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine;
+using System.CommandLine.IO;
 using System.IO;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
@@ -12,12 +14,18 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
-    public class ConsoleOutput : IDisposable
+    public interface  IObservableConsole : IDisposable
+    {
+         IObservable<string> Out { get; }
+         IObservable<string> Error { get; }
+    }
+
+    public class ConsoleOutput : IObservableConsole
     {
         private TextWriter _originalOutputWriter;
         private TextWriter _originalErrorWriter;
-        private readonly TrackingStringWriter _outputWriter = new TrackingStringWriter();
-        private readonly TrackingStringWriter _errorWriter = new TrackingStringWriter();
+        private readonly ObservableStringWriter _outputWriter = new ObservableStringWriter();
+        private readonly ObservableStringWriter _errorWriter = new ObservableStringWriter();
 
         private const int NOT_DISPOSED = 0;
         private const int DISPOSED = 1;
@@ -30,8 +38,16 @@ namespace Microsoft.DotNet.Interactive.Utility
         {
         }
 
-        public static async Task<ConsoleOutput> CaptureAsync()
+        public static async Task<IObservableConsole> CaptureAsync()
         {
+            if (Console.Out is ObservableStringWriter trackingOut &&
+                Console.Error is ObservableStringWriter trackingErr)
+            {
+                return new ObservableConsole(
+                    @out: trackingOut,
+                    error: trackingErr);
+            }
+
             var redirector = new ConsoleOutput();
             await _consoleLock.WaitAsync();
 
@@ -52,14 +68,20 @@ namespace Microsoft.DotNet.Interactive.Utility
             return redirector;
         }
 
+        public IObservable<string> Out => _outputWriter;
+
+        public IObservable<string> Error => _errorWriter;
+
         public IDisposable SubscribeToStandardOutput(Action<string> action)
         {
-            return _outputWriter.Subscribe(action);
+            // FIX: (SubscribeToStandardOutput) delete
+            return Out.Subscribe(action);
         }
 
         public IDisposable SubscribeToStandardError(Action<string> action)
         {
-            return _errorWriter.Subscribe(action);
+            // FIX: (SubscribeToStandardError) delete
+            return Error.Subscribe(action);
         }
 
         public void Dispose()
@@ -92,7 +114,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         public bool IsEmpty() => _outputWriter.ToString().Length == 0 && _errorWriter.ToString().Length == 0;
 
-        private class TrackingStringWriter : StringWriter, IObservable<string>
+        private class ObservableStringWriter : StringWriter, IObservable<string>
         {
             private class Region
             {
@@ -107,7 +129,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
             private readonly CompositeDisposable _disposable;
 
-            public TrackingStringWriter()
+            public ObservableStringWriter()
             {
                 _disposable = new CompositeDisposable
                 {
@@ -125,8 +147,6 @@ namespace Microsoft.DotNet.Interactive.Utility
                 base.Dispose(disposing);
             }
 
-            public bool WriteOccurred { get; set; }
-
             public override void Write(char value)
             {
                 TrackWriteOperation(() => base.Write(value));
@@ -134,7 +154,6 @@ namespace Microsoft.DotNet.Interactive.Utility
 
             private void TrackWriteOperation(Action action)
             {
-                WriteOccurred = true;
                 if (_trackingWriteOperation)
                 {
                     action();
@@ -168,7 +187,6 @@ namespace Microsoft.DotNet.Interactive.Utility
 
             private async Task TrackWriteOperationAsync(Func<Task> action)
             {
-                WriteOccurred = true;
                 if (_trackingWriteOperation)
                 {
                     await action();
@@ -416,6 +434,24 @@ namespace Microsoft.DotNet.Interactive.Utility
                     Disposable.Create(() => Interlocked.Decrement(ref _observerCount)),
                     _writeEvents.Subscribe(observer)
                 };
+            }
+        }
+
+        private class ObservableConsole : IObservableConsole
+        {
+            public ObservableConsole(
+                ObservableStringWriter @out,
+                ObservableStringWriter error)
+            {
+                Out = @out;
+                Error = error;
+            }
+
+            public IObservable<string> Out { get; }
+            public IObservable<string> Error { get; }
+
+            public void Dispose()
+            {
             }
         }
     }

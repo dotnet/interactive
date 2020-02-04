@@ -601,7 +601,7 @@ Console.Write(""value three"");",
                 .NotContain(e => e is DisplayEventBase);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task it_returns_a_similarly_shaped_error(Language language)

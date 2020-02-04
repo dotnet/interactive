@@ -175,48 +175,44 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
 
             Exception exception = null;
-            using var console = await ConsoleOutput.CaptureAsync();
-            using (console.SubscribeToStandardOutput(std => context.PublishStandardOut(std, submitCode)))
-            using (console.SubscribeToStandardError(std => context.PublishStandardError(std, submitCode)))
-            {
-                if (!cancellationSource.IsCancellationRequested)
-                {
-                    ScriptOptions = ScriptOptions.WithMetadataResolver(
-                        ScriptMetadataResolver.Default.WithBaseDirectory(
-                            Directory.GetCurrentDirectory()));
 
-                    try
+            if (!cancellationSource.IsCancellationRequested)
+            {
+                ScriptOptions = ScriptOptions.WithMetadataResolver(
+                    ScriptMetadataResolver.Default.WithBaseDirectory(
+                        Directory.GetCurrentDirectory()));
+
+                try
+                {
+                    if (ScriptState == null)
                     {
-                        if (ScriptState == null)
-                        {
-                            ScriptState = await CSharpScript.RunAsync(
-                                    code,
-                                    ScriptOptions,
-                                    cancellationToken: cancellationSource.Token)
-                                .UntilCancelled(cancellationSource.Token);
-                        }
-                        else
-                        {
-                            ScriptState = await ScriptState.ContinueWithAsync(
-                                    code,
-                                    ScriptOptions,
-                                    catchException: e =>
-                                   {
-                                       exception = e;
-                                       return true;
-                                   },
-                                    cancellationToken: cancellationSource.Token)
-                                .UntilCancelled(cancellationSource.Token);
-                        }
+                        ScriptState = await CSharpScript.RunAsync(
+                                                            code,
+                                                            ScriptOptions,
+                                                            cancellationToken: cancellationSource.Token)
+                                                        .UntilCancelled(cancellationSource.Token);
                     }
-                    catch (CompilationErrorException cpe)
+                    else
                     {
-                        exception = new CodeSubmissionCompilationErrorException(cpe);
+                        ScriptState = await ScriptState.ContinueWithAsync(
+                                                           code,
+                                                           ScriptOptions,
+                                                           catchException: e =>
+                                                           {
+                                                               exception = e;
+                                                               return true;
+                                                           },
+                                                           cancellationToken: cancellationSource.Token)
+                                                       .UntilCancelled(cancellationSource.Token);
                     }
-                    catch (Exception e)
-                    {
-                        exception = e;
-                    }
+                }
+                catch (CompilationErrorException cpe)
+                {
+                    exception = new CodeSubmissionCompilationErrorException(cpe);
+                }
+                catch (Exception e)
+                {
+                    exception = e;
                 }
             }
 
