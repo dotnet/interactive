@@ -11,15 +11,15 @@ namespace Microsoft.DotNet.Interactive.Events
     public class InputRequested : KernelEventBase
     {
         [JsonConstructor]
-        internal InputRequested(string prompt, bool password)
+        internal InputRequested(string prompt, bool isPassword)
         {
             Prompt = prompt;
-            Password = password;
+            Password = isPassword;
         }
 
         public InputRequested(
             string prompt,
-            bool password,
+            bool isPassword,
             IKernelCommand command) : base(command)
         {
             if (command == null)
@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.Events
             }
 
             Prompt = prompt;
-            Password = password;
+            Password = isPassword;
         }
 
         [JsonIgnore]
