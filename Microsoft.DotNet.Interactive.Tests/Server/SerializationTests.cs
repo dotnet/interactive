@@ -136,7 +136,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
             IEnumerable<IKernelEvent> events()
             {
-                var submitCode = new SubmitCode("123");
+                var submitCode = new SubmitCode("123") { AllowStdin = true };
 
                 yield return new CodeSubmissionReceived(
                     submitCode);

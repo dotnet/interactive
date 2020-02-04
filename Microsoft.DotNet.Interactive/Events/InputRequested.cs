@@ -26,23 +26,23 @@ namespace Microsoft.DotNet.Interactive.Events
                 throw new ArgumentNullException(nameof(command));
             }
 
+            var submitCode = command as SubmitCode;
+            if (submitCode == null)
+            {
+                throw new ArgumentException("An input can be requested only if a 'submitCode' command is currently being processed.", nameof(command));
+            }
+
+            if (!submitCode.AllowStdin)
+            {
+                throw new NotSupportedException("Input request is not supported. The stdin channel is not allowed by the frontend.");
+            }
+
             Prompt = prompt;
             IsPassword = isPassword;
         }
 
         [JsonIgnore]
-        private string _content;
-
-        [JsonIgnore]
-        public string Content
-        {
-            get => AllowStdin ? _content : throw new NotSupportedException("The stdin channel is not allowed by the frontend.");
-            set => _content = value;
-        }
-
-        [JsonIgnore]
-        public bool AllowStdin { get; set; }
-
+        public string Content { get; set; }
         public string Prompt { get; }
         public bool IsPassword { get; }
 
