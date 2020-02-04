@@ -22,6 +22,19 @@ namespace Microsoft.DotNet.Interactive
             return Task.Run(() => KernelInvocationContext.Current.DisplayAsync(value, mimeType)).Result;
         }
 
+        public static string input(
+            string prompt = "",
+            bool isPassword = false)
+        {
+            var inputReqEvent = new InputRequested(
+                prompt,
+                isPassword,
+                KernelInvocationContext.Current.Command);
+
+            KernelInvocationContext.Current.Publish(inputReqEvent);
+            return inputReqEvent.Content;
+        }
+
         public static IHtmlContent HTML(string content) => content.ToHtmlContent();
 
         public static void Javascript(
