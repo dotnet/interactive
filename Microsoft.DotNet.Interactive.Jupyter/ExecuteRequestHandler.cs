@@ -72,14 +72,13 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         private void OnInputRequested(JupyterRequestContext context, InputRequested inputRequested)
         {
             var executeRequest = GetJupyterRequest(context);
-            if (!executeRequest.AllowStdin)
-            {
-                throw new StdInChannelNotSupportedException();
-            }
+            inputRequested.AllowStdin = executeRequest.AllowStdin;
 
-            var inputReq = new InputRequest(inputRequested.Prompt, inputRequested.Password);
-            var inputValue = context.JupyterMessageSender.Send(inputReq);
-            inputRequested.Input = inputValue;
+            if (executeRequest.AllowStdin)
+            {
+                var inputReq = new InputRequest(inputRequested.Prompt, inputRequested.IsPassword);
+                inputRequested.Content = context.JupyterMessageSender.Send(inputReq);
+            }
         }
 
         private void OnCommandFailed(
