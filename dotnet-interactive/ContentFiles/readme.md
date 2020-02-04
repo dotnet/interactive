@@ -15,12 +15,14 @@ https://github.com/dotnet/interactive
 	```console
 	[InstallKernelSpec] Installed kernelspec .net in C:\Users\AppData\Roaming\jupyter\kernels\.net-csharp
 	[InstallKernelSpec] Installed kernelspec .net in C:\Users\AppData\Roaming\jupyter\kernels\.net-fsharp
+	[InstallKernelSpec] Installed kernelspec .net in C:\Users\AppData\Roaming\jupyter\kernels\.net-powershell
 	.NET kernel installation succeeded
 	```
 
 4. Now, executing `jupyter kernelspec list` will show the `dotnet-interactive` kernel:
 
 	```console
-	.net-csharp    C:\Users\AppData\Roaming\jupyter\kernels\.net-csharp
-	.net-fsharp    C:\Users\AppData\Roaming\jupyter\kernels\.net-fsharp
+	.net-csharp     C:\Users\AppData\Roaming\jupyter\kernels\.net-csharp
+	.net-fsharp     C:\Users\AppData\Roaming\jupyter\kernels\.net-fsharp
+	.net-powershell C:\Users\AppData\Roaming\jupyter\kernels\.net-powershell
 	```
