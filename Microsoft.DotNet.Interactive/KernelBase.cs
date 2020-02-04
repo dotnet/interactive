@@ -297,15 +297,10 @@ namespace Microsoft.DotNet.Interactive
         {
             if (_serviceContainer.TryAdd(typeof(T), service))
             {
-                switch (service)
+                RegisterForDisposal(() =>
                 {
-                    case IDisposable disposableService:
-                        RegisterForDisposal(() =>
-                        {
-                            _serviceContainer.TryRemove(typeof(T), out _);
-                        });
-                        break;
-                }
+                    _serviceContainer.TryRemove(typeof(T), out _);
+                });
             }
         }
 
