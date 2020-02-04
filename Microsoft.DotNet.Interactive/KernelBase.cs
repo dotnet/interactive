@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly CompositeDisposable _disposables;
         private readonly SubmissionSplitter _submissionSplitter = new SubmissionSplitter();
         private readonly ConcurrentQueue<IKernelCommand> _deferredCommands = new ConcurrentQueue<IKernelCommand>();
+        private readonly ConcurrentDictionary<Type, object> _serviceContainer = new ConcurrentDictionary<Type, object>();
 
         protected KernelBase()
         {
@@ -187,6 +188,8 @@ namespace Microsoft.DotNet.Interactive
         private readonly ConcurrentQueue<KernelOperation> _commandQueue =
             new ConcurrentQueue<KernelOperation>();
 
+  
+
         public Task<IKernelCommandResult> SendAsync(
             IKernelCommand command,
             CancellationToken cancellationToken)
@@ -289,5 +292,26 @@ namespace Microsoft.DotNet.Interactive
         public void Dispose() => _disposables.Dispose();
 
         string IKernel.Name => Name;
+
+        public void AddService<T>(T service) where T : class
+        {
+            if (_serviceContainer.TryAdd(typeof(T), service))
+            {
+                switch (service)
+                {
+                    case IDisposable disposableService:
+                        RegisterForDisposal(() =>
+                        {
+                            _serviceContainer.TryRemove(typeof(T), out _);
+                        });
+                        break;
+                }
+            }
+        }
+
+        public T GetService<T>() where T : class
+        {
+            return _serviceContainer.TryGetValue(typeof(T), out var service)? (T)service : default;
+        }
     }
 }
