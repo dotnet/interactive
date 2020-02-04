@@ -196,6 +196,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new IncompleteCodeSubmissionReceived(submitCode);
 
+                yield return new InputRequested("prompt", isPassword: false, submitCode);
+
                 yield return new PackageAdded(
                     new ResolvedPackageReference("ThePackage", "1.2.3", new[] { new FileInfo(Path.GetTempFileName()) }));
 
