@@ -16,7 +16,7 @@ if (Test-Path 'env:DisableArcade') {
     }
 
     $script:toolLocation = "$thisDir\..\artifacts\packages\Debug\Shipping"
-    $script:toolVersion = "1.0.44142.42"
+    $script:toolVersion = "1.0.0-dev"
 }
 
 if (Get-Command dotnet-interactive -ErrorAction SilentlyContinue) {
