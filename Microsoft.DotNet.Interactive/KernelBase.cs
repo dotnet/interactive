@@ -295,7 +295,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void AddService<T>(T service) where T : class
         {
-            if (_serviceContainer.TryAdd(typeof(T), service))
+            if (service != null && _serviceContainer.TryAdd(typeof(T), service))
             {
                 RegisterForDisposal(() =>
                 {
