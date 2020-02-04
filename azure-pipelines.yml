@@ -102,6 +102,11 @@ stages:
           env:
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
 
+        # Prevent symbols packages from being saved in the following `packages` artifact because they're incomplete.
+        # See `eng/AfterSolutionBuild.targets:StripFilesFromSymbolPackages` for details.
+        - script: del /S $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\*.symbols.nupkg
+          displayName: Clean symbol packages
+
         - task: PublishBuildArtifacts@1
           displayName: Publish packages to artifacts container
           inputs:

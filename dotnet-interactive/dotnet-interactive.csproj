@@ -105,18 +105,26 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="CopyKernelFiles" DependsOnTargets="PrepareKernels">
-    <Copy SourceFiles="@(KernelFiles)" DestinationFolder="$(KernelDestinationDirectory)/%(RecursiveDir)" />
+  <Target Name="CopyKernelSpecificFiles"  DependsOnTargets="PrepareKernels;CopyLogoFiles">
+    <CreateItem Include="%(KernelFolders.Identity)/**/*.json" AdditionalMetadata="Destination=$([System.IO.Path]::GetFileName(%(KernelFolders.Identity)))">
+      <Output TaskParameter="Include" ItemName="KernelSpecificJsonFiles" />
+    </CreateItem>
+
+    <CreateItem Include="%(KernelFolders.Identity)/**/*.png" AdditionalMetadata="Destination=$([System.IO.Path]::GetFileName(%(KernelFolders.Identity)))">
+      <Output TaskParameter="Include" ItemName="KernelSpecificLogoFiles" />
+    </CreateItem>
+    <Copy SourceFiles="%(KernelSpecificJsonFiles.FullPath)" DestinationFolder="$(KernelDestinationDirectory)/%(KernelSpecificJsonFiles.Destination)" />
+    <Copy SourceFiles="%(KernelSpecificLogoFiles.FullPath)" DestinationFolder="$(KernelDestinationDirectory)/%(KernelSpecificLogoFiles.Destination)" />
   </Target>
 
-  <Target Name="CopyLogoFiles" DependsOnTargets="PrepareKernels;CopyKernelFiles">
+  <Target Name="CopyLogoFiles" DependsOnTargets="PrepareKernels">
     <CreateItem Include="@(KernelLogoFiles)" AdditionalMetadata="Destination=$([System.IO.Path]::GetFileName(%(KernelFolders.Identity)))">
       <Output TaskParameter="Include" ItemName="AllKernelLogoFiles" />
     </CreateItem>
-    <Copy SourceFiles="%(AllKernelLogoFiles.FullPath)" DestinationFolder="$(KernelDestinationDirectory)/%(AllKernelLogoFiles.Destination)" />
+    <Copy SourceFiles="%(AllKernelLogoFiles.FullPath)" DestinationFolder="$(KernelDestinationDirectory)/%(AllKernelLogoFiles.Destination)"/>
   </Target>
 
-  <Target Name="ZipDotnetKernel" BeforeTargets="PrepareForBuild" DependsOnTargets="CopyKernelFiles;CopyLogoFiles">
+  <Target Name="ZipDotnetKernel" BeforeTargets="PrepareForBuild" DependsOnTargets="CopyKernelSpecificFiles;CopyLogoFiles">
     <ZipDirectory SourceDirectory="$(KernelDestinationDirectory)" DestinationFile="$(IntermediateOutputPath)/dotnetKernel.zip" Overwrite="true" />
   </Target>
   
