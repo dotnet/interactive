@@ -9,6 +9,19 @@
     <FileSignInfo Include="Namotion.Reflection.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="NetMQ.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="NJsonSchema.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Serilog.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Serilog.Sinks.RollingFileAlternate.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="XPlot.Plotly.dll" CertificateName="3PartySHA2" />
+
+    <!-- PowerShell Modules that are shipped with the PowerShell subkernel -->
+
+    <!-- Microsoft.PowerShell.Archive -->
+    <FileSignInfo Include="Microsoft.PowerShell.Archive.cat" CertificateName="None" />
+    <FileSignInfo Include="Microsoft.PowerShell.Archive.psd1" CertificateName="None" />
+    <FileSignInfo Include="Microsoft.PowerShell.Archive.psm1" CertificateName="None" />
+    <FileSignInfo Include="ArchiveResources.psd1" CertificateName="None" />
+
+    <!-- PackageManagement -->
     <FileSignInfo Include="PackageManagement.cat" CertificateName="None" />
     <FileSignInfo Include="PackageManagement.format.ps1xml" CertificateName="None" />
     <FileSignInfo Include="PackageManagement.psd1" CertificateName="None" />
@@ -33,9 +46,28 @@
     <FileSignInfo Include="MSFT_PackageManagementSource.schema.mfl" CertificateName="None" />
     <FileSignInfo Include="MSFT_PackageManagementSource.schema.mof" CertificateName="None" />
     <FileSignInfo Include="MSFT_PackageManagementSource.strings.psd1" CertificateName="None" />
-    <FileSignInfo Include="Serilog.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="Serilog.Sinks.RollingFileAlternate.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="XPlot.Plotly.dll" CertificateName="3PartySHA2" />
+    
+    <!-- PowerShellGet -->
+    <FileSignInfo Include="PowerShellGet.cat" CertificateName="None" />
+    <FileSignInfo Include="PowerShellGet.psd1" CertificateName="None" />
+    <FileSignInfo Include="PSGet.Format.ps1xml" CertificateName="None" />
+    <FileSignInfo Include="PSGet.Resource.psd1" CertificateName="None" />
+    <FileSignInfo Include="PSModule.psm1" CertificateName="None" />
+    <FileSignInfo Include="MSFT_PSRepository.psm1" CertificateName="None" />
+    <FileSignInfo Include="MSFT_PSRepository.schema.mfl" CertificateName="None" />
+    <FileSignInfo Include="MSFT_PSRepository.schema.mof" CertificateName="None" />
+    <FileSignInfo Include="MSFT_PSRepository.strings.psd1" CertificateName="None" />
+    <FileSignInfo Include="MSFT_PSModule.psm1" CertificateName="None" />
+    <FileSignInfo Include="MSFT_PSModule.schema.mfl" CertificateName="None" />
+    <FileSignInfo Include="MSFT_PSModule.schema.mof" CertificateName="None" />
+    <FileSignInfo Include="MSFT_PSModule.strings.psd1" CertificateName="None" />
+    <FileSignInfo Include="PowerShellGet.ResourceHelper.psm1" CertificateName="None" />
+    <FileSignInfo Include="PowerShellGet.ResourceHelper.strings.psd1" CertificateName="None" />
+    <FileSignInfo Include="PowerShellGet.LocalizationHelper.psm1" CertificateName="None" />
+
+    <!-- ThreadJob -->
+    <FileSignInfo Include="Microsoft.PowerShell.ThreadJob.dll" CertificateName="None" />
+    <FileSignInfo Include="ThreadJob.psd1" CertificateName="None" />
   </ItemGroup>
 
 </Project>
