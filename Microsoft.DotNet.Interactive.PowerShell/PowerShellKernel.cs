@@ -38,11 +38,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             // Add Modules directory that contains the helper modules
             string psModulePath = Environment.GetEnvironmentVariable("PSModulePath");
+            string psJupyterModulePath = Path.Join(
+                Path.GetDirectoryName(typeof(PowerShellKernel).Assembly.Location),
+                "Modules");
 
             Environment.SetEnvironmentVariable("PSModulePath",
-                psModulePath + Path.PathSeparator + Path.Join(
-                    Path.GetDirectoryName(typeof(PowerShellKernel).Assembly.Location),
-                    "Modules"));
+                $"{psJupyterModulePath}{Path.PathSeparator}{psModulePath}");
         }
 
         protected override Task HandleAsync(
