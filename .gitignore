@@ -378,3 +378,7 @@ docs/\.ionide/
 #Backup files
 *.bak
 NotebookExamples/*/Samples/housing.csv
+
+#PowerShell restored modules
+Microsoft\.DotNet\.Interactive\.PowerShell/Modules/*
+!Microsoft\.DotNet\.Interactive\.PowerShell/Modules/Microsoft\.DotNet\.Interactive\.PowerShell/*
