@@ -1,5 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Target Name="PSRestoreBuiltInModules" AfterTargets="Restore" BeforeTargets="Build">
+    <PropertyGroup>
+      <PSUtilityUrl>https://raw.githubusercontent.com/PowerShell/PowerShell/v7.0.0-rc.2/src/Modules/Windows/Microsoft.PowerShell.Utility/Microsoft.PowerShell.Utility.psd1</PSUtilityUrl>
+      <PSManagementUrl>https://raw.githubusercontent.com/PowerShell/PowerShell/v7.0.0-rc.2/src/Modules/Windows/Microsoft.PowerShell.Management/Microsoft.PowerShell.Management.psd1</PSManagementUrl>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <PSUtilityFolder>$(MSBuildProjectDirectory)\Modules\Microsoft.PowerShell.Utility</PSUtilityFolder>
+      <PSManagementFolder>$(MSBuildProjectDirectory)\Modules\Microsoft.PowerShell.Management</PSManagementFolder>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(PSUtilityFolder)" />
+    <MakeDir Directories="$(PSManagementFolder)" />
+
+    <DownloadFile SourceUrl="$(PSUtilityUrl)" DestinationFolder="$(PSUtilityFolder)" />
+    <DownloadFile SourceUrl="$(PSManagementUrl)" DestinationFolder="$(PSManagementFolder)" />
+  </Target>
+
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>latest</LangVersion>
