@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk" InitialTargets="PSRestoreBuiltInModules;GetNuGetPackageRoot">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -10,6 +10,25 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <NoWarn>;NU5104;2003;8002</NoWarn>
   </PropertyGroup>
+
+  <!-- Restore the module manifests for built in modules. This is temporary until https://github.com/PowerShell/PowerShell/issues/11783 is fixed. -->
+  <Target Name="PSRestoreBuiltInModules">
+    <PropertyGroup>
+      <PSUtilityUrl>https://raw.githubusercontent.com/PowerShell/PowerShell/v7.0.0-rc.2/src/Modules/Windows/Microsoft.PowerShell.Utility/Microsoft.PowerShell.Utility.psd1</PSUtilityUrl>
+      <PSManagementUrl>https://raw.githubusercontent.com/PowerShell/PowerShell/v7.0.0-rc.2/src/Modules/Windows/Microsoft.PowerShell.Management/Microsoft.PowerShell.Management.psd1</PSManagementUrl>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <PSUtilityFolder>$(MSBuildProjectDirectory)\Modules\Microsoft.PowerShell.Utility</PSUtilityFolder>
+      <PSManagementFolder>$(MSBuildProjectDirectory)\Modules\Microsoft.PowerShell.Management</PSManagementFolder>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(PSUtilityFolder)" />
+    <MakeDir Directories="$(PSManagementFolder)" />
+
+    <DownloadFile SourceUrl="$(PSUtilityUrl)" DestinationFolder="$(PSUtilityFolder)" />
+    <DownloadFile SourceUrl="$(PSManagementUrl)" DestinationFolder="$(PSManagementFolder)" />
+  </Target>
 
   <!-- PowerShell Module Versions -->
   <PropertyGroup>
@@ -30,8 +49,6 @@
   <!-- Get NuGetPackageRoot if it's not defined -->
   <Target
     Name="GetNuGetPackageRoot"
-    AfterTargets="Restore"
-    BeforeTargets="Build"
     Condition=" '$(NuGetPackageRoot)' == '' "
   >
     <Exec Command="dotnet nuget locals global-packages --list --force-english-output" ConsoleToMSBuild="true">
@@ -51,50 +68,31 @@
       Include="$(NuGetPackageRoot)packagemanagement\$(PackageManagementVersion)\**"
       Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.sha512"
       PackageCopyToOutput="true">
-      <Link>Modules\PackageManagement\$(PackageManagementVersion)\%(RecursiveDir)\%(FileName)%(Extension)</Link>
+      <Link>Modules\PackageManagement\%(RecursiveDir)\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content
       Include="$(NuGetPackageRoot)powershellget\$(PowerShellGetVersion)\**"
       Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.sha512"
       PackageCopyToOutput="true">
-      <Link>Modules\PowerShellGet\$(PowerShellGetVersion)\%(RecursiveDir)\%(FileName)%(Extension)</Link>
+      <Link>Modules\PowerShellGet\%(RecursiveDir)\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content
       Include="$(NuGetPackageRoot)microsoft.powershell.archive\$(MicrosoftPowerShellArchiveVersion)\**"
       Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.sha512"
       PackageCopyToOutput="true">
-      <Link>Modules\Microsoft.PowerShell.Archive\$(MicrosoftPowerShellArchiveVersion)\%(RecursiveDir)\%(FileName)%(Extension)</Link>
+      <Link>Modules\Microsoft.PowerShell.Archive\%(RecursiveDir)\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content
       Include="$(NuGetPackageRoot)threadjob\$(ThreadJobVersion)\**"
       Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.sha512"
       PackageCopyToOutput="true">
-      <Link>Modules\ThreadJob\$(ThreadJobVersion)\%(RecursiveDir)\%(FileName)%(Extension)</Link>
+      <Link>Modules\ThreadJob\%(RecursiveDir)\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
-  <!-- Restore the module manifests for built in modules. This is temporary until https://github.com/PowerShell/PowerShell/issues/11783 is fixed. -->
-  <Target Name="PSRestoreBuiltInModules" AfterTargets="Restore" BeforeTargets="Build">
-    <PropertyGroup>
-      <PSUtilityUrl>https://raw.githubusercontent.com/PowerShell/PowerShell/v7.0.0-rc.2/src/Modules/Windows/Microsoft.PowerShell.Utility/Microsoft.PowerShell.Utility.psd1</PSUtilityUrl>
-      <PSManagementUrl>https://raw.githubusercontent.com/PowerShell/PowerShell/v7.0.0-rc.2/src/Modules/Windows/Microsoft.PowerShell.Management/Microsoft.PowerShell.Management.psd1</PSManagementUrl>
-    </PropertyGroup>
-
-    <PropertyGroup>
-      <PSUtilityFolder>$(MSBuildProjectDirectory)\Modules\Microsoft.PowerShell.Utility</PSUtilityFolder>
-      <PSManagementFolder>$(MSBuildProjectDirectory)\Modules\Microsoft.PowerShell.Management</PSManagementFolder>
-    </PropertyGroup>
-
-    <MakeDir Directories="$(PSUtilityFolder)" />
-    <MakeDir Directories="$(PSManagementFolder)" />
-
-    <DownloadFile SourceUrl="$(PSUtilityUrl)" DestinationFolder="$(PSUtilityFolder)" />
-    <DownloadFile SourceUrl="$(PSManagementUrl)" DestinationFolder="$(PSManagementFolder)" />
-  </Target>
 
   <!-- The dependencies for this project -->
   <ItemGroup>
