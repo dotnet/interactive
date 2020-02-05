@@ -9,30 +9,30 @@
     <FileSignInfo Include="Namotion.Reflection.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="NetMQ.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="NJsonSchema.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="PackageManagement.cat" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="PackageManagement.format.ps1xml" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="PackageManagement.psd1" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="PackageManagement.psm1" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="PackageManagement.Resources.psd1" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="PackageProviderFunctions.psm1" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="Microsoft.PackageManagement.ArchiverProviders.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="Microsoft.PackageManagement.CoreProviders.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="Microsoft.PackageManagement.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="Microsoft.PackageManagement.MetaProvider.PowerShell.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="Microsoft.PackageManagement.NuGetProvider.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="Microsoft.PowerShell.PackageManagement.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="Microsoft.PackageManagement.MsiProvider.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="Microsoft.PackageManagement.MsuProvider.dll" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="PackageManagementDscUtilities.psm1" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="PackageManagementDscUtilities.strings.psd1" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="MSFT_PackageManagement.psm1" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="MSFT_PackageManagement.schema.mfl" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="MSFT_PackageManagement.schema.mof" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="MSFT_PackageManagement.strings.psd1" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="MSFT_PackageManagementSource.psm1" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="MSFT_PackageManagementSource.schema.mfl" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="MSFT_PackageManagementSource.schema.mof" CertificateName="3PartySHA2" />
-    <FileSignInfo Include="MSFT_PackageManagementSource.strings.psd1" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="PackageManagement.cat" CertificateName="None" />
+    <FileSignInfo Include="PackageManagement.format.ps1xml" CertificateName="None" />
+    <FileSignInfo Include="PackageManagement.psd1" CertificateName="None" />
+    <FileSignInfo Include="PackageManagement.psm1" CertificateName="None" />
+    <FileSignInfo Include="PackageManagement.Resources.psd1" CertificateName="None" />
+    <FileSignInfo Include="PackageProviderFunctions.psm1" CertificateName="None" />
+    <FileSignInfo Include="Microsoft.PackageManagement.ArchiverProviders.dll" CertificateName="None" />
+    <FileSignInfo Include="Microsoft.PackageManagement.CoreProviders.dll" CertificateName="None" />
+    <FileSignInfo Include="Microsoft.PackageManagement.dll" CertificateName="None" />
+    <FileSignInfo Include="Microsoft.PackageManagement.MetaProvider.PowerShell.dll" CertificateName="None" />
+    <FileSignInfo Include="Microsoft.PackageManagement.NuGetProvider.dll" CertificateName="None" />
+    <FileSignInfo Include="Microsoft.PowerShell.PackageManagement.dll" CertificateName="None" />
+    <FileSignInfo Include="Microsoft.PackageManagement.MsiProvider.dll" CertificateName="None" />
+    <FileSignInfo Include="Microsoft.PackageManagement.MsuProvider.dll" CertificateName="None" />
+    <FileSignInfo Include="PackageManagementDscUtilities.psm1" CertificateName="None" />
+    <FileSignInfo Include="PackageManagementDscUtilities.strings.psd1" CertificateName="None" />
+    <FileSignInfo Include="MSFT_PackageManagement.psm1" CertificateName="None" />
+    <FileSignInfo Include="MSFT_PackageManagement.schema.mfl" CertificateName="None" />
+    <FileSignInfo Include="MSFT_PackageManagement.schema.mof" CertificateName="None" />
+    <FileSignInfo Include="MSFT_PackageManagement.strings.psd1" CertificateName="None" />
+    <FileSignInfo Include="MSFT_PackageManagementSource.psm1" CertificateName="None" />
+    <FileSignInfo Include="MSFT_PackageManagementSource.schema.mfl" CertificateName="None" />
+    <FileSignInfo Include="MSFT_PackageManagementSource.schema.mof" CertificateName="None" />
+    <FileSignInfo Include="MSFT_PackageManagementSource.strings.psd1" CertificateName="None" />
     <FileSignInfo Include="Serilog.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Serilog.Sinks.RollingFileAlternate.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="XPlot.Plotly.dll" CertificateName="3PartySHA2" />
