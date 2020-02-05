@@ -26,3 +26,7 @@ If applicable, add screenshots to help explain your problem.
     - [ ] Chrome
     - [ ] Edge
     - [ ] Safari
+ - Frontend
+    - [ ] Jupyter notebook
+    - [ ] Jupyter lab
+    - [ ] nteract
