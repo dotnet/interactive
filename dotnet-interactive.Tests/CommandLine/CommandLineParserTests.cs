@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             testConsole.Error.ToString().Should().Contain("Required argument missing for command: jupyter");
         }
 
-        [Fact]
+        [Fact(Skip = "build hackery is flaky; see dotnet-interactive.csproj")]
         public async Task kernel_server_honors_log_path()
         {
             using var logPath = DisposableDirectory.Create();
