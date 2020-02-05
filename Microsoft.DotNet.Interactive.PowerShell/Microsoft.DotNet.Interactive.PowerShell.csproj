@@ -1,5 +1,79 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <NoWarn>$(NoWarn);2003;CS8002;NU1608;</NoWarn> <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
+    <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>;NU5104;2003;8002</NoWarn>
+  </PropertyGroup>
+
+  <!-- PowerShell Module Versions -->
+  <PropertyGroup>
+    <PackageManagementVersion>1.4.6</PackageManagementVersion>
+    <PowerShellGetVersion>2.2.3</PowerShellGetVersion>
+    <MicrosoftPowerShellArchiveVersion>1.2.4</MicrosoftPowerShellArchiveVersion>
+    <ThreadJobVersion>2.0.3</ThreadJobVersion>
+  </PropertyGroup>
+
+  <!-- PowerShell Module Package References -->
+  <ItemGroup>
+    <PackageReference Include="PackageManagement" Version="$(PackageManagementVersion)" />
+    <PackageReference Include="PowerShellGet" Version="$(PowerShellGetVersion)" />
+    <PackageReference Include="Microsoft.PowerShell.Archive" Version="$(MicrosoftPowerShellArchiveVersion)" />
+    <PackageReference Include="ThreadJob" Version="$(ThreadJobVersion)" />
+  </ItemGroup>
+
+  <!-- Get NuGetPackageRoot if it's not defined -->
+  <Target
+    Name="GetNuGetPackageRoot"
+    AfterTargets="Restore"
+    BeforeTargets="Build"
+    Condition=" '$(NuGetPackageRoot)' == '' "
+  >
+    <Exec Command="dotnet nuget locals global-packages --list --force-english-output" ConsoleToMSBuild="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec" />
+    </Exec>
+
+    <PropertyGroup>
+      <RegexForOutputOfExec>info : global-packages: (.*)</RegexForOutputOfExec>
+      <RegexMatch>$([System.Text.RegularExpressions.Regex]::Match($(OutputOfExec), $(RegexForOutputOfExec)).Groups[2].Value)</RegexMatch>
+      <NuGetPackageRoot>$(RegexMatch)</NuGetPackageRoot>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Copy restored contents of PowerShell module nuget pacakges into output -->
+  <ItemGroup>
+    <Content
+      Include="$(NuGetPackageRoot)packagemanagement\$(PackageManagementVersion)\**"
+      Exclude="\**\*.nupkg;\**\*.sha512">
+      <Link>Modules\PackageManagement\$(PackageManagementVersion)\%(RecursiveDir)\%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content
+      Include="$(NuGetPackageRoot)powershellget\$(PowerShellGetVersion)\**"
+      Exclude="\**\*.nupkg;\**\*.sha512">
+      <Link>Modules\PowerShellGet\$(PowerShellGetVersion)\%(RecursiveDir)\%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content
+      Include="$(NuGetPackageRoot)microsoft.powerShell.archive\$(MicrosoftPowerShellArchiveVersion)\**"
+      Exclude="\**\*.nupkg;\**\*.sha512">
+      <Link>Modules\Microsoft.PowerShell.Archive\$(MicrosoftPowerShellArchiveVersion)\%(RecursiveDir)\%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content
+      Include="$(NuGetPackageRoot)threadjob\$(ThreadJobVersion)\**"
+      Exclude="\**\*.nupkg;\**\*.sha512">
+      <Link>Modules\ThreadJob\$(ThreadJobVersion)\%(RecursiveDir)\%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Restore the module manifests for built in modules. This is temporary until https://github.com/PowerShell/PowerShell/issues/11783 is fixed. -->
   <Target Name="PSRestoreBuiltInModules" AfterTargets="Restore" BeforeTargets="Build">
     <PropertyGroup>
       <PSUtilityUrl>https://raw.githubusercontent.com/PowerShell/PowerShell/v7.0.0-rc.2/src/Modules/Windows/Microsoft.PowerShell.Utility/Microsoft.PowerShell.Utility.psd1</PSUtilityUrl>
@@ -18,17 +92,7 @@
     <DownloadFile SourceUrl="$(PSManagementUrl)" DestinationFolder="$(PSManagementFolder)" />
   </Target>
 
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <LangVersion>latest</LangVersion>
-    <NoWarn>$(NoWarn);2003;CS8002;NU1608;</NoWarn> <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
-    <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <NoWarn>;NU5104;2003;8002</NoWarn>
-  </PropertyGroup>
-
+  <!-- The dependencies for this project -->
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
@@ -37,6 +101,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.0.0-rc.1" />
   </ItemGroup>
+
+  <!-- Copies anything in the Modules folder into the output (including the helper module's module manifest) -->
   <ItemGroup>
     <Content Include="Modules\**" PackageCopyToOutput="true">
       <Link>Modules\%(RecursiveDir)\%(FileName)%(Extension)</Link>
