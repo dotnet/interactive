@@ -9,6 +9,7 @@
     <FileSignInfo Include="Namotion.Reflection.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="NetMQ.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="NJsonSchema.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="PackageManagement.cat" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Serilog.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Serilog.Sinks.RollingFileAlternate.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="XPlot.Plotly.dll" CertificateName="3PartySHA2" />
