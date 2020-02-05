@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly CompositeDisposable _disposables;
         private readonly SubmissionSplitter _submissionSplitter = new SubmissionSplitter();
         private readonly ConcurrentQueue<IKernelCommand> _deferredCommands = new ConcurrentQueue<IKernelCommand>();
-        private readonly ConcurrentDictionary<Type, object> _serviceContainer = new ConcurrentDictionary<Type, object>();
+        private readonly ConcurrentDictionary<Type, object> _propertyBag = new ConcurrentDictionary<Type, object>();
 
         protected KernelBase()
         {
@@ -293,20 +293,14 @@ namespace Microsoft.DotNet.Interactive
 
         string IKernel.Name => Name;
 
-        public void AddService<T>(T service) where T : class
+        public void SetProperty<T>(T service) where T : class
         {
-            if (service != null && _serviceContainer.TryAdd(typeof(T), service))
-            {
-                RegisterForDisposal(() =>
-                {
-                    _serviceContainer.TryRemove(typeof(T), out _);
-                });
-            }
+            _propertyBag.TryAdd(typeof(T), service);
         }
 
-        public T GetService<T>() where T : class
+        public T GetProperty<T>() where T : class
         {
-            return _serviceContainer.TryGetValue(typeof(T), out var service)? (T)service : default;
+            return _propertyBag.TryGetValue(typeof(T), out var service)? (T)service : default;
         }
     }
 }
