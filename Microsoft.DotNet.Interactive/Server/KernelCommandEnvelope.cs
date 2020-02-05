@@ -122,6 +122,8 @@ namespace Microsoft.DotNet.Interactive.Server
             return Create(command);
         }
 
+        public static string Serialize(IKernelCommand command) => Serialize(Create(command));
+
         public static string Serialize(IKernelCommandEnvelope envelope)
         {
             var serializationModel = new SerializationModel
