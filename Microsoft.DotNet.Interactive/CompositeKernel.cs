@@ -13,19 +13,23 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Extensions;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class CompositeKernel : KernelBase, IEnumerable<IKernel>, IExtensibleKernel
+    public class CompositeKernel : 
+        KernelBase, 
+        IExtensibleKernel,
+        IEnumerable<IKernel>
     {
         private readonly ConcurrentQueue<PackageAdded> _packages = new ConcurrentQueue<PackageAdded>();
         private readonly List<IKernel> _childKernels = new List<IKernel>();
-        private readonly CompositeKernelExtensionLoader _extensionLoader;
+        private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
 
         public CompositeKernel()
         {
             Name = nameof(CompositeKernel);
-            _extensionLoader = new CompositeKernelExtensionLoader();
+
             RegisterForDisposal(KernelEvents
                 .OfType<PackageAdded>()
                 .Where(pa => pa?.PackageReference.PackageRoot != null)
@@ -77,8 +81,11 @@ namespace Microsoft.DotNet.Interactive
 
             while (_packages.TryDequeue(out var packageAdded))
             {
-                var loadExtensionsInDirectory = new LoadExtensionsInDirectory(packageAdded.PackageReference.PackageRoot, Name);
-                await this.SendAsync(loadExtensionsInDirectory);
+                var packageRootDir = packageAdded.PackageReference.PackageRoot;
+
+                await LoadExtensionsFromDirectoryAsync(
+                    packageRootDir,
+                    context);
             }
         }
 
@@ -164,7 +171,7 @@ namespace Microsoft.DotNet.Interactive
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public async Task LoadExtensionsFromDirectory(
+        public async Task LoadExtensionsFromDirectoryAsync(
             DirectoryInfo directory,
             KernelInvocationContext context)
         {

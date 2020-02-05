@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.Interactive.Events;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,31 +8,61 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Events;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive.Extensions
 {
-    public class KernelExtensionAssemblyLoader
+    public class AssemblyBasedExtensionLoader : IKernelExtensionLoader
     {
-        private static readonly HashSet<AssemblyName> LoadedAssemblies = new HashSet<AssemblyName>();
-        private static readonly object AssemblyLoadLock = new object();
+        private readonly HashSet<AssemblyName> _loadedAssemblies = new HashSet<AssemblyName>();
+        private readonly object _lock = new object();
+
+        public async Task LoadFromDirectoryAsync(
+            DirectoryInfo directory,
+            IExtensibleKernel kernel,
+            KernelInvocationContext context)
+        {
+            if (directory == null)
+            {
+                throw new ArgumentNullException(nameof(directory));
+            }
+
+            if (kernel == null)
+            {
+                throw new ArgumentNullException(nameof(kernel));
+            }
+
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            if (!directory.Exists)
+            {
+                throw new ArgumentException($"Directory {directory.FullName} doesn't exist", nameof(directory));
+            }
+
+            await LoadFromAssembliesInDirectory(
+                directory,
+                kernel,
+                context);
+        }
 
         public async Task LoadFromAssembliesInDirectory(
-
             DirectoryInfo directory,
             IKernel kernel,
             KernelInvocationContext context)
         {
             if (directory.Exists)
             {
-                var displayId = Guid.NewGuid().ToString("N");
-              
-
                 var extensionDlls = directory.GetFiles("*.dll", SearchOption.TopDirectoryOnly).ToList();
+
                 if (extensionDlls.Count > 0)
                 {
                     context.Publish(new DisplayedValueProduced(
-                        $"Loading kernel extensions in directory {directory.FullName}", context.Command,
-                        valueId: displayId));
+                                        $"Loading kernel extensions in directory {directory.FullName}", context.Command,
+                                        valueId: Guid.NewGuid().ToString("N")));
+
                     foreach (var extensionDll in extensionDlls)
                     {
                         await LoadFromAssembly(
@@ -43,7 +72,7 @@ namespace Microsoft.DotNet.Interactive
                     }
 
                     context.Publish(new DisplayedValueUpdated(
-                        $"Loaded kernel extensions in directory {directory.FullName}", displayId, context.Command));
+                                        $"Loaded kernel extensions in directory {directory.FullName}", Guid.NewGuid().ToString("N"), context.Command));
                 }
             }
         }
@@ -70,43 +99,42 @@ namespace Microsoft.DotNet.Interactive
 
             bool loadExtensions;
 
-            lock (AssemblyLoadLock)
+            lock (_lock)
             {
-                loadExtensions = LoadedAssemblies.Add(AssemblyName.GetAssemblyName(assemblyFile.FullName));
+                loadExtensions = _loadedAssemblies.Add(AssemblyName.GetAssemblyName(assemblyFile.FullName));
             }
 
             if (loadExtensions)
             {
                 var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyFile.FullName);
                 var extensionTypes = assembly
-                    .ExportedTypes
-                    .Where(t => t.CanBeInstantiated() && typeof(IKernelExtension).IsAssignableFrom(t))
-                    .ToArray();
+                                     .ExportedTypes
+                                     .Where(t => t.CanBeInstantiated() && typeof(IKernelExtension).IsAssignableFrom(t))
+                                     .ToArray();
 
                 foreach (var extensionType in extensionTypes)
                 {
                     var extension = (IKernelExtension) Activator.CreateInstance(extensionType);
                     var display = Guid.NewGuid().ToString("N");
                     context.Publish(new DisplayedValueProduced(
-                        $"Loading kernel extension {extensionType.Name} from assembly {assemblyFile.FullName}",
-                        context.Command, valueId: display));
+                                        $"Loading kernel extension {extensionType.Name} from assembly {assemblyFile.FullName}",
+                                        context.Command, valueId: display));
                     try
                     {
                         await extension.OnLoadAsync(kernel);
                         context.Publish(new DisplayedValueUpdated(
-                            $"Loaded kernel extension {extensionType.Name} from assembly {assemblyFile.FullName}",
-                            display, context.Command));
+                                            $"Loaded kernel extension {extensionType.Name} from assembly {assemblyFile.FullName}",
+                                            display, context.Command));
                     }
                     catch (Exception e)
                     {
                         context.Publish(new ErrorProduced(
-                            $"Failure loading kernel extension {extensionType.Name} from assembly {assemblyFile.FullName}",
-                            context.Command));
+                                            $"Failure loading kernel extension {extensionType.Name} from assembly {assemblyFile.FullName}",
+                                            context.Command));
                         context.Fail(new KernelExtensionLoadException(e));
                     }
                 }
             }
-
         }
     }
 }

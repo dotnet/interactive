@@ -7,7 +7,6 @@ using System.Reactive.Disposables;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Extensions;
 using Pocket;
 
 namespace Microsoft.DotNet.Interactive
@@ -72,6 +71,64 @@ namespace Microsoft.DotNet.Interactive
             }
 
             return kernel;
+        }
+
+        public static void VisitSubkernels(
+            this IKernel kernel,
+            Action<IKernel> onVisit,
+            bool recursive = false)
+        {
+            if (kernel == null)
+            {
+                throw new ArgumentNullException(nameof(kernel));
+            }
+
+            if (onVisit == null)
+            {
+                throw new ArgumentNullException(nameof(onVisit));
+            }
+
+            if (kernel is CompositeKernel compositeKernel)
+            {
+                foreach (var subKernel in compositeKernel.ChildKernels)
+                {
+                    onVisit(subKernel);
+
+                    if (recursive)
+                    {
+                        subKernel.VisitSubkernels(onVisit, recursive: true);
+                    }
+                }
+            }
+        }
+
+        public static async Task VisitSubkernelsAsync(
+            this IKernel kernel,
+            Func<IKernel, Task> onVisit,
+            bool recursive = false)
+        {
+            if (kernel == null)
+            {
+                throw new ArgumentNullException(nameof(kernel));
+            }
+
+            if (onVisit == null)
+            {
+                throw new ArgumentNullException(nameof(onVisit));
+            }
+
+            if (kernel is CompositeKernel compositeKernel)
+            {
+                foreach (var subKernel in compositeKernel.ChildKernels)
+                {
+                    await onVisit(subKernel);
+
+                    if (recursive)
+                    {
+                        await subKernel.VisitSubkernelsAsync(onVisit, true);
+                    }
+                }
+            }
         }
     }
 }

@@ -17,6 +17,7 @@ using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
 using XPlot.Plotly;
@@ -24,7 +25,9 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
-    public class CSharpKernel : KernelBase, IExtensibleKernel
+    public class CSharpKernel : 
+        KernelBase, 
+        IExtensibleKernel
     {
         internal const string DefaultKernelName = "csharp";
 
@@ -56,13 +59,12 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              typeof(PocketView).Assembly,
                              typeof(PlotlyChart).Assembly);
 
-        private readonly CSharpKernelExtensionLoader _extensionLoader;
+        private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
 
         public CSharpKernel()
         {
             _cancellationSource = new CancellationTokenSource();
             Name = DefaultKernelName;
-            _extensionLoader = new CSharpKernelExtensionLoader();
             NativeAssemblyLoadHelper = new NativeAssemblyLoadHelper(this);
             RegisterForDisposal(NativeAssemblyLoadHelper);
             RegisterForDisposal(() =>
@@ -354,7 +356,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
         }
 
-        public async Task LoadExtensionsFromDirectory(
+        public async Task LoadExtensionsFromDirectoryAsync(
             DirectoryInfo directory,
             KernelInvocationContext context)
         {
