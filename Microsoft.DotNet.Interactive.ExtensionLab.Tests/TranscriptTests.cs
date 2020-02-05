@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync($"#!record --path {filePath}");
+            await kernel.SubmitCodeAsync($"#!record --output {filePath}");
             await kernel.SubmitCodeAsync("12345");
 
             var lines = File.ReadAllLines(filePath);

@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 "a",
                 Guid.NewGuid().ToString("N"));
 
-            await kernel.SubmitCodeAsync($"#!download --uri {url} --path \"{path}\"");
+            await kernel.SubmitCodeAsync($"#!download --uri {url} --output \"{path}\"");
 
             events.Should()
                   .NotContainErrors();

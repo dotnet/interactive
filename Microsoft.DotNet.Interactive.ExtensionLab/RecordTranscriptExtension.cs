@@ -19,18 +19,18 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     "Records a replayable transcript of code submissions.")
                 {
                     new Option<FileInfo>(
-                        "--path",
+                        new [] {"-o", "--output"},
                         description: "The name of the file to write the transcript to")
                 };
 
-                record.Handler = CommandHandler.Create<FileInfo>(path =>
+                record.Handler = CommandHandler.Create<FileInfo>(output =>
                 {
                     kernelBase.AddMiddleware(async (command, context, next) =>
                     {
                         var json = KernelCommandEnvelope.Serialize(command);
 
                         await File.AppendAllLinesAsync(
-                            path.FullName,
+                            output.FullName,
                             new[]
                             {
                                 json

@@ -23,13 +23,13 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 {
                     new Option<Uri>("--uri"),
                     new Option<FileInfo>(
-                        "--path",
+                        new [] {"-o", "--output"},
                         parseArgument: ParsePath,
                         isDefault: true)
                 };
 
                 download.Handler = CommandHandler.Create(
-                    (Uri uri, FileInfo path, KernelInvocationContext context) => Download(uri, path, context));
+                    (Uri uri, FileInfo output, KernelInvocationContext context) => Download(uri, output, context));
 
                 kernelBase.AddDirective(download);
             }
@@ -60,20 +60,20 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private static readonly HttpClient _httpClient = new HttpClient();
 
-        private async Task Download(Uri uri, FileInfo path, KernelInvocationContext context)
+        private async Task Download(Uri uri, FileInfo output, KernelInvocationContext context)
         {
 
             var response = await _httpClient.GetAsync(uri);
             response.EnsureSuccessStatusCode();
 
-            path.Directory.EnsureExists();
+            output.Directory.EnsureExists();
 
             await using var responseStream = await response.Content.ReadAsStreamAsync();
-            await using var fileStream = File.Create(path.FullName);
+            await using var fileStream = File.Create(output.FullName);
 
             responseStream.CopyTo(fileStream);
 
-            await context.DisplayAsync($"Created file: {path}");
+            await context.DisplayAsync($"Created file: {output}");
         }
     }
 }
