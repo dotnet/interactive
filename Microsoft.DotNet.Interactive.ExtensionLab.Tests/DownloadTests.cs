@@ -51,7 +51,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var url = "https://raw.githubusercontent.com/dotnet/interactive/master/README.md";
 
-            var path = Path.Combine(Directory.GetCurrentDirectory(), Guid.NewGuid().ToString("N"));
+            var path = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                Guid.NewGuid().ToString("N"),
+                "a",
+                Guid.NewGuid().ToString("N"));
 
             await kernel.SubmitCodeAsync($"#!download --uri {url} --path \"{path}\"");
 

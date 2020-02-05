@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -6,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 {
     public static class DirectoryUtility
     {
-        private static readonly object CreateDirectoryLock = new object();
+        private static readonly object _lock = new object();
 
         private static readonly DirectoryInfo _defaultDirectory = new DirectoryInfo(
             Path.Combine(
@@ -26,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
             DirectoryInfo created;
 
-            lock (CreateDirectoryLock)
+            lock (_lock)
             {
                 if (!parentDirectory.Exists)
                 {
@@ -71,7 +74,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             }
         }
 
-        private static DirectoryInfo EnsureExists(this DirectoryInfo directory)
+        public static DirectoryInfo EnsureExists(this DirectoryInfo directory)
         {
             if (directory == null)
             {

@@ -1,10 +1,12 @@
-﻿using System;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.IO;
+using FluentAssertions;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
-using FluentAssertions;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests;
 using Xunit;
@@ -26,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             await new RecordTranscriptExtension().OnLoadAsync(kernel);
 
             var filePath = Path.Combine(
-                Directory.GetCurrentDirectory(), 
+                Directory.GetCurrentDirectory(),
                 Guid.NewGuid().ToString());
 
             _disposables.Add(Disposable.Create(() => File.Delete(filePath)));

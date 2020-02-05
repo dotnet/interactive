@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -61,13 +62,15 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private async Task Download(Uri uri, FileInfo path, KernelInvocationContext context)
         {
+
             var response = await _httpClient.GetAsync(uri);
             response.EnsureSuccessStatusCode();
+
+            path.Directory.EnsureExists();
 
             await using var responseStream = await response.Content.ReadAsStreamAsync();
             await using var fileStream = File.Create(path.FullName);
 
-            responseStream.Seek(0, SeekOrigin.Begin);
             responseStream.CopyTo(fileStream);
 
             await context.DisplayAsync($"Created file: {path}");
