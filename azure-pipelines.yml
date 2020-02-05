@@ -171,6 +171,46 @@ stages:
           env:
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
 
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableMicrobuild: true
+      enableTelemetry: true
+      helixRepo: dotnet/interactive
+      jobs:
+      - job: IntegrationTest
+        dependsOn: Windows_NT
+        condition: succeeded()
+        pool:
+          vmImage: ubuntu-16.04
+        variables:
+        # specify tool version on public CI builds
+        - ${{ if eq(variables['System.TeamProject'], 'public') }}:
+          - name: ToolVersionArgs
+            value: --version 1.0.0-ci
+        # else
+        - ${{ if ne(variables['System.TeamProject'], 'public') }}:
+          - name: ToolVersionArgs
+            value: ''
+        steps:
+        - checkout: none
+        - task: UseDotNet@2
+          displayName: Add dotnet 3.0
+          inputs:
+            packageType: sdk
+            version: $(DotNetSdkVersion)
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+        - task: DownloadBuildArtifacts@0
+          displayName: Download built packages
+          inputs:
+            artifactName: packages
+            downloadPath: $(System.DefaultWorkingDirectory)
+        - script: echo "<configuration><packageSources><clear /></packageSources></configuration>" > NuGet.config
+          displayName: Generate empty NuGet.config
+        - script: dotnet tool install -g --configfile NuGet.config $(ToolVersionArgs) --add-source "$(System.DefaultWorkingDirectory)/packages/Shipping" Microsoft.dotnet-interactive
+          displayName: Install global tool
+        - script: dotnet interactive --version
+          displayName: Write version
+
 #---------------------------------------------------------------------------------------------------------------------#
 #                                                    Post Build                                                       #
 #---------------------------------------------------------------------------------------------------------------------#
