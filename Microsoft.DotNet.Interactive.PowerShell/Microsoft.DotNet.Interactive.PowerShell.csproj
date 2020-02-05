@@ -49,28 +49,28 @@
   <ItemGroup>
     <Content
       Include="$(NuGetPackageRoot)packagemanagement\$(PackageManagementVersion)\**"
-      Exclude="\**\*.nupkg;\**\*.sha512"
+      Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.sha512"
       PackageCopyToOutput="true">
       <Link>Modules\PackageManagement\$(PackageManagementVersion)\%(RecursiveDir)\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content
       Include="$(NuGetPackageRoot)powershellget\$(PowerShellGetVersion)\**"
-      Exclude="\**\*.nupkg;\**\*.sha512"
+      Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.sha512"
       PackageCopyToOutput="true">
       <Link>Modules\PowerShellGet\$(PowerShellGetVersion)\%(RecursiveDir)\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content
       Include="$(NuGetPackageRoot)microsoft.powershell.archive\$(MicrosoftPowerShellArchiveVersion)\**"
-      Exclude="\**\*.nupkg;\**\*.sha512"
+      Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.sha512"
       PackageCopyToOutput="true">
       <Link>Modules\Microsoft.PowerShell.Archive\$(MicrosoftPowerShellArchiveVersion)\%(RecursiveDir)\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content
       Include="$(NuGetPackageRoot)threadjob\$(ThreadJobVersion)\**"
-      Exclude="\**\*.nupkg;\**\*.sha512"
+      Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.sha512"
       PackageCopyToOutput="true">
       <Link>Modules\ThreadJob\$(ThreadJobVersion)\%(RecursiveDir)\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
