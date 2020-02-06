@@ -12,14 +12,54 @@ namespace Microsoft.DotNet.Interactive.Tests
 {
     internal static class KernelExtensionTestHelper
     {
-        internal static async Task<FileInfo> CreateExtensionInDirectory(
-            DirectoryInfo extensionDir, 
-            string body, 
-            DirectoryInfo outputDir, 
+        internal static async Task<FileInfo> CreateExtensionNupkgInDirectory(
+            DirectoryInfo projectDir,
+            string body,
+            DirectoryInfo outputDir,
             [CallerMemberName] string testName = null)
         {
-            var extensionName = AlignExtensionNameWithDirectoryName(extensionDir, testName);
-            var extensionDll = await CreateExtension(extensionDir, body, extensionName);
+            var extensionName = AlignExtensionNameWithDirectoryName(projectDir, testName);
+
+            await CreateProjectAndBuild(
+                projectDir,
+                body,
+                extensionName);
+
+            var extensionDll = projectDir
+                               .GetDirectories("bin", SearchOption.AllDirectories)
+                               .Single()
+                               .GetFiles($"{extensionName}.nupkg", SearchOption.AllDirectories)
+                               .Single();
+
+            if (!outputDir.Exists)
+            {
+                outputDir.Create();
+            }
+
+            var finalExtensionDll = new FileInfo(Path.Combine(outputDir.FullName, extensionDll.Name));
+            File.Move(extensionDll.FullName, finalExtensionDll.FullName);
+
+            return finalExtensionDll;
+        }
+
+        internal static async Task<FileInfo> CreateExtensionDllInDirectory(
+            DirectoryInfo projectDir,
+            string body,
+            DirectoryInfo outputDir,
+            [CallerMemberName] string testName = null)
+        {
+            var extensionName = AlignExtensionNameWithDirectoryName(projectDir, testName);
+
+            await CreateProjectAndBuild(
+                projectDir,
+                body,
+                extensionName);
+
+            var extensionDll = projectDir
+                               .GetDirectories("bin", SearchOption.AllDirectories)
+                               .Single()
+                               .GetFiles($"{extensionName}.dll", SearchOption.AllDirectories)
+                               .Single();
 
             if (!outputDir.Exists)
             {
@@ -38,14 +78,14 @@ namespace Microsoft.DotNet.Interactive.Tests
             return match.Success ? $"{testName}{match.Groups["counter"].Value}" : testName;
         }
 
-        private static async Task<FileInfo> CreateExtension(
-            DirectoryInfo extensionDir, 
+        private static async Task CreateProjectAndBuild(
+            DirectoryInfo projectDir, 
             string body, 
-            [CallerMemberName] string extensionName = null)
+            string extensionName = null)
         {
             var microsoftDotNetInteractiveDllPath = typeof(IKernelExtension).Assembly.Location;
 
-            extensionDir.Populate(
+            projectDir.Populate(
                 ("Extension.cs", $@"
 using System;
 using System.Reflection;
@@ -79,14 +119,10 @@ public class TestKernelExtension : IKernelExtension
 </Project>
 "));
 
-            var buildResult = await new Dotnet(extensionDir).Build();
+            var buildResult = await new Dotnet(projectDir).Build();
             buildResult.ThrowOnFailure();
 
-            return extensionDir
-                               .GetDirectories("bin", SearchOption.AllDirectories)
-                               .Single()
-                               .GetFiles($"{extensionName}.dll", SearchOption.AllDirectories)
-                               .Single();
         }
+        
     }
 }

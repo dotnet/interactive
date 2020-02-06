@@ -55,7 +55,9 @@ namespace Microsoft.DotNet.Interactive.Extensions
         {
             if (directory.Exists)
             {
-                var extensionDlls = directory.GetFiles("*.dll", SearchOption.TopDirectoryOnly).ToList();
+                var extensionDlls = directory
+                                    .GetFiles("*.dll", SearchOption.TopDirectoryOnly)
+                                    .ToList();
 
                 if (extensionDlls.Count > 0)
                 {

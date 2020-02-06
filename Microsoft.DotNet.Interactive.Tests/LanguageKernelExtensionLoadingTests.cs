@@ -10,6 +10,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Xunit;
 using Xunit.Abstractions;
+using static Microsoft.DotNet.Interactive.Tests.KernelExtensionTestHelper;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -25,13 +26,12 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             var projectDir = DirectoryUtility.CreateDirectory();
 
-            var extensionDir = projectDir
-                .CreateSubdirectory("extension");
+            var dllDir = projectDir.CreateSubdirectory("extension");
 
-            var extensionDll = await KernelExtensionTestHelper.CreateExtensionInDirectory(
+            var extensionDll = await CreateExtensionDllInDirectory(
                                    projectDir,
                                    @"await kernel.SendAsync(new SubmitCode(""display(\""csharp extension installed\"");""));",
-                                   extensionDir);
+                                   dllDir);
 
             var kernel = (IExtensibleKernel) CreateKernel(Language.CSharp);
 
@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var events = context.KernelEvents.ToSubscribedList();
 
             await kernel.LoadExtensionsFromDirectoryAsync(
-                extensionDir,
+                dllDir,
                 context);
 
             events.Should()
@@ -54,12 +54,12 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             var projectDir = DirectoryUtility.CreateDirectory();
 
-            var extensionDir = projectDir.CreateSubdirectory("extension");
+            var dllDir = projectDir.CreateSubdirectory("extension");
 
-            await KernelExtensionTestHelper.CreateExtensionInDirectory(
+            await CreateExtensionDllInDirectory(
                 projectDir,
                 "throw new Exception();",
-                extensionDir);
+                dllDir);
 
             var kernel = (IExtensibleKernel) CreateKernel(Language.CSharp);
             await using var context = KernelInvocationContext.Establish(new SubmitCode(""));
@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var events = context.KernelEvents.ToSubscribedList();
 
             await kernel.LoadExtensionsFromDirectoryAsync(
-                extensionDir,
+                dllDir,
                 context);
 
             events.Should()
@@ -77,14 +77,14 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task It_loads_extensions_found_in_nuget_packages()
         {
-            var directory = DirectoryUtility.CreateDirectory();
+            var projectDir = DirectoryUtility.CreateDirectory();
 
-            const string packageName = "MyExtensionPackage";
+            var packageName = "MyExtensionPackage";
             var packageVersion = "2.0.0";
 
             var nugetPackageDirectory = new DirectoryInfo(
                 Path.Combine(
-                    directory.FullName,
+                    projectDir.FullName,
                     packageName,
                     packageVersion));
 
@@ -94,8 +94,8 @@ namespace Microsoft.DotNet.Interactive.Tests
                         nugetPackageDirectory.FullName,
                         "interactive-extensions", "dotnet"));
 
-            var extensionDll = await KernelExtensionTestHelper.CreateExtensionInDirectory(
-                                   directory,
+            var extensionDll = await CreateExtensionNupkgInDirectory(
+                                   projectDir,
                                    @"await kernel.SendAsync(new SubmitCode(""using System.Reflection;""));",
                                    extensionsDir);
 
