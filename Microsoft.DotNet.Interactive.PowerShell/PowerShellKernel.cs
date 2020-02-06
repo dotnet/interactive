@@ -22,34 +22,42 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         internal const string DefaultKernelName = "powershell";
 
         private readonly object _cancellationSourceLock = new object();
-        private readonly PowerShell _pwsh;
+        private PowerShell _pwsh;
         private CancellationTokenSource _cancellationSource;
+        private bool _firstTimeSetupHasRun;
 
         public PowerShellKernel()
         {
-            //Sets the distribution channel to "PSES" so starts can be distinguished in PS7+ telemetry
-            Environment.SetEnvironmentVariable("POWERSHELL_DISTRIBUTION_CHANNEL", "dotnet-interactive-powershell");
-
-            var runspace = RunspaceFactory.CreateRunspace(InitialSessionState.CreateDefault());
-            runspace.Open();
-            _pwsh = PowerShell.Create(runspace);
-            _cancellationSource = new CancellationTokenSource();
             Name = DefaultKernelName;
-
-            // Add Modules directory that contains the helper modules
-            string psModulePath = Environment.GetEnvironmentVariable("PSModulePath");
-            string psJupyterModulePath = Path.Join(
-                Path.GetDirectoryName(typeof(PowerShellKernel).Assembly.Location),
-                "Modules");
-
-            Environment.SetEnvironmentVariable("PSModulePath",
-                $"{psJupyterModulePath}{Path.PathSeparator}{psModulePath}");
+            _cancellationSource = new CancellationTokenSource();
         }
 
         protected override Task HandleAsync(
             IKernelCommand command,
             KernelInvocationContext context)
         {
+            if (!_firstTimeSetupHasRun)
+            {
+                _firstTimeSetupHasRun = true;
+
+                //Sets the distribution channel to "PSES" so starts can be distinguished in PS7+ telemetry
+                Environment.SetEnvironmentVariable("POWERSHELL_DISTRIBUTION_CHANNEL", "dotnet-interactive-powershell");
+
+                // Create PowerShell instance
+                var runspace = RunspaceFactory.CreateRunspace(InitialSessionState.CreateDefault());
+                runspace.Open();
+                _pwsh = PowerShell.Create(runspace);
+
+                // Add Modules directory that contains the helper modules
+                string psModulePath = Environment.GetEnvironmentVariable("PSModulePath");
+                string psJupyterModulePath = Path.Join(
+                    Path.GetDirectoryName(typeof(PowerShellKernel).Assembly.Location),
+                    "Modules");
+
+                Environment.SetEnvironmentVariable("PSModulePath",
+                    $"{psJupyterModulePath}{Path.PathSeparator}{psModulePath}");    
+            }
+
             if (command is KernelCommandBase kb)
             {
                 if (kb.Handler == null)
