@@ -4,7 +4,7 @@
 
 First, make sure you have the following installed:
 
-- The [.NET 3.0 SDK](https://dotnet.microsoft.com/download).
+- The [.NET 3.1 SDK](https://dotnet.microsoft.com/download).
 - **Jupyter**. Jupyter can be installed using [Anaconda](https://www.anaconda.com/distribution).
 
 - Open the Anaconda Prompt (Windows) or Terminal (macOS) and verify that Jupyter is installed and present on the path:
