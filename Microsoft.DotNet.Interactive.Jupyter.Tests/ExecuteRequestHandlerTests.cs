@@ -218,7 +218,6 @@ f();"));
             JupyterMessageSender.PubSubMessages
                 .OfType<ExecuteResult>()
                 .Should()
-
                 .Contain(dp => dp.Data["text/latex"] as string == expectedDisplayValue);
         }
 
@@ -288,6 +287,51 @@ f();"));
             await context.Done().Timeout(5.Seconds());
 
             JupyterMessageSender.ReplyMessages.Should().ContainItemsAssignableTo<ExecuteReplyOk>();
+        }
+
+        [Theory]
+        [InlineData("input()", "", false, "input-value")]
+        [InlineData("input(\"User:\", false)", "User:", false, "user name")]
+        [InlineData("input(\"Password:\", true)", "Password:", true, "secret")]
+        public async Task sends_InputRequest_message_when_submission_requests_user_input(string code, string prompt, bool isPassword, string expectedDisplayValue)
+        {
+            var scheduler = CreateScheduler();
+            var request = ZeroMQMessage.Create(new ExecuteRequest(code));
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            await scheduler.Schedule(context);
+
+            await context.Done().Timeout(20.Seconds());
+
+            JupyterMessageSender.RequestMessages.Should().Contain(r => r.Prompt == prompt && r.Password == isPassword);
+            JupyterMessageSender.PubSubMessages
+                .OfType<ExecuteResult>()
+                .Should()
+                .Contain(dp => dp.Data["text/plain"] as string == expectedDisplayValue);
+        }
+
+        [Fact]
+        public async Task Shows_not_supported_exception_when_stdin_not_allowed()
+        {
+            var scheduler = CreateScheduler();
+            var request = ZeroMQMessage.Create(new ExecuteRequest("input()", allowStdin: false));
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+
+            await scheduler.Schedule(context);
+
+            await context.Done().Timeout(5.Seconds());
+
+            var errors = JupyterMessageSender
+                .PubSubMessages
+                .OfType<Error>();
+
+            errors.Should().HaveCount(2);
+            var traceback = errors.LastOrDefault().Traceback;
+
+            var errorMessage = string.Join("\n", traceback);
+
+            errorMessage
+                  .Should()
+                  .StartWith("System.NotSupportedException: Input request is not supported");
         }
     }
 }

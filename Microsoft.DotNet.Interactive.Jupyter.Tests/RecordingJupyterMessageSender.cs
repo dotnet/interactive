@@ -43,7 +43,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             _messages.Add(message);
             _requestMessages.Add(message);
 
-            return $"input-value";
+            return message.Prompt switch
+            {
+                "User:" => "user name",
+                "Password:" => "secret",
+                _ => "input-value"
+            };
         }
     }
 }
