@@ -317,18 +317,17 @@ f();"));
             var context = new JupyterRequestContext(JupyterMessageSender, request);
 
             await scheduler.Schedule(context);
-
             await context.Done().Timeout(5.Seconds());
 
-            var errors = JupyterMessageSender
+            var traceback = JupyterMessageSender
                 .PubSubMessages
-                .OfType<Error>();
-
-            errors.Should().HaveCount(2);
-            var traceback = errors.LastOrDefault().Traceback;
+                .Should()
+                .ContainSingle(e => e is Error)
+                .Which
+                .As<Error>()
+                .Traceback;
 
             var errorMessage = string.Join("\n", traceback);
-
             errorMessage
                   .Should()
                   .StartWith("System.NotSupportedException: Input request is not supported");
