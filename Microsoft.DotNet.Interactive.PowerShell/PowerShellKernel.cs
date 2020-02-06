@@ -22,31 +22,22 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         internal const string DefaultKernelName = "powershell";
 
         private readonly object _cancellationSourceLock = new object();
-        private PowerShell _pwsh;
+        private readonly Lazy<PowerShell> _lazyPwsh;
         private CancellationTokenSource _cancellationSource;
-        private bool _firstTimeSetupHasRun;
 
         public PowerShellKernel()
         {
             Name = DefaultKernelName;
             _cancellationSource = new CancellationTokenSource();
-        }
 
-        protected override Task HandleAsync(
-            IKernelCommand command,
-            KernelInvocationContext context)
-        {
-            if (!_firstTimeSetupHasRun)
-            {
-                _firstTimeSetupHasRun = true;
-
+            _lazyPwsh = new Lazy<PowerShell>(() => {
                 //Sets the distribution channel to "PSES" so starts can be distinguished in PS7+ telemetry
                 Environment.SetEnvironmentVariable("POWERSHELL_DISTRIBUTION_CHANNEL", "dotnet-interactive-powershell");
 
                 // Create PowerShell instance
                 var runspace = RunspaceFactory.CreateRunspace(InitialSessionState.CreateDefault());
                 runspace.Open();
-                _pwsh = PowerShell.Create(runspace);
+                var pwsh = PowerShell.Create(runspace);
 
                 // Add Modules directory that contains the helper modules
                 string psModulePath = Environment.GetEnvironmentVariable("PSModulePath");
@@ -55,9 +46,17 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                     "Modules");
 
                 Environment.SetEnvironmentVariable("PSModulePath",
-                    $"{psJupyterModulePath}{Path.PathSeparator}{psModulePath}");    
-            }
+                    $"{psJupyterModulePath}{Path.PathSeparator}{psModulePath}");
 
+                RegisterForDisposal(pwsh);
+                return pwsh;
+            });
+        }
+
+        protected override Task HandleAsync(
+            IKernelCommand command,
+            KernelInvocationContext context)
+        {
             if (command is KernelCommandBase kb)
             {
                 if (kb.Handler == null)
@@ -142,7 +141,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             StreamHandler streamHandler = RegisterPowerShellStreams(context, submitCode);
             try
             {
-                _pwsh.AddScript(code)
+                _lazyPwsh.Value.AddScript(code)
                     .AddCommand(@"Microsoft.DotNet.Interactive.PowerShell\Trace-PipelineObject")
                     .InvokeAndClearCommands();
             }
@@ -152,7 +151,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 // TODO: Should we even output the ErrorRecord? Maybe we should just return
                 // CommandFailed?
                 string stringifiedErrorRecord =
-                    _pwsh.AddCommand(CommandUtils.OutStringCmdletInfo)
+                    _lazyPwsh.Value.AddCommand(CommandUtils.OutStringCmdletInfo)
                         .AddParameter("InputObject", new ErrorRecord(e, null, ErrorCategory.NotSpecified, null))
                     .InvokeAndClearCommands<string>()[0];
 
@@ -188,9 +187,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             {
                 _cancellationSource.Cancel();
                 _cancellationSource = new CancellationTokenSource();
-                if (_pwsh.Runspace.RunspaceAvailability != RunspaceAvailability.Available)
+                if (_lazyPwsh.Value.Runspace.RunspaceAvailability != RunspaceAvailability.Available)
                 {
-                    _pwsh.Stop();
+                    _lazyPwsh.Value.Stop();
                 }
             }
 
@@ -211,7 +210,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             string code,
             int cursorPosition)
         {
-            CommandCompletion completion = CommandCompletion.CompleteInput(code, cursorPosition, null, _pwsh);
+            CommandCompletion completion = CommandCompletion.CompleteInput(code, cursorPosition, null, _lazyPwsh.Value);
 
             return completion.CompletionMatches.Select(c => new CompletionItem(
                 displayText: c.CompletionText,
@@ -225,12 +224,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             IKernelCommand command)
         {
             var streamHandler = new StreamHandler(context, command);
-            _pwsh.Streams.Debug.DataAdding += streamHandler.DebugDataAdding;
-            _pwsh.Streams.Warning.DataAdding += streamHandler.WarningDataAdding;
-            _pwsh.Streams.Error.DataAdding += streamHandler.ErrorDataAdding;
-            _pwsh.Streams.Verbose.DataAdding += streamHandler.VerboseDataAdding;
-            _pwsh.Streams.Information.DataAdding += streamHandler.InformationDataAdding;
-            _pwsh.Streams.Progress.DataAdding += streamHandler.ProgressDataAdding;
+            _lazyPwsh.Value.Streams.Debug.DataAdding += streamHandler.DebugDataAdding;
+            _lazyPwsh.Value.Streams.Warning.DataAdding += streamHandler.WarningDataAdding;
+            _lazyPwsh.Value.Streams.Error.DataAdding += streamHandler.ErrorDataAdding;
+            _lazyPwsh.Value.Streams.Verbose.DataAdding += streamHandler.VerboseDataAdding;
+            _lazyPwsh.Value.Streams.Information.DataAdding += streamHandler.InformationDataAdding;
+            _lazyPwsh.Value.Streams.Progress.DataAdding += streamHandler.ProgressDataAdding;
             return streamHandler;
         }
 
@@ -242,12 +241,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 return;
             }
 
-            _pwsh.Streams.Debug.DataAdding -= streamHandler.DebugDataAdding;
-            _pwsh.Streams.Warning.DataAdding -= streamHandler.WarningDataAdding;
-            _pwsh.Streams.Error.DataAdding -= streamHandler.ErrorDataAdding;
-            _pwsh.Streams.Verbose.DataAdding -= streamHandler.VerboseDataAdding;
-            _pwsh.Streams.Information.DataAdding -= streamHandler.InformationDataAdding;
-            _pwsh.Streams.Progress.DataAdding -= streamHandler.ProgressDataAdding;
+            _lazyPwsh.Value.Streams.Debug.DataAdding -= streamHandler.DebugDataAdding;
+            _lazyPwsh.Value.Streams.Warning.DataAdding -= streamHandler.WarningDataAdding;
+            _lazyPwsh.Value.Streams.Error.DataAdding -= streamHandler.ErrorDataAdding;
+            _lazyPwsh.Value.Streams.Verbose.DataAdding -= streamHandler.VerboseDataAdding;
+            _lazyPwsh.Value.Streams.Information.DataAdding -= streamHandler.InformationDataAdding;
+            _lazyPwsh.Value.Streams.Progress.DataAdding -= streamHandler.ProgressDataAdding;
         }
     }
 }
