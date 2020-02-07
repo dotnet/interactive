@@ -44,7 +44,5 @@ namespace Microsoft.DotNet.Interactive.Commands
 
             await Handler(this, context);
         }
-
-        internal IKernel HandlingKernel { get; set; }
     }
 }

@@ -89,7 +89,14 @@ namespace Microsoft.DotNet.Interactive
             WriteProjectFile();
 
             var dotnet = new Dotnet(Directory);
-            var result = await dotnet.Execute("msbuild -restore /t:WriteNugetAssemblyPaths");
+            
+            var commandLine = "msbuild -restore /t:WriteNugetAssemblyPaths";
+
+#if DEBUG
+            commandLine += " /bl";
+#endif
+
+            var result = await dotnet.Execute(commandLine);
 
             if (result.ExitCode != 0)
             {

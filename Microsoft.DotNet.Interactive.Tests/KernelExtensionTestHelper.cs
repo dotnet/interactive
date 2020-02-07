@@ -12,47 +12,66 @@ namespace Microsoft.DotNet.Interactive.Tests
 {
     internal static class KernelExtensionTestHelper
     {
-        internal static async Task<FileInfo> CreateExtensionNupkgInDirectory(
+        private static readonly string _microsoftDotNetInteractiveDllPath = typeof(IKernelExtension).Assembly.Location;
+
+        internal static async Task<FileInfo> CreateExtensionNupkg(
             DirectoryInfo projectDir,
-            string body,
-            DirectoryInfo outputDir,
-            [CallerMemberName] string testName = null)
+            string code,
+            string packageName,
+            string packageVersion)
         {
-            var extensionName = AlignExtensionNameWithDirectoryName(projectDir, testName);
+            projectDir.Populate(
+                ("_._", ""),
+                ExtensionCs(code),
+                ("Extension.csproj", $@"
+<Project Sdk=""Microsoft.NET.Sdk"">
 
-            await CreateProjectAndBuild(
-                projectDir,
-                body,
-                extensionName);
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsPackable>true</IsPackable>
+    <PackageId>{packageName}</PackageId>
+    <PackageVersion>{packageVersion}</PackageVersion>
+  </PropertyGroup>
 
-            var extensionDll = projectDir
-                               .GetDirectories("bin", SearchOption.AllDirectories)
-                               .Single()
-                               .GetFiles($"{extensionName}.nupkg", SearchOption.AllDirectories)
-                               .Single();
+  <ItemGroup>
+    <None Include=""_._"" Pack=""true"" PackagePath=""lib/netstandard2.0"" />
+    <None Include=""_._"" Pack=""true"" PackagePath=""lib/netcoreapp3.1"" />
+    <None Include=""$(OutputPath)/Extension.dll"" Pack=""true"" PackagePath=""interactive-extensions/dotnet"" />
+  </ItemGroup>
 
-            if (!outputDir.Exists)
-            {
-                outputDir.Create();
-            }
+  <ItemGroup>
+    <Reference Include=""Microsoft.DotNet.Interactive"">
+      <HintPath>{_microsoftDotNetInteractiveDllPath}</HintPath>
+    </Reference>
+  </ItemGroup>
 
-            var finalExtensionDll = new FileInfo(Path.Combine(outputDir.FullName, extensionDll.Name));
-            File.Move(extensionDll.FullName, finalExtensionDll.FullName);
+</Project>
 
-            return finalExtensionDll;
+"));
+
+            var dotnet = new Dotnet(projectDir);
+
+            var pack = await dotnet.Pack(projectDir.FullName);
+
+            pack.ThrowOnFailure();
+
+            return projectDir
+                   .GetFiles("*.nupkg", SearchOption.AllDirectories)
+                   .Single();
         }
 
-        internal static async Task<FileInfo> CreateExtensionDllInDirectory(
+        internal static async Task<FileInfo> CreateExtensionAssembly(
             DirectoryInfo projectDir,
-            string body,
-            DirectoryInfo outputDir,
+            string code,
+            DirectoryInfo copyDllTo = null,
             [CallerMemberName] string testName = null)
         {
             var extensionName = AlignExtensionNameWithDirectoryName(projectDir, testName);
 
-            await CreateProjectAndBuild(
+            await CreateExtensionProjectAndBuild(
                 projectDir,
-                body,
+                code,
                 extensionName);
 
             var extensionDll = projectDir
@@ -61,15 +80,19 @@ namespace Microsoft.DotNet.Interactive.Tests
                                .GetFiles($"{extensionName}.dll", SearchOption.AllDirectories)
                                .Single();
 
-            if (!outputDir.Exists)
+            if (copyDllTo != null)
             {
-                outputDir.Create();
+                if (!copyDllTo.Exists)
+                {
+                    copyDllTo.Create();
+                }
+
+                var finalExtensionDll = new FileInfo(Path.Combine(copyDllTo.FullName, extensionDll.Name));
+                File.Move(extensionDll.FullName, finalExtensionDll.FullName);
+                extensionDll = finalExtensionDll;
             }
 
-            var finalExtensionDll = new FileInfo(Path.Combine(outputDir.FullName, extensionDll.Name));
-            File.Move(extensionDll.FullName, finalExtensionDll.FullName);
-
-            return finalExtensionDll;
+            return extensionDll;
         }
 
         private static string AlignExtensionNameWithDirectoryName(DirectoryInfo extensionDir, string testName)
@@ -78,15 +101,38 @@ namespace Microsoft.DotNet.Interactive.Tests
             return match.Success ? $"{testName}{match.Groups["counter"].Value}" : testName;
         }
 
-        private static async Task CreateProjectAndBuild(
-            DirectoryInfo projectDir, 
-            string body, 
-            string extensionName = null)
+        private static async Task CreateExtensionProjectAndBuild(
+            DirectoryInfo projectDir,
+            string code,
+            string extensionName)
         {
-            var microsoftDotNetInteractiveDllPath = typeof(IKernelExtension).Assembly.Location;
-
             projectDir.Populate(
-                ("Extension.cs", $@"
+                ExtensionCs(code),
+                ("TestExtension.csproj", $@"
+<Project Sdk=""Microsoft.NET.Sdk"">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyName>{extensionName}</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include=""Microsoft.DotNet.Interactive"">
+      <HintPath>{_microsoftDotNetInteractiveDllPath}</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
+"));
+
+            var buildResult = await new Dotnet(projectDir).Build();
+
+            buildResult.ThrowOnFailure();
+        }
+
+        private static (string, string) ExtensionCs(string code)
+        {
+            return ("Extension.cs", $@"
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -97,32 +143,10 @@ public class TestKernelExtension : IKernelExtension
 {{
     public async Task OnLoadAsync(IKernel kernel)
     {{
-        {body}
+        {code}
     }}
 }}
-"),
-                ("TestExtension.csproj", $@"
-<Project Sdk=""Microsoft.NET.Sdk"">
-
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <AssemblyName>{extensionName}</AssemblyName>
-  </PropertyGroup>
-
-    <ItemGroup>
-
-    <Reference Include=""Microsoft.DotNet.Interactive"">
-      <HintPath>{microsoftDotNetInteractiveDllPath}</HintPath>
-    </Reference>
-  </ItemGroup>
-
-</Project>
-"));
-
-            var buildResult = await new Dotnet(projectDir).Build();
-            buildResult.ThrowOnFailure();
-
+");
         }
-        
     }
 }

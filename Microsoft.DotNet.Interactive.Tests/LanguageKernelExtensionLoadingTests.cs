@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
@@ -28,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var dllDir = projectDir.CreateSubdirectory("extension");
 
-            var extensionDll = await CreateExtensionDllInDirectory(
+            var extensionDll = await CreateExtensionAssembly(
                                    projectDir,
                                    @"await kernel.SendAsync(new SubmitCode(""display(\""csharp extension installed\"");""));",
                                    dllDir);
@@ -56,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var dllDir = projectDir.CreateSubdirectory("extension");
 
-            await CreateExtensionDllInDirectory(
+            await CreateExtensionAssembly(
                 projectDir,
                 "throw new Exception();",
                 dllDir);
@@ -79,33 +78,26 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             var projectDir = DirectoryUtility.CreateDirectory();
 
-            var packageName = "MyExtensionPackage";
-            var packageVersion = "2.0.0";
+            var packageName = "MyTestExtension";
+            var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
+            var guid = Guid.NewGuid().ToString();
 
-            var nugetPackageDirectory = new DirectoryInfo(
-                Path.Combine(
-                    projectDir.FullName,
-                    packageName,
-                    packageVersion));
-
-            var extensionsDir =
-                new DirectoryInfo(
-                    Path.Combine(
-                        nugetPackageDirectory.FullName,
-                        "interactive-extensions", "dotnet"));
-
-            var extensionDll = await CreateExtensionNupkgInDirectory(
-                                   projectDir,
-                                   @"await kernel.SendAsync(new SubmitCode(""using System.Reflection;""));",
-                                   extensionsDir);
+            var nupkg = await CreateExtensionNupkg(
+                            projectDir,
+                            $"await kernel.SendAsync(new SubmitCode(\"\\\"{guid}\\\"\"));",
+                            packageName,
+                            packageVersion);
 
             var kernel = CreateKernel(Language.CSharp);
 
-            await kernel.SubmitCodeAsync($"#r \"nuget:{packageName},{packageVersion}\"");
+            await kernel.SubmitCodeAsync($@"
+#r ""nuget:RestoreSources={nupkg.Directory.FullName}""
+#r ""nuget:{packageName},{packageVersion}""            ");
 
             KernelEvents.Should()
-                        .ContainSingle<DisplayedValueUpdated>(e =>
-                                                                  e.Value.ToString() == $"Loaded kernel extension TestKernelExtension from assembly {extensionDll.FullName}");
+                        .ContainSingle<ReturnValueProduced>(
+                            e =>
+                                e.Value.ToString().Contains(guid));
         }
     }
 }
