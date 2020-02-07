@@ -303,7 +303,9 @@ namespace Microsoft.DotNet.Interactive
 
         public T GetProperty<T>() where T : class
         {
-            return _propertyBag.TryGetValue(typeof(T), out var property) ? property as T : default;
+            return _propertyBag.TryGetValue(typeof(T), out var property) 
+                ? property as T 
+                : throw new InvalidOperationException($"Cannot find property {typeof(T)}.");
         }
     }
 }
