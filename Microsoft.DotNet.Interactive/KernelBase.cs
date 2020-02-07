@@ -303,12 +303,7 @@ namespace Microsoft.DotNet.Interactive
 
         public T GetProperty<T>() where T : class
         {
-            if(_propertyBag.TryGetValue(typeof(T), out var property))
-            {
-                return property as T;
-            }
-
-            throw new KeyNotFoundException($"Cannot get property with key {typeof(T)}");
+            return _propertyBag.TryGetValue(typeof(T), out var property) ? property as T : default;
         }
     }
 }
