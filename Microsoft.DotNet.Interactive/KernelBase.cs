@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly CompositeDisposable _disposables;
         private readonly SubmissionSplitter _submissionSplitter = new SubmissionSplitter();
         private readonly ConcurrentQueue<IKernelCommand> _deferredCommands = new ConcurrentQueue<IKernelCommand>();
-        private readonly ConcurrentDictionary<Type, object> _propertyBag = new ConcurrentDictionary<Type, object>();
+        private readonly ConcurrentDictionary<Type, object> _properties = new ConcurrentDictionary<Type, object>();
 
         protected KernelBase()
         {
@@ -295,7 +295,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void SetProperty<T>(T property) where T : class
         {
-            if (!_propertyBag.TryAdd(typeof(T), property))
+            if (!_properties.TryAdd(typeof(T), property))
             {
                 throw new InvalidOperationException($"Cannot add property with key {typeof(T)}.");
             }
@@ -303,9 +303,9 @@ namespace Microsoft.DotNet.Interactive
 
         public T GetProperty<T>() where T : class
         {
-            return _propertyBag.TryGetValue(typeof(T), out var property) 
+            return _properties.TryGetValue(typeof(T), out var property) 
                 ? property as T 
-                : throw new InvalidOperationException($"Cannot find property {typeof(T)}.");
+                : throw new KeyNotFoundException($"Cannot find property {typeof(T)}.");
         }
     }
 }
