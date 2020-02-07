@@ -192,7 +192,8 @@ stages:
           - name: ToolVersionArgs
             value: ''
         steps:
-        - checkout: none
+        - checkout: self
+          clean: true
         - task: UseDotNet@2
           displayName: Add dotnet 3.0
           inputs:
@@ -203,13 +204,24 @@ stages:
           displayName: Download built packages
           inputs:
             artifactName: packages
-            downloadPath: $(System.DefaultWorkingDirectory)
-        - script: echo "<configuration><packageSources><clear /></packageSources></configuration>" > NuGet.config
+            downloadPath: $(Build.ArtifactStagingDirectory)
+        - script: echo "<configuration><packageSources><clear /></packageSources></configuration>" > "$(Build.ArtifactStagingDirectory)/NuGet.config"
           displayName: Generate empty NuGet.config
-        - script: dotnet tool install -g --configfile NuGet.config $(ToolVersionArgs) --add-source "$(System.DefaultWorkingDirectory)/packages/Shipping" Microsoft.dotnet-interactive
+        - script: dotnet tool install -g --configfile "$(Build.ArtifactStagingDirectory)/NuGet.config" $(ToolVersionArgs) --add-source "$(Build.ArtifactStagingDirectory)/packages/Shipping" Microsoft.dotnet-interactive
           displayName: Install global tool
         - script: dotnet interactive --version
           displayName: Write version
+        - script: dotnet test
+            "$(Build.SourcesDirectory)/dotnet-interactive.IntegrationTests/dotnet-interactive.IntegrationTests.csproj"
+            --logger "trx;LogFileName=$(Build.ArtifactStagingDirectory)/TestResults/IntegrationTests.trx"
+          displayName: Execute integration tests
+        - task: PublishTestResults@2
+          displayName: Publish Test Results
+          inputs:
+            testResultsFormat: VSTest
+            testResultsFiles: '**/*.trx'
+            searchFolder: '$(Build.ArtifactStagingDirectory)/TestResults'
+          condition: always()
 
 #---------------------------------------------------------------------------------------------------------------------#
 #                                                    Post Build                                                       #
