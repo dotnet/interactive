@@ -5,7 +5,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
-using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
@@ -187,8 +186,6 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly ConcurrentQueue<KernelOperation> _commandQueue =
             new ConcurrentQueue<KernelOperation>();
-
-  
 
         public Task<IKernelCommandResult> SendAsync(
             IKernelCommand command,
