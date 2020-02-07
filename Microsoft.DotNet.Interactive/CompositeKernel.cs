@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         private async Task LoadExtensions(
-            IKernelCommand command, 
+            IKernelCommand command,
             KernelInvocationContext context,
             KernelPipelineContinuation next)
         {
@@ -83,9 +83,20 @@ namespace Microsoft.DotNet.Interactive
             {
                 var packageRootDir = packageAdded.PackageReference.PackageRoot;
 
-                await LoadExtensionsFromDirectoryAsync(
-                    packageRootDir,
-                    context);
+                var extensionDir =
+                    new DirectoryInfo
+                    (Path.Combine(
+                         packageRootDir.FullName,
+                         "interactive-extensions",
+                         "dotnet"));
+                
+                if (extensionDir.Exists)
+                {
+
+                    await LoadExtensionsFromDirectoryAsync(
+                        extensionDir,
+                        context);
+                }
             }
         }
 

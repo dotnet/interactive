@@ -21,22 +21,18 @@ namespace Microsoft.DotNet.Interactive.Tests
             string packageVersion)
         {
             projectDir.Populate(
-                ("_._", ""),
                 ExtensionCs(code),
                 ("Extension.csproj", $@"
 <Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <IncludeBuildOutput>false</IncludeBuildOutput>
     <IsPackable>true</IsPackable>
     <PackageId>{packageName}</PackageId>
     <PackageVersion>{packageVersion}</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include=""_._"" Pack=""true"" PackagePath=""lib/netstandard2.0"" />
-    <None Include=""_._"" Pack=""true"" PackagePath=""lib/netcoreapp3.1"" />
     <None Include=""$(OutputPath)/Extension.dll"" Pack=""true"" PackagePath=""interactive-extensions/dotnet"" />
   </ItemGroup>
 
