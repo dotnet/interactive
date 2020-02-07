@@ -293,14 +293,22 @@ namespace Microsoft.DotNet.Interactive
 
         string IKernel.Name => Name;
 
-        public void SetProperty<T>(T service) where T : class
+        public void SetProperty<T>(T property) where T : class
         {
-            _propertyBag.TryAdd(typeof(T), service);
+            if (!_propertyBag.TryAdd(typeof(T), property))
+            {
+                throw new InvalidOperationException($"Cannot add property with key {typeof(T)}.");
+            }
         }
 
         public T GetProperty<T>() where T : class
         {
-            return _propertyBag.TryGetValue(typeof(T), out var service)? (T)service : default;
+            if(_propertyBag.TryGetValue(typeof(T), out var property))
+            {
+                return property as T;
+            }
+
+            throw new KeyNotFoundException($"Cannot get property with key {typeof(T)}");
         }
     }
 }
