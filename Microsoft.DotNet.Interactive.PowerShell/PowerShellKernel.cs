@@ -35,7 +35,14 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 Environment.SetEnvironmentVariable("POWERSHELL_DISTRIBUTION_CHANNEL", "dotnet-interactive-powershell");
 
                 // Create PowerShell instance
-                var runspace = RunspaceFactory.CreateRunspace(InitialSessionState.CreateDefault());
+                var iss = InitialSessionState.CreateDefault();
+                if(Platform.IsWindows)
+                {
+                    // This sets the execution policy on Windows to RemoteSigned.
+                    iss.ExecutionPolicy = Microsoft.PowerShell.ExecutionPolicy.RemoteSigned;
+                }
+
+                var runspace = RunspaceFactory.CreateRunspace(iss);
                 runspace.Open();
                 var pwsh = PowerShell.Create(runspace);
 

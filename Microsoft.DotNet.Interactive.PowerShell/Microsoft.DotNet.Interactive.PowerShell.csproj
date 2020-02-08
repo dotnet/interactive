@@ -101,7 +101,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.0.0-rc.1" />
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.0.0-rc.2" />
   </ItemGroup>
 
   <!-- Copies anything in the Modules folder into the output (including the helper module's module manifest) -->
