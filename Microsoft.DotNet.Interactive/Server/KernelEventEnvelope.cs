@@ -120,6 +120,8 @@ namespace Microsoft.DotNet.Interactive.Server
             return Create(@event);
         }
 
+        public static string Serialize(IKernelEvent @event) => Serialize(Create(@event));
+
         public static string Serialize(IKernelEventEnvelope eventEnvelope)
         {
             KernelCommandEnvelope.SerializationModel commandSerializationModel = null;

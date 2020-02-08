@@ -7,9 +7,8 @@ using System.IO;
 using FluentAssertions;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Utility;
-using Xunit;
 using Xunit.Abstractions;
+using static Microsoft.DotNet.Interactive.Tests.DirectoryUtility;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
@@ -33,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             //path containing the environment variables for jupyter
 
             var kernelSpec = GetJupyterKernelSpec(true);
-            var kernelDir = DirectoryUtility.CreateDirectory();
+            var kernelDir = CreateDirectory();
 
             var result = await kernelSpec.InstallKernel(kernelDir);
             result.Error.Should().BeEmpty();
@@ -49,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public async Task Returns_failure_when_kernel_installation_did_not_succeed()
         {
             var kernelSpec = GetJupyterKernelSpec(false, error: new[] { "Could not find jupyter kernelspec module" });
-            var kernelDir = DirectoryUtility.CreateDirectory();
+            var kernelDir = CreateDirectory();
 
             var result = await kernelSpec.InstallKernel(kernelDir);
             result.ExitCode.Should().Be(1);

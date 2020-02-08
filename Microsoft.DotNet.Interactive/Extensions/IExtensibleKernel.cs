@@ -4,11 +4,11 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive.Extensions
 {
-    public interface IExtensibleKernel
+    public interface IExtensibleKernel : IKernel
     {
-        Task LoadExtensionsFromDirectory(
+        Task LoadExtensionsFromDirectoryAsync(
             DirectoryInfo directory, 
             KernelInvocationContext invocationContext);
     }

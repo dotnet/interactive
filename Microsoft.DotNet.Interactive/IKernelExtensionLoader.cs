@@ -3,13 +3,15 @@
 
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Extensions;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public interface IKernelExtensionLoader<in T> where T : IKernel
+    public interface IKernelExtensionLoader 
     {
-        Task LoadFromDirectoryAsync(DirectoryInfo directory,
-            T kernel,
+        Task LoadFromDirectoryAsync(
+            DirectoryInfo directory,
+            IExtensibleKernel kernel,
             KernelInvocationContext context);
     }
 }

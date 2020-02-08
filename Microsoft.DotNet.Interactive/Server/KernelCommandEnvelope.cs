@@ -29,7 +29,6 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(CancelCurrentCommand)] = typeof(KernelCommandEnvelope<CancelCurrentCommand>),
                 [nameof(DisplayError)] = typeof(KernelCommandEnvelope<DisplayError>),
                 [nameof(DisplayValue)] = typeof(KernelCommandEnvelope<DisplayValue>),
-                [nameof(LoadExtensionsInDirectory)] = typeof(KernelCommandEnvelope<LoadExtensionsInDirectory>),
                 [nameof(RequestCompletion)] = typeof(KernelCommandEnvelope<RequestCompletion>),
                 [nameof(RequestDiagnostics)] = typeof(KernelCommandEnvelope<RequestDiagnostics>),
                 [nameof(SubmitCode)] = typeof(KernelCommandEnvelope<SubmitCode>),
@@ -121,6 +120,8 @@ namespace Microsoft.DotNet.Interactive.Server
 
             return Create(command);
         }
+
+        public static string Serialize(IKernelCommand command) => Serialize(Create(command));
 
         public static string Serialize(IKernelCommandEnvelope envelope)
         {

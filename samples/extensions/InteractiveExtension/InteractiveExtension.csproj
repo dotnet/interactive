@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsPackable>true</IsPackable>
+    <PackageDescription>Here's very nice, fine, lovely library. Library!</PackageDescription>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="_._" Pack="true" PackagePath="lib/netstandard2.0" />
+    <None Include="$(OutputPath)/InteractiveExtension.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
+  </ItemGroup>
+
+</Project>

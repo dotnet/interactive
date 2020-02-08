@@ -1,14 +1,15 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.IO;
+using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Utility;
+using Microsoft.DotNet.Interactive.Extensions;
 using Xunit;
 using Xunit.Abstractions;
+using static Microsoft.DotNet.Interactive.Tests.KernelExtensionTestHelper;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -19,79 +20,84 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
         }
 
-        [Theory(Timeout = 45000)]
-        [InlineData("interactive-extensions/dotnet/cs", @"await kernel.SendAsync(new SubmitCode(""display(\""csharp extension installed\"");""));")]
-        [InlineData("interactive-extensions/dotnet/", "")]
-        public async Task can_load_kernel_extensions(string extensionPath, string code)
+        [Fact]
+        public async Task It_loads_extensions_in_specified_directory_via_a_command()
         {
-            var extensionDir = DirectoryUtility.CreateDirectory();
-            var extensionFile =  await KernelExtensionTestHelper.CreateExtensionInDirectory(extensionDir,
-                code,
-                extensionDir.CreateSubdirectory(extensionPath)
-                );
+            var projectDir = DirectoryUtility.CreateDirectory();
 
-            var kernel = CreateKernel();
-            using var events = kernel.KernelEvents.ToSubscribedList();
-            await kernel.SendAsync(new LoadExtensionsInDirectory(extensionDir, kernel.Name));
+            var dllDir = projectDir.CreateSubdirectory("extension");
+
+            var extensionDll = await CreateExtensionAssembly(
+                                   projectDir,
+                                   @"await kernel.SendAsync(new SubmitCode(""display(\""csharp extension installed\"");""));",
+                                   dllDir);
+
+            var kernel = (IExtensibleKernel) CreateKernel(Language.CSharp);
+
+            await using var context = KernelInvocationContext.Establish(new SubmitCode(""));
+
+            using var events = context.KernelEvents.ToSubscribedList();
+
+            await kernel.LoadExtensionsFromDirectoryAsync(
+                dllDir,
+                context);
 
             events.Should()
-                .NotContain(e => e is CommandFailed)
-                .And
-                .ContainSingle<DisplayedValueUpdated>(dv => dv.Value.ToString().Contains(extensionFile.FullName));
+                  .NotContain(e => e is CommandFailed)
+                  .And
+                  .ContainSingle<DisplayedValueUpdated>(dv => dv.Value.ToString().Contains(extensionDll.FullName));
         }
 
-        [Theory(Timeout = 45000)]
-        [InlineData("interactive-extensions/dotnet/cs")]
-        [InlineData("interactive-extensions/dotnet/")]
-        public async Task Gives_kernel_extension_load_exception_event_when_extension_throws_exception_during_load(string extensionPath)
+        [Fact]
+        public async Task It_throws_when_extension_throws_during_load()
         {
-            var extensionDir = DirectoryUtility.CreateDirectory();
-            await KernelExtensionTestHelper.CreateExtensionInDirectory(
-                extensionDir, 
-                @"throw new Exception();",
-                extensionDir.CreateSubdirectory(extensionPath)
-                );
+            var projectDir = DirectoryUtility.CreateDirectory();
 
-            var kernel = CreateKernel();
+            var dllDir = projectDir.CreateSubdirectory("extension");
 
-            using var events = kernel.KernelEvents.ToSubscribedList();
+            await CreateExtensionAssembly(
+                projectDir,
+                "throw new Exception();",
+                dllDir);
 
-            await kernel.SendAsync(new LoadExtensionsInDirectory(extensionDir, kernel.Name));
+            var kernel = (IExtensibleKernel) CreateKernel(Language.CSharp);
+            await using var context = KernelInvocationContext.Establish(new SubmitCode(""));
+
+            using var events = context.KernelEvents.ToSubscribedList();
+
+            await kernel.LoadExtensionsFromDirectoryAsync(
+                dllDir,
+                context);
 
             events.Should()
-                .ContainSingle<CommandFailed>(cf => cf.Exception is KernelExtensionLoadException);
+                  .ContainSingle<CommandFailed>(cf => cf.Exception is KernelExtensionLoadException);
         }
 
-        [Fact(Timeout = 45000)]
-        public async Task Should_load_extension_in_directory()
+        [Fact]
+        public async Task It_loads_extensions_found_in_nuget_packages()
         {
-            var directory = DirectoryUtility.CreateDirectory();
+            var projectDir = DirectoryUtility.CreateDirectory();
 
-            const string nugetPackageName = "myNugetPackage";
-            var nugetPackageDirectory = new DirectoryInfo(
-                Path.Combine(
-                    directory.FullName,
-                    nugetPackageName,
-                    "2.0.0"));
+            var packageName = "MyTestExtension";
+            var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
+            var guid = Guid.NewGuid().ToString();
 
-            var extensionsDir =
-                new DirectoryInfo(
-                    Path.Combine(
-                        nugetPackageDirectory.FullName,
-                        "interactive-extensions", "dotnet", "cs"));
+            var nupkg = await CreateExtensionNupkg(
+                            projectDir,
+                            $"await kernel.SendAsync(new SubmitCode(\"\\\"{guid}\\\"\"));",
+                            packageName,
+                            packageVersion);
 
-            var extensionDll = await KernelExtensionTestHelper.CreateExtensionInDirectory(
-                                   directory, 
-                                   @"await kernel.SendAsync(new SubmitCode(""using System.Reflection;""));",
-                                   extensionsDir);
+            var kernel = CreateKernel(Language.CSharp);
 
-            var kernel = CreateKernel();
-
-            await kernel.SendAsync(new LoadExtensionsInDirectory(nugetPackageDirectory, kernel.Name));
+            await kernel.SubmitCodeAsync($@"
+#r ""nuget:RestoreSources={nupkg.Directory.FullName}""
+#r ""nuget:{packageName},{packageVersion}""            ");
 
             KernelEvents.Should()
-                        .ContainSingle<DisplayedValueUpdated>(e => 
-                            e.Value.ToString() == $"Loaded kernel extension TestKernelExtension from assembly {extensionDll.FullName}");
+                        .ContainSingle<ReturnValueProduced>(
+                            e =>
+                                e.Value.ToString().Contains(guid));
         }
     }
 }

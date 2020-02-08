@@ -105,7 +105,6 @@ namespace Microsoft.DotNet.Interactive.Tests
             DisposeAfterTest(KernelEvents);
             DisposeAfterTest(kernel);
 
-
             return kernel;
         }
 
