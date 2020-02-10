@@ -2,19 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.CommandLine.Binding;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App.CommandLine;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
-using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
@@ -150,53 +145,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             await _parser.InvokeAsync("jupyter", testConsole);
 
             testConsole.Error.ToString().Should().Contain("Required argument missing for command: jupyter");
-        }
-
-        [Fact(Skip = "build hackery is flaky; see dotnet-interactive.csproj")]
-        public async Task kernel_server_honors_log_path()
-        {
-            using var logPath = DisposableDirectory.Create();
-            using var outputReceived = new ManualResetEvent(false);
-            var errorLines = new List<string>();
-
-            // start as external process
-            var dotnet = new Dotnet(logPath.Directory);
-            using var kernelServerProcess = dotnet.StartProcess(
-                args: $@"""{typeof(Program).Assembly.Location}"" kernel-server --log-path ""{logPath.Directory.FullName}""",
-                output: _line => { outputReceived.Set(); },
-                error: errorLines.Add);
-
-            // wait for log file to be created
-            var logFile = await logPath.Directory.WaitForFile(
-                timeout: TimeSpan.FromSeconds(2),
-                predicate: _file => true); // any matching file is the one we want
-            errorLines.Should().BeEmpty();
-            logFile.Should().NotBeNull("unable to find created log file");
-
-            // submit code
-            var submission = new SubmitCode("1+1");
-            var submissionJson = KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(submission));
-            await kernelServerProcess.StandardInput.WriteLineAsync(submissionJson);
-            await kernelServerProcess.StandardInput.FlushAsync();
-
-            // wait for output to proceed
-            var gotOutput = outputReceived.WaitOne(timeout: TimeSpan.FromSeconds(2));
-            gotOutput.Should().BeTrue("expected to receive on stdout");
-
-            // kill
-            kernelServerProcess.StandardInput.Close(); // simulate Ctrl+C
-            await Task.Delay(TimeSpan.FromSeconds(2)); // allow logs to be flushed
-            kernelServerProcess.Kill();
-            kernelServerProcess.WaitForExit(2000).Should().BeTrue();
-            errorLines.Should().BeEmpty();
-
-            // check log file for expected contents
-            (await logFile.WaitForFileCondition(
-                timeout: TimeSpan.FromSeconds(2),
-                predicate: file => file.Length > 0))
-                .Should().BeTrue("expected non-empty log file");
-            var logFileContents = File.ReadAllText(logFile.FullName);
-            logFileContents.Should().Contain("ℹ OnAssemblyLoad: ");
         }
     }
 }

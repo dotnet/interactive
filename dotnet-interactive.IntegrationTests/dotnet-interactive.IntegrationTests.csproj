@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>Microsoft.DotNet.Interactive.App.IntegrationTests</RootNamespace>
+    <NoWarn>$(NoWarn);8002</NoWarn><!-- Assent isn't strongly signed -->
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Microsoft.DotNet.Interactive.App.IntegrationTests</AssemblyName>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive\Utility\DisposableDirectory.cs" Link="External\DisposableDirectory.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.17" />
+    <PackageReference Include="pocketlogger.subscribe" Version="0.6.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Assent" Version="1.3.1" />
+    <PackageReference Include="FluentAssertions" Version="5.10.0" />
+  </ItemGroup>
+
+</Project>

@@ -128,13 +128,4 @@
     <ZipDirectory SourceDirectory="$(KernelDestinationDirectory)" DestinationFile="$(IntermediateOutputPath)/dotnetKernel.zip" Overwrite="true" />
   </Target>
 
-  <!-- Copied from https://github.com/dotnet/sdk/issues/1675 to ensure *.runtimeconfig.json is copied to projects referencing this, e.g., test projects. -->
-  <!-- Temporarily disabled to investigate flaky build. -->
-  <!-- <Target Name="AddRuntimeDependenciesToContent" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'" BeforeTargets="GetCopyToOutputDirectoryItems" DependsOnTargets="GenerateBuildDependencyFile;GenerateBuildRuntimeConfigurationFiles">
-    <ItemGroup>
-      <ContentWithTargetPath Include="$(ProjectDepsFilePath)" CopyToOutputDirectory="PreserveNewest" TargetPath="$(ProjectDepsFileName)" Condition="'$(BuildingTestProject)' == 'true'" />
-      <ContentWithTargetPath Include="$(ProjectRuntimeConfigFilePath)" CopyToOutputDirectory="PreserveNewest" TargetPath="$(ProjectRuntimeConfigFileName)" />
-    </ItemGroup>
-  </Target> -->
-
 </Project>
