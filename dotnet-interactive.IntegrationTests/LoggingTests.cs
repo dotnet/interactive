@@ -16,6 +16,8 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
         {
             using var logPath = DisposableDirectory.Create();
             using var outputReceived = new ManualResetEvent(false);
+            var outputLock = new object();
+            var receivedOutput = false;
             var errorLines = new List<string>();
 
             // start as external process
@@ -23,7 +25,17 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
                 command: "dotnet",
                 args: $@"interactive kernel-server --log-path ""{logPath.Directory.FullName}""",
                 workingDir: new DirectoryInfo(Directory.GetCurrentDirectory()),
-                output: _line => { outputReceived.Set(); },
+                output: _line =>
+                {
+                    lock (outputLock)
+                    {
+                        if (!receivedOutput)
+                        {
+                            receivedOutput = true;
+                            outputReceived.Set();
+                        }
+                    }
+                },
                 error: errorLines.Add);
 
             // wait for log file to be created
