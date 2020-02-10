@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
 {
     public class LoggingTests
     {
-        [Fact]
+        [IntegrationTest]
         public async Task kernel_server_honors_log_path()
         {
             using var logPath = DisposableDirectory.Create();

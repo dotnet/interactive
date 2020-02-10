@@ -215,6 +215,8 @@ stages:
             "$(Build.SourcesDirectory)/dotnet-interactive.IntegrationTests/dotnet-interactive.IntegrationTests.csproj"
             --logger "trx;LogFileName=$(Build.ArtifactStagingDirectory)/TestResults/IntegrationTests.trx"
           displayName: Execute integration tests
+          env:
+            INTEGRATION_TEST_RUN: true
         - task: PublishTestResults@2
           displayName: Publish Test Results
           inputs:
