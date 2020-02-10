@@ -280,8 +280,17 @@ namespace s
         </InteractiveResolvedFile>
 
         <NativeIncludeRoots
+            Include="@(Compile)"
+            Condition="'%(Compile.NugetItemType)' == 'Compile' and $([System.String]::Copy('%(Compile.Identity)').IndexOf('contentFiles', System.StringComparison.InvariantCultureIgnoreCase)) != -1"
+            KeepDuplicates="false">
+            <PositionPathInPackage>$([System.String]::Copy('%(Compile.Identity)').IndexOf('contentFiles', System.StringComparison.InvariantCultureIgnoreCase))</PositionPathInPackage>
+            <Path>$([System.String]::Copy('%(Compile.Identity)').Substring(0, %(NativeIncludeRoots.PositionPathInPackage)))</Path>
+        </NativeIncludeRoots>
+
+        <NativeIncludeRoots
             Include=""@(RuntimeTargetsCopyLocalItems)""
-            Condition=""'%(RuntimeTargetsCopyLocalItems.AssetType)' == 'native'"">
+            Condition=""'%(RuntimeTargetsCopyLocalItems.AssetType)' == 'native'""
+            KeepDuplicates="false">
             <Path>$([MSBuild]::EnsureTrailingSlash('$([System.String]::Copy('%(FullPath)').Substring(0, $([System.String]::Copy('%(FullPath)').LastIndexOf('runtimes'))))'))</Path>
         </NativeIncludeRoots>
       </ItemGroup>
@@ -294,7 +303,7 @@ namespace s
 
     <ItemGroup>
       <ResolvedReferenceLines Remove='*' />
-      <ResolvedReferenceLines Include='%(InteractiveResolvedFile.NugetPackageId),%(InteractiveResolvedFile.NugetPackageVersion),%(InteractiveResolvedFile.Identity),%(NativeIncludeRoots.Path),$(AppHostRuntimeIdentifier)' />
+      <ResolvedReferenceLines Include='%(InteractiveResolvedFile.NugetPackageId),%(InteractiveResolvedFile.NugetPackageVersion),%(InteractiveResolvedFile.Identity),%(NativeIncludeRoots.Path),$(AppHostRuntimeIdentifier)' KeepDuplicates="false" />
     </ItemGroup>
 
     <WriteLinesToFile Lines='@(ResolvedReferenceLines)' 
