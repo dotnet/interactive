@@ -25,6 +25,10 @@ stages:
 - stage: build
   displayName: Build and Test
   jobs:
+
+  #-------------------------------------------------------------------------------------------------------------------#
+  #                                                      Windows                                                      #
+  #-------------------------------------------------------------------------------------------------------------------#
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
@@ -115,6 +119,54 @@ stages:
             artifactName: packages
             artifactType: container
 
+  #-------------------------------------------------------------------------------------------------------------------#
+  #                                                  Arcade Disabled                                                  #
+  #-------------------------------------------------------------------------------------------------------------------#
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableMicrobuild: true
+      enablePublishBuildArtifacts: false
+      enablePublishTestResults: false
+      enablePublishBuildAssets: false
+      enablePublishUsingPipelines: false
+      enableTelemetry: true
+      helixRepo: dotnet/interactive
+      jobs:
+      - job: DisableArcade
+        pool:
+          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+            vmImage: windows-2019
+          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+            name: NetCoreInternal-Pool
+            queue: buildpool.windows.10.amd64.vs2019
+        variables:
+          - name: DisableArcade
+            value: 1
+        steps:
+        - checkout: self
+          clean: true
+
+        - task: UseDotNet@2
+          displayName: Add dotnet 3.0
+          inputs:
+            packageType: sdk
+            version: $(DotNetSdkVersion)
+            installationPath: $(Agent.ToolsDirectory)\dotnet
+
+        - script: dotnet test --test-adapter-path . --logger "trx;noprogress=true"
+          displayName: Build / Test
+
+        - task: PublishTestResults@2
+          displayName: Publish Test Results
+          inputs:
+            testResultsFormat: VSTest
+            testResultsFiles: '**/*.trx'
+            searchFolder: '$(Build.SourcesDirectory)'
+          condition: always()
+
+  #-------------------------------------------------------------------------------------------------------------------#
+  #                                                       Linux                                                       #
+  #-------------------------------------------------------------------------------------------------------------------#
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
@@ -172,6 +224,9 @@ stages:
           env:
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
 
+  #-------------------------------------------------------------------------------------------------------------------#
+  #                                                 Integration Test                                                  #
+  #-------------------------------------------------------------------------------------------------------------------#
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
