@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using FluentAssertions;
 using System.Linq;
 using System.Threading;
@@ -48,6 +47,38 @@ namespace Microsoft.DotNet.Interactive.Tests
                           .NotBe(commandInTask2)
                           .And
                           .NotBeNull();
+        }
+
+        private class TestFrontendEnvironment : FrontendEnvironmentBase
+        {
+            
+        }
+
+        [Fact(Timeout = 45000)]
+        public async Task can_provide_access_to_fronted_capabilities()
+        {
+            var cSharpKernel = new CSharpKernel();
+            using var kernel = new CompositeKernel
+            {
+                cSharpKernel
+            };
+            
+            kernel.UseFrontedEnvironment(_ => new TestFrontendEnvironment());
+
+            using var kernelEvents = kernel.KernelEvents.ToSubscribedList();
+            
+            FrontendEnvironmentBase frontendEnvironment = null;
+
+            kernel.AddMiddleware(async (command, context, next) =>
+            {
+                frontendEnvironment = context.FrontendEnvironment;
+                await next(command, context);
+            });
+
+            await kernel.SendAsync(new SubmitCode("2"));
+            frontendEnvironment
+                .Should()
+                .BeOfType<TestFrontendEnvironment>();
         }
 
         [Fact(Timeout = 45000)]

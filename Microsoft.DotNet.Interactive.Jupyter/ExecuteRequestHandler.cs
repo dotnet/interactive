@@ -21,8 +21,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     {
         private int _executionCount;
 
-        public ExecuteRequestHandler(IKernel kernel, IScheduler scheduler = null)
-            : base(kernel, scheduler ?? CurrentThreadScheduler.Instance)
+        public ExecuteRequestHandler(IKernel kernel, JupyterFrontendEnvironment frontendEnvironment, IScheduler scheduler = null)
+            : base(kernel, scheduler ?? CurrentThreadScheduler.Instance, frontendEnvironment)
         {
         }
 
@@ -31,6 +31,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             var executeRequest = GetJupyterRequest(context);
 
             _executionCount = executeRequest.Silent ? _executionCount : Interlocked.Increment(ref _executionCount);
+            
+            FrontendEnvironment.AllowStandardInput = executeRequest.AllowStdin;
 
             var executeInputPayload = new ExecuteInput(executeRequest.Code, _executionCount);
             context.JupyterMessageSender.Send(executeInputPayload);

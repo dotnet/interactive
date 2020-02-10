@@ -150,6 +150,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 {
                     Track(context.ParseResult);
 
+                    var frontendEnvironment = new JupyterFrontendEnvironment();
                     services
                         .AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
                         .AddSingleton(
@@ -160,8 +161,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                                                                 .Trace()
                                                                                 .Handle(delivery));
                             })
-                        .AddSingleton(c => CreateKernel(options.DefaultKernel))
-                        .AddSingleton(c => new JupyterRequestContextHandler(c.GetRequiredService<IKernel>())
+                        .AddSingleton(c => CreateKernel(options.DefaultKernel, frontendEnvironment))
+                        .AddSingleton(c => new JupyterRequestContextHandler(c.GetRequiredService<IKernel>(), frontendEnvironment)
                                           .Trace())
                         .AddSingleton<IHostedService, Shell>()
                         .AddSingleton<IHostedService, Heartbeat>();
@@ -198,16 +199,17 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     (startupOptions, options, console, context) =>
                 {
                     Track(context.ParseResult);
-                    return startKernelServer(startupOptions, CreateKernel(options.DefaultKernel), console);
+                    return startKernelServer(startupOptions, CreateKernel(options.DefaultKernel, new JupyterFrontendEnvironment()), console);
                 });
 
                 return startKernelServerCommand;
             }
         }
 
-        private static IKernel CreateKernel(string defaultKernelName)
+        private static IKernel CreateKernel(string defaultKernelName, FrontendEnvironmentBase frontendEnvironment)
         {
             var compositeKernel = new CompositeKernel();
+            compositeKernel.UseFrontedEnvironment(context => frontendEnvironment);
 
             compositeKernel.Add(
                 new CSharpKernel()
@@ -231,8 +233,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 new PowerShellKernel(), new[] { "#!pwsh" });
 
             var kernel = compositeKernel
-                         .UseDefaultMagicCommands()
-                         .UseAbout();
+                .UseDefaultMagicCommands()
+                .UseAbout();
 
             kernel.DefaultKernelName = defaultKernelName;
             kernel.Name = ".NET";
