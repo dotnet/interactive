@@ -6,13 +6,12 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App.IntegrationTests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.App.IntegrationTests
 {
     public class LoggingTests
     {
-        [IntegrationTest]
+        [IntegrationFact]
         public async Task kernel_server_honors_log_path()
         {
             using var logPath = DisposableDirectory.Create();

@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.App.IntegrationTests
+namespace Microsoft.DotNet.Interactive.App.IntegrationTests.Utility
 {
     public static class DirectoryTestHelper
     {
