@@ -12,23 +12,26 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public class JupyterRequestContextHandler : ICommandHandler<JupyterRequestContext>
     {
+        public JupyterFrontendEnvironment FrontendEnvironment { get; }
         private readonly ExecuteRequestHandler _executeHandler;
         private readonly CompleteRequestHandler _completeHandler;
         private readonly InterruptRequestHandler _interruptHandler;
         private readonly IsCompleteRequestHandler _isCompleteHandler;
 
-        public JupyterRequestContextHandler(IKernel kernel)
+        public JupyterRequestContextHandler(IKernel kernel, JupyterFrontendEnvironment frontendEnvironment)
         {
+            FrontendEnvironment = frontendEnvironment;
+
             var scheduler = new EventLoopScheduler(t =>
             {
                 var thread = new Thread(t) {IsBackground = true, Name = "MessagePump"};
                 return thread;
             });
-
-            _executeHandler = new ExecuteRequestHandler(kernel, scheduler);
-            _completeHandler = new CompleteRequestHandler(kernel, scheduler);
-            _interruptHandler = new InterruptRequestHandler(kernel, scheduler);
-            _isCompleteHandler = new IsCompleteRequestHandler(kernel, scheduler);
+            
+            _executeHandler = new ExecuteRequestHandler(kernel, frontendEnvironment, scheduler);
+            _completeHandler = new CompleteRequestHandler(kernel, frontendEnvironment, scheduler);
+            _interruptHandler = new InterruptRequestHandler(kernel, frontendEnvironment, scheduler);
+            _isCompleteHandler = new IsCompleteRequestHandler(kernel, frontendEnvironment, scheduler);
         }
 
         public async Task<ICommandDeliveryResult> Handle(
@@ -56,5 +59,10 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             return delivery.Complete();
         }
+    }
+
+    public class JupyterFrontendEnvironment : FrontendEnvironmentBase
+    {
+        public bool AllowStandardInput { get; set; }
     }
 }

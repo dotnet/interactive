@@ -12,8 +12,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     public class InterruptRequestHandler : RequestHandlerBase<InterruptRequest>
     {
 
-        public InterruptRequestHandler(IKernel kernel, IScheduler scheduler = null)
-            : base(kernel, scheduler ?? CurrentThreadScheduler.Instance)
+        public InterruptRequestHandler(IKernel kernel, JupyterFrontendEnvironment frontendEnvironment, IScheduler scheduler = null)
+            : base(kernel, scheduler ?? CurrentThreadScheduler.Instance, frontendEnvironment)
         {
         }
 

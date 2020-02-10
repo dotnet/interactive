@@ -21,6 +21,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
         }
 
+       
+
         [Fact]
         public async Task sends_ExecuteInput_when_ExecuteRequest_is_handled()
         {

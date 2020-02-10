@@ -1,6 +1,8 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Diagnostics;
@@ -8,11 +10,11 @@ using System.IO;
 using System.Linq;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using FSharp.Compiler.AbstractIL.Internal;
 using Markdig;
 using Markdig.Renderers;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Kernel;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
@@ -116,6 +118,18 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         {
             kernel.AddDirective(javascript());
 
+            return kernel;
+        }
+
+        public static T AddEnrichInvocationContextMiddleware<T>(this T kernel, Func<Dictionary<string,object>> getEnvironment )
+            where T : KernelBase
+        {
+            kernel.AddMiddleware(async (command, context, next) =>
+            {
+                var env = getEnvironment();
+                
+                await next(command, context);
+            });
             return kernel;
         }
 

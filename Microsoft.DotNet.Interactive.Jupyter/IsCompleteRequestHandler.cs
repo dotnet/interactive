@@ -13,8 +13,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public class IsCompleteRequestHandler : RequestHandlerBase<IsCompleteRequest>
     {
-        public IsCompleteRequestHandler(IKernel kernel, IScheduler scheduler = null)
-            : base(kernel, scheduler ?? CurrentThreadScheduler.Instance)
+        public IsCompleteRequestHandler(IKernel kernel, JupyterFrontendEnvironment frontendEnvironment ,IScheduler scheduler = null)
+            : base(kernel, scheduler ?? CurrentThreadScheduler.Instance, frontendEnvironment)
         {
         }
 

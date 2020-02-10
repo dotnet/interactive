@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             Shell.SetupDefaultMimeTypes();
 
-            var handler = new JupyterRequestContextHandler(Kernel);
+            var handler = new JupyterRequestContextHandler(Kernel, new JupyterFrontendEnvironment());
 
             return CommandScheduler.Create<JupyterRequestContext>(handler.Handle).Trace();
         }
