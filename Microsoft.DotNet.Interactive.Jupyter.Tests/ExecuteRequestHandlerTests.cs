@@ -8,6 +8,7 @@ using FluentAssertions;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests;
+using Pocket;
 using Recipes;
 using Xunit;
 using Xunit.Abstractions;
@@ -20,8 +21,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         public ExecuteRequestHandlerTests(ITestOutputHelper output) : base(output)
         {
         }
-
-       
 
         [Fact]
         public async Task sends_ExecuteInput_when_ExecuteRequest_is_handled()
@@ -307,6 +306,29 @@ f();"));
                 .OfType<ExecuteResult>()
                 .Should()
                 .Contain(dp => dp.Data["text/plain"] as string == expectedDisplayValue);
+        }
+
+        [Fact]
+        public async Task password_input_should_not_appear_in_diagnostic_logs()
+        {
+            var log = new System.Text.StringBuilder();
+            using var _ = Pocket.LogEvents.Subscribe(e => log.Append(e.ToLogString()));
+
+            var scheduler = CreateScheduler();
+            var request = ZeroMQMessage.Create(new ExecuteRequest("input(\"Password:\", true)"));
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            await scheduler.Schedule(context);
+
+            await context.Done().Timeout(20.Seconds());
+
+            JupyterMessageSender.RequestMessages
+                .Should()
+                .ContainSingle(r => r.Prompt == "Password" && r.Password == true);
+            JupyterMessageSender.PubSubMessages
+                .OfType<ExecuteResult>()
+                .Should()
+                .Contain(dp => dp.Data["text/plain"] as string == "secret");
+            log.ToString().Should().NotContain("secret");
         }
 
         [Fact]

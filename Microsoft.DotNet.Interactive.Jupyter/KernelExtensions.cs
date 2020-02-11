@@ -40,6 +40,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             this CSharpKernel kernel)
         {
             var command = new SubmitCode($@"
+#r ""{typeof(Kernel).Assembly.Location.Replace("\\", "/")}""
 using static {typeof(Kernel).FullName};
 ");
 
