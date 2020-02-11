@@ -99,5 +99,27 @@ namespace Microsoft.DotNet.Interactive.Tests
                             e =>
                                 e.Value.ToString().Contains(guid));
         }
+
+        [Fact]
+        public async Task BUG()
+        {
+
+            var kernel = CreateKernel(Language.CSharp);
+
+            await kernel.SubmitCodeAsync("#r nuget:RxClockExtension");
+
+            await kernel.SubmitCodeAsync("DateTime.Now");
+
+            KernelEvents.Should()
+                        .ContainSingle<ReturnValueProduced>()
+                        .Which
+                        .FormattedValues
+                        .Should()
+                        .ContainSingle(v => v.MimeType == "text/html")
+                        .Which
+                        .Value
+                        .Should()
+                        .Contain("<circle");
+        }
     }
 }
