@@ -323,7 +323,7 @@ f();"));
 
             JupyterMessageSender.RequestMessages
                 .Should()
-                .ContainSingle(r => r.Prompt == "Password" && r.Password == true);
+                .ContainSingle(r => r.Prompt == "Password:" && r.Password == true);
             JupyterMessageSender.PubSubMessages
                 .OfType<ExecuteResult>()
                 .Should()
