@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.Events
         }
 
         [JsonIgnore]
-        public string Content { get; set; }
+        public PasswordString Content { get; set; }
         public string Prompt { get; }
 
         public override string ToString() => $"{nameof(PasswordRequested)}: Prompt-'{Prompt}'";

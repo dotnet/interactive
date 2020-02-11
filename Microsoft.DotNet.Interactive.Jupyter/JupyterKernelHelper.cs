@@ -22,5 +22,20 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             throw new NotSupportedException("Input request is not supported. The stdin channel is not allowed by the frontend.");
         }
+
+        public static PasswordString password(string prompt = "")
+        {
+            var context = KernelInvocationContext.Current;
+
+            if (context?.FrontendEnvironment is JupyterFrontendEnvironment environment &&
+                environment.AllowStandardInput)
+            {
+                var inputReqEvent = new PasswordRequested(prompt, context.Command);
+                context.Publish(inputReqEvent);
+                return inputReqEvent.Content;
+            }
+
+            throw new NotSupportedException("Input request is not supported. The stdin channel is not allowed by the frontend.");
+        }
     }
 }

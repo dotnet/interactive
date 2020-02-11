@@ -81,7 +81,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         private void OnPasswordRequested(JupyterRequestContext context, PasswordRequested passwordRequested)
         {
             var passReq = new InputRequest(passwordRequested.Prompt, password: true);
-            passwordRequested.Content = context.JupyterMessageSender.Send(passReq);
+            var clearTextPassword = context.JupyterMessageSender.Send(passReq);
+            passwordRequested.Content = new PasswordString(clearTextPassword);
         }
 
         private void OnCommandFailed(
