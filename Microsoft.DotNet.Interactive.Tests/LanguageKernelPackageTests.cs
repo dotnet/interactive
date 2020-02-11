@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task it_can_load_assembly_references_using_r_directive_single_submission(Language language)
@@ -63,7 +63,7 @@ json"
                 .Be(new { value = "hello" }.ToJson());
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task it_can_load_assembly_references_using_r_directive_separate_submissions(Language language)
@@ -106,7 +106,7 @@ json"
                 .Be(new { value = "hello" }.ToJson());
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.FSharp)]
         public async Task it_can_load_assembly_references_using_r_directive_at_quotedpaths(Language language)
         {
@@ -142,7 +142,7 @@ json
                 .Be(new { value = "hello" }.ToJson());
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.FSharp)]
         public async Task it_can_load_assembly_references_using_r_directive_at_triplequotedpaths(Language language)
         {
@@ -177,7 +177,7 @@ json
                 .Be(new { value = "hello" }.ToJson());
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp, false)]
         [InlineData(Language.FSharp, false)]
         [InlineData(Language.CSharp, true)]
@@ -223,7 +223,7 @@ json
                         .ContainSingle<CommandHandled>(c => c.Command == command);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task it_returns_completion_list_for_types_imported_at_runtime()
         {
             var kernel = CreateKernel();
@@ -245,7 +245,7 @@ json
                         .Contain(i => i.DisplayText == "SerializeObject");
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task When_SubmitCode_command_adds_packages_to_csharp_kernel_then_the_submission_is_not_passed_to_csharpScript()
         {
             using var kernel = CreateKernel(Language.CSharp);
@@ -261,7 +261,7 @@ json
                 .NotContain(e => e.Code.Contains("#r"));
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp, "Microsoft.Extensions.Logging.ILogger logger = null;")]
         [InlineData(Language.FSharp, "let logger: Microsoft.Extensions.Logging.ILogger = null")]
         public async Task When_SubmitCode_command_adds_packages_to_kernel_then_PackageAdded_event_is_raised(Language language, string expression)
@@ -301,7 +301,7 @@ json
         }
 
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Loads_native_dependencies_from_nugets()
         {
             using var kernel = CreateKernel(Language.CSharp);
@@ -364,7 +364,7 @@ catch (Exception e)
                 .ContainSingle<StandardOutputValueProduced>(e => e.Value.As<string>().Contains("success"));
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Dependency_version_conflicts_are_resolved_correctly()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -414,7 +414,7 @@ Formatter<DataFrame>.Register((df, writer) =>
             events.Should().NotContainErrors();
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Pound_r_nuget_disallows_empty_package_specification()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -435,7 +435,7 @@ Formatter<DataFrame>.Register((df, writer) =>
                 .Be($"Invalid Package Id: ''{Environment.NewLine}");
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Pound_r_nuget_disallows_version_only_package_specification()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -456,7 +456,7 @@ Formatter<DataFrame>.Register((df, writer) =>
                 .Be($"Invalid Package Id: ''{Environment.NewLine}");
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Pound_r_nuget_allows_RestoreSources_package_specification()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -472,7 +472,7 @@ Formatter<DataFrame>.Register((df, writer) =>
             events.Should().NotContainErrors();
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Pound_r_nuget_allows_duplicate_sources_package_specification_single_cell()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -489,7 +489,7 @@ Formatter<DataFrame>.Register((df, writer) =>
             events.Should().NotContainErrors();
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Pound_r_nuget_allows_duplicate_sources_package_specification_multiple_cells()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -511,7 +511,7 @@ Formatter<DataFrame>.Register((df, writer) =>
             events.Should().NotContainErrors();
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Pound_r_nuget_allows_multiple_sources_package_specification_single_cell()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -527,7 +527,7 @@ Formatter<DataFrame>.Register((df, writer) =>
             events.Should().NotContainErrors();
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Pound_r_nuget_allows_multiple_sources_package_specification_multiple_cells()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -550,7 +550,7 @@ Formatter<DataFrame>.Register((df, writer) =>
             events.Should().NotContainErrors();
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Pound_r_nuget_allows_duplicate_package_specifications_single_cell()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -568,7 +568,7 @@ using Microsoft.ML.AutoML;
             events.Should().NotContainErrors();
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Pound_r_nuget_allows_duplicate_package_specifications_multiple_cells()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -592,7 +592,7 @@ using Microsoft.ML.AutoML;
             events.Should().NotContainErrors();
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Pound_r_nuget_disallows_package_specifications_with_different_versions_single_cell()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -615,7 +615,7 @@ using Microsoft.ML.AutoML;
                 .Be("Microsoft.ML.AutoML version 0.16.1-preview cannot be added because version 0.16.0-preview was added previously.");
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Pound_r_nuget_disallows_package_specifications_with_different_versions_multiple_cells()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -644,7 +644,7 @@ using Microsoft.ML.AutoML;
                 .Be("Microsoft.ML.AutoML version 0.16.1-preview cannot be added because version 0.16.0-preview was added previously.");
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task cell_with_nuget_and_code_continues_executions_on_right_kernel()
         {
             var kernel =
@@ -688,7 +688,7 @@ using XPlot.Plotly;");
                 .ContainSingle<CommandHandled>(ch => ch.Command == command);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Pound_r_nuget_disallows_changing_version_of_loaded_dependent_packages()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -718,7 +718,7 @@ using XPlot.Plotly;");
                 .Be("Google.Protobuf version 3.10.1 cannot be added because version 3.10.0 was added previously.");
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Pound_r_nuget_allows_using_version_of_loaded_dependent_packages()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -742,7 +742,7 @@ using XPlot.Plotly;");
             events.Should().NotContainErrors();
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Pound_r_nuget_with_System_Text_Json_should_succeed()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -754,8 +754,7 @@ using XPlot.Plotly;");
 using System.Text.Json;
 ");
             // It should work, no errors and the requested package should be added
-            events.Should()
-                  .NotContainErrors();
+            events.Should().NotContainErrors();
 
             // The System.Text.JSon dll ships in : Microsoft.NETCore.App.Ref
             events.OfType<PackageAdded>()
@@ -763,7 +762,7 @@ using System.Text.Json;
                   .ContainSingle(e => e.PackageReference.PackageName == "Microsoft.NETCore.App.Ref");
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Pound_r_nuget_with_no_version_should_not_get_the_oldest_package_version()
         {
             // #r "nuget: with no version specified should get the newest version of the package not the oldest:
@@ -785,12 +784,12 @@ using System.Text.Json;
                                       e.PackageReference.PackageVersion != "1.0.3");
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Pound_r_nuget_with_no_version_displays_the_version_that_was_installed()
         {
             var kernel = CreateKernel(Language.CSharp);
 
-            var events = kernel.KernelEvents.ToSubscribedList();
+            using var events = kernel.KernelEvents.ToSubscribedList();
 
             await kernel.SubmitCodeAsync(@"
 #r ""nuget:Its.Log""
@@ -802,8 +801,27 @@ using System.Text.Json;
                   .ContainSingle<DisplayedValueUpdated>(e => e.Value.Equals("Installed package Its.Log version 2.10.1"));
         }
 
+        [Fact]
+        public async Task When_restore_fails_then_an_error_is_displayed()
+        {
+            var kernel = CreateKernel(Language.CSharp);
 
-        [Theory(Timeout = 45000)]
+            var nonexistentPackageName = Guid.NewGuid().ToString("N");
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SubmitCodeAsync($"#r nuget:{nonexistentPackageName},1.0.0");
+
+            events.Should()
+                  .ContainSingle<CommandFailed>()
+                  .Which
+                  .Message
+                  .Should()
+                  .Contain($"error NU1101: Unable to find package {nonexistentPackageName}. No packages exist with this id in source(s): ");
+        }
+
+
+        [Theory]
         [InlineData(Language.CSharp)]
         // [InlineData(Language.FSharp)]    TODO -- Uncomment when FSharp is inserted
         public async Task it_can_load_assembly_referenced_from_refs_folder_in_nugetpackage(Language language)

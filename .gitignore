@@ -355,14 +355,8 @@ wwwroot/api/
 
 wwwroot/client/
 
-MLS\.Agent/wwwroot/api/
-
-MLS\.Agent/wwwroot/client/
-
-MLS\.Agent/wwwroot/css/
-
 *.trx
-
+Untitled*.ipynb
 
 Microsoft\.DotNet\.Try\.js/\.rpt2_cache/
 
