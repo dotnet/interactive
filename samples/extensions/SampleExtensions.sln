@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Library.InteractiveExtensio
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Library.nuget", "Library.nuget\Library.nuget.csproj", "{83A70A97-8430-4424-8E7C-B08485180FFF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxClockExtension", "RxClockExtension\RxClockExtension.csproj", "{4A2A0BD0-5F73-4C23-A0AC-57E10B975D3C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClockExtension", "ClockExtension\ClockExtension.csproj", "{4A2A0BD0-5F73-4C23-A0AC-57E10B975D3C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleExtensions.Tests", "SampleExtensions.Tests\SampleExtensions.Tests.csproj", "{90D01D42-C395-4E43-9B04-10CB24F66F85}"
 EndProject

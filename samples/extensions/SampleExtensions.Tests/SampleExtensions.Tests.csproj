@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RxClockExtension\RxClockExtension.csproj" />
+    <ProjectReference Include="..\ClockExtension\ClockExtension.csproj" />
   </ItemGroup>
 
 </Project>

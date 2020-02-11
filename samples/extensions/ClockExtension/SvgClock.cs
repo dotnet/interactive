@@ -9,7 +9,7 @@ using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace RxClockExtension
 {
-    public static class RxClock
+    public static class SvgClock
     {
         public static IHtmlContent DrawSvgClock(this DateTimeOffset datetime) =>
             datetime.DateTime.DrawSvgClock();
