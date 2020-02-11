@@ -39,6 +39,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(IncompleteCodeSubmissionReceived)] = typeof(KernelEventEnvelope<IncompleteCodeSubmissionReceived>),
                 [nameof(InputRequested)] = typeof(KernelEventEnvelope<InputRequested>),
                 [nameof(PackageAdded)] = typeof(KernelEventEnvelope<PackageAdded>),
+                [nameof(PasswordRequested)] = typeof(KernelEventEnvelope<PasswordRequested>),
                 [nameof(ReturnValueProduced)] = typeof(KernelEventEnvelope<ReturnValueProduced>),
                 [nameof(StandardErrorValueProduced)] = typeof(KernelEventEnvelope<StandardErrorValueProduced>),
                 [nameof(StandardOutputValueProduced)] = typeof(KernelEventEnvelope<StandardOutputValueProduced>),

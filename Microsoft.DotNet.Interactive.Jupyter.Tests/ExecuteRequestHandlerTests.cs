@@ -8,7 +8,6 @@ using FluentAssertions;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests;
-using Pocket;
 using Recipes;
 using Xunit;
 using Xunit.Abstractions;
