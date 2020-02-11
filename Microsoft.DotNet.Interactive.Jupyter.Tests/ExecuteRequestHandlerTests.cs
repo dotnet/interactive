@@ -9,6 +9,7 @@ using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests;
+using Pocket;
 using Recipes;
 using Xunit;
 using Xunit.Abstractions;
@@ -305,6 +306,22 @@ f();"));
                 .OfType<ExecuteResult>()
                 .Should()
                 .Contain(dp => dp.Data["text/plain"] as string == expectedDisplayValue);
+        }
+
+        [Fact]
+        public async Task password_input_should_not_appear_in_diagnostic_logs()
+        {
+            var log = new System.Text.StringBuilder();
+            using var _ = Pocket.LogEvents.Subscribe(e => log.Append(e.ToLogString()));
+
+            var scheduler = CreateScheduler();
+            var request = ZeroMQMessage.Create(new ExecuteRequest("password(\"Password:\")"));
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            await scheduler.Schedule(context);
+
+            await context.Done().Timeout(20.Seconds());
+
+            log.ToString().Should().NotContain("secret");
         }
 
         [Theory]
