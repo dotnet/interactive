@@ -10,7 +10,6 @@ using System.IO;
 using System.Linq;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using FSharp.Compiler.AbstractIL.Internal;
 using Markdig;
 using Markdig.Renderers;
 using Microsoft.DotNet.Interactive.Commands;

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Clockwise;
 using FluentAssertions;
 using FluentAssertions.Extensions;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests;
 using Recipes;
@@ -288,9 +289,9 @@ f();"));
         }
 
         [Theory]
-        [InlineData("input()", "", false, "input-value")]
-        [InlineData("input(\"User:\")", "User:", false, "user name")]
-        public async Task sends_InputRequest_message_when_submission_requests_user_input(string code, string prompt, bool isPassword, string expectedDisplayValue)
+        [InlineData("input()", "", "input-value")]
+        [InlineData("input(\"User:\")", "User:", "user name")]
+        public async Task sends_InputRequest_message_when_submission_requests_user_input(string code, string prompt, string expectedDisplayValue)
         {
             var scheduler = CreateScheduler();
             var request = ZeroMQMessage.Create(new ExecuteRequest(code));
@@ -299,15 +300,34 @@ f();"));
 
             await context.Done().Timeout(20.Seconds());
 
-            JupyterMessageSender.RequestMessages.Should().Contain(r => r.Prompt == prompt && r.Password == isPassword);
+            JupyterMessageSender.RequestMessages.Should().Contain(r => r.Prompt == prompt && r.Password == false);
             JupyterMessageSender.PubSubMessages
                 .OfType<ExecuteResult>()
                 .Should()
                 .Contain(dp => dp.Data["text/plain"] as string == expectedDisplayValue);
         }
 
+        [Theory]
+        [InlineData("password()", "")]
+        [InlineData("password(\"Type your password:\")", "Type your password:")]
+        public async Task sends_InputRequest_message_when_submission_requests_user_password(string code, string prompt)
+        {
+            var scheduler = CreateScheduler();
+            var request = ZeroMQMessage.Create(new ExecuteRequest(code));
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            await scheduler.Schedule(context);
+
+            await context.Done().Timeout(20.Seconds());
+
+            JupyterMessageSender.RequestMessages.Should().Contain(r => r.Prompt == prompt && r.Password == true);
+            JupyterMessageSender.PubSubMessages
+                .OfType<ExecuteResult>()
+                .Should()
+                .Contain(dp => dp.Data["text/html"] as string == $"{typeof(PasswordString).FullName}");
+        }
+
         [Fact]
-        public async Task Shows_not_supported_exception_when_stdin_not_allowed()
+        public async Task Shows_not_supported_exception_when_stdin_not_allowed_and_input_is_requested()
         {
             var scheduler = CreateScheduler();
             var request = ZeroMQMessage.Create(new ExecuteRequest("input()", allowStdin: false));
@@ -328,6 +348,30 @@ f();"));
             errorMessage
                   .Should()
                   .StartWith("System.NotSupportedException: Input request is not supported");
+        }
+
+        [Fact]
+        public async Task Shows_not_supported_exception_when_stdin_not_allowed_and_password_is_requested()
+        {
+            var scheduler = CreateScheduler();
+            var request = ZeroMQMessage.Create(new ExecuteRequest("password()", allowStdin: false));
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+
+            await scheduler.Schedule(context);
+            await context.Done().Timeout(5.Seconds());
+
+            var traceback = JupyterMessageSender
+                .PubSubMessages
+                .Should()
+                .ContainSingle(e => e is Error)
+                .Which
+                .As<Error>()
+                .Traceback;
+
+            var errorMessage = string.Join("\n", traceback);
+            errorMessage
+                .Should()
+                .StartWith("System.NotSupportedException: Input request is not supported");
         }
     }
 }
