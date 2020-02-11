@@ -290,8 +290,7 @@ f();"));
 
         [Theory]
         [InlineData("input()", "", false, "input-value")]
-        [InlineData("input(\"User:\", false)", "User:", false, "user name")]
-        [InlineData("input(\"Password:\", true)", "Password:", true, "secret")]
+        [InlineData("input(\"User:\")", "User:", false, "user name")]
         public async Task sends_InputRequest_message_when_submission_requests_user_input(string code, string prompt, bool isPassword, string expectedDisplayValue)
         {
             var scheduler = CreateScheduler();
@@ -306,29 +305,6 @@ f();"));
                 .OfType<ExecuteResult>()
                 .Should()
                 .Contain(dp => dp.Data["text/plain"] as string == expectedDisplayValue);
-        }
-
-        [Fact]
-        public async Task password_input_should_not_appear_in_diagnostic_logs()
-        {
-            var log = new System.Text.StringBuilder();
-            using var _ = Pocket.LogEvents.Subscribe(e => log.Append(e.ToLogString()));
-
-            var scheduler = CreateScheduler();
-            var request = ZeroMQMessage.Create(new ExecuteRequest("input(\"Password:\", true)"));
-            var context = new JupyterRequestContext(JupyterMessageSender, request);
-            await scheduler.Schedule(context);
-
-            await context.Done().Timeout(20.Seconds());
-
-            JupyterMessageSender.RequestMessages
-                .Should()
-                .ContainSingle(r => r.Prompt == "Password:" && r.Password == true);
-            JupyterMessageSender.PubSubMessages
-                .OfType<ExecuteResult>()
-                .Should()
-                .Contain(dp => dp.Data["text/plain"] as string == "secret");
-            log.ToString().Should().NotContain("secret");
         }
 
         [Fact]
