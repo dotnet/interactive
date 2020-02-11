@@ -12,7 +12,7 @@ function TestUsingNPM([string] $testPath) {
 
 try {
     # invoke regular build/test script
-    . (Join-Path $PSScriptRoot "common\build.ps1") /p:Projects=$PSScriptRoot\..\dotnet-interactive.sln @args
+    . (Join-Path $PSScriptRoot "common\build.ps1") /p:Projects=$PSScriptRoot\..\dotnet-interactive.sln`;$PSScriptRoot\..\samples\extensions\ClockExtension\ClockExtension.csproj @args
     if ($LASTEXITCODE -ne 0) {
         exit $LASTEXITCODE
     }
