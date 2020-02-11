@@ -216,6 +216,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseDefaultFormatting()
                     .UseNugetDirective()
                     .UseKernelHelpers()
+                    .UseJupyterHelpers()
                     .UseWho()
                     .UseXplot()
                     .UseMathAndLaTeX());

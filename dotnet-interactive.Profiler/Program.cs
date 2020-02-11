@@ -73,6 +73,7 @@ Console.Write(""value three"")"
                         .UseDefaultFormatting()
                         .UseNugetDirective()
                         .UseKernelHelpers()
+                        .UseJupyterHelpers()
                         .UseWho()
                         .UseXplot()
                         .UseMathAndLaTeX(),

@@ -30,6 +30,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             _cSharpKernel = new CSharpKernel()
                 .UseDefaultFormatting()
                 .UseKernelHelpers()
+                .UseJupyterHelpers()
                 .UseMathAndLaTeX();
 
             _fSharpKernel = new FSharpKernel()

@@ -16,8 +16,6 @@ namespace Microsoft.DotNet.Interactive.Commands
             SubmissionType = submissionType;
         }
 
-        public bool AllowStdin { get; set; }
-
         public string Code { get; }
 
         public SubmissionType SubmissionType { get; }

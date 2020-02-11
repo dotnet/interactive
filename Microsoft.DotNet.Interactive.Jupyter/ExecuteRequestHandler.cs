@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             var executeInputPayload = new ExecuteInput(executeRequest.Code, _executionCount);
             context.JupyterMessageSender.Send(executeInputPayload);
 
-            var command = new SubmitCode(executeRequest.Code) { AllowStdin = executeRequest.AllowStdin };
+            var command = new SubmitCode(executeRequest.Code);
 
             await SendAsync(context, command);
         }
