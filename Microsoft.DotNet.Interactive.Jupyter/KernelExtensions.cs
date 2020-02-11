@@ -14,6 +14,7 @@ using FSharp.Compiler.AbstractIL.Internal;
 using Markdig;
 using Markdig.Renderers;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Kernel;
@@ -31,6 +32,18 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                   .UseJavaScript()
                   .UseMarkdown()
                   .UseTime();
+
+            return kernel;
+        }
+
+        public static CSharpKernel UseJupyterHelpers(
+            this CSharpKernel kernel)
+        {
+            var command = new SubmitCode($@"
+using static {typeof(Kernel).FullName};
+");
+
+            kernel.DeferCommand(command);
 
             return kernel;
         }
