@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         private readonly CSharpKernel _cSharpKernel;
         private readonly FSharpKernel _fSharpKernel;
         private readonly CompositeKernel _compositeKernel;
+        private readonly JupyterFrontendEnvironment _frontendEnvironment;
 
         protected RecordingJupyterMessageSender JupyterMessageSender { get; }
 
@@ -26,6 +27,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
         protected JupyterRequestHandlerTestBase(ITestOutputHelper output)
         {
+            _frontendEnvironment = new JupyterFrontendEnvironment();
             _disposables.Add(output.SubscribeToPocketLogger());
             _cSharpKernel = new CSharpKernel()
                 .UseDefaultFormatting()
@@ -46,6 +48,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                 }
                 .UseDefaultMagicCommands();
 
+            _compositeKernel.UseFrontedEnvironment(context => _frontendEnvironment);
             SetKernelLanguage(Language.CSharp);
             _compositeKernel.Name = ".NET";
 
@@ -78,7 +81,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             Shell.SetupDefaultMimeTypes();
 
-            var handler = new JupyterRequestContextHandler(Kernel, new JupyterFrontendEnvironment());
+            var handler = new JupyterRequestContextHandler(Kernel, _frontendEnvironment);
 
             return CommandScheduler.Create<JupyterRequestContext>(handler.Handle).Trace();
         }
