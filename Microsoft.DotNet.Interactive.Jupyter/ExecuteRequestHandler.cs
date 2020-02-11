@@ -60,6 +60,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 case InputRequested inputRequested:
                     OnInputRequested(context, inputRequested);
                     break;
+                case PasswordRequested passwordRequested:
+                    OnPasswordRequested(context, passwordRequested);
+                    break;
             }
         }
 
@@ -71,8 +74,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         private void OnInputRequested(JupyterRequestContext context, InputRequested inputRequested)
         {
-            var inputReq = new InputRequest(inputRequested.Prompt, inputRequested.IsPassword);
+            var inputReq = new InputRequest(inputRequested.Prompt, password: false);
             inputRequested.Content = context.JupyterMessageSender.Send(inputReq);
+        }
+
+        private void OnPasswordRequested(JupyterRequestContext context, PasswordRequested passwordRequested)
+        {
+            var passReq = new InputRequest(passwordRequested.Prompt, password: true);
+            passwordRequested.Content = context.JupyterMessageSender.Send(passReq);
         }
 
         private void OnCommandFailed(

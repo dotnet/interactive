@@ -7,15 +7,15 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class InputRequested : KernelEventBase
+    public class PasswordRequested : KernelEventBase
     {
         [JsonConstructor]
-        internal InputRequested(string prompt)
+        internal PasswordRequested(string prompt)
         {
             Prompt = prompt;
         }
 
-        public InputRequested(
+        public PasswordRequested(
             string prompt,
             IKernelCommand command) : base(command)
         {
@@ -31,6 +31,6 @@ namespace Microsoft.DotNet.Interactive.Events
         public string Content { get; set; }
         public string Prompt { get; }
 
-        public override string ToString() => $"{nameof(InputRequested)}: Prompt-'{Prompt}'";
+        public override string ToString() => $"{nameof(PasswordRequested)}: Prompt-'{Prompt}'";
     }
 }

@@ -8,20 +8,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public static class Kernel
     {
-        public static string input(
-            string prompt = "",
-            bool isPassword = false)
+        public static string input(string prompt = "")
         {
             var context = KernelInvocationContext.Current;
 
             if (context?.FrontendEnvironment is JupyterFrontendEnvironment environment &&
                 environment.AllowStandardInput)
             {
-                var inputReqEvent = new InputRequested(
-                    prompt,
-                    isPassword,
-                    context.Command);
-
+                var inputReqEvent = new InputRequested(prompt, context.Command);
                 context.Publish(inputReqEvent);
                 return inputReqEvent.Content;
             }
