@@ -16,13 +16,17 @@ namespace ClockExtension
 
         public static IHtmlContent DrawSvgClock(this DateTime datetime)
         {
-            var hours = datetime.Hour;
+            var hours = datetime.Hour % 12;
             var minutes = datetime.Minute;
             var seconds = datetime.Second;
 
             return div(
                 svg[viewBox: "0 0 40 40"](
-                    circle[cx: "20", cy: "20", r: "19"],
+                    _.defs(
+                        _.radialGradient[id: "grad1", cx: "50%", cy: "50%", r: "50%", fx: "50%", fy: "50%"](
+                            _.stop[offset: "0%", style: "stop-color:#512bd4;stop-opacity:0"],
+                            _.stop[offset: "100%", style: "stop-color:#512bd4;stop-opacity:.5"])),
+                    circle[cx: "20", cy: "20", r: "19", fill: "url(#grad1)"],
                     g[@class: "marks"](
                         line[x1: 15, y1: 0, x2: 16, y2: 0],
                         line[x1: 15, y1: 0, x2: 16, y2: 0],
@@ -48,8 +52,8 @@ let svg = document.querySelector('svg');
 "
                 ));
 
-            string Css(int hours, int minutes, int seconds) =>
-                $@"
+            IHtmlContent Css(int hours, int minutes, int seconds) =>
+                new HtmlString($@"
 html {{
   background: #dedede !important;
 }}
@@ -59,6 +63,7 @@ svg {{
   stroke: black;
   stroke-width: 1;
   stroke-linecap: round;
+  transform: rotate(-90deg);
   --start-seconds: {seconds};
   --start-minutes: {minutes};
   --start-hours: {hours};
@@ -125,20 +130,21 @@ svg {{
   transform: translate(20px, 20px) rotate(calc(var(--start-minutes) * 6deg));
 }}
 .hour {{
+  stroke: #512bd4;
   stroke-width: 1;
-   transform: translate(20px, 20px) rotate(calc(var(--start-hours) * 30deg));
+  transform: translate(20px, 20px) rotate(calc(var(--start-hours) * 30deg));
 }}
 .pin {{
   stroke: #d00505;
   stroke-width: 0.2;
 }}
 .text {{
-  font-size: 1.5px;
-  font-family: sans-serif;
-  transform: translate(15px, 30px) rotate(0deg);
-  fill: #5f2fd9;
+  font-size: 2px;
+  font-family: ""Segoe UI"",Helvetica,Arial,sans-serif;
+  transform: rotate(90deg) translate(13.5px, -12px);
+  fill: #512bd4;
   stroke: none;
-}}";
+}}");
         }
     }
 }
