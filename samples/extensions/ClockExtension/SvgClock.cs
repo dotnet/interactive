@@ -7,7 +7,7 @@ using System;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
-namespace RxClockExtension
+namespace ClockExtension
 {
     public static class SvgClock
     {
@@ -59,9 +59,9 @@ svg {{
   stroke: black;
   stroke-width: 1;
   stroke-linecap: round;
-  --start-seconds: {hours};
+  --start-seconds: {seconds};
   --start-minutes: {minutes};
-  --start-hours: {seconds};
+  --start-hours: {hours};
 }}
 
 .marks {{
