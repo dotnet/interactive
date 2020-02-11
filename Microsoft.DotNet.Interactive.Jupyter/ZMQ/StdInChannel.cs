@@ -19,6 +19,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 
         public string RequestInput(InputRequest message, Message request)
         {
+            if (message == null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+            
             _sender.Send(
                 Message.Create(
                     message,
