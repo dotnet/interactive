@@ -8,23 +8,23 @@ using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests;
-using RxClockExtension;
+using ClockExtension;
 using Xunit;
 
 namespace SampleExtensions.Tests
 {
-    public class RxClockKernelExtensionTests : IDisposable
+    public class ClockKernelExtensionTests : IDisposable
     {
         private readonly IKernel _kernel;
 
-        public RxClockKernelExtensionTests()
+        public ClockKernelExtensionTests()
         {
             _kernel = new CompositeKernel
             {
                 new CSharpKernel()
             };
 
-            Task.Run(() => new RxClockKernelExtension().OnLoadAsync(_kernel))
+            Task.Run(() => new ClockKernelExtension().OnLoadAsync(_kernel))
                 .Wait();
 
             KernelEvents = _kernel.KernelEvents.ToSubscribedList();
