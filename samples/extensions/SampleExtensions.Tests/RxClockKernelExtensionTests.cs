@@ -58,23 +58,6 @@ namespace SampleExtensions.Tests
             AssertThatClockWasRendered();
         }
 
-        [Fact]
-        public async Task It_formats_any_IObservable_DateTime()
-        {
-            await _kernel.SubmitCodeAsync(@"
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Concurrency;
-
-Observable
-    .Timer(TimeSpan.FromSeconds(1), Scheduler.CurrentThread)
-    .Repeat()
-    .Take(10)
-");
-
-            AssertThatClockWasRendered();
-        }
-
         private void AssertThatClockWasRendered()
         {
             KernelEvents
