@@ -30,12 +30,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             if (context?.FrontendEnvironment is JupyterFrontendEnvironment environment &&
                 environment.AllowStandardInput)
             {
-                var inputReqEvent = new PasswordRequested(prompt, context.Command);
-                context.Publish(inputReqEvent);
-                return inputReqEvent.Content;
+                var passwordReqEvent = new PasswordRequested(prompt, context.Command);
+                context.Publish(passwordReqEvent);
+                return passwordReqEvent.Content;
             }
 
-            throw new NotSupportedException("Input request is not supported. The stdin channel is not allowed by the frontend.");
+            throw new NotSupportedException("Password request is not supported. The stdin channel is not allowed by the frontend.");
         }
     }
 }

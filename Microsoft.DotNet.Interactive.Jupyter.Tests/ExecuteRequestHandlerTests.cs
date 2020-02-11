@@ -388,7 +388,7 @@ f();"));
             var errorMessage = string.Join("\n", traceback);
             errorMessage
                 .Should()
-                .StartWith("System.NotSupportedException: Input request is not supported");
+                .StartWith("System.NotSupportedException: Password request is not supported");
         }
     }
 }
