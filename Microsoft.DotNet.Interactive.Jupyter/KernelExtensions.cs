@@ -12,7 +12,6 @@ using Markdig;
 using Markdig.Renderers;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Kernel;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;

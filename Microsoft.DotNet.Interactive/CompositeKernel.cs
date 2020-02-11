@@ -92,7 +92,6 @@ namespace Microsoft.DotNet.Interactive
                 
                 if (extensionDir.Exists)
                 {
-
                     await LoadExtensionsFromDirectoryAsync(
                         extensionDir,
                         context);

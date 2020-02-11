@@ -1,8 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.AspNetCore.Html;
-
 namespace Microsoft.DotNet.Interactive.Formatting
 {
     public static class PocketViewTags
@@ -17,6 +15,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static dynamic button => _.button;
         public static dynamic caption => _.caption;
         public static dynamic center => _.center;
+        public static dynamic circle => _.circle;
         public static dynamic code => _.code;
         public static dynamic colgroup => _.colgroup;
         public static dynamic dd => _.dd;
@@ -28,6 +27,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static dynamic figure => _.figure;
         public static dynamic font => _.font;
         public static dynamic form => _.form;
+        public static dynamic g => _.g;
         public static dynamic h1 => _.h1;
         public static dynamic h2 => _.h2;
         public static dynamic h3 => _.h3;
@@ -45,6 +45,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static dynamic input => _.input;
         public static dynamic label => _.label;
         public static dynamic li => _.li;
+        public static dynamic line => _.line;
         public static dynamic link => _.link;
         public static dynamic main => _.main;
         public static dynamic menu => _.menu;
@@ -74,6 +75,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static dynamic table => _.table;
         public static dynamic tbody => _.tbody;
         public static dynamic td => _.td;
+        public static dynamic text => _.text;
         public static dynamic textarea => _.textarea;
         public static dynamic tfoot => _.tfoot;
         public static dynamic th => _.th;

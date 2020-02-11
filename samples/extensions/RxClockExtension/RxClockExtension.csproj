@@ -3,18 +3,25 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
     <IsPackable>true</IsPackable>
     <PackageDescription>Here's very nice, fine, lovely library. Library!</PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="_._" Pack="true" PackagePath="lib/netstandard2.0" />
-    <None Include="$(OutputPath)/InteractiveExtension.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
+    <None Include="$(OutputPath)/RxClockExtension.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
+    <ProjectReference Include="..\..\..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.DotNet.Interactive.Tests">
+      <HintPath>..\..\..\Microsoft.DotNet.Interactive.Tests\bin\Debug\netcoreapp3.1\Microsoft.DotNet.Interactive.Tests.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

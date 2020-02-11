@@ -105,12 +105,12 @@ using static {typeof(Kernel).FullName};
                         }
                         else
                         {
-                            var added = restoreContext.AddPackageReference(
+                            var added = restoreContext.GetOrAddPackageReference(
                                 package.PackageName,
                                 package.PackageVersion,
                                 package.RestoreSources);
 
-                            if (!added)
+                            if (added is null)
                             {
                                 var errorMessage = $"{GenerateErrorMessage(package)}";
                                 context.Publish(new ErrorProduced(errorMessage));
@@ -172,6 +172,8 @@ using static {typeof(Kernel).FullName};
                 {
                     var messages = new Dictionary<PackageReference, string>(new PackageReferenceComparer());
 
+                    // FIX: (DoNugetRestore) only display for the requested package, not ones that were added in previous submissions
+
                     foreach (var package in restoreContext.RequestedPackageReferences)
                     {
                         if (string.IsNullOrWhiteSpace(package.PackageName) && 
@@ -181,6 +183,7 @@ using static {typeof(Kernel).FullName};
                         }
                         else
                         {
+                            // FIX: (DoNugetRestore) for RestoreSources-only #r's, use a clearer message
                             var message =  InstallingPackageMessage(package) + "...";
                             context.Publish(
                                 new DisplayedValueProduced(
@@ -192,7 +195,7 @@ using static {typeof(Kernel).FullName};
                     }
 
                     // Restore packages
-                    var restorePackagesTask = restoreContext.Restore();
+                    var restorePackagesTask = restoreContext.RestoreAsync();
                     while (await Task.WhenAny(Task.Delay(500), restorePackagesTask) != restorePackagesTask)
                     {
                         foreach (var key in messages.Keys.ToArray())
@@ -236,12 +239,7 @@ using static {typeof(Kernel).FullName};
                     {
                         var errors = $"{string.Join(Environment.NewLine, result.Errors)}";
 
-                        foreach (var resolvedReference in result.ResolvedReferences)
-                        {
-                            context.Publish(string.IsNullOrEmpty(resolvedReference.PackageName)
-                                ? new ErrorProduced($"Failed to apply RestoreSources {resolvedReference.RestoreSources}{Environment.NewLine}{errors}")
-                                : new ErrorProduced($"Failed to add reference to package {resolvedReference.PackageName}{Environment.NewLine}{errors}"));
-                        }
+                       context.Fail(message: errors);
                     }
                 };
 

@@ -5,7 +5,6 @@
     <PackageId>Microsoft.DotNet.Interactive</PackageId>
     <NoWarn>$(NoWarn);8002;CS8002</NoWarn>
     <LangVersion>preview</LangVersion>
-    <NuspecFile>Microsoft.DotNet.Interactive.nuspec</NuspecFile> <!-- Clockwise isn't strongly signed -->
   </PropertyGroup>
 
   <PropertyGroup>
@@ -29,7 +28,6 @@
     <PackageReference Include="PocketLogger" Version="$(PocketLoggerVersion)">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="XPlot.Plotly" Version="3.0.1" />
   </ItemGroup>
 
    <ItemGroup>	

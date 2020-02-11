@@ -56,26 +56,45 @@ namespace Microsoft.DotNet.Interactive
 
         public DirectoryInfo Directory => _lazyDirectory.Value;
 
-        public bool AddPackageReference(
+        public PackageReference GetOrAddPackageReference(
             string packageName,
             string packageVersion = null,
             string restoreSources = null)
         {
             var key = $"{packageName}:{restoreSources}";
-       
-            // we use a lock because we are going to be looking up and inserting
-            if (!_requestedPackageReferences.TryGetValue(key, out PackageReference existingPackage))
-            {
-                if (!_resolvedPackageReferences.TryGetValue(key, out ResolvedPackageReference resolvedPackage))
-                {
-                    return _requestedPackageReferences.TryAdd(key, new PackageReference(packageName, packageVersion, restoreSources));
-                }
 
-                return resolvedPackage.PackageVersion.Trim() == packageVersion.Trim();
+            if (_resolvedPackageReferences.TryGetValue(key, out var resolvedPackage))
+            {
+                if (string.IsNullOrWhiteSpace(packageVersion) ||
+                    packageVersion == "*" ||
+                    string.Equals(resolvedPackage.PackageVersion.Trim(), packageVersion.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    return resolvedPackage;
+                }
+                else
+                {
+                    // It was previously resolved at a different version than the one requested
+                    return null;
+                }
+            }
+
+            // we use a lock because we are going to be looking up and inserting
+            if (_requestedPackageReferences.TryGetValue(key, out PackageReference existingPackage))
+            {
+                if (string.Equals(existingPackage.PackageVersion.Trim(), packageVersion.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    return existingPackage;
+                }
+                else
+                {
+                    return null;
+                }
             }
 
             // Verify version numbers match note: wildcards/previews are considered distinct
-            return existingPackage.PackageVersion.Trim() == packageVersion.Trim();
+            var newPackageRef = new PackageReference(packageName, packageVersion, restoreSources);
+            _requestedPackageReferences.TryAdd(key, newPackageRef);
+            return newPackageRef;
         }
 
         public IEnumerable<PackageReference> RequestedPackageReferences => _requestedPackageReferences.Values;
@@ -84,7 +103,7 @@ namespace Microsoft.DotNet.Interactive
 
         public ResolvedPackageReference GetResolvedPackageReference(string packageName) => _resolvedPackageReferences[packageName];
 
-        public async Task<PackageRestoreResult> Restore()
+        public async Task<PackageRestoreResult> RestoreAsync()
         {
             WriteProjectFile();
 
@@ -96,23 +115,33 @@ namespace Microsoft.DotNet.Interactive
             commandLine += " /bl";
 #endif
 
+            var newlyRequested = _requestedPackageReferences
+                                         .Values
+                                         .Where(r => !_resolvedPackageReferences.ContainsKey(r.PackageName))
+                                         .ToArray();
+
             var result = await dotnet.Execute(commandLine);
 
             if (result.ExitCode != 0)
             {
                 return new PackageRestoreResult(
                     succeeded: false,
-                    requestedPackages: _requestedPackageReferences.Values,
+                    requestedPackages: newlyRequested,
                     errors: result.Output.Concat(result.Error).ToArray());
             }
             else
             {
+                var previouslyResolved = _resolvedPackageReferences.Values.ToArray();
+
                 ReadResolvedReferencesFromBuildOutput();
 
                 return new PackageRestoreResult(
                     succeeded: true,
-                    requestedPackages: _requestedPackageReferences.Values,
-                    resolvedReferences: _resolvedPackageReferences.Values.ToList());
+                    requestedPackages: newlyRequested,
+                    resolvedReferences: _resolvedPackageReferences
+                                        .Values
+                                        .Except(previouslyResolved)
+                                        .ToList());
             }
         }
 
