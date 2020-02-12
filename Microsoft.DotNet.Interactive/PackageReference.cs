@@ -43,7 +43,14 @@ namespace Microsoft.DotNet.Interactive
                 return false;
             }
 
-            var packageName = parts[0].Substring(6);
+            var packageName = parts[0].Substring(6).Trim();
+
+            if (string.IsNullOrWhiteSpace(packageName))
+            {
+                reference = null;
+                return false;
+            }
+
             var packageVersion = parts.Length > 1
                                      ? parts[1]
                                      : null;

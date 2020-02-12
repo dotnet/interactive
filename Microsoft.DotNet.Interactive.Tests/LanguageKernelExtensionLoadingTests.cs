@@ -5,12 +5,8 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
-using Microsoft.DotNet.Interactive.FSharp;
-using Microsoft.DotNet.Interactive.Jupyter;
-using Microsoft.DotNet.Interactive.PowerShell;
 using Xunit;
 using Xunit.Abstractions;
 using static Microsoft.DotNet.Interactive.Tests.KernelExtensionTestHelper;
@@ -95,13 +91,16 @@ namespace Microsoft.DotNet.Interactive.Tests
             var kernel = CreateKernel(Language.CSharp);
 
             await kernel.SubmitCodeAsync($@"
-#r ""nuget:RestoreSources={nupkg.Directory.FullName}""
+#i ""nuget:{nupkg.Directory.FullName}""
 #r ""nuget:{packageName},{packageVersion}""            ");
 
             KernelEvents.Should()
-                        .ContainSingle<ReturnValueProduced>(
-                            e =>
-                                e.Value.ToString().Contains(guid));
+                        .ContainSingle<ReturnValueProduced>()
+                        .Which
+                        .Value
+                        .As<string>()
+                        .Should()
+                        .Contain(guid);
         }
     }
 }

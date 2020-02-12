@@ -63,15 +63,20 @@ using static {typeof(Kernel).FullName};
 
         private static Command i(PackageRestoreContext restoreContext)
         {
-            return new Command("#i")
+            var iDirective = new Command("#i")
             {
-
+                new Argument<string>("source")
             };
+            iDirective.Handler = CommandHandler.Create<string,KernelInvocationContext>((source,context) =>
+            {
+                restoreContext.AddRestoreSource(source);
+            });
+            return iDirective;
         }
 
         private static Command r(PackageRestoreContext restoreContext)
         {
-            var poundR = new Command("#r")
+            var rDirective = new Command("#r")
             {
                 new Argument<PackageReference>(
                     result =>
@@ -83,7 +88,7 @@ using static {typeof(Kernel).FullName};
                         }
                         else
                         {
-                            result.ErrorMessage = $"Could not parse \"{token}\" as a package reference.";
+                            result.ErrorMessage = $"Unable to parse package reference: \"{token}\"";
                             return null;
                         }
                     })
@@ -92,9 +97,9 @@ using static {typeof(Kernel).FullName};
                 }
             };
 
-            poundR.Handler = CommandHandler.Create<PackageReference, KernelInvocationContext>(HandleAddPackageReference);
+            rDirective.Handler = CommandHandler.Create<PackageReference, KernelInvocationContext>(HandleAddPackageReference);
 
-            return poundR;
+            return rDirective;
 
             async Task HandleAddPackageReference(
                 PackageReference package, 
