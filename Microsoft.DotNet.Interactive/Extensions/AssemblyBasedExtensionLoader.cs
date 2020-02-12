@@ -9,6 +9,8 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
+using Pocket;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Extensions.AssemblyBasedExtensionLoader>;
 
 namespace Microsoft.DotNet.Interactive.Extensions
 {
@@ -61,9 +63,11 @@ namespace Microsoft.DotNet.Interactive.Extensions
 
                 if (extensionDlls.Count > 0)
                 {
-                    context.Publish(new DisplayedValueProduced(
-                                        $"Loading kernel extensions in directory {directory.FullName}", context.Command,
-                                        valueId: Guid.NewGuid().ToString("N")));
+                    using var op = new ConfirmationLogger(
+                        Log.Category,
+                        message: "Loading extensions in directory {directory}",
+                        logOnStart: true,
+                        args: new object[] { directory });
 
                     foreach (var extensionDll in extensionDlls)
                     {
@@ -73,8 +77,7 @@ namespace Microsoft.DotNet.Interactive.Extensions
                             context);
                     }
 
-                    context.Publish(new DisplayedValueUpdated(
-                                        $"Loaded kernel extensions in directory {directory.FullName}", Guid.NewGuid().ToString("N"), context.Command));
+                    op.Succeed();
                 }
             }
         }
@@ -117,22 +120,23 @@ namespace Microsoft.DotNet.Interactive.Extensions
                 foreach (var extensionType in extensionTypes)
                 {
                     var extension = (IKernelExtension) Activator.CreateInstance(extensionType);
-                    var display = Guid.NewGuid().ToString("N");
-                    context.Publish(new DisplayedValueProduced(
-                                        $"Loading kernel extension {extensionType.Name} from assembly {assemblyFile.FullName}",
-                                        context.Command, valueId: display));
+
+                    var displayed = await context.DisplayAsync(
+                                        $"Loading kernel extension \"{extensionType.Name}\" from assembly {assemblyFile.FullName}");
+
                     try
                     {
                         await extension.OnLoadAsync(kernel);
-                        context.Publish(new DisplayedValueUpdated(
-                                            $"Loaded kernel extension {extensionType.Name} from assembly {assemblyFile.FullName}",
-                                            display, context.Command));
+
+                        displayed.Update(
+                            $"Loaded kernel extension \"{extensionType.Name}\" from assembly {assemblyFile.FullName}");
                     }
                     catch (Exception e)
                     {
                         context.Publish(new ErrorProduced(
-                                            $"Failure loading kernel extension {extensionType.Name} from assembly {assemblyFile.FullName}",
+                                            $"Failed to load kernel extension \"{extensionType.Name}\" from assembly {assemblyFile.FullName}",
                                             context.Command));
+
                         context.Fail(new KernelExtensionLoadException(e));
                     }
                 }

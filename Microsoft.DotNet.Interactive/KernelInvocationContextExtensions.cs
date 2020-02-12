@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive
 
             await kernel.SendAsync(new DisplayValue(value, formatted, displayId));
 
-            return new DisplayedValue(displayId, mimeType);
+            return new DisplayedValue(displayId, mimeType, context);
         }
     }
 }
