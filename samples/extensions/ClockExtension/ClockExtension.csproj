@@ -9,12 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="$(OutputPath)/RxClockExtension.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
+    <None Include="$(OutputPath)/ClockExtension.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
-    <ProjectReference Include="..\..\..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
+    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.20111.6" />
+    <PackageReference Include="microsoft.dotnet.interactive.formatting" Version="1.0.0-beta.20111.6" />
   </ItemGroup>
 
 </Project>

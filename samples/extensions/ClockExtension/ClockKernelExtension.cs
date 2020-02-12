@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Formatting;
 
-namespace RxClockExtension
+namespace ClockExtension
 {
-    public class RxClockKernelExtension : IKernelExtension
+    public class ClockKernelExtension : IKernelExtension
     {
         public async Task OnLoadAsync(IKernel kernel)
         {
@@ -28,7 +28,7 @@ namespace RxClockExtension
 
             if (KernelInvocationContext.Current is {} context)
             {
-                await context.DisplayAsync($"{nameof(RxClockExtension)} is loaded. Now you can format System.DateTime and System.DateTimeOffset.");
+                await context.DisplayAsync($"{nameof(ClockExtension)} is loaded. Now you can format System.DateTime and System.DateTimeOffset.");
             }
         }
     }
