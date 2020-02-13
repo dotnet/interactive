@@ -31,18 +31,6 @@ namespace Microsoft.DotNet.Interactive.Utility
         {
         }
 
-        public static async Task<IDisposable> TryCaptureAsync(Func<IObservableConsole, IDisposable> onCaptured)
-        {
-            if (!_isCaptured)
-            {
-                var console = await CaptureAsync();
-
-                return onCaptured(console);
-            }
-
-            return Task.CompletedTask;
-        } 
-
         public static async Task<IObservableConsole> CaptureAsync()
         {
             if (_isCaptured)
@@ -72,6 +60,24 @@ namespace Microsoft.DotNet.Interactive.Utility
             }
 
             return redirector;
+        }
+
+        public static async Task<IDisposable> TryCaptureAsync(Func<IObservableConsole, IDisposable> onCaptured)
+        {
+            if (!_isCaptured)
+            {
+                var console = await CaptureAsync();
+
+                var disposables = onCaptured(console);
+
+                return new CompositeDisposable
+                {
+                    disposables,
+                    console
+                };
+            }
+
+            return Task.CompletedTask;
         }
 
         public IObservable<string> Out => _outputWriter;
