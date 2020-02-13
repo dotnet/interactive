@@ -171,7 +171,7 @@ namespace Microsoft.DotNet.Interactive
                                 context.BindingContext
                                        .AddService(
                                            typeof(KernelInvocationContext),
-                                           () => KernelInvocationContext.Current);
+                                           _ => KernelInvocationContext.Current);
                             });
 
                 commandLineBuilder.EnableDirectives = false;

@@ -18,7 +18,7 @@
     <MicrosoftCodeAnalysisAnalyzersVersion>2.9.6</MicrosoftCodeAnalysisAnalyzersVersion>	
     <SystemRuntimeLoaderVersion>4.3.0</SystemRuntimeLoaderVersion>	
     <SystemReactiveVersion>4.3.2</SystemReactiveVersion>	
-    <SystemCommandLineVersion>2.0.0-beta1.20104.2</SystemCommandLineVersion>	
+    <SystemCommandLineVersion>2.0.0-beta1.20112.2</SystemCommandLineVersion>	
   </PropertyGroup>
 
   <ItemGroup>
