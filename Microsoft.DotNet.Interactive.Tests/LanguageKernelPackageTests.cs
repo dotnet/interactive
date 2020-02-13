@@ -372,7 +372,7 @@ catch (Exception e)
             using var events = kernel.KernelEvents.ToSubscribedList();
 
             await kernel.SubmitCodeAsync(@"#!time
-#r ""nuget:RestoreSources=https://dotnet.myget.org/F/dotnet-corefxlab/api/v3/index.json""
+#i ""nuget:https://dotnet.myget.org/F/dotnet-corefxlab/api/v3/index.json""
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
 #r ""nuget:Microsoft.Data.DataFrame,1.0.0-e190910-1""
 ");
@@ -428,11 +428,12 @@ Formatter<DataFrame>.Register((df, writer) =>
 ");
 
             events
-                .OfType<ErrorProduced>()
-                .Last()
-                .Value
                 .Should()
-                .Be($"Invalid Package Id: ''{Environment.NewLine}");
+                .ContainSingle<CommandFailed>()
+                .Which
+                .Message
+                .Should()
+                .Be("Unable to parse package reference: \"nuget:\"");
         }
 
         [Fact]
@@ -449,15 +450,16 @@ Formatter<DataFrame>.Register((df, writer) =>
 ");
 
             events
-                .OfType<ErrorProduced>()
-                .Last()
-                .Value
                 .Should()
-                .Be($"Invalid Package Id: ''{Environment.NewLine}");
+                .ContainSingle<CommandFailed>()
+                .Which
+                .Message
+                .Should()
+                .Be("Unable to parse package reference: \"nuget:,1.0.0\"");
         }
 
         [Fact]
-        public async Task Pound_r_nuget_allows_RestoreSources_package_specification()
+        public async Task Pound_i_nuget_allows_RestoreSources_package_specification()
         {
             var kernel = CreateKernel(Language.CSharp);
 
@@ -466,14 +468,14 @@ Formatter<DataFrame>.Register((df, writer) =>
             await kernel.SubmitCodeAsync(
                 @"
 #!time
-#r ""nuget:RestoreSources=https://completelyFakerestoreSource""
+#i ""nuget:https://completelyFakerestoreSource""
 ");
 
             events.Should().NotContainErrors();
         }
 
         [Fact]
-        public async Task Pound_r_nuget_allows_duplicate_sources_package_specification_single_cell()
+        public async Task Pound_i_nuget_allows_duplicate_sources_package_specification_single_cell()
         {
             var kernel = CreateKernel(Language.CSharp);
 
@@ -482,15 +484,15 @@ Formatter<DataFrame>.Register((df, writer) =>
             await kernel.SubmitCodeAsync(
                 @"
 #!time
-#r ""nuget:RestoreSources=https://completelyFakerestoreSource""
-#r ""nuget:RestoreSources=https://completelyFakerestoreSource""
+#i ""nuget:https://completelyFakerestoreSource""
+#i ""nuget:https://completelyFakerestoreSource""
 ");
 
             events.Should().NotContainErrors();
         }
 
         [Fact]
-        public async Task Pound_r_nuget_allows_duplicate_sources_package_specification_multiple_cells()
+        public async Task Pound_i_nuget_allows_duplicate_sources_package_specification_multiple_cells()
         {
             var kernel = CreateKernel(Language.CSharp);
 
@@ -499,20 +501,20 @@ Formatter<DataFrame>.Register((df, writer) =>
             await kernel.SubmitCodeAsync(
                 @"
 #!time
-#r ""nuget:RestoreSources=https://completelyFakerestoreSource""
+#i ""nuget:https://completelyFakerestoreSource""
 ");
 
             await kernel.SubmitCodeAsync(
                 @"
 #!time
-#r ""nuget:RestoreSources=https://completelyFakerestoreSource""
+#i ""nuget:https://completelyFakerestoreSource""
 ");
 
             events.Should().NotContainErrors();
         }
 
         [Fact]
-        public async Task Pound_r_nuget_allows_multiple_sources_package_specification_single_cell()
+        public async Task Pound_i_nuget_allows_multiple_sources_package_specification_single_cell()
         {
             var kernel = CreateKernel(Language.CSharp);
 
@@ -521,14 +523,14 @@ Formatter<DataFrame>.Register((df, writer) =>
             await kernel.SubmitCodeAsync(
                 @"
 #!time
-#r ""nuget:RestoreSources=https://completelyFakerestoreSource""
+#i ""nuget:https://completelyFakerestoreSource""
 ");
 
             events.Should().NotContainErrors();
         }
 
         [Fact]
-        public async Task Pound_r_nuget_allows_multiple_sources_package_specification_multiple_cells()
+        public async Task Pound_i_nuget_allows_multiple_package_sources_to_be_specified_in_multiple_cells()
         {
             var kernel = CreateKernel(Language.CSharp);
 
@@ -537,14 +539,14 @@ Formatter<DataFrame>.Register((df, writer) =>
             await kernel.SubmitCodeAsync(
                 @"
 #!time
-#r ""nuget:RestoreSources=https://completelyFakerestoreSource""
+#i ""nuget:https://completelyFakerestoreSource""
 ");
             events.Should().NotContainErrors();
 
             await kernel.SubmitCodeAsync(
                 @"
 #!time
-#r ""nuget:RestoreSources=https://anotherCompletelyFakerestoreSource""
+#i ""nuget:https://anotherCompletelyFakerestoreSource""
 ");
 
             events.Should().NotContainErrors();

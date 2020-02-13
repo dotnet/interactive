@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
@@ -44,36 +43,12 @@ using static {typeof(Kernel).FullName};
 
         public static CSharpKernel UseNugetDirective(this CSharpKernel kernel)
         {
-            var packageRefArg = new Argument<PackageReference>(
-                result =>
-                {
-                    var token = result.Tokens.Select(t => t.Value).SingleOrDefault();
-                    if (PackageReference.TryParse(token, out var reference))
-                    {
-                        return reference;
-                    }
-                    else
-                    {
-                        result.ErrorMessage = $"Could not parse \"{token}\" as a package reference.";
-                        return null;
-                    }
-                })
-            {
-                Name = "package"
-            };
-
-            var poundR = new Command("#r")
-            {
-                packageRefArg
-            };
-
             var restoreContext = new PackageRestoreContext();
             kernel.SetProperty(restoreContext);
             kernel.RegisterForDisposal(restoreContext);
 
-            poundR.Handler = CommandHandler.Create<PackageReference, KernelInvocationContext>(HandleAddPackageReference);
-
-            kernel.AddDirective(poundR);
+            kernel.AddDirective(i(restoreContext));
+            kernel.AddDirective(r(restoreContext));
 
             var restore = new Command("#!nuget-restore")
             {
@@ -84,8 +59,51 @@ using static {typeof(Kernel).FullName};
             kernel.AddDirective(restore);
 
             return kernel;
+        }
 
-            async Task HandleAddPackageReference(PackageReference package, KernelInvocationContext pipelineContext)
+        private static Command i(PackageRestoreContext restoreContext)
+        {
+            var iDirective = new Command("#i")
+            {
+                new Argument<string>("source")
+            };
+            iDirective.Handler = CommandHandler.Create<string, KernelInvocationContext>((source, context) =>
+            {
+                restoreContext.AddRestoreSource(source.Replace("nuget:", ""));
+            });
+            return iDirective;
+        }
+
+        private static Command r(PackageRestoreContext restoreContext)
+        {
+            var rDirective = new Command("#r")
+            {
+                new Argument<PackageReference>(
+                    result =>
+                    {
+                        var token = result.Tokens.Select(t => t.Value).SingleOrDefault();
+                        if (PackageReference.TryParse(token, out var reference))
+                        {
+                            return reference;
+                        }
+                        else
+                        {
+                            result.ErrorMessage = $"Unable to parse package reference: \"{token}\"";
+                            return null;
+                        }
+                    })
+                {
+                    Name = "package"
+                }
+            };
+
+            rDirective.Handler = CommandHandler.Create<PackageReference, KernelInvocationContext>(HandleAddPackageReference);
+
+            return rDirective;
+
+            async Task HandleAddPackageReference(
+                PackageReference package, 
+                KernelInvocationContext pipelineContext)
             {
                 var addPackage = new AddPackage(package)
                 {
@@ -107,8 +125,7 @@ using static {typeof(Kernel).FullName};
                         {
                             var added = restoreContext.GetOrAddPackageReference(
                                 package.PackageName,
-                                package.PackageVersion,
-                                package.RestoreSources);
+                                package.PackageVersion);
 
                             if (added is null)
                             {
@@ -122,20 +139,24 @@ using static {typeof(Kernel).FullName};
                 };
 
                 await pipelineContext.HandlingKernel.SendAsync(addPackage);
-            }
 
-            static string GenerateErrorMessage(
-                PackageReference requested,
-                PackageReference existing = null)
-            {
-                if (existing != null &&
-                    !string.IsNullOrEmpty(requested.PackageName) &&
-                    !string.IsNullOrEmpty(requested.PackageVersion))
+                static string GenerateErrorMessage(
+                    PackageReference requested,
+                    PackageReference existing = null)
                 {
-                    return $"{requested.PackageName} version {requested.PackageVersion} cannot be added because version {existing.PackageVersion} was added previously.";
-                }
+                    if (existing != null)
+                    {
+                        if (!string.IsNullOrEmpty(requested.PackageName))
+                        {
+                            if (!string.IsNullOrEmpty(requested.PackageVersion))
+                            {
+                                return $"{requested.PackageName} version {requested.PackageVersion} cannot be added because version {existing.PackageVersion} was added previously.";
+                            }
+                        }
+                    }
 
-                return $"Invalid Package specification: '{requested}'";
+                    return $"Invalid Package specification: '{requested}'";
+                }
             }
         }
 
@@ -151,14 +172,7 @@ using static {typeof(Kernel).FullName};
 
             public static string GetDisplayValueId(PackageReference package)
             {
-                var value = package.PackageName;
-
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    value = package.RestoreSources;
-                }
-
-                return value.ToLowerInvariant();
+                return package.PackageName.ToLowerInvariant();
             }
         }
 
@@ -172,26 +186,16 @@ using static {typeof(Kernel).FullName};
                 {
                     var messages = new Dictionary<PackageReference, string>(new PackageReferenceComparer());
 
-                    // FIX: (DoNugetRestore) only display for the requested package, not ones that were added in previous submissions
-
                     foreach (var package in restoreContext.RequestedPackageReferences)
                     {
-                        if (string.IsNullOrWhiteSpace(package.PackageName) && 
-                            string.IsNullOrWhiteSpace(package.RestoreSources))
-                        {
-                            context.Publish(new ErrorProduced($"Invalid Package Id: '{package.PackageName}'{Environment.NewLine}"));
-                        }
-                        else
-                        {
-                            // FIX: (DoNugetRestore) for RestoreSources-only #r's, use a clearer message
-                            var message =  InstallingPackageMessage(package) + "...";
-                            context.Publish(
-                                new DisplayedValueProduced(
-                                    message, 
-                                    context.Command, 
-                                    valueId: PackageReferenceComparer.GetDisplayValueId(package)));
-                            messages.Add(package, message);
-                        }
+
+                        var message = InstallingPackageMessage(package) + "...";
+                        context.Publish(
+                            new DisplayedValueProduced(
+                                message,
+                                context.Command,
+                                valueId: PackageReferenceComparer.GetDisplayValueId(package)));
+                        messages.Add(package, message);
                     }
 
                     // Restore packages
@@ -258,10 +262,6 @@ using static {typeof(Kernel).FullName};
                         message += $", version {package.PackageVersion}";
                     }
 
-                }
-                else if (!string.IsNullOrEmpty(package.RestoreSources))
-                {
-                    message += $"    RestoreSources: {package.RestoreSources}" + br;
                 }
 
                 return message;

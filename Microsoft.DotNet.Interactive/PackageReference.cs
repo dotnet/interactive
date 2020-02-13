@@ -3,48 +3,64 @@
 
 using System;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace Microsoft.DotNet.Interactive
 {
     public class PackageReference
     {
-        private static readonly Regex _regex = new Regex(
-            @"(?<moniker>nuget)(?<colon>\s*:\s*)(?<packageName>(?!RestoreSources\s*=\s*)[^,]+)*(\s*,\s*(?<packageVersion>(?!RestoreSources\s*=\s*)[^,]+))*(?<comma>\s*,\s*)*(RestoreSources\s*=\s*(?<restoreSources>[^,]+)*)*",
-            RegexOptions.Compiled |
-            RegexOptions.CultureInvariant |
-            RegexOptions.Singleline);
-
-        public PackageReference(string packageName, string packageVersion = null, string restoreSources = null)
+        public PackageReference(string packageName, string packageVersion = null)
         {
-            PackageName = packageName ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(packageName))
+            {
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(packageName));
+            }
+
+            PackageName = packageName ;
             PackageVersion = packageVersion ?? string.Empty;
-            RestoreSources = restoreSources ?? string.Empty;
         }
 
         public string PackageName { get; }
 
         public string PackageVersion { get; }
 
-        public string RestoreSources { get; }
-
         public static bool TryParse(string value, out PackageReference reference)
         {
-            var result = _regex.Match(value);
+            value = value.Trim();
 
-            if (!result.Success)
+            if (!value.StartsWith("nuget:"))
             {
                 reference = null;
                 return false;
             }
 
-            var packageName = result.Groups["packageName"].Value;
-            var packageVersion = result.Groups["packageVersion"].Value;
-            var restoreSources = result.Groups["restoreSources"].Value;
-            reference = new PackageReference(packageName, packageVersion, restoreSources);
+            var parts = value.Split(",", 2)
+                             .Select(v => v.Trim())
+                             .ToArray();
+
+            if (parts.Length == 0)
+            {
+                reference = null;
+                return false;
+            }
+
+            var packageName = parts[0].Substring(6).Trim();
+
+            if (string.IsNullOrWhiteSpace(packageName))
+            {
+                reference = null;
+                return false;
+            }
+
+            var packageVersion = parts.Length > 1
+                                     ? parts[1]
+                                     : null;
+
+            reference = new PackageReference(packageName, packageVersion);
 
             return true;
         }
+
+        public bool IsPackageVersionSpecified => !string.IsNullOrWhiteSpace(PackageVersion) || PackageVersion == "*";
 
         public override string ToString()
         {

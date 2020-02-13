@@ -20,6 +20,7 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly ConcurrentDictionary<string, PackageReference> _requestedPackageReferences = new ConcurrentDictionary<string, PackageReference>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, ResolvedPackageReference> _resolvedPackageReferences = new Dictionary<string, ResolvedPackageReference>(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _restoreSources = new HashSet<string>();
         private readonly Lazy<DirectoryInfo> _lazyDirectory;
 
         public PackageRestoreContext()
@@ -55,6 +56,8 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public DirectoryInfo Directory => _lazyDirectory.Value;
+
+        public void AddRestoreSource(string source) => _restoreSources.Add(source);
 
         public PackageReference GetOrAddPackageReference(
             string packageName,
@@ -92,10 +95,12 @@ namespace Microsoft.DotNet.Interactive
             }
 
             // Verify version numbers match note: wildcards/previews are considered distinct
-            var newPackageRef = new PackageReference(packageName, packageVersion, restoreSources);
+            var newPackageRef = new PackageReference(packageName, packageVersion);
             _requestedPackageReferences.TryAdd(key, newPackageRef);
             return newPackageRef;
         }
+
+        public IEnumerable<string> RestoreSources => _restoreSources;
 
         public IEnumerable<PackageReference> RequestedPackageReferences => _requestedPackageReferences.Values;
 
@@ -266,11 +271,11 @@ namespace s
 
                 sb.Append("  <PropertyGroup>\n");
 
-                _requestedPackageReferences
-                    .Values
-                    .Where(reference => !string.IsNullOrEmpty(reference.RestoreSources))
-                    .ToList()
-                    .ForEach(reference => sb.Append($"    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources){reference.RestoreSources}</RestoreAdditionalProjectSources>\n"));
+                foreach (var source in RestoreSources)
+                {
+                    sb.Append($"    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources){source}</RestoreAdditionalProjectSources>\n");
+                }
+
                 sb.Append("  </PropertyGroup>\n");
 
                 return sb.ToString();

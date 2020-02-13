@@ -28,66 +28,71 @@ namespace Microsoft.DotNet.Interactive
                 submitCode.Code.Split(new[] { "\r\n", "\n" },
                                       StringSplitOptions.None));
 
-            var nonDirectiveLines = new List<string>();
+            var linesToForward = new List<string>();
             var commands = new List<IKernelCommand>();
-            var hoistedCommands = new List<IKernelCommand>();
+            var packageCommands = new List<IKernelCommand>();
             var commandWasSplit = false;
 
             while (lines.Count > 0)
             {
                 var currentLine = lines.Dequeue();
 
-                if (string.IsNullOrWhiteSpace(currentLine))
+                if (currentLine.TrimStart().StartsWith("#"))
                 {
-                    nonDirectiveLines.Add(currentLine);
-                    continue;
-                }
+                    var parseResult = directiveParser.Parse(currentLine);
+                    var command = parseResult.CommandResult.Command;
 
-                var parseResult = directiveParser.Parse(currentLine);
-                var command = parseResult.CommandResult.Command;
-
-                if (parseResult.Errors.Count == 0)
-                {
-                    commandWasSplit = true;
-
-                    if (AccumulatedSubmission() is { } cmd)
+                    if (parseResult.Errors.Count == 0)
                     {
-                        commands.Add(cmd);
-                    }
+                        commandWasSplit = true;
 
-                    var runDirective = new DirectiveCommand(parseResult);
+                        if (AccumulatedSubmission() is { } cmd)
+                        {
+                            commands.Add(cmd);
+                        }
 
-                    if (command.Name == "#r")
-                    {
-                        hoistedCommands.Add(runDirective);
+                        var runDirective = new DirectiveCommand(parseResult);
+
+                        if (command.Name == "#r" || 
+                            command.Name == "#i")
+                        {
+                            packageCommands.Add(runDirective);
+                        }
+                        else
+                        {
+                            commands.Add(runDirective);
+                        }
                     }
                     else
                     {
-                        commands.Add(runDirective);
+                        if (command == parseResult.Parser.Configuration.RootCommand)
+                        {
+                            linesToForward.Add(currentLine);
+                        }
+                        else if (IsDirectiveSupportedByCompiler(command, parseResult))
+                        {
+                            linesToForward.Add(currentLine);
+                        }
+                        else
+                        {
+                            commands.Clear();
+                            commands.Add(
+                                new AnonymousKernelCommand((kernelCommand, context) =>
+                                {
+                                    var message =
+                                        string.Join(Environment.NewLine,
+                                                    parseResult.Errors
+                                                               .Select(e => e.ToString()));
+
+                                    context.Fail(message: message);
+                                    return Task.CompletedTask;
+                                }));
+                        }
                     }
                 }
                 else
                 {
-                    if (command == parseResult.Parser.Configuration.RootCommand ||
-                        command.Name == "#r")
-                    {
-                        nonDirectiveLines.Add(currentLine);
-                    }
-                    else
-                    {
-                        var message =
-                            string.Join(Environment.NewLine,
-                                        parseResult.Errors
-                                                   .Select(e => e.ToString()));
-
-                        commands.Clear();
-                        commands.Add(
-                            new AnonymousKernelCommand((kernelCommand, context) =>
-                            {
-                                 context.Fail(message: message);
-                                 return Task.CompletedTask;
-                            }));
-                    }
+                    linesToForward.Add(currentLine);
                 }
             }
 
@@ -103,22 +108,22 @@ namespace Microsoft.DotNet.Interactive
                 commands.Add(submitCode);
             }
 
-            if (hoistedCommands.Count > 0)
+            if (packageCommands.Count > 0)
             {
                 var parseResult = directiveParser.Parse("#!nuget-restore");
 
-                hoistedCommands.Add(new DirectiveCommand(parseResult));
+                packageCommands.Add(new DirectiveCommand(parseResult));
             }
 
-            return hoistedCommands.Concat(commands).ToArray();
+            return packageCommands.Concat(commands).ToArray();
 
             IKernelCommand AccumulatedSubmission()
             {
-                if (nonDirectiveLines.Any())
+                if (linesToForward.Any())
                 {
-                    var code = string.Join(Environment.NewLine, nonDirectiveLines);
+                    var code = string.Join(Environment.NewLine, linesToForward);
 
-                    nonDirectiveLines.Clear();
+                    linesToForward.Clear();
 
                     if (!string.IsNullOrWhiteSpace(code))
                     {
@@ -127,6 +132,25 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 return null;
+            }
+        }
+
+        private static bool IsDirectiveSupportedByCompiler(
+            ICommand command,
+            ParseResult parseResult)
+        {
+            switch (command.Name)
+            {
+                case "#r":
+                    if (parseResult.Errors.Any(e => e.Message.Contains("nuget:")))
+                    {
+                        return false;
+                    }
+
+                    return true;
+
+                default:
+                    return false;
             }
         }
 

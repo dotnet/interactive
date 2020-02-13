@@ -2,18 +2,17 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class DisplayedValue 
+    public class DisplayedValue
     {
         private readonly string _displayId;
         private readonly string _mimeType;
+        private readonly KernelInvocationContext _context;
 
-        public DisplayedValue(string displayId, string mimeType)
+        public DisplayedValue(string displayId, string mimeType, KernelInvocationContext context)
         {
             if (string.IsNullOrWhiteSpace(displayId))
             {
@@ -24,8 +23,10 @@ namespace Microsoft.DotNet.Interactive.Events
             {
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(mimeType));
             }
+
             _displayId = displayId;
             _mimeType = mimeType;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         public void Update(object updatedValue)
@@ -34,11 +35,7 @@ namespace Microsoft.DotNet.Interactive.Events
                 _mimeType,
                 updatedValue.ToDisplayString(_mimeType));
 
-            var kernel = KernelInvocationContext.Current.HandlingKernel;
-
-            Task.Run(() =>
-                    kernel.SendAsync(new UpdateDisplayedValue(updatedValue, formatted, _displayId)))
-                .Wait();
+            _context.Publish(new DisplayedValueUpdated(updatedValue, _displayId, _context.Command, new[] { formatted }));
         }
     }
 }

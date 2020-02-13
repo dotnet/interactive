@@ -3,7 +3,6 @@
 
 using System;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 
@@ -11,25 +10,28 @@ namespace Microsoft.DotNet.Interactive
 {
     public static class KernelInvocationContextExtensions
     {
-        public static async Task<DisplayedValue> DisplayAsync(
+        public static Task<DisplayedValue> DisplayAsync(
             this KernelInvocationContext context,
-            object value, 
+            object value,
             string mimeType = null)
         {
             var displayId = Kernel.DisplayIdGenerator?.Invoke() ??
                             Guid.NewGuid().ToString();
 
-             mimeType ??= Formatter.PreferredMimeTypeFor(value.GetType());
+            mimeType ??= Formatter.PreferredMimeTypeFor(value.GetType());
 
-            var formatted = new FormattedValue(
+            var formattedValue = new FormattedValue(
                 mimeType,
                 value.ToDisplayString(mimeType));
 
-            var kernel = context.HandlingKernel ?? context.CurrentKernel;
+            context.Publish(
+                new DisplayedValueProduced(
+                    value,
+                    context?.Command,
+                    new[] { formattedValue },
+                    displayId));
 
-            await kernel.SendAsync(new DisplayValue(value, formatted, displayId));
-
-            return new DisplayedValue(displayId, mimeType);
+            return Task.FromResult(new DisplayedValue(displayId, mimeType, context));
         }
     }
 }
