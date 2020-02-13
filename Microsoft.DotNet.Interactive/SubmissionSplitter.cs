@@ -53,7 +53,8 @@ namespace Microsoft.DotNet.Interactive
 
                         var runDirective = new DirectiveCommand(parseResult);
 
-                        if (command.Name == "#r")
+                        if (command.Name == "#r" || 
+                            command.Name == "#i")
                         {
                             packageCommands.Add(runDirective);
                         }

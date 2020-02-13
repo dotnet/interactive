@@ -459,7 +459,7 @@ Formatter<DataFrame>.Register((df, writer) =>
         }
 
         [Fact]
-        public async Task Pound_r_nuget_allows_RestoreSources_package_specification()
+        public async Task Pound_i_nuget_allows_RestoreSources_package_specification()
         {
             var kernel = CreateKernel(Language.CSharp);
 
@@ -475,7 +475,7 @@ Formatter<DataFrame>.Register((df, writer) =>
         }
 
         [Fact]
-        public async Task Pound_r_nuget_allows_duplicate_sources_package_specification_single_cell()
+        public async Task Pound_i_nuget_allows_duplicate_sources_package_specification_single_cell()
         {
             var kernel = CreateKernel(Language.CSharp);
 
@@ -492,7 +492,7 @@ Formatter<DataFrame>.Register((df, writer) =>
         }
 
         [Fact]
-        public async Task Pound_r_nuget_allows_duplicate_sources_package_specification_multiple_cells()
+        public async Task Pound_i_nuget_allows_duplicate_sources_package_specification_multiple_cells()
         {
             var kernel = CreateKernel(Language.CSharp);
 
@@ -514,7 +514,7 @@ Formatter<DataFrame>.Register((df, writer) =>
         }
 
         [Fact]
-        public async Task Pound_r_nuget_allows_multiple_sources_package_specification_single_cell()
+        public async Task Pound_i_nuget_allows_multiple_sources_package_specification_single_cell()
         {
             var kernel = CreateKernel(Language.CSharp);
 
@@ -530,7 +530,7 @@ Formatter<DataFrame>.Register((df, writer) =>
         }
 
         [Fact]
-        public async Task Pound_r_nuget_allows_multiple_sources_package_specification_multiple_cells()
+        public async Task Pound_i_nuget_allows_multiple_package_sources_to_be_specified_in_multiple_cells()
         {
             var kernel = CreateKernel(Language.CSharp);
 

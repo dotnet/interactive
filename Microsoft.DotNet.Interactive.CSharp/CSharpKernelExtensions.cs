@@ -67,9 +67,9 @@ using static {typeof(Kernel).FullName};
             {
                 new Argument<string>("source")
             };
-            iDirective.Handler = CommandHandler.Create<string,KernelInvocationContext>((source,context) =>
+            iDirective.Handler = CommandHandler.Create<string, KernelInvocationContext>((source, context) =>
             {
-                restoreContext.AddRestoreSource(source);
+                restoreContext.AddRestoreSource(source.Replace("nuget:", ""));
             });
             return iDirective;
         }
