@@ -512,7 +512,7 @@ Console.Write(""value three"")",
                 Language.CSharp => @"
 Console.Write(""value one"");
 Console.Write(""value two"");
-Console.Write(""value three"");",
+Console.Write(""value three"");"
             };
 
             var kernelCommand = new SubmitCode(source);
@@ -523,9 +523,9 @@ Console.Write(""value three"");",
                 .OfType<StandardOutputValueProduced>()
                 .Should()
                 .BeEquivalentTo(
-                    new StandardOutputValueProduced("value one", kernelCommand, new[] { new FormattedValue("text/plain", "value one"), }),
-                    new StandardOutputValueProduced("value two", kernelCommand, new[] { new FormattedValue("text/plain", "value two"), }),
-                    new StandardOutputValueProduced("value three", kernelCommand, new[] { new FormattedValue("text/plain", "value three"), }));
+                    new StandardOutputValueProduced("value one", kernelCommand, new[] { new FormattedValue("text/plain", "value one") }),
+                    new StandardOutputValueProduced("value two", kernelCommand, new[] { new FormattedValue("text/plain", "value two") }),
+                    new StandardOutputValueProduced("value three", kernelCommand, new[] { new FormattedValue("text/plain", "value three") }));
         }
 
         [Theory(Timeout = 45000)]

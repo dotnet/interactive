@@ -76,15 +76,16 @@ namespace Microsoft.DotNet.Interactive
         {
             AddMiddleware(async (command, context, next) =>
             {
-                using var console = await ConsoleOutput.CaptureAsync();
-                using var _ = console.Out.Subscribe(s => context.PublishStandardOut(s, command));
-                using var __ = console.Error.Subscribe(s => context.PublishStandardError(s, command));
+                using var console = await ConsoleOutput.TryCaptureAsync(c =>
+                {
+                    return new CompositeDisposable
+                    {
+                        c.Out.Subscribe(s => context.PublishStandardOut(s, command)),
+                        c.Error.Subscribe(s => context.PublishStandardError(s, command))
+                    };
+                });
 
                 await next(command, context);
-
-
-
-
             });
         }
 

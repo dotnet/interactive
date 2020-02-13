@@ -3,8 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.IO;
 using System.IO;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
@@ -14,18 +12,12 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
-    public interface  IObservableConsole : IDisposable
-    {
-         IObservable<string> Out { get; }
-         IObservable<string> Error { get; }
-    }
-
-    public class ConsoleOutput : IObservableConsole
+    internal class ConsoleOutput : IObservableConsole
     {
         private TextWriter _originalOutputWriter;
         private TextWriter _originalErrorWriter;
-        private readonly ObservableStringWriter _outputWriter = new ObservableStringWriter();
-        private readonly ObservableStringWriter _errorWriter = new ObservableStringWriter();
+        private static readonly ObservableStringWriter _outputWriter = new ObservableStringWriter();
+        private static readonly ObservableStringWriter _errorWriter = new ObservableStringWriter();
 
         private const int NOT_DISPOSED = 0;
         private const int DISPOSED = 1;
@@ -33,31 +25,45 @@ namespace Microsoft.DotNet.Interactive.Utility
         private int _alreadyDisposed = NOT_DISPOSED;
 
         private static readonly SemaphoreSlim _consoleLock = new SemaphoreSlim(1, 1);
+        private static bool _isCaptured;
 
         private ConsoleOutput()
         {
         }
 
+        public static async Task<IDisposable> TryCaptureAsync(Func<IObservableConsole, IDisposable> onCaptured)
+        {
+            if (!_isCaptured)
+            {
+                var console = await CaptureAsync();
+
+                return onCaptured(console);
+            }
+
+            return Task.CompletedTask;
+        } 
+
         public static async Task<IObservableConsole> CaptureAsync()
         {
-            if (Console.Out is ObservableStringWriter trackingOut &&
-                Console.Error is ObservableStringWriter trackingErr)
+            if (_isCaptured)
             {
                 return new ObservableConsole(
-                    @out: trackingOut,
-                    error: trackingErr);
+                    @out: _outputWriter,
+                    error: _errorWriter);
             }
 
             var redirector = new ConsoleOutput();
             await _consoleLock.WaitAsync();
-
+            
+            _isCaptured = true;
+            
             try
             {
                 redirector._originalOutputWriter = Console.Out;
                 redirector._originalErrorWriter = Console.Error;
 
-                Console.SetOut(redirector._outputWriter);
-                Console.SetError(redirector._errorWriter);
+                Console.SetOut(_outputWriter);
+                Console.SetError(_errorWriter);
             }
             catch
             {
@@ -71,19 +77,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         public IObservable<string> Out => _outputWriter;
 
         public IObservable<string> Error => _errorWriter;
-
-        public IDisposable SubscribeToStandardOutput(Action<string> action)
-        {
-            // FIX: (SubscribeToStandardOutput) delete
-            return Out.Subscribe(action);
-        }
-
-        public IDisposable SubscribeToStandardError(Action<string> action)
-        {
-            // FIX: (SubscribeToStandardError) delete
-            return Error.Subscribe(action);
-        }
-
+      
         public void Dispose()
         {
             if (Interlocked.CompareExchange(ref _alreadyDisposed, DISPOSED, NOT_DISPOSED) == NOT_DISPOSED)
@@ -99,6 +93,7 @@ namespace Microsoft.DotNet.Interactive.Utility
                 }
 
                 _consoleLock.Release();
+                _isCaptured = false;
             }
         }
 

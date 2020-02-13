@@ -199,9 +199,6 @@ i");
             {
                 new Option<bool>("--loudness")
             };
-            command.Handler = CommandHandler.Create((IConsole console) =>
-            {
-            });
 
             kernel.AddDirective(command);
 

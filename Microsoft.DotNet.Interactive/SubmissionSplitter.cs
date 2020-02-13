@@ -164,7 +164,7 @@ namespace Microsoft.DotNet.Interactive
                     new CommandLineBuilder(_rootCommand)
                         .ParseResponseFileAs(ResponseFileHandling.Disabled)
                         .UseTypoCorrections()
-                        // .UseHelp()
+                        .UseHelp()
                         .UseMiddleware(
                             context =>
                             {
