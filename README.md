@@ -51,6 +51,10 @@ First, make sure you have the following installed:
 
 ```console
 > dotnet interactive jupyter install
+
+[InstallKernelSpec] Installed kernelspec .net-powershell in ~\jupyter\kernels\.net-powershell
+.NET kernel installation succeeded
+
 [InstallKernelSpec] Installed kernelspec .net-csharp in ~\jupyter\kernels\.net-csharp
 .NET kernel installation succeeded
 
@@ -62,9 +66,10 @@ First, make sure you have the following installed:
 
 ```console
 > jupyter kernelspec list
-  .net-csharp    ~\jupyter\kernels\.net-csharp
-  .net-fsharp    ~\jupyter\kernels\.net-fsharp
-  python3        ~\jupyter\kernels\python3
+  .net-csharp       ~\jupyter\kernels\.net-csharp
+  .net-fsharp       ~\jupyter\kernels\.net-fsharp
+  .net-powershell   ~\jupyter\kernels\.net-powershell
+  python3           ~\jupyter\kernels\python3
 ```
 For more detailed documentation visit see [table of content](#table-of-contents).
 ## Contribution Guidelines
