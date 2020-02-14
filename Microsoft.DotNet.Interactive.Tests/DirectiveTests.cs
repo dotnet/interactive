@@ -212,7 +212,7 @@ i");
 
             stdOut
                 .Should()
-                .ContainAll("Usage", "#!hello [options]", "--loudness");
+                .ContainAll("Usage", "#!hello", "[options]", "--loudness");
         }
     }
 }
