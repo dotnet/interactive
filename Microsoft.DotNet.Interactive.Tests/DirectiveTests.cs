@@ -212,7 +212,11 @@ i");
 
             stdOut
                 .Should()
-                .ContainAll("Usage", "#!hello", "[options]", "--loudness");
+                .ContainAll("Usage", $"#!hello", "[options]", "--loudness");
+
+            stdOut
+                .Should()
+                .NotContain(new RootCommand().Name, "RootCommand.Name is generally intended to reflect the command line tool's name but in this case it's just an implementation detail and it looks weird in the output.");
         }
     }
 }
