@@ -109,10 +109,10 @@ new [] {1,2,3}");
                     "unregistered kernel name"));
 
             events.Should()
-                .ContainSingle<CommandFailed>(cf => cf.Exception is NoSuitableKernelException);
+                  .ContainSingle<CommandFailed>(cf => cf.Exception is NoSuitableKernelException);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public void cannot_add_duplicated_named_kernels()
         {
             using var kernel = new CompositeKernel
@@ -127,7 +127,6 @@ new [] {1,2,3}");
                 .Message
                 .Should()
                 .Be("Alias '#!csharp' is already in use.");
-
         }
 
         [Fact(Timeout = 45000)]

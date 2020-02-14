@@ -164,9 +164,6 @@ type FSharpKernel() as this =
 
             let codeSubmissionReceived = CodeSubmissionReceived(codeSubmission)
             context.Publish(codeSubmissionReceived)
-            use! console = ConsoleOutput.Capture() |> Async.AwaitTask
-            use _ = console.SubscribeToStandardOutput(fun msg -> context.Publish(StandardOutputValueProduced(msg, codeSubmission, FormattedValue.FromObject(msg))))
-            use _ = console.SubscribeToStandardError(fun msg -> context.Publish(StandardErrorValueProduced(msg, codeSubmission, FormattedValue.FromObject(msg))))
             resolvedAssemblies.Clear()
             let tokenSource = cancellationTokenSource
             let result, errors =

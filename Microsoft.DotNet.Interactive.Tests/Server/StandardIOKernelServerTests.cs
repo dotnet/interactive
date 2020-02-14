@@ -178,6 +178,24 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                                 e.Event.PackageReference.PackageName == "Microsoft.Spark");
         }
 
+        [Fact]
+        public async Task it_produces_values_when_executing_Console_output()
+        {
+            var guid = Guid.NewGuid().ToString();
+
+            var command = new SubmitCode($"Console.WriteLine(\"{guid}\");");
+
+            await _standardIOKernelServer.WriteAsync(command);
+
+            var stdOut = string.Join(
+                "",
+                _kernelEvents
+                    .OfType<KernelEventEnvelope<StandardOutputValueProduced>>()
+                    .Select(e => e.Event.Value.As<string>()));
+
+            stdOut.Should().Contain(guid);
+        }
+
         public void Dispose()
         {
             _disposables.Dispose();

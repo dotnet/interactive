@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +19,8 @@ namespace Microsoft.DotNet.Interactive
         private readonly ReplaySubject<IKernelEvent> _events = new ReplaySubject<IKernelEvent>();
 
         private readonly HashSet<IKernelCommand> _childCommands = new HashSet<IKernelCommand>();
+
+        private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
         private readonly List<Func<KernelInvocationContext, Task>> _onCompleteActions = new List<Func<KernelInvocationContext, Task>>();
         private FrontendEnvironmentBase _frontendEnvironment;
@@ -134,6 +137,8 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 active.Complete(Command);
+                
+                _disposables.Dispose();
             }
 
             // This method is not async because it would prevent the setting of _current.Value to null from flowing up to the caller.

@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
+using System.CommandLine.Help;
+using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.Linq;
 using System.Threading.Tasks;
@@ -164,14 +166,15 @@ namespace Microsoft.DotNet.Interactive
                     new CommandLineBuilder(_rootCommand)
                         .ParseResponseFileAs(ResponseFileHandling.Disabled)
                         .UseTypoCorrections()
-                        // .UseHelp()
+                        .UseHelpBuilder(bc => new HelpBuilderThatOmitsRootCommandName(bc.Console, _rootCommand.Name))
+                        .UseHelp()
                         .UseMiddleware(
                             context =>
                             {
                                 context.BindingContext
                                        .AddService(
                                            typeof(KernelInvocationContext),
-                                           () => KernelInvocationContext.Current);
+                                           _ => KernelInvocationContext.Current);
                             });
 
                 commandLineBuilder.EnableDirectives = false;
@@ -209,6 +212,26 @@ namespace Microsoft.DotNet.Interactive
             if (_rootCommand == null)
             {
                 _rootCommand = new RootCommand();
+            }
+        }
+
+        private class HelpBuilderThatOmitsRootCommandName : HelpBuilder
+        {
+            private readonly string _rootCommandName;
+
+            public HelpBuilderThatOmitsRootCommandName(IConsole console, string rootCommandName) : base(console)
+            {
+                _rootCommandName = rootCommandName;
+            }
+
+            public override void Write(ICommand command)
+            {
+                var capturingConsole = new TestConsole();
+                new HelpBuilder(capturingConsole).Write(command);
+                Console.Out.Write(
+                    capturingConsole.Out
+                                    .ToString()
+                                    .Replace(_rootCommandName + " ", ""));
             }
         }
     }

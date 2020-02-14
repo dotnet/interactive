@@ -12,12 +12,12 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
-    public class ConsoleOutput : IDisposable
+    internal class ConsoleOutput : IObservableConsole
     {
         private TextWriter _originalOutputWriter;
         private TextWriter _originalErrorWriter;
-        private readonly TrackingStringWriter _outputWriter = new TrackingStringWriter();
-        private readonly TrackingStringWriter _errorWriter = new TrackingStringWriter();
+        private static readonly ObservableStringWriter _outputWriter = new ObservableStringWriter();
+        private static readonly ObservableStringWriter _errorWriter = new ObservableStringWriter();
 
         private const int NOT_DISPOSED = 0;
         private const int DISPOSED = 1;
@@ -25,23 +25,33 @@ namespace Microsoft.DotNet.Interactive.Utility
         private int _alreadyDisposed = NOT_DISPOSED;
 
         private static readonly SemaphoreSlim _consoleLock = new SemaphoreSlim(1, 1);
+        private static bool _isCaptured;
 
         private ConsoleOutput()
         {
         }
 
-        public static async Task<ConsoleOutput> Capture()
+        public static async Task<IObservableConsole> CaptureAsync()
         {
+            if (_isCaptured)
+            {
+                return new ObservableConsole(
+                    @out: _outputWriter,
+                    error: _errorWriter);
+            }
+
             var redirector = new ConsoleOutput();
             await _consoleLock.WaitAsync();
-
+            
+            _isCaptured = true;
+            
             try
             {
                 redirector._originalOutputWriter = Console.Out;
                 redirector._originalErrorWriter = Console.Error;
 
-                Console.SetOut(redirector._outputWriter);
-                Console.SetError(redirector._errorWriter);
+                Console.SetOut(_outputWriter);
+                Console.SetError(_errorWriter);
             }
             catch
             {
@@ -52,16 +62,28 @@ namespace Microsoft.DotNet.Interactive.Utility
             return redirector;
         }
 
-        public IDisposable SubscribeToStandardOutput(Action<string> action)
+        public static async Task<IDisposable> TryCaptureAsync(Func<IObservableConsole, IDisposable> onCaptured)
         {
-            return _outputWriter.Subscribe(action);
+            if (!_isCaptured)
+            {
+                var console = await CaptureAsync();
+
+                var disposables = onCaptured(console);
+
+                return new CompositeDisposable
+                {
+                    disposables,
+                    console
+                };
+            }
+
+            return Task.CompletedTask;
         }
 
-        public IDisposable SubscribeToStandardError(Action<string> action)
-        {
-            return _errorWriter.Subscribe(action);
-        }
+        public IObservable<string> Out => _outputWriter;
 
+        public IObservable<string> Error => _errorWriter;
+      
         public void Dispose()
         {
             if (Interlocked.CompareExchange(ref _alreadyDisposed, DISPOSED, NOT_DISPOSED) == NOT_DISPOSED)
@@ -77,6 +99,7 @@ namespace Microsoft.DotNet.Interactive.Utility
                 }
 
                 _consoleLock.Release();
+                _isCaptured = false;
             }
         }
 
@@ -92,7 +115,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         public bool IsEmpty() => _outputWriter.ToString().Length == 0 && _errorWriter.ToString().Length == 0;
 
-        private class TrackingStringWriter : StringWriter, IObservable<string>
+        private class ObservableStringWriter : StringWriter, IObservable<string>
         {
             private class Region
             {
@@ -107,7 +130,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
             private readonly CompositeDisposable _disposable;
 
-            public TrackingStringWriter()
+            public ObservableStringWriter()
             {
                 _disposable = new CompositeDisposable
                 {
@@ -125,8 +148,6 @@ namespace Microsoft.DotNet.Interactive.Utility
                 base.Dispose(disposing);
             }
 
-            public bool WriteOccurred { get; set; }
-
             public override void Write(char value)
             {
                 TrackWriteOperation(() => base.Write(value));
@@ -134,7 +155,6 @@ namespace Microsoft.DotNet.Interactive.Utility
 
             private void TrackWriteOperation(Action action)
             {
-                WriteOccurred = true;
                 if (_trackingWriteOperation)
                 {
                     action();
@@ -168,7 +188,6 @@ namespace Microsoft.DotNet.Interactive.Utility
 
             private async Task TrackWriteOperationAsync(Func<Task> action)
             {
-                WriteOccurred = true;
                 if (_trackingWriteOperation)
                 {
                     await action();
@@ -416,6 +435,24 @@ namespace Microsoft.DotNet.Interactive.Utility
                     Disposable.Create(() => Interlocked.Decrement(ref _observerCount)),
                     _writeEvents.Subscribe(observer)
                 };
+            }
+        }
+
+        private class ObservableConsole : IObservableConsole
+        {
+            public ObservableConsole(
+                ObservableStringWriter @out,
+                ObservableStringWriter error)
+            {
+                Out = @out;
+                Error = error;
+            }
+
+            public IObservable<string> Out { get; }
+            public IObservable<string> Error { get; }
+
+            public void Dispose()
+            {
             }
         }
     }
