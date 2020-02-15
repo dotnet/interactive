@@ -12,7 +12,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.PowerShell.Commands;
+using Microsoft.DotNet.Interactive.PowerShell.Host;
+using Microsoft.PowerShell;
+using Microsoft.PowerShell.Commands;
 using XPlot.Plotly;
 
 namespace Microsoft.DotNet.Interactive.PowerShell
@@ -23,12 +25,26 @@ namespace Microsoft.DotNet.Interactive.PowerShell
     {
         internal const string DefaultKernelName = "powershell";
 
-        private readonly object _cancellationSourceLock = new object();
+        private static readonly CmdletInfo _outDefaultCommand;
+        private static readonly PropertyInfo _writeStreamProperty;
+        private static readonly object _errorStreamValue;
+
+        private readonly PSKernelHost _psHost;
         private readonly Lazy<PowerShell> _lazyPwsh;
+        private readonly object _cancellationSourceLock;
         private readonly CancellationTokenSource _cancellationSource;
+
+        public Func<string, string> ReadInput { get; set; }
+        public Func<string, PasswordString> ReadPassword { get; set; }
 
         static PowerShellKernel()
         {
+            // Prepare for marking PSObject as error with 'WriteStream'.
+            _writeStreamProperty = typeof(PSObject).GetProperty("WriteStream", BindingFlags.Instance | BindingFlags.NonPublic);
+            Type writeStreamType = typeof(PSObject).Assembly.GetType("System.Management.Automation.WriteStreamType");
+            _errorStreamValue = Enum.Parse(writeStreamType, "Error");
+            _outDefaultCommand = new CmdletInfo("Out-Default", typeof(OutDefaultCommand));
+
             // Register type accelerators for Plotly.
             var accelerator = typeof(PSObject).Assembly.GetType("System.Management.Automation.TypeAccelerators");
             MethodInfo addAccelerator = accelerator.GetMethod("Add", new Type[] { typeof(string), typeof(Type) });
@@ -46,35 +62,44 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             Name = DefaultKernelName;
             _cancellationSource = new CancellationTokenSource();
+            _cancellationSourceLock = new object();
+            _psHost = new PSKernelHost();
+            _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);
+        }
 
-            _lazyPwsh = new Lazy<PowerShell>(() => {
-                //Sets the distribution channel to "PSES" so starts can be distinguished in PS7+ telemetry
-                Environment.SetEnvironmentVariable("POWERSHELL_DISTRIBUTION_CHANNEL", "dotnet-interactive-powershell");
+        private PowerShell CreatePowerShell()
+        {
+            const string PSTelemetryEnvName = "POWERSHELL_DISTRIBUTION_CHANNEL";
+            const string PSTelemetryChannel = "dotnet-interactive-powershell";
+            const string PSModulePathEnvName = "PSModulePath";
 
-                // Create PowerShell instance
-                var iss = InitialSessionState.CreateDefault2();
-                if(Platform.IsWindows)
-                {
-                    // This sets the execution policy on Windows to RemoteSigned.
-                    iss.ExecutionPolicy = Microsoft.PowerShell.ExecutionPolicy.RemoteSigned;
-                }
+            // Set the distribution channel so telemetry can be distinguished in PS7+ telemetry
+            Environment.SetEnvironmentVariable(PSTelemetryEnvName, PSTelemetryChannel);
 
-                var runspace = RunspaceFactory.CreateRunspace(iss);
-                runspace.Open();
-                var pwsh = PowerShell.Create(runspace);
+            // Create PowerShell instance
+            var iss = InitialSessionState.CreateDefault2();
+            if(Platform.IsWindows)
+            {
+                // This sets the execution policy on Windows to RemoteSigned.
+                iss.ExecutionPolicy = ExecutionPolicy.RemoteSigned;
+            }
 
-                // Add Modules directory that contains the helper modules
-                string psModulePath = Environment.GetEnvironmentVariable("PSModulePath");
-                string psJupyterModulePath = Path.Join(
-                    Path.GetDirectoryName(typeof(PowerShellKernel).Assembly.Location),
-                    "Modules");
+            var runspace = RunspaceFactory.CreateRunspace(_psHost, iss);
+            runspace.Open();
+            var pwsh = PowerShell.Create(runspace);
 
-                Environment.SetEnvironmentVariable("PSModulePath",
-                    $"{psJupyterModulePath}{Path.PathSeparator}{psModulePath}");
+            // Add Modules directory that contains the helper modules
+            string psModulePath = Environment.GetEnvironmentVariable(PSModulePathEnvName);
+            string psJupyterModulePath = Path.Join(
+                Path.GetDirectoryName(typeof(PowerShellKernel).Assembly.Location),
+                "Modules");
 
-                RegisterForDisposal(pwsh);
-                return pwsh;
-            });
+            Environment.SetEnvironmentVariable(
+                PSModulePathEnvName,
+                $"{psJupyterModulePath}{Path.PathSeparator}{psModulePath}");
+
+            RegisterForDisposal(pwsh);
+            return pwsh;
         }
 
         public override bool TryGetVariable(string name, out object value)
@@ -84,8 +109,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         }
 
         protected override Task HandleSubmitCode(
-                SubmitCode submitCode,
-                KernelInvocationContext context)
+            SubmitCode submitCode,
+            KernelInvocationContext context)
         {
             CancellationTokenSource cancellationSource;
             lock (_cancellationSourceLock)
@@ -94,11 +119,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
 
             // Acknowledge that we received the request.
-            var codeSubmissionReceived = new CodeSubmissionReceived(submitCode);
-            context.Publish(codeSubmissionReceived);
+            context.Publish(new CodeSubmissionReceived(submitCode));
+
+            string code = submitCode.Code;
+            PowerShell pwsh = _lazyPwsh.Value;
 
             // Test is the code we got is actually able to run.
-            var code = submitCode.Code;
             if (IsCompleteSubmission(code, out ParseError[] parseErrors))
             {
                 context.Publish(new CompleteCodeSubmissionReceived(submitCode));
@@ -108,11 +134,11 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 context.Publish(new IncompleteCodeSubmissionReceived(submitCode));
             }
 
-            // If there were parse errors, publish them and return early.
+            // If there were parse errors, display them and return early.
             if (parseErrors.Length > 0)
             {
-                context.Fail(message: string.Join(Environment.NewLine + Environment.NewLine,
-                    parseErrors.Select(pe => pe.ToString())));
+                var parseException = new ParseException(parseErrors);
+                ReportError(parseException.ErrorRecord, pwsh);
                 return Task.CompletedTask;
             }
 
@@ -128,28 +154,25 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 return Task.CompletedTask;
             }
 
-            StreamHandler streamHandler = RegisterPowerShellStreams(context, submitCode);
             try
             {
-                _lazyPwsh.Value.AddScript(code)
-                    .AddCommand(@"Microsoft.DotNet.Interactive.PowerShell\Trace-PipelineObject")
-                    .InvokeAndClearCommands();
+                pwsh.AddScript(code)
+                    .AddCommand(_outDefaultCommand)
+                    .Commands.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output);
+
+                pwsh.InvokeAndClearCommands();
             }
             catch (Exception e)
             {
-                // If a non-terminating error happened, log it and send back CommandFailed.
-                // TODO: Should we even output the ErrorRecord? Maybe we should just return
-                // CommandFailed?
-                string stringifiedErrorRecord =
-                    _lazyPwsh.Value.AddCommand(CommandUtils.OutStringCmdletInfo)
-                        .AddParameter("InputObject", new ErrorRecord(e, null, ErrorCategory.NotSpecified, null))
-                    .InvokeAndClearCommands<string>()[0];
+                var error = e is IContainsErrorRecord icer
+                    ? icer.ErrorRecord
+                    : new ErrorRecord(e, "JupyterPSHost.ReportException", ErrorCategory.NotSpecified, targetObject: null);
 
-                context.Fail(message: stringifiedErrorRecord);
+                ReportError(error, pwsh);
             }
             finally
             {
-                UnregisterPowerShellStreams(streamHandler);
+                ((PSKernelHostUserInterface)_psHost.UI).ResetProgress();
             }
             
             return Task.CompletedTask;
@@ -195,34 +218,14 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             ));
         }
 
-        private StreamHandler RegisterPowerShellStreams(
-            KernelInvocationContext context,
-            IKernelCommand command)
+        private void ReportError(ErrorRecord error, PowerShell pwsh)
         {
-            var streamHandler = new StreamHandler(context, command);
-            _lazyPwsh.Value.Streams.Debug.DataAdding += streamHandler.DebugDataAdding;
-            _lazyPwsh.Value.Streams.Warning.DataAdding += streamHandler.WarningDataAdding;
-            _lazyPwsh.Value.Streams.Error.DataAdding += streamHandler.ErrorDataAdding;
-            _lazyPwsh.Value.Streams.Verbose.DataAdding += streamHandler.VerboseDataAdding;
-            _lazyPwsh.Value.Streams.Information.DataAdding += streamHandler.InformationDataAdding;
-            _lazyPwsh.Value.Streams.Progress.DataAdding += streamHandler.ProgressDataAdding;
-            return streamHandler;
-        }
+            var psObject = PSObject.AsPSObject(error);
+            _writeStreamProperty.SetValue(psObject, _errorStreamValue);
 
-        private void UnregisterPowerShellStreams(
-            StreamHandler streamHandler)
-        {
-            if (streamHandler == null)
-            {
-                return;
-            }
-
-            _lazyPwsh.Value.Streams.Debug.DataAdding -= streamHandler.DebugDataAdding;
-            _lazyPwsh.Value.Streams.Warning.DataAdding -= streamHandler.WarningDataAdding;
-            _lazyPwsh.Value.Streams.Error.DataAdding -= streamHandler.ErrorDataAdding;
-            _lazyPwsh.Value.Streams.Verbose.DataAdding -= streamHandler.VerboseDataAdding;
-            _lazyPwsh.Value.Streams.Information.DataAdding -= streamHandler.InformationDataAdding;
-            _lazyPwsh.Value.Streams.Progress.DataAdding -= streamHandler.ProgressDataAdding;
+            pwsh.AddCommand(_outDefaultCommand)
+                .AddParameter("InputObject", psObject)
+                .InvokeAndClearCommands();
         }
     }
 }
