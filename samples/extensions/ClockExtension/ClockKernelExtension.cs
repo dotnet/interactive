@@ -2,7 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Reactive.Linq;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -13,18 +14,36 @@ namespace ClockExtension
     {
         public async Task OnLoadAsync(IKernel kernel)
         {
-            Formatter<DateTime>.Register((d, writer) => { writer.Write(d.DrawSvgClock()); }, "text/html");
-
-            Formatter<DateTimeOffset>.Register((d, writer) => { writer.Write(d.DrawSvgClock()); }, "text/html");
-
-            Formatter.Register(typeof(IObservable<DateTime>), (o, writer) =>
+            Formatter<DateTime>.Register((d, writer) =>
             {
-                var ts = o as IObservable<DateTime>;
-
-                var firstAsync = Task.Run(async () => await ts.FirstAsync()).Result;
-
-                writer.Write(firstAsync.DrawSvgClock());
+                writer.Write(d.DrawSvgClock());
             }, "text/html");
+
+            Formatter<DateTimeOffset>.Register((d, writer) =>
+            {
+                writer.Write(d.DrawSvgClock());
+            }, "text/html");
+
+            if (kernel is KernelBase kernelBase)
+            {
+                var clockCommand = new Command("#!clock", "Displays a clock showing the current or specified time.")
+                {
+                    new Option<int>(new[]{"-o","--hour"},
+                                    "The position of the hour hand"),
+                    new Option<int>(new[]{"-m","--minute"},
+                                    "The position of the minute hand"),
+                    new Option<int>(new[]{"-s","--second"},
+                                    "The position of the second hand")
+                };
+
+                clockCommand.Handler = CommandHandler.Create(
+                    async (int hour, int minute, int second, KernelInvocationContext context) => 
+                {
+                    await context.DisplayAsync(SvgClock.DrawSvgClock(hour, minute, second));
+                });
+
+                kernelBase.AddDirective(clockCommand);
+            }
 
             if (KernelInvocationContext.Current is {} context)
             {

@@ -40,28 +40,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                           "Version", 
                           "https://github.com/dotnet/interactive");
             }
-
-            [Fact]
-            public void Mulitple_invocations_()
-            {
-                // FIX: (Mulitple_invocations_) delete
-                var command = new RootCommand("Root command description")
-                {
-                    new Command("inner")
-                };
-
-                var console1 = new TestConsole();
-
-                command.Invoke("-h", console1);
-
-                console1.Out.ToString().Should().Contain(command.Description);
-
-                var console2 = new TestConsole();
-
-                command.Invoke("-h", console2);
-
-                console2.Out.ToString().Should().Contain(command.Description);
-            }
         }
     }
 }

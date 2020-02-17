@@ -13,11 +13,11 @@ using Xunit;
 
 namespace SampleExtensions.Tests
 {
-    public class ClockKernelExtensionTests : IDisposable
+    public class ClockExtensionTests : IDisposable
     {
         private readonly IKernel _kernel;
 
-        public ClockKernelExtensionTests()
+        public ClockExtensionTests()
         {
             _kernel = new CompositeKernel
             {
@@ -54,6 +54,16 @@ namespace SampleExtensions.Tests
             using var events = _kernel.KernelEvents.ToSubscribedList();
 
             await _kernel.SubmitCodeAsync("DateTimeOffset.Now");
+
+            AssertThatClockWasRendered();
+        }
+
+        [Fact]
+        public async Task It_adds_a_clock_magic_command()
+        {
+            using var events = _kernel.KernelEvents.ToSubscribedList();
+
+            await _kernel.SubmitCodeAsync("#!clock");
 
             AssertThatClockWasRendered();
         }
