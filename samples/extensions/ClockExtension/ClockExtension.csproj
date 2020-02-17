@@ -9,12 +9,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="$(OutputPath)/ClockExtension.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
+    <Compile Remove="bin\**" />
+    <EmbeddedResource Remove="bin\**" />
+    <None Remove="bin\**" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.20111.6" />
     <PackageReference Include="microsoft.dotnet.interactive.formatting" Version="1.0.0-beta.20111.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(OutputPath)/ClockExtension.dll" 
+          Pack="true" 
+          PackagePath="interactive-extensions/dotnet" />
   </ItemGroup>
 
 </Project>

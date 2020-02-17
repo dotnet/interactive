@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -78,67 +79,79 @@ using static {typeof(Kernel).FullName};
         {
             var rDirective = new Command("#r")
             {
-                new Argument<PackageReference>(
+                new Argument<Union<PackageReference, FileInfo>>(
                     result =>
                     {
-                        var token = result.Tokens.Select(t => t.Value).SingleOrDefault();
+                        var token = result.Tokens
+                                          .Select(t => t.Value)
+                                          .SingleOrDefault();
+
                         if (PackageReference.TryParse(token, out var reference))
                         {
                             return reference;
                         }
-                        else
+
+                        if (token != null &&
+                            !token.StartsWith("nuget:") &&
+                            !Path.EndsInDirectorySeparator(token))
                         {
-                            result.ErrorMessage = $"Unable to parse package reference: \"{token}\"";
-                            return null;
+                            return new FileInfo(token);
                         }
+
+                        result.ErrorMessage = $"Unable to parse package reference: \"{token}\"";
+
+                        return null;
                     })
                 {
                     Name = "package"
                 }
             };
 
-            rDirective.Handler = CommandHandler.Create<PackageReference, KernelInvocationContext>(HandleAddPackageReference);
+            rDirective.Handler = CommandHandler.Create<Union<PackageReference, FileInfo>, KernelInvocationContext>(HandleAddPackageReference);
 
             return rDirective;
 
             async Task HandleAddPackageReference(
-                PackageReference package, 
+                Union<PackageReference, FileInfo> package,
                 KernelInvocationContext pipelineContext)
             {
-                var addPackage = new AddPackage(package)
+                var pkg = package?.Value as PackageReference;
+
+                if (pkg == null)
                 {
-                    Handler = (command, context) =>
-                    {
-                        var alreadyGotten =
-                            restoreContext.ResolvedPackageReferences
-                                          .Concat(restoreContext.RequestedPackageReferences)
-                                          .FirstOrDefault(r => r.PackageName.Equals(package.PackageName, StringComparison.OrdinalIgnoreCase));
+                    return;
+                }
 
-                        if (alreadyGotten is { } &&
-                            !string.IsNullOrWhiteSpace(package.PackageVersion) &&
-                            package.PackageVersion != alreadyGotten.PackageVersion)
-                        {
-                            var errorMessage = $"{GenerateErrorMessage(package, alreadyGotten)}";
-                            context.Publish(new ErrorProduced(errorMessage));
-                        }
-                        else
-                        {
-                            var added = restoreContext.GetOrAddPackageReference(
-                                package.PackageName,
-                                package.PackageVersion);
-
-                            if (added is null)
-                            {
-                                var errorMessage = $"{GenerateErrorMessage(package)}";
-                                context.Publish(new ErrorProduced(errorMessage));
-                            }
-                        }
-
-                        return Task.CompletedTask;
-                    }
+                var addPackage = new AddPackage(pkg)
+                {
+                    Handler = HandleAddPackage
                 };
 
                 await pipelineContext.HandlingKernel.SendAsync(addPackage);
+
+                Task HandleAddPackage(IKernelCommand command, KernelInvocationContext context)
+                {
+                    var alreadyGotten = restoreContext.ResolvedPackageReferences.Concat(restoreContext.RequestedPackageReferences)
+                                                      .FirstOrDefault(r => r.PackageName.Equals(pkg.PackageName, StringComparison.OrdinalIgnoreCase));
+
+                    if (alreadyGotten is { } && !string.IsNullOrWhiteSpace(pkg.PackageVersion) && pkg.PackageVersion != alreadyGotten.PackageVersion)
+                    {
+                        var errorMessage = $"{GenerateErrorMessage(pkg, alreadyGotten)}";
+                        context.Publish(new ErrorProduced(errorMessage));
+                    }
+                    else
+                    {
+                        var added = restoreContext.GetOrAddPackageReference(pkg.PackageName, pkg.PackageVersion);
+
+                        if (added is null)
+                        {
+                            var errorMessage = $"{GenerateErrorMessage(pkg)}";
+                            context.Publish(new ErrorProduced(errorMessage));
+                        }
+                    }
+
+                    return Task.CompletedTask;
+                }
 
                 static string GenerateErrorMessage(
                     PackageReference requested,
@@ -317,5 +330,7 @@ using static {typeof(Kernel).FullName};
 
             return command;
         }
+
+    
     }
 }

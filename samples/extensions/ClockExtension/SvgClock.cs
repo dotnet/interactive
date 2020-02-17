@@ -4,6 +4,7 @@
 // SVG clock adapted from: https://medium.com/the-andela-way/create-a-pure-css-clock-with-svg-f123bcc41e46
 
 using System;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -20,6 +21,11 @@ namespace ClockExtension
             var minutes = datetime.Minute;
             var seconds = datetime.Second;
 
+            return DrawSvgClock(hours, minutes, seconds);
+        }
+
+        public static IHtmlContent DrawSvgClock(int hours, int minutes, int seconds)
+        {
             return div(
                 svg[viewBox: "0 0 40 40"](
                     _.defs(
