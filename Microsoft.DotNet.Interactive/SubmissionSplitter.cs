@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Interactive
 
                         var runDirective = new DirectiveCommand(parseResult);
 
-                        if (command.Name == "#r" || 
+                        if (command.Name == "#r" ||
                             command.Name == "#i")
                         {
                             packageCommands.Add(runDirective);
@@ -68,10 +68,6 @@ namespace Microsoft.DotNet.Interactive
                     else
                     {
                         if (command == parseResult.Parser.Configuration.RootCommand)
-                        {
-                            linesToForward.Add(currentLine);
-                        }
-                        else if (IsDirectiveSupportedByCompiler(command, parseResult))
                         {
                             linesToForward.Add(currentLine);
                         }
@@ -134,25 +130,6 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 return null;
-            }
-        }
-
-        private static bool IsDirectiveSupportedByCompiler(
-            ICommand command,
-            ParseResult parseResult)
-        {
-            switch (command.Name)
-            {
-                case "#r":
-                    if (parseResult.Errors.Any(e => e.Message.Contains("nuget:")))
-                    {
-                        return false;
-                    }
-
-                    return true;
-
-                default:
-                    return false;
             }
         }
 

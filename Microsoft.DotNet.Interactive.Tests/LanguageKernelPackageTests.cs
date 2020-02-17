@@ -421,11 +421,7 @@ Formatter<DataFrame>.Register((df, writer) =>
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync(
-                @"
-#!time
-#r ""nuget:""
-");
+            await kernel.SubmitCodeAsync(@"#r ""nuget:""");
 
             events
                 .Should()
@@ -579,14 +575,12 @@ using Microsoft.ML.AutoML;
 
             await kernel.SubmitCodeAsync(
                 @"
-#!time
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview"""
             );
             events.Should().NotContainErrors();
 
             await kernel.SubmitCodeAsync(
                 @"
-#!time
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
 using Microsoft.ML.AutoML;
 ");

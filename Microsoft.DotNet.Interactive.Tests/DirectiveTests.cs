@@ -5,10 +5,8 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Xunit;
@@ -190,6 +188,23 @@ i");
         }
 
         [Fact]
+        public async Task When_an_unrecognized_directive_is_encountered_no_error_is_produced()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel()
+            };
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SubmitCodeAsync("#!oops");
+
+            events
+                .Should()
+                .ContainSingle<CommandHandled>();
+        }
+
+        [Fact]
         public async Task Directives_can_display_help()
         {
             using var kernel = new CompositeKernel();
@@ -212,11 +227,42 @@ i");
 
             stdOut
                 .Should()
-                .ContainAll("Usage", $"#!hello", "[options]", "--loudness");
+                .ContainAll("Usage", "#!hello", "[options]", "--loudness");
 
             stdOut
                 .Should()
                 .NotContain(new RootCommand().Name, "RootCommand.Name is generally intended to reflect the command line tool's name but in this case it's just an implementation detail and it looks weird in the output.");
+        }
+
+        [Fact]
+        public async Task New_directives_can_be_added_after_older_ones_have_been_evaluated()
+        {
+            using var kernel = new CompositeKernel { new CSharpKernel() };
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            var oneWasCalled = false;
+            var twoWasCalled = false;
+
+            kernel.AddDirective(new Command("#!one")
+            {
+                Handler = CommandHandler.Create(() => oneWasCalled = true)
+            });
+
+            await kernel.SubmitCodeAsync("#!one\n123");
+
+            events.Should().NotContainErrors();
+
+            kernel.AddDirective(new Command("#!two")
+            {
+                Handler = CommandHandler.Create(() => twoWasCalled = true)
+            });
+
+            await kernel.SubmitCodeAsync("#!two\n123");
+
+            events.Should().NotContainErrors();
+            oneWasCalled.Should().BeTrue();
+            twoWasCalled.Should().BeTrue();
         }
     }
 }
