@@ -111,27 +111,14 @@ using static {typeof(Kernel).FullName};
 
             return rDirective;
 
-            async Task HandleAddPackageReference(
+            Task HandleAddPackageReference(
                 Union<PackageReference, FileInfo> package,
-                KernelInvocationContext pipelineContext)
+                KernelInvocationContext context)
             {
-                var pkg = package?.Value as PackageReference;
-
-                if (pkg == null)
+                if (package?.Value is PackageReference pkg)
                 {
-                    return;
-                }
-
-                var addPackage = new AddPackage(pkg)
-                {
-                    Handler = HandleAddPackage
-                };
-
-                await pipelineContext.HandlingKernel.SendAsync(addPackage);
-
-                Task HandleAddPackage(IKernelCommand command, KernelInvocationContext context)
-                {
-                    var alreadyGotten = restoreContext.ResolvedPackageReferences.Concat(restoreContext.RequestedPackageReferences)
+                    var alreadyGotten = restoreContext.ResolvedPackageReferences
+                                                      .Concat(restoreContext.RequestedPackageReferences)
                                                       .FirstOrDefault(r => r.PackageName.Equals(pkg.PackageName, StringComparison.OrdinalIgnoreCase));
 
                     if (alreadyGotten is { } && !string.IsNullOrWhiteSpace(pkg.PackageVersion) && pkg.PackageVersion != alreadyGotten.PackageVersion)
@@ -150,26 +137,27 @@ using static {typeof(Kernel).FullName};
                         }
                     }
 
-                    return Task.CompletedTask;
-                }
-
-                static string GenerateErrorMessage(
-                    PackageReference requested,
-                    PackageReference existing = null)
-                {
-                    if (existing != null)
+                    static string GenerateErrorMessage(
+                        PackageReference requested,
+                        PackageReference existing = null)
                     {
-                        if (!string.IsNullOrEmpty(requested.PackageName))
+                        if (existing != null)
                         {
-                            if (!string.IsNullOrEmpty(requested.PackageVersion))
+                            if (!string.IsNullOrEmpty(requested.PackageName))
                             {
-                                return $"{requested.PackageName} version {requested.PackageVersion} cannot be added because version {existing.PackageVersion} was added previously.";
+                                if (!string.IsNullOrEmpty(requested.PackageVersion))
+                                {
+                                    return
+                                        $"{requested.PackageName} version {requested.PackageVersion} cannot be added because version {existing.PackageVersion} was added previously.";
+                                }
                             }
                         }
-                    }
 
-                    return $"Invalid Package specification: '{requested}'";
+                        return $"Invalid Package specification: '{requested}'";
+                    }
                 }
+
+                return Task.CompletedTask;
             }
         }
 
