@@ -85,14 +85,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                                 return Task.CompletedTask;
                             };
                             break;
-
-                        case CancelCurrentCommand interruptExecution:
-                            interruptExecution.Handler = (_, invocationContext) =>
-                            {
-                                HandleCancelCurrentCommand(interruptExecution, invocationContext);
-                                return Task.CompletedTask;
-                            };
-                            break;
                     }
                 }
             }
@@ -184,24 +176,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                     requestCompletion.CursorPosition);
 
             context.Publish(new CompletionRequestCompleted(completionList, requestCompletion));
-        }
-
-        private void HandleCancelCurrentCommand(
-            CancelCurrentCommand cancelCurrentCommand,
-            KernelInvocationContext context)
-        {
-            lock (_cancellationSourceLock)
-            {
-                _cancellationSource.Cancel();
-                _cancellationSource = new CancellationTokenSource();
-                if (_lazyPwsh.Value.Runspace.RunspaceAvailability != RunspaceAvailability.Available)
-                {
-                    _lazyPwsh.Value.Stop();
-                }
-            }
-
-            var reply = new CurrentCommandCancelled(cancelCurrentCommand);
-            context.Publish(reply);
         }
 
         public static bool IsCompleteSubmission(string code, out ParseError[] errors)

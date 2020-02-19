@@ -25,8 +25,11 @@ namespace Microsoft.DotNet.Interactive
         private readonly List<Func<KernelInvocationContext, Task>> _onCompleteActions = new List<Func<KernelInvocationContext, Task>>();
         private FrontendEnvironmentBase _frontendEnvironment;
 
+        private readonly CancellationTokenSource _cancellationTokenSource;
+
         private KernelInvocationContext(IKernelCommand command)
         {
+            _cancellationTokenSource = new CancellationTokenSource();
             Command = command;
             Result = new KernelCommandResult(_events);
         }
@@ -34,6 +37,8 @@ namespace Microsoft.DotNet.Interactive
         public IKernelCommand Command { get; }
 
         public bool IsComplete { get; private set; }
+
+        public CancellationToken CancellationToken => _cancellationTokenSource.Token;
 
         public void Complete(IKernelCommand command)
         {
@@ -45,6 +50,7 @@ namespace Microsoft.DotNet.Interactive
                     _events.OnCompleted();
                 }
                 IsComplete = true;
+                _cancellationTokenSource.Cancel();
             }
             else
             {
@@ -60,6 +66,7 @@ namespace Microsoft.DotNet.Interactive
 
             _events.OnCompleted();
             IsComplete = true;
+            _cancellationTokenSource.Cancel();
         }
 
         public void OnComplete(Func<KernelInvocationContext, Task> onComplete)
