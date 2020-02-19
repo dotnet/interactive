@@ -38,8 +38,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             new CSharpParseOptions(LanguageVersion.Default, kind: SourceCodeKind.Script);
 
         private WorkspaceFixture _fixture;
-        private CancellationTokenSource _cancellationSource;
-        private readonly object _cancellationSourceLock = new object();
 
         internal ScriptOptions ScriptOptions =
             ScriptOptions.Default
@@ -63,7 +61,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public CSharpKernel()
         {
-            _cancellationSource = new CancellationTokenSource();
             Name = DefaultKernelName;
             NativeAssemblyLoadHelper = new NativeAssemblyLoadHelper(this);
             RegisterForDisposal(NativeAssemblyLoadHelper);
@@ -107,13 +104,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
                                 await HandleRequestCompletion(requestCompletion, invocationContext);
                             };
                             break;
-
-                        case CancelCurrentCommand interruptExecution:
-                            interruptExecution.Handler = async (_, invocationContext) =>
-                            {
-                                await HandleCancelCurrentCommand(interruptExecution, invocationContext);
-                            };
-                            break;
                     }
                 }
             }
@@ -127,32 +117,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
         }
 
-        private Task HandleCancelCurrentCommand(
-            CancelCurrentCommand cancelCurrentCommand,
-            KernelInvocationContext context)
-        {
-            var reply = new CurrentCommandCancelled(cancelCurrentCommand);
-            lock (_cancellationSourceLock)
-            {
-                _cancellationSource.Cancel();
-                _cancellationSource = new CancellationTokenSource();
-            }
-
-            context.Publish(reply);
-
-            return Task.CompletedTask;
-        }
 
         private async Task HandleSubmitCode(
                 SubmitCode submitCode,
                 KernelInvocationContext context)
         {
-            CancellationTokenSource cancellationSource;
-            lock (_cancellationSourceLock)
-            {
-                cancellationSource = _cancellationSource;
-            }
-
             var codeSubmissionReceived = new CodeSubmissionReceived(submitCode);
 
             context.Publish(codeSubmissionReceived);
@@ -176,7 +145,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             Exception exception = null;
 
-            if (!cancellationSource.IsCancellationRequested)
+            if (!context.CancellationToken.IsCancellationRequested)
             {
                 ScriptOptions = ScriptOptions.WithMetadataResolver(
                     ScriptMetadataResolver.Default.WithBaseDirectory(
@@ -189,8 +158,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
                         ScriptState = await CSharpScript.RunAsync(
                                                             code,
                                                             ScriptOptions,
-                                                            cancellationToken: cancellationSource.Token)
-                                                        .UntilCancelled(cancellationSource.Token);
+                                                            cancellationToken: context.CancellationToken)
+                                                        .UntilCancelled(context.CancellationToken);
                     }
                     else
                     {
@@ -202,8 +171,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
                                                                exception = e;
                                                                return true;
                                                            },
-                                                           cancellationToken: cancellationSource.Token)
-                                                       .UntilCancelled(cancellationSource.Token);
+                                                           cancellationToken: context.CancellationToken)
+                                                       .UntilCancelled(context.CancellationToken);
                     }
                 }
                 catch (CompilationErrorException cpe)
@@ -216,7 +185,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 }
             }
 
-            if (!cancellationSource.IsCancellationRequested)
+            if (!context.CancellationToken.IsCancellationRequested)
             {
                 if (exception != null)
                 {

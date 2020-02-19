@@ -203,14 +203,6 @@ type FSharpKernel() as this =
             context.Publish(CompletionRequestCompleted(completionItems, requestCompletion))
         }
 
-    let handleCancelCurrentCommand (cancelCurrentCommand: CancelCurrentCommand) (context: KernelInvocationContext) =
-        async {
-            cancellationTokenSource.Cancel()
-            cancellationTokenSource.Dispose()
-            cancellationTokenSource <- new CancellationTokenSource()
-            context.Publish(CurrentCommandCancelled(cancelCurrentCommand))
-        }
-
     member _.GetCurrentVariables() =
         // `ValueBound` event will make a copy of value types, so to ensure we always get the current value, we re-evaluate each variable
         variables
@@ -229,6 +221,5 @@ type FSharpKernel() as this =
         match command with
         | :? SubmitCode as submitCode -> submitCode.Handler <- fun _ _ -> (handleSubmitCode submitCode context) |> Async.StartAsTask :> Task
         | :? RequestCompletion as requestCompletion -> requestCompletion.Handler <- fun _ _ -> (handleRequestCompletion requestCompletion context) |> Async.StartAsTask :> Task
-        | :? CancelCurrentCommand as cancelCurrentCommand -> cancelCurrentCommand.Handler <- fun _ _ -> (handleCancelCurrentCommand cancelCurrentCommand context) |> Async.StartAsTask :> Task
         | _ -> ()
         Task.CompletedTask

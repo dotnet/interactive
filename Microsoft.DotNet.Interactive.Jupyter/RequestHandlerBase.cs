@@ -28,6 +28,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         protected IObservable<IKernelEvent> KernelEvents { get; }
 
         protected JupyterFrontendEnvironment FrontendEnvironment { get; }
+
         protected async Task SendAsync(
             JupyterRequestContext context,
             IKernelCommand command)
