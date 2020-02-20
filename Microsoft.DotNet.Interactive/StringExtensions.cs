@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.Interactive
     {
         public static string TruncateForDisplay(
             this string value,
-            int length = 25)
+            int length = 50)
         {
             value = value.Trim();
 

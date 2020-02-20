@@ -237,6 +237,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             var kernel = compositeKernel
                 .UseDefaultMagicCommands()
+                .UseLog()
                 .UseAbout();
 
             kernel.DefaultKernelName = defaultKernelName;
