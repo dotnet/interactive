@@ -73,6 +73,13 @@ using static {typeof(Kernel).FullName};
             iDirective.Handler = CommandHandler.Create<string, KernelInvocationContext>((source, context) =>
             {
                 restoreContext.AddRestoreSource(source.Replace("nuget:", ""));
+
+                IHtmlContent content = div(
+                    strong("Restore sources"),
+                    ul(restoreContext.RestoreSources
+                                    .Select(s => li(span(s)))));
+
+                context.DisplayAsync(content);
             });
             return iDirective;
         }

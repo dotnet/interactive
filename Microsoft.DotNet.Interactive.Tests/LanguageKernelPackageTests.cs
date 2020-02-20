@@ -471,6 +471,27 @@ Formatter<DataFrame>.Register((df, writer) =>
         }
 
         [Fact]
+        public async Task Pound_i_nuget_displays_list_of_added_sources()
+        {
+             var kernel = CreateKernel(Language.CSharp);
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SubmitCodeAsync(@"#i ""nuget:https://completelyFakerestoreSource""");
+
+            events.Should()
+                  .ContainSingle<DisplayedValueProduced>()
+                  .Which
+                  .FormattedValues
+                  .Should()
+                  .ContainSingle(v => v.MimeType == "text/html")
+                  .Which
+                  .Value
+                  .Should()
+                  .ContainAll("Restore sources", "https://completelyFakerestoreSource");
+        }
+
+        [Fact]
         public async Task Pound_i_nuget_allows_duplicate_sources_package_specification_single_cell()
         {
             var kernel = CreateKernel(Language.CSharp);
