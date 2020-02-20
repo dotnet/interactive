@@ -196,11 +196,11 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        internal virtual async Task HandleInternalAsync(
+        internal virtual async Task HandleAsync(
             IKernelCommand command,
             KernelInvocationContext context)
         {
-            await HandleAsync(command, context);
+            SetHandler(command, context);
             await command.InvokeAsync(context);
         }
 
@@ -297,10 +297,42 @@ namespace Microsoft.DotNet.Interactive
 
             _disposables.Add(disposable);
         }
-
-        protected internal abstract Task HandleAsync(
-            IKernelCommand command,
+   
+        protected abstract Task HandleSubmitCode(
+            SubmitCode command, 
             KernelInvocationContext context);
+
+        protected abstract Task HandleRequestCompletion(
+            RequestCompletion command, 
+            KernelInvocationContext context);
+
+        private protected void SetHandler(
+            IKernelCommand command,
+            KernelInvocationContext context)
+        {
+            if (command is KernelCommandBase kb)
+            {
+                if (kb.Handler == null)
+                {
+                    switch (command)
+                    {
+                        case SubmitCode submitCode:
+                            submitCode.Handler = (_, invocationContext) =>
+                            {
+                                return HandleSubmitCode(submitCode, context);
+                            };
+                            break;
+
+                        case RequestCompletion requestCompletion:
+                            requestCompletion.Handler = (_, invocationContext) =>
+                            {
+                                return HandleRequestCompletion(requestCompletion, invocationContext);
+                            };
+                            break;
+                    }
+                }
+            }
+        }
 
         protected virtual void SetHandlingKernel(
             IKernelCommand command,

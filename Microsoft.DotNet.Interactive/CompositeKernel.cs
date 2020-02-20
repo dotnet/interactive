@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Interactive
             return kernel ?? throw new NoSuitableKernelException(command);
         }
 
-        protected internal override async Task HandleAsync(
+        internal override async Task HandleAsync(
             IKernelCommand command,
             KernelInvocationContext context)
         {
@@ -163,9 +163,14 @@ namespace Microsoft.DotNet.Interactive
             throw new NoSuitableKernelException(command);
         }
 
-        internal override Task HandleInternalAsync(IKernelCommand command, KernelInvocationContext context)
+        protected override Task HandleSubmitCode(SubmitCode command, KernelInvocationContext context)
         {
-            return HandleAsync(command, context);
+            throw new NotSupportedException();
+        }
+
+        protected override Task HandleRequestCompletion(RequestCompletion command, KernelInvocationContext context)
+        {
+            throw new NotSupportedException();
         }
 
         public IReadOnlyCollection<IKernel> ChildKernels => _childKernels;

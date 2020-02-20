@@ -3,7 +3,6 @@
 
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Tests
@@ -17,11 +16,15 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         public KernelCommandInvocation Handle { get; set; }
 
-        protected override Task HandleAsync(
-            IKernelCommand command,
-            KernelInvocationContext context)
+        protected override Task HandleSubmitCode(SubmitCode command, KernelInvocationContext context)
         {
-            command.As<KernelCommandBase>().Handler = Handle;
+            Handle(command, context);
+            return Task.CompletedTask;
+        }
+
+        protected override Task HandleRequestCompletion(RequestCompletion command, KernelInvocationContext context)
+        {
+            Handle(command, context);
             return Task.CompletedTask;
         }
     }

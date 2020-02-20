@@ -60,39 +60,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             });
         }
 
-        protected override Task HandleAsync(
-            IKernelCommand command,
-            KernelInvocationContext context)
-        {
-            if (command is KernelCommandBase kb)
-            {
-                if (kb.Handler == null)
-                {
-                    switch (command)
-                    {
-                        case SubmitCode submitCode:
-                            submitCode.Handler = (_, invocationContext) =>
-                            {
-                                HandleSubmitCode(submitCode, context);
-                                return Task.CompletedTask;
-                            };
-                            break;
-
-                        case RequestCompletion requestCompletion:
-                            requestCompletion.Handler = (_, invocationContext) =>
-                            {
-                                HandleRequestCompletion(requestCompletion, invocationContext);
-                                return Task.CompletedTask;
-                            };
-                            break;
-                    }
-                }
-            }
-
-            return Task.CompletedTask;
-        }
-
-        private void HandleSubmitCode(
+        protected override Task HandleSubmitCode(
                 SubmitCode submitCode,
                 KernelInvocationContext context)
         {
@@ -122,19 +90,19 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             {
                 context.Fail(message: string.Join(Environment.NewLine + Environment.NewLine,
                     parseErrors.Select(pe => pe.ToString())));
-                return;
+                return Task.CompletedTask;
             }
 
             // Do nothing if we get a Diagnose type.
             if (submitCode.SubmissionType == SubmissionType.Diagnose)
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (cancellationSource.IsCancellationRequested)
             {
                 context.Fail(null, "Command cancelled");
-                return;
+                return Task.CompletedTask;
             }
 
             StreamHandler streamHandler = RegisterPowerShellStreams(context, submitCode);
@@ -160,9 +128,11 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             {
                 UnregisterPowerShellStreams(streamHandler);
             }
+            
+            return Task.CompletedTask;
         }
 
-        private void HandleRequestCompletion(
+        protected override Task HandleRequestCompletion(
             RequestCompletion requestCompletion,
             KernelInvocationContext context)
         {
@@ -176,6 +146,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                     requestCompletion.CursorPosition);
 
             context.Publish(new CompletionRequestCompleted(completionList, requestCompletion));
+
+            return Task.CompletedTask;
         }
 
         public static bool IsCompleteSubmission(string code, out ParseError[] errors)

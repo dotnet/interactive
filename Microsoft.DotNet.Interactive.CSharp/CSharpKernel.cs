@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
@@ -81,46 +80,15 @@ namespace Microsoft.DotNet.Interactive.CSharp
             ScriptOptions = ScriptOptions.AddReferences(references);
         }
 
-        protected override Task HandleAsync(
-            IKernelCommand command,
-            KernelInvocationContext context)
-        {
-            if (command is KernelCommandBase kb)
-            {
-                if (kb.Handler == null)
-                {
-                    switch (command)
-                    {
-                        case SubmitCode submitCode:
-                            submitCode.Handler = async (_, invocationContext) =>
-                            {
-                                await HandleSubmitCode(submitCode, context);
-                            };
-                            break;
-
-                        case RequestCompletion requestCompletion:
-                            requestCompletion.Handler = async (_, invocationContext) =>
-                            {
-                                await HandleRequestCompletion(requestCompletion, invocationContext);
-                            };
-                            break;
-                    }
-                }
-            }
-
-            return Task.CompletedTask;
-        }
-
         public Task<bool> IsCompleteSubmissionAsync(string code)
         {
             var syntaxTree = SyntaxFactory.ParseSyntaxTree(code, _csharpParseOptions);
             return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
         }
 
-
-        private async Task HandleSubmitCode(
-                SubmitCode submitCode,
-                KernelInvocationContext context)
+        protected override async Task HandleSubmitCode(
+            SubmitCode submitCode,
+            KernelInvocationContext context)
         {
             var codeSubmissionReceived = new CodeSubmissionReceived(submitCode);
 
@@ -219,7 +187,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
         }
 
-        private async Task HandleRequestCompletion(
+        protected override async Task HandleRequestCompletion(
             RequestCompletion requestCompletion,
             KernelInvocationContext context)
         {
