@@ -55,12 +55,12 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 throw new ArgumentNullException(nameof(services));
             }
 
-            startServer ??= ((startupOptions, invocationContext) =>
-                Program.ConstructWebHost(startupOptions).Run());
+            startServer ??= (startupOptions, invocationContext) =>
+                Program.ConstructWebHost(startupOptions).Run();
 
             jupyter ??= JupyterCommand.Do;
 
-            startKernelServer ??= (async (startupOptions, kernel, console) =>
+            startKernelServer ??= async (startupOptions, kernel, console) =>
             {
                 var disposable = Program.StartToolLogging(startupOptions);
                 if (kernel is KernelBase kernelBase)
@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     Console.Out);
 
                 await server.Input.LastAsync();
-            });
+            };
 
             // Setup first time use notice sentinel.
             firstTimeUseNoticeSentinel ??= new FirstTimeUseNoticeSentinel(VersionSensor.Version().AssemblyInformationalVersion);
@@ -206,7 +206,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             }
         }
 
-        private static IKernel CreateKernel(string defaultKernelName, FrontendEnvironmentBase frontendEnvironment)
+        private static IKernel CreateKernel(
+            string defaultKernelName, 
+            FrontendEnvironmentBase frontendEnvironment)
         {
             var compositeKernel = new CompositeKernel();
             compositeKernel.UseFrontedEnvironment(context => frontendEnvironment);

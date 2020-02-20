@@ -53,8 +53,8 @@ namespace Microsoft.DotNet.Interactive
 
             invocations.Add(
                 (
-                    func: async (command, context, _) => await _kernel.HandleInternalAsync(command, context),
-                    name: nameof(KernelBase.HandleAsync) + $"({_kernel.Name})"
+                    func: async (command, context, _) => await _kernel.HandleAsync(command, context),
+                    name: $"HandleAsync({_kernel.Name})"
                 ));
 
             var combined =

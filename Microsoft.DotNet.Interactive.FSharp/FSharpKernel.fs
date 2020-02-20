@@ -123,7 +123,6 @@ type FSharpKernel() as this =
 
     let handleSubmitCode (codeSubmission: SubmitCode) (context: KernelInvocationContext) =
         async {
-
             use _ = script.Value.DependencyAdding
                     |> Observable.subscribe (fun (key, referenceText) ->
                         if key = "nuget" then
@@ -217,9 +216,9 @@ type FSharpKernel() as this =
             | Ok(Some(value)) -> Some (CurrentVariable(v, value.ReflectionType, value.ReflectionValue))
             | _ -> None)
 
-    override __.HandleAsync(command: IKernelCommand, context: KernelInvocationContext): Task =
-        match command with
-        | :? SubmitCode as submitCode -> submitCode.Handler <- fun _ _ -> (handleSubmitCode submitCode context) |> Async.StartAsTask :> Task
-        | :? RequestCompletion as requestCompletion -> requestCompletion.Handler <- fun _ _ -> (handleRequestCompletion requestCompletion context) |> Async.StartAsTask :> Task
-        | _ -> ()
-        Task.CompletedTask
+    override _.HandleSubmitCode(command: SubmitCode, context: KernelInvocationContext): Task =
+        handleSubmitCode command context |> Async.StartAsTask :> Task
+        
+    override _.HandleRequestCompletion(command: RequestCompletion, context: KernelInvocationContext): Task =
+        handleRequestCompletion command context |> Async.StartAsTask :> Task
+
