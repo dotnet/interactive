@@ -28,6 +28,10 @@
     <PackageReference Include="PocketLogger" Version="$(PocketLoggerVersion)">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="PocketLogger.Subscribe" Version="0.6.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
    <ItemGroup>	
@@ -37,8 +41,8 @@
     <NuspecProperty Include="SystemCommandLineVersion=$(SystemCommandLineVersion)" />	
   </ItemGroup>
 
-   <ItemGroup>
-     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
-   </ItemGroup>
- 
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
+  </ItemGroup>
+
 </Project>

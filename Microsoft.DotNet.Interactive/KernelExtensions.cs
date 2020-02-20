@@ -2,12 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.Diagnostics;
-using System.Reactive.Disposables;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 using Pocket;
+using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -47,6 +50,60 @@ namespace Microsoft.DotNet.Interactive
             }
 
             return kernel.SendAsync(new SubmitCode(code), CancellationToken.None);
+        }
+
+        public static T UseLog<T>(this T kernel)
+            where T : KernelBase
+        {
+            var command = new Command("#!log", "Enables session logging.");
+
+            var logStarted = false;
+
+            command.Handler = CommandHandler.Create<KernelInvocationContext>(async context =>
+            {
+                if (logStarted)
+                {
+                    return;
+                }
+
+                logStarted = true;
+
+                kernel.AddMiddleware(async (kernelCommand, context, next) =>
+                {
+                    await context.DisplayAsync(kernelCommand.ToLogString());
+
+                    await next(kernelCommand, context);
+                });
+
+                var disposable = new CompositeDisposable();
+
+                disposable.Add(kernel.KernelEvents.Subscribe(async e =>
+                {
+                    if (KernelInvocationContext.Current is {} currentContext)
+                    {
+                        if (!(e is DisplayEventBase))
+                        {
+                            await currentContext.DisplayAsync(e.ToLogString());
+                        }
+                    }
+                }));
+
+                disposable.Add(LogEvents.Subscribe(async e =>
+                {
+                    if (KernelInvocationContext.Current is {} currentContext)
+                    {
+                        await currentContext.DisplayAsync(e.ToLogString());
+                    }
+                }));
+
+                kernel.RegisterForDisposal(disposable);
+
+                await context.DisplayAsync("Logging enabled");
+            });
+
+            kernel.AddDirective(command);
+
+            return kernel;
         }
 
         [DebuggerStepThrough]
