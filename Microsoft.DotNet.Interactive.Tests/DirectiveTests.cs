@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public async Task Directive_handlers_are_in_invoked_the_order_in_which_they_occur_in_the_code_submission()
+        public async Task Directive_handlers_are_invoked_in_the_order_in_which_they_occur_in_the_code_submission()
         {
             using var kernel = new CSharpKernel();
             var events = kernel.KernelEvents.ToSubscribedList();
@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
                 {
                     await context.HandlingKernel.SubmitCodeAsync("i++;");
-                } )
+                })
             });
 
             await kernel.SubmitCodeAsync(@"

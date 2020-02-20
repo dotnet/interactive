@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
@@ -108,9 +109,14 @@ namespace Microsoft.DotNet.Interactive
         private async Task HandleDirectivesAndSubmitCode(
             SubmitCode submitCode,
             KernelInvocationContext context,
-            KernelPipelineContinuation next)
+            KernelPipelineContinuation continueOnCurrentPipeline)
         {
             var commands = _submissionSplitter.SplitSubmission(submitCode);
+
+            if (!commands.Contains(submitCode))
+            {
+                context.CommandToSignalCompletion = commands.Last();
+            }
 
             foreach (var command in commands)
             {
@@ -121,7 +127,8 @@ namespace Microsoft.DotNet.Interactive
 
                 if (command == submitCode)
                 {
-                    await next(submitCode, context);
+                    // no new context is needed
+                    await continueOnCurrentPipeline(submitCode, context);
                 }
                 else
                 {
@@ -132,7 +139,20 @@ namespace Microsoft.DotNet.Interactive
                             await command.InvokeAsync(context);
                             break;
                         default:
-                            await (context.HandlingKernel ?? this).SendAsync(command);
+                            var kernel = context.HandlingKernel;
+
+                            if (kernel == this)
+                            {
+                                var c = KernelInvocationContext.Establish(command);
+
+                                await continueOnCurrentPipeline(command, c);
+                            }
+                            else
+                            {
+                                // forward to next kernel
+                                await kernel.SendAsync(command);
+                            }
+
                             break;
                     }
                 }

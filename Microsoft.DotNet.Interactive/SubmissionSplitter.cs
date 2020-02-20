@@ -8,6 +8,7 @@ using System.CommandLine.Builder;
 using System.CommandLine.Help;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -20,14 +21,14 @@ namespace Microsoft.DotNet.Interactive
 
         private RootCommand _rootCommand;
 
-        public IReadOnlyCollection<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
+        public IReadOnlyList<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
 
-        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode)
+        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode originalSubmitCode)
         {
             var directiveParser = GetDirectiveParser();
 
             var lines = new Queue<string>(
-                submitCode.Code.Split(new[] { "\r\n", "\n" },
+                originalSubmitCode.Code.Split(new[] { "\r\n", "\n" },
                                       StringSplitOptions.None));
 
             var linesToForward = new List<string>();
@@ -55,8 +56,20 @@ namespace Microsoft.DotNet.Interactive
 
                         var runDirective = new DirectiveCommand(parseResult);
 
-                        if (command.Name == "#r" ||
-                            command.Name == "#i")
+                        if (command.Name == "#r")
+                        {
+                            var value = parseResult.CommandResult.GetArgumentValueOrDefault<PackageReferenceOrFileInfo>("package");
+
+                            if (value.Value is FileInfo)
+                            {
+                                linesToForward.Add(currentLine);
+                            }
+                            else
+                            {
+                                packageCommands.Add(runDirective);
+                            }
+                        }
+                        else if (command.Name == "#i")
                         {
                             packageCommands.Add(runDirective);
                         }
@@ -96,14 +109,14 @@ namespace Microsoft.DotNet.Interactive
 
             if (commandWasSplit)
             {
-                if (AccumulatedSubmission() is { } command)
+                if (AccumulatedSubmission() is { } newSubmitCode)
                 {
-                    commands.Add(command);
+                    commands.Add(newSubmitCode);
                 }
             }
             else
             {
-                commands.Add(submitCode);
+                commands.Add(originalSubmitCode);
             }
 
             if (packageCommands.Count > 0)
@@ -115,7 +128,7 @@ namespace Microsoft.DotNet.Interactive
 
             return packageCommands.Concat(commands).ToArray();
 
-            IKernelCommand AccumulatedSubmission()
+            SubmitCode AccumulatedSubmission()
             {
                 if (linesToForward.Any())
                 {
