@@ -3,11 +3,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.IO;
 using FluentAssertions;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.CSharp;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -68,52 +71,58 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public async Task Split_pound_r_and_i_commands_are_executed_before_other_cell_contents()
+        public async Task Split_non_referencing_directives_are_executed_in_textual_order()
         {
-            var receivedCommands = new List<IKernelCommand>();
+            var receivedCommands = new List<string>();
 
             using var kernel = new FakeKernel
             {
                 Handle = (command, context) =>
                 {
-                    receivedCommands.Add(command);
+                    receivedCommands.Add(((SubmitCode) command).Code);
                     return Task.CompletedTask;
                 }
             };
 
-
-            var path = Path.GetTempFileName();
-
-            kernel.DeferCommand(new SubmitCode($@"
-#r ""{path}""
-using Some.Namespace; 
-"));
-
-
-            await kernel.SubmitCodeAsync("// the code");
-
-
-
-
-
-            throw new NotImplementedException("test not written");
-        }
-
-        [Fact]
-        public void Split_non_referencing_directives_are_executed_in_textual_order()
-        {
-            var receivedCommands = new List<IKernelCommand>();
-
-            using var kernel = new FakeKernel
+            kernel.AddDirective(new Command("#!one")
             {
-                Handle = (command, context) =>
+                Handler = CommandHandler.Create(() =>
                 {
-                    receivedCommands.Add(command);
-                    return Task.CompletedTask;
-                }
-            };
+                    receivedCommands.Add("#!one");
+                })
+            });
 
-            throw new NotImplementedException("test not written");
+            kernel.AddDirective(new Command("#!two")
+            {
+                Handler = CommandHandler.Create(() =>
+                {
+                    receivedCommands.Add("#!two");
+                })
+            });
+
+            var code1 = "var a = 1";
+            var code2 = "var b = 2";
+            var code3 = "var c = 3";
+            var directive1 = "#!one";
+            var directive2 = "#!two";
+
+            await kernel.SubmitCodeAsync($@"
+{code1}
+{directive1}
+{code2}
+{directive2}
+{code3}
+");
+
+            receivedCommands
+                .Select(c => c.Trim())
+                .Should()
+                .BeEquivalentSequenceTo(
+                    code1,
+                    directive1,
+                    code2,
+                    directive2,
+                    code3);
         }
 
         [Fact]

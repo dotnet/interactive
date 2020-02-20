@@ -124,7 +124,6 @@ location.EndsWith(""System.Text.Json.dll"")"
               .Be(true);
         }
 
-
         [Theory(Timeout = 45000)]
         [InlineData(Language.FSharp)]
         public async Task kernel_base_ignores_command_line_directives(Language language)

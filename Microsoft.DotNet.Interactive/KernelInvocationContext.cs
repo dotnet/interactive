@@ -31,6 +31,7 @@ namespace Microsoft.DotNet.Interactive
         {
             _cancellationTokenSource = new CancellationTokenSource();
             Command = command;
+            CommandToSignalCompletion = command;
             Result = new KernelCommandResult(_events);
         }
 
@@ -39,6 +40,8 @@ namespace Microsoft.DotNet.Interactive
         public bool IsComplete { get; private set; }
 
         public CancellationToken CancellationToken => _cancellationTokenSource.Token;
+
+        internal IKernelCommand CommandToSignalCompletion { get; set; }
 
         public void Complete(IKernelCommand command)
         {
@@ -50,11 +53,11 @@ namespace Microsoft.DotNet.Interactive
                     _events.OnCompleted();
                 }
                 IsComplete = true;
-                _cancellationTokenSource.Cancel();
             }
             else
             {
                 _childCommands.Remove(command);
+
             }
         }
 
@@ -66,7 +69,6 @@ namespace Microsoft.DotNet.Interactive
 
             _events.OnCompleted();
             IsComplete = true;
-            _cancellationTokenSource.Cancel();
         }
 
         public void OnComplete(Func<KernelInvocationContext, Task> onComplete)
@@ -81,7 +83,7 @@ namespace Microsoft.DotNet.Interactive
                 return;
             }
 
-            var command = @event.Command;
+            var command = @event.Command as KernelCommandBase;
 
             if (command == null ||
                 Command == command ||
@@ -102,6 +104,7 @@ namespace Microsoft.DotNet.Interactive
                 var context = new KernelInvocationContext(command);
 
                 _current.Value = context;
+
             }
             else
             {

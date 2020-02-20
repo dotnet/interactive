@@ -9,9 +9,11 @@ using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
@@ -79,7 +81,7 @@ using static {typeof(Kernel).FullName};
         {
             var rDirective = new Command("#r")
             {
-                new Argument<Union<PackageReference, FileInfo>>(
+                new Argument<PackageReferenceOrFileInfo>(
                     result =>
                     {
                         var token = result.Tokens
@@ -107,12 +109,12 @@ using static {typeof(Kernel).FullName};
                 }
             };
 
-            rDirective.Handler = CommandHandler.Create<Union<PackageReference, FileInfo>, KernelInvocationContext>(HandleAddPackageReference);
+            rDirective.Handler = CommandHandler.Create<PackageReferenceOrFileInfo, KernelInvocationContext>(HandleAddPackageReference);
 
             return rDirective;
 
             Task HandleAddPackageReference(
-                Union<PackageReference, FileInfo> package,
+                PackageReferenceOrFileInfo package,
                 KernelInvocationContext context)
             {
                 if (package?.Value is PackageReference pkg)
@@ -189,7 +191,6 @@ using static {typeof(Kernel).FullName};
 
                     foreach (var package in restoreContext.RequestedPackageReferences)
                     {
-
                         var message = InstallingPackageMessage(package) + "...";
                         context.Publish(
                             new DisplayedValueProduced(
