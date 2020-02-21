@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
         /// The name you want to give this Trace.
         /// </summary>
         [Parameter(Position = 1)]
-        public string Name { get; set; } = "Untitled";
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// EndProcessing override.
