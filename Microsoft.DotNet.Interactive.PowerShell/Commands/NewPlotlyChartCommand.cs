@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
         /// The title of the chart.
         /// </summary>
         [Parameter(Position = 1)]
-        public string Title { get; set; }  = "Untitled Chart";
+        public string Title { get; set; }  = string.Empty;
 
         private List<Trace> _traces;
 
