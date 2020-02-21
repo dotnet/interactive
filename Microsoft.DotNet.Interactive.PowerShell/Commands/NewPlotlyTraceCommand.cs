@@ -14,17 +14,42 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
     /// </summary>
     [Cmdlet(VerbsCommon.New, "PlotlyTrace")]
     [OutputType("XPlot.Plotly.Graph+Trace")]
+    [Alias("npt")]
     public sealed class NewPlotlyTraceCommand : PSCmdlet
     {
         /// <summary>
-        /// The object from pipeline.
+        /// The Trace type you want to create.
         /// </summary>
         [Parameter(Mandatory = true, Position = 0)]
+        [ValidateSet(
+            "Area",
+            "Bar",
+            "Box",
+            "Candlestick",
+            "Choropleth",
+            "Contour",
+            "Heatmap",
+            "Histogram",
+            "Histogram2d",
+            "Histogram2dcontour",
+            "Mesh3d",
+            "Pie",
+            "Scatter",
+            "Scatter3d",
+            "Scattergeo",
+            "Scattergl",
+            "Surface")]
         public string TraceType { get; set; }
 
+        /// <summary>
+        /// The name you want to give this Trace.
+        /// </summary>
         [Parameter(Position = 1)]
         public string Name { get; set; } = "Untitled";
 
+        /// <summary>
+        /// EndProcessing override.
+        /// </summary>
         protected override void EndProcessing()
         {
             var trace = CreateTrace(TraceType);

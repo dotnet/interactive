@@ -12,10 +12,11 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "HtmlContent")]
     [OutputType("AspNetCore.Html.IHtmlContent")]
+    [Alias("ghc")]
     public sealed class GetHtmlContentCommand : PSCmdlet
     {
         /// <summary>
-        /// The object from pipeline.
+        /// The Html string to convert into an HtmlContent object.
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
         public string HtmlString { get; set; }

@@ -10,6 +10,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
     /// Takes the the JavaScript string input and invokes it on the client.
     /// </summary>
     [Cmdlet(VerbsOther.Use, "JavaScript")]
+    [Alias("uj")]
     public sealed class UseJavaScriptCommand : PSCmdlet
     {
         /// <summary>
