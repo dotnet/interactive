@@ -26,7 +26,8 @@ namespace ClockExtension
 
         public static IHtmlContent DrawSvgClock(int hours, int minutes, int seconds)
         {
-            return div(
+            var id = "clockExtension" + Guid.NewGuid().ToString("N");
+            return div[id: id](
                 svg[viewBox: "0 0 40 40"](
                     _.defs(
                         _.radialGradient[id: "grad1", cx: "50%", cy: "50%", r: "50%", fx: "50%", fy: "50%"](
@@ -52,18 +53,18 @@ namespace ClockExtension
                     line[x1: 0, y1: 0, x2: 16, y2: 0, @class: "seconds"],
                     circle[cx: 20, cy: 20, r: 0.7, @class: "pin"]
                 ),
-                style[type: "text/css"](Css(hours, minutes, seconds)),
+                style[type: "text/css"](Css()),
                 script(@"
 let svg = document.querySelector('svg');
 "
                 ));
 
-            IHtmlContent Css(int hours, int minutes, int seconds) =>
+            IHtmlContent Css() =>
                 new HtmlString($@"
 html {{
   background: #dedede !important;
 }}
-svg {{
+#{id} svg {{
   width: 400px;
   fill: white;
   stroke: black;
@@ -75,76 +76,76 @@ svg {{
   --start-hours: {hours};
 }}
 
-.marks {{
+#{id} .marks {{
   transform: translate(20px, 20px);
   stroke-width: 0.2;
 }}
-.marks > line:nth-child(1) {{
+#{id} .marks > line:nth-child(1) {{
   transform: rotate(30deg); 
 }}
-.marks > line:nth-child(2) {{
+#{id} .marks > line:nth-child(2) {{
   transform: rotate(calc(2 * 30deg));
 }}
-.marks > line:nth-child(3) {{
+#{id} .marks > line:nth-child(3) {{
   transform: rotate(calc(3 * 30deg));
   stroke-width: 0.5;
 }}
-.marks > line:nth-child(4) {{
+#{id} .marks > line:nth-child(4) {{
   transform: rotate(calc(4 * 30deg));
 }}
-.marks > line:nth-child(5) {{
+#{id} .marks > line:nth-child(5) {{
   transform: rotate(calc(5 * 30deg));
 }}
-.marks > line:nth-child(6) {{
+#{id} .marks > line:nth-child(6) {{
   transform: rotate(calc(6 * 30deg));
   stroke-width: 0.5;
 }}
-.marks > line:nth-child(7) {{
+#{id} .marks > line:nth-child(7) {{
   transform: rotate(calc(7 * 30deg));
 }}
-.marks > line:nth-child(8) {{
+#{id} .marks > line:nth-child(8) {{
   transform: rotate(calc(8 * 30deg));
 }}
-.marks > line:nth-child(9) {{
+#{id} .marks > line:nth-child(9) {{
   transform: rotate(calc(9 * 30deg));
   stroke-width: 0.5;
 }}
-.marks > line:nth-child(10) {{
+#{id} .marks > line:nth-child(10) {{
   transform: rotate(calc(10 * 30deg));
 }}
-.marks > line:nth-child(11) {{
+#{id} .marks > line:nth-child(11) {{
   transform: rotate(calc(11 * 30deg));
 }}
-.marks > line:nth-child(12) {{
+#{id} .marks > line:nth-child(12) {{
   transform: rotate(calc(12 * 30deg));
   stroke-width: 0.5;
 }}
-.seconds,
-.minute,
-.hour
+#{id} .seconds,
+#{id} .minute,
+#{id} .hour
 {{
   transform: translate(20px, 20px) rotate(0deg);
 }}
-.seconds {{
+#{id} .seconds {{
   stroke-width: 0.3;
   stroke: #d00505;
   transform: translate(20px, 20px) rotate(calc(var(--start-seconds) * 6deg));
 
 }}
-.minute {{
+#{id} .minute {{
   stroke-width: 0.6;
   transform: translate(20px, 20px) rotate(calc(var(--start-minutes) * 6deg));
 }}
-.hour {{
+#{id} .hour {{
   stroke: #512bd4;
   stroke-width: 1;
   transform: translate(20px, 20px) rotate(calc(var(--start-hours) * 30deg));
 }}
-.pin {{
+#{id} .pin {{
   stroke: #d00505;
   stroke-width: 0.2;
 }}
-.text {{
+#{id} .text {{
   font-size: 2px;
   font-family: ""Segoe UI"",Helvetica,Arial,sans-serif;
   transform: rotate(90deg) translate(13.5px, -12px);
