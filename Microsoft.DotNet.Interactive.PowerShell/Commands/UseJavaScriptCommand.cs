@@ -9,8 +9,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
     /// <summary>
     /// Takes the the JavaScript string input and invokes it on the client.
     /// </summary>
-    [Cmdlet(VerbsLifecycle.Invoke, "JupyterJavaScript")]
-    public sealed class InvokeJupyterJavaScriptCommand : PSCmdlet
+    [Cmdlet(VerbsOther.Use, "JavaScript")]
+    public sealed class UseJavaScriptCommand : PSCmdlet
     {
         /// <summary>
         /// The JavaScript string to invoke.

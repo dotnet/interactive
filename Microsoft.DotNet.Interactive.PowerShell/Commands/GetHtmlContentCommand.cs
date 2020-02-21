@@ -10,9 +10,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
     /// Takes the the string input and turns it into an IHtmlContent that can be passed in to
     /// Show-JupyterContent to render Html in a Jupyter cell's output.
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "JupyterHtml")]
+    [Cmdlet(VerbsCommon.Get, "HtmlContent")]
     [OutputType("AspNetCore.Html.IHtmlContent")]
-    public sealed class GetJupyterHtmlCommand : PSCmdlet
+    public sealed class GetHtmlContentCommand : PSCmdlet
     {
         /// <summary>
         /// The object from pipeline.
