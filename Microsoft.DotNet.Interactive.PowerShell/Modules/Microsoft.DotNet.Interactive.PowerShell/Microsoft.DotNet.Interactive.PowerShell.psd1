@@ -52,7 +52,9 @@ CmdletsToExport = @(
     'Get-JupyterHtml',
     'Invoke-JupyterJavaScript',
     'Show-JupyterContent',
-    'Trace-PipelineObject')
+    'Trace-PipelineObject',
+    'New-PlotlyChart',
+    'New-PlotlyTrace')
 
 # Variables to export from this module
 VariablesToExport = '*'

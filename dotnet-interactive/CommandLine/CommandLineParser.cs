@@ -233,7 +233,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseMathAndLaTeX());
 
             compositeKernel.Add(
-                new PowerShellKernel(), new[] { "#!pwsh" });
+                new PowerShellKernel()
+                    .UseXplot()
+                , new[] { "#!pwsh" });
 
             var kernel = compositeKernel
                 .UseDefaultMagicCommands()

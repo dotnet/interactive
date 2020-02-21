@@ -102,6 +102,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.0.0-rc.2" />
+    <PackageReference Include="FSharp.Core" />
+    <PackageReference Include="XPlot.Plotly" Version="3.0.1" />
   </ItemGroup>
 
   <!-- Copies anything in the Modules folder into the output (including the helper module's module manifest) -->
