@@ -15,19 +15,26 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
     /// </summary>
     [Cmdlet(VerbsCommon.New, "PlotlyChart")]
     [OutputType("XPlot.Plotly.Chart")]
+    [Alias("npc")]
     public sealed class NewPlotlyChartCommand : PSCmdlet
     {
         /// <summary>
-        /// The object from pipeline.
+        /// The traces to show in a chart.
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
         public Trace[] Trace { get; set; }
 
+        /// <summary>
+        /// The title of the chart.
+        /// </summary>
         [Parameter(Position = 1)]
         public string Title { get; set; }  = "Untitled Chart";
 
         private List<Trace> _traces;
 
+        /// <summary>
+        /// BeginProcessing override.
+        /// </summary>
         protected override void BeginProcessing()
         {
             _traces = new List<Trace>();
@@ -41,6 +48,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
             _traces.AddRange(Trace);
         }
 
+        /// <summary>
+        /// EndProcessing override.
+        /// </summary>
         protected override void EndProcessing()
         {
             var chart = Chart.Plot(_traces);

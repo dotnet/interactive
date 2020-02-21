@@ -11,9 +11,10 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
     /// Takes the the input and displays it on the client using .NET Interactive's formatters.
     /// This returns a DisplayedValue that can then be updated by calling `Update` on the object.
     /// </summary>
-    [Cmdlet(VerbsCommon.Show, "JupyterContent")]
+    [Cmdlet(VerbsData.Out, "Display")]
     [OutputType("Interactive.Events.DisplayedValue")]
-    public sealed class ShowJupyterContentCommand : PSCmdlet
+    [Alias("od")]
+    public sealed class OutDisplayCommand : PSCmdlet
     {
         /// <summary>
         /// The object from pipeline.
