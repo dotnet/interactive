@@ -10,8 +10,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
     using System.Management.Automation;
 
     /// <summary>
-    /// Takes the the string input and turns it into an IHtmlContent that can be passed in to
-    /// Show-JupyterContent to render Html in a Jupyter cell's output.
+    /// Creates a new Plotly Chart object.
     /// </summary>
     [Cmdlet(VerbsCommon.New, "PlotlyChart")]
     [OutputType("XPlot.Plotly.Chart")]
