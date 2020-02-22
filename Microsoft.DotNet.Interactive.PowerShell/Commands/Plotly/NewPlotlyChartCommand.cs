@@ -30,6 +30,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
         [Parameter(Position = 1)]
         public string Title { get; set; }  = string.Empty;
 
+        /// <summary>
+        /// The title of the chart.
+        /// </summary>
+        [Parameter(Position = 1)]
+        public Layout.Layout Layout { get; set; }
+
         private List<Trace> _traces;
 
         /// <summary>
@@ -55,6 +61,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
         {
             var chart = Chart.Plot(_traces);
             chart.WithTitle(Title);
+
+            if (Layout != null)
+            {
+                chart.WithLayout(Layout);
+            }
+
             WriteObject(chart);
         }
     }
