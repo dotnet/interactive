@@ -53,10 +53,15 @@ namespace Microsoft.DotNet.Interactive
                 kernelBase.AddMiddleware(LoadExtensions);
             }
 
-            var chooseKernelCommand = new Command($"#!{kernel.Name}")
+            var chooseKernelCommand = new Command(
+                $"#!{kernel.Name}", 
+                $"Run the code that follows using the {kernel.Name} kernel.")
             {
                 Handler = CommandHandler.Create<KernelInvocationContext>(
-                    context => { context.HandlingKernel = kernel; })
+                    context =>
+                    {
+                        context.HandlingKernel = kernel;
+                    })
             };
 
             if (aliases is { })

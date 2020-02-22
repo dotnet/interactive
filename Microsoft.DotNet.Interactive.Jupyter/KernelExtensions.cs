@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Diagnostics;
@@ -51,7 +50,7 @@ using static {typeof(Kernel).FullName};
         private static T UseHtml<T>(this T kernel)
             where T : KernelBase
         {
-            kernel.AddDirective(new Command("#!html")
+            kernel.AddDirective(new Command("#!html", "Render the code that follows as HTML")
             {
                 Handler = CommandHandler.Create((KernelInvocationContext context) =>
                 {
@@ -85,7 +84,7 @@ using static {typeof(Kernel).FullName};
                    .UseAdvancedExtensions()
                    .Build();
 
-            kernel.AddDirective(new Command("#!markdown")
+            kernel.AddDirective(new Command("#!markdown", "Convert the code that follows from Markdown into HTML")
             {
                 Handler = CommandHandler.Create((KernelInvocationContext context) =>
                 {
@@ -134,18 +133,6 @@ using static {typeof(Kernel).FullName};
             return kernel;
         }
 
-        public static T AddEnrichInvocationContextMiddleware<T>(this T kernel, Func<Dictionary<string,object>> getEnvironment )
-            where T : KernelBase
-        {
-            kernel.AddMiddleware(async (command, context, next) =>
-            {
-                var env = getEnvironment();
-                
-                await next(command, context);
-            });
-            return kernel;
-        }
-
         private static T UseTime<T>(this T kernel)
             where T : KernelBase
         {
@@ -155,7 +142,7 @@ using static {typeof(Kernel).FullName};
 
             static Command time()
             {
-                return new Command("#!time")
+                return new Command("#!time", "Time the execution of the following code in the submission.")
                 {
                     Handler = CommandHandler.Create((KernelInvocationContext context) =>
                     {
@@ -213,7 +200,7 @@ using static {typeof(Kernel).FullName};
 
         private static Command lsmagic()
         {
-            return new Command("#!lsmagic")
+            return new Command("#!lsmagic", "List the available magic commands / directives in all loaded kernels")
             {
                 Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
                 {
@@ -239,7 +226,7 @@ using static {typeof(Kernel).FullName};
 
         private static Command javascript()
         {
-            return new Command("#!javascript")
+            return new Command("#!javascript", "Run the code that follows in JavaScript in the notebook frontend.")
             {
                 Handler = CommandHandler.Create((KernelInvocationContext context) =>
                 {
