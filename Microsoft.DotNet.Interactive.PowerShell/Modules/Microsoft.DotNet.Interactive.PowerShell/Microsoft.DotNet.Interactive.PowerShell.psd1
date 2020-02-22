@@ -50,11 +50,13 @@ FunctionsToExport = @()
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @(
     'Get-HtmlContent'
-    'Use-JavaScript'
+    'New-PlotlyChart'
+    'New-PlotlyLayout'
+    'New-PlotlyObject'
+    'New-PlotlyTrace'
     'Out-Display'
     'Trace-PipelineObject'
-    'New-PlotlyChart'
-    'New-PlotlyTrace'
+    'Use-JavaScript'
 )
 
 # Variables to export from this module
@@ -64,6 +66,8 @@ VariablesToExport = '*'
 AliasesToExport = @(
     'ghc'
     'npc'
+    'npl'
+    'npo'
     'npt'
     'od'
     'uj'
