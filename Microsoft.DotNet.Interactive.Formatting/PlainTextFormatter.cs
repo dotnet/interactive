@@ -68,6 +68,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }
             }
 
+            if (typeof(T).IsEnum)
+            {
+                return (enumValue, writer) =>
+                {
+                    writer.Write(enumValue.ToString());
+                };
+            }
+
             return FormatObject;
 
             void FormatObject(T target, TextWriter writer)

@@ -46,15 +46,10 @@ ENV DOTNET_RUNNING_IN_CONTAINER=true \
     # Opt out of telemetry until after we install jupyter when building the image, this prevents caching of machine id
     DOTNET_TRY_CLI_TELEMETRY_OPTOUT=true
 
-# Trigger first run experience by running arbitrary cmd
-RUN dotnet help
-
 # Copy notebooks
-
 COPY ./NotebookExamples/ ${HOME}/Notebooks/
 
 # Copy package sources
-
 COPY ./NuGet.config ${HOME}/nuget.config
 
 RUN chown -R ${NB_UID} ${HOME}

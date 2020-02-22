@@ -7,6 +7,7 @@ using System.Dynamic;
 using System.IO;
 using FluentAssertions;
 using System.Linq;
+using FluentAssertions.Extensions;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
@@ -266,6 +267,32 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 var formatted = tuple.ToDisplayString(formatter);
 
                 formatted.Should().Be("( 123, Hello, [ 1, 2, 3 ] )");
+            }
+
+            [Fact]
+            public void Enums_are_formatted_using_their_names()
+            {
+                var formatter = PlainTextFormatter.Create(typeof(FileAccess));
+
+                var writer = new StringWriter();
+
+                formatter.Format(FileAccess.ReadWrite, writer);
+
+                writer.ToString().Should().Be("ReadWrite");
+            }
+
+            [Fact]
+            public void TimeSpan_is_not_destructured()
+            {
+                var formatter = PlainTextFormatter.Create(typeof(TimeSpan));
+
+                var writer = new StringWriter();
+
+                var timespan = 25.Milliseconds();
+
+                formatter.Format(timespan, writer);
+
+                writer.ToString().Should().Be(timespan.ToString());
             }
         }
 
