@@ -8,6 +8,7 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using FluentAssertions;
+using FluentAssertions.Extensions;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
@@ -195,6 +196,33 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 writer.ToString()
                       .Should()
                       .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/System.String?view=netcore-3.0\">System.String</a></span>");
+            }
+
+            
+            [Fact]
+            public void Enums_are_formatted_using_their_names()
+            {
+                var formatter = HtmlFormatter.Create(typeof(FileAccess));
+
+                var writer = new StringWriter();
+
+                formatter.Format(FileAccess.ReadWrite, writer);
+
+                writer.ToString().Should().Contain("ReadWrite");
+            }
+
+            [Fact]
+            public void TimeSpan_is_not_destructured()
+            {
+                var formatter = HtmlFormatter.Create(typeof(TimeSpan));
+
+                var writer = new StringWriter();
+
+                var timespan = 25.Milliseconds();
+
+                formatter.Format(timespan, writer);
+
+                writer.ToString().Should().Contain(timespan.ToString());
             }
         }
 

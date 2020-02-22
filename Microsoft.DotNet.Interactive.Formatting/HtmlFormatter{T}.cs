@@ -36,6 +36,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return ft;
             }
 
+            if (typeof(T).IsEnum)
+            {
+                return new HtmlFormatter<T>((enumValue, writer) =>
+                {
+                    writer.Write(enumValue.ToString());
+                });
+            }
+
             if (typeof(IEnumerable).IsAssignableFrom(typeof(T)))
             {
                 return CreateForSequence(includeInternals);

@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                             writer.Write(array.ToDisplayString());
                         },
                         PlainTextFormatter.MimeType);
-                }
+                },
             };
         }
 
@@ -83,6 +83,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 [typeof(ReadOnlyMemory<char>)] = Formatter.Create<ReadOnlyMemory<char>>((memory, writer) =>
                 {
                     writer.Write(memory.Span.ToString());
+                }, PlainTextFormatter.MimeType),
+                
+                [typeof(TimeSpan)] = Formatter.Create<TimeSpan>((timespan, writer) =>
+                {
+                    writer.Write(timespan.ToString());
                 }, PlainTextFormatter.MimeType),
 
                 [typeof(Type)] = new PlainTextFormatter<Type>((type, writer) =>

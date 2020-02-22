@@ -88,6 +88,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 [typeof(string)] = new HtmlFormatter<string>((s, writer) => writer.Write(s)),
 
+                [typeof(TimeSpan)] = Formatter.Create<TimeSpan>((timespan, writer) =>
+                {
+                    writer.Write(timespan.ToString());
+                }, HtmlFormatter.MimeType),
+
                 [typeof(Type)] = _formatterForSystemType,
 
                 [typeof(Type).GetType()] = _formatterForSystemType,
