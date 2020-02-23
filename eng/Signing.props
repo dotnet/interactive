@@ -15,6 +15,35 @@
 
     <!-- PowerShell Modules that are shipped with the PowerShell subkernel -->
 
+    <!-- CimCmdlets -->
+    <FileSignInfo Include="CimCmdlets.psd1" CertificateName="None" />
+
+    <!-- Microsoft.PowerShell.Diagnostics -->
+    <FileSignInfo Include="Microsoft.PowerShell.Diagnostics.psd1" CertificateName="None" />
+    <FileSignInfo Include="Diagnostics.format.ps1xml" CertificateName="None" />
+    <FileSignInfo Include="Event.format.ps1xml" CertificateName="None" />
+    <FileSignInfo Include="GetEvent.types.ps1xml" CertificateName="None" />
+
+    <!-- Microsoft.PowerShell.Host -->
+    <FileSignInfo Include="Microsoft.PowerShell.Host.psd1" CertificateName="None" />
+
+    <!-- Microsoft.PowerShell.Management -->
+    <FileSignInfo Include="Microsoft.PowerShell.Management.psd1" CertificateName="None" />
+
+    <!-- Microsoft.PowerShell.Security -->
+    <FileSignInfo Include="Microsoft.PowerShell.Security.psd1" CertificateName="None" />
+
+    <!-- Microsoft.PowerShell.Utility -->
+    <FileSignInfo Include="Microsoft.PowerShell.Utility.psd1" CertificateName="None" />
+
+    <!-- Microsoft.WSMan.Management -->
+    <FileSignInfo Include="Microsoft.WSMan.Management.psd1" CertificateName="None" />
+    <FileSignInfo Include="WSMan.format.ps1xml" CertificateName="None" />
+
+    <!-- PSDiagnostics -->
+    <FileSignInfo Include="PSDiagnostics.psd1" CertificateName="None" />
+    <FileSignInfo Include="PSDiagnostics.psm1" CertificateName="None" />
+
     <!-- Microsoft.PowerShell.Archive -->
     <FileSignInfo Include="Microsoft.PowerShell.Archive.cat" CertificateName="None" />
     <FileSignInfo Include="Microsoft.PowerShell.Archive.psd1" CertificateName="None" />
