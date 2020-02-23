@@ -16,8 +16,7 @@ namespace XPlot.DotNet.Interactive.KernelExtensions
             var jsElement = chart.GetInlineJS().Replace("<script>", string.Empty).Replace("</script>",string.Empty);
             
             return $@"{divElement}
-{GetScriptElementWithRequire(jsElement)}"
-                   ;
+{GetScriptElementWithRequire(jsElement)}"                   ;
         }
 
         private static IHtmlContent GetScriptElementWithRequire(string script)

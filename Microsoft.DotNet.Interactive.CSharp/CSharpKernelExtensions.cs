@@ -286,7 +286,7 @@ using static {typeof(Kernel).FullName};
 
         private static Command who_and_whos()
         {
-            var command = new Command("#!whos")
+            var command = new Command("#!whos", "Display the names of the current top-level variables and their values.")
             {
                 Handler = CommandHandler.Create((ParseResult parseResult, KernelInvocationContext context) =>
                 {

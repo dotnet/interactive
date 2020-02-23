@@ -155,44 +155,59 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 var rows = new List<IHtmlContent>();
                 List<IHtmlContent> headers = null;
 
-                foreach (var item in getValues(instance))
+                var values = getValues(instance);
+
+                foreach (var item in values)
                 {
-                    var destructurer1 = destructurer;
-                    if (destructurer == null)
+                    if (index < Formatter.ListExpansionLimit)
                     {
-                        if (item != null)
+                        if (destructurer == null)
                         {
-                            destructurer1 = Destructurer.Create(item.GetType());
-                        }
-                        else
-                        {
-                            destructurer1 = NonDestructurer.Instance;
-                        }
-                    }
-
-                    var dictionary = destructurer1.Destructure(item);
-
-                    if (headers == null)
-                    {
-                        headers = new List<IHtmlContent>();
-                        headers.Add(indexHeader);
-                        headers.AddRange(dictionary.Keys
-                                                   .Select(k => (IHtmlContent) th(k)));
-                    }
-
-                    var cells =
-                        new IHtmlContent[]
+                            if (item != null)
                             {
-                                td(getIndex().ToHtmlContent())
+                                destructurer = Destructurer.Create(item.GetType());
                             }
-                            .Concat(
-                                dictionary
-                                    .Values
-                                    .Select(v => (IHtmlContent) td(v)));
+                            else
+                            {
+                                destructurer = NonDestructurer.Instance;
+                            }
+                        }
 
-                    rows.Add(tr(cells));
+                        var dictionary = destructurer.Destructure(item);
 
-                    index++;
+                        if (headers == null)
+                        {
+                            headers = new List<IHtmlContent>();
+                            headers.Add(indexHeader);
+                            headers.AddRange(dictionary.Keys
+                                                       .Select(k => (IHtmlContent) th(k)));
+                        }
+
+                        var cells =
+                            new IHtmlContent[]
+                                {
+                                    td(getIndex().ToHtmlContent())
+                                }
+                                .Concat(
+                                    dictionary
+                                        .Values
+                                        .Select(v => (IHtmlContent) td(v)));
+
+                        rows.Add(tr(cells));
+
+                        index++;
+                    }
+                    else
+                    {
+                        var more = values switch
+                        {
+                            ICollection c => $"({c.Count - index} more)",
+                            _ => "(more...)"
+                        };
+
+                        rows.Add(tr(td[colspan: $"{headers.Count}"](more)));
+                        break;
+                    }
                 }
 
                 var view = HtmlFormatter.Table(headers, rows);

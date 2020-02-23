@@ -333,6 +333,27 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
 
             [Fact]
+            public void Formatter_truncates_expansion_of_long_IDictionary()
+            {
+                var list = new Dictionary<string, int>();
+                for (var i = 1; i < 11; i++)
+                {
+                    list.Add("number " + i, i);
+                }
+
+                Formatter.ListExpansionLimit = 4;
+
+                var formatter = PlainTextFormatter.Create(list.GetType());
+
+                var formatted = list.ToDisplayString(formatter);
+
+                formatted.Contains("number 1").Should().BeTrue();
+                formatted.Contains("number 4").Should().BeTrue();
+                formatted.Should().NotContain("number 5");
+                formatted.Contains("6 more").Should().BeTrue();
+            }
+
+            [Fact]
             public void Formatter_iterates_IEnumerable_property_when_its_reflected_type_is_array()
             {
                 var node = new Node
