@@ -80,15 +80,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     pair.Value.FormatTo(writer);
                 }),
 
-                [typeof(ReadOnlyMemory<char>)] = Formatter.Create<ReadOnlyMemory<char>>((memory, writer) =>
+                [typeof(ReadOnlyMemory<char>)] = new PlainTextFormatter<ReadOnlyMemory<char>>((memory, writer) =>
                 {
                     writer.Write(memory.Span.ToString());
-                }, PlainTextFormatter.MimeType),
+                }),
                 
-                [typeof(TimeSpan)] = Formatter.Create<TimeSpan>((timespan, writer) =>
+                [typeof(TimeSpan)] = new PlainTextFormatter<TimeSpan>((timespan, writer) =>
                 {
                     writer.Write(timespan.ToString());
-                }, PlainTextFormatter.MimeType),
+                }),
 
                 [typeof(Type)] = new PlainTextFormatter<Type>((type, writer) =>
                 {
@@ -118,6 +118,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }),
 
                 [typeof(DateTime)] = new PlainTextFormatter<DateTime>((value, writer) => writer.Write(value.ToString("u"))),
+
                 [typeof(DateTimeOffset)] = new PlainTextFormatter<DateTimeOffset>((value, writer) => writer.Write(value.ToString("u")))
             };
         }

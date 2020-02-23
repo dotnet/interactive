@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var s = "hello".ToDisplayString(formatter);
 
-                s.Should().Be("hello");
+                s.Should().Be("<span>hello</span>");
             }
 
             [Fact]
@@ -335,10 +335,52 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var html = sorted.ToDisplayString("text/html");
 
-                html.ToDisplayString("text/html")
-                    .Should()
+                html.Should()
                     .Be(
                         "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>kiwi</td></tr><tr><td>1</td><td>apple</td></tr><tr><td>2</td><td>plantain</td></tr></tbody></table>");
+            }
+
+            [Fact]
+            public void Formatter_truncates_expansion_of_long_IEnumerable()
+            {
+                var list = new List<string>();
+                for (var i = 1; i < 11; i++)
+                {
+                    list.Add("number " + i);
+                }
+
+                Formatter.ListExpansionLimit = 4;
+
+                var formatter = HtmlFormatter.Create(list.GetType());
+
+                var formatted = list.ToDisplayString(formatter);
+
+                formatted.Contains("number 1").Should().BeTrue();
+                formatted.Contains("number 4").Should().BeTrue();
+                formatted.Should().NotContain("number 5");
+                formatted.Contains("6 more").Should().BeTrue();
+            }
+
+            [Fact]
+            public void Formatter_truncates_expansion_of_long_IDictionary()
+            {
+                var list = new Dictionary<string, int>();
+
+                for (var i = 1; i < 11; i++)
+                {
+                    list.Add("number " + i, i);
+                }
+
+                Formatter.ListExpansionLimit = 4;
+
+                var formatter = HtmlFormatter.Create(list.GetType());
+
+                var formatted = list.ToDisplayString(formatter);
+
+                formatted.Contains("number 1").Should().BeTrue();
+                formatted.Contains("number 4").Should().BeTrue();
+                formatted.Should().NotContain("number 5");
+                formatted.Contains("6 more").Should().BeTrue();
             }
 
             [Fact(Skip = "wip")]

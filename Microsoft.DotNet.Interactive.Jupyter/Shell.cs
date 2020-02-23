@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Clockwise;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
@@ -16,6 +17,7 @@ using NetMQ.Sockets;
 using Pocket;
 using Recipes;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Jupyter.Shell>;
+using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
@@ -132,22 +134,16 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         public static void SetupDefaultMimeTypes()
         {
-            Microsoft.DotNet.Interactive.Formatting.Formatter<LaTeXString>.Register((laTeX, writer) =>
-                {
-                    writer.Write(laTeX.ToString());
-                },
-                "text/latex");
+            Formatter<LaTeXString>.Register((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
 
-            Microsoft.DotNet.Interactive.Formatting.Formatter<MathString>.Register((math, writer) =>
-                {
-                    writer.Write(math.ToString());
-                },
-                "text/latex");
+            Formatter<MathString>.Register((math, writer) => writer.Write(math.ToString()), "text/latex");
 
-            Microsoft.DotNet.Interactive.Formatting.Formatter.SetPreferredMimeTypeFor(typeof(LaTeXString), "text/latex");
-            Microsoft.DotNet.Interactive.Formatting.Formatter.SetPreferredMimeTypeFor(typeof(MathString), "text/latex");
-            Microsoft.DotNet.Interactive.Formatting.Formatter.SetPreferredMimeTypeFor(typeof(string), Microsoft.DotNet.Interactive.Formatting.PlainTextFormatter.MimeType);
-            Microsoft.DotNet.Interactive.Formatting.Formatter.SetDefaultMimeType(Microsoft.DotNet.Interactive.Formatting.HtmlFormatter.MimeType);
+            Formatter.SetPreferredMimeTypeFor(typeof(LaTeXString), "text/latex");
+            Formatter.SetPreferredMimeTypeFor(typeof(MathString), "text/latex");
+            
+            Formatter.SetPreferredMimeTypeFor(typeof(string), HtmlFormatter.MimeType);
+            
+            Formatter.SetDefaultMimeType(HtmlFormatter.MimeType);
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

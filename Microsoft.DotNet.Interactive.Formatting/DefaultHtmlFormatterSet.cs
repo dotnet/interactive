@@ -8,6 +8,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
+using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -56,20 +57,19 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     foreach (var pair in obj.OrderBy(p => p.Key))
                     {
-                        headers.Add(PocketViewTags.th(pair.Key));
-                        values.Add(PocketViewTags.td(pair.Value));
+                        headers.Add(th(pair.Key));
+                        values.Add(td(pair.Value));
                     }
 
-                    PocketView t = PocketViewTags.table(
-                        PocketViewTags.thead(
-                            PocketViewTags.tr(
+                    IHtmlContent view = table(
+                        thead(
+                            tr(
                                 headers)),
-                        PocketViewTags.tbody(
-                            PocketViewTags.tr(
-                                values))
-                    );
+                        tbody(
+                            tr(
+                                values)));
 
-                    t.WriteTo(writer, HtmlEncoder.Default);
+                    view.WriteTo(writer, HtmlEncoder.Default);
                 }),
 
                 [typeof(HtmlString)] = new HtmlFormatter<HtmlString>((view, writer) => view.WriteTo(writer, HtmlEncoder.Default)),
@@ -78,20 +78,19 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 [typeof(PocketView)] = new HtmlFormatter<PocketView>((view, writer) => view.WriteTo(writer, HtmlEncoder.Default)),
 
-                [typeof(ReadOnlyMemory<char>)] = Formatter.Create<ReadOnlyMemory<char>>((memory, writer) =>
+                [typeof(ReadOnlyMemory<char>)] = new HtmlFormatter<ReadOnlyMemory<char>>((memory, writer) =>
                 {
-                    PocketView view = PocketViewTags.span(memory.Span.ToString());
+                    PocketView view = span(memory.Span.ToString());
 
                     view.WriteTo(writer, HtmlEncoder.Default);
+                }),
 
-                }, HtmlFormatter.MimeType),
+                [typeof(string)] = new HtmlFormatter<string>((s, writer) => writer.Write(span(s))),
 
-                [typeof(string)] = new HtmlFormatter<string>((s, writer) => writer.Write(s)),
-
-                [typeof(TimeSpan)] = Formatter.Create<TimeSpan>((timespan, writer) =>
+                [typeof(TimeSpan)] = new HtmlFormatter<TimeSpan>((timespan, writer) =>
                 {
                     writer.Write(timespan.ToString());
-                }, HtmlFormatter.MimeType),
+                }),
 
                 [typeof(Type)] = _formatterForSystemType,
 
@@ -100,8 +99,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         private static readonly HtmlFormatter<Type> _formatterForSystemType  = new HtmlFormatter<Type>((type, writer) =>
         {
-            PocketView view = PocketViewTags.span(
-                PocketViewTags.a[href: $"https://docs.microsoft.com/dotnet/api/{type.FullName}?view=netcore-3.0"](
+            PocketView view = span(
+                a[href: $"https://docs.microsoft.com/dotnet/api/{type.FullName}?view=netcore-3.0"](
                     type.ToDisplayString()));
 
             view.WriteTo(writer, HtmlEncoder.Default);

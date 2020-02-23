@@ -203,7 +203,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         break;
 
                     default:
-
                         if (arg is IEnumerable<object> seq &&
                             seq.All(s => s is IHtmlContent))
                         {
