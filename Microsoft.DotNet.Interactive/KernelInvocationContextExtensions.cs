@@ -36,10 +36,10 @@ namespace Microsoft.DotNet.Interactive
             return Task.FromResult(new DisplayedValue(displayId, mimeType, context));
         }
         
-        public static void PublishStandardOut(
+        public static void DisplayStandardOut(
             this KernelInvocationContext context,
             string output,
-            IKernelCommand command)
+            IKernelCommand command = null)
         {
             var formattedValues = new List<FormattedValue>
             {
@@ -50,14 +50,14 @@ namespace Microsoft.DotNet.Interactive
             context.Publish(
                 new StandardOutputValueProduced(
                     output,
-                    command,
+                    command ?? context.Command,
                     formattedValues));
         }
 
-        public static void PublishStandardError(
+        public static void DisplayStandardError(
             this KernelInvocationContext context,
             string error,
-            IKernelCommand command)
+            IKernelCommand command = null)
         {
             var formattedValues = new List<FormattedValue>
             {
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Interactive
             context.Publish(
                 new StandardErrorValueProduced(
                     error,
-                    command,
+                    command ?? context.Command,
                     formattedValues));
         }
     }

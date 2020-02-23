@@ -81,8 +81,8 @@ namespace Microsoft.DotNet.Interactive
                 {
                     return new CompositeDisposable
                     {
-                        c.Out.Subscribe(s => context.PublishStandardOut(s, command)),
-                        c.Error.Subscribe(s => context.PublishStandardError(s, command))
+                        c.Out.Subscribe(s => context.DisplayStandardOut(s, command)),
+                        c.Error.Subscribe(s => context.DisplayStandardError(s, command))
                     };
                 });
 
