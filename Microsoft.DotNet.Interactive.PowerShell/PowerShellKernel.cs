@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 Environment.SetEnvironmentVariable("POWERSHELL_DISTRIBUTION_CHANNEL", "dotnet-interactive-powershell");
 
                 // Create PowerShell instance
-                var iss = InitialSessionState.CreateDefault();
+                var iss = InitialSessionState.CreateDefault2();
                 if(Platform.IsWindows)
                 {
                     // This sets the execution policy on Windows to RemoteSigned.

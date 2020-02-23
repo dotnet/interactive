@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" InitialTargets="PSRestoreBuiltInModules;GetNuGetPackageRoot">
+﻿<Project Sdk="Microsoft.NET.Sdk" InitialTargets="GetNuGetPackageRoot">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -11,30 +11,11 @@
     <NoWarn>;NU5104;2003;8002</NoWarn>
   </PropertyGroup>
 
-  <!-- Restore the module manifests for built in modules. This is temporary until https://github.com/PowerShell/PowerShell/issues/11783 is fixed. -->
-  <Target Name="PSRestoreBuiltInModules">
-    <PropertyGroup>
-      <PSUtilityUrl>https://raw.githubusercontent.com/PowerShell/PowerShell/v7.0.0-rc.2/src/Modules/Windows/Microsoft.PowerShell.Utility/Microsoft.PowerShell.Utility.psd1</PSUtilityUrl>
-      <PSManagementUrl>https://raw.githubusercontent.com/PowerShell/PowerShell/v7.0.0-rc.2/src/Modules/Windows/Microsoft.PowerShell.Management/Microsoft.PowerShell.Management.psd1</PSManagementUrl>
-    </PropertyGroup>
-
-    <PropertyGroup>
-      <PSUtilityFolder>$(MSBuildProjectDirectory)\Modules\Microsoft.PowerShell.Utility</PSUtilityFolder>
-      <PSManagementFolder>$(MSBuildProjectDirectory)\Modules\Microsoft.PowerShell.Management</PSManagementFolder>
-    </PropertyGroup>
-
-    <MakeDir Directories="$(PSUtilityFolder)" />
-    <MakeDir Directories="$(PSManagementFolder)" />
-
-    <DownloadFile SourceUrl="$(PSUtilityUrl)" DestinationFolder="$(PSUtilityFolder)" />
-    <DownloadFile SourceUrl="$(PSManagementUrl)" DestinationFolder="$(PSManagementFolder)" />
-  </Target>
-
   <!-- PowerShell Module Versions -->
   <PropertyGroup>
     <PackageManagementVersion>1.4.6</PackageManagementVersion>
     <PowerShellGetVersion>2.2.3</PowerShellGetVersion>
-    <MicrosoftPowerShellArchiveVersion>1.2.4</MicrosoftPowerShellArchiveVersion>
+    <MicrosoftPowerShellArchiveVersion>1.2.5</MicrosoftPowerShellArchiveVersion>
     <ThreadJobVersion>2.0.3</ThreadJobVersion>
   </PropertyGroup>
 
@@ -101,8 +82,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.0.0-rc.2" />
-    <PackageReference Include="FSharp.Core" />
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.0.0-rc.3" />
     <PackageReference Include="XPlot.Plotly" Version="3.0.1" />
   </ItemGroup>
 
