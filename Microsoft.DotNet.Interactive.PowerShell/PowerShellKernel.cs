@@ -7,11 +7,13 @@ using System.IO;
 using System.Linq;
 using System.Management.Automation.Language;
 using System.Management.Automation.Runspaces;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.PowerShell.Commands;
+using XPlot.Plotly;
 
 namespace Microsoft.DotNet.Interactive.PowerShell
 {
@@ -56,6 +58,19 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                     $"{psJupyterModulePath}{Path.PathSeparator}{psModulePath}");
 
                 RegisterForDisposal(pwsh);
+
+                // Register type accelerators for Plotly.
+                var accelerator = typeof(PSObject).Assembly.GetType("System.Management.Automation.TypeAccelerators");
+                MethodInfo addAccelerator = accelerator.GetMethod("Add", new Type[] { typeof(string), typeof(Type) });
+                foreach (Type type in typeof(Graph).GetNestedTypes())
+                {
+                    addAccelerator.Invoke(null, new object[] { type.Name, type });
+                }
+
+                // Add accelerators that exist in other namespaces.
+                addAccelerator.Invoke(null, new object[] { "Layout", typeof(Layout.Layout) });
+                addAccelerator.Invoke(null, new object[] { "Chart", typeof(Chart) });
+
                 return pwsh;
             });
         }
