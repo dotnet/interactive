@@ -898,6 +898,8 @@ for ($j = 1; $j -le 4; $j++ ) {
             var accelerator = typeof(PSObject).Assembly.GetType("System.Management.Automation.TypeAccelerators");
             dynamic typeAccelerators = accelerator.GetProperty("Get").GetValue(null);
             Assert.Equal(typeAccelerators["Graph.Scatter"].FullName, $"{typeof(Graph).FullName}+Scatter");
+            Assert.Equal(typeAccelerators["Layout"].FullName, $"{typeof(Layout).FullName}+Layout");
+            Assert.Equal(typeAccelerators["Chart"].FullName, typeof(Chart).FullName);
         }
     }
 }
