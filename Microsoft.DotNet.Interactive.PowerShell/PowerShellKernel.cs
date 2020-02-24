@@ -73,7 +73,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                     $"{psJupyterModulePath}{Path.PathSeparator}{psModulePath}");
 
                 RegisterForDisposal(pwsh);
-
                 return pwsh;
             });
         }
