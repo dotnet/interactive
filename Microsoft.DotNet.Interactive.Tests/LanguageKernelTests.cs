@@ -11,6 +11,7 @@ using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using XPlot.Plotly;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -880,6 +881,23 @@ for ($j = 1; $j -le 4; $j++ ) {
                     .Value.Should().BeOfType<ProgressRecord>().Which
                     .StatusDescription.Should().Be("100% Complete"),
                 e => e.Should().BeOfType<CommandHandled>());
+        }
+
+        [Fact()]
+        public async Task PowerShell_type_accelerators_present()
+        {
+            var kernel = CreateKernel(Language.PowerShell);
+            var command = new SubmitCode(@"
+            for ($j = 1; $j -le 4; $j++ ) {
+                Write-Progress -Id 1 -Activity 'Search in Progress' -Status ""$($j*25)% Complete"" -PercentComplete $j;
+                Start-Sleep -Milliseconds 10
+            }
+            ");
+            await kernel.SendAsync(command);
+
+            var accelerator = typeof(PSObject).Assembly.GetType("System.Management.Automation.TypeAccelerators");
+            dynamic typeAccelerators = accelerator.GetProperty("Get").GetValue(null);
+            Assert.Equal(typeAccelerators["Graph.Scatter"].FullName, $"{typeof(Graph).FullName}+Scatter");
         }
     }
 }
