@@ -55,7 +55,6 @@ CmdletsToExport = @(
     'New-PlotlyObject'
     'New-PlotlyTrace'
     'Out-Display'
-    'Trace-PipelineObject'
     'Use-JavaScript'
 )
 
