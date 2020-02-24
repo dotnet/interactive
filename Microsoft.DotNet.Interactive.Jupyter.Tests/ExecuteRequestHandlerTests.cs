@@ -9,6 +9,7 @@ using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests;
+using Newtonsoft.Json.Linq;
 using Pocket;
 using Recipes;
 using Xunit;
@@ -140,6 +141,21 @@ f();"));
             await context.Done().Timeout(20.Seconds());
 
             JupyterMessageSender.PubSubMessages.Should().Contain(r => r is DisplayData);
+        }
+
+        [Fact]
+        public async Task sends_DisplayData_message_with_json_when_json_mimetype_is_requested()
+        {
+            var scheduler = CreateScheduler();
+            var request = ZeroMQMessage.Create(new ExecuteRequest(@"display(2+2,""application/json"");"));
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            await scheduler.Schedule(context);
+
+            await context.Done().Timeout(20.Seconds());
+
+            JupyterMessageSender.PubSubMessages
+                .Should()
+                .ContainSingle<DisplayData>(r => r.Data["application/json"] is JToken token && token.Type ==JTokenType.Integer);
         }
 
         [Theory]

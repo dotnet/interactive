@@ -12,7 +12,7 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Newtonsoft.Json.Linq;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             var formattedValues = displayEvent
                 .FormattedValues
-                .ToDictionary(k => k.MimeType, v => (object) v.Value);
+                .ToDictionary(k => k.MimeType, v => (object) PreserveJson(v.MimeType, displayEvent.Value, v.Value));
 
             var value = displayEvent.Value;
             PubSubMessage dataMessage;
@@ -191,6 +191,16 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 // send on io
                 jupyterMessageSender.Send(dataMessage);
             }
+        }
+
+        private object PreserveJson(string mimeType, object rawValue, string formattedValue)
+        {
+            var value =  mimeType switch
+            {
+                "application/json" => (object)JToken.FromObject(rawValue),
+                _ => formattedValue,
+            };
+            return value;
         }
 
         private string GetPlainTextValueOrDefault(Dictionary<string, object> formattedValues, string defaultText)
