@@ -105,7 +105,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             switch (mimeType)
             {
-                case "text/html":
+                case HtmlFormatter.MimeType:
                     if (HtmlFormatter.DefaultFormatters
                                      .TryGetFormatterForType(typeof(T), out var htmlFormatter))
                     {
@@ -113,6 +113,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     }
 
                     return HtmlFormatter<T>.Create();
+
+                case JsonFormatter.MimeType:
+                    if (JsonFormatter.DefaultFormatters
+                                     .TryGetFormatterForType(typeof(T), out var jsonFormatter))
+                    {
+                        return jsonFormatter;
+                    }
+
+                    return JsonFormatter<T>.Create();
 
                 default:
 

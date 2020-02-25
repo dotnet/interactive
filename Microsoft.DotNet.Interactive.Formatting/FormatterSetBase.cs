@@ -6,21 +6,16 @@ using System.Collections.Concurrent;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    internal class FormatterSetBase : IFormatterSet
+    internal abstract class FormatterSetBase : IFormatterSet
     {
         private Func<Type, ITypeFormatter> _factory = type => null;
 
         protected FormatterSetBase(
-            ConcurrentDictionary<Type, Func<Type, ITypeFormatter>> formatterFactories = null,
             ConcurrentDictionary<Type, ITypeFormatter> formatters = null)
         {
-            FormatterFactories = formatterFactories ??
-                                 new ConcurrentDictionary<Type, Func<Type, ITypeFormatter>>();
             Formatters = formatters ??
                          new ConcurrentDictionary<Type, ITypeFormatter>();
         }
-
-        protected ConcurrentDictionary<Type, Func<Type, ITypeFormatter>> FormatterFactories { get; }
 
         protected ConcurrentDictionary<Type, ITypeFormatter> Formatters { get; }
 
@@ -30,13 +25,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _factory = t => factory(t) ?? previousFactory(t);
         }
 
-        internal void Clear() => FormatterFactories.Clear();
-
         public bool TryGetFormatterForType(Type type, out ITypeFormatter formatter)
         {
             formatter = _factory(type);
-
-            // return formatter != null;
 
             if (formatter != null)
             {
@@ -48,17 +39,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return true;
             }
 
-            if (type.IsGenericType &&
-                FormatterFactories.TryGetValue(
-                    type.GetGenericTypeDefinition(),
-                    out var factory))
+            if (TryInferFormatter(
+                    type,
+                    out formatter))
             {
-                formatter = factory(type);
                 Formatters[type] = formatter;
                 return true;
             }
 
             return false;
         }
+
+        protected abstract bool TryInferFormatter(Type type, out ITypeFormatter formatter);
     }
 }

@@ -294,37 +294,43 @@ using static {typeof(Kernel).FullName};
 
                     var detailed = alias == "#!whos";
 
-                    if (context.Command is SubmitCode &&
-                        context.HandlingKernel is CSharpKernel kernel)
-                    {
-                        var variables = kernel.ScriptState.Variables.Select(v => new CurrentVariable(v.Name, v.Type, v.Value));
-
-                        var currentVariables = new CurrentVariables(
-                            variables,
-                            detailed);
-
-                        var html = currentVariables
-                            .ToDisplayString(HtmlFormatter.MimeType);
-
-                        context.Publish(
-                            new DisplayedValueProduced(
-                                html,
-                                context.Command,
-                                new[]
-                                {
-                                    new FormattedValue(
-                                        HtmlFormatter.MimeType,
-                                        html)
-                                }));
-                    }
+                    Display(context, detailed);
 
                     return Task.CompletedTask;
                 })
             };
 
+            // FIX: (who_and_whos) this should be a separate command with separate help
             command.AddAlias("#!who");
 
             return command;
+
+            void Display(KernelInvocationContext context, bool detailed)
+            {
+                if (context.Command is SubmitCode &&
+                    context.HandlingKernel is CSharpKernel kernel)
+                {
+                    var variables = kernel.ScriptState.Variables.Select(v => new CurrentVariable(v.Name, v.Type, v.Value));
+
+                    var currentVariables = new CurrentVariables(
+                        variables,
+                        detailed);
+
+                    var html = currentVariables
+                        .ToDisplayString(HtmlFormatter.MimeType);
+
+                    context.Publish(
+                        new DisplayedValueProduced(
+                            html,
+                            context.Command,
+                            new[]
+                            {
+                                new FormattedValue(
+                                    HtmlFormatter.MimeType,
+                                    html)
+                            }));
+                }
+            }
         }
 
     

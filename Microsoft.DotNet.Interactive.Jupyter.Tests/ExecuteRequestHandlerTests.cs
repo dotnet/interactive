@@ -174,7 +174,6 @@ f();"));
             JupyterMessageSender.PubSubMessages
                 .OfType<DisplayData>()
                 .Should()
-                
                 .Contain(dp=> dp.Data["text/latex"] as string == expectedDisplayValue);
         }
 
@@ -328,7 +327,7 @@ f();"));
         public async Task password_input_should_not_appear_in_diagnostic_logs()
         {
             var log = new System.Text.StringBuilder();
-            using var _ = Pocket.LogEvents.Subscribe(e => log.Append(e.ToLogString()));
+            using var _ = LogEvents.Subscribe(e => log.Append(e.ToLogString()));
 
             var scheduler = CreateScheduler();
             var request = ZeroMQMessage.Create(new ExecuteRequest("password(\"Password:\")"));
@@ -352,7 +351,7 @@ f();"));
 
             await context.Done().Timeout(20.Seconds());
 
-            JupyterMessageSender.RequestMessages.Should().Contain(r => r.Prompt == prompt && r.Password == true);
+            JupyterMessageSender.RequestMessages.Should().Contain(r => r.Prompt == prompt && r.Password);
             JupyterMessageSender.PubSubMessages
                 .OfType<ExecuteResult>()
                 .Should()
