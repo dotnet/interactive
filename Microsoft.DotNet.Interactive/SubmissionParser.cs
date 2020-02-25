@@ -15,13 +15,15 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal class SubmissionSplitter
+    internal class SubmissionParser
     {
         private Parser _directiveParser;
 
         private RootCommand _rootCommand;
 
         public IReadOnlyList<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
+
+        public IReadOnlyList<IKernelCommand> SplitSubmission(string submission) => SplitSubmission(new SubmitCode(submission));
 
         public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode originalSubmitCode)
         {

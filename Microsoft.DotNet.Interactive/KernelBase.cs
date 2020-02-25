@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly Subject<IKernelEvent> _kernelEvents = new Subject<IKernelEvent>();
         private readonly CompositeDisposable _disposables;
-        private readonly SubmissionSplitter _submissionSplitter = new SubmissionSplitter();
+        private readonly SubmissionParser _submissionParser = new SubmissionParser();
         private readonly ConcurrentQueue<IKernelCommand> _deferredCommands = new ConcurrentQueue<IKernelCommand>();
         private readonly ConcurrentDictionary<Type, object> _properties = new ConcurrentDictionary<Type, object>();
 
@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.Interactive
             KernelInvocationContext context,
             KernelPipelineContinuation continueOnCurrentPipeline)
         {
-            var commands = _submissionSplitter.SplitSubmission(submitCode);
+            var commands = _submissionParser.SplitSubmission(submitCode);
 
             if (!commands.Contains(submitCode))
             {
@@ -163,9 +163,9 @@ namespace Microsoft.DotNet.Interactive
 
         public string Name { get; set; }
 
-        public IReadOnlyCollection<ICommand> Directives => _submissionSplitter.Directives;
+        public IReadOnlyCollection<ICommand> Directives => _submissionParser.Directives;
 
-        public void AddDirective(Command command) => _submissionSplitter.AddDirective(command);
+        public void AddDirective(Command command) => _submissionParser.AddDirective(command);
 
         private class KernelOperation
         {
