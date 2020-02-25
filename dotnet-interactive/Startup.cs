@@ -38,6 +38,8 @@ namespace Microsoft.DotNet.Interactive.App
             IApplicationBuilder app,
             IHostApplicationLifetime lifetime)
         {
+            
+           
         }
     }
 }
