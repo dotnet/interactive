@@ -90,8 +90,8 @@ namespace Microsoft.DotNet.Interactive.App
                                   c.Add(serviceDescriptor);
                               }
                           })
-                          .UseContentRoot(Path.GetDirectoryName(typeof(Program).Assembly.Location))
                           .UseStartup<Startup>()
+                          .UseUrls("http://localhost:5004")
                           .Build();
 
             return webHost;
