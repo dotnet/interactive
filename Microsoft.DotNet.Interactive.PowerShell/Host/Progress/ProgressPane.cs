@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
             string textToRender = string.Join('\n', contents);
             if (_displayValue == null)
             {
-                _displayValue = KernelInvocationContext.Current?.DisplayAsync(textToRender).Result;
+                _displayValue = KernelInvocationContext.Current?.DisplayAsync(textToRender, "text/plain").Result;
             }
             else
             {
