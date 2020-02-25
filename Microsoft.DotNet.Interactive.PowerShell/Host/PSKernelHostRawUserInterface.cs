@@ -90,40 +90,62 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
 
         #region "NotSupported Members"
 
-        public override int CursorSize { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
-        public override Coordinates CursorPosition { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
-        public override bool KeyAvailable => throw new NotSupportedException();
-        public override Coordinates WindowPosition { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
-        public override string WindowTitle { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        private const string NotSupportedFeatureMsg = "This method or property is not supported by the PowerShell kernel.";
+
+        public override int CursorSize
+        {
+            get => throw new NotSupportedException(NotSupportedFeatureMsg);
+            set => throw new NotSupportedException(NotSupportedFeatureMsg);
+        }
+
+        public override Coordinates CursorPosition
+        {
+            get => throw new NotSupportedException(NotSupportedFeatureMsg);
+            set => throw new NotSupportedException(NotSupportedFeatureMsg);
+        }
+
+        public override bool KeyAvailable => throw new NotSupportedException(NotSupportedFeatureMsg);
+
+        public override Coordinates WindowPosition
+        {
+            get => throw new NotSupportedException(NotSupportedFeatureMsg);
+            set => throw new NotSupportedException(NotSupportedFeatureMsg);
+        }
+
+        public override string WindowTitle
+        {
+            get => throw new NotSupportedException(NotSupportedFeatureMsg);
+            set => throw new NotSupportedException(NotSupportedFeatureMsg);
+        }
 
         public override void FlushInputBuffer()
         {
-            throw new NotSupportedException();
+            throw new NotSupportedException(NotSupportedFeatureMsg);
         }
 
         public override BufferCell[,] GetBufferContents(Rectangle rectangle)
         {
-            throw new NotSupportedException();
+            throw new NotSupportedException(NotSupportedFeatureMsg);
         }
 
         public override KeyInfo ReadKey(ReadKeyOptions options)
         {
-            throw new NotSupportedException();
+            throw new NotSupportedException(NotSupportedFeatureMsg);
         }
 
         public override void ScrollBufferContents(Rectangle source, Coordinates destination, Rectangle clip, BufferCell fill)
         {
-            throw new NotSupportedException();
+            throw new NotSupportedException(NotSupportedFeatureMsg);
         }
 
         public override void SetBufferContents(Coordinates origin, BufferCell[,] contents)
         {
-            throw new NotSupportedException();
+            throw new NotSupportedException(NotSupportedFeatureMsg);
         }
 
         public override void SetBufferContents(Rectangle rectangle, BufferCell fill)
         {
-            throw new NotSupportedException();
+            throw new NotSupportedException(NotSupportedFeatureMsg);
         }
 
         #endregion

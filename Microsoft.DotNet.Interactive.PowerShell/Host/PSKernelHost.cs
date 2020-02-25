@@ -44,45 +44,45 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
 
         public override void EnterNestedPrompt()
         {
-            throw new NotImplementedException("Nested prompt scenarios are not support yet.");
+            throw new NotImplementedException("Nested prompt support is coming soon.");
         }
 
         public override void ExitNestedPrompt()
         {
-            throw new NotImplementedException("Nested prompt scenarios are not support yet.");
+            throw new NotImplementedException("Nested prompt support is coming soon.");
         }
 
         public override void NotifyBeginApplication()
         {
-            // Don't need to do anything
+            // Don't need to do anything for the PS kernel.
         }
 
         public override void NotifyEndApplication()
         {
-            // Don't need to do anything
+            // Don't need to do anything for the PS kernel.
         }
 
         public override void SetShouldExit(int exitCode)
         {
-            // No op
+            // Don't need to do anything for the PS kernel.
         }
 
         #endregion
 
         #region "IHostSupportsInteractiveSession Implementation"
 
-        public bool IsRunspacePushed => throw new NotImplementedException();
+        public bool IsRunspacePushed => throw new NotImplementedException("IHostSupportsInteractiveSession support is coming soon.");
 
-        public Runspace Runspace => throw new NotImplementedException();
+        public Runspace Runspace => throw new NotImplementedException("IHostSupportsInteractiveSession support is coming soon.");
 
         public void PopRunspace()
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("IHostSupportsInteractiveSession support is coming soon.");
         }
 
         public void PushRunspace(Runspace runspace)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("IHostSupportsInteractiveSession support is coming soon.");
         }
 
         #endregion
