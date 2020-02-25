@@ -13,34 +13,35 @@ namespace Microsoft.DotNet.Interactive.Formatting
     internal class DefaultPlainTextFormatterSet : FormatterSetBase
     {
         public DefaultPlainTextFormatterSet() :
-            base(DefaultFormatterFactories(),
-                 DefaultFormatters())
+            base(DefaultFormatters())
         {
         }
 
-        private static ConcurrentDictionary<Type, Func<Type, ITypeFormatter>> DefaultFormatterFactories()
+        protected override bool TryInferFormatter(Type type, out ITypeFormatter formatter)
         {
-            return new ConcurrentDictionary<Type, Func<Type, ITypeFormatter>>
+            if (type.IsGenericType &&
+                type.GetGenericTypeDefinition() == typeof(ReadOnlyMemory<>))
             {
-                [typeof(ReadOnlyMemory<>)] = type =>
-                {
-                    return Formatter.Create(
-                        type,
-                        (obj, writer) =>
+                formatter = Formatter.Create(
+                    type,
+                    (obj, writer) =>
+                    {
+                        var toArray = Formatter.FormatReadOnlyMemoryMethod.MakeGenericMethod
+                            (type.GetGenericArguments());
+
+                        var array = toArray.Invoke(null, new[]
                         {
-                            var toArray = Formatter.FormatReadOnlyMemoryMethod.MakeGenericMethod
-                                (type.GetGenericArguments());
+                            obj
+                        });
 
-                            var array = toArray.Invoke(null, new[]
-                            {
-                                obj
-                            });
+                        writer.Write(array.ToDisplayString());
+                    },
+                    PlainTextFormatter.MimeType);
+                return true;
+            }
 
-                            writer.Write(array.ToDisplayString());
-                        },
-                        PlainTextFormatter.MimeType);
-                },
-            };
+            formatter = null;
+            return false;
         }
 
         private static ConcurrentDictionary<Type, ITypeFormatter> DefaultFormatters()

@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             var formattedValues = displayEvent
                 .FormattedValues
-                .ToDictionary(k => k.MimeType, v => (object) PreserveJson(v.MimeType, displayEvent.Value, v.Value));
+                .ToDictionary(k => k.MimeType, v => PreserveJson(v.MimeType, v.Value));
 
             var value = displayEvent.Value;
             PubSubMessage dataMessage;
@@ -193,11 +193,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             }
         }
 
-        private object PreserveJson(string mimeType, object rawValue, string formattedValue)
+        private object PreserveJson(string mimeType, string formattedValue)
         {
-            var value =  mimeType switch
+            var value = mimeType switch
             {
-                "application/json" => (object)JToken.FromObject(rawValue),
+                JsonFormatter.MimeType => (object) JToken.Parse(formattedValue),
                 _ => formattedValue,
             };
             return value;

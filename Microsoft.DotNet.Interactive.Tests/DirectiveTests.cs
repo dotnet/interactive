@@ -224,6 +224,12 @@ i");
                 events
                     .OfType<StandardOutputValueProduced>()
                     .Select(e => e.Value.As<string>()));
+            
+            var stdErr = string.Join(
+                "",
+                events
+                    .OfType<StandardErrorValueProduced>()
+                    .Select(e => e.Value.As<string>()));
 
             stdOut
                 .Should()
@@ -232,6 +238,8 @@ i");
             stdOut
                 .Should()
                 .NotContain(new RootCommand().Name, "RootCommand.Name is generally intended to reflect the command line tool's name but in this case it's just an implementation detail and it looks weird in the output.");
+
+            stdErr.Should().BeEmpty();
         }
 
         [Fact]
