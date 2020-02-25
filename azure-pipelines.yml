@@ -153,7 +153,7 @@ stages:
             version: $(DotNetSdkVersion)
             installationPath: $(Agent.ToolsDirectory)\dotnet
 
-        - script: dotnet test --test-adapter-path . --logger "trx;noprogress=true"
+        - script: dotnet test --test-adapter-path . --logger trx
           displayName: Build / Test
 
         - task: PublishTestResults@2
