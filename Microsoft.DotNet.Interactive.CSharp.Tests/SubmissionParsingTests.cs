@@ -10,7 +10,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.CSharp.Tests
 {
-    public class SubmissionSplittingTests
+    public class SubmissionParsingTests
     {
         [Fact]
         public async Task pound_r_is_not_split_into_separate_command_from_csharp_code()
