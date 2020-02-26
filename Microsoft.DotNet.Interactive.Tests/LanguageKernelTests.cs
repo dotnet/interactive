@@ -806,12 +806,16 @@ Console.Write(2);
         {
             var kernel = CreateKernel(Language.PowerShell);
 
-            var warningMessage = "I am a warning message";
-            var verboseMessage = "I am a verbose message";
-            var outputMessage = "I am output";
-            var debugMessage = "I am a debug message";
-            var hostMessage = "I am a message written to host";
-            var errorMessage = "I am a non-terminating error";
+            const string yellow_foreground = "\u001b[93m";
+            const string red_foreground = "\u001b[91m";
+            const string reset = "\u001b[0m";
+
+            const string warningMessage = "I am a warning message";
+            const string verboseMessage = "I am a verbose message";
+            const string outputMessage = "I am output";
+            const string debugMessage = "I am a debug message";
+            const string hostMessage = "I am a message written to host";
+            const string errorMessage = "I am a non-terminating error";
 
             var command = new SubmitCode($@"
 Write-Warning '{warningMessage}'
@@ -828,17 +832,17 @@ Write-Error '{errorMessage}'
                 e => e.Should().BeOfType<CodeSubmissionReceived>(),
                 e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
                 e => e.Should().BeOfType<StandardOutputValueProduced>().Which
-                    .Value.ToString().Should().Contain($"\u001b[93mWARNING: {warningMessage}\u001b[0m"),
+                    .Value.ToString().Should().Contain($"{yellow_foreground}WARNING: {warningMessage}{reset}"),
                 e => e.Should().BeOfType<StandardOutputValueProduced>().Which
-                    .Value.ToString().Should().Contain($"\u001b[93mVERBOSE: {verboseMessage}\u001b[0m"),
+                    .Value.ToString().Should().Contain($"{yellow_foreground}VERBOSE: {verboseMessage}{reset}"),
                 e => e.Should().BeOfType<StandardOutputValueProduced>().Which
                     .Value.ToString().Should().Be(outputMessage + Environment.NewLine),
                 e => e.Should().BeOfType<StandardOutputValueProduced>().Which
-                    .Value.ToString().Should().Contain($"\u001b[93mDEBUG: {debugMessage}\u001b[0m"),
+                    .Value.ToString().Should().Contain($"{yellow_foreground}DEBUG: {debugMessage}{reset}"),
                 e => e.Should().BeOfType<StandardOutputValueProduced>().Which
                     .Value.ToString().Should().Be(hostMessage),
                 e => e.Should().BeOfType<StandardOutputValueProduced>().Which
-                    .Value.ToString().Should().Contain($"\u001b[91mWrite-Error: \u001b[91m{errorMessage}\u001b[0m"),
+                    .Value.ToString().Should().Contain($"{red_foreground}Write-Error: {red_foreground}{errorMessage}{reset}"),
                 e => e.Should().BeOfType<CommandHandled>());
         }
 
@@ -860,10 +864,10 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                 e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
                 e => e.Should().BeOfType<DisplayedValueProduced>().Which
                     .Value.Should().BeOfType<string>().Which
-                    .Should().Match("*Search in Progress* 0% Complete*"),
+                    .Should().Match("* Search in Progress* 0% Complete* [ * ] *"),
                 e => e.Should().BeOfType<DisplayedValueUpdated>().Which
                     .Value.Should().BeOfType<string>().Which
-                    .Should().Match("*Search in Progress* 100% Complete*"),
+                    .Should().Match("* Search in Progress* 100% Complete* [ooo*ooo] *"),
                 e => e.Should().BeOfType<DisplayedValueUpdated>().Which
                     .Value.Should().BeOfType<string>().Which
                     .Should().Be(string.Empty),

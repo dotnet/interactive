@@ -5,6 +5,7 @@ using System;
 using Clockwise;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests;
 using Pocket;
@@ -18,6 +19,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly CSharpKernel _cSharpKernel;
         private readonly FSharpKernel _fSharpKernel;
+        private readonly PowerShellKernel _psKernel;
         private readonly CompositeKernel _compositeKernel;
         private readonly JupyterFrontendEnvironment _frontendEnvironment;
 
@@ -41,10 +43,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                 .UseDefaultNamespaces()
                 .UseMathAndLaTeX();
 
+            _psKernel = new PowerShellKernel()
+                .UseJupyterHelpers();
+
             _compositeKernel = new CompositeKernel
                 {
                     _cSharpKernel,
-                    _fSharpKernel
+                    _fSharpKernel,
+                    _psKernel
                 }
                 .UseDefaultMagicCommands();
 
@@ -69,6 +75,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                     break;
                 case Language.FSharp:
                     _compositeKernel.DefaultKernelName = _fSharpKernel.Name;
+                    break;
+                case Language.PowerShell:
+                    _compositeKernel.DefaultKernelName = _psKernel.Name;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(language), language, null);
