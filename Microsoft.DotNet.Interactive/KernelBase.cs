@@ -164,6 +164,7 @@ namespace Microsoft.DotNet.Interactive
         public string Name { get; set; }
 
         public IReadOnlyCollection<ICommand> Directives => _submissionParser.Directives;
+        public abstract object GetVariable(string variableName);
 
         public void AddDirective(Command command) => _submissionParser.AddDirective(command);
 

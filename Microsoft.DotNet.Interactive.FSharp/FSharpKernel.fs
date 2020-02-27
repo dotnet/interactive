@@ -222,3 +222,5 @@ type FSharpKernel() as this =
     override _.HandleRequestCompletion(command: RequestCompletion, context: KernelInvocationContext): Task =
         handleRequestCompletion command context |> Async.StartAsTask :> Task
 
+    override _.GetVariable(variableName: string): Object =
+        raise (System.NotSupportedException())

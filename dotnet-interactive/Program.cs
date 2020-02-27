@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Interactive.App
             return disposables;
         }
 
-        public static IWebHost ConstructWebHost(StartupOptions options)
+        public static IWebHostBuilder ConstructWebHostBuilder(StartupOptions options, IServiceCollection serviceCollection)
         {
             var disposables = new CompositeDisposable
             {
@@ -79,19 +79,27 @@ namespace Microsoft.DotNet.Interactive.App
             };
 
             var webHost = new WebHostBuilder()
-                          .UseKestrel()
-                          .UseContentRoot(Path.GetDirectoryName(typeof(Program).Assembly.Location))
-                          .ConfigureServices(c =>
-                          {
-                              c.AddSingleton(options);
+                .UseKestrel()
+                .UseContentRoot(Path.GetDirectoryName(typeof(Program).Assembly.Location))
+                .ConfigureServices(c =>
+                {
+                    c.AddSingleton(options);
 
-                              foreach (var serviceDescriptor in _serviceCollection)
-                              {
-                                  c.Add(serviceDescriptor);
-                              }
-                          })
-                          .UseStartup<Startup>()
-                          .UseUrls("http://localhost:5004")
+                    foreach (var serviceDescriptor in serviceCollection)
+                    {
+                        c.Add(serviceDescriptor);
+                    }
+                })
+                .UseStartup<Startup>()
+                .UseUrls("http://localhost:5004");
+              
+
+            return webHost;
+        }
+
+        public static IWebHost ConstructWebHost(StartupOptions options)
+        {
+            var webHost = ConstructWebHostBuilder(options,_serviceCollection)
                           .Build();
 
             return webHost;
