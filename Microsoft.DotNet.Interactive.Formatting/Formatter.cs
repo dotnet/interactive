@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _defaultMimeType = HtmlFormatter.MimeType;
             _preferredMimeTypesByType[typeof(string)] = PlainTextFormatter.MimeType;
 
-            ListExpansionLimit = 10;
+            ListExpansionLimit = 20;
             RecursionLimit = 6;
             NullString = "<null>";
 
