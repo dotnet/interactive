@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.Extensions.DependencyInjection;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
@@ -16,12 +17,12 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         where TStartup : class
     {
         private TestServer _host;
-        private readonly IDisposable _extraDisposable;
+        private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly ServiceCollection _serviceCollection = new ServiceCollection();
 
-        public static async Task<InProcessTestServer<TStartup>> StartServer(string args, IDisposable disposable = null)
+        public static async Task<InProcessTestServer<TStartup>> StartServer(string args)
         {
-            var server = new InProcessTestServer<TStartup>( disposable);
+            var server = new InProcessTestServer<TStartup>();
             await server.StartServerInner(args);
             return server;
         }
@@ -30,17 +31,11 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
         public IKernel Kernel { get; private set; }
 
-        private InProcessTestServer() : this(null)
+        private InProcessTestServer()
         {
             
         }
 
-        private InProcessTestServer(IDisposable disposable)
-        {
-            _extraDisposable = disposable;
-
-            
-        }
 
         private async Task StartServerInner(string args)
         {
@@ -57,13 +52,12 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             _host = new TestServer(builder);
             Kernel = _host.Services.GetRequiredService<IKernel>();
 
-
         }
 
       
         public void Dispose()
         {
-            _extraDisposable?.Dispose();
+            _disposables.Dispose();
             _host.Dispose();
         }
 
