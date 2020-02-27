@@ -5,7 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <IsPackable>true</IsPackable>
-    <PackageDescription>Here's very nice, fine, lovely library. Library!</PackageDescription>
+    <PackageDescription>Renders a clock in dotnet-interactive using SVG</PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>
