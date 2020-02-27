@@ -16,6 +16,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
 {
     public partial class PSKernelHostUserInterface
     {
+        // Note: the prompt handling code is from the PowerShell ConsoleHost implementation,
+        // with the necessary refactoring and updates for it to work with the PowerShell kernel.
+
         private const char PromptCommandPrefix = '!';
 
         /// <summary>
@@ -136,9 +139,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
                     }
                     else
                     {
-                        string inputPrompt = $"{fieldName}: ";
                         // field is not a list
-                        object convertedObj = null;
+                        string inputPrompt = $"{fieldName}: ";
 
                         PromptForSingleItem(
                             fieldType,
@@ -146,7 +148,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
                             inputPrompt,
                             isListInput: false,
                             out bool _,
-                            out convertedObj);
+                            out object convertedObj);
 
                         inputPSObject = PSObject.AsPSObject(convertedObj);
                     }

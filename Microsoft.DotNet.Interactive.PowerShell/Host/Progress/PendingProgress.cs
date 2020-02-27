@@ -16,9 +16,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
     ///
     /// The set of activities that we're tracking is logically a binary tree, with siblings in one branch and children in
     /// another.  For ease of implementation, this tree is represented as lists of lists.
-    ///
-    /// This class uses lots of nearly identical helper functions to recursively traverse the tree. If I weren't so pressed
-    /// for time, I would see if generic methods could be used to collapse the number of traversers.
     /// </summary>
     internal class PendingProgress
     {

@@ -11,12 +11,18 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
 {
     public partial class PSKernelHostUserInterface
     {
+        // Note: the progress handling code is from the PowerShell ConsoleHost implementation,
+        // with the necessary refactoring and updates for it to work with the PowerShell kernel.
+
         // Time in milliseconds to refresh the rendering of a progress bar.
         private const int UpdateTimerThreshold = 200;
+        private const int ToRender = 1;
+        private const int ToNotRender = 0;
+
         private Timer _progPaneUpdateTimer = null;
         private ProgressPane _progPane = null;
         private PendingProgress _pendingProgress = null;
-        private int progPaneUpdateFlag = 0;
+        private int progPaneUpdateFlag = ToNotRender;
 
         public override void WriteProgress(long sourceId, ProgressRecord record)
         {
@@ -46,14 +52,15 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
                     if (_progPaneUpdateTimer == null)
                     {
                         // Show a progress pane at the first time we've received a progress record
-                        progPaneUpdateFlag = 1;
+                        progPaneUpdateFlag = ToRender;
 
                         // The timer will be auto restarted every 'UpdateTimerThreshold' ms
                         _progPaneUpdateTimer = new Timer(new TimerCallback(ProgressPaneUpdateTimerElapsed), null, UpdateTimerThreshold, UpdateTimerThreshold);
                     }
                 }
 
-                if (Interlocked.CompareExchange(ref progPaneUpdateFlag, 0, 1) == 1 || record.RecordType == ProgressRecordType.Completed)
+                if (Interlocked.CompareExchange(ref progPaneUpdateFlag, ToNotRender, ToRender) == ToRender ||
+                    record.RecordType == ProgressRecordType.Completed)
                 {
                     // Update the progress pane only when the timer set up the update flag or WriteProgress is completed.
                     // As a result, we do not block WriteProgress and whole script and eliminate unnecessary console locks and updates.
@@ -79,10 +86,10 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
                     _progPaneUpdateTimer = null;
                 }
 
-                // We don't set 'progPaneUpdateFlag = 0' here, because:
+                // We don't set 'progPaneUpdateFlag = ToNotRender' here, because:
                 // 1. According to MSDN, the timer callback can occur after the Dispose() method has been called.
-                //    So we cannot guarantee the flag is truly set to 0.
-                // 2. When creating a new timer in 'HandleIncomingProgressRecord', we will set the flag to 1 anyways.
+                //    So we cannot guarantee the flag is truly set to 'ToNotRender'.
+                // 2. When creating a new timer in 'HandleIncomingProgressRecord', we will set the flag to 'ToRender' anyways.
                 if (_progPane != null)
                 {
                     _progPane.Hide();
@@ -95,7 +102,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
 
         private void ProgressPaneUpdateTimerElapsed(object sender)
         {
-            Interlocked.CompareExchange(ref progPaneUpdateFlag, 1, 0);
+            Interlocked.CompareExchange(ref progPaneUpdateFlag, ToRender, ToNotRender);
         }
     }
 }
