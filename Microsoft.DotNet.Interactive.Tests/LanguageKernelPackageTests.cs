@@ -808,14 +808,34 @@ using System.Text.Json;
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync(@"
-#r ""nuget:Its.Log""
-");
+            await kernel.SubmitCodeAsync(@"#r ""nuget:Its.Log""");
 
             events.Should().NotContainErrors();
 
             events.Should()
                   .ContainSingle<DisplayedValueUpdated>(e => e.Value.Equals("Installed package Its.Log version 2.10.1"));
+        }
+
+        [Fact]
+        public async Task Pound_r_nuget_does_not_repeat_notifications_for_previous_r_nuget_submissions()
+        {
+            var kernel = CreateKernel(Language.CSharp);
+
+            await kernel.SubmitCodeAsync(@"#r ""nuget:Its.Log""");
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SubmitCodeAsync(@"#r ""nuget:System.Text.Json""");
+
+            events.Should().NotContainErrors();
+
+            events.Should()
+                  .NotContain(e =>
+                                  e is DisplayedValueUpdated &&
+                                  e.As<DisplayedValueUpdated>()
+                                   .Value
+                                   .As<string>()
+                                   .StartsWith("Installing package Its.Log"));
         }
 
         [Fact]
@@ -840,7 +860,7 @@ using System.Text.Json;
 
         [Theory]
         [InlineData(Language.CSharp)]
-        // [InlineData(Language.FSharp)]    TODO -- Uncomment when FSharp is inserted
+        [InlineData(Language.FSharp)]   
         public async Task it_can_load_assembly_referenced_from_refs_folder_in_nugetpackage(Language language)
         {
             var kernel = CreateKernel(language);

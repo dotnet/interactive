@@ -184,10 +184,12 @@ using static {typeof(Kernel).FullName};
             {
                 return package.PackageName.ToLowerInvariant();
             }
+
+            public static IEqualityComparer<PackageReference> Instance { get; } = new PackageReferenceComparer();
         }
 
         internal static KernelCommandInvocation DoNugetRestore(
-            CSharpKernel kernel, 
+            CSharpKernel kernel,
             PackageRestoreContext restoreContext)
         {
             return async (command, invocationContext) =>
@@ -196,7 +198,11 @@ using static {typeof(Kernel).FullName};
                 {
                     var messages = new Dictionary<PackageReference, string>(new PackageReferenceComparer());
 
-                    foreach (var package in restoreContext.RequestedPackageReferences)
+                    var newlyRequestedPackages =
+                        restoreContext.RequestedPackageReferences
+                                      .Except(restoreContext.ResolvedPackageReferences, PackageReferenceComparer.Instance);
+
+                    foreach (var package in newlyRequestedPackages)
                     {
                         var message = InstallingPackageMessage(package) + "...";
                         context.Publish(
