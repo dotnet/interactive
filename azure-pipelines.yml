@@ -6,6 +6,7 @@ pr:
 - master
 - feature/*
 
+# Variables
 variables:
   - name: _TeamName
     value: DotNetInteractive
