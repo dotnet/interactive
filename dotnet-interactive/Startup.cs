@@ -2,19 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Linq;
-using System.Threading.Tasks;
 using FSharp.Compiler;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.App.CommandLine;
+using Microsoft.DotNet.Interactive.App.HttpRouting;
 using Microsoft.DotNet.Interactive.App.SignalR;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.App
 {
@@ -62,47 +58,6 @@ namespace Microsoft.DotNet.Interactive.App
             {
                 endpoints.MapHub<KernelHub>("/kernel");
             });
-        }
-    }
-
-    public class VariableRouter : IRouter
-    {
-        private readonly IKernel _kernel;
-
-        public VariableRouter(IKernel kernel)
-        {
-            _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
-        }
-
-        public VirtualPathData GetVirtualPath(VirtualPathContext context)
-        {
-            return null;
-        }
-
-        public Task RouteAsync(RouteContext context)
-        {
-            var segments =
-                context.HttpContext
-                    .Request
-                    .Path
-                    .Value
-                    .Split(new[] {'/'}, StringSplitOptions.RemoveEmptyEntries);
-
-            if (segments[0] == "variables")
-            {
-                var composite = _kernel as CompositeKernel;
-
-                var target = composite.ChildKernels.First(k => k.Name == segments[1]);
-
-                var variable = target.GetVariable(segments[2]);
-                context.Handler = async httpContext =>
-                {
-                    httpContext.Response.ContentType = "application/jon";
-                    await httpContext.Response.WriteAsync( JsonConvert.SerializeObject(variable) );
-                };
-            }
-
-            return Task.CompletedTask;
         }
     }
 }
