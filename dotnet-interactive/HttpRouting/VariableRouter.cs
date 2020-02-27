@@ -35,9 +35,17 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
 
             if (segments[0] == "variables")
             {
-                var composite = _kernel as CompositeKernel;
+                var target = _kernel;
+                if (_kernel.Name != segments[1])
+                {
+                    var composite = _kernel as CompositeKernel;
+                    if (composite == null)
+                    {
+                        throw new ArgumentNullException(nameof(composite));
+                    }
 
-                var target = composite.ChildKernels.First(k => k.Name == segments[1]);
+                    target = composite.ChildKernels.First(k => k.Name == segments[1]);
+                }
 
                 var variable = target.GetVariable(segments[2]);
                 context.Handler = async httpContext =>
