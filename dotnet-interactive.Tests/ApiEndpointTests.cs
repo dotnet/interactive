@@ -3,35 +3,20 @@
 
 using System;
 using System.CommandLine.Parsing;
-using System.IO;
-using System.Linq;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
-
-    public abstract class InProcessTestServer : IDisposable
-    {
-
-
-        public abstract void Dispose();
-    }
-
-    public class InProcessTestServer<TStartup> : InProcessTestServer
+    public class InProcessTestServer<TStartup> : IDisposable
         where TStartup : class
     {
         private TestServer _host;
@@ -47,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
         public HttpClient Client => _host.CreateClient();
 
-        public IKernel Kernel { get; protected set; }
+        public IKernel Kernel { get; private set; }
 
         private InProcessTestServer() : this(null)
         {
@@ -80,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         }
 
       
-        public override void Dispose()
+        public void Dispose()
         {
             _extraDisposable?.Dispose();
             _host.Dispose();
@@ -109,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         [Fact]
         public async Task can_get_variable_from_kernel ()
         {
-            using var server = await StartServer<Startup>();
+            using var server = await InProcessTestServer<Startup>.StartServer("http --default-kernel csharp");
             var kernel = server.Kernel;
             var client = server.Client;
 
