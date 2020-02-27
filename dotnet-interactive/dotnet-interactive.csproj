@@ -74,7 +74,6 @@
 
   <ItemGroup>
     <Folder Include="ClientApi\" />
-    <Folder Include="CommandLine\" />
     <Folder Include="ContentFiles\" />
   </ItemGroup>
 

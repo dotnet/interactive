@@ -100,6 +100,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             rootCommand.AddCommand(Jupyter());
             rootCommand.AddCommand(KernelServer());
+            rootCommand.AddCommand(HttpServer());
 
             return new CommandLineBuilder(rootCommand)
                    .UseDefaults()
@@ -189,6 +190,27 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 Task<int> InstallHandler(IConsole console, InvocationContext context) =>
                     new JupyterInstallCommand(console, new JupyterKernelSpec()).InvokeAsync();
+            }
+
+            Command HttpServer()
+            {
+                var startKernelHttpCommand = new Command("http", "Starts dotnet-interactive with kernel functionality exposed over http")
+                {
+                    defaultKernelOption,
+                    logPathOption,
+                };
+
+                startKernelHttpCommand.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
+                    (startupOptions, options, console, context) =>
+                    {
+                        var frontendEnvironment = new JupyterFrontendEnvironment();
+                        services
+                            .AddSingleton(c => CreateKernel(options.DefaultKernel, frontendEnvironment));
+
+                        return jupyter(startupOptions, console, startServer, context);
+                    });
+
+                return startKernelHttpCommand;
             }
 
             Command KernelServer()

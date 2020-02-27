@@ -86,6 +86,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
         }
 
+        public override object GetVariable(string variableName)
+        {
+            return ScriptState?.Variables.Last(v => v.Name == variableName)?.Value;
+        }
+
         protected override async Task HandleSubmitCode(
             SubmitCode submitCode,
             KernelInvocationContext context)

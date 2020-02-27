@@ -76,6 +76,10 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 return pwsh;
             });
         }
+        public override object GetVariable(string variableName)
+        {
+            throw new NotSupportedException();
+        }
 
         protected override Task HandleSubmitCode(
                 SubmitCode submitCode,
