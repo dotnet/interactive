@@ -22,14 +22,34 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             await kernel.SendAsync(new SubmitCode("var a = 123;", "csharp"));
 
             var response = await client.GetAsync("/variables/csharp/a");
-
+            
+            response.EnsureSuccessStatusCode();
+            
             var responseContent = await response.Content.ReadAsStringAsync();
 
             var value = JToken.Parse(responseContent).Value<int>();
 
-            // read
             value.Should().Be(123);
-
         }
     }
+
+    public class StaticResourcesTests
+    {
+
+        [Fact]
+        public async Task can_get_static_content_from_server()
+        {
+            using var server = await InProcessTestServer<Startup>.StartServer("http --default-kernel csharp");
+            
+            var client = server.Client;
+
+            var response = await client.GetAsync("/resources/logo-32x32.png");
+            
+            response.EnsureSuccessStatusCode();
+
+            response.Content.Headers.ContentType.MediaType.Should().Be("image/png");
+        }
+    }
+
+
 }

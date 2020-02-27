@@ -10,6 +10,7 @@ using Microsoft.DotNet.Interactive.App.SignalR;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.DotNet.Interactive.App
@@ -47,12 +48,14 @@ namespace Microsoft.DotNet.Interactive.App
         {
             app.UseDeveloperExceptionPage();
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
+            app.UseStaticFiles( new StaticFileOptions
+            {
+                FileProvider = new EmbeddedFileProvider(typeof(Startup).Assembly)
+            });
             app.UseRouting();
             app.UseRouter(r =>
             {
-                var kernel = serviceProvider.GetRequiredService<IKernel>();
-                r.Routes.Add(new VariableRouter(kernel));
+                r.Routes.Add(new VariableRouter( serviceProvider.GetRequiredService<IKernel>()));
             });
             app.UseEndpoints(endpoints =>
             {

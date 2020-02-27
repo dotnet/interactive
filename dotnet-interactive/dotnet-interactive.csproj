@@ -30,6 +30,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Remove="resources\logo-32x32.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Clockwise" Version="1.0.261-beta" />
     <PackageReference Include="EnvironmentExtensions" Version="0.1.9120003">
       <PrivateAssets>all</PrivateAssets>
@@ -73,7 +77,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="ClientApi\" />
     <Folder Include="ContentFiles\" />
   </ItemGroup>
 
@@ -90,6 +93,9 @@
   <ItemGroup>
     <EmbeddedResource Include="$(IntermediateOutputPath)/dotnetKernel.zip">
       <LogicalName>dotnetKernel.zip</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="resources\logo-32x32.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
 
