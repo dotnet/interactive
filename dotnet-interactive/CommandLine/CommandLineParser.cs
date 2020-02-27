@@ -83,7 +83,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 VersionSensor.Version().AssemblyInformationalVersion,
                 firstTimeUseNoticeSentinel);
             var filter = new TelemetryFilter(Sha256Hasher.HashWithNormalizedCasing);
-            void Track(ParseResult o) => telemetry.SendFiltered(filter, o);
 
             var verboseOption = new Option<bool>(
                 "--verbose",
@@ -106,6 +105,11 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                    .UseDefaults()
                    .UseMiddleware(async (context, next) =>
                    {
+                       if (context.ParseResult.Errors.Count == 0)
+                       {
+                           telemetry.SendFiltered(filter, context.ParseResult);
+                       }
+
                        // If sentinel does not exist, print the welcome message showing the telemetry notification.
                        if (!firstTimeUseNoticeSentinel.Exists() && !Telemetry.Telemetry.SkipFirstTimeExperience)
                        {
@@ -146,29 +150,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     }.ExistingOnly()
                 };
 
-                jupyterCommand.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext>((startupOptions, options, console, context) =>
-                {
-                    Track(context.ParseResult);
-
-                    var frontendEnvironment = new JupyterFrontendEnvironment();
-                    services
-                        .AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
-                        .AddSingleton(
-                            c =>
-                            {
-                                return CommandScheduler
-                                    .Create<JupyterRequestContext>(delivery => c.GetRequiredService<ICommandHandler<JupyterRequestContext>>()
-                                                                                .Trace()
-                                                                                .Handle(delivery));
-                            })
-                        .AddSingleton(c => CreateKernel(options.DefaultKernel, frontendEnvironment))
-                        .AddSingleton(c => new JupyterRequestContextHandler(c.GetRequiredService<IKernel>(), frontendEnvironment)
-                                          .Trace())
-                        .AddSingleton<IHostedService, Shell>()
-                        .AddSingleton<IHostedService, Heartbeat>();
-
-                    return jupyter(startupOptions, console, startServer, context);
-                });
+                jupyterCommand.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext>(JupyterHandler);
 
                 var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
                 {
@@ -176,15 +158,37 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     verboseOption
                 };
 
-                installCommand.Handler = CommandHandler.Create<IConsole, InvocationContext>((console, context) =>
-                {
-                    Track(context.ParseResult);
-                    return new JupyterInstallCommand(console, new JupyterKernelSpec()).InvokeAsync();
-                });
+                installCommand.Handler = CommandHandler.Create<IConsole, InvocationContext>(InstallHandler);
 
                 jupyterCommand.AddCommand(installCommand);
 
                 return jupyterCommand;
+
+                Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context)
+                {
+                    services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
+                            .AddSingleton(_ => new JupyterFrontendEnvironment())
+                            .AddSingleton<FrontendEnvironmentBase>(_ => new JupyterFrontendEnvironment())
+                            .AddSingleton(c =>
+                            {
+                                return CommandScheduler.Create<JupyterRequestContext>(delivery => c.GetRequiredService<ICommandHandler<JupyterRequestContext>>()
+                                                                                                   .Trace()
+                                                                                                   .Handle(delivery));
+                            })
+                            .AddSingleton(c => CreateKernel(options.DefaultKernel,
+                                                            c.GetRequiredService<FrontendEnvironmentBase>()))
+                            .AddSingleton(c => new JupyterRequestContextHandler(
+                                                  c.GetRequiredService<IKernel>(),
+                                                  c.GetRequiredService<JupyterFrontendEnvironment>())
+                                              .Trace())
+                            .AddSingleton<IHostedService, Shell>()
+                            .AddSingleton<IHostedService, Heartbeat>();
+
+                    return jupyter(startupOptions, console, startServer, context);
+                }
+
+                Task<int> InstallHandler(IConsole console, InvocationContext context) =>
+                    new JupyterInstallCommand(console, new JupyterKernelSpec()).InvokeAsync();
             }
 
             Command KernelServer()
@@ -198,7 +202,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 startKernelServerCommand.Handler = CommandHandler.Create<StartupOptions, KernelServerOptions, IConsole, InvocationContext>(
                     (startupOptions, options, console, context) =>
                 {
-                    Track(context.ParseResult);
                     return startKernelServer(startupOptions, CreateKernel(options.DefaultKernel, new JupyterFrontendEnvironment()), console);
                 });
 
