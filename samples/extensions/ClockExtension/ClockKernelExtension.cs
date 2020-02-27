@@ -47,7 +47,7 @@ namespace ClockExtension
 
             if (KernelInvocationContext.Current is {} context)
             {
-                await context.DisplayAsync($"{nameof(ClockExtension)} is loaded. Now you can format System.DateTime and System.DateTimeOffset.");
+                await context.DisplayAsync($"`{nameof(ClockExtension)}` is loaded. It adds visualizations for `System.DateTime` and `System.DateTimeOffset`. Try it by running: `display(DateTime.Now);` or `#!clock -h`", "text/markdown");
             }
         }
     }
