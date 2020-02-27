@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.App.CommandLine;
+using Microsoft.DotNet.Interactive.App.SignalR;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
