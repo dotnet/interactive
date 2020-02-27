@@ -4,6 +4,8 @@
 using System;
 using System.CommandLine.Parsing;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -91,11 +93,22 @@ namespace Microsoft.DotNet.Interactive.App
                     }
                 })
                 .UseStartup<Startup>()
-                .UseUrls("http://localhost:5004");
+                .UseUrls($"http://localhost:{GetFreePort()}");
               
 
             return webHost;
+
+            int GetFreePort()
+            {
+                var l = new TcpListener(IPAddress.Loopback, 0);
+                l.Start();
+                var port = ((IPEndPoint)l.LocalEndpoint).Port;
+                l.Stop();
+                return port;
+            }
         }
+
+       
 
         public static IWebHost ConstructWebHost(StartupOptions options)
         {
