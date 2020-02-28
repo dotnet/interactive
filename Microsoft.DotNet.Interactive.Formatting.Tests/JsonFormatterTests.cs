@@ -1,11 +1,11 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using FluentAssertions;
 using System.Linq;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
@@ -42,7 +42,9 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 yield return JToken.FromObject(new[] { 1, 2, 3 });
                 
                 yield return JToken.FromObject(new { parent = new { Child = new { Age = 5 } } });
-                
+
+                yield return JToken.FromObject(JsonConvert.SerializeObject(new { parent = new { Child = new { Age = 5 } } }));
+
                 yield return JToken.FromObject(new Dictionary<string, object>
                 {
                     ["anInt"] = 1,
