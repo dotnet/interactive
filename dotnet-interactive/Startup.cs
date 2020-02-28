@@ -35,6 +35,7 @@ namespace Microsoft.DotNet.Interactive.App
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRouting();
+            services.AddCors();
         }
 
         public void Configure(
@@ -42,19 +43,15 @@ namespace Microsoft.DotNet.Interactive.App
             IHostApplicationLifetime lifetime,
             IServiceProvider serviceProvider)
         {
-            // app.UseDeveloperExceptionPage();
-            // app.UseHttpsRedirection();
-            
-
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new EmbeddedFileProvider(typeof(Startup).Assembly)
             });
-
+            app.UseCors(builder =>
+                builder.AllowAnyOrigin()
+                    .AllowAnyMethod());
             app.UseRouting();
             app.UseRouter(r => r.Routes.Add(new VariableRouter(serviceProvider.GetRequiredService<IKernel>())));
-
-            // app.UseEndpoints(endpoints => endpoints.MapHub<KernelHub>("/kernel"));
         }
     }
 }

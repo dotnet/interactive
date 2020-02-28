@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            using var activity = Log.OnEnterAndExit();
+           
 
             SetupDefaultMimeTypes();
 
@@ -89,44 +89,47 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             _stdIn.Bind(_stdInAddress);
             _control.Bind(_controlAddress);
             var kernelIdentity = Guid.NewGuid().ToString();
-
-            while (!cancellationToken.IsCancellationRequested)
+            Task.Run(async () =>
             {
-                var request = _shell.GetMessage();
-
-                activity.Info("Received: {message}", request.ToJson());
-
-                SetBusy(request);
-
-                switch (request.Header.MessageType)
+                using var activity = Log.OnEnterAndExit();
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    case JupyterMessageContentTypes.KernelInfoRequest:
-                        kernelIdentity = Encoding.Unicode.GetString(request.Identifiers[0].ToArray());
-                        HandleKernelInfoRequest(request);
-                        SetIdle(request);
-                        break;
+                    var request = _shell.GetMessage();
 
-                    case JupyterMessageContentTypes.KernelShutdownRequest:
-                        SetIdle(request);
-                        break;
+                    activity.Info("Received: {message}", request.ToJson());
 
-                    default:
-                        var context = new JupyterRequestContext(
-                            _shellChannel,
-                            _ioPubChannel,
-                            _stdInChannel,
-                            request, 
-                            kernelIdentity);
+                    SetBusy(request);
 
-                        await _scheduler.Schedule(context);
+                    switch (request.Header.MessageType)
+                    {
+                        case JupyterMessageContentTypes.KernelInfoRequest:
+                            kernelIdentity = Encoding.Unicode.GetString(request.Identifiers[0].ToArray());
+                            HandleKernelInfoRequest(request);
+                            SetIdle(request);
+                            break;
 
-                        await context.Done();
+                        case JupyterMessageContentTypes.KernelShutdownRequest:
+                            SetIdle(request);
+                            break;
 
-                        SetIdle(request);
+                        default:
+                            var context = new JupyterRequestContext(
+                                _shellChannel,
+                                _ioPubChannel,
+                                _stdInChannel,
+                                request,
+                                kernelIdentity);
 
-                        break;
+                            await _scheduler.Schedule(context);
+
+                            await context.Done();
+
+                            SetIdle(request);
+
+                            break;
+                    }
                 }
-            }
+            });
 
             void SetBusy(ZeroMQMessage request) => _ioPubChannel.Publish(new Status(StatusValues.Busy), request, kernelIdentity);
             void SetIdle(ZeroMQMessage request) => _ioPubChannel.Publish(new Status(StatusValues.Idle), request, kernelIdentity);

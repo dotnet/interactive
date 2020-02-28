@@ -33,17 +33,19 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         {
             await Task.Yield();
             _server.Bind(_address);
-
-            using (Logger<Heartbeat>.Log.OnEnterAndExit())
+            Task.Run(() =>
             {
-                while (!cancellationToken.IsCancellationRequested)
+                using (Logger<Heartbeat>.Log.OnEnterAndExit())
                 {
-                    var data = _server.ReceiveFrameBytes();
+                    while (!cancellationToken.IsCancellationRequested)
+                    {
+                        var data = _server.ReceiveFrameBytes();
 
-                    // Echoing back whatever was received
-                    _server.TrySendFrame(data);
+                        // Echoing back whatever was received
+                        _server.TrySendFrame(data);
+                    }
                 }
-            }
+            });
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
