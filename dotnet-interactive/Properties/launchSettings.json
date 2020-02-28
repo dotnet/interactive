@@ -25,7 +25,11 @@
     },
     "dotnet-interactive-server": {
       "commandName": "Project",
-      "commandLineArgs": "kernel-server"
+      "commandLineArgs": "stdio"
+    },
+    "dotnet-interactive-http": {
+      "commandName": "Project",
+      "commandLineArgs": "http"
     }
   }
 }

@@ -174,9 +174,11 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context)
                 {
+                    var frontendEnvironment = new JupyterFrontendEnvironment();
+
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
-                            .AddSingleton(_ => new JupyterFrontendEnvironment())
-                            .AddSingleton<FrontendEnvironmentBase>(_ => new JupyterFrontendEnvironment())
+                            .AddSingleton(_ => frontendEnvironment)
+                            .AddSingleton<FrontendEnvironmentBase>(_ => frontendEnvironment)
                             .AddSingleton(c =>
                             {
                                 return CommandScheduler.Create<JupyterRequestContext>(delivery => c.GetRequiredService<ICommandHandler<JupyterRequestContext>>()
@@ -190,7 +192,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                                   c.GetRequiredService<JupyterFrontendEnvironment>())
                                               .Trace())
                             .AddSingleton<IHostedService, Shell>()
-                            .AddSingleton<IHostedService, Heartbeat>();
+                            .AddSingleton<IHostedService, Heartbeat>()
+                          ;
 
                     return jupyter(startupOptions, console, startServer, context);
                 }
