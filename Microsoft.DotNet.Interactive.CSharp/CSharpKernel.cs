@@ -88,11 +88,18 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public override object GetVariable(string variableName)
         {
-            if (ScriptState == null)
+            if (ScriptState != null)
             {
-                throw new InvalidOperationException(nameof(variableName));
+                var variable = ScriptState.Variables.LastOrDefault(v => v.Name == variableName);
+
+                if (variable == null)
+                {
+                    throw new VariableNotFoundException(variableName);
+                }
+                return variable.Value;
             }
-            return ScriptState.Variables.Last(v => v.Name == variableName).Value;
+
+            throw new VariableNotFoundException(variableName);
         }
 
         protected override async Task HandleSubmitCode(
@@ -278,4 +285,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         internal NativeAssemblyLoadHelper NativeAssemblyLoadHelper { get; }
     }
+
+
 }

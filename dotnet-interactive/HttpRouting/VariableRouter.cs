@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                                 await httpContext.Response.WriteAsync(JsonConvert.SerializeObject(value));
                             };
                         }
-                        catch (InvalidOperationException)
+                        catch (VariableNotFoundException)
                         {
                         }
                     }
