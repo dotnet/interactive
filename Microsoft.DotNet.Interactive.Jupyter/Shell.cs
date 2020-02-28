@@ -78,10 +78,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                            };
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public Task StartAsync(CancellationToken cancellationToken)
         {
-           
-
             SetupDefaultMimeTypes();
 
             _shell.Bind(_shellAddress);
@@ -129,10 +127,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                             break;
                     }
                 }
-            });
+            }, cancellationToken);
 
             void SetBusy(ZeroMQMessage request) => _ioPubChannel.Publish(new Status(StatusValues.Busy), request, kernelIdentity);
             void SetIdle(ZeroMQMessage request) => _ioPubChannel.Publish(new Status(StatusValues.Idle), request, kernelIdentity);
+
+            return Task.CompletedTask;
         }
 
         public static void SetupDefaultMimeTypes()
