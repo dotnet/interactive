@@ -63,10 +63,12 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             startKernelServer ??= async (startupOptions, kernel, console) =>
             {
                 var disposable = Program.StartToolLogging(startupOptions);
+
                 if (kernel is KernelBase kernelBase)
                 {
                     kernelBase.RegisterForDisposal(disposable);
                 }
+
                 var server = new StandardIOKernelServer(
                     kernel, 
                     Console.In, 
@@ -87,6 +89,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             var verboseOption = new Option<bool>(
                 "--verbose",
                 "Enable verbose logging to the console");
+            
+            var httpPortOption = new Option<int>(
+                "--http-port",
+                "Specifies the port on which to enable HTTP services");
 
             var logPathOption = new Option<DirectoryInfo>(
                 "--log-path",
@@ -134,6 +140,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 command.AddOption(logPathOption);
                 command.AddOption(verboseOption);
+                command.AddOption(httpPortOption);
 
                 return command;
             }
@@ -215,17 +222,19 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             Command KernelServer()
             {
-                var startKernelServerCommand = new Command("kernel-server", "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
+                var startKernelServerCommand = new Command(
+                    "stdio", 
+                    "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
                 {
                     defaultKernelOption,
                     logPathOption,
                 };
 
                 startKernelServerCommand.Handler = CommandHandler.Create<StartupOptions, KernelServerOptions, IConsole, InvocationContext>(
-                    (startupOptions, options, console, context) =>
-                {
-                    return startKernelServer(startupOptions, CreateKernel(options.DefaultKernel, new JupyterFrontendEnvironment()), console);
-                });
+                    (startupOptions, options, console, context) => startKernelServer(
+                        startupOptions,
+                        CreateKernel(options.DefaultKernel,
+                                     new JupyterFrontendEnvironment()), console));
 
                 return startKernelServerCommand;
             }

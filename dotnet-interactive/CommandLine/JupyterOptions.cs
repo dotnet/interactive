@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         }
 
         public FileInfo ConnectionFile { get; }
+
         public string DefaultKernel { get; }
     }
 }

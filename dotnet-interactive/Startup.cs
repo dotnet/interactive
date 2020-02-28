@@ -2,12 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using FSharp.Compiler;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.HttpRouting;
-using Microsoft.DotNet.Interactive.App.SignalR;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -24,8 +21,7 @@ namespace Microsoft.DotNet.Interactive.App
             Environment = env;
             StartupOptions = startupOptions;
 
-            var configurationBuilder = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath);
+            var configurationBuilder = new ConfigurationBuilder();
 
             Configuration = configurationBuilder.Build();
         }
@@ -38,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.App
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSignalR();
+            services.AddRouting();
         }
 
         public void Configure(
@@ -46,21 +42,19 @@ namespace Microsoft.DotNet.Interactive.App
             IHostApplicationLifetime lifetime,
             IServiceProvider serviceProvider)
         {
-            app.UseDeveloperExceptionPage();
-            app.UseHttpsRedirection();
-            app.UseStaticFiles( new StaticFileOptions
+            // app.UseDeveloperExceptionPage();
+            // app.UseHttpsRedirection();
+            
+
+            app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new EmbeddedFileProvider(typeof(Startup).Assembly)
             });
+
             app.UseRouting();
-            app.UseRouter(r =>
-            {
-                r.Routes.Add(new VariableRouter( serviceProvider.GetRequiredService<IKernel>()));
-            });
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapHub<KernelHub>("/kernel");
-            });
+            app.UseRouter(r => r.Routes.Add(new VariableRouter(serviceProvider.GetRequiredService<IKernel>())));
+
+            // app.UseEndpoints(endpoints => endpoints.MapHub<KernelHub>("/kernel"));
         }
     }
 }

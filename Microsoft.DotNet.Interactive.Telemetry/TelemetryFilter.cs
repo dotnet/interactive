@@ -253,21 +253,21 @@ namespace Microsoft.DotNet.Interactive.Telemetry
             return new IgnoreItem(type, isOptional);
         }
 
-        private static CommandRule[] Rules => new CommandRule[]
+        private static CommandRule[] Rules => new[]
         {
             new CommandRule("jupyter",
-                new CommandRuleItem[]{
+                new[]{
                     Arg("install", TokenType.Command, "subcommand", isOptional: false) }),
 
             new CommandRule("jupyter",
-                new CommandRuleItem[]{
-                    Option("--default-kernel", new string[]{ "csharp", "fsharp", "powershell" }, "default-kernel"),
+                new[]{
+                    Option("--default-kernel", new[]{ "csharp", "fsharp", "powershell" }, "default-kernel"),
                     Ignore(TokenType.Argument, isOptional: true) // connection file
                 }),
 
-            new CommandRule("kernel-server",
-                new CommandRuleItem[]{
-                    Option("--default-kernel", new string[]{ "csharp", "fsharp", "powershell" }, "default-kernel")
+            new CommandRule("stdio",
+                new[]{
+                    Option("--default-kernel", new[]{ "csharp", "fsharp", "powershell" }, "default-kernel")
                 })
         };
     }

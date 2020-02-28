@@ -28,31 +28,32 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
         {
             var segments =
                 context.HttpContext
-                    .Request
-                    .Path
-                    .Value
-                    .Split(new[] {'/'}, StringSplitOptions.RemoveEmptyEntries);
+                       .Request
+                       .Path
+                       .Value
+                       .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
             if (segments[0] == "variables")
             {
-                var target = _kernel;
+                var targetKernel = _kernel;
+
                 if (_kernel.Name != segments[1])
                 {
-                    var composite = _kernel as CompositeKernel;
-                    if (composite == null)
+                    if (_kernel is CompositeKernel composite)
                     {
-                        throw new ArgumentNullException(nameof(composite));
+                        targetKernel = composite.ChildKernels.First(k => k.Name == segments[1]);
                     }
-
-                    target = composite.ChildKernels.First(k => k.Name == segments[1]);
                 }
 
-                var variable = target.GetVariable(segments[2]);
-                context.Handler = async httpContext =>
+                if (targetKernel is KernelBase kernelBase)
                 {
-                    httpContext.Response.ContentType = "application/jon";
-                    await httpContext.Response.WriteAsync( JsonConvert.SerializeObject(variable) );
-                };
+                    var value = kernelBase.GetVariable(segments[2]);
+                    context.Handler = async httpContext =>
+                    {
+                        httpContext.Response.ContentType = "application/json";
+                        await httpContext.Response.WriteAsync(JsonConvert.SerializeObject(value));
+                    };
+                }
             }
 
             return Task.CompletedTask;

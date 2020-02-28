@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
             // start as external process
             var kernelServerProcess = ProcessHelper.Start(
                 command: "dotnet",
-                args: $@"interactive kernel-server --log-path ""{logPath.Directory.FullName}""",
+                args: $@"interactive stdio --log-path ""{logPath.Directory.FullName}""",
                 workingDir: new DirectoryInfo(Directory.GetCurrentDirectory()),
                 output: _line =>
                 {
