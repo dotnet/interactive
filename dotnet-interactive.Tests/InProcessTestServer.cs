@@ -2,9 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.CommandLine;
+using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.Net.Http;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.DotNet.Interactive.App.CommandLine;
@@ -13,54 +14,48 @@ using Pocket;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
-    internal class InProcessTestServer<TStartup> : IDisposable
-        where TStartup : class
+    internal class InProcessTestServer : IDisposable
     {
         private TestServer _host;
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly ServiceCollection _serviceCollection = new ServiceCollection();
 
-        public static async Task<InProcessTestServer<TStartup>> StartServer(string args)
+        public static InProcessTestServer StartServer(string args)
         {
-            var server = new InProcessTestServer<TStartup>();
-            await server.StartServerInner(args);
+            var server = new InProcessTestServer();
+
+            IWebHostBuilder builder = null;
+
+            var parser = CommandLineParser.Create(
+                server._serviceCollection,
+                (startupOptions, invocationContext) =>
+                {
+                    builder = Program.ConstructWebHostBuilder(
+                        startupOptions, 
+                        server._serviceCollection);
+                });
+
+            parser.Invoke(args, server.Console);
+
+            server._host = new TestServer(builder);
+            server.Kernel = server._host.Services.GetRequiredService<IKernel>();
             return server;
         }
 
-        public HttpClient Client => _host.CreateClient();
+        private InProcessTestServer()
+        {
+        }
+
+        public IConsole Console { get; } = new TestConsole();
+
+        public HttpClient HttpClient => _host.CreateClient();
 
         public IKernel Kernel { get; private set; }
 
-        private InProcessTestServer()
-        {
-            
-        }
-
-
-        private async Task StartServerInner(string args)
-        {
-         
-            IWebHostBuilder builder = null;
-            await CommandLineParser.Create(_serviceCollection,
-                startServer: (startupOptions, invocationContext) =>
-                {
-                    builder = Program.ConstructWebHostBuilder(startupOptions, _serviceCollection);
-                }).InvokeAsync(args);
-
-   
-            
-            _host = new TestServer(builder);
-            Kernel = _host.Services.GetRequiredService<IKernel>();
-
-        }
-
-      
         public void Dispose()
         {
             _disposables.Dispose();
             _host.Dispose();
         }
-
-     
     }
 }

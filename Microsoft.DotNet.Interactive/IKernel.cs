@@ -22,6 +22,5 @@ namespace Microsoft.DotNet.Interactive
             CancellationToken cancellationToken);
 
         IReadOnlyCollection<ICommand> Directives { get; }
-        object GetVariable(string variableName);
     }
 }

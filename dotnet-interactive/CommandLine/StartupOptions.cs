@@ -13,7 +13,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         {
             StartupOptions startupOptions = null;
 
-            CommandLineParser.Create(new ServiceCollection(), startServer: (options, context) => { startupOptions = options; })
+            CommandLineParser.Create(
+                                 new ServiceCollection(),
+                                 startServer: (options, context) => startupOptions = options)
                              .InvokeAsync(commandLine);
 
             return startupOptions;
@@ -30,5 +32,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         public DirectoryInfo LogPath { get; }
 
         public bool Verbose { get; }
+
+        public int? HttpPort { get; internal set; }
     }
 }

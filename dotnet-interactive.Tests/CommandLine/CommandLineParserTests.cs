@@ -121,9 +121,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public void kernel_server_starts_with_default_kernel()
+        public void it_defaults_to_csharp_kernel()
         {
-            var result = _parser.Parse($"kernel-server");
+            var result = _parser.Parse("stdio");
             var binder = new ModelBinder<KernelServerOptions>();
             var options = (KernelServerOptions)binder.CreateInstance(new BindingContext(result));
             options.DefaultKernel.Should().Be("csharp");
@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         [Fact]
         public void kernel_server__honors_default_kernel_option()
         {
-            var result = _parser.Parse($"kernel-server --default-kernel bsharp");
+            var result = _parser.Parse("stdio --default-kernel bsharp");
             var binder = new ModelBinder<KernelServerOptions>();
             var options = (KernelServerOptions)binder.CreateInstance(new BindingContext(result));
             options.DefaultKernel.Should().Be("bsharp");

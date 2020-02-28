@@ -73,28 +73,31 @@ namespace Microsoft.DotNet.Interactive.App
             return disposables;
         }
 
-        public static IWebHostBuilder ConstructWebHostBuilder(StartupOptions options, IServiceCollection serviceCollection)
+        public static IWebHostBuilder ConstructWebHostBuilder(
+            StartupOptions options, 
+            IServiceCollection serviceCollection)
         {
+            // FIX: (ConstructWebHostBuilder) dispose me
             var disposables = new CompositeDisposable
             {
                 StartToolLogging(options)
             };
 
-            var webHost = new WebHostBuilder()
-                .UseKestrel()
-                .UseContentRoot(Path.GetDirectoryName(typeof(Program).Assembly.Location))
-                .ConfigureServices(c =>
-                {
-                    c.AddSingleton(options);
+            var httpPort = options.HttpPort ??= GetFreePort();
 
-                    foreach (var serviceDescriptor in serviceCollection)
-                    {
-                        c.Add(serviceDescriptor);
-                    }
-                })
-                .UseStartup<Startup>()
-                .UseUrls($"http://localhost:{GetFreePort()}");
-              
+            var webHost = new WebHostBuilder()
+                          .UseKestrel()
+                          .ConfigureServices(c =>
+                          {
+                              c.AddSingleton(options);
+
+                              foreach (var serviceDescriptor in serviceCollection)
+                              {
+                                  c.Add(serviceDescriptor);
+                              }
+                          })
+                          .UseStartup<Startup>()
+                          .UseUrls($"http://*:{httpPort}");
 
             return webHost;
 
@@ -107,8 +110,6 @@ namespace Microsoft.DotNet.Interactive.App
                 return port;
             }
         }
-
-       
 
         public static IWebHost ConstructWebHost(StartupOptions options)
         {
