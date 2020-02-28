@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
         public HttpApiTests()
         {
-            _server = InProcessTestServer.StartServer("stdio --default-kernel csharp");
+            _server = InProcessTestServer.StartServer("http --default-kernel csharp");
         }
 
         public void Dispose()

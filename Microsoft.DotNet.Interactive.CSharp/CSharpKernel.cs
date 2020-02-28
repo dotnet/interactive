@@ -88,7 +88,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public override object GetVariable(string variableName)
         {
-            return ScriptState?.Variables.Last(v => v.Name == variableName)?.Value;
+            if (ScriptState == null)
+            {
+                throw new InvalidOperationException(nameof(variableName));
+            }
+            return ScriptState.Variables.Last(v => v.Name == variableName).Value;
         }
 
         protected override async Task HandleSubmitCode(
