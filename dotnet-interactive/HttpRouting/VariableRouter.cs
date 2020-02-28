@@ -27,41 +27,42 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
 
         public Task RouteAsync(RouteContext context)
         {
-            var segments =
-                context.HttpContext
-                       .Request
-                       .Path
-                       .Value
-                       .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-
-            if (segments[0] == "variables")
+            if (context.HttpContext.Request.Method == HttpMethods.Get)
             {
-                var targetKernel = _kernel;
+                var segments =
+                    context.HttpContext
+                        .Request
+                        .Path
+                        .Value
+                        .Split(new[] {'/'}, StringSplitOptions.RemoveEmptyEntries);
 
-                if (_kernel.Name != segments[1])
+                if (segments[0] == "variables")
                 {
-                    if (_kernel is CompositeKernel composite)
-                    {
-                        targetKernel = composite.ChildKernels.FirstOrDefault(k => k.Name == segments[1]);
-                    }
-                }
+                    var targetKernel = _kernel;
 
-                if (targetKernel is KernelBase kernelBase)
-                {
-                    try
+                    if (_kernel.Name != segments[1])
                     {
-                        var value = kernelBase.GetVariable(segments[2]);
-                        context.Handler = async httpContext =>
+                        if (_kernel is CompositeKernel composite)
                         {
-                            httpContext.Response.ContentType = "application/json";
-                            await httpContext.Response.WriteAsync(JsonConvert.SerializeObject(value));
-                        };
-                    }
-                    catch (InvalidOperationException _)
-                    {
+                            targetKernel = composite.ChildKernels.FirstOrDefault(k => k.Name == segments[1]);
+                        }
                     }
 
-                    
+                    if (targetKernel is KernelBase kernelBase)
+                    {
+                        try
+                        {
+                            var value = kernelBase.GetVariable(segments[2]);
+                            context.Handler = async httpContext =>
+                            {
+                                httpContext.Response.ContentType = "application/json";
+                                await httpContext.Response.WriteAsync(JsonConvert.SerializeObject(value));
+                            };
+                        }
+                        catch (InvalidOperationException)
+                        {
+                        }
+                    }
                 }
             }
 
