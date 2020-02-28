@@ -29,9 +29,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             _server = new ResponseSocket();
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public Task StartAsync(CancellationToken cancellationToken)
         {
-            await Task.Yield();
             _server.Bind(_address);
             Task.Run(() =>
             {
@@ -45,7 +44,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                         _server.TrySendFrame(data);
                     }
                 }
-            });
+            }, cancellationToken);
+
+            return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
