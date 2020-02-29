@@ -7,30 +7,27 @@
 
 ## Welcome to the .NET Interactive repo.
 
- .NET interactive provides data Scientists and developers a way to explore data, experiment code, and try new ideas effortlessly.  Use .NET interactive to build .NET Jupyter notebooks. 
+ .NET interactive provides data scientists and developers a way to explore data, experiment with code, and try new ideas effortlessly. Use .NET Interactive to build .NET Jupyter notebooks or custom interactive coding experiences.
 
 ### Jupyter Notebooks with .NET
 
 <img src="https://user-images.githubusercontent.com/2546640/72949473-60477900-3d56-11ea-8bc4-47352a613b78.png" width="80%">
 <img src="https://user-images.githubusercontent.com/2546640/67912370-1b99b080-fb60-11e9-9839-0058d02488cf.png" width="62%">
 
-## Table of Contents
-
 # Jupyter Notebooks with .NET Core | Preview 2 <img src ="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Jupyter_logo.svg/207px-Jupyter_logo.svg.png" width="38px" alt="dotnet bot in space" align ="right">
 
 There are several ways to get started using .NET with Jupyter.
 
-- [Try sample .NET notebooks online using Binder](docs/NotebooksOnBinder.md). This also allows you try out our daily builds.
-- [Create and run .NET notebooks on your machine](docs/NotebooksLocalExperience.md).
-   - Install instructions [below](#Install)
+- [Try sample .NET notebooks online using Binder](docs/NotebooksOnBinder.md). This also allows you try out our daily builds, which includes preview features of F# 5.
+- [Create and run .NET notebooks on your machine](docs/NotebooksLocalExperience.md). (Installation instructions [below](#Install).)
 - [Share your own .NET notebooks with others online using Binder](docs/CreateBinder.md).
-- [.NET Interactive with nteract](https://nteract.io/kernels/dotnet)
+- [Use .NET Interactive with nteract](https://nteract.io/kernels/dotnet)
 
-## Install
-### How Install .NET Interactive 
+## How to Install .NET Interactive 
+
 First, make sure you have the following installed:
 
-- The [.NET 3.0 SDK](https://dotnet.microsoft.com/download).
+- The [.NET 3.1 SDK](https://dotnet.microsoft.com/download).
 - **Jupyter**. Jupyter can be installed using [Anaconda](https://www.anaconda.com/distribution).
 
 - Open the Anaconda Prompt (Windows) or Terminal (macOS) and verify that Jupyter is installed and present on the path:
@@ -46,7 +43,7 @@ First, make sure you have the following installed:
 > dotnet tool install -g --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json" Microsoft.dotnet-interactive
 ```
 
-- Install the .NET kernel by running the following within your Anaconda Prompt:
+- Register .NET Interactive as a Jupyter kernel by running the following within your Anaconda Prompt:
 
 ```console
 > dotnet interactive jupyter install
@@ -61,7 +58,7 @@ First, make sure you have the following installed:
 .NET kernel installation succeeded
 ```
     
-- You can verify the installation by running the following again in the Anaconda Prompt:
+- You can now verify the installation by running the following in the Anaconda Prompt:
 
 ```console
 > jupyter kernelspec list
@@ -70,13 +67,26 @@ First, make sure you have the following installed:
   .net-powershell   ~\jupyter\kernels\.net-powershell
   python3           ~\jupyter\kernels\python3
 ```
-For more detailed documentation visit see [table of content](#table-of-contents).
+
+## Packages
+
+We are providing a number of packages that can be used to write custom extensions for .NET Interactive or to build your own interactive experiences.
+
+
+Package                                    | Version                                                                                                                                                         | Description
+-------------------------------------------| ----------------------------------------------------------------------------------------------------------------------------------------------------------------| ------------
+`Microsoft.dotnet-interactive`             | [![Nuget](https://img.shields.io/nuget/v/Microsoft.dotnet-interactive.svg)](https://www.nuget.org/packages/Microsoft.dotnet-interactive)                        | The `dotnet-interactive` global tool
+`Microsoft.DotNet.Interactive`             | [![Nuget](https://img.shields.io/nuget/v/Microsoft.DotNet.Interactive.svg)](https://www.nuget.org/packages/Microsoft.DotNet.Interactive)                        | Core types for building applications providing interactive programming for .NET.
+`Microsoft.DotNet.Interactive.Formatting`  | [![Nuget](https://img.shields.io/nuget/v/Microsoft.DotNet.Interactive.Formatting.svg)](https://www.nuget.org/packages/Microsoft.DotNet.Interactive.Formatting)  | Convention-based and highly configurable .NET object formatting for interactive programming, including support for mime types suitable for building visualizations for Jupyter Notebooks and web browsers.
+`Microsoft.DotNet.Interactive.FSharp`      | [![Nuget](https://img.shields.io/nuget/v/Microsoft.DotNet.Interactive.FSharp.svg)](https://www.nuget.org/packages/Microsoft.DotNet.Interactive.FSharp)          | Microsoft.DotNet.Interactive.IKernel implementation for F#
+`Microsoft.DotNet.Interactive.CSharp`      | [![Nuget](https://img.shields.io/nuget/v/Microsoft.DotNet.Interactive.CSharp.svg)](https://www.nuget.org/packages/Microsoft.DotNet.Interactive.CSharp)          | Microsoft.DotNet.Interactive.IKernel implementation for C#
+
 ## Contribution Guidelines
 
-As we are still in the early stages of our development, we are unable to take any feature PRs at the moment, but we intend to do so in the future.
-If you find an issue or have a feature suggestion, please open an [issue](https://github.com/dotnet/interactive/issues/new/choose). And if you have any feature suggestions, please submit them using the "community suggestions" label.
+As we are still in the early stages of development, we may not take any feature PRs at the moment, but we intend to do so in the future. If you find an bug or have a feature suggestion, please open an [issue](https://github.com/dotnet/interactive/issues/new/choose).
 
 ## Customers & Partners
+
 |    [Azure Synapse Analytics ](https://azure.microsoft.com/en-us/services/synapse-analytics/)   |Azure HDInsight (HDI)  |
 |:-------------:|:-------------:|
 | Azure Synapse Analytics uses the .NET kernel to write and run quick ad-hoc queries in addition to developing complete, end-to-end big data scenarios, such as reading in data, transforming it, and visualizing it|You can launch Jupyter notebooks from your HDInsight cluster to run big data queries against the compute resources in that cluster. |
