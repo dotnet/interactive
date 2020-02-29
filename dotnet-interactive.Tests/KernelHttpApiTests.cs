@@ -6,6 +6,7 @@ using System.Net;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Tests;
 using Newtonsoft.Json.Linq;
 using Pocket;
 using Xunit;
@@ -28,12 +29,14 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             _disposables.Dispose();
         }
 
-        [Fact]
-        public async Task can_get_variable_value()
+        [Theory]
+        [InlineData(Language.CSharp, "var a = 123;")]
+        [InlineData(Language.FSharp, "let a = 123")]
+        public async Task can_get_variable_value(Language language, string code)
         {
-            await _server.Kernel.SendAsync(new SubmitCode("var a = 123;", "csharp"));
+            await _server.Kernel.SendAsync(new SubmitCode(code, language.LanguageName()));
 
-            var response = await _server.HttpClient.GetAsync("/variables/csharp/a");
+            var response = await _server.HttpClient.GetAsync($"/variables/{language.LanguageName()}/a");
 
             response.EnsureSuccessStatusCode();
 
@@ -44,22 +47,26 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             value.Should().Be(123);
         }
 
-        [Fact]
-        public async Task variable_is_returned_with_application_json_content_type()
+        [Theory]
+        [InlineData(Language.CSharp, "var a = 123;")]
+        [InlineData(Language.FSharp, "let a = 123")]
+        public async Task variable_is_returned_with_application_json_content_type(Language language, string code)
         {
-            await _server.Kernel.SendAsync(new SubmitCode("var a = 123;", "csharp"));
+            await _server.Kernel.SendAsync(new SubmitCode(code, language.LanguageName()));
 
-            var response = await _server.HttpClient.GetAsync("/variables/csharp/a");
+            var response = await _server.HttpClient.GetAsync($"/variables/{language.LanguageName()}/a");
 
             response.EnsureSuccessStatusCode();
 
             response.Content.Headers.ContentType.MediaType.Should().Be("application/json");
         }
 
-        [Fact]
-        public async Task When_variable_does_not_exist_then_it_returns_404()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task When_variable_does_not_exist_then_it_returns_404(Language language)
         {
-            var response = await _server.HttpClient.GetAsync("/variables/csharp/does_not_exist");
+            var response = await _server.HttpClient.GetAsync($"/variables/{language.LanguageName()}/does_not_exist");
 
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
