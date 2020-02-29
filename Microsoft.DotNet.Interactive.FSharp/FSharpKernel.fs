@@ -202,19 +202,21 @@ type FSharpKernel() as this =
             context.Publish(CompletionRequestCompleted(completionItems, requestCompletion))
         }
 
-    member _.GetCurrentVariables() =
+    member _.GetCurrentVariable(variableName: string) =
+        let result, _errors =
+            try
+                script.Value.Eval("``" + variableName + "``")
+            with
+            | ex -> Error(ex), [||]
+        match result with
+        | Ok(Some(value)) -> Some (CurrentVariable(variableName, value.ReflectionType, value.ReflectionValue))
+        | _ -> None
+
+    member this.GetCurrentVariables() =
         // `ValueBound` event will make a copy of value types, so to ensure we always get the current value, we re-evaluate each variable
         variables
         |> Seq.filter (fun v -> v <> "it") // don't report special variable `it`
-        |> Seq.choose (fun v ->
-            let result, _errors =
-                try
-                    script.Value.Eval("``" + v + "``")
-                with
-                | ex -> Error(ex), [||]
-            match result with
-            | Ok(Some(value)) -> Some (CurrentVariable(v, value.ReflectionType, value.ReflectionValue))
-            | _ -> None)
+        |> Seq.choose (this.GetCurrentVariable)
 
     override _.HandleSubmitCode(command: SubmitCode, context: KernelInvocationContext): Task =
         handleSubmitCode command context |> Async.StartAsTask :> Task
@@ -222,5 +224,7 @@ type FSharpKernel() as this =
     override _.HandleRequestCompletion(command: RequestCompletion, context: KernelInvocationContext): Task =
         handleRequestCompletion command context |> Async.StartAsTask :> Task
 
-    override _.GetVariable(variableName: string): Object =
-        raise (System.NotSupportedException())
+    override this.GetVariable(variableName: string) =
+        match this.GetCurrentVariable(variableName) with
+        | Some(cv) -> cv.Value
+        | None -> raise (VariableNotFoundException(variableName))
