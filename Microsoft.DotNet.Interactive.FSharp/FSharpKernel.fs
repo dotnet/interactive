@@ -229,7 +229,7 @@ type FSharpKernel() as this =
     override this.TryGetVariable(name: string, [<Out>] value: Object byref) =
         match this.GetCurrentVariable(name) with
         | Some(cv) -> 
-            value <- cv
+            value <- cv.Value
             true
         | None -> 
             false
