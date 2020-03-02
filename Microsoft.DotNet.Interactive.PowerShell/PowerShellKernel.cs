@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         private readonly object _cancellationSourceLock = new object();
         private readonly Lazy<PowerShell> _lazyPwsh;
-        private CancellationTokenSource _cancellationSource;
+        private readonly CancellationTokenSource _cancellationSource;
 
         static PowerShellKernel()
         {
@@ -76,9 +76,11 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 return pwsh;
             });
         }
-        public override object GetVariable(string variableName)
+
+        public override bool TryGetVariable(string name, out object value)
         {
-            throw new NotSupportedException();
+            value = null;
+            return false;
         }
 
         protected override Task HandleSubmitCode(

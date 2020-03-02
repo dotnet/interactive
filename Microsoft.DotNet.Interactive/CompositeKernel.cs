@@ -143,9 +143,10 @@ namespace Microsoft.DotNet.Interactive
             return kernel ?? throw new NoSuitableKernelException(command);
         }
 
-        public override object GetVariable(string variableName)
+        public override bool TryGetVariable(string name, out object value)
         {
-            throw new NotSupportedException();
+            value = null;
+            return false;
         }
 
         internal override async Task HandleAsync(

@@ -5,6 +5,7 @@ namespace Microsoft.DotNet.Interactive.FSharp
 
 open System
 open System.Collections.Generic
+open System.Runtime.InteropServices
 open System.Threading
 open System.Threading.Tasks
 
@@ -18,6 +19,7 @@ open FSharp.Compiler.Scripting
 open FSharp.DependencyManager
 open FSharp.Compiler.SourceCodeServices
 open Microsoft.CodeAnalysis.Tags
+open System
 
 type FSharpKernel() as this =
     inherit KernelBase(Name = "fsharp")
@@ -224,7 +226,10 @@ type FSharpKernel() as this =
     override _.HandleRequestCompletion(command: RequestCompletion, context: KernelInvocationContext): Task =
         handleRequestCompletion command context |> Async.StartAsTask :> Task
 
-    override this.GetVariable(variableName: string) =
-        match this.GetCurrentVariable(variableName) with
-        | Some(cv) -> cv.Value
-        | None -> raise (VariableNotFoundException(variableName))
+    override this.TryGetVariable(name: string, [<Out>] value: Object byref) =
+        match this.GetCurrentVariable(name) with
+        | Some(cv) -> 
+            value <- cv
+            true
+        | None -> 
+            false

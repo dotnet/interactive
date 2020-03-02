@@ -49,17 +49,13 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
 
                     if (targetKernel is KernelBase kernelBase)
                     {
-                        try
+                        if (kernelBase.TryGetVariable(segments[2], out var value))
                         {
-                            var value = kernelBase.GetVariable(segments[2]);
                             context.Handler = async httpContext =>
                             {
                                 httpContext.Response.ContentType = "application/json";
                                 await httpContext.Response.WriteAsync(JsonConvert.SerializeObject(value));
                             };
-                        }
-                        catch (VariableNotFoundException)
-                        {
                         }
                     }
                 }
