@@ -88,5 +88,15 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             response.Content.Headers.ContentType.MediaType.Should().Be("image/png");
         }
+
+        [Fact]
+        public async Task can_get_javascript_api()
+        {
+            var response = await _server.HttpClient.GetAsync("/resources/dotnet-interactive.js");
+
+            response.EnsureSuccessStatusCode();
+
+            response.Content.Headers.ContentType.MediaType.Should().Be("application/javascript");
+        }
     }
 }

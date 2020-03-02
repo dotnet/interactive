@@ -34,6 +34,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="resources\dotnet-interactive.js" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Clockwise" Version="1.0.261-beta" />
     <PackageReference Include="EnvironmentExtensions" Version="0.1.9120003">
       <PrivateAssets>all</PrivateAssets>
@@ -95,7 +99,13 @@
       <LogicalName>dotnetKernel.zip</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="resources\logo-32x32.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="resources\dotnet-interactive.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
 
