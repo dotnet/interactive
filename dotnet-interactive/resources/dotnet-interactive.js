@@ -4,7 +4,7 @@
     let clientFetch = (url, init) => {
         let address = url;
         if (!address.startsWith("http")) {
-            address = `${rootUrl}${url}`
+            address = `${rootUrl}${url}`;
         }
         return fetch(address, init);
     };
@@ -21,5 +21,5 @@
         return clientFetch(`/resources/${resource}`);
     };
 
-    return client
+    return client;
 }
