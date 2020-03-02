@@ -246,6 +246,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
             TextWriter writer,
             string mimeType = PlainTextFormatter.MimeType)
         {
+            if (obj is string s)
+            {
+                writer.Write(s);
+                return;
+            }
+
             if (obj != null)
             {
                 var actualType = obj.GetType();
@@ -263,7 +269,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             Formatter<T>.FormatTo(obj, writer, mimeType);
         }
-
 
         internal static Action<object, TextWriter, string> GetGenericFormatterMethod(this Type type)
         {

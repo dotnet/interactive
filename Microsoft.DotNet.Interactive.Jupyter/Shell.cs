@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             Formatter.SetPreferredMimeTypeFor(typeof(LaTeXString), "text/latex");
             Formatter.SetPreferredMimeTypeFor(typeof(MathString), "text/latex");
             
-            Formatter.SetPreferredMimeTypeFor(typeof(string), HtmlFormatter.MimeType);
+            Formatter.SetPreferredMimeTypeFor(typeof(string), PlainTextFormatter.MimeType);
             
             Formatter.SetDefaultMimeType(HtmlFormatter.MimeType);
         }

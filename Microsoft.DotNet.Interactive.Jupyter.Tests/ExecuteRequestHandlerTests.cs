@@ -305,8 +305,8 @@ f();"));
         }
 
         [Theory]
-        [InlineData("input()", "", "<span>input-value</span>")]
-        [InlineData("input(\"User:\")", "User:", "<span>user name</span>")]
+        [InlineData("input()", "", "input-value")]
+        [InlineData("input(\"User:\")", "User:", "user name")]
         public async Task sends_InputRequest_message_when_submission_requests_user_input(string code, string prompt, string expectedDisplayValue)
         {
             var scheduler = CreateScheduler();
@@ -320,7 +320,7 @@ f();"));
             JupyterMessageSender.PubSubMessages
                 .OfType<ExecuteResult>()
                 .Should()
-                .Contain(dp => dp.Data["text/html"] as string == expectedDisplayValue);
+                .Contain(dp => dp.Data["text/plain"] as string == expectedDisplayValue);
         }
 
         [Fact]
