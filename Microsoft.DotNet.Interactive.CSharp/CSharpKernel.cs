@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Microsoft.CodeAnalysis.FlowAnalysis;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.DotNet.Interactive.Commands;
@@ -86,20 +87,19 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
         }
 
-        public override object GetVariable(string variableName)
+        public override bool TryGetVariable(
+            string name,
+            out object value)
         {
-            if (ScriptState != null)
+            if (ScriptState?.Variables
+                           .LastOrDefault(v => v.Name == name) is {} variable)
             {
-                var variable = ScriptState.Variables.LastOrDefault(v => v.Name == variableName);
-
-                if (variable == null)
-                {
-                    throw new VariableNotFoundException(variableName);
-                }
-                return variable.Value;
+                value = variable.Value;
+                return true;
             }
 
-            throw new VariableNotFoundException(variableName);
+            value = default;
+            return false;
         }
 
         protected override async Task HandleSubmitCode(

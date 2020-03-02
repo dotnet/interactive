@@ -30,7 +30,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         private readonly PublisherSocket _ioPubSocket;
         private readonly string _shellAddress;
         private readonly string _ioPubAddress;
-        private readonly SignatureValidator _signatureValidator;
         private readonly CompositeDisposable _disposables;
         private readonly ReplyChannel _shellChannel;
         private readonly PubSubChannel _ioPubChannel;
@@ -59,15 +58,15 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             _controlAddress = $"{connectionInformation.Transport}://{connectionInformation.IP}:{connectionInformation.ControlPort}";
 
             var signatureAlgorithm = connectionInformation.SignatureScheme.Replace("-", string.Empty).ToUpperInvariant();
-            _signatureValidator = new SignatureValidator(connectionInformation.Key, signatureAlgorithm);
+            var signatureValidator = new SignatureValidator(connectionInformation.Key, signatureAlgorithm);
             _shell = new RouterSocket();
             _ioPubSocket = new PublisherSocket();
             _stdIn = new RouterSocket();
             _control = new RouterSocket();
 
-            _shellChannel = new ReplyChannel(new MessageSender(_shell, _signatureValidator));
-            _ioPubChannel = new PubSubChannel(new MessageSender(_ioPubSocket, _signatureValidator));
-            _stdInChannel = new StdInChannel(new MessageSender(_stdIn, _signatureValidator), new MessageReceiver(_stdIn));
+            _shellChannel = new ReplyChannel(new MessageSender(_shell, signatureValidator));
+            _ioPubChannel = new PubSubChannel(new MessageSender(_ioPubSocket, signatureValidator));
+            _stdInChannel = new StdInChannel(new MessageSender(_stdIn, signatureValidator), new MessageReceiver(_stdIn));
 
             _disposables = new CompositeDisposable
                            {

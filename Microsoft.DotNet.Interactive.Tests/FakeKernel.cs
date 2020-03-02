@@ -17,10 +17,12 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         public KernelCommandInvocation Handle { get; set; }
 
-        public override object GetVariable(string variableName)
+        public override bool TryGetVariable(string name, out object value)
         {
-            throw new NotSupportedException();
+            value = null;
+            return false;
         }
+
         protected override Task HandleSubmitCode(SubmitCode command, KernelInvocationContext context)
         {
             Handle(command, context);
