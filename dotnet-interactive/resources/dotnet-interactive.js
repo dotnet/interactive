@@ -1,13 +1,5 @@
-﻿function createDotnetInteractiveClient(address, port) {
-    let rootUrl = "";
-
-    if (typeof  address !== 'undefined') {
-        rootUrl = `${address}`;
-    }
-    
-    if (typeof  port !== 'undefined') {
-        rootUrl = `${rootUrl}:${port}`;
-    }
+﻿function createDotnetInteractiveClient(address) {
+    let rootUrl = address;
 
     let clientFetch = (url, init) => {
         let address = url;
@@ -22,11 +14,11 @@
     client.fetch = clientFetch;
 
     client.getVariable = (kernel, variable) => {
-        return clientFetch(`${kernel}/variables/${variable}`);
+        return clientFetch(`/${kernel}/variables/${variable}`);
     };
 
     client.getReource = (resource) => {
-        return clientFetch(`resources/${resource}`);
+        return clientFetch(`/resources/${resource}`);
     };
 
     return client
