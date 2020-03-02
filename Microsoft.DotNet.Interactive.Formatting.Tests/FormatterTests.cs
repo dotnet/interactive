@@ -205,6 +205,20 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         [Theory]
+        [InlineData("text/html")]
+        [InlineData("text/plain")]
+        [InlineData("text/markdown")]
+        [InlineData("application/json")]
+        public void When_input_is_a_string_then_it_is_not_modified(string mimeType)
+        {
+            var input = "# { This is the <input> }";
+
+            var output = input.ToDisplayString(mimeType);
+
+            output.Should().Be(input);
+        }
+
+        [Theory]
         [InlineData("text/plain")]
         [InlineData("text/html")]
         public void Custom_formatters_can_be_registered_for_types_not_known_until_runtime(string mimeType)
