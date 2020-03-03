@@ -1,8 +1,12 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using Microsoft.DotNet.Interactive.App.CommandLine;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Recipes;
 using XPlot.DotNet.Interactive.KernelExtensions;
@@ -57,6 +61,44 @@ namespace Microsoft.DotNet.Interactive.App
             Formatter<PlotlyChart>.Register(
                 (chart, writer) => writer.Write(PlotlyChartExtensions.GetHtml(chart)),
                 HtmlFormatter.MimeType);
+
+            return kernel;
+        }
+
+        public static T UseHttpApi<T>(this T kernel, StartupOptions startupOptions)
+            where T : KernelBase
+        {
+
+            var initApiCommand = new Command("#!enableHttpApi")
+            {
+                Handler = CommandHandler.Create((KernelInvocationContext context) =>
+                {
+                    if (context.Command is SubmitCode submitCode)
+                    {
+                        var scriptContent =
+                            HttpApiBootstrapper.GetJSCode(new Uri($"http://localhost:{startupOptions.HttpPort}"));
+
+                        string value =
+                            script[type: "text/javascript"](
+
+                                    scriptContent.ToHtmlContent())
+                                .ToString();
+
+                        context.Publish(new DisplayedValueProduced(
+                            scriptContent,
+                            context.Command,
+                            formattedValues: new[]
+                            {
+                                new FormattedValue("text/html",
+                                    value)
+                            }));
+
+                        context.Complete(submitCode);
+                    }
+                })
+            };
+
+            kernel.AddDirective(initApiCommand);
 
             return kernel;
         }
