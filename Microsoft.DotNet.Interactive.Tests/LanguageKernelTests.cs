@@ -885,5 +885,62 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             Assert.Equal(typeAccelerators["Layout"].FullName, $"{typeof(Layout).FullName}+Layout");
             Assert.Equal(typeAccelerators["Chart"].FullName, typeof(Chart).FullName);
         }
+
+        [Fact()]
+        public async Task PowerShell_token_variables_work()
+        {
+            var kernel = CreateKernel(Language.PowerShell);
+
+            await kernel.SendAsync(new SubmitCode("echo /this/is/a/path"));
+            await kernel.SendAsync(new SubmitCode("$$; $^"));
+
+            Assert.Collection(KernelEvents,
+                e => e.Should()
+                        .BeOfType<CodeSubmissionReceived>()
+                        .Which.Code
+                        .Should().Be("echo /this/is/a/path"),
+                e => e.Should()
+                        .BeOfType<CompleteCodeSubmissionReceived>()
+                        .Which.Code
+                        .Should().Be("echo /this/is/a/path"),
+                e => e.Should()
+                        .BeOfType<StandardOutputValueProduced>()
+                        .Which.Value.ToString()
+                        .Should().Be("/this/is/a/path" + Environment.NewLine),
+                e => e.Should().BeOfType<CommandHandled>(),
+                e => e.Should()
+                        .BeOfType<CodeSubmissionReceived>()
+                        .Which.Code
+                        .Should().Be("$$; $^"),
+                e => e.Should()
+                        .BeOfType<CompleteCodeSubmissionReceived>()
+                        .Which.Code
+                        .Should().Be("$$; $^"),
+                e => e.Should()
+                        .BeOfType<StandardOutputValueProduced>()
+                        .Which.Value.ToString()
+                        .Should().Be("/this/is/a/path" + Environment.NewLine),
+                e => e.Should()
+                        .BeOfType<StandardOutputValueProduced>()
+                        .Which.Value.ToString()
+                        .Should().Be("echo" + Environment.NewLine),
+                e => e.Should().BeOfType<CommandHandled>());
+        }
+
+        [Fact()]
+        public async Task PowerShell_get_history_should_work()
+        {
+            var kernel = CreateKernel(Language.PowerShell);
+
+            await kernel.SendAsync(new SubmitCode("Get-Verb > $null"));
+            await kernel.SendAsync(new SubmitCode("echo bar > $null"));
+            await kernel.SendAsync(new SubmitCode("Get-History | % CommandLine"));
+
+            var outputs = KernelEvents.OfType<StandardOutputValueProduced>();
+            outputs.Should().HaveCount(2);
+            Assert.Collection(outputs,
+                e => e.Value.As<string>().Should().Be("Get-Verb > $null" + Environment.NewLine),
+                e => e.Value.As<string>().Should().Be("echo bar > $null" + Environment.NewLine));
+        }
     }
 }
