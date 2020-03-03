@@ -14,6 +14,7 @@ using Markdig.Renderers;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Kernel;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
@@ -43,7 +44,14 @@ using static {typeof(Kernel).FullName};
 ");
 
             kernel.DeferCommand(command);
+            return kernel;
+        }
 
+        public static PowerShellKernel UseJupyterHelpers(
+            this PowerShellKernel kernel)
+        {
+            kernel.ReadInput = Kernel.input;
+            kernel.ReadPassword = Kernel.password;
             return kernel;
         }
 

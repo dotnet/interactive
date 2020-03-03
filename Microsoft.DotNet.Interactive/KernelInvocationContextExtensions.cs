@@ -17,6 +17,15 @@ namespace Microsoft.DotNet.Interactive
             object value,
             string mimeType = null)
         {
+            DisplayedValue result = Display(context, value, mimeType);
+            return Task.FromResult(result);
+        }
+
+        public static DisplayedValue Display(
+            this KernelInvocationContext context,
+            object value,
+            string mimeType = null)
+        {
             var displayId = Kernel.DisplayIdGenerator?.Invoke() ??
                             Guid.NewGuid().ToString();
 
@@ -33,9 +42,9 @@ namespace Microsoft.DotNet.Interactive
                     new[] { formattedValue },
                     displayId));
 
-            return Task.FromResult(new DisplayedValue(displayId, mimeType, context));
+            return new DisplayedValue(displayId, mimeType, context);
         }
-        
+
         public static void DisplayStandardOut(
             this KernelInvocationContext context,
             string output,

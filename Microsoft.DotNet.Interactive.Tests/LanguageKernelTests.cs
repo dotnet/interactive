@@ -247,7 +247,6 @@ f();"
         [Theory(Timeout = 45000)]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
         public async Task it_returns_diagnostics(Language language)
         {
             var kernel = CreateKernel(language);
@@ -264,11 +263,7 @@ f();"
                 {
                     "using System;",
                     "aaaadd"
-                },
-                Language.PowerShell => new[]
-                {
-                    "$x ="
-                },
+                }
             };
 
             await SubmitCode(kernel, source);
@@ -276,22 +271,16 @@ f();"
             var error = language switch
             {
                 Language.FSharp => "input.fsx (1,1)-(1,7) typecheck error The value or constructor 'aaaadd' is not defined.",
-                Language.CSharp => "(1,1): error CS0103: The name 'aaaadd' does not exist in the current context",
-                Language.PowerShell => @"At line:1 char:5
-+ $x =
-+     ~
-You must provide a value expression following the '=' operator.",
+                Language.CSharp => "(1,1): error CS0103: The name 'aaaadd' does not exist in the current context"
             };
 
             KernelEvents
                 .Should()
                 .ContainSingle<CommandFailed>()
                 .Which
-                // Unfortunately, PowerShell's ParseError type's ToString() hardcoded a \n which means we have
-                // mixed newlines in PowerShell... So we replace \r\n with \n so we have consistant newlines.
-                .Message.Replace("\r\n", "\n")
+                .Message
                 .Should()
-                .Be(error.Replace("\r\n", "\n"));
+                .Be(error);
         }
 
         [Theory(Timeout = 45000)]
@@ -817,19 +806,23 @@ Console.Write(2);
         {
             var kernel = CreateKernel(Language.PowerShell);
 
-            var warningMessage = "I am a warning message";
-            var verboseMessage = "I am a verbose message";
-            var outputMessage = "I am output";
-            var debugMessage = "I am a debug message";
-            var infoMessage = "I am a information message";
-            var errorMessage = "I am a non-terminating error";
+            const string yellow_foreground = "\u001b[93m";
+            const string red_foreground = "\u001b[91m";
+            const string reset = "\u001b[0m";
+
+            const string warningMessage = "I am a warning message";
+            const string verboseMessage = "I am a verbose message";
+            const string outputMessage = "I am output";
+            const string debugMessage = "I am a debug message";
+            const string hostMessage = "I am a message written to host";
+            const string errorMessage = "I am a non-terminating error";
 
             var command = new SubmitCode($@"
 Write-Warning '{warningMessage}'
 Write-Verbose '{verboseMessage}' -Verbose
 '{outputMessage}'
 Write-Debug '{debugMessage}' -Debug
-Write-Host '{infoMessage}'
+Write-Host '{hostMessage}' -NoNewline
 Write-Error '{errorMessage}'
 ");
 
@@ -838,18 +831,18 @@ Write-Error '{errorMessage}'
             Assert.Collection(KernelEvents,
                 e => e.Should().BeOfType<CodeSubmissionReceived>(),
                 e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-                e => e.Should().BeOfType<DisplayedValueProduced>().Which
-                    .Value.ToString().Should().Be(warningMessage),
-                e => e.Should().BeOfType<DisplayedValueProduced>().Which
-                    .Value.ToString().Should().Be(verboseMessage),
-                e => e.Should().BeOfType<DisplayedValueProduced>().Which
-                    .Value.ToString().Should().Be(outputMessage),
-                e => e.Should().BeOfType<DisplayedValueProduced>().Which
-                    .Value.ToString().Should().Be(debugMessage),
-                e => e.Should().BeOfType<DisplayedValueProduced>().Which
-                    .Value.ToString().Should().Be(infoMessage),
-                e => e.Should().BeOfType<DisplayedValueProduced>().Which
-                    .Value.ToString().Should().Be(errorMessage),
+                e => e.Should().BeOfType<StandardOutputValueProduced>().Which
+                    .Value.ToString().Should().Contain($"{yellow_foreground}WARNING: {warningMessage}{reset}"),
+                e => e.Should().BeOfType<StandardOutputValueProduced>().Which
+                    .Value.ToString().Should().Contain($"{yellow_foreground}VERBOSE: {verboseMessage}{reset}"),
+                e => e.Should().BeOfType<StandardOutputValueProduced>().Which
+                    .Value.ToString().Should().Be(outputMessage + Environment.NewLine),
+                e => e.Should().BeOfType<StandardOutputValueProduced>().Which
+                    .Value.ToString().Should().Contain($"{yellow_foreground}DEBUG: {debugMessage}{reset}"),
+                e => e.Should().BeOfType<StandardOutputValueProduced>().Which
+                    .Value.ToString().Should().Be(hostMessage),
+                e => e.Should().BeOfType<StandardOutputValueProduced>().Which
+                    .Value.ToString().Should().Contain($"{red_foreground}Write-Error: {red_foreground}{errorMessage}{reset}"),
                 e => e.Should().BeOfType<CommandHandled>());
         }
 
@@ -858,9 +851,10 @@ Write-Error '{errorMessage}'
         {
             var kernel = CreateKernel(Language.PowerShell);
             var command = new SubmitCode(@"
-for ($j = 1; $j -le 4; $j++ ) {
-    Write-Progress -Id 1 -Activity 'Search in Progress' -Status ""$($j*25)% Complete"" -PercentComplete $j;
-    Start-Sleep -Milliseconds 10
+for ($j = 0; $j -le 4; $j += 4 ) {
+    $p = $j * 25
+    Write-Progress -Id 1 -Activity 'Search in Progress' -Status ""$p% Complete"" -PercentComplete $p
+    Start-Sleep -Milliseconds 300
 }
 ");
             await kernel.SendAsync(command);
@@ -869,31 +863,21 @@ for ($j = 1; $j -le 4; $j++ ) {
                 e => e.Should().BeOfType<CodeSubmissionReceived>(),
                 e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
                 e => e.Should().BeOfType<DisplayedValueProduced>().Which
-                    .Value.Should().BeOfType<ProgressRecord>().Which
-                    .StatusDescription.Should().Be("25% Complete"),
+                    .Value.Should().BeOfType<string>().Which
+                    .Should().Match("* Search in Progress* 0% Complete* [ * ] *"),
                 e => e.Should().BeOfType<DisplayedValueUpdated>().Which
-                    .Value.Should().BeOfType<ProgressRecord>().Which
-                    .StatusDescription.Should().Be("50% Complete"),
+                    .Value.Should().BeOfType<string>().Which
+                    .Should().Match("* Search in Progress* 100% Complete* [ooo*ooo] *"),
                 e => e.Should().BeOfType<DisplayedValueUpdated>().Which
-                    .Value.Should().BeOfType<ProgressRecord>().Which
-                    .StatusDescription.Should().Be("75% Complete"),
-                e => e.Should().BeOfType<DisplayedValueUpdated>().Which
-                    .Value.Should().BeOfType<ProgressRecord>().Which
-                    .StatusDescription.Should().Be("100% Complete"),
+                    .Value.Should().BeOfType<string>().Which
+                    .Should().Be(string.Empty),
                 e => e.Should().BeOfType<CommandHandled>());
         }
 
         [Fact()]
-        public async Task PowerShell_type_accelerators_present()
+        public void PowerShell_type_accelerators_present()
         {
             var kernel = CreateKernel(Language.PowerShell);
-            var command = new SubmitCode(@"
-            for ($j = 1; $j -le 4; $j++ ) {
-                Write-Progress -Id 1 -Activity 'Search in Progress' -Status ""$($j*25)% Complete"" -PercentComplete $j;
-                Start-Sleep -Milliseconds 10
-            }
-            ");
-            await kernel.SendAsync(command);
 
             var accelerator = typeof(PSObject).Assembly.GetType("System.Management.Automation.TypeAccelerators");
             dynamic typeAccelerators = accelerator.GetProperty("Get").GetValue(null);

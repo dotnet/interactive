@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Clockwise;
@@ -306,8 +307,8 @@ f();"));
 
         [Theory]
         [InlineData("input()", "", "input-value")]
-        [InlineData("input(\"User:\")", "User:", "user name")]
-        public async Task sends_InputRequest_message_when_submission_requests_user_input(string code, string prompt, string expectedDisplayValue)
+        [InlineData("input(\"User: \")", "User: ", "user name")]
+        public async Task sends_InputRequest_message_when_submission_requests_user_input_in_csharp(string code, string prompt, string expectedDisplayValue)
         {
             var scheduler = CreateScheduler();
             var request = ZeroMQMessage.Create(new ExecuteRequest(code));
@@ -321,6 +322,27 @@ f();"));
                 .OfType<ExecuteResult>()
                 .Should()
                 .Contain(dp => dp.Data["text/plain"] as string == expectedDisplayValue);
+        }
+
+        [Theory]
+        [InlineData("Read-Host", "", "input-value")]
+        [InlineData("Read-Host -Prompt User", "User: ", "user name")]
+        public async Task sends_InputRequest_message_when_submission_requests_user_input_in_powershell(string code, string prompt, string expectedDisplayValue)
+        {
+            SetKernelLanguage(Language.PowerShell);
+
+            var scheduler = CreateScheduler();
+            var request = ZeroMQMessage.Create(new ExecuteRequest(code));
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            await scheduler.Schedule(context);
+
+            await context.Done().Timeout(20.Seconds());
+
+            JupyterMessageSender.RequestMessages.Should().Contain(r => r.Prompt == prompt && r.Password == false);
+            JupyterMessageSender.PubSubMessages
+                .OfType<Stream>()
+                .Should()
+                .Contain(s => s.Name == Stream.StandardOutput && s.Text == (expectedDisplayValue + Environment.NewLine));
         }
 
         [Fact]
@@ -342,7 +364,7 @@ f();"));
         [Theory]
         [InlineData("password()", "")]
         [InlineData("password(\"Type your password:\")", "Type your password:")]
-        public async Task sends_InputRequest_message_when_submission_requests_user_password(string code, string prompt)
+        public async Task sends_InputRequest_message_when_submission_requests_user_password_in_csharp(string code, string prompt)
         {
             var scheduler = CreateScheduler();
             var request = ZeroMQMessage.Create(new ExecuteRequest(code));
@@ -356,6 +378,27 @@ f();"));
                 .OfType<ExecuteResult>()
                 .Should()
                 .Contain(dp => dp.Data["text/html"] as string == $"{typeof(PasswordString).FullName}");
+        }
+
+        [Theory]
+        [InlineData("Read-Host -AsSecureString", "")]
+        [InlineData("Read-Host -Prompt 'Type your password' -AsSecureString", "Type your password: ")]
+        public async Task sends_InputRequest_message_when_submission_requests_user_password_in_powershell(string code, string prompt)
+        {
+            SetKernelLanguage(Language.PowerShell);
+
+            var scheduler = CreateScheduler();
+            var request = ZeroMQMessage.Create(new ExecuteRequest(code));
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            await scheduler.Schedule(context);
+
+            await context.Done().Timeout(20.Seconds());
+
+            JupyterMessageSender.RequestMessages.Should().Contain(r => r.Prompt == prompt && r.Password == true);
+            JupyterMessageSender.PubSubMessages
+                .OfType<Stream>()
+                .Should()
+                .Contain(s => s.Name == Stream.StandardOutput && s.Text == $"System.Security.SecureString{Environment.NewLine}");
         }
 
         [Fact]

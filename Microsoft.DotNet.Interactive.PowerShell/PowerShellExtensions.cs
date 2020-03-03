@@ -3,7 +3,9 @@
 
 using System.Collections;
 using System.Collections.ObjectModel;
+using System.Security;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.PowerShell
 {
@@ -76,6 +78,17 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 pwsh.Streams.ClearStreams();
                 pwsh.Commands.Clear();
             }
+        }
+
+        internal static SecureString GetSecureStringPassword(this PasswordString pwdString)
+        {
+            var secure = new SecureString();
+            foreach (char c in pwdString.GetClearTextPassword())
+            {
+                secure.AppendChar(c);
+            }
+
+            return secure;
         }
     }
 }
