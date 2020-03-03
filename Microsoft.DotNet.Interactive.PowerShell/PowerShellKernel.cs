@@ -31,8 +31,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         private readonly PSKernelHost _psHost;
         private readonly Lazy<PowerShell> _lazyPwsh;
-        private readonly object _cancellationSourceLock;
-        private readonly CancellationTokenSource _cancellationSource;
 
         public Func<string, string> ReadInput { get; set; }
         public Func<string, PasswordString> ReadPassword { get; set; }
@@ -61,8 +59,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         public PowerShellKernel()
         {
             Name = DefaultKernelName;
-            _cancellationSource = new CancellationTokenSource();
-            _cancellationSourceLock = new object();
             _psHost = new PSKernelHost();
             _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);
         }
@@ -112,12 +108,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             SubmitCode submitCode,
             KernelInvocationContext context)
         {
-            CancellationTokenSource cancellationSource;
-            lock (_cancellationSourceLock)
-            {
-                cancellationSource = _cancellationSource;
-            }
-
             // Acknowledge that we received the request.
             context.Publish(new CodeSubmissionReceived(submitCode));
 
@@ -148,7 +138,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 return Task.CompletedTask;
             }
 
-            if (cancellationSource.IsCancellationRequested)
+            if (context.CancellationToken.IsCancellationRequested)
             {
                 context.Fail(null, "Command cancelled");
                 return Task.CompletedTask;

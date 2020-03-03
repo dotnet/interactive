@@ -13,11 +13,13 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
     internal static class PowerShellExtensions
     {
+        private static PSInvocationSettings _settings = new PSInvocationSettings() { AddToHistory = true };
+
         public static void InvokeAndClearCommands(this PowerShell pwsh)
         {
             try
             {
-                pwsh.Invoke();
+                pwsh.Invoke(input: null, _settings);
             }
             finally
             {
@@ -30,7 +32,11 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             try
             {
-                await pwsh.InvokeAsync().ConfigureAwait(false);
+                await pwsh.InvokeAsync<PSObject>(
+                    input: null,
+                    settings: _settings,
+                    callback: null,
+                    state: null).ConfigureAwait(false);
             }
             finally
             {
@@ -43,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             try
             {
-                pwsh.Invoke(input);
+                pwsh.Invoke(input, _settings);
             }
             finally
             {
@@ -56,7 +62,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             try
             {
-                var result = pwsh.Invoke<T>();
+                var result = pwsh.Invoke<T>(input: null, settings: _settings);
                 return result;
             }
             finally
@@ -70,7 +76,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             try
             {
-                var result = pwsh.Invoke<T>(input);
+                var result = pwsh.Invoke<T>(input, _settings);
                 return result;
             }
             finally
