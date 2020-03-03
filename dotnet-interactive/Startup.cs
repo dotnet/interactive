@@ -51,7 +51,12 @@ namespace Microsoft.DotNet.Interactive.App
                 builder.AllowAnyOrigin()
                     .AllowAnyMethod());
             app.UseRouting();
-            app.UseRouter(r => r.Routes.Add(new VariableRouter(serviceProvider.GetRequiredService<IKernel>())));
+            app.UseRouter(r =>
+            {
+                r.Routes.Add(new VariableRouter(serviceProvider.GetRequiredService<IKernel>()));
+                r.Routes.Add(new KernelsRouter(serviceProvider.GetRequiredService<IKernel>()));
+
+            });
         }
     }
 }

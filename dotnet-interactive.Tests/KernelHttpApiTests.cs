@@ -90,6 +90,21 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         }
 
         [Fact]
+        public async Task can_get_kernel_names()
+        {
+            var response = await _server.HttpClient.GetAsync("/kernels");
+
+            response.EnsureSuccessStatusCode();
+
+            response.Content.Headers.ContentType.MediaType.Should().Be("application/json");
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var kernels = JToken.Parse(responseContent).Values<string>();
+
+            kernels.Should().BeEquivalentTo(".NET", "csharp", "fsharp", "powershell");
+        }
+
+        [Fact]
         public async Task can_get_javascript_api()
         {
             var response = await _server.HttpClient.GetAsync("/resources/dotnet-interactive.js");
