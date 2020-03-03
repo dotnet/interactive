@@ -42,16 +42,15 @@
                     return r.json();
                 })
                 .then(kernelNames => {
+                    global.kernels = {};
                     if (Array.isArray(kernelNames) && kernelNames.length > 0) {
                         for (let index = 0; index < kernelNames.length; index++) {
                             let kernelName = kernelNames[index];
-                            global.kernels = {};
                             global.kernels[kernelName] = {
                                 getVariable: (variableName) => {
                                     return client.getVariable(kernelName, variableName);
                                 }
                             }
-                            console.log(kernels);
                         }
                     }
                 });

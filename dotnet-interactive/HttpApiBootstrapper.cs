@@ -25,7 +25,7 @@ else {
 }
 
 function loadDotnetInteractiveApi(){
-    let apiRequire = requirejs.config({context:""dotnet-interactive"",paths:{dotnetInteractive:""$API_URL$""}});
+    let apiRequire = requirejs.config({context:""dotnet-interactive.$SEED$"",paths:{dotnetInteractive:""$API_URL$""}});
     apiRequire(['dotnetInteractive'], 
     function(api) {       
         api.createDotnetInteractiveClient(""$HOST$"", window);
