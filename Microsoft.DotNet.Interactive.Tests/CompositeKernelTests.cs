@@ -3,6 +3,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -266,6 +268,84 @@ new [] {1,2,3}");
             var events = compositeKernel.KernelEvents.ToSubscribedList();
 
             await subKernel.SendAsync(new SubmitCode("var x = 1;"));
+
+            events
+                .Select(e => e.GetType())
+                .Should()
+                .ContainInOrder(
+                    typeof(CodeSubmissionReceived),
+                    typeof(CompleteCodeSubmissionReceived),
+                    typeof(CommandHandled));
+        }
+
+        [Fact(Timeout = 45000)]
+        public async Task Deferred_commands_on_composite_kernel_are_execute_on_first_submission()
+        {
+            var deferredCommandExecuted = false;
+            var subKernel = new CSharpKernel();
+
+            using var compositeKernel = new CompositeKernel
+            {
+                subKernel
+            };
+
+            compositeKernel.DefaultKernelName = subKernel.Name;
+
+            var deferred = new SubmitCode("placeholder")
+            {
+                Handler = (command, context) =>
+                {
+                    deferredCommandExecuted = true;
+                    return Task.CompletedTask;
+                }
+            };
+
+            
+            compositeKernel.DeferCommand(deferred);
+
+            var events = compositeKernel.KernelEvents.ToSubscribedList();
+
+            await compositeKernel.SendAsync(new SubmitCode("var x = 1;", targetKernelName: subKernel.Name));
+
+            deferredCommandExecuted.Should().Be(true);
+
+            events
+                .Select(e => e.GetType())
+                .Should()
+                .ContainInOrder(
+                    typeof(CodeSubmissionReceived),
+                    typeof(CompleteCodeSubmissionReceived),
+                    typeof(CommandHandled));
+        }
+
+        [Fact(Timeout = 45000)]
+        public async Task Deferred_commands_on_composite_kernel_can_use_directives()
+        {
+            var deferredCommandExecuted = false;
+            var subKernel = new CSharpKernel();
+
+            using var compositeKernel = new CompositeKernel
+            {
+                subKernel
+            };
+            var customDirective = new Command("#!customDirective")
+            {
+                Handler = CommandHandler.Create(() => { deferredCommandExecuted = true; })
+
+            };
+            compositeKernel.AddDirective(customDirective);
+
+            compositeKernel.DefaultKernelName = subKernel.Name;
+
+            var deferred = new SubmitCode("#!customDirective");
+
+            compositeKernel.DeferCommand(deferred);
+
+            var events = compositeKernel.KernelEvents.ToSubscribedList();
+
+            await compositeKernel.SendAsync(new SubmitCode("var x = 1;", targetKernelName: subKernel.Name));
+
+            deferredCommandExecuted.Should().Be(true);
 
             events
                 .Select(e => e.GetType())

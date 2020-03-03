@@ -8,11 +8,15 @@ using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Clockwise;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.PowerShell;
@@ -22,6 +26,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Recipes;
 using CommandHandler = System.CommandLine.Invocation.CommandHandler;
+using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine
 {
@@ -186,7 +191,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                                                                                    .Handle(delivery));
                             })
                             .AddSingleton(c => CreateKernel(options.DefaultKernel,
-                                                            c.GetRequiredService<FrontendEnvironmentBase>()))
+                                                            c.GetRequiredService<FrontendEnvironmentBase>(), startupOptions))
                             .AddSingleton(c => new JupyterRequestContextHandler(
                                                   c.GetRequiredService<IKernel>(),
                                                   c.GetRequiredService<JupyterFrontendEnvironment>())
@@ -215,7 +220,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     {
                         var frontendEnvironment = new JupyterFrontendEnvironment();
                         services
-                            .AddSingleton(c => CreateKernel(options.DefaultKernel, frontendEnvironment));
+                            .AddSingleton(c => CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions));
 
                         return jupyter(startupOptions, console, startServer, context);
                     });
@@ -237,7 +242,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     (startupOptions, options, console, context) => startKernelServer(
                         startupOptions,
                         CreateKernel(options.DefaultKernel,
-                                     new JupyterFrontendEnvironment()), console));
+                                     new JupyterFrontendEnvironment(), startupOptions), console));
 
                 return startKernelServerCommand;
             }
@@ -245,7 +250,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
         private static IKernel CreateKernel(
             string defaultKernelName, 
-            FrontendEnvironmentBase frontendEnvironment)
+            FrontendEnvironmentBase frontendEnvironment, StartupOptions startupOptions)
         {
             var compositeKernel = new CompositeKernel();
             compositeKernel.UseFrontedEnvironment(context => frontendEnvironment);
@@ -280,6 +285,37 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 .UseLog()
                 .UseAbout();
 
+            var initApiCommand = new Command("#!enableHttpApi")
+            {
+                Handler = CommandHandler.Create((KernelInvocationContext context) =>
+                {
+                    if (context.Command is SubmitCode submitCode)
+                    {
+                        var scriptContent =
+                            HttpApiBootstrapper.GetJSCode(new Uri($"http://localhost:{startupOptions.HttpPort}"));
+
+                        string value =
+                            script[type: "text/javascript"](
+
+                                    scriptContent.ToHtmlContent())
+                                .ToString();
+
+                        context.Publish(new DisplayedValueProduced(
+                            scriptContent,
+                            context.Command,
+                            formattedValues: new[]
+                            {
+                                new FormattedValue("text/html",
+                                    value)
+                            }));
+
+                        context.Complete(submitCode);
+                    }
+                })
+            };
+
+                compositeKernel.AddDirective(initApiCommand);
+            
             kernel.DefaultKernelName = defaultKernelName;
             kernel.Name = ".NET";
 
