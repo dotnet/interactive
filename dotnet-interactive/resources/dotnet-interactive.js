@@ -27,5 +27,10 @@
         return response;
     };
 
+    client.getReourceUrl = (resource) => {
+        let resourceUrl = `${rootUrl}resources/${resource}`;
+        return resourceUrl;
+    };
+
     return client;
 }
