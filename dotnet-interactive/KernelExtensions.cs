@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.Interactive.App
             where T : KernelBase
         {
 
-            var initApiCommand = new Command("#!enableHttpApi")
+            var initApiCommand = new Command("#!enable-http")
             {
                 Handler = CommandHandler.Create((KernelInvocationContext context) =>
                 {
