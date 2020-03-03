@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.Interactive
         IExtensibleKernel,
         IEnumerable<IKernel>
     {
+
         private readonly ConcurrentQueue<PackageAdded> _packages = new ConcurrentQueue<PackageAdded>();
         private readonly List<IKernel> _childKernels = new List<IKernel>();
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();

@@ -1,24 +1,30 @@
 ﻿function createDotnetInteractiveClient(address) {
     let rootUrl = address;
-
-    let clientFetch = (url, init) => {
+    if (!address.endsWith("/")) {
+        rootUrl = `${rootUrl}/`;
+    }
+    let clientFetch = async (url, init) => {
         let address = url;
         if (!address.startsWith("http")) {
             address = `${rootUrl}${url}`;
         }
-        return fetch(address, init);
+        let response = await fetch(address, init);
+        return response;
     };
 
     let client = {};
 
     client.fetch = clientFetch;
 
-    client.getVariable = (kernel, variable) => {
-        return clientFetch(`/${kernel}/variables/${variable}`);
+    client.getVariable = async (kernel, variable) => {
+        let response = await clientFetch(`variables/${kernel}/${variable}`);
+        let variableValue = await response.json();
+        return variableValue;
     };
 
     client.getReource = (resource) => {
-        return clientFetch(`/resources/${resource}`);
+        let response = await clientFetch(`resources/${resource}`);
+        return response;
     };
 
     return client;

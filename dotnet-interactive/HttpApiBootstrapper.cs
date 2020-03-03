@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.App
     {
         public static string GetJSCode(Uri apiRoot)
         {
-            var template = @"
+            var template = @"#!javascript
 if ((typeof(requirejs) !==  typeof(Function)) || (typeof(requirejs.config) !== typeof(Function))) { 
     let script = document.createElement(""script""); 
     script.setAttribute(""src"", ""$API_URL$""); 
