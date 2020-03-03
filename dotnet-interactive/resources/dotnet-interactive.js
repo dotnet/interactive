@@ -26,12 +26,12 @@
             return variableValue;
         };
 
-        client.getReource = async (resource) => {
+        client.getResource = async (resource) => {
             let response = await clientFetch(`resources/${resource}`);
             return response;
         };
 
-        client.getReourceUrl = (resource) => {
+        client.getResourceUrl = (resource) => {
             let resourceUrl = `${rootUrl}resources/${resource}`;
             return resourceUrl;
         };
@@ -42,11 +42,10 @@
                     return r.json();
                 })
                 .then(kernelNames => {
-                    global.kernels = {};
                     if (Array.isArray(kernelNames) && kernelNames.length > 0) {
                         for (let index = 0; index < kernelNames.length; index++) {
                             let kernelName = kernelNames[index];
-                            global.kernels[kernelName] = {
+                            client[kernelName] = {
                                 getVariable: (variableName) => {
                                     return client.getVariable(kernelName, variableName);
                                 }
@@ -57,7 +56,6 @@
         }
 
         global.dotnet = client;
-        global.kernels = { };
 
         client.loadKernels();
 
