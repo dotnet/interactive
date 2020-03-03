@@ -283,38 +283,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             var kernel = compositeKernel
                 .UseDefaultMagicCommands()
                 .UseLog()
-                .UseAbout();
+                .UseAbout()
+                .UseHttpApi(startupOptions);
 
-            var initApiCommand = new Command("#!enableHttpApi")
-            {
-                Handler = CommandHandler.Create((KernelInvocationContext context) =>
-                {
-                    if (context.Command is SubmitCode submitCode)
-                    {
-                        var scriptContent =
-                            HttpApiBootstrapper.GetJSCode(new Uri($"http://localhost:{startupOptions.HttpPort}"));
-
-                        string value =
-                            script[type: "text/javascript"](
-
-                                    scriptContent.ToHtmlContent())
-                                .ToString();
-
-                        context.Publish(new DisplayedValueProduced(
-                            scriptContent,
-                            context.Command,
-                            formattedValues: new[]
-                            {
-                                new FormattedValue("text/html",
-                                    value)
-                            }));
-
-                        context.Complete(submitCode);
-                    }
-                })
-            };
-
-                compositeKernel.AddDirective(initApiCommand);
             
             kernel.DefaultKernelName = defaultKernelName;
             kernel.Name = ".NET";
