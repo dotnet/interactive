@@ -14,14 +14,14 @@ if ((typeof(requirejs) !==  typeof(Function)) || (typeof(requirejs.config) !== t
     let script = document.createElement(""script""); 
     script.setAttribute(""src"", ""$API_URL$""); 
     script.onload = function(){
-        window.dotnetInteractive = createDotnetInteractiveClient(""$HOST$"");
+        window.dotnet = createDotnetInteractiveClient(""$HOST$"");
     };
     document.getElementsByTagName(""head"")[0].appendChild(script); 
 }
 else {
     let apiRequire = requirejs.config({context:""dotnet-interactive"",paths:{dotnetInteractive:""$API_URL$""}});
     apiRequire(['dotnetInteractive'], function(api) {
-        window.dotnetInteractive = createDotnetInteractiveClient(""$HOST$"");
+        window.dotnet = createDotnetInteractiveClient(""$HOST$"");
     });
 }";
             var jsUri = new Uri(apiRoot, "/resources/dotnet-interactive.js");
