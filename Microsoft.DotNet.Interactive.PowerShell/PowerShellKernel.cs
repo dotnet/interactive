@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             _writeStreamProperty = typeof(PSObject).GetProperty("WriteStream", BindingFlags.Instance | BindingFlags.NonPublic);
             Type writeStreamType = typeof(PSObject).Assembly.GetType("System.Management.Automation.WriteStreamType");
             _errorStreamValue = Enum.Parse(writeStreamType, "Error");
-            _outDefaultCommand = new CmdletInfo("Out-Default", typeof(OutDefaultCommand));
+            _outDefaultCommand = new CmdletInfo("Out-Default2", typeof(OutDefaultCommand));
 
             // Register type accelerators for Plotly.
             var accelerator = typeof(PSObject).Assembly.GetType("System.Management.Automation.TypeAccelerators");
