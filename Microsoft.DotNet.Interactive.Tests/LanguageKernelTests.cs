@@ -956,8 +956,9 @@ for ($j = 0; $j -le 4; $j += 4 ) {
 
             var outputs = KernelEvents.OfType<StandardOutputValueProduced>();
             outputs.Should().HaveCountGreaterThan(1);
-            outputs.First()
-                .Value.ToString().ToLowerInvariant()
+            outputs.Select(e => e.Value.ToString())
+                .First(s => s.Trim().Length > 0)
+                .ToLowerInvariant()
                 .Should().Match("*ping*data*");
         }
     }
