@@ -37,16 +37,16 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             using var sub = Kernel
                       .KernelEvents
-                      .Where(FilterEvents)
+                      .Where(ShouldForward)
                       .Subscribe(e => OnKernelEventReceived(e, context));
 
             await ((KernelBase) Kernel).SendAsync(
                 command,
                 CancellationToken.None);
 
-            bool FilterEvents(IKernelEvent e)
+            bool ShouldForward(IKernelEvent e)
             {
-                return (e.Command?.GetToken() == context.Token) || e.Command.GetPublishInternalEvents();
+                return (e.Command?.GetToken() == context.Token) || e.Command.ShouldPublishInternalEvents();
             }
         }
 
