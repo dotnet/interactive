@@ -942,5 +942,23 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                 e => e.Value.As<string>().Should().Be("Get-Verb > $null" + Environment.NewLine),
                 e => e.Value.As<string>().Should().Be("echo bar > $null" + Environment.NewLine));
         }
+
+        [Fact()]
+        public async Task PowerShell_native_executable_output_is_collected()
+        {
+            var kernel = CreateKernel(Language.PowerShell);
+
+            var command = Platform.IsWindows
+                ? new SubmitCode("ping.exe -n 1 localhost")
+                : new SubmitCode("ping -c 1 localhost");
+
+            await kernel.SendAsync(command);
+
+            var outputs = KernelEvents.OfType<StandardOutputValueProduced>();
+            outputs.Should().HaveCountGreaterThan(1);
+            outputs.First()
+                .Value.ToString().ToLowerInvariant()
+                .Should().Match("*ping*data*");
+        }
     }
 }
