@@ -290,7 +290,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             kernel.DefaultKernelName = defaultKernelName;
             kernel.Name = ".NET";
             var enableHttp = new SubmitCode("#!enable-http", compositeKernel.Name);
-            enableHttp.SetForcePublishEvents(true);
+            enableHttp.SetPublishInternalEvents(true);
             compositeKernel.DeferCommand(enableHttp);
             return kernel;
         }
