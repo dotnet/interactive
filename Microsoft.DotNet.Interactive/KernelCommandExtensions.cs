@@ -11,6 +11,34 @@ namespace Microsoft.DotNet.Interactive
     public static class KernelCommandExtensions
     {
         internal const string TokenKey = "token";
+        internal const string ForcePublishEvents = "forcePublishEvents";
+
+        public static void SetForcePublishEvents(
+            this IKernelCommand command,
+            bool produceEvents)
+        {
+            command.Properties[ForcePublishEvents] = produceEvents;
+        }
+
+        public static bool GetForcePublishEvents(
+            this IKernelCommand command)
+        {
+            var returnValue = false;
+            if (command.Properties.TryGetValue(ForcePublishEvents, out var produceEvents))
+            {
+                returnValue = (bool)produceEvents;
+            }
+            else
+            {
+                if (command is KernelCommandBase commandBase &&
+                    commandBase.Parent != null)
+                {
+                    returnValue = commandBase.Parent.GetForcePublishEvents();
+                }
+            }
+
+            return returnValue ;
+        }
 
         public static void SetToken(
             this IKernelCommand command,

@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             bool FilterByToken(IKernelEvent e)
             {
-                return e.Command?.GetToken() == context.Token;
+                return (e.Command?.GetToken() == context.Token) || e.Command.GetForcePublishEvents();
             }
         }
 
