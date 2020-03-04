@@ -37,16 +37,16 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             using var sub = Kernel
                       .KernelEvents
-                      .Where(FilterByToken)
+                      .Where(FilterEvents)
                       .Subscribe(e => OnKernelEventReceived(e, context));
 
             await ((KernelBase) Kernel).SendAsync(
                 command,
                 CancellationToken.None);
 
-            bool FilterByToken(IKernelEvent e)
+            bool FilterEvents(IKernelEvent e)
             {
-                return (e.Command?.GetToken() == context.Token) || e.Command.GetForcePublishEvents();
+                return (e.Command?.GetToken() == context.Token) || e.Command.GetPublishInternalEvents();
             }
         }
 
