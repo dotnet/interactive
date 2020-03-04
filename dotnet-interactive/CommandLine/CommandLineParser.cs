@@ -8,15 +8,12 @@ using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
-using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Clockwise;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
-using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.PowerShell;
@@ -26,7 +23,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Recipes;
 using CommandHandler = System.CommandLine.Invocation.CommandHandler;
-using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine
 {
@@ -290,7 +286,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             kernel.DefaultKernelName = defaultKernelName;
             kernel.Name = ".NET";
             var enableHttp = new SubmitCode("#!enable-http", compositeKernel.Name);
-            enableHttp.SetPublishInternalEvents(true);
+            enableHttp.PublishInternalEvents();
             compositeKernel.DeferCommand(enableHttp);
             return kernel;
         }

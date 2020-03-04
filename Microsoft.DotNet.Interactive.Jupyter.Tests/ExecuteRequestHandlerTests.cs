@@ -264,7 +264,7 @@ f();"));
             var command = new SubmitCode(@"#!html
 <p>hello!</p>", Kernel.Name);
             
-            command.SetPublishInternalEvents(true);
+            command.Properties["publish-internal-events"] = true;
 
             DeferCommand(command);
             var request = ZeroMQMessage.Create(new ExecuteRequest("display(2+2)"));
