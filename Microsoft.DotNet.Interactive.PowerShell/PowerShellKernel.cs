@@ -41,6 +41,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             _writeStreamProperty = typeof(PSObject).GetProperty("WriteStream", BindingFlags.Instance | BindingFlags.NonPublic);
             Type writeStreamType = typeof(PSObject).Assembly.GetType("System.Management.Automation.WriteStreamType");
             _errorStreamValue = Enum.Parse(writeStreamType, "Error");
+
+            // When the downstream cmdlet of a native executable is 'Out-Default', PowerShell assumes
+            // it's running in the console where the 'Out-Default' would be added by default. Hence,
+            // PowerShell won't redirect the standard output of the executable.
+            // To workaround that, we rename 'Out-Default' to 'Out-Default2' to make sure the standard
+            // output is captured.
             _outDefaultCommand = new CmdletInfo("Out-Default2", typeof(OutDefaultCommand));
 
             // Register type accelerators for Plotly.
@@ -164,7 +170,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             {
                 ((PSKernelHostUserInterface)_psHost.UI).ResetProgress();
             }
-            
+
             return Task.CompletedTask;
         }
 
