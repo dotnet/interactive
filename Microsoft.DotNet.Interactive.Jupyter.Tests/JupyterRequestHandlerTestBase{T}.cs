@@ -3,6 +3,7 @@
 
 using System;
 using Clockwise;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
@@ -82,6 +83,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                 default:
                     throw new ArgumentOutOfRangeException(nameof(language), language, null);
             }
+        }
+
+        protected void DeferCommand(IKernelCommand command)
+        { 
+            _compositeKernel.DeferCommand(command);
         }
 
         public void Dispose() => _disposables.Dispose();

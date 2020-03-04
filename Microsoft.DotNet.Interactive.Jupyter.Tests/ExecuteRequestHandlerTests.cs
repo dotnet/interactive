@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Clockwise;
 using FluentAssertions;
 using FluentAssertions.Extensions;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests;
@@ -251,6 +252,32 @@ f();"));
             await context.Done().Timeout(20.Seconds());
 
             JupyterMessageSender.PubSubMessages.Should().NotContain(r => r is ExecuteResult);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task deferred_command_can_produce_events(Language language)
+        {
+            var scheduler = CreateScheduler();
+            SetKernelLanguage(language);
+            var command = new SubmitCode(@"#!html
+<p>hello!</p>", Kernel.Name);
+            
+            command.SetForcePublishEvents(true);
+
+            DeferCommand(command);
+            var request = ZeroMQMessage.Create(new ExecuteRequest("display(2+2)"));
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            await scheduler.Schedule(context);
+
+            await context.Done().Timeout(20.Seconds());
+
+            JupyterMessageSender.PubSubMessages
+                .OfType<DisplayData>()
+                .Should()
+
+                .Contain(dp => dp.Data["text/html"] as string == "<p>hello!</p>");
         }
 
         [Fact]
