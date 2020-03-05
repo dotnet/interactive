@@ -18,6 +18,7 @@ using XPlot.Plotly;
 
 namespace Microsoft.DotNet.Interactive.PowerShell
 {
+    using Microsoft.DotNet.Interactive.Utility;
     using System.Management.Automation;
 
     public class PowerShellKernel : KernelBase
@@ -125,6 +126,13 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             value = null;
             return false;
         }
+
+        public override void AddScriptReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override string ScriptExtension { get { throw new NotSupportedException(); } }
 
         protected override Task HandleSubmitCode(
             SubmitCode submitCode,

@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task Returns_new_references_if_they_are_added()
         {
-            using var restoreContext = new PackageRestoreContext();
+            using var restoreContext = new PackageRestoreContext(".csx");
             var added = restoreContext.GetOrAddPackageReference("FluentAssertions", "5.7.0");
             added.Should().NotBeNull();
 
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task Returns_references_when_package_version_is_not_specified()
         {
-            using var restoreContext = new PackageRestoreContext();
+            using var restoreContext = new PackageRestoreContext(".csx");
             var added = restoreContext.GetOrAddPackageReference("NewtonSoft.Json");
             added.Should().NotBeNull();
 
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task Returns_failure_if_package_installation_fails()
         {
-            using var restoreContext = new PackageRestoreContext();
+            using var restoreContext = new PackageRestoreContext(".csx");
             var added = restoreContext.GetOrAddPackageReference("not-a-real-package-definitely-not", "5.7.0");
             added.Should().NotBeNull();
 
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task Returns_failure_if_adding_package_twice_at_different_versions()
         {
-            using var restoreContext = new PackageRestoreContext();
+            using var restoreContext = new PackageRestoreContext(".csx");
 
             var added = restoreContext.GetOrAddPackageReference("another-not-a-real-package-definitely-not", "5.7.0");
             added.Should().NotBeNull();
@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task Packages_from_previous_requests_are_not_returned_in_subsequent_results()
         {
-            using var restoreContext = new PackageRestoreContext();
+            using var restoreContext = new PackageRestoreContext(".csx");
 
             var added = restoreContext.GetOrAddPackageReference("FluentAssertions", "5.7.0");
             added.Should().NotBeNull();
@@ -110,7 +110,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task Can_get_path_to_nuget_packaged_assembly()
         {
-            using var restoreContext = new PackageRestoreContext();
+            using var restoreContext = new PackageRestoreContext(".csx");
             restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
 
             await restoreContext.RestoreAsync();
@@ -119,21 +119,26 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var path = packageReference.AssemblyPaths.Single();
 
-            path.FullName
-                .ToLower()
-                .Should()
-                .EndWith("fluentassertions" + Path.DirectorySeparatorChar +
-                         "5.7.0" + Path.DirectorySeparatorChar +
-                         "lib" + Path.DirectorySeparatorChar +
-                         "netcoreapp2.0" + Path.DirectorySeparatorChar  +
-                         "fluentassertions.dll");
+            // path is a string similar to:
+            /// c:/users/someuser/.nuget/packages/fluentassertions/5.7.0/netcoreapp2.0/fluentassertions.dll
+            var name = path.Name;
+            var tfm = path.Directory.Name;
+            var reflib = path.Directory.Parent.Name;
+            var version = path.Directory.Parent.Parent.Name;
+            var packageName = path.Directory.Parent.Parent.Parent.Parent.Name;
+
+            name.ToLower().Should().Equals("fluentassertions.dll");
+            tfm.ToLower().Should().Equals("netcoreapp2.0");
+            reflib.ToLower().Should().Equals("lib");
+            version.ToLower().Should().Equals("5.7.0");
+            packageName.ToLower().Should().Equals("fluentassertions");
             path.Exists.Should().BeTrue();
         }
 
         [Fact]
         public async Task Can_get_path_to_nuget_package_root()
         {
-            using var restoreContext = new PackageRestoreContext();
+            using var restoreContext = new PackageRestoreContext(".csx");
             restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
 
             await restoreContext.RestoreAsync();
@@ -142,16 +147,17 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var path = packageReference.PackageRoot;
 
-            path.FullName
-                .Should()
-                .EndWith("fluentassertions" + Path.DirectorySeparatorChar + "5.7.0" );
+            var version = path.Name;
+            var packageName = path.Parent.Name;
+            version.ToLower().Should().Equals("5.7.0");
+            packageName.ToLower().Should().Equals("fluentassertions");
             path.Exists.Should().BeTrue();
         }
 
         [Fact]
         public async Task Can_get_path_to_nuget_package_when_multiple_packages_are_added()
         {
-            using var restoreContext = new PackageRestoreContext();
+            using var restoreContext = new PackageRestoreContext(".csx");
             restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
             restoreContext.GetOrAddPackageReference("htmlagilitypack", "1.11.12");
 

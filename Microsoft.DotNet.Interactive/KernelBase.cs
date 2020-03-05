@@ -319,7 +319,11 @@ namespace Microsoft.DotNet.Interactive
 
             _disposables.Add(disposable);
         }
-   
+
+        public abstract void AddScriptReferences(IReadOnlyList<ResolvedPackageReference> packageReferences);
+
+        public abstract string ScriptExtension { get; }
+
         protected abstract Task HandleSubmitCode(
             SubmitCode command, 
             KernelInvocationContext context);

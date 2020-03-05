@@ -79,6 +79,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             {
                 Language.FSharp => new FSharpKernel()
                                    .UseDefaultFormatting()
+                                   .UseNugetDirective()
                                    .UseKernelHelpers()
                                    .UseWho()
                                    .UseDefaultNamespaces() as KernelBase,

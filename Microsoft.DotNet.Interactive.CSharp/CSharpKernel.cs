@@ -30,6 +30,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         IExtensibleKernel
     {
         internal const string DefaultKernelName = "csharp";
+        internal const string DefaultScriptExtension = ".csx";
 
         private static readonly MethodInfo _hasReturnValueMethod = typeof(Script)
             .GetMethod("HasReturnValue", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -62,8 +63,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
         public CSharpKernel()
         {
             Name = DefaultKernelName;
-            NativeAssemblyLoadHelper = new NativeAssemblyLoadHelper(this);
-            RegisterForDisposal(NativeAssemblyLoadHelper);
             RegisterForDisposal(() =>
             {
                 ScriptState = null;
@@ -72,14 +71,16 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public ScriptState ScriptState { get; private set; }
 
-        internal void AddScriptReferences(IReadOnlyList<ResolvedPackageReference> assemblyPaths)
+        public override void AddScriptReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
         {
-            var references = assemblyPaths
+            var references = resolvedReferences
                              .SelectMany(r => r.AssemblyPaths)
                              .Select(r => MetadataReference.CreateFromFile(r.FullName));
 
             ScriptOptions = ScriptOptions.AddReferences(references);
         }
+
+        public override string ScriptExtension { get { return DefaultScriptExtension; } }
 
         public Task<bool> IsCompleteSubmissionAsync(string code)
         {
@@ -282,9 +283,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
         private bool HasReturnValue =>
             ScriptState != null &&
             (bool)_hasReturnValueMethod.Invoke(ScriptState.Script, null);
-
-        internal NativeAssemblyLoadHelper NativeAssemblyLoadHelper { get; }
     }
-
 
 }
