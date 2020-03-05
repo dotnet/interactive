@@ -25,6 +25,7 @@
     <PackageReference Include="PowerShellGet" Version="$(PowerShellGetVersion)" />
     <PackageReference Include="Microsoft.PowerShell.Archive" Version="$(MicrosoftPowerShellArchiveVersion)" />
     <PackageReference Include="ThreadJob" Version="$(ThreadJobVersion)" />
+    <PackageReference Include="FluentAssertions" Version="5.10.0" />
   </ItemGroup>
 
   <!-- Get NuGetPackageRoot if it's not defined -->
