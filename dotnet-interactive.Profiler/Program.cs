@@ -79,6 +79,7 @@ Console.Write(""value three"")"
                         .UseMathAndLaTeX(),
                     new FSharpKernel()
                         .UseDefaultFormatting()
+                        .UseNugetDirective()
                         .UseKernelHelpers()
                         .UseWho()
                         .UseDefaultNamespaces()
