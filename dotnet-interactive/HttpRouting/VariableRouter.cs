@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.DotNet.Interactive.Formatting;
 using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.App.HttpRouting
@@ -54,7 +55,8 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                             context.Handler = async httpContext =>
                             {
                                 httpContext.Response.ContentType = "application/json";
-                                await httpContext.Response.WriteAsync(JsonConvert.SerializeObject(value));
+                                await httpContext.Response.WriteAsync(
+                                    JsonConvert.SerializeObject(value, settings: JsonFormatter.SerializerSettings));
                             };
                         }
                     }
