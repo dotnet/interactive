@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static IFormatterSet DefaultFormatters { get; private set; } = new DefaultHtmlFormatterSet();
     
-        internal static JsonSerializerSettings SerializerSettings { get; }
+        public static JsonSerializerSettings SerializerSettings { get; }
 
         public static ITypeFormatter Create(Type type)
         {
