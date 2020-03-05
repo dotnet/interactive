@@ -14,8 +14,6 @@
             return response;
         };
 
-       
-
         let client = {};
 
         client.fetch = clientFetch;
@@ -55,7 +53,7 @@
                 });
         }
 
-        global.dotnet = client;
+        global.interactive = client;
 
         client.loadKernels();
 
