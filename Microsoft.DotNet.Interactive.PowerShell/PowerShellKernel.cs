@@ -106,10 +106,19 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         public override bool TryGetVariable(string name, out object value)
         {
             var variable = _lazyPwsh.Value.Runspace.SessionStateProxy.PSVariable.Get(name);
-            
+
             if (variable != null)
             {
-                value = variable.Value;
+                switch (variable.Value)
+                {
+                    case PSObject psobject:
+                        value = psobject.BaseObject;
+                        break;
+                    default:
+                        value = variable.Value;
+                        break;
+                }
+
                 return true;
             }
 
