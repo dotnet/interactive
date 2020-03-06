@@ -170,6 +170,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             command.SetToken("abc");
 
             await _standardIOKernelServer.WriteAsync(command);
+            
 
             _kernelEvents
                 .Should()

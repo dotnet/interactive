@@ -61,9 +61,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             addAccelerator.Invoke(null, new object[] { "Chart", typeof(Chart) });
         }
 
-        public PowerShellKernel()
+        public PowerShellKernel() : base(DefaultKernelName)
         {
-            Name = DefaultKernelName;
             _psHost = new PSKernelHost();
             _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);
         }

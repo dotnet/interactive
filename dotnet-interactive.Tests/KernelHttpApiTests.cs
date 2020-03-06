@@ -101,7 +101,14 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var responseContent = await response.Content.ReadAsStringAsync();
             var kernels = JToken.Parse(responseContent).Values<string>();
 
-            kernels.Should().BeEquivalentTo(".NET", "csharp", "fsharp", "powershell");
+            kernels.Should()
+                   .BeEquivalentTo(
+                       ".NET", 
+                       "csharp", 
+                       "fsharp", 
+                       "powershell",
+                       "html",
+                       "javascript");
         }
 
         [Fact]

@@ -26,8 +26,15 @@ namespace Microsoft.DotNet.Interactive
         private readonly ConcurrentQueue<IKernelCommand> _deferredCommands = new ConcurrentQueue<IKernelCommand>();
         private readonly ConcurrentDictionary<Type, object> _properties = new ConcurrentDictionary<Type, object>();
 
-        protected KernelBase()
+        protected KernelBase(string name)
         {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
+            }
+
+            Name = name;
+
             _disposables = new CompositeDisposable();
 
             Pipeline = new KernelCommandPipeline(this);

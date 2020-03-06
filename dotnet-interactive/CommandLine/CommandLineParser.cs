@@ -276,15 +276,20 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseXplot(),
                 new[] { "#!pwsh" });
 
-            var kernel = compositeKernel
-                .UseDefaultMagicCommands()
-                .UseLog()
-                .UseAbout()
-                .UseHttpApi(startupOptions);
-
+            compositeKernel.Add(
+                new JavaScriptKernel(),
+                new[] { "#!js" });
             
+            compositeKernel.Add(
+                new HtmlKernel());
+
+            var kernel = compositeKernel
+                         .UseDefaultMagicCommands()
+                         .UseLog()
+                         .UseAbout()
+                         .UseHttpApi(startupOptions);
+
             kernel.DefaultKernelName = defaultKernelName;
-            kernel.Name = ".NET";
             var enableHttp = new SubmitCode("#!enable-http", compositeKernel.Name);
             enableHttp.PublishInternalEvents();
             compositeKernel.DeferCommand(enableHttp);

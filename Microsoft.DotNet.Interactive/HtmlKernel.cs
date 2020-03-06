@@ -2,36 +2,36 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Formatting;
 
-namespace Microsoft.DotNet.Interactive.Tests
+namespace Microsoft.DotNet.Interactive
 {
-    public class FakeKernel : KernelBase
+    public class HtmlKernel : KernelBase
     {
-        public FakeKernel([CallerMemberName] string name = null) : base(name)
+        public const string DefaultKernelName = "html";
+
+        public HtmlKernel() : base(DefaultKernelName)
         {
         }
-
-        public KernelCommandInvocation Handle { get; set; }
 
         public override bool TryGetVariable(string name, out object value)
         {
-            value = null;
+            value = default;
             return false;
         }
 
-        protected override Task HandleSubmitCode(SubmitCode command, KernelInvocationContext context)
+        protected override async Task HandleSubmitCode(SubmitCode command, KernelInvocationContext context)
         {
-            Handle(command, context);
-            return Task.CompletedTask;
+            await context.DisplayAsync(
+                command.Code,
+                HtmlFormatter.MimeType);
         }
 
         protected override Task HandleRequestCompletion(RequestCompletion command, KernelInvocationContext context)
         {
-            Handle(command, context);
-            return Task.CompletedTask;
+            throw new NotSupportedException();
         }
     }
 }
