@@ -22,7 +22,7 @@ open Microsoft.CodeAnalysis.Tags
 open System
 
 type FSharpKernel() as this =
-    inherit KernelBase(Name = "fsharp")
+    inherit KernelBase("fsharp")
 
     let resolvedAssemblies = List<string>()
     static let lockObj = Object();

@@ -20,7 +20,7 @@ using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {
-    public class ExecuteRequestHandlerTests : JupyterRequestHandlerTestBase<ExecuteRequest>
+    public class ExecuteRequestHandlerTests : JupyterRequestHandlerTestBase
     {
         public ExecuteRequestHandlerTests(ITestOutputHelper output) : base(output)
         {
@@ -276,7 +276,6 @@ f();"));
             JupyterMessageSender.PubSubMessages
                 .OfType<DisplayData>()
                 .Should()
-
                 .Contain(dp => dp.Data["text/html"] as string == "<p>hello!</p>");
         }
 

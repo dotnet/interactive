@@ -15,7 +15,6 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Formatting;
-using static Microsoft.DotNet.Interactive.Kernel;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
@@ -26,8 +25,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             where T : KernelBase
         {
             kernel.UseLsMagic()
-                  .UseHtml()
-                  .UseJavaScript()
                   .UseMarkdown()
                   .UseTime();
 
@@ -51,35 +48,6 @@ using static {typeof(Kernel).FullName};
         {
             kernel.ReadInput = Kernel.input;
             kernel.ReadPassword = Kernel.password;
-            return kernel;
-        }
-
-        private static T UseHtml<T>(this T kernel)
-            where T : KernelBase
-        {
-            kernel.AddDirective(new Command("#!html", "Render the code that follows as HTML")
-            {
-                Handler = CommandHandler.Create((KernelInvocationContext context) =>
-                {
-                    if (context.Command is SubmitCode submitCode)
-                    {
-                        var htmlContent = submitCode.Code
-                                                    .Replace("#!html", "")
-                                                    .Trim();
-
-                        context.Publish(new DisplayedValueProduced(
-                                            htmlContent,
-                                            context.Command,
-                                            formattedValues: new[]
-                                            {
-                                                new FormattedValue("text/html", htmlContent)
-                                            }));
-
-                        context.Complete(submitCode);
-                    }
-                })
-            });
-
             return kernel;
         }
 
@@ -128,14 +96,6 @@ using static {typeof(Kernel).FullName};
                     }
                 })
             });
-
-            return kernel;
-        }
-
-        private static T UseJavaScript<T>(this T kernel)
-            where T : KernelBase
-        {
-            kernel.AddDirective(javascript());
 
             return kernel;
         }
@@ -227,39 +187,6 @@ using static {typeof(Kernel).FullName};
                             await k.SendAsync(new SubmitCode(((SubmitCode) context.Command).Code));
                         }
                     });
-                })
-            };
-        }
-
-        private static Command javascript()
-        {
-            return new Command("#!javascript", "Run the code that follows in JavaScript in the notebook frontend.")
-            {
-                Handler = CommandHandler.Create((KernelInvocationContext context) =>
-                {
-                    if (context.Command is SubmitCode submitCode)
-                    {
-                        var scriptContent = submitCode.Code
-                                                      .Replace("#!javascript", string.Empty)
-                                                      .Trim();
-
-                        string value =
-                            script[type: "text/javascript"](
-                                    HTML(
-                                        scriptContent))
-                                .ToString();
-
-                        context.Publish(new DisplayedValueProduced(
-                                            scriptContent,
-                                            context.Command,
-                                            formattedValues: new[]
-                                            {
-                                                new FormattedValue("text/html",
-                                                                   value)
-                                            }));
-
-                        context.Complete(submitCode);
-                    }
                 })
             };
         }
