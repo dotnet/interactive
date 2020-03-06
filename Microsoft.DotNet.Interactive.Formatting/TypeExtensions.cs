@@ -83,6 +83,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
                        .ToArray();
         }
 
+        public static IEnumerable<Type> GetAllInterfaces(this Type type)
+        {
+            if (type.IsInterface)
+            {
+                yield return type;
+            }
+            foreach (var i in type.GetInterfaces())
+                yield return i;
+        }
+
         public static bool IsAnonymous(this Type type)
         {
             if (type == null)

@@ -444,6 +444,29 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                       .Be(
                           "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>8</td></tr><tr><td>1</td><td>&lt;null&gt;</td></tr><tr><td>2</td><td>9</td></tr></tbody></table>");
             }
+
+            [Fact]
+            public void Sequences_contain_different_types_of_elements()
+            {
+                IEnumerable<object> GetCollection()
+                {
+                    yield return true;
+                    yield return 99;
+                    yield return "Hello, World";
+                }
+
+                var formatter = HtmlFormatter.Create(typeof(IEnumerable<object>));
+
+                var writer = new StringWriter();
+
+                formatter.Format(GetCollection(), writer);
+
+                writer.ToString().Should()
+                      .Be(
+                          "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>True</td></tr><tr><td>1</td><td>99</td></tr><tr><td>2</td><td>Hello, World</td></tr></tbody></table>");
+            }
+
+
         }
     }
 }

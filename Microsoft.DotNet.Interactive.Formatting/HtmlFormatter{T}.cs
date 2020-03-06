@@ -89,11 +89,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
             Func<T, IEnumerable> getKeys = null;
             Func<T, IEnumerable> getValues = instance => (IEnumerable)instance;
 
-            var dictionaryGenericType = typeof(T).GetInterfaces()
+            var dictionaryGenericType = typeof(T).GetAllInterfaces()
                                                  .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
-            var dictionaryObjectType = typeof(T).GetInterfaces()
+            var dictionaryObjectType = typeof(T).GetAllInterfaces()
                                                 .FirstOrDefault(i => i == typeof(IDictionary));
-            var enumerableGenericType = typeof(T).GetInterfaces()
+            var enumerableGenericType = typeof(T).GetAllInterfaces()
                                                  .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
 
             if (dictionaryGenericType != null || dictionaryObjectType != null)
