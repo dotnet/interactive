@@ -12,9 +12,8 @@ namespace Microsoft.DotNet.Interactive.Tests
 {
     public class FakeKernel : KernelBase
     {
-        public FakeKernel([CallerMemberName] string name = null)
+        public FakeKernel([CallerMemberName] string name = null) : base(name)
         {
-            Name = name;
         }
 
         public KernelCommandInvocation Handle { get; set; }

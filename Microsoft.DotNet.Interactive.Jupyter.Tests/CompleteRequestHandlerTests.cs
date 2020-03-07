@@ -13,7 +13,7 @@ using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {
-    public class CompleteRequestHandlerTests : JupyterRequestHandlerTestBase<CompleteRequest>
+    public class CompleteRequestHandlerTests : JupyterRequestHandlerTestBase
     {
         public CompleteRequestHandlerTests(ITestOutputHelper output) : base(output)
         {

@@ -21,7 +21,7 @@ open Microsoft.CodeAnalysis.Tags
 open System.Text
 
 type FSharpKernel() as this =
-    inherit KernelBase(Name = "fsharp")
+    inherit KernelBase("fsharp")
 
     let DefaultScriptExtension = ".fsx"
 

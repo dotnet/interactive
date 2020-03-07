@@ -7,15 +7,13 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
-using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests;
 using Pocket;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {
-    public abstract class JupyterRequestHandlerTestBase<T> : IDisposable
-        where T : Message
+    public abstract class JupyterRequestHandlerTestBase : IDisposable
     {
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly CSharpKernel _cSharpKernel;
@@ -51,7 +49,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                 {
                     _cSharpKernel,
                     _fSharpKernel,
-                    _psKernel
+                    _psKernel,
+                    new HtmlKernel(),
+                    new JavaScriptKernel()
                 }
                 .UseDefaultMagicCommands();
 
