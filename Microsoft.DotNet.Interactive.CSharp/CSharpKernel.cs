@@ -63,8 +63,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
         public CSharpKernel() : base(DefaultKernelName)
         {
             Name = DefaultKernelName;
-            NativeAssemblyLoadHelper = new NativeAssemblyLoadHelper(this);
-            RegisterForDisposal(NativeAssemblyLoadHelper);
             RegisterForDisposal(() =>
             {
                 ScriptState = null;
