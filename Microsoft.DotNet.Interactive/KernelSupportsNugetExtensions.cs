@@ -5,21 +5,18 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public static class KernelBaseNugetExtensions
+    public static class KernelSupportsNugetExtensions
     {
-        public static T UseNugetDirective<T>(this T kernel) where T: KernelBase
+        public static T UseNugetDirective<T>(this T kernel) where T: KernelBase, ISupportNuget
         {
             var restoreContext = new PackageRestoreContext(kernel.ScriptExtension);
             kernel.SetProperty(restoreContext);
@@ -206,7 +203,7 @@ namespace Microsoft.DotNet.Interactive
 
                     if (result.Succeeded)
                     {
-                        kernel.AddScriptReferences(result.ResolvedReferences);
+                        (kernel as ISupportNuget)?.AddScriptReferences(result.ResolvedReferences);
 
                         foreach (var resolvedReference in result.ResolvedReferences)
                         {
@@ -240,7 +237,6 @@ namespace Microsoft.DotNet.Interactive
                     {
                         message += $", version {package.PackageVersion}";
                     }
-
                 }
 
                 return message;

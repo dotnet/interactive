@@ -176,13 +176,6 @@ namespace Microsoft.DotNet.Interactive
             throw new NoSuitableKernelException(command);
         }
 
-        public override void AddScriptReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
-        {
-            throw new NotSupportedException();
-        }
-
-        public override string ScriptExtension { get { throw new NotSupportedException(); } }
-
         protected override Task HandleSubmitCode(SubmitCode command, KernelInvocationContext context)
         {
             throw new NotSupportedException();

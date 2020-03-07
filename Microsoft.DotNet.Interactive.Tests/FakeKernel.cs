@@ -24,13 +24,6 @@ namespace Microsoft.DotNet.Interactive.Tests
             value = null;
             return false;
         }
-        public override string ScriptExtension { get { throw new NotSupportedException(); } }
-
-        public override void AddScriptReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
-        {
-            throw new NotSupportedException();
-        }
-
 
         protected override Task HandleSubmitCode(SubmitCode command, KernelInvocationContext context)
         {

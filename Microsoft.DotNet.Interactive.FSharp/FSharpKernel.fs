@@ -16,7 +16,6 @@ open Microsoft.DotNet.Interactive.Utility
 
 open FSharp.Compiler.Interactive.Shell
 open FSharp.Compiler.Scripting
-open FSharp.DependencyManager
 open FSharp.Compiler.SourceCodeServices
 open Microsoft.CodeAnalysis.Tags
 open System.Text
@@ -156,32 +155,6 @@ type FSharpKernel() as this =
         |> Seq.filter (fun v -> v <> "it") // don't report special variable `it`
         |> Seq.choose (this.GetCurrentVariable)
 
-    override _.ScriptExtension with get() =
-        DefaultScriptExtension
-
-    override this.AddScriptReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
-        // Generate #r and #I from packageReferences
-        let sb = StringBuilder()
-        let hashset = HashSet()
-
-        for reference in packageReferences do
-            for assembly in reference.AssemblyPaths do
-                if hashset.Add(assembly.FullName) then
-                    if assembly.Exists then
-                        sb.AppendFormat("#r @\"{0}\"", assembly.FullName) |> ignore
-                        sb.Append(Environment.NewLine) |> ignore
-
-            match reference.PackageRoot with
-            | null -> ()
-            | root ->
-                if hashset.Add(root.FullName) then
-                    if root.Exists then
-                        sb.AppendFormat("#I @\"{0}\"", root.FullName) |> ignore
-                        sb.Append(Environment.NewLine) |> ignore
-        let command = new SubmitCode(sb.ToString(), "fsharp")
-        let task = this.SendAsync(command)
-        task.Wait()
-
     override _.HandleSubmitCode(command: SubmitCode, context: KernelInvocationContext): Task =
         handleSubmitCode command context |> Async.StartAsTask :> Task
         
@@ -195,3 +168,32 @@ type FSharpKernel() as this =
             true
         | None -> 
             false
+
+    interface ISupportNuget with
+
+        member _.ScriptExtension with get() =
+            DefaultScriptExtension
+
+        member this.AddScriptReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
+            // Generate #r and #I from packageReferences
+            let sb = StringBuilder()
+            let hashset = HashSet()
+
+            for reference in packageReferences do
+                for assembly in reference.AssemblyPaths do
+                    if hashset.Add(assembly.FullName) then
+                        if assembly.Exists then
+                            sb.AppendFormat("#r @\"{0}\"", assembly.FullName) |> ignore
+                            sb.Append(Environment.NewLine) |> ignore
+
+                match reference.PackageRoot with
+                | null -> ()
+                | root ->
+                    if hashset.Add(root.FullName) then
+                        if root.Exists then
+                            sb.AppendFormat("#I @\"{0}\"", root.FullName) |> ignore
+                            sb.Append(Environment.NewLine) |> ignore
+            let command = new SubmitCode(sb.ToString(), "fsharp")
+            let task = this.SendAsync(command)
+            task.Wait()
+

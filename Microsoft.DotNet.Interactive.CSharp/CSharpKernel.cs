@@ -27,7 +27,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
 {
     public class CSharpKernel : 
         KernelBase, 
-        IExtensibleKernel
+        IExtensibleKernel,
+        ISupportNuget
     {
         internal const string DefaultKernelName = "csharp";
         internal const string DefaultScriptExtension = ".csx";
@@ -71,7 +72,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public ScriptState ScriptState { get; private set; }
 
-        public override void AddScriptReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
+        public void AddScriptReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
         {
             var references = resolvedReferences
                              .SelectMany(r => r.AssemblyPaths)
@@ -80,7 +81,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             ScriptOptions = ScriptOptions.AddReferences(references);
         }
 
-        public override string ScriptExtension { get { return DefaultScriptExtension; } }
+        public string ScriptExtension { get { return DefaultScriptExtension; } }
 
         public Task<bool> IsCompleteSubmissionAsync(string code)
         {

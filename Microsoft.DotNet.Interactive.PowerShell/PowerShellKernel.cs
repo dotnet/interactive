@@ -127,13 +127,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return false;
         }
 
-        public override void AddScriptReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
-        {
-            throw new NotSupportedException();
-        }
-
-        public override string ScriptExtension { get { throw new NotSupportedException(); } }
-
         protected override Task HandleSubmitCode(
             SubmitCode submitCode,
             KernelInvocationContext context)
