@@ -140,13 +140,13 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         [Fact]
         public async Task Jupyter_ignore_connection_file_sends_telemetry()
         {
-                // Do not capture connection file
-                await _parser.InvokeAsync($"jupyter  {_connectionFile}", _console);
-                _fakeTelemetry.LogEntries.Should().Contain(
-                    x => x.EventName == "command" &&
-                         x.Properties.Count == 2 &&
-                         x.Properties["verb"] == Sha256Hasher.Hash("JUPYTER") &&
-                         x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
+            // Do not capture connection file
+            await _parser.InvokeAsync($"jupyter  {_connectionFile}", _console);
+            _fakeTelemetry.LogEntries.Should().Contain(
+                x => x.EventName == "command" &&
+                     x.Properties.Count == 2 &&
+                     x.Properties["verb"] == Sha256Hasher.Hash("JUPYTER") &&
+                     x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
         }
 
         [Fact]

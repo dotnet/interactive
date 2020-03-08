@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                 {
                     case OptionItem optItem:
                         {
-                            var optionValue = commandResult.OptionResult(optItem.Option)?.Tokens?.FirstOrDefault()?.Value;
+                            var optionValue = commandResult.OptionResult(optItem.Option).GetValueOrDefault()?.ToString();
                             if (optionValue != null && optItem.Values.Contains(optionValue))
                             {
                                 entryItems.Add(new KeyValuePair<string, string>(optItem.EntryKey, optionValue));
