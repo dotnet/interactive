@@ -71,6 +71,7 @@ namespace Microsoft.DotNet.Interactive.App
 
             var initApiCommand = new Command("#!enable-http")
             {
+                IsHidden = true,
                 Handler = CommandHandler.Create((KernelInvocationContext context) =>
                 {
                     if (context.Command is SubmitCode submitCode)
