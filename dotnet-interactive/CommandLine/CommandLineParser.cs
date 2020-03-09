@@ -175,11 +175,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context)
                 {
-                    var frontendEnvironment = new JupyterFrontendEnvironment();
-
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
-                            .AddSingleton(_ => frontendEnvironment)
-                            .AddSingleton<FrontendEnvironmentBase>(_ => frontendEnvironment)
+                            .AddSingleton(_ =>
+                            {
+                                var frontendEnvironment = new JupyterFrontendEnvironment();
+                                frontendEnvironment.Host = $"http://localhost:{startupOptions.HttpPort}";
+                                return frontendEnvironment;
+                            })
+                            .AddSingleton<FrontendEnvironmentBase>(c => c.GetService<JupyterFrontendEnvironment>())
                             .AddSingleton(c =>
                             {
                                 return CommandScheduler.Create<JupyterRequestContext>(delivery => c.GetRequiredService<ICommandHandler<JupyterRequestContext>>()

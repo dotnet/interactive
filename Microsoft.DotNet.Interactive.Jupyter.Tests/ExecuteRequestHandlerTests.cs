@@ -160,6 +160,30 @@ f();"));
                 .ContainSingle<DisplayData>(r => r.Data["application/json"] is JToken token && token.Type ==JTokenType.Integer);
         }
 
+        [Fact]
+        public async Task javascript_code_is_wrapped_in_script_tags_and_interactive_factory()
+        {
+            var input = "alert('hello');";
+
+            var scheduler = CreateScheduler();
+            var request = ZeroMQMessage.Create(new ExecuteRequest($@"#!javascript
+{input}"));
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            await scheduler.Schedule(context);
+
+            await context.Done().Timeout(20.Seconds());
+
+            JupyterMessageSender.PubSubMessages
+                .Should()
+                .ContainSingle<DisplayData>()
+                .Which
+                .Data["text/html"]
+                .Should()
+                .Be($@"<script type=""text/javascript"">createDotnetInteractiveClient('http://localhost:1234').then((interactive) => {{
+{input}
+}});</script>");
+        }
+
         [Theory]
         [InlineData(Language.CSharp, "display(new LaTeXString(@\"F(k) = \\int_{-\\infty}^{\\infty} f(x) e^{2\\pi i k} dx\"));", @"F(k) = \int_{-\infty}^{\infty} f(x) e^{2\pi i k} dx")]
         [InlineData(Language.FSharp, "display(new LaTeXString(@\"F(k) = \\int_{-\\infty}^{\\infty} f(x) e^{2\\pi i k} dx\"))", @"F(k) = \int_{-\infty}^{\infty} f(x) e^{2\pi i k} dx")]
