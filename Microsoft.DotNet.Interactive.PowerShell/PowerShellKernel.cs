@@ -34,6 +34,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         public Func<string, string> ReadInput { get; set; }
         public Func<string, PasswordString> ReadPassword { get; set; }
 
+        internal AzShellConnectionUtils AzShell { get; set; }
+        internal int DefaultRunspaceId
+        {
+            get { return _lazyPwsh.IsValueCreated ? _lazyPwsh.Value.Runspace.Id : -1; }
+        }
+
         static PowerShellKernel()
         {
             // Prepare for marking PSObject as error with 'WriteStream'.
@@ -125,7 +131,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return false;
         }
 
-        protected override Task HandleSubmitCode(
+        protected override async Task HandleSubmitCode(
             SubmitCode submitCode,
             KernelInvocationContext context)
         {
@@ -150,21 +156,75 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             {
                 var parseException = new ParseException(parseErrors);
                 ReportError(parseException.ErrorRecord, pwsh);
-                return Task.CompletedTask;
+                return;
             }
 
             // Do nothing if we get a Diagnose type.
             if (submitCode.SubmissionType == SubmissionType.Diagnose)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             if (context.CancellationToken.IsCancellationRequested)
             {
                 context.Fail(null, "Command cancelled");
-                return Task.CompletedTask;
+                return;
             }
 
+            if (AzShell != null)
+            {
+                await RunSubmitCodeInAzShell(code);
+            }
+            else
+            {
+                RunSubmitCodeLocally(pwsh, code);
+            }
+        }
+
+        protected override Task HandleRequestCompletion(
+            RequestCompletion requestCompletion,
+            KernelInvocationContext context)
+        {
+            CompletionRequestCompleted completion;
+            context.Publish(new CompletionRequestReceived(requestCompletion));
+
+            if (AzShell != null)
+            {
+                // Currently no tab completion when interacting with AzShell.
+                completion = new CompletionRequestCompleted(Array.Empty<CompletionItem>(), requestCompletion);
+            }
+            else
+            {
+                var completionList = GetCompletionList(
+                    requestCompletion.Code,
+                    requestCompletion.CursorPosition);
+
+                completion = new CompletionRequestCompleted(completionList, requestCompletion);
+            }
+
+            context.Publish(completion);
+            return Task.CompletedTask;
+        }
+
+        private async Task RunSubmitCodeInAzShell(string code)
+        {
+            code = code.Trim();
+
+            if (string.Equals(code, "exit", StringComparison.OrdinalIgnoreCase))
+            {
+                await AzShell.ExitSession();
+
+                AzShell.Dispose();
+                AzShell = null;
+            }
+            else
+            {
+                await AzShell.SendCommand(code);
+            }
+        }
+
+        private void RunSubmitCodeLocally(PowerShell pwsh, string code)
+        {
             try
             {
                 pwsh.AddScript(code)
@@ -185,8 +245,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             {
                 ((PSKernelHostUserInterface)_psHost.UI).ResetProgress();
             }
-
-            return Task.CompletedTask;
         }
 
         protected override Task HandleRequestCompletion(
@@ -199,11 +257,11 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             CommandCompletion completion = CommandCompletion.CompleteInput(requestCompletion.Code, requestCompletion.CursorPosition, null, _lazyPwsh.Value);
 
-            var completionList = completion.CompletionMatches.Select(c => new CompletionItem(
-                displayText: c.CompletionText,
-                kind: c.ResultType.ToString(),
-                documentation: c.ToolTip
-            ));
+            var completionList = completion.CompletionMatches.Select(
+                c => new CompletionItem(
+                    displayText: c.CompletionText,
+                    kind: c.ResultType.ToString(),
+                    documentation: c.ToolTip));
 
             context.Publish(new CompletionRequestCompleted(
                 completionList,
@@ -215,7 +273,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return Task.CompletedTask;
         }
 
-        public static bool IsCompleteSubmission(string code, out ParseError[] errors)
+        private static bool IsCompleteSubmission(string code, out ParseError[] errors)
         {
             // Parse the PowerShell script. If there are any parse errors, check if the input was incomplete.
             // We only need to check if the first ParseError has incomplete input. This is consistant with

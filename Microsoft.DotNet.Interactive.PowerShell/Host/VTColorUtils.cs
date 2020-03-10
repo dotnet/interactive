@@ -9,6 +9,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
     {
         internal const string EscapeCharacters = "\x1b[";
         internal const string ResetColor = "\x1b[0m";
+        internal const string BoldColor = "\x1b[1m";
         internal const ConsoleColor DefaultConsoleColor = (ConsoleColor)(-1);
 
         private static readonly string[] BackgroundColorMap = {
