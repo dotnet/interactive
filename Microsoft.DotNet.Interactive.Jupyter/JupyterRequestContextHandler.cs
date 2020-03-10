@@ -64,5 +64,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     public class JupyterFrontendEnvironment : FrontendEnvironmentBase
     {
         public bool AllowStandardInput { get; set; }
+        public string Host { get; set; }
     }
 }

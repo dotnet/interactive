@@ -148,6 +148,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             var value = displayEvent.Value;
             PubSubMessage dataMessage;
 
+            ProcessJavaScriptTransforms(formattedValues, value);
             CreateDefaultFormattedValueIfEmpty(formattedValues, value);
 
             switch (displayEvent)
@@ -220,6 +221,19 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 formattedValues.Add(
                     HtmlFormatter.MimeType,
                     value.ToDisplayString("text/html"));
+            }
+        }
+
+        private void ProcessJavaScriptTransforms(Dictionary<string, object> formattedValues, object value)
+        {
+            if (value is ScriptContent script)
+            {
+                var fullCode = $@"createDotnetInteractiveClient('{FrontendEnvironment.Host}').then((interactive) => {{
+{script.ScriptValue}
+}});";
+                var content = PocketViewTags.script[type: "text/javascript"](fullCode.ToHtmlContent());
+                formattedValues["text/javascript"] = fullCode;
+                formattedValues[HtmlFormatter.MimeType] = content.ToString();
             }
         }
 
