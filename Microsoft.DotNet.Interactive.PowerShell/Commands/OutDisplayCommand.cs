@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
     /// Takes the the input and displays it on the client using .NET Interactive's formatters.
     /// This returns a DisplayedValue that can then be updated by calling `Update` on the object.
     /// </summary>
-    [Cmdlet(VerbsData.Out, "Display")]
+    [Cmdlet(VerbsData.Out, "Display", DefaultParameterSetName = "MimeType")]
     [OutputType("Interactive.Events.DisplayedValue")]
     [Alias("od")]
     public sealed class OutDisplayCommand : PSCmdlet
@@ -26,8 +26,22 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
         /// <summary>
         /// The MimeType to use.
         /// </summary>
-        [Parameter(Position = 1)]
-        public string MimeType { get; set; }
+        [Parameter(Position = 1, ParameterSetName = "MimeType")]
+        [ValidateSet(
+            "application/javascript",
+            "application/json",
+            "text/html",
+            "text/markdown",
+            "text/plain"
+        )]
+        public string MimeType { get; set; } = "text/html";
+
+        /// <summary>
+        /// If the user wants to send back a MimeType that isn't in the MimeType parameter,
+        /// they can use this.
+        /// </summary>
+        [Parameter(Position = 1, ParameterSetName = "CustomMimeType")]
+        public string CustomMimeType { get; set; }
 
         /// <summary>
         /// Determines whether the DisplayedValue should get written to the pipeline.
