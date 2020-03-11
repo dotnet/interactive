@@ -44,12 +44,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
 
         public override void EnterNestedPrompt()
         {
-            throw new NotImplementedException("Nested prompt support is coming soon.");
+            throw new PSNotImplementedException("Nested prompt support is coming soon.");
         }
 
         public override void ExitNestedPrompt()
         {
-            throw new NotImplementedException("Nested prompt support is coming soon.");
+            throw new PSNotImplementedException("Nested prompt support is coming soon.");
         }
 
         public override void NotifyBeginApplication()
@@ -71,18 +71,18 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
 
         #region "IHostSupportsInteractiveSession Implementation"
 
-        public bool IsRunspacePushed => throw new NotImplementedException("IHostSupportsInteractiveSession support is coming soon.");
+        public bool IsRunspacePushed => false;
 
-        public Runspace Runspace => throw new NotImplementedException("IHostSupportsInteractiveSession support is coming soon.");
+        public Runspace Runspace => throw new PSNotImplementedException("IHostSupportsInteractiveSession support is coming soon.");
 
         public void PopRunspace()
         {
-            throw new NotImplementedException("IHostSupportsInteractiveSession support is coming soon.");
+            throw new PSNotImplementedException("IHostSupportsInteractiveSession support is coming soon.");
         }
 
         public void PushRunspace(Runspace runspace)
         {
-            throw new NotImplementedException("IHostSupportsInteractiveSession support is coming soon.");
+            throw new PSNotImplementedException("IHostSupportsInteractiveSession support is coming soon.");
         }
 
         #endregion
