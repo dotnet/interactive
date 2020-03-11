@@ -17,4 +17,8 @@
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.PowerShell\Microsoft.DotNet.Interactive.PowerShell.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="5.10.0" />
+  </ItemGroup>
+
 </Project>
