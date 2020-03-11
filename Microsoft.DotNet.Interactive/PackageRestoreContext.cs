@@ -36,6 +36,7 @@ namespace Microsoft.DotNet.Interactive
             _scriptExtension = scriptExtension;
             _lazyDependencies = new Lazy<DependencyProvider>(new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots));
             _lazyIdm = new Lazy<IDependencyManagerProvider>(_lazyDependencies.Value.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", ReportError, packageKey));
+            AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
         }
 
         private IEnumerable<string> AssemblyProbingPaths()
@@ -195,8 +196,17 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
         }
+        private void OnAssemblyLoad(object sender, AssemblyLoadEventArgs args)
+        {
+            if (args.LoadedAssembly.IsDynamic ||
+                string.IsNullOrWhiteSpace(args.LoadedAssembly.Location))
+            {
+                return;
+            }
+            Log.Info("OnAssemblyLoad: {location}", args.LoadedAssembly.Location);
+        }
 
-        public async Task<PackageRestoreResult> RestoreAsync()
+            public async Task<PackageRestoreResult> RestoreAsync()
         {
             var newlyRequested = RequestedPackageReferences
                                          .Where(r => !_resolvedPackageReferences.ContainsKey(r.PackageName.ToLower(CultureInfo.InvariantCulture)))
@@ -245,7 +255,8 @@ namespace Microsoft.DotNet.Interactive
         {
             try
             {
-                if(_lazyDependencies.IsValueCreated)
+                AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
+                if (_lazyDependencies.IsValueCreated)
                 {
                     var dependencies = _lazyDependencies.Value as IDisposable;
                     dependencies?.Dispose();
