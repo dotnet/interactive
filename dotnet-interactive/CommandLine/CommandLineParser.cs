@@ -349,9 +349,4 @@ let notebookScope = getDotnetInteractiveScope('{browserFrontendEnvironment.ApiUr
             }
         }
     }
-
-    public class BrowserFrontendEnvironment : FrontendEnvironment
-    {
-        public Uri ApiUri { get; set; }
-    }
 }
