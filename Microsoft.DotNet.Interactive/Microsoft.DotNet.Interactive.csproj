@@ -32,7 +32,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="FSharp.Compiler.Private.Scripting" Version="$(FSharpCompilerPrivateScriptingVersion)" />
+    <PackageReference Include="FSharp.Compiler.Private.Scripting" />
   </ItemGroup>
 
    <ItemGroup>	

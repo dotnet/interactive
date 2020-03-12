@@ -7,15 +7,27 @@ using FluentAssertions;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
+using System.Collections.Generic;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
+    public class NugetSupporter : ISupportNuget
+    {
+        string ISupportNuget.ScriptExtension => ".csx";
+
+        void ISupportNuget.RegisterNugetResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> packageReferences)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class PackageRestoreContextTests
     {
         [Fact]
         public async Task Returns_new_references_if_they_are_added()
         {
-            using var restoreContext = new PackageRestoreContext(".csx");
+            using var restoreContext = new PackageRestoreContext(new NugetSupporter());
             var added = restoreContext.GetOrAddPackageReference("FluentAssertions", "5.7.0");
             added.Should().NotBeNull();
 
@@ -37,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task Returns_references_when_package_version_is_not_specified()
         {
-            using var restoreContext = new PackageRestoreContext(".csx");
+            using var restoreContext = new PackageRestoreContext(new NugetSupporter());
             var added = restoreContext.GetOrAddPackageReference("NewtonSoft.Json");
             added.Should().NotBeNull();
 
@@ -58,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task Returns_failure_if_package_installation_fails()
         {
-            using var restoreContext = new PackageRestoreContext(".csx");
+            using var restoreContext = new PackageRestoreContext(new NugetSupporter());
             var added = restoreContext.GetOrAddPackageReference("not-a-real-package-definitely-not", "5.7.0");
             added.Should().NotBeNull();
 
@@ -70,8 +82,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task Returns_failure_if_adding_package_twice_at_different_versions()
         {
-            using var restoreContext = new PackageRestoreContext(".csx");
-
+            using var restoreContext = new PackageRestoreContext(new NugetSupporter());
             var added = restoreContext.GetOrAddPackageReference("another-not-a-real-package-definitely-not", "5.7.0");
             added.Should().NotBeNull();
 
@@ -86,8 +97,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task Packages_from_previous_requests_are_not_returned_in_subsequent_results()
         {
-            using var restoreContext = new PackageRestoreContext(".csx");
-
+            using var restoreContext = new PackageRestoreContext(new NugetSupporter());
             var added = restoreContext.GetOrAddPackageReference("FluentAssertions", "5.7.0");
             added.Should().NotBeNull();
 
@@ -110,7 +120,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task Can_get_path_to_nuget_packaged_assembly()
         {
-            using var restoreContext = new PackageRestoreContext(".csx");
+            using var restoreContext = new PackageRestoreContext(new NugetSupporter());
             restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
 
             await restoreContext.RestoreAsync();
@@ -138,7 +148,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task Can_get_path_to_nuget_package_root()
         {
-            using var restoreContext = new PackageRestoreContext(".csx");
+            using var restoreContext = new PackageRestoreContext(new NugetSupporter());
             restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
 
             await restoreContext.RestoreAsync();
@@ -157,7 +167,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task Can_get_path_to_nuget_package_when_multiple_packages_are_added()
         {
-            using var restoreContext = new PackageRestoreContext(".csx");
+            using var restoreContext = new PackageRestoreContext(new NugetSupporter());
             restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
             restoreContext.GetOrAddPackageReference("htmlagilitypack", "1.11.12");
 

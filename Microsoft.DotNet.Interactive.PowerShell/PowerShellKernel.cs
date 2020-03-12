@@ -18,7 +18,6 @@ using XPlot.Plotly;
 
 namespace Microsoft.DotNet.Interactive.PowerShell
 {
-    using Microsoft.DotNet.Interactive.Utility;
     using System.Management.Automation;
 
     public class PowerShellKernel : KernelBase

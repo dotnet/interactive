@@ -24,16 +24,16 @@ namespace Microsoft.DotNet.Interactive
     {
         private const string restoreTfm = "netcoreapp3.1";
         private const string packageKey = "nuget";
-        private readonly string _scriptExtension;
+        private readonly ISupportNuget _iSupportNuget;
         private readonly ConcurrentDictionary<string, PackageReference> _requestedPackageReferences = new ConcurrentDictionary<string, PackageReference>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, ResolvedPackageReference> _resolvedPackageReferences = new Dictionary<string, ResolvedPackageReference>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _restoreSources = new HashSet<string>();
         private readonly Lazy<DependencyProvider> _lazyDependencies;
         private readonly Lazy<IDependencyManagerProvider> _lazyIdm;
 
-        public PackageRestoreContext(string scriptExtension)
+        public PackageRestoreContext(ISupportNuget iSupportNuget)
         {
-            _scriptExtension = scriptExtension;
+            _iSupportNuget = iSupportNuget;
             _lazyDependencies = new Lazy<DependencyProvider>(new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots));
             _lazyIdm = new Lazy<IDependencyManagerProvider>(_lazyDependencies.Value.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", ReportError, packageKey));
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
@@ -59,15 +59,17 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+        // This error is invoked from within the package manager library, which happens in a seperate
+        // process, we scrape stdio for error messages in RestoreAsync method below.
         private ResolvingErrorReport ReportError = (ErrorReportType errorType, int code, string message) =>
         {
             if (errorType == ErrorReportType.Error)
             {
-                Console.WriteLine("PackageManagementError {0} {1}", code, message);
+                Console.WriteLine("PackageManagement Error {0} {1}", code, message);
             }
             else
             {
-                Console.WriteLine("PackageManagementWarning {0} {1}", code, message);
+                Console.WriteLine("PackageManagement Warning {0} {1}", code, message);
             }
         };
 
@@ -214,7 +216,7 @@ namespace Microsoft.DotNet.Interactive
 
             var result =
                 await Task.Run(() => {
-                    return _lazyDependencies.Value.Resolve(_lazyIdm.Value, _scriptExtension, GetPackageManagerLines(), ReportError, restoreTfm);
+                    return _lazyDependencies.Value.Resolve(_lazyIdm.Value, _iSupportNuget.ScriptExtension, GetPackageManagerLines(), ReportError, restoreTfm);
                 });
 
             if (!result.Success)

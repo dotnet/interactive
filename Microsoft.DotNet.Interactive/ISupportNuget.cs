@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive
 {
     public interface ISupportNuget
     {
-        public abstract void AddScriptReferences(IReadOnlyList<ResolvedPackageReference> packageReferences);
+        public abstract void RegisterNugetResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> packageReferences);
 
         public abstract string ScriptExtension { get; }
     }

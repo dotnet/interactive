@@ -163,10 +163,10 @@ type FSharpKernel() as this =
 
     override this.TryGetVariable(name: string, [<Out>] value: Object byref) =
         match this.GetCurrentVariable(name) with
-        | Some(cv) -> 
+        | Some(cv) ->
             value <- cv.Value
             true
-        | None -> 
+        | None ->
             false
 
     interface ISupportNuget with
@@ -174,7 +174,7 @@ type FSharpKernel() as this =
         member _.ScriptExtension with get() =
             DefaultScriptExtension
 
-        member this.AddScriptReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
+        member this.RegisterNugetResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
             // Generate #r and #I from packageReferences
             let sb = StringBuilder()
             let hashset = HashSet()
@@ -191,9 +191,7 @@ type FSharpKernel() as this =
                 | root ->
                     if hashset.Add(root.FullName) then
                         if root.Exists then
-                            sb.AppendFormat("#I @\"{0}\"", root.FullName) |> ignore
+                            sb.AppendFormat("#i @\"{0}\"", root.FullName) |> ignore
                             sb.Append(Environment.NewLine) |> ignore
             let command = new SubmitCode(sb.ToString(), "fsharp")
-            let task = this.SendAsync(command)
-            task.Wait()
-
+            this.DeferCommand(command) 

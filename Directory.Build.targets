@@ -2,10 +2,6 @@
 
   <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" Condition="'$(DisableArcade)' != '1'" />
 
-
-  <PropertyGroup>
-    <FSharpCompilerPrivateScripting></FSharpCompilerPrivateScripting>
-  </PropertyGroup>
   <!--
   Arcade normally auto-adds the appropriate test packages, but in non-arcade scenarios they must be re-added.
 

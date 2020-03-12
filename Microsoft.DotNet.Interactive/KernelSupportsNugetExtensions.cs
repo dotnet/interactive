@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive
     {
         public static T UseNugetDirective<T>(this T kernel) where T: KernelBase, ISupportNuget
         {
-            var restoreContext = new PackageRestoreContext(kernel.ScriptExtension);
+            var restoreContext = new PackageRestoreContext(kernel);
             kernel.SetProperty(restoreContext);
             kernel.RegisterForDisposal(restoreContext);
 
@@ -203,7 +203,7 @@ namespace Microsoft.DotNet.Interactive
 
                     if (result.Succeeded)
                     {
-                        (kernel as ISupportNuget)?.AddScriptReferences(result.ResolvedReferences);
+                        (kernel as ISupportNuget)?.RegisterNugetResolvedPackageReferences(result.ResolvedReferences);
 
                         foreach (var resolvedReference in result.ResolvedReferences)
                         {
