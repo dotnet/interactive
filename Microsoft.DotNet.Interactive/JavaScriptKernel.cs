@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var scriptContent = new ScriptContent(command.Code);
 
-            await context.DisplayAsync(scriptContent, "text/javascript");
+            await context.DisplayAsync(scriptContent);
         }
 
         protected override Task HandleRequestCompletion(RequestCompletion command, KernelInvocationContext context)

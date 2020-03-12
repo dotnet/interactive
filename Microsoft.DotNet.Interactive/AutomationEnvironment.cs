@@ -4,7 +4,7 @@
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class AutomationEnvironment : FrontendEnvironmentBase
+    public class AutomationEnvironment : FrontendEnvironment
     {
 
     }

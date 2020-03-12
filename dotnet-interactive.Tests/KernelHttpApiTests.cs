@@ -34,9 +34,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public async Task FrontendEnvrionment_host_is_set_via_handshake()
         {
             var expectedUri = new Uri("http://choosen.one:1000/");
-            var response = await _server.HttpClient.PostAsync("/channelhandshake", new StringContent(expectedUri.AbsoluteUri));
+            var response = await _server.HttpClient.PostAsync("/discovery", new StringContent(expectedUri.AbsoluteUri));
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            _server.FrontendEnvironment.Host.Should().Be(expectedUri);
+            _server.FrontendEnvironment.ApiUri.Should().Be(expectedUri);
         }
 
         [Theory]

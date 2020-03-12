@@ -10,13 +10,17 @@ using System.CommandLine.Parsing;
 using System.IO;
 using System.Reactive.Linq;
 using System.Security.Policy;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Clockwise;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
+using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
@@ -179,26 +183,32 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
                             .AddSingleton(_ =>
                             {
-                                var frontendEnvironment = new JupyterFrontendEnvironment
+                                var frontendEnvironment = new BrowserFrontendEnvironment
                                 {
-                                    Host = new Uri($"http://localhost:{startupOptions.HttpPort}")
+                                    ApiUri = new Uri($"http://localhost:{startupOptions.HttpPort}")
                                 };
                                 return frontendEnvironment;
                             })
-                            .AddSingleton<FrontendEnvironmentBase>(c => c.GetService<JupyterFrontendEnvironment>())
+                            .AddSingleton<FrontendEnvironment>(c => c.GetService<BrowserFrontendEnvironment>())
                             .AddSingleton(c =>
                             {
                                 return CommandScheduler.Create<JupyterRequestContext>(delivery => c.GetRequiredService<ICommandHandler<JupyterRequestContext>>()
                                                                                                    .Trace()
                                                                                                    .Handle(delivery));
                             })
-                            .AddSingleton(c => CreateKernel(options.DefaultKernel,
-                                                            c.GetRequiredService<FrontendEnvironmentBase>(), 
-                                                            startupOptions,
-                                                            c.GetRequiredService<HttpProbingSettings>()))
+                            .AddSingleton(c =>
+                            {
+                                var frontendEnvironment = c.GetRequiredService<BrowserFrontendEnvironment>();
+                                
+                                var kernel = CreateKernel(options.DefaultKernel,
+                                    frontendEnvironment,
+                                    startupOptions,
+                                    c.GetRequiredService<HttpProbingSettings>());
+                                return kernel;
+                            })
                             .AddSingleton(c => new JupyterRequestContextHandler(
                                                   c.GetRequiredService<IKernel>(),
-                                                  c.GetRequiredService<JupyterFrontendEnvironment>())
+                                                  c.GetRequiredService<BrowserFrontendEnvironment>())
                                               .Trace())
                             .AddSingleton<IHostedService, Shell>()
                             .AddSingleton<IHostedService, Heartbeat>()
@@ -222,7 +232,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 startKernelHttpCommand.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
                     (startupOptions, options, console, context) =>
                     {
-                        var frontendEnvironment = new JupyterFrontendEnvironment();
+                        var frontendEnvironment = new BrowserFrontendEnvironment();
                         services
                             .AddSingleton(_ => frontendEnvironment)
                             .AddSingleton(c => CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions,null));
@@ -247,7 +257,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     (startupOptions, options, console, context) => startKernelServer(
                         startupOptions,
                         CreateKernel(options.DefaultKernel,
-                                     new JupyterFrontendEnvironment(), startupOptions,null), console));
+                                     new BrowserFrontendEnvironment(), startupOptions,null), console));
 
                 return startKernelServerCommand;
             }
@@ -255,7 +265,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
         private static IKernel CreateKernel(
             string defaultKernelName, 
-            FrontendEnvironmentBase frontendEnvironment, 
+            FrontendEnvironment frontendEnvironment, 
             StartupOptions startupOptions, 
             HttpProbingSettings httpProbingSettings)
         {
@@ -299,6 +309,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                          .UseLog()
                          .UseAbout()
                          .UseHttpApi(startupOptions, httpProbingSettings);
+            
+            SetUpFormatters(frontendEnvironment);
+            
 
             kernel.DefaultKernelName = defaultKernelName;
             var enableHttp = new SubmitCode("#!enable-http", compositeKernel.Name);
@@ -306,5 +319,39 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             compositeKernel.DeferCommand(enableHttp);
             return kernel;
         }
+
+        public static void SetUpFormatters(FrontendEnvironment frontendEnvironment)
+        {
+            switch (frontendEnvironment)
+            {
+                case AutomationEnvironment automationEnvironment:
+                    break;
+                case BrowserFrontendEnvironment browserFrontendEnvironment:
+                    Formatter<LaTeXString>.Register((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
+                    Formatter<MathString>.Register((math, writer) => writer.Write(math.ToString()), "text/latex");
+                    Formatter<ScriptContent>.Register((script, writer) =>
+                    {
+                        var fullCode = $@"createDotnetInteractiveClient('{browserFrontendEnvironment.ApiUri.AbsoluteUri}').then(function (interactive) {{
+let notebookScope = getDotnetInteractiveScope('{browserFrontendEnvironment.ApiUri.AbsoluteUri}');
+{script.ScriptValue}
+}});";
+                        IHtmlContent content = PocketViewTags.script[type: "text/javascript"](fullCode.ToHtmlContent());
+                        content.WriteTo(writer, HtmlEncoder.Default);
+                    }, HtmlFormatter.MimeType);
+                    Formatter.SetPreferredMimeTypeFor(typeof(LaTeXString), "text/latex");
+                    Formatter.SetPreferredMimeTypeFor(typeof(MathString), "text/latex");
+                    Formatter.SetPreferredMimeTypeFor(typeof(string), PlainTextFormatter.MimeType);
+                    Formatter.SetDefaultMimeType(HtmlFormatter.MimeType);
+                    Formatter.SetPreferredMimeTypeFor(typeof(ScriptContent), HtmlFormatter.MimeType);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(frontendEnvironment));
+            }
+        }
+    }
+
+    public class BrowserFrontendEnvironment : FrontendEnvironment
+    {
+        public Uri ApiUri { get; set; }
     }
 }

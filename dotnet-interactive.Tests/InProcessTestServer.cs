@@ -40,14 +40,14 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             server._host = new TestServer(builder);
             server.Kernel = server._host.Services.GetRequiredService<IKernel>();
-            server.FrontendEnvironment = server._host.Services.GetRequiredService<JupyterFrontendEnvironment>();
+            server.FrontendEnvironment = server._host.Services.GetRequiredService<BrowserFrontendEnvironment>();
             return server;
         }
 
         private InProcessTestServer()
         {
         }
-        public JupyterFrontendEnvironment FrontendEnvironment { get; private set; }
+        public BrowserFrontendEnvironment FrontendEnvironment { get; private set; }
 
         public IConsole Console { get; } = new TestConsole();
 

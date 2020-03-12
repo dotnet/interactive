@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     {
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
-        protected RequestHandlerBase(IKernel kernel, IScheduler scheduler, JupyterFrontendEnvironment frontendEnvironment)
+        protected RequestHandlerBase(IKernel kernel, IScheduler scheduler, FrontendEnvironment frontendEnvironment)
         {
             Kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
             FrontendEnvironment = frontendEnvironment ?? throw new ArgumentNullException(nameof(frontendEnvironment));
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         protected IObservable<IKernelEvent> KernelEvents { get; }
 
-        protected JupyterFrontendEnvironment FrontendEnvironment { get; }
+        protected FrontendEnvironment FrontendEnvironment { get; }
 
         protected async Task SendAsync(
             JupyterRequestContext context,

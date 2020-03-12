@@ -38,7 +38,7 @@ async function probeAddresses(probingAddresses) {
                 rootUrl = `${rootUrl}/`;
             }
 
-            let response = await fetch(`${rootUrl}channelhandshake`, {
+            let response = await fetch(`${rootUrl}discovery`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'text/plain'
