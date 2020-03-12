@@ -9,6 +9,7 @@ using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Reactive.Linq;
+using System.Security.Policy;
 using System.Threading.Tasks;
 using Clockwise;
 using Microsoft.AspNetCore.Hosting;
@@ -178,8 +179,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
                             .AddSingleton(_ =>
                             {
-                                var frontendEnvironment = new JupyterFrontendEnvironment();
-                                frontendEnvironment.Host = $"http://localhost:{startupOptions.HttpPort}";
+                                var frontendEnvironment = new JupyterFrontendEnvironment
+                                {
+                                    Host = new Uri($"http://localhost:{startupOptions.HttpPort}")
+                                };
                                 return frontendEnvironment;
                             })
                             .AddSingleton<FrontendEnvironmentBase>(c => c.GetService<JupyterFrontendEnvironment>())
@@ -219,6 +222,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     {
                         var frontendEnvironment = new JupyterFrontendEnvironment();
                         services
+                            .AddSingleton(_ => frontendEnvironment)
                             .AddSingleton(c => CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions));
 
                         return jupyter(startupOptions, console, startServer, context);

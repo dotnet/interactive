@@ -28,8 +28,10 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
         protected JupyterRequestHandlerTestBase(ITestOutputHelper output)
         {
-            _frontendEnvironment = new JupyterFrontendEnvironment();
-            _frontendEnvironment.Host = $"http://localhost:1234";
+            _frontendEnvironment = new JupyterFrontendEnvironment
+            {
+                Host = new Uri("http://localhost:1234")
+            };
             _disposables.Add(output.SubscribeToPocketLogger());
             _cSharpKernel = new CSharpKernel()
                 .UseDefaultFormatting()

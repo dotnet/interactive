@@ -60,10 +60,4 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             return delivery.Complete();
         }
     }
-
-    public class JupyterFrontendEnvironment : FrontendEnvironmentBase
-    {
-        public bool AllowStandardInput { get; set; }
-        public string Host { get; set; }
-    }
 }

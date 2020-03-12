@@ -179,7 +179,7 @@ f();"));
                 .Which
                 .Data["text/html"]
                 .Should()
-                .Be($@"<script type=""text/javascript"">createDotnetInteractiveClient('http://localhost:1234').then((interactive) => {{
+                .Be($@"<script type=""text/javascript"">createDotnetInteractiveClient('http://localhost:1234/').then((interactive) => {{
 {input}
 }});</script>");
         }
