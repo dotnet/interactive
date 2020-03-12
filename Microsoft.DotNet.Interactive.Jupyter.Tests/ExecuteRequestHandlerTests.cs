@@ -179,7 +179,8 @@ f();"));
                 .Which
                 .Data["text/html"]
                 .Should()
-                .Be($@"<script type=""text/javascript"">createDotnetInteractiveClient('http://localhost:1234/').then((interactive) => {{
+                .Be($@"<script type=""text/javascript"">createDotnetInteractiveClient('http://localhost:1234/').then(function (interactive) {{
+let notebookScope = getDotnetInteractiveScope('http://localhost:1234/');
 {input}
 }});</script>");
         }

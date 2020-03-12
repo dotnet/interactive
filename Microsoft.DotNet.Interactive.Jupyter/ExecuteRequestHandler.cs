@@ -228,7 +228,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         {
             if (value is ScriptContent script)
             {
-                var fullCode = $@"createDotnetInteractiveClient('{FrontendEnvironment.Host.AbsoluteUri}').then((interactive) => {{
+                var fullCode = $@"createDotnetInteractiveClient('{FrontendEnvironment.Host.AbsoluteUri}').then(function (interactive) {{
+let notebookScope = getDotnetInteractiveScope('{FrontendEnvironment.Host.AbsoluteUri}');
 {script.ScriptValue}
 }});";
                 var content = PocketViewTags.script[type: "text/javascript"](fullCode.ToHtmlContent());
