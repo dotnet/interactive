@@ -19,6 +19,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
+using Newtonsoft.Json.Linq;
 using XPlot.Plotly;
 using Task = System.Threading.Tasks.Task;
 
@@ -98,6 +99,30 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             value = default;
             return false;
+        }
+
+        public override Task<JObject> LspMethod(string methodName, JObject request)
+        {
+            JObject result;
+            switch (methodName)
+            {
+                case "textDocument/hover":
+                    // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
+                    var resultJson = $@"
+                        {{
+                            ""contents"": {{
+                                ""kind"": ""markdown"",
+                                ""value"": ""textDocument/hover at position ({request["position"]["line"]}, {request["position"]["character"]}) with `markdown`""
+                            }},
+                        }}";
+                    result = JObject.Parse(resultJson);
+                    break;
+                default:
+                    result = null;
+                    break;
+            }
+
+            return Task.FromResult(result);
         }
 
         protected override async Task HandleSubmitCode(

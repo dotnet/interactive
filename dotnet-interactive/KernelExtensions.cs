@@ -75,29 +75,15 @@ namespace Microsoft.DotNet.Interactive.App
                 {
                     if (context.Command is SubmitCode submitCode)
                     {
-                        var probingUrls = httpProbingSettings != null 
-                            ? httpProbingSettings.AddressList 
+                        var probingUrls = httpProbingSettings != null
+                            ? httpProbingSettings.AddressList
                             : new[]
-                            {new Uri($"http://localhost:{startupOptions.HttpPort}")};
-                        
-                        var scriptContent =
-                            HttpApiBootstrapper.GetJSCode(probingUrls, startupOptions.HttpPort?.ToString() ?? Guid.NewGuid().ToString("N") );
-
-                        string value =
-                            script[type: "text/javascript"](
-
-                                    scriptContent.ToHtmlContent())
-                                .ToString();
-
-                        context.Publish(new DisplayedValueProduced(
-                            scriptContent,
-                            context.Command,
-                            formattedValues: new[]
                             {
-                                new FormattedValue("text/html",
-                                    value)
-                            }));
-
+                                new Uri($"http://localhost:{startupOptions.HttpPort}")
+                            };
+                        var html =
+                            HttpApiBootstrapper.GetHtmlInjection(probingUrls, startupOptions.HttpPort?.ToString() ?? Guid.NewGuid().ToString("N"));
+                        context.Display(html, "text/html");
                         context.Complete(submitCode);
                     }
                 })
