@@ -29,7 +29,6 @@ else {
 }
 
 async function probeAddresses(probingAddresses) {
-    console.log(probingAddresses);
     if (Array.isArray(probingAddresses)) {
         for (let i = 0; i < probingAddresses.length; i++) {
             
