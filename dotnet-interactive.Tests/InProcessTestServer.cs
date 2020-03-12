@@ -9,6 +9,7 @@ using System.Net.Http;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.DotNet.Interactive.App.CommandLine;
+using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.Extensions.DependencyInjection;
 using Pocket;
 
@@ -39,12 +40,14 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             server._host = new TestServer(builder);
             server.Kernel = server._host.Services.GetRequiredService<IKernel>();
+            server.FrontendEnvironment = server._host.Services.GetRequiredService<JupyterFrontendEnvironment>();
             return server;
         }
 
         private InProcessTestServer()
         {
         }
+        public JupyterFrontendEnvironment FrontendEnvironment { get; private set; }
 
         public IConsole Console { get; } = new TestConsole();
 

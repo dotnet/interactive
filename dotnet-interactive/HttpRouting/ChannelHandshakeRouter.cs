@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
             return null;
         }
 
-        public Task RouteAsync(RouteContext context)
+        public async Task RouteAsync(RouteContext context)
         {
             if (context.HttpContext.Request.Method == HttpMethods.Post)
             {
@@ -38,16 +38,19 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                 {
                     // get the body
                     using var reader = new StreamReader(context.HttpContext.Request.Body);
-                    var body = new Uri( reader.ReadToEnd() );
+                    var source = await reader.ReadToEndAsync();
+                    var body = new Uri( source);
+                    _frontendEnvironment.Host = body;
 
                     // Do something
+                    context.Handler = async httpContext =>
+                    {
+                        await httpContext.Response.CompleteAsync(); 
 
-                    _frontendEnvironment.Host = body;
+                    };
 
                 }
             }
-
-            return Task.CompletedTask;
         }
     }
 }
