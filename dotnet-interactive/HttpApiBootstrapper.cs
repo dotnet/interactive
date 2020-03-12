@@ -3,20 +3,22 @@
 
 using System;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.App
 {
     internal static class HttpApiBootstrapper
     {
-        public static string GetJSCode(Uri apiRoot)
+        public static string GetJSCode(Uri[] probingUris, string seed)
         {
-            var id = $"{Process.GetCurrentProcess().Id}.{apiRoot.Port}";
+            var apiCacheBuster = $"{Process.GetCurrentProcess().Id}.{seed}";
             var template = @"#!javascript
 // ensure `requirejs` is available
-if ((typeof(requirejs) !==  typeof(Function)) || (typeof(requirejs.config) !== typeof(Function))) {
+if ((typeof (requirejs) !== typeof (Function)) || (typeof (requirejs.config) !== typeof (Function))) 
+{
     let script = document.createElement('script');
     script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
-    script.onload = function() {
+    script.onload = function () {
         loadDotnetInteractiveApi();
     };
 
@@ -26,34 +28,65 @@ else {
     loadDotnetInteractiveApi();
 }
 
-function loadDotnetInteractiveApi() {
-    // ensure interactive helpers are loaded
-    let interactiveHelperElement = document.getElementById('dotnet-interactive-script-loaded');
-    if (!interactiveHelperElement) {
-        let apiRequire = requirejs.config({
-                context: 'dotnet-interactive.$SEED$',
-                paths: {
-                    dotnetInteractive: '$API_URL$'
-                }
-            });
-            apiRequire(['dotnetInteractive'],
-                function(api) {
-                    api.init(window);
-                    let sentinelElement = document.createElement('div');
-                    sentinelElement.setAttribute('id', 'dotnet-interactive-script-loaded');
-                    sentinelElement.setAttribute('style', 'display: none');
-                    document.getElementsByTagName('head')[0].appendChild(sentinelElement);
+async function probeAddresses(probingAddresses) {
+    console.log(probingAddresses);
+    if (Array.isArray(probingAddresses)) {
+        for (let i = 0; i < probingAddresses.length; i++) {
+            
+            let rootUrl = probingAddresses[i];
+
+            if (!rootUrl.endsWith('/')) {
+                rootUrl = `${rootUrl}/`;
+            }
+
+            let response = await fetch(`${rootUrl}channelhandshake`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain'
                 },
-                function(error) {
-                    console.log(error);
-                }
-            );
+                body: probingAddresses[i]
+            });
+
+            if (response.status == 200) {
+                return rootUrl;
+            }
+        }
     }
+}
+
+function loadDotnetInteractiveApi() {
+    probeAddresses($ADDRESSES$)
+        .then((root) => {
+            // use probing to find host url and api resources
+            // ensure interactive helpers are loaded
+            let interactiveHelperElement = document.getElementById('dotnet-interactive-script-loaded');
+            if (!interactiveHelperElement) {
+                let apiRequire = requirejs.config({
+                    context: 'dotnet-interactive.$CACHE_BUSTER$',
+                    paths: {
+                        dotnetInteractive: `${root}resources/dotnet-interactive`
+                    }
+                });
+                apiRequire(['dotnetInteractive'],
+                    function (api) {
+                        api.init(window);
+                        let sentinelElement = document.createElement('div');
+                        sentinelElement.setAttribute('id', 'dotnet-interactive-script-loaded');
+                        sentinelElement.setAttribute('style', 'display: none');
+                        document.getElementsByTagName('head')[0].appendChild(sentinelElement);
+                    },
+                    function (error) {
+                        console.log(error);
+                    }
+                );
+            }
+        });
 }";
-            var jsUri = new Uri(apiRoot, "/resources/dotnet-interactive");
+           
+            var jsProbingUris = $"[{ string.Join(", ",probingUris.Select(a => $"\"{a.AbsoluteUri}\"")) }]";
             var code = template;
-            code = code.Replace("$API_URL$", jsUri.ToString());
-            code = code.Replace("$SEED$", id);
+            code = code.Replace("$CACHE_BUSTER$", apiCacheBuster);
+            code = code.Replace("$ADDRESSES$", jsProbingUris);
 
             return code;
         }

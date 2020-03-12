@@ -193,7 +193,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                                                                                    .Handle(delivery));
                             })
                             .AddSingleton(c => CreateKernel(options.DefaultKernel,
-                                                            c.GetRequiredService<FrontendEnvironmentBase>(), startupOptions))
+                                                            c.GetRequiredService<FrontendEnvironmentBase>(), 
+                                                            startupOptions,
+                                                            c.GetRequiredService<HttpProbingSettings>()))
                             .AddSingleton(c => new JupyterRequestContextHandler(
                                                   c.GetRequiredService<IKernel>(),
                                                   c.GetRequiredService<JupyterFrontendEnvironment>())
@@ -223,7 +225,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         var frontendEnvironment = new JupyterFrontendEnvironment();
                         services
                             .AddSingleton(_ => frontendEnvironment)
-                            .AddSingleton(c => CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions));
+                            .AddSingleton(c => CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions,null));
 
                         return jupyter(startupOptions, console, startServer, context);
                     });
@@ -245,7 +247,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     (startupOptions, options, console, context) => startKernelServer(
                         startupOptions,
                         CreateKernel(options.DefaultKernel,
-                                     new JupyterFrontendEnvironment(), startupOptions), console));
+                                     new JupyterFrontendEnvironment(), startupOptions,null), console));
 
                 return startKernelServerCommand;
             }
@@ -253,7 +255,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
         private static IKernel CreateKernel(
             string defaultKernelName, 
-            FrontendEnvironmentBase frontendEnvironment, StartupOptions startupOptions)
+            FrontendEnvironmentBase frontendEnvironment, 
+            StartupOptions startupOptions, 
+            HttpProbingSettings httpProbingSettings)
         {
             var compositeKernel = new CompositeKernel();
             compositeKernel.UseFrontedEnvironment(context => frontendEnvironment);
@@ -294,7 +298,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                          .UseDefaultMagicCommands()
                          .UseLog()
                          .UseAbout()
-                         .UseHttpApi(startupOptions);
+                         .UseHttpApi(startupOptions, httpProbingSettings);
 
             kernel.DefaultKernelName = defaultKernelName;
             var enableHttp = new SubmitCode("#!enable-http", compositeKernel.Name);
