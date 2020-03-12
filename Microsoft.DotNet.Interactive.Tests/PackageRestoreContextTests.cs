@@ -9,14 +9,24 @@ using System.Threading.Tasks;
 using Xunit;
 using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Utility;
+using Interactive.DependencyManager;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
+    // For the tests here no implementation is actually needed
     public class NugetSupporter : ISupportNuget
     {
-        string ISupportNuget.ScriptExtension => ".csx";
+        void ISupportNuget.InitializeDependencyProvider(AssemblyResolutionProbe assemblyProbingPaths, NativeResolutionProbe nativeProbingRoots)
+        {
+            throw new NotImplementedException();
+        }
 
         void ISupportNuget.RegisterNugetResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> packageReferences)
+        {
+            throw new NotImplementedException();
+        }
+
+        IResolveDependenciesResult ISupportNuget.Resolve(IEnumerable<string> packageManagerTextLines, string executionTfm)
         {
             throw new NotImplementedException();
         }

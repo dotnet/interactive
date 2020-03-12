@@ -5,20 +5,23 @@ namespace Microsoft.DotNet.Interactive.FSharp
 
 open System
 open System.Collections.Generic
+open System.Linq
 open System.Runtime.InteropServices
+open System.Text
 open System.Threading
 open System.Threading.Tasks
 
+open Microsoft.CodeAnalysis.Tags
+open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive.Commands
 open Microsoft.DotNet.Interactive.Events
 open Microsoft.DotNet.Interactive.Utility
 
+open Interactive.DependencyManager;
 open FSharp.Compiler.Interactive.Shell
 open FSharp.Compiler.Scripting
 open FSharp.Compiler.SourceCodeServices
-open Microsoft.CodeAnalysis.Tags
-open System.Text
 
 type FSharpKernel() as this =
     inherit KernelBase("fsharp")
@@ -139,6 +142,28 @@ type FSharpKernel() as this =
             context.Publish(CompletionRequestCompleted(completionItems, requestCompletion))
         }
 
+    let _lockObject = obj()
+    let mutable _dependencies = Unchecked.defaultof<DependencyProvider>
+    let mutable _idm = Unchecked.defaultof<IDependencyManagerProvider>
+    let mutable _assemblyProbingPaths = Unchecked.defaultof<AssemblyResolutionProbe>
+    let mutable _nativeProbingRoots = Unchecked.defaultof<NativeResolutionProbe>
+
+    let reportError =
+        let report errorType err msg =
+            let error = err, msg
+            match errorType with
+            | ErrorReportType.Warning -> Console.WriteLine("PackageManagement Error {0} {1}", err, msg);
+            | ErrorReportType.Error -> Console.WriteLine("PackageManagement Warning {0} {1}", err, msg);
+        ResolvingErrorReport (report)
+
+    let ensureDependencyProviderLoaded () =
+        // Convert to isNull _dependencies once DependencyProvider is annotated with AllowsNullAttribute
+        if _dependencies = Unchecked.defaultof<DependencyProvider> then
+            lock _lockObject (fun () ->
+                if _dependencies = Unchecked.defaultof<DependencyProvider> then
+                    _dependencies <- new DependencyProvider(_assemblyProbingPaths, _nativeProbingRoots)
+                    _idm <- _dependencies.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget"))
+
     member _.GetCurrentVariable(variableName: string) =
         let result, _errors =
             try
@@ -171,8 +196,11 @@ type FSharpKernel() as this =
 
     interface ISupportNuget with
 
-        member _.ScriptExtension with get() =
-            DefaultScriptExtension
+        member this.InitializeDependencyProvider(assemblyProbingPaths, nativeProbingRoots) =
+
+            lock _lockObject (fun () ->
+                _assemblyProbingPaths <- assemblyProbingPaths
+                _nativeProbingRoots <- nativeProbingRoots )
 
         member this.RegisterNugetResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
             // Generate #r and #I from packageReferences
@@ -195,3 +223,8 @@ type FSharpKernel() as this =
                             sb.Append(Environment.NewLine) |> ignore
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command) 
+
+        member this.Resolve(packageManagerTextLines:IEnumerable<string>, executionTfm: string): IResolveDependenciesResult =
+            //     Resolve reference for a list of package manager lines
+            ensureDependencyProviderLoaded();
+            _dependencies.Resolve(_idm, ".fsx", packageManagerTextLines, reportError, executionTfm)

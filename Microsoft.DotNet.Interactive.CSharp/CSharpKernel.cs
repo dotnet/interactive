@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Interactive.DependencyManager;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp;
@@ -24,7 +25,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
-    public class CSharpKernel : 
+    public class CSharpKernel :
         KernelBase, 
         IExtensibleKernel,
         ISupportNuget
@@ -66,21 +67,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
             RegisterForDisposal(() =>
             {
                 ScriptState = null;
+                (_dependencies as IDisposable)?.Dispose();
             });
         }
 
         public ScriptState ScriptState { get; private set; }
-
-        public void RegisterNugetResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
-        {
-            var references = resolvedReferences
-                             .SelectMany(r => r.AssemblyPaths)
-                             .Select(r => MetadataReference.CreateFromFile(r.FullName));
-
-            ScriptOptions = ScriptOptions.AddReferences(references);
-        }
-
-        public string ScriptExtension { get { return DefaultScriptExtension; } }
 
         public Task<bool> IsCompleteSubmissionAsync(string code)
         {
@@ -280,9 +271,67 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 context);
         }
 
+        // This error is invoked from within the package manager library, which happens in a seperate
+        // process, we scrape stdio for error messages in RestoreAsync method below.
+        private ResolvingErrorReport ReportError = (ErrorReportType errorType, int code, string message) =>
+        {
+            if (errorType == ErrorReportType.Error)
+            {
+                Console.WriteLine("PackageManagement Error {0} {1}", code, message);
+            }
+            else
+            {
+                Console.WriteLine("PackageManagement Warning {0} {1}", code, message);
+            }
+        };
+
+        private object _lockObject = new object();
+        private DependencyProvider _dependencies;
+        private IDependencyManagerProvider _idm;
+        private AssemblyResolutionProbe _assemblyProbingPaths;
+        private NativeResolutionProbe _nativeProbingRoots;
+
+        private void EnsureDependencyProviderLoaded()
+        {
+            if (_dependencies == null)
+            {
+                lock (_lockObject)
+                {
+                    if (_dependencies is null)
+                    {
+                        _dependencies = new DependencyProvider(_assemblyProbingPaths, _nativeProbingRoots);
+                        _idm = _dependencies.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", ReportError, "nuget");
+                    }
+                }
+            }
+        }
+
+        void ISupportNuget.InitializeDependencyProvider(AssemblyResolutionProbe assemblyProbingPaths, NativeResolutionProbe nativeProbingRoots)
+        {
+            lock (_lockObject)
+            {
+                _assemblyProbingPaths = assemblyProbingPaths;
+                _nativeProbingRoots = nativeProbingRoots;
+            }
+        }
+
+        void ISupportNuget.RegisterNugetResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
+        {
+            var references = resolvedReferences
+                             .SelectMany(r => r.AssemblyPaths)
+                             .Select(r => MetadataReference.CreateFromFile(r.FullName));
+
+            ScriptOptions = ScriptOptions.AddReferences(references);
+        }
+
+        IResolveDependenciesResult ISupportNuget.Resolve(IEnumerable<string> packageManagerTextLines, string executionTfm)
+        {
+            EnsureDependencyProviderLoaded();
+            return _dependencies.Resolve(_idm, ".csx", packageManagerTextLines, ReportError, executionTfm);
+        }
+
         private bool HasReturnValue =>
             ScriptState != null &&
             (bool)_hasReturnValueMethod.Invoke(ScriptState.Script, null);
     }
-
 }

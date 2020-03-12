@@ -28,14 +28,11 @@ namespace Microsoft.DotNet.Interactive
         private readonly ConcurrentDictionary<string, PackageReference> _requestedPackageReferences = new ConcurrentDictionary<string, PackageReference>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, ResolvedPackageReference> _resolvedPackageReferences = new Dictionary<string, ResolvedPackageReference>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _restoreSources = new HashSet<string>();
-        private readonly Lazy<DependencyProvider> _lazyDependencies;
-        private readonly Lazy<IDependencyManagerProvider> _lazyIdm;
 
         public PackageRestoreContext(ISupportNuget iSupportNuget)
         {
             _iSupportNuget = iSupportNuget;
-            _lazyDependencies = new Lazy<DependencyProvider>(new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots));
-            _lazyIdm = new Lazy<IDependencyManagerProvider>(_lazyDependencies.Value.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", ReportError, packageKey));
+            _iSupportNuget.InitializeDependencyProvider(AssemblyProbingPaths, NativeProbingRoots);
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
         }
 
@@ -58,20 +55,6 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
         }
-
-        // This error is invoked from within the package manager library, which happens in a seperate
-        // process, we scrape stdio for error messages in RestoreAsync method below.
-        private ResolvingErrorReport ReportError = (ErrorReportType errorType, int code, string message) =>
-        {
-            if (errorType == ErrorReportType.Error)
-            {
-                Console.WriteLine("PackageManagement Error {0} {1}", code, message);
-            }
-            else
-            {
-                Console.WriteLine("PackageManagement Warning {0} {1}", code, message);
-            }
-        };
 
         public void AddRestoreSource(string source) => _restoreSources.Add(source);
 
@@ -136,8 +119,6 @@ namespace Microsoft.DotNet.Interactive
                 yield return $"Include={pr.PackageName}, Version={pr.PackageVersion}";
             }
         }
-
-        private DependencyProvider Dependencies { get { return _lazyDependencies.Value; } }
 
         private bool TryGetPackageAndVersionFromPackageRoot(DirectoryInfo packageRoot, out PackageReference packageReference)
         {
@@ -208,7 +189,7 @@ namespace Microsoft.DotNet.Interactive
             Log.Info("OnAssemblyLoad: {location}", args.LoadedAssembly.Location);
         }
 
-            public async Task<PackageRestoreResult> RestoreAsync()
+        public async Task<PackageRestoreResult> RestoreAsync()
         {
             var newlyRequested = RequestedPackageReferences
                                          .Where(r => !_resolvedPackageReferences.ContainsKey(r.PackageName.ToLower(CultureInfo.InvariantCulture)))
@@ -216,7 +197,7 @@ namespace Microsoft.DotNet.Interactive
 
             var result =
                 await Task.Run(() => {
-                    return _lazyDependencies.Value.Resolve(_lazyIdm.Value, _iSupportNuget.ScriptExtension, GetPackageManagerLines(), ReportError, restoreTfm);
+                    return _iSupportNuget.Resolve(GetPackageManagerLines(), restoreTfm);
                 });
 
             if (!result.Success)
@@ -258,11 +239,6 @@ namespace Microsoft.DotNet.Interactive
             try
             {
                 AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
-                if (_lazyDependencies.IsValueCreated)
-                {
-                    var dependencies = _lazyDependencies.Value as IDisposable;
-                    dependencies?.Dispose();
-                }
             }
             catch
             {
