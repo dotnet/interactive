@@ -17,6 +17,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.PowerShell.Host;
+using Timer = System.Timers.Timer;
 
 namespace Microsoft.DotNet.Interactive.PowerShell
 {
@@ -125,27 +126,41 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         private const string UserAgent = "PowerShell.Enter-AzShell";
         private const string CommandToStartPwsh = "stty -echo && cat | pwsh -noninteractive -f - && exit";
         private const string CommandToSetPrompt = @"Remove-Item Function:\Prompt -Force; New-Item -Path Function:\Prompt -Value { ""PS>`n"" } -Options constant -Force > $null; New-Alias -Name help -Value Get-Help -Force";
+        private const string PwshPrompt = "PS>\r\n";
 
-        private readonly KernelInvocationContext _context;
+        private static readonly byte[] _exitSessionCommand = new byte[] { 4 };
+
+        private static string _cachedAccessToken;
+        private static string _cachedRefreshToken;
+        private static string _cachedTenantId;
+
         private readonly HttpClient _httpClient;
         private readonly ClientWebSocket _socket;
         private readonly Pipe _pipe;
-        private readonly byte[] _exitSessionCommand;
-        private readonly string _pwshPrompt;
+        private readonly Timer _tokenRenewTimer;
+        private readonly string _requestedTenantId;
 
-        private string _accessToken;
-        private string _refreshToken;
         private bool _sessionInitialized;
         private TaskCompletionSource<object> _codeExecutedTaskSource;
 
-        internal AzShellConnectionUtils(KernelInvocationContext context)
+        internal AzShellConnectionUtils(string tenantId)
+            : this(tenantId != null && tenantId != _cachedTenantId)
         {
-            _context = context;
+            _requestedTenantId = tenantId;
+        }
+
+        internal AzShellConnectionUtils(bool reset)
+        {
             _httpClient = new HttpClient();
             _socket = new ClientWebSocket();
             _pipe = new Pipe();
-            _exitSessionCommand = new byte[] { 4 };
-            _pwshPrompt = "PS>\r\n";
+            _tokenRenewTimer = new Timer() { AutoReset = false };
+            _tokenRenewTimer.Elapsed += OnTimedEvent;
+
+            if (reset)
+            {
+                ResetState();
+            }
         }
 
         public void Dispose()
@@ -159,6 +174,13 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             {
                 _socket.Dispose();
             }
+
+            if (_tokenRenewTimer != null)
+            {
+                _tokenRenewTimer.Stop();
+                _tokenRenewTimer.Elapsed -= OnTimedEvent;
+                _tokenRenewTimer.Dispose();
+            }
         }
 
         internal async Task ConnectAndInitializeAzShell(int terminalWidth, int terminalHeight)
@@ -169,10 +191,27 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
 
             Console.WriteLine("Authenticating with Azure...");
-            await GetDeviceCode().ConfigureAwait(false);
+            if (_cachedAccessToken != null)
+            {
+                try
+                {
+                    Console.Write("Renew the previous access token...");
+                    await RefreshToken().ConfigureAwait(false);
+                    Console.WriteLine("Succeeded.");
+                }
+                catch
+                {
+                    Console.WriteLine("Failed.\nStarting a new authentication...");
+                    ResetState();
+                }
+            }
 
-            string tenantId = await GetTenantId().ConfigureAwait(false);
-            await RefreshToken(tenantId).ConfigureAwait(false);
+            if (_cachedAccessToken == null)
+            {
+                await GetDeviceCode().ConfigureAwait(false);
+                _cachedTenantId = _requestedTenantId ?? await GetTenantId().ConfigureAwait(false);
+                await RefreshToken().ConfigureAwait(false);
+            }
 
             Console.Write("Requesting Cloud Shell...");
             string cloudShellUri = await RequestCloudShell().ConfigureAwait(false);
@@ -196,6 +235,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         internal async Task ExitSession()
         {
             await SendCommand(_exitSessionCommand, waitForExecutionCompletion: false);
+            _tokenRenewTimer.Stop();
 
             string color = VTColorUtils.CombineColorSequences(ConsoleColor.Green, VTColorUtils.DefaultConsoleColor);
             Console.Write($"{color}Azure Cloud Shell session ended.{VTColorUtils.ResetColor}\n");
@@ -219,7 +259,16 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             if (_socket.State != WebSocketState.Open)
             {
-                throw new IOException($"Session closed: {_socket.State}.\nCloseStatus: {_socket.CloseStatus}\nDescription: {_socket.CloseStatusDescription}");
+                string message = _socket.State switch
+                {
+                    WebSocketState.Closed => string.IsNullOrEmpty(_socket.CloseStatusDescription)
+                        ? $"Session closed: {_socket.CloseStatus}"
+                        : $"Session closed. {_socket.CloseStatus} => {_socket.CloseStatusDescription}",
+                    WebSocketState.Aborted => "Session aborted!",
+                    _ => $"Session is about to close. State: {_socket.State}"
+                };
+
+                throw new IOException(message);
             }
 
             await _socket.SendAsync(
@@ -233,6 +282,39 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 await _codeExecutedTaskSource.Task;
                 _codeExecutedTaskSource = null;
             }
+        }
+
+        private async void OnTimedEvent(Object source, System.Timers.ElapsedEventArgs e)
+        {
+            const int fiveMinInMSec = 300000;
+            const int oneMinInMSec = 60000;
+
+            try
+            {
+                await RefreshToken();
+            }
+            catch
+            {
+                // Give it another try.
+                Timer timer = (Timer)source;
+                double oldInterval = timer.Interval;
+                double newInterval = oldInterval >= fiveMinInMSec 
+                    ? fiveMinInMSec / 2
+                    : oldInterval /  2;
+
+                if (newInterval > oneMinInMSec)
+                {
+                    timer.Interval = newInterval;
+                    timer.Start();
+                }
+            }
+        }
+
+        private void ResetState()
+        {
+            _cachedAccessToken = null;
+            _cachedRefreshToken = null;
+            _cachedTenantId = null;
         }
 
         private async Task FillPipeAsync(ClientWebSocket socket, PipeWriter writer)
@@ -310,8 +392,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
                     if (_sessionInitialized)
                     {
-                        if (_pwshPrompt.Equals(line, StringComparison.Ordinal) ||
-                            (line.EndsWith(_pwshPrompt, StringComparison.Ordinal) &&
+                        if (PwshPrompt.Equals(line, StringComparison.Ordinal) ||
+                            (line.EndsWith(PwshPrompt, StringComparison.Ordinal) &&
                              line.StartsWith(VTColorUtils.EscapeCharacters)))
                         {
                             // The line is the prompt string, either exactly or with some escape sequences prepended.
@@ -383,12 +465,13 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return Encoding.UTF8.GetString(buffer.ToArray());
         }
 
-        private async Task RefreshToken(string tenantId)
+        private async Task RefreshToken()
         {
+            const int fiveMinInSec = 300;
             const string resource = "https://management.core.windows.net/";
-            string resourceUri = $"https://login.microsoftonline.com/{tenantId}/oauth2/token";
+            string resourceUri = $"https://login.microsoftonline.com/{_cachedTenantId}/oauth2/token";
             string encodedResource = Uri.EscapeDataString(resource);
-            string body = $"client_id={ClientId}&resource={encodedResource}&grant_type=refresh_token&refresh_token={_refreshToken}";
+            string body = $"client_id={ClientId}&resource={encodedResource}&grant_type=refresh_token&refresh_token={_cachedRefreshToken}";
 
             byte[] response = await SendWebRequest(
                 resourceUri: resourceUri,
@@ -399,8 +482,13 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             );
 
             var authResponse = JsonSerializer.Deserialize<AuthResponse>(response);
-            _accessToken = authResponse.access_token;
-            _refreshToken = authResponse.refresh_token;
+            _cachedAccessToken = authResponse.access_token;
+            _cachedRefreshToken = authResponse.refresh_token;
+
+            int expires_in = authResponse.expires_in;
+            int interval = expires_in > 2 * fiveMinInSec ? expires_in - fiveMinInSec : expires_in / 2;
+            _tokenRenewTimer.Interval = interval * 1000;
+            _tokenRenewTimer.Start();
         }
 
         private async Task<string> RequestTerminal(string uri, int width, int height)
@@ -410,7 +498,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 resourceUri: resourceUri,
                 body: string.Empty,
                 contentType: "application/json",
-                token: _accessToken,
+                token: _cachedAccessToken,
                 method: HttpMethod.Post
             );
 
@@ -425,7 +513,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 resourceUri: resourceUri,
                 body: null,
                 contentType: null,
-                token: _accessToken,
+                token: _cachedAccessToken,
                 method: HttpMethod.Get
             );
 
@@ -455,7 +543,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 resourceUri: resourceUri,
                 body: body,
                 contentType: "application/json",
-                token: _accessToken,
+                token: _cachedAccessToken,
                 method: HttpMethod.Put
             );
 
@@ -497,8 +585,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 if (authResponsePending.error == null)
                 {
                     var authResponse = JsonSerializer.Deserialize<AuthResponse>(response);
-                    _accessToken = authResponse.access_token;
-                    _refreshToken = authResponse.refresh_token;
+                    _cachedAccessToken = authResponse.access_token;
+                    _cachedRefreshToken = authResponse.refresh_token;
                     return;
                 }
 
