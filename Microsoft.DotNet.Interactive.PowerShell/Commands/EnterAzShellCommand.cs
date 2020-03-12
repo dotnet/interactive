@@ -10,9 +10,18 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
     /// <summary>
     /// Connect to Azure PowerShell for code execution.
     /// </summary>
-    [Cmdlet(VerbsCommon.Enter, "AzShell")]
+    [Cmdlet(VerbsCommon.Enter, "AzShell", DefaultParameterSetName = DefaultSetName)]
     public sealed class EnterAzShellCommand : PSCmdlet
     {
+        private const string TenantIdSetName = "TenantIdSpecified";
+        private const string DefaultSetName = "Default";
+
+        [Parameter(ParameterSetName = TenantIdSetName)]
+        public Guid TenantId { get; set; }
+
+        [Parameter(ParameterSetName = DefaultSetName)]
+        public SwitchParameter Reset;
+
         /// <summary>
         /// ProcessRecord override.
         /// </summary>
@@ -32,7 +41,10 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
                     this.ThrowTerminatingError(error);
                 }
 
-                psKernel.AzShell = new AzShellConnectionUtils(context);
+                psKernel.AzShell = ParameterSetName == TenantIdSetName
+                    ? new AzShellConnectionUtils(TenantId != Guid.Empty ? TenantId.ToString() : null)
+                    : new AzShellConnectionUtils(Reset.IsPresent);
+
                 var windowSize = Host.UI.RawUI.WindowSize;
                 psKernel.AzShell.ConnectAndInitializeAzShell(windowSize.Width, windowSize.Height).Wait();
             }

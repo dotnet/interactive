@@ -173,7 +173,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             if (AzShell != null)
             {
-                await RunSubmitCodeInAzShell(code);
+                await RunSubmitCodeInAzShell(pwsh, code);
             }
             else
             {
@@ -206,20 +206,33 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return Task.CompletedTask;
         }
 
-        private async Task RunSubmitCodeInAzShell(string code)
+        private async Task RunSubmitCodeInAzShell(PowerShell pwsh, string code)
         {
             code = code.Trim();
+            bool shouldDispose = false;
 
-            if (string.Equals(code, "exit", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                await AzShell.ExitSession();
+                if (string.Equals(code, "exit", StringComparison.OrdinalIgnoreCase))
+                {
+                    await AzShell.ExitSession();
+                    shouldDispose = true;
+                }
+                else
+                {
+                    await AzShell.SendCommand(code);
+                }
+            }
+            catch (IOException e)
+            {
+                ReportException(e, pwsh);
+                shouldDispose = true;
+            }
 
+            if (shouldDispose)
+            {
                 AzShell.Dispose();
                 AzShell = null;
-            }
-            else
-            {
-                await AzShell.SendCommand(code);
             }
         }
 
@@ -235,11 +248,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
             catch (Exception e)
             {
-                var error = e is IContainsErrorRecord icer
-                    ? icer.ErrorRecord
-                    : new ErrorRecord(e, "JupyterPSHost.ReportException", ErrorCategory.NotSpecified, targetObject: null);
-
-                ReportError(error, pwsh);
+                ReportException(e, pwsh);
             }
             finally
             {
@@ -290,6 +299,15 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             pwsh.AddCommand(_outDefaultCommand)
                 .AddParameter("InputObject", psObject)
                 .InvokeAndClearCommands();
+        }
+
+        private void ReportException(Exception e, PowerShell pwsh)
+        {
+            var error = e is IContainsErrorRecord icer
+                ? icer.ErrorRecord
+                : new ErrorRecord(e, "JupyterPSHost.ReportException", ErrorCategory.NotSpecified, targetObject: null);
+
+            ReportError(error, pwsh);
         }
     }
 }
