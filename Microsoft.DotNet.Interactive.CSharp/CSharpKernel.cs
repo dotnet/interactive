@@ -18,13 +18,17 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Utility;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using XPlot.Plotly;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
-    public partial class CSharpKernel :
+    public class CSharpKernel :
         KernelBase,
         IExtensibleKernel
     {
@@ -37,6 +41,12 @@ namespace Microsoft.DotNet.Interactive.CSharp
             new CSharpParseOptions(LanguageVersion.Default, kind: SourceCodeKind.Script);
 
         private WorkspaceFixture _fixture;
+
+        private readonly JsonSerializer _jsonSerializer = JsonSerializer.CreateDefault(new JsonSerializerSettings()
+        {
+            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            NullValueHandling = NullValueHandling.Ignore,
+        });
 
         internal ScriptOptions ScriptOptions =
             ScriptOptions.Default
@@ -98,6 +108,36 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             value = default;
             return false;
+        }
+
+        public override Task<LspResponse> LspMethod(string methodName, JObject request)
+        {
+            LspResponse result;
+            switch (methodName)
+            {
+                case "textDocument/hover":
+                    // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
+                    var hoverParams = request.ToObject<HoverParams>(_jsonSerializer);
+                    result = TextDocumentHover(hoverParams);
+                    break;
+                default:
+                    result = null;
+                    break;
+            }
+
+            return Task.FromResult(result);
+        }
+
+        public TextDocumentHoverResponse TextDocumentHover(HoverParams hoverParams)
+        {
+            return new TextDocumentHoverResponse()
+            {
+                Contents = new MarkupContent()
+                {
+                    Kind = MarkupKind.Markdown,
+                    Value = $"textDocument/hover at position ({hoverParams.Position.Line}, {hoverParams.Position.Character}) with `markdown`",
+                },
+            };
         }
 
         protected override async Task HandleSubmitCode(
