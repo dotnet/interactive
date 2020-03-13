@@ -211,6 +211,8 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
             response.EnsureSuccessStatusCode();
             var responseJson = await response.Content.ReadAsStringAsync();
             var json = JObject.Parse(responseJson);
+            var responseType = json["contents"]["kind"].Value<string>();
+            responseType.Should().Be("markdown");
             var markdownContent = json["contents"]["value"].Value<string>();
             markdownContent.Should().Be("textDocument/hover at position (1, 2) with `markdown`");
         }

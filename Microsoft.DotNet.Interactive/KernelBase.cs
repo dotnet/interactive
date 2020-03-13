@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Utility;
 using Newtonsoft.Json.Linq;
 
@@ -192,9 +193,9 @@ namespace Microsoft.DotNet.Interactive
 
         public void AddDirective(Command command) => _submissionParser.AddDirective(command); 
         
-        public virtual Task<JObject> LspMethod(string methodName, JObject request)
+        public virtual Task<LspResponse> LspMethod(string methodName, JObject request)
         {
-            return Task.FromResult<JObject>(null);
+            return Task.FromResult<LspResponse>(null);
         }
 
         private class KernelOperation
