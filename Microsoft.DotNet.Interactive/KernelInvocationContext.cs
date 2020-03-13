@@ -155,11 +155,5 @@ namespace Microsoft.DotNet.Interactive
             // This method is not async because it would prevent the setting of _current.Value to null from flowing up to the caller.
             return new ValueTask(Task.CompletedTask);
         }
-
-        public FrontendEnvironment FrontendEnvironment
-        {
-            get => _frontendEnvironment ?? new AutomationEnvironment();
-            internal set => _frontendEnvironment = value;
-        }
     }
 }

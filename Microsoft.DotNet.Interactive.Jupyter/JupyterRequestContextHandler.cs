@@ -12,26 +12,23 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public class JupyterRequestContextHandler : ICommandHandler<JupyterRequestContext>
     {
-        public FrontendEnvironment FrontendEnvironment { get; }
         private readonly ExecuteRequestHandler _executeHandler;
         private readonly CompleteRequestHandler _completeHandler;
         private readonly InterruptRequestHandler _interruptHandler;
         private readonly IsCompleteRequestHandler _isCompleteHandler;
 
-        public JupyterRequestContextHandler(IKernel kernel, FrontendEnvironment frontendEnvironment)
+        public JupyterRequestContextHandler(IKernel kernel)
         {
-            FrontendEnvironment = frontendEnvironment;
-
             var scheduler = new EventLoopScheduler(t =>
             {
                 var thread = new Thread(t) {IsBackground = true, Name = "MessagePump"};
                 return thread;
             });
             
-            _executeHandler = new ExecuteRequestHandler(kernel, frontendEnvironment, scheduler);
-            _completeHandler = new CompleteRequestHandler(kernel, frontendEnvironment, scheduler);
-            _interruptHandler = new InterruptRequestHandler(kernel, frontendEnvironment, scheduler);
-            _isCompleteHandler = new IsCompleteRequestHandler(kernel, frontendEnvironment, scheduler);
+            _executeHandler = new ExecuteRequestHandler(kernel, scheduler);
+            _completeHandler = new CompleteRequestHandler(kernel, scheduler);
+            _interruptHandler = new InterruptRequestHandler(kernel, scheduler);
+            _isCompleteHandler = new IsCompleteRequestHandler(kernel, scheduler);
         }
 
         public async Task<ICommandDeliveryResult> Handle(

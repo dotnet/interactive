@@ -396,5 +396,42 @@ new [] {1,2,3}");
             csharpKernelWasDisposed.Should().BeTrue();
             fsharpKernelWasDisposed.Should().BeTrue();
         }
+
+        [Fact]
+        public void When_frontend_environment_is_set_then_it_is_also_assigned_to_child_kernels()
+        {
+            using var compositeKernel = new CompositeKernel
+            {
+                new CSharpKernel()
+            };
+
+            compositeKernel.FrontendEnvironment = new AutomationEnvironment();
+
+            compositeKernel
+                .ChildKernels
+                .OfType<KernelBase>()
+                .Single()
+                .FrontendEnvironment
+                .Should()
+                .BeSameAs(compositeKernel.FrontendEnvironment);
+        }
+        
+        [Fact]
+        public void When_child_kernel_is_added_then_its_frontend_environment_is_obtained_from_the_parent()
+        {
+            using var compositeKernel = new CompositeKernel();
+
+            compositeKernel.FrontendEnvironment = new AutomationEnvironment();
+
+            compositeKernel.Add(new CSharpKernel());
+
+            compositeKernel
+                .ChildKernels
+                .OfType<KernelBase>()
+                .Single()
+                .FrontendEnvironment
+                .Should()
+                .BeSameAs(compositeKernel.FrontendEnvironment);
+        }
     }
 }

@@ -21,19 +21,6 @@ namespace Microsoft.DotNet.Interactive
     {
         private static readonly TextSpanFormatter _textSpanFormatter = new TextSpanFormatter();
 
-        public static T UseFrontedEnvironment<T>(this T kernel, Func<KernelInvocationContext, FrontendEnvironment> getEnvironment)
-            where T : KernelBase
-        {
-            // FIX: (UseFrontedEnvironment) don't do this with middleware
-            kernel.AddMiddleware(async (command, context, next) =>
-            {
-                var env = getEnvironment(context);
-                context.FrontendEnvironment = env;
-                await next(command, context);
-            });
-            return kernel;
-        }
-
         public static Task<IKernelCommandResult> SendAsync(
             this IKernel kernel,
             IKernelCommand command)
