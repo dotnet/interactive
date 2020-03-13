@@ -66,6 +66,8 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             var response = await GetServer(language).HttpClient.GetAsync($"/variables/{language.LanguageName()}/a");
 
+            await response.ShouldSucceed();
+
             var responseContent = await response.Content.ReadAsStringAsync();
 
             responseContent.Should().BeJsonEquivalentTo(123);
@@ -171,6 +173,8 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
 
             var response = await GetServer(language).HttpClient.GetAsync($"/variables/{language.LanguageName()}/a");
 
+            await response.ShouldSucceed();
+
             response.Content.Headers.ContentType.MediaType.Should().Be("application/json");
         }
 
@@ -208,7 +212,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
 }
 ");
             var response = await GetServer(language).HttpClient.PostJsonAsync("/lsp/textDocument/hover", request);
-            response.EnsureSuccessStatusCode();
+            await response.ShouldSucceed();
             var responseJson = await response.Content.ReadAsStringAsync();
             var json = JObject.Parse(responseJson);
             var responseType = json["contents"]["kind"].Value<string>();
@@ -223,7 +227,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         {
             // language kernels that implement LSP handling, but not for the specified method
             var response = await GetServer(language).HttpClient.PostJsonAsync($"/lsp/not/a/method", new JObject());
-            response.EnsureSuccessStatusCode();
+            await response.ShouldSucceed();
             var responseJson = await response.Content.ReadAsStringAsync();
             responseJson.Should().BeEmpty();
         }
@@ -235,7 +239,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         {
             // language kernels that don't implement any LSP handling
             var response = await GetServer(language).HttpClient.PostJsonAsync($"/lsp/textDocument/hover", new JObject());
-            response.EnsureSuccessStatusCode();
+            await response.ShouldSucceed();
             var responseJson = await response.Content.ReadAsStringAsync();
             responseJson.Should().BeEmpty();
         }
@@ -245,6 +249,8 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         {
             var response = await GetServer().HttpClient.GetAsync("/resources/logo-32x32.png");
 
+            await response.ShouldSucceed();
+
             response.Content.Headers.ContentType.MediaType.Should().Be("image/png");
         }
 
@@ -252,6 +258,8 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         public async Task can_get_kernel_names()
         {
             var response = await GetServer().HttpClient.GetAsync("/kernels");
+
+            await response.ShouldSucceed();
 
             response.Content.Headers.ContentType.MediaType.Should().Be("application/json");
 
@@ -273,6 +281,8 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         {
             var response = await GetServer().HttpClient.GetAsync("/resources/dotnet-interactive.js");
 
+            await response.ShouldSucceed();
+
             response.Content.Headers.ContentType.MediaType.Should().Be("application/javascript");
         }
     }
@@ -284,6 +294,18 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
             var content = new StringContent(requestBody.ToString(), Encoding.UTF8, "application/json");
             var response = await client.PostAsync(requestUri, content);
             return response;
+        }
+
+        public static async Task ShouldSucceed(this HttpResponseMessage response)
+        {
+            if (!response.IsSuccessStatusCode)
+            {
+                // this block is wrapped so `response.Content` isn't prematurely consumed
+                var content = await response.Content.ReadAsStringAsync();
+                response.IsSuccessStatusCode
+                    .Should()
+                    .BeTrue($"Response status code indicates failure: {(int)response.StatusCode} ({response.StatusCode}):\n{content}");
+            }
         }
     }
 }
