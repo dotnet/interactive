@@ -8,7 +8,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <IsPackable>true</IsPackable>
+    <!-- temporarily disabled due to https://github.com/dotnet/interactive/issues/272 -->
+    <!--<IsPackable>true</IsPackable>-->
     <PackageDescription>Microsoft.DotNet.Interactive.IKernel implementation for PowerShell</PackageDescription>
     <PackageTags>interactive PowerShell</PackageTags>
   </PropertyGroup>
