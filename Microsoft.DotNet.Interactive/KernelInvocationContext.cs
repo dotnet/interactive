@@ -24,8 +24,6 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly List<Func<KernelInvocationContext, Task>> _onCompleteActions = new List<Func<KernelInvocationContext, Task>>();
 
-        private FrontendEnvironment _frontendEnvironment;
-
         private readonly CancellationTokenSource _cancellationTokenSource;
 
         private KernelInvocationContext(IKernelCommand command)

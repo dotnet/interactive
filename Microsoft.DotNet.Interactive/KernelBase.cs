@@ -177,10 +177,8 @@ namespace Microsoft.DotNet.Interactive
             get => _frontendEnvironment ??=
                        ParentKernel?.FrontendEnvironment ??
                        new AutomationEnvironment();
-            set
-            {
-                _frontendEnvironment = value;
-            }
+            set => _frontendEnvironment = value;
+            
         }
 
         public IObservable<IKernelEvent> KernelEvents => _kernelEvents;
