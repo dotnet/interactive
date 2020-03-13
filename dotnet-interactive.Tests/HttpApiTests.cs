@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests;
@@ -200,6 +201,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         [InlineData(Language.CSharp)]
         public async Task lsp_textDocument_hover_returns_expected_placeholder(Language language)
         {
+            using var _ = new AssertionScope();
             var request = JObject.Parse(@"
 {
     ""textDocument"": {
