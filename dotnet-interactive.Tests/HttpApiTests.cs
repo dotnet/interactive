@@ -2,11 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests;
 using Newtonsoft.Json.Linq;
 using Pocket;
@@ -23,6 +25,8 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public HttpApiTests()
         {
             _server = InProcessTestServer.StartServer("http --default-kernel csharp");
+
+            _disposables.Add(Formatting.Formatter.ResetToDefault);
         }
 
         public void Dispose()
@@ -48,13 +52,29 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             var response = await _server.HttpClient.GetAsync($"/variables/{language.LanguageName()}/a");
 
-            response.EnsureSuccessStatusCode();
-
             var responseContent = await response.Content.ReadAsStringAsync();
 
             var value = JToken.Parse(responseContent).Value<int>();
 
             value.Should().Be(123);
+        }
+
+        [Fact]
+        public async Task Variable_serialization_can_be_customized_using_Formatter()
+        {
+            Formatter<FileInfo>.Register(
+                info => new { TheName = info.Name }.SerializeToJson().Value,
+                JsonFormatter.MimeType);
+
+            await _server.Kernel.SendAsync(new SubmitCode("var theFile = new System.IO.FileInfo(\"the-file.txt\");"));
+
+            var response = await _server.HttpClient.GetAsync("/variables/csharp/theFile");
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            var value = JObject.Parse(responseContent);
+
+            value["TheName"].Value<string>().Should().Be("the-file.txt");
         }
 
         [Theory]
@@ -65,8 +85,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             await _server.Kernel.SendAsync(new SubmitCode(code, language.LanguageName()));
 
             var response = await _server.HttpClient.GetAsync($"/variables/{language.LanguageName()}/a");
-
-            response.EnsureSuccessStatusCode();
 
             response.Content.Headers.ContentType.MediaType.Should().Be("application/json");
         }
@@ -94,8 +112,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
             var response = await _server.HttpClient.GetAsync("/resources/logo-32x32.png");
 
-            response.EnsureSuccessStatusCode();
-
             response.Content.Headers.ContentType.MediaType.Should().Be("image/png");
         }
 
@@ -103,8 +119,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public async Task can_get_kernel_names()
         {
             var response = await _server.HttpClient.GetAsync("/kernels");
-
-            response.EnsureSuccessStatusCode();
 
             response.Content.Headers.ContentType.MediaType.Should().Be("application/json");
 
@@ -125,8 +139,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public async Task can_get_javascript_api()
         {
             var response = await _server.HttpClient.GetAsync("/resources/dotnet-interactive.js");
-
-            response.EnsureSuccessStatusCode();
 
             response.Content.Headers.ContentType.MediaType.Should().Be("application/javascript");
         }

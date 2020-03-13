@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -54,12 +55,11 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                         {
                             context.Handler = async httpContext =>
                             {
-                                httpContext.Response.ContentType = "application/json";
-                                
-                                await httpContext.Response.WriteAsync(
-                                    JsonConvert.SerializeObject(
-                                        value, 
-                                        settings: JsonFormatter.SerializerSettings));
+                                httpContext.Response.ContentType = JsonFormatter.MimeType;
+
+                                await using var writer = new StreamWriter(httpContext.Response.Body);
+
+                                value.FormatTo(writer, JsonFormatter.MimeType);
                             };
                         }
                     }
