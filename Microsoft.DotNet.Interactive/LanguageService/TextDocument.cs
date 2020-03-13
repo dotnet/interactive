@@ -3,9 +3,8 @@
 
 namespace Microsoft.DotNet.Interactive.LanguageService
 {
-    public struct Position
+    public class TextDocument
     {
-        public int Line { get; set; }
-        public int Character { get; set; }
+        public string Uri { get; set; }
     }
 }

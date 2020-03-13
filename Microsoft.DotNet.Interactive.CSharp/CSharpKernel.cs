@@ -18,16 +18,14 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Utility;
-using Newtonsoft.Json.Linq;
 using XPlot.Plotly;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
-    public class CSharpKernel : 
-        KernelBase, 
+    public partial class CSharpKernel :
+        KernelBase,
         IExtensibleKernel
     {
         internal const string DefaultKernelName = "csharp";
@@ -100,30 +98,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             value = default;
             return false;
-        }
-
-        public override Task<LspResponse> LspMethod(string methodName, JObject request)
-        {
-            LspResponse result;
-            switch (methodName)
-            {
-                case "textDocument/hover":
-                    // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
-                    result = new TextDocumentHoverResponse()
-                    {
-                        Contents = new MarkupContent()
-                        {
-                            Kind = MarkupKind.Markdown,
-                            Value = $"textDocument/hover at position ({request["position"]["line"]}, {request["position"]["character"]}) with `markdown`",
-                        },
-                    };
-                    break;
-                default:
-                    result = null;
-                    break;
-            }
-
-            return Task.FromResult(result);
         }
 
         protected override async Task HandleSubmitCode(

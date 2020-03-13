@@ -3,9 +3,9 @@
 
 namespace Microsoft.DotNet.Interactive.LanguageService
 {
-    public struct Position
+    public class HoverParams
     {
-        public int Line { get; set; }
-        public int Character { get; set; }
+        public TextDocument TextDocument { get; set; }
+        public Position Position { get; set; }
     }
 }
