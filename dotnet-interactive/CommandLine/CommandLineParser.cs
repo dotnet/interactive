@@ -326,7 +326,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             {
                 case AutomationEnvironment automationEnvironment:
                     break;
+
                 case BrowserFrontendEnvironment browserFrontendEnvironment:
+                    Formatter.DefaultMimeType = HtmlFormatter.MimeType;
+                    Formatter.SetPreferredMimeTypeFor(typeof(LaTeXString), "text/latex");
+                    Formatter.SetPreferredMimeTypeFor(typeof(MathString), "text/latex");
+                    Formatter.SetPreferredMimeTypeFor(typeof(string), PlainTextFormatter.MimeType);
+                    Formatter.SetPreferredMimeTypeFor(typeof(ScriptContent), HtmlFormatter.MimeType);
+                    
                     Formatter<LaTeXString>.Register((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
                     Formatter<MathString>.Register((math, writer) => writer.Write(math.ToString()), "text/latex");
                     Formatter<ScriptContent>.Register((script, writer) =>
@@ -338,12 +345,9 @@ let notebookScope = getDotnetInteractiveScope('{browserFrontendEnvironment.ApiUr
                         IHtmlContent content = PocketViewTags.script[type: "text/javascript"](fullCode.ToHtmlContent());
                         content.WriteTo(writer, HtmlEncoder.Default);
                     }, HtmlFormatter.MimeType);
-                    Formatter.SetPreferredMimeTypeFor(typeof(LaTeXString), "text/latex");
-                    Formatter.SetPreferredMimeTypeFor(typeof(MathString), "text/latex");
-                    Formatter.SetPreferredMimeTypeFor(typeof(string), PlainTextFormatter.MimeType);
-                    Formatter.SetDefaultMimeType(HtmlFormatter.MimeType);
-                    Formatter.SetPreferredMimeTypeFor(typeof(ScriptContent), HtmlFormatter.MimeType);
+
                     break;
+                
                 default:
                     throw new ArgumentOutOfRangeException(nameof(frontendEnvironment));
             }

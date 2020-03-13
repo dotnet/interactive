@@ -30,7 +30,6 @@ namespace Microsoft.DotNet.Interactive.App
 
             Formatter<VersionSensor.BuildInfo>.Register((info, writer) =>
             {
-                // https://github.com/dotnet/swag/tree/master/netlogo
                 var url = "https://github.com/dotnet/interactive";
 
                 PocketView html = table(
