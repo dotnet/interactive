@@ -50,6 +50,8 @@ namespace Microsoft.DotNet.Interactive
 
         internal KernelCommandPipeline Pipeline { get; }
 
+        internal CompositeKernel ParentKernel { get; set; }
+
         public void AddMiddleware(
             KernelCommandPipelineMiddleware middleware,
             [CallerMemberName] string caller = null) => Pipeline.AddMiddleware(middleware, caller);
@@ -170,6 +172,17 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+        public FrontendEnvironment FrontendEnvironment
+        {
+            get => _frontendEnvironment ??=
+                       ParentKernel?.FrontendEnvironment ??
+                       new AutomationEnvironment();
+            set
+            {
+                _frontendEnvironment = value;
+            }
+        }
+
         public IObservable<IKernelEvent> KernelEvents => _kernelEvents;
 
         public string Name { get; set; }
@@ -239,6 +252,8 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly ConcurrentQueue<KernelOperation> _commandQueue =
             new ConcurrentQueue<KernelOperation>();
+
+        private FrontendEnvironment _frontendEnvironment;
 
         public Task<IKernelCommandResult> SendAsync(
             IKernelCommand command,

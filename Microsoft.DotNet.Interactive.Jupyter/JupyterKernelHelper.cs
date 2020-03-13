@@ -12,7 +12,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         {
             var context = KernelInvocationContext.Current;
 
-            if (context?.FrontendEnvironment?.AllowStandardInput == true)
+            if (context?.HandlingKernel is KernelBase kernelBase &&
+                kernelBase.FrontendEnvironment.AllowStandardInput)
             {
                 var inputReqEvent = new InputRequested(prompt, context.Command);
                 context.Publish(inputReqEvent);
@@ -26,7 +27,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         {
             var context = KernelInvocationContext.Current;
 
-            if (context?.FrontendEnvironment?.AllowStandardInput == true)
+            if (context?.HandlingKernel is KernelBase kernelBase &&
+                kernelBase.FrontendEnvironment.AllowStandardInput)
             {
                 var passwordReqEvent = new PasswordRequested(prompt, context.Command);
                 context.Publish(passwordReqEvent);

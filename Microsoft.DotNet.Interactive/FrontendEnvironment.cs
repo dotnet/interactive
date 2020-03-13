@@ -4,7 +4,7 @@
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class FrontendEnvironment        
+    public abstract class FrontendEnvironment        
     {
         public bool AllowStandardInput { get; set; }
     }

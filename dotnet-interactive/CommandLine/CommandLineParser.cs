@@ -9,7 +9,6 @@ using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Reactive.Linq;
-using System.Security.Policy;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Clockwise;
@@ -207,8 +206,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                 return kernel;
                             })
                             .AddSingleton(c => new JupyterRequestContextHandler(
-                                                  c.GetRequiredService<IKernel>(),
-                                                  c.GetRequiredService<BrowserFrontendEnvironment>())
+                                                  c.GetRequiredService<IKernel>())
                                               .Trace())
                             .AddSingleton<IHostedService, Shell>()
                             .AddSingleton<IHostedService, Heartbeat>()
@@ -270,7 +268,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             HttpProbingSettings httpProbingSettings)
         {
             var compositeKernel = new CompositeKernel();
-            compositeKernel.UseFrontedEnvironment(context => frontendEnvironment);
+            compositeKernel.FrontendEnvironment = frontendEnvironment;
 
             compositeKernel.Add(
                 new CSharpKernel()

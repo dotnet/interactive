@@ -115,8 +115,6 @@ namespace Microsoft.DotNet.Interactive.App
             }
         }
 
-     
-
         public static IWebHost ConstructWebHost(StartupOptions options)
         {
             var webHost = ConstructWebHostBuilder(options,_serviceCollection)
