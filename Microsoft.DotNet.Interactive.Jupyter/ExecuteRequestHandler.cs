@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     {
         private int _executionCount;
 
-        public ExecuteRequestHandler(IKernel kernel, JupyterFrontendEnvironment frontendEnvironment, IScheduler scheduler = null)
+        public ExecuteRequestHandler(IKernel kernel, FrontendEnvironment frontendEnvironment, IScheduler scheduler = null)
             : base(kernel, scheduler ?? CurrentThreadScheduler.Instance, frontendEnvironment)
         {
         }
@@ -148,9 +148,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             var value = displayEvent.Value;
             PubSubMessage dataMessage;
 
-            ProcessJavaScriptTransforms(formattedValues, value);
-            CreateDefaultFormattedValueIfEmpty(formattedValues, value);
-
             switch (displayEvent)
             {
                 case DisplayedValueProduced _:
@@ -212,29 +209,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             }
 
             return defaultText;
-        }
-
-        private static void CreateDefaultFormattedValueIfEmpty(Dictionary<string, object> formattedValues, object value)
-        {
-            if (formattedValues.Count == 0)
-            {
-                formattedValues.Add(
-                    HtmlFormatter.MimeType,
-                    value.ToDisplayString("text/html"));
-            }
-        }
-
-        private void ProcessJavaScriptTransforms(Dictionary<string, object> formattedValues, object value)
-        {
-            if (value is ScriptContent script)
-            {
-                var fullCode = $@"createDotnetInteractiveClient('{FrontendEnvironment.Host}').then((interactive) => {{
-{script.ScriptValue}
-}});";
-                var content = PocketViewTags.script[type: "text/javascript"](fullCode.ToHtmlContent());
-                formattedValues["text/javascript"] = fullCode;
-                formattedValues[HtmlFormatter.MimeType] = content.ToString();
-            }
         }
 
         private void OnCommandHandled(IJupyterMessageSender jupyterMessageSender)

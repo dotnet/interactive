@@ -12,13 +12,13 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public class JupyterRequestContextHandler : ICommandHandler<JupyterRequestContext>
     {
-        public JupyterFrontendEnvironment FrontendEnvironment { get; }
+        public FrontendEnvironment FrontendEnvironment { get; }
         private readonly ExecuteRequestHandler _executeHandler;
         private readonly CompleteRequestHandler _completeHandler;
         private readonly InterruptRequestHandler _interruptHandler;
         private readonly IsCompleteRequestHandler _isCompleteHandler;
 
-        public JupyterRequestContextHandler(IKernel kernel, JupyterFrontendEnvironment frontendEnvironment)
+        public JupyterRequestContextHandler(IKernel kernel, FrontendEnvironment frontendEnvironment)
         {
             FrontendEnvironment = frontendEnvironment;
 
@@ -59,11 +59,5 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             return delivery.Complete();
         }
-    }
-
-    public class JupyterFrontendEnvironment : FrontendEnvironmentBase
-    {
-        public bool AllowStandardInput { get; set; }
-        public string Host { get; set; }
     }
 }

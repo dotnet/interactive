@@ -2,8 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine.Parsing;
+using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
@@ -84,19 +87,21 @@ namespace Microsoft.DotNet.Interactive.App
 
             var httpPort = options.HttpPort ??= GetFreePort();
 
+            var probingSettings = HttpProbingSettings.Create(httpPort);
+
             var webHost = new WebHostBuilder()
                           .UseKestrel()
                           .ConfigureServices(c =>
                           {
+                              c.AddSingleton(probingSettings);
                               c.AddSingleton(options);
-
                               foreach (var serviceDescriptor in serviceCollection)
                               {
                                   c.Add(serviceDescriptor);
                               }
                           })
                           .UseStartup<Startup>()
-                          .UseUrls($"http://*:{httpPort}");
+                          .UseUrls(probingSettings.AddressList.Select(a => a.AbsoluteUri).ToArray());
 
             return webHost;
 
@@ -109,6 +114,8 @@ namespace Microsoft.DotNet.Interactive.App
                 return port;
             }
         }
+
+     
 
         public static IWebHost ConstructWebHost(StartupOptions options)
         {

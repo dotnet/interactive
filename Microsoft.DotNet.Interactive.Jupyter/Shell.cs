@@ -79,8 +79,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            SetupDefaultMimeTypes();
-
             _shell.Bind(_shellAddress);
             _ioPubSocket.Bind(_ioPubAddress);
             _stdIn.Bind(_stdInAddress);
@@ -132,20 +130,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             void SetIdle(ZeroMQMessage request) => _ioPubChannel.Publish(new Status(StatusValues.Idle), request, kernelIdentity);
 
             return Task.CompletedTask;
-        }
-
-        public static void SetupDefaultMimeTypes()
-        {
-            Formatter<LaTeXString>.Register((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
-
-            Formatter<MathString>.Register((math, writer) => writer.Write(math.ToString()), "text/latex");
-
-            Formatter.SetPreferredMimeTypeFor(typeof(LaTeXString), "text/latex");
-            Formatter.SetPreferredMimeTypeFor(typeof(MathString), "text/latex");
-            
-            Formatter.SetPreferredMimeTypeFor(typeof(string), PlainTextFormatter.MimeType);
-            
-            Formatter.SetDefaultMimeType(HtmlFormatter.MimeType);
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

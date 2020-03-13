@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive
 {
     public static class KernelExtensions
     {
-        public static T UseFrontedEnvironment<T>(this T kernel, Func<KernelInvocationContext, FrontendEnvironmentBase> getEnvironment)
+        public static T UseFrontedEnvironment<T>(this T kernel, Func<KernelInvocationContext, FrontendEnvironment> getEnvironment)
             where T : KernelBase
         {
             kernel.AddMiddleware(async (command, context, next) =>

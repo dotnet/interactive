@@ -1,5 +1,16 @@
 ﻿define({
     init: function (global) {
+        global.getDotnetInteractiveScope = (key) => {
+            if (typeof (global.interactiveScopes) === 'undefined') {
+                global.interactiveScopes = {};
+            }
+
+            if (typeof (global.interactiveScopes[key]) === 'undefined') {
+                global.interactiveScopes[key] = {};
+            }
+
+            return global.interactiveScopes[key];
+        };
         global.createDotnetInteractiveClient = async (address) => {
             let rootUrl = address;
             if (!address.endsWith("/")) {

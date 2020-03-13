@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.App
             return kernel;
         }
 
-        public static T UseHttpApi<T>(this T kernel, StartupOptions startupOptions)
+        public static T UseHttpApi<T>(this T kernel, StartupOptions startupOptions, HttpProbingSettings httpProbingSettings)
             where T : KernelBase
         {
 
@@ -76,8 +76,13 @@ namespace Microsoft.DotNet.Interactive.App
                 {
                     if (context.Command is SubmitCode submitCode)
                     {
+                        var probingUrls = httpProbingSettings != null 
+                            ? httpProbingSettings.AddressList 
+                            : new[]
+                            {new Uri($"http://localhost:{startupOptions.HttpPort}")};
+                        
                         var scriptContent =
-                            HttpApiBootstrapper.GetJSCode(new Uri($"http://localhost:{startupOptions.HttpPort}"));
+                            HttpApiBootstrapper.GetJSCode(probingUrls, startupOptions.HttpPort?.ToString() ?? Guid.NewGuid().ToString("N") );
 
                         string value =
                             script[type: "text/javascript"](

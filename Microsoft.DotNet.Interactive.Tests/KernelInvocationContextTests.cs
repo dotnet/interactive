@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                           .NotBeNull();
         }
 
-        private class TestFrontendEnvironment : FrontendEnvironmentBase
+        private class TestFrontendEnvironment : FrontendEnvironment
         {
             
         }
@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             using var kernelEvents = kernel.KernelEvents.ToSubscribedList();
             
-            FrontendEnvironmentBase frontendEnvironment = null;
+            FrontendEnvironment frontendEnvironment = null;
 
             kernel.AddMiddleware(async (command, context, next) =>
             {

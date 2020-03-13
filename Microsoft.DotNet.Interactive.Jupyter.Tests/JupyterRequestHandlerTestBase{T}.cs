@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         private readonly FSharpKernel _fSharpKernel;
         private readonly PowerShellKernel _psKernel;
         private readonly CompositeKernel _compositeKernel;
-        private readonly JupyterFrontendEnvironment _frontendEnvironment;
+        private readonly FrontendEnvironment _frontendEnvironment;
 
         protected RecordingJupyterMessageSender JupyterMessageSender { get; }
 
@@ -28,8 +28,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
         protected JupyterRequestHandlerTestBase(ITestOutputHelper output)
         {
-            _frontendEnvironment = new JupyterFrontendEnvironment();
-            _frontendEnvironment.Host = $"http://localhost:1234";
+            _frontendEnvironment = new FrontendEnvironment();
             _disposables.Add(output.SubscribeToPocketLogger());
             _cSharpKernel = new CSharpKernel()
                 .UseDefaultFormatting()
@@ -95,10 +94,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
         protected ICommandScheduler<JupyterRequestContext> CreateScheduler()
         {
-            Shell.SetupDefaultMimeTypes();
-
             var handler = new JupyterRequestContextHandler(Kernel, _frontendEnvironment);
-
             return CommandScheduler.Create<JupyterRequestContext>(handler.Handle).Trace();
         }
     }
