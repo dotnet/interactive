@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Interactive
                 };
             }
 
-            return kernel ?? throw new NoSuitableKernelException(command);
+            return kernel ?? this;
         }
 
         public override bool TryGetVariable(string name, out object value)

@@ -39,10 +39,10 @@ namespace Microsoft.DotNet.Interactive
 
             Pipeline = new KernelCommandPipeline(this);
 
+            AddCaptureConsoleMiddleware();
+
             AddSetKernelMiddleware();
 
-            AddCaptureConsoleMiddleware();
-           
             AddDirectiveMiddlewareAndCommonCommandHandlers();
 
             _disposables.Add(_kernelEvents);
@@ -66,18 +66,7 @@ namespace Microsoft.DotNet.Interactive
 
         private void AddSetKernelMiddleware()
         {
-            AddMiddleware(async (command, context, next) =>
-            {
-                SetHandlingKernel(command, context);
-
-                var previousKernel = context.CurrentKernel;
-
-                context.CurrentKernel = this;
-
-                await next(command, context);
-
-                context.CurrentKernel = previousKernel;
-            });
+            AddMiddleware(SetKernel);
         }
 
         private void AddCaptureConsoleMiddleware()
@@ -101,7 +90,8 @@ namespace Microsoft.DotNet.Interactive
         {
             AddMiddleware(
                 (command, context, next) =>
-                    command switch
+                {
+                    return command switch
                     {
                         SubmitCode submitCode =>
                         HandleDirectivesAndSubmitCode(
@@ -110,7 +100,21 @@ namespace Microsoft.DotNet.Interactive
                             next),
 
                         _ => next(command, context)
-                    });
+                    };
+                });
+        }
+
+        private async Task SetKernel(IKernelCommand command, KernelInvocationContext context, KernelPipelineContinuation next)
+        {
+            SetHandlingKernel(command, context);
+
+            var previousKernel = context.CurrentKernel;
+
+            context.CurrentKernel = this;
+
+            await next(command, context);
+
+            context.CurrentKernel = previousKernel;
         }
 
         private async Task HandleDirectivesAndSubmitCode(
