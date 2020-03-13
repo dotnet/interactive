@@ -12,17 +12,17 @@ namespace Microsoft.DotNet.Interactive.App
         public static string GetJSCode(Uri[] probingUris, string seed)
         {
             var apiCacheBuster = $"{Process.GetCurrentProcess().Id}.{seed}";
-            var template = @"#!javascript
-// ensure `requirejs` is available
+            var template = @"// ensure `requirejs` is available
 if ((typeof (requirejs) !== typeof (Function)) || (typeof (requirejs.config) !== typeof (Function))) 
 {
-    let script = document.createElement('script');
-    script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
-    script.onload = function () {
+    let requirejs_script = document.createElement('script');
+    requirejs_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
+    requirejs_script.setAttribute('type', 'text/javascript');
+    requirejs_script.onload = function () {
         loadDotnetInteractiveApi();
     };
 
-    document.getElementsByTagName('head')[0].appendChild(script);
+    document.getElementsByTagName('head')[0].appendChild(requirejs_script);
 }
 else {
     loadDotnetInteractiveApi();
@@ -69,9 +69,9 @@ function loadDotnetInteractiveApi() {
                 apiRequire(['dotnetInteractive'],
                     function (api) {
                         api.init(window);
-                        let sentinelElement = document.createElement('div');
+                        let sentinelElement = document.createElement('script');
                         sentinelElement.setAttribute('id', 'dotnet-interactive-script-loaded');
-                        sentinelElement.setAttribute('style', 'display: none');
+                        sentinelElement.setAttribute('type', 'text/javascript');
                         document.getElementsByTagName('head')[0].appendChild(sentinelElement);
                     },
                     function (error) {
@@ -79,7 +79,8 @@ function loadDotnetInteractiveApi() {
                     }
                 );
             }
-        });
+        })
+        .catch(error => {console.log(error);});
 }";
            
             var jsProbingUris = $"[{ string.Join(", ",probingUris.Select(a => $"\"{a.AbsoluteUri}\"")) }]";
