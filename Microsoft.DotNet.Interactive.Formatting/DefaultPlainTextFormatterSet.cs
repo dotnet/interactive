@@ -40,6 +40,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return true;
             }
 
+            if (typeof(TextSpan).IsAssignableFrom(type))
+            {
+                formatter = new PlainTextFormatter<TextSpan>((span, writer) =>
+                {
+                    writer.Write(span.ToString(OutputMode.Ansi));
+                });
+                return true;
+            }
             formatter = null;
             return false;
         }
