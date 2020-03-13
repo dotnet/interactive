@@ -4,21 +4,27 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.CommandLine.Rendering;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Pocket;
+using static System.CommandLine.Rendering.Ansi.Color;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive
 {
     public static class KernelExtensions
     {
+        private static readonly TextSpanFormatter _textSpanFormatter = new TextSpanFormatter();
+
         public static T UseFrontedEnvironment<T>(this T kernel, Func<KernelInvocationContext, FrontendEnvironment> getEnvironment)
             where T : KernelBase
         {
+            // FIX: (UseFrontedEnvironment) don't do this with middleware
             kernel.AddMiddleware(async (command, context, next) =>
             {
                 var env = getEnvironment(context);
@@ -57,6 +63,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var command = new Command("#!log", "Enables session logging.");
 
+
             var logStarted = false;
 
             command.Handler = CommandHandler.Create<KernelInvocationContext>(async context =>
@@ -70,41 +77,51 @@ namespace Microsoft.DotNet.Interactive
 
                 kernel.AddMiddleware(async (kernelCommand, context, next) =>
                 {
-                    await context.DisplayAsync(kernelCommand.ToLogString());
+                    await Log(context, kernelCommand.ToLogString());
 
                     await next(kernelCommand, context);
                 });
 
-                var disposable = new CompositeDisposable();
-
-                disposable.Add(kernel.KernelEvents.Subscribe(async e =>
+                var disposable = new CompositeDisposable
                 {
-                    if (KernelInvocationContext.Current is {} currentContext)
+                    kernel.KernelEvents.Subscribe(async e =>
                     {
-                        if (!(e is DisplayEventBase))
+                        if (KernelInvocationContext.Current is {} currentContext)
                         {
-                            await currentContext.DisplayAsync(e.ToLogString());
+                            if (!(e is DisplayEventBase))
+                            {
+                                await Log(currentContext, e.ToLogString());
+                            }
                         }
-                    }
-                }));
-
-                disposable.Add(LogEvents.Subscribe(async e =>
-                {
-                    if (KernelInvocationContext.Current is {} currentContext)
+                    }),
+                    LogEvents.Subscribe(async e =>
                     {
-                        await currentContext.DisplayAsync(e.ToLogString());
-                    }
-                }));
+                        if (KernelInvocationContext.Current is {} currentContext)
+                        {
+                            await Log(currentContext, e.ToLogString());
+                        }
+                    })
+                };
 
                 kernel.RegisterForDisposal(disposable);
 
-                await context.DisplayAsync("Logging enabled");
+                await Log(context, "Logging enabled");
+
+                Task Log(KernelInvocationContext c, string message) => c.DisplayAnsi($"{Foreground.LightGray}{message}{Off}");
             });
 
             kernel.AddDirective(command);
 
             return kernel;
         }
+
+        internal static Task DisplayAnsi(
+            this KernelInvocationContext context, 
+            FormattableString message) =>
+            DisplayAnsi(context, _textSpanFormatter.ParseToSpan(message));
+
+        internal static Task DisplayAnsi(KernelInvocationContext context, TextSpan span) => 
+            context.DisplayAsync(span, PlainTextFormatter.MimeType);
 
         [DebuggerStepThrough]
         public static T LogEventsToPocketLogger<T>(this T kernel)
