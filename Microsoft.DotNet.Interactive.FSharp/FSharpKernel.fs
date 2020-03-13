@@ -219,10 +219,12 @@ type FSharpKernel() as this =
                 | root ->
                     if hashset.Add(root.FullName) then
                         if root.Exists then
-                            sb.AppendFormat("#i @\"{0}\"", root.FullName) |> ignore
+                            sb.AppendFormat("#I @\"{0}\"", root.FullName) |> ignore
                             sb.Append(Environment.NewLine) |> ignore
             let command = new SubmitCode(sb.ToString(), "fsharp")
-            this.DeferCommand(command) 
+//            this.DeferCommand(command)
+            let task = this.SendAsync(command)
+            task.Wait()
 
         member this.Resolve(packageManagerTextLines:IEnumerable<string>, executionTfm: string): IResolveDependenciesResult =
             //     Resolve reference for a list of package manager lines

@@ -7,37 +7,27 @@ using FluentAssertions;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Utility;
 using Interactive.DependencyManager;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    // For the tests here no implementation is actually needed
-    public class NugetSupporter : ISupportNuget
+    public class PackageRestoreContextTests : LanguageKernelTestBase
     {
-        void ISupportNuget.InitializeDependencyProvider(AssemblyResolutionProbe assemblyProbingPaths, NativeResolutionProbe nativeProbingRoots)
+        public PackageRestoreContextTests(ITestOutputHelper output) : base(output)
         {
-            throw new NotImplementedException();
         }
 
-        void ISupportNuget.RegisterNugetResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> packageReferences)
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Returns_new_references_if_they_are_added(Language language)
         {
-            throw new NotImplementedException();
-        }
+            var kernel = CreateBaseKernel(language) as ISupportNuget;
 
-        IResolveDependenciesResult ISupportNuget.Resolve(IEnumerable<string> packageManagerTextLines, string executionTfm)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class PackageRestoreContextTests
-    {
-        [Fact]
-        public async Task Returns_new_references_if_they_are_added()
-        {
-            using var restoreContext = new PackageRestoreContext(new NugetSupporter());
+            using var restoreContext = new PackageRestoreContext((ISupportNuget)kernel);
             var added = restoreContext.GetOrAddPackageReference("FluentAssertions", "5.7.0");
             added.Should().NotBeNull();
 
@@ -56,10 +46,14 @@ namespace Microsoft.DotNet.Interactive.Tests
                               r.PackageVersion == "5.7.0");
         }
 
-        [Fact]
-        public async Task Returns_references_when_package_version_is_not_specified()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Returns_references_when_package_version_is_not_specified(Language language)
         {
-            using var restoreContext = new PackageRestoreContext(new NugetSupporter());
+            var kernel = CreateBaseKernel(language) as ISupportNuget;
+
+            using var restoreContext = new PackageRestoreContext(kernel);
             var added = restoreContext.GetOrAddPackageReference("NewtonSoft.Json");
             added.Should().NotBeNull();
 
@@ -77,10 +71,14 @@ namespace Microsoft.DotNet.Interactive.Tests
                               !string.IsNullOrWhiteSpace(r.PackageVersion));
         }
 
-        [Fact]
-        public async Task Returns_failure_if_package_installation_fails()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Returns_failure_if_package_installation_fails(Language language)
         {
-            using var restoreContext = new PackageRestoreContext(new NugetSupporter());
+            var kernel = CreateBaseKernel(language) as ISupportNuget;
+
+            using var restoreContext = new PackageRestoreContext(kernel);
             var added = restoreContext.GetOrAddPackageReference("not-a-real-package-definitely-not", "5.7.0");
             added.Should().NotBeNull();
 
@@ -89,10 +87,14 @@ namespace Microsoft.DotNet.Interactive.Tests
             result.Errors.Should().NotBeEmpty();
         }
 
-        [Fact]
-        public async Task Returns_failure_if_adding_package_twice_at_different_versions()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Returns_failure_if_adding_package_twice_at_different_versions(Language language)
         {
-            using var restoreContext = new PackageRestoreContext(new NugetSupporter());
+            var kernel = CreateBaseKernel(language) as ISupportNuget;
+
+            using var restoreContext = new PackageRestoreContext(kernel);
             var added = restoreContext.GetOrAddPackageReference("another-not-a-real-package-definitely-not", "5.7.0");
             added.Should().NotBeNull();
 
@@ -104,10 +106,14 @@ namespace Microsoft.DotNet.Interactive.Tests
             result.Errors.Should().NotBeEmpty();
         }
 
-        [Fact]
-        public async Task Packages_from_previous_requests_are_not_returned_in_subsequent_results()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Packages_from_previous_requests_are_not_returned_in_subsequent_results(Language language)
         {
-            using var restoreContext = new PackageRestoreContext(new NugetSupporter());
+            var kernel = CreateBaseKernel(language) as ISupportNuget;
+
+            using var restoreContext = new PackageRestoreContext(kernel);
             var added = restoreContext.GetOrAddPackageReference("FluentAssertions", "5.7.0");
             added.Should().NotBeNull();
 
@@ -127,10 +133,14 @@ namespace Microsoft.DotNet.Interactive.Tests
                         .NotContain(r => r.PackageName == "FluentAssertions");
         }
 
-        [Fact]
-        public async Task Can_get_path_to_nuget_packaged_assembly()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Can_get_path_to_nuget_packaged_assembly(Language language)
         {
-            using var restoreContext = new PackageRestoreContext(new NugetSupporter());
+            var kernel = CreateBaseKernel(language) as ISupportNuget;
+
+            using var restoreContext = new PackageRestoreContext(kernel);
             restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
 
             await restoreContext.RestoreAsync();
@@ -155,10 +165,14 @@ namespace Microsoft.DotNet.Interactive.Tests
             path.Exists.Should().BeTrue();
         }
 
-        [Fact]
-        public async Task Can_get_path_to_nuget_package_root()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Can_get_path_to_nuget_package_root(Language language)
         {
-            using var restoreContext = new PackageRestoreContext(new NugetSupporter());
+            var kernel = CreateBaseKernel(language) as ISupportNuget;
+
+            using var restoreContext = new PackageRestoreContext(kernel);
             restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
 
             await restoreContext.RestoreAsync();
@@ -174,10 +188,14 @@ namespace Microsoft.DotNet.Interactive.Tests
             path.Exists.Should().BeTrue();
         }
 
-        [Fact]
-        public async Task Can_get_path_to_nuget_package_when_multiple_packages_are_added()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Can_get_path_to_nuget_package_when_multiple_packages_are_added(Language language)
         {
-            using var restoreContext = new PackageRestoreContext(new NugetSupporter());
+            var kernel = CreateBaseKernel(language) as ISupportNuget;
+
+            using var restoreContext = new PackageRestoreContext(kernel);
             restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
             restoreContext.GetOrAddPackageReference("htmlagilitypack", "1.11.12");
 
