@@ -224,6 +224,7 @@ namespace Microsoft.DotNet.Interactive
                 };
 
                 await invocationContext.QueueAction(restore);
+                await kernel.RunDeferredCommandsAsync();
             };
 
             static string InstallingPackageMessage(PackageReference package)

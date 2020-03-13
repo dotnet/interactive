@@ -222,9 +222,7 @@ type FSharpKernel() as this =
                             sb.AppendFormat("#I @\"{0}\"", root.FullName) |> ignore
                             sb.Append(Environment.NewLine) |> ignore
             let command = new SubmitCode(sb.ToString(), "fsharp")
-//            this.DeferCommand(command)
-            let task = this.SendAsync(command)
-            task.Wait()
+            this.DeferCommand(command)
 
         member this.Resolve(packageManagerTextLines:IEnumerable<string>, executionTfm: string): IResolveDependenciesResult =
             //     Resolve reference for a list of package manager lines
