@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -193,25 +194,40 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _preferredMimeTypesByType[type] = preferredMimeType;
         }
 
-        public static void SetDefaultMimeType(string mimeType)
+        public static string DefaultMimeType
         {
-            if (string.IsNullOrWhiteSpace(mimeType))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(mimeType));
-            }
-
-            _defaultMimeType = mimeType;
-        }
-
-        public static string GetDefaultMimeType()
-        {
-            return _defaultMimeType;
+            get => _defaultMimeType;
+            set => _defaultMimeType = value ??
+                                      throw new ArgumentNullException(nameof(value));
         }
 
         public static string PreferredMimeTypeFor(Type type) =>
-            _preferredMimeTypesByType.TryGetValue(type, out var mimeType) 
-                ? mimeType 
-                : _defaultMimeType;
+            _preferredMimeTypesByType
+                .GetOrAdd(type, t =>
+                {
+                    if (TryInferMimeType(t, out var mimeType))
+                    {
+                        return mimeType;
+                    }
+                    else
+                    {
+                        return _defaultMimeType;
+                    }
+                });
+
+        private static bool TryInferMimeType(
+            Type type,
+            out string mimeType)
+        {
+            if (typeof(JToken).IsAssignableFrom(type))
+            {
+                mimeType = JsonFormatter.MimeType;
+                return true;
+            }
+
+            mimeType = default;
+            return false;
+        }
 
         public static string ToDisplayString(
             this object obj,
@@ -443,11 +459,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             // an additional formatter is needed since typeof(Type) == System.RuntimeType, which is not public
             Register(typeof(Type).GetType(),
-                     (obj, writer) => Formatter<Type>.FormatTo((Type) obj, writer, Formatting.PlainTextFormatter.MimeType));
+                     (obj, writer) => Formatter<Type>.FormatTo((Type) obj, writer, PlainTextFormatter.MimeType));
 
             // Newtonsoft.Json types -- these implement IEnumerable and their default output is not useful, so use their default ToString
-            TryRegisterDefault("Newtonsoft.Json.Linq.JArray, Newtonsoft.Json", (obj, writer) => writer.Write(obj), Formatting.PlainTextFormatter.MimeType);
-            TryRegisterDefault("Newtonsoft.Json.Linq.JObject, Newtonsoft.Json", (obj, writer) => writer.Write(obj), Formatting.PlainTextFormatter.MimeType);
+            TryRegisterDefault("Newtonsoft.Json.Linq.JArray, Newtonsoft.Json", (obj, writer) => writer.Write(obj), PlainTextFormatter.MimeType);
+            TryRegisterDefault("Newtonsoft.Json.Linq.JObject, Newtonsoft.Json", (obj, writer) => writer.Write(obj), PlainTextFormatter.MimeType);
         }
 
         private static void TryRegisterDefault(string typeName, Action<object, TextWriter> write, string mimeType)

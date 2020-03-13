@@ -3,7 +3,6 @@
 
 using System;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -13,9 +12,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             SerializerSettings = new JsonSerializerSettings
             {
-                ContractResolver = new CamelCasePropertyNamesContractResolver(),
                 NullValueHandling = NullValueHandling.Ignore,
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                Formatting = Newtonsoft.Json.Formatting.None
             };
 
             Formatter.Clearing += (sender, args) => DefaultFormatters = new DefaultJsonFormatterSet();
@@ -23,8 +22,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public const string MimeType = "application/json";
 
-        internal static IFormatterSet DefaultFormatters { get; private set; } = new DefaultHtmlFormatterSet();
-    
+        internal static IFormatterSet DefaultFormatters { get; private set; } = new DefaultJsonFormatterSet();
+
         public static JsonSerializerSettings SerializerSettings { get; }
 
         public static ITypeFormatter Create(Type type)

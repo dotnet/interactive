@@ -55,8 +55,11 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                             context.Handler = async httpContext =>
                             {
                                 httpContext.Response.ContentType = "application/json";
+                                
                                 await httpContext.Response.WriteAsync(
-                                    JsonConvert.SerializeObject(value, settings: JsonFormatter.SerializerSettings));
+                                    JsonConvert.SerializeObject(
+                                        value, 
+                                        settings: JsonFormatter.SerializerSettings));
                             };
                         }
                     }
