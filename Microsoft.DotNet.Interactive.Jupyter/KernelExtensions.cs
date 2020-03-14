@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Diagnostics;
@@ -10,6 +11,7 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Markdig;
 using Markdig.Renderers;
+using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -156,10 +158,29 @@ using static {typeof(Kernel).FullName};
             Formatter<SupportedDirectives>.Register((directives, writer) =>
             {
                 PocketView t = div(
-                    h6(directives.KernelName),
-                    pre(directives.Commands.Select(d => d.Name)));
+                    h3(directives.KernelName + " kernel"),
+                    div(directives.Commands.Select(v => div[style: "text-indent:1.5em"](Summary(v)))));
 
                 t.WriteTo(writer, HtmlEncoder.Default);
+
+                IEnumerable<IHtmlContent> Summary(ICommand command)
+                {
+                    yield return new HtmlString("<pre>");
+
+                    for (var i = 0; i < command.Aliases.Count; i++)
+                    {
+                        yield return span[style: "color:#512bd4"](command.Aliases[i]);
+
+                        if (i < command.Aliases.Count - 1)
+                        {
+                            yield return span[style: "color:darkgray"](", ");
+                        }
+                    }
+
+                    yield return new HtmlString("</pre>");
+
+                    yield return div[style: "text-indent:3em"](command.Description);
+                }
             }, "text/html");
 
             return kernel;
@@ -167,7 +188,7 @@ using static {typeof(Kernel).FullName};
 
         private static Command lsmagic()
         {
-            return new Command("#!lsmagic", "List the available magic commands / directives in all loaded kernels")
+            return new Command("#!lsmagic", "List the available magic commands / directives")
             {
                 Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
                 {
@@ -178,7 +199,7 @@ using static {typeof(Kernel).FullName};
                     supportedDirectives.Commands.AddRange(
                         kernel.Directives.Where(d => !d.IsHidden));
 
-                    context.Publish(new DisplayedValueProduced(supportedDirectives, context.Command));
+                    await context.DisplayAsync(supportedDirectives);
 
                     await kernel.VisitSubkernelsAsync(async k =>
                     {

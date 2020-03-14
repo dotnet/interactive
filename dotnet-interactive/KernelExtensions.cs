@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.App
         public static T UseAbout<T>(this T kernel)
             where T : KernelBase
         {
-            var about = new Command("#!about")
+            var about = new Command("#!about", "Show version and build information")
             {
                 Handler = CommandHandler.Create<KernelInvocationContext>(
                     async context => await context.DisplayAsync(VersionSensor.Version()))
