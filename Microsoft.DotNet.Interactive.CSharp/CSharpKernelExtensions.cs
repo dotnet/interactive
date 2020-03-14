@@ -66,7 +66,7 @@ using static {typeof(Kernel).FullName};
 
         private static Command i(PackageRestoreContext restoreContext)
         {
-            var iDirective = new Command("#i")
+            var iDirective = new Command("#i", "Specifies an assembly search path or NuGet package source")
             {
                 new Argument<string>("source")
             };
@@ -86,7 +86,7 @@ using static {typeof(Kernel).FullName};
 
         private static Command r(PackageRestoreContext restoreContext)
         {
-            var rDirective = new Command("#r")
+            var rDirective = new Command("#r", "References an assembly or package")
             {
                 new Argument<PackageReferenceOrFileInfo>(
                     result =>
@@ -276,7 +276,6 @@ using static {typeof(Kernel).FullName};
                     {
                         message += $", version {package.PackageVersion}";
                     }
-
                 }
 
                 return message;
