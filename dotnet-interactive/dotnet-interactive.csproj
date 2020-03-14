@@ -96,9 +96,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="$(IntermediateOutputPath)/dotnetKernel.zip">
-      <LogicalName>dotnetKernel.zip</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="resources\logo-32x32.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
