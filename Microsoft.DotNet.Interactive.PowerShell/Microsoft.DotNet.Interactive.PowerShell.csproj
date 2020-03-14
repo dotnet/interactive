@@ -27,17 +27,22 @@
 
   <!-- PowerShell Module Package References -->
   <ItemGroup>
-    <PackageReference Include="PackageManagement" Version="$(PackageManagementVersion)" />
-    <PackageReference Include="PowerShellGet" Version="$(PowerShellGetVersion)" />
-    <PackageReference Include="Microsoft.PowerShell.Archive" Version="$(MicrosoftPowerShellArchiveVersion)" />
-    <PackageReference Include="ThreadJob" Version="$(ThreadJobVersion)" />
+    <PackageReference Include="PackageManagement" Version="$(PackageManagementVersion)">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="PowerShellGet" Version="$(PowerShellGetVersion)">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.PowerShell.Archive" Version="$(MicrosoftPowerShellArchiveVersion)">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="ThreadJob" Version="$(ThreadJobVersion)">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
   <!-- Get NuGetPackageRoot if it's not defined -->
-  <Target
-    Name="GetNuGetPackageRoot"
-    Condition=" '$(NuGetPackageRoot)' == '' "
-  >
+  <Target Name="GetNuGetPackageRoot" Condition=" '$(NuGetPackageRoot)' == '' ">
     <Exec Command="dotnet nuget locals global-packages --list --force-english-output" ConsoleToMSBuild="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec" />
     </Exec>
@@ -49,37 +54,39 @@
     </PropertyGroup>
   </Target>
 
-  <!-- Copy restored contents of PowerShell module nuget pacakges into output -->
-  <ItemGroup>
-    <Content
-      Include="$(NuGetPackageRoot)packagemanagement\$(PackageManagementVersion)\**"
-      Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.sha512"
-      PackageCopyToOutput="true">
-      <Link>Modules\PackageManagement\%(RecursiveDir)\%(FileName)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content
-      Include="$(NuGetPackageRoot)powershellget\$(PowerShellGetVersion)\**"
-      Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.sha512"
-      PackageCopyToOutput="true">
-      <Link>Modules\PowerShellGet\%(RecursiveDir)\%(FileName)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content
-      Include="$(NuGetPackageRoot)microsoft.powershell.archive\$(MicrosoftPowerShellArchiveVersion)\**"
-      Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.sha512"
-      PackageCopyToOutput="true">
-      <Link>Modules\Microsoft.PowerShell.Archive\%(RecursiveDir)\%(FileName)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content
-      Include="$(NuGetPackageRoot)threadjob\$(ThreadJobVersion)\**"
-      Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.sha512"
-      PackageCopyToOutput="true">
-      <Link>Modules\ThreadJob\%(RecursiveDir)\%(FileName)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+  <Target Name="CopyGalleryModules" AfterTargets="Restore">
+    <!-- PackageManagement -->
+    <CreateItem Include="$(NuGetPackageRoot)packagemanagement\$(PackageManagementVersion)\**"
+                Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.nuspec;$(NuGetPackageRoot)**\*.sha512;$(NuGetPackageRoot)**\fullclr\**">
+      <Output ItemName="PackageManagementFiles" TaskParameter="Include" />
+    </CreateItem>
+    <Copy SourceFiles="@(PackageManagementFiles)"
+          DestinationFolder="$(MSBuildThisFileDirectory)Modules\PackageManagement\%(RecursiveDir)"/>
+
+    <!-- PowerShellGet -->
+    <CreateItem Include="$(NuGetPackageRoot)powershellget\$(PowerShellGetVersion)\**"
+                Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.nuspec;$(NuGetPackageRoot)**\*.sha512">
+      <Output ItemName="PowerShellGetFiles" TaskParameter="Include" />
+    </CreateItem>
+    <Copy SourceFiles="@(PowerShellGetFiles)"
+          DestinationFolder="$(MSBuildThisFileDirectory)Modules\PowerShellGet\%(RecursiveDir)"/>
+
+    <!-- Microsoft.PowerShell.Archive -->
+    <CreateItem Include="$(NuGetPackageRoot)microsoft.powershell.archive\$(MicrosoftPowerShellArchiveVersion)\**"
+                Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.nuspec;$(NuGetPackageRoot)**\*.sha512">
+      <Output ItemName="ArchiveFiles" TaskParameter="Include" />
+    </CreateItem>
+    <Copy SourceFiles="@(ArchiveFiles)"
+          DestinationFolder="$(MSBuildThisFileDirectory)Modules\Microsoft.PowerShell.Archive\%(RecursiveDir)"/>
+
+    <!-- ThreadJob -->
+    <CreateItem Include="$(NuGetPackageRoot)threadjob\$(ThreadJobVersion)\**"
+                Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.nuspec;$(NuGetPackageRoot)**\*.sha512">
+      <Output ItemName="ThreadJobFiles" TaskParameter="Include" />
+    </CreateItem>
+    <Copy SourceFiles="@(ThreadJobFiles)"
+          DestinationFolder="$(MSBuildThisFileDirectory)Modules\ThreadJob\%(RecursiveDir)"/>
+  </Target>
 
   <!-- The dependencies for this project -->
   <ItemGroup>
