@@ -10,17 +10,4 @@ namespace Microsoft.DotNet.Interactive.Tests
         FSharp = 1,
         PowerShell = 2,
     }
-
-    public static class LanguageExtensions
-    {
-        public static string LanguageName(this Language language)
-        {
-            return language switch
-            {
-                Language.CSharp => "csharp",
-                Language.FSharp => "fsharp",
-                Language.PowerShell => "pwsh",
-            };
-        }
-    }
 }
