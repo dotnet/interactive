@@ -8,7 +8,7 @@ using FluentAssertions;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit.Abstractions;
-using static Microsoft.DotNet.Interactive.Tests.DirectoryUtility;
+using static Microsoft.DotNet.Interactive.Tests.Utility.DirectoryUtility;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {

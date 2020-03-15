@@ -7,7 +7,7 @@ using Pocket;
 using Xunit.Sdk;
 using static Pocket.Logger;
 
-namespace Microsoft.DotNet.Interactive.Tests
+namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
     internal class LogTestNamesToPocketLoggerAttribute : BeforeAfterTestAttribute
     {

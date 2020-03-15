@@ -6,7 +6,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using Microsoft.DotNet.Interactive.Utility;
 
-namespace Microsoft.DotNet.Interactive.Tests
+namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
     public static class DirectoryUtility
     {

@@ -8,9 +8,10 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
-using static Microsoft.DotNet.Interactive.Tests.KernelExtensionTestHelper;
+using static Microsoft.DotNet.Interactive.Tests.Utility.KernelExtensionTestHelper;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
