@@ -6,10 +6,12 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
+using System.CommandLine.Rendering;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
+using System.CommandLine.Rendering;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -132,7 +134,7 @@ using static {typeof(Kernel).FullName};
 
                     if (alreadyGotten is { } && !string.IsNullOrWhiteSpace(pkg.PackageVersion) && pkg.PackageVersion != alreadyGotten.PackageVersion)
                     {
-                        var errorMessage = $"{GenerateErrorMessage(pkg, alreadyGotten)}";
+                        var errorMessage = GenerateErrorMessage(pkg, alreadyGotten).ToString(OutputMode.NonAnsi);
                         context.Publish(new ErrorProduced(errorMessage));
                     }
                     else
@@ -141,28 +143,30 @@ using static {typeof(Kernel).FullName};
 
                         if (added is null)
                         {
-                            var errorMessage = $"{GenerateErrorMessage(pkg)}";
+                            var errorMessage = GenerateErrorMessage(pkg).ToString(OutputMode.NonAnsi);
+
                             context.Publish(new ErrorProduced(errorMessage));
                         }
                     }
 
-                    static string GenerateErrorMessage(
+                    static TextSpan GenerateErrorMessage(
                         PackageReference requested,
                         PackageReference existing = null)
                     {
+                        var spanFormatter = new TextSpanFormatter();
                         if (existing != null)
                         {
                             if (!string.IsNullOrEmpty(requested.PackageName))
                             {
                                 if (!string.IsNullOrEmpty(requested.PackageVersion))
                                 {
-                                    return
-                                        $"{requested.PackageName} version {requested.PackageVersion} cannot be added because version {existing.PackageVersion} was added previously.";
+                                    return spanFormatter.ParseToSpan(
+                                        $"{Ansi.Color.Foreground.Red}{requested.PackageName} version {requested.PackageVersion} cannot be added because version {existing.PackageVersion} was added previously.{Ansi.Color.Off}");
                                 }
                             }
                         }
 
-                        return $"Invalid Package specification: '{requested}'";
+                        return spanFormatter.ParseToSpan($"Invalid Package specification: '{requested}'");
                     }
                 }
 
@@ -197,6 +201,7 @@ using static {typeof(Kernel).FullName};
                 KernelCommandInvocation restore = async (_, context) =>
                 {
                     var messages = new Dictionary<PackageReference, string>(new PackageReferenceComparer());
+                    var displayedValues = new Dictionary<string, DisplayedValue>();
 
                     var newlyRequestedPackages =
                         restoreContext.RequestedPackageReferences
@@ -205,11 +210,8 @@ using static {typeof(Kernel).FullName};
                     foreach (var package in newlyRequestedPackages)
                     {
                         var message = InstallingPackageMessage(package) + "...";
-                        context.Publish(
-                            new DisplayedValueProduced(
-                                message,
-                                context.Command,
-                                valueId: PackageReferenceComparer.GetDisplayValueId(package)));
+                        var displayedValue = context.Display(message);
+                        displayedValues[PackageReferenceComparer.GetDisplayValueId(package)] = displayedValue;
                         messages.Add(package, message);
                     }
 
@@ -220,7 +222,8 @@ using static {typeof(Kernel).FullName};
                         foreach (var key in messages.Keys.ToArray())
                         {
                             var message = messages[key] + ".";
-                            context.Publish(new DisplayedValueUpdated(message, PackageReferenceComparer.GetDisplayValueId(key)));
+                            var displayedValue = displayedValues[PackageReferenceComparer.GetDisplayValueId(key)];
+                            displayedValue.Update(message);
                             messages[key] = message;
                         }
                     }
@@ -246,19 +249,22 @@ using static {typeof(Kernel).FullName};
 
                         foreach (var resolvedReference in result.ResolvedReferences)
                         {
-                            context.Publish(
-                                new DisplayedValueUpdated(
-                                    $"Installed package {resolvedReference.PackageName} version {resolvedReference.PackageVersion}",
-                                    PackageReferenceComparer.GetDisplayValueId(resolvedReference)));
+                            if (displayedValues.TryGetValue(
+                                PackageReferenceComparer.GetDisplayValueId(resolvedReference), out var displayedValue))
+                            {
+                                displayedValue.Update(
+                                    $"Installed package {resolvedReference.PackageName} version {resolvedReference.PackageVersion}");
+                            }
 
                             context.Publish(new PackageAdded(resolvedReference));
+
                         }
                     }
                     else
                     {
                         var errors = $"{string.Join(Environment.NewLine, result.Errors)}";
 
-                       context.Fail(message: errors);
+                        context.Fail(message: errors);
                     }
                 };
 
@@ -338,6 +344,6 @@ using static {typeof(Kernel).FullName};
             }
         }
 
-    
+
     }
 }
