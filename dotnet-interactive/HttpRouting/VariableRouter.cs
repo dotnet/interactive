@@ -66,21 +66,21 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                         {
                             if (kernelBase.TryGetVariable(variableName, out var value))
                             {
-                                var formatted = value;
-                                if (value.GetType() != typeof(string))
+                                if (value is string)
                                 {
-                                    await using var writer = new StringWriter();
-                                    value.FormatTo(writer, JsonFormatter.MimeType);
-                                    formatted = JToken.Parse(writer.ToString());
+                                    propertyBag[variableName] = JToken.FromObject(value);
                                 }
-                                
-                                propertyBag[variableName] = JToken.FromObject(formatted);
+                                else
+                                {
+                                    propertyBag[variableName] = JToken.Parse(value.ToDisplayString(JsonFormatter.MimeType));
+                                }
                             }
                             else
                             {
                                 context.Handler = async httpContext =>
                                 {
                                     httpContext.Response.StatusCode = 400;
+                                    await httpContext.Response.WriteAsync($"variable {variableName} not found on kernel {kernelName}");
                                     await httpContext.Response.CompleteAsync();
                                 };
                                 return;
@@ -92,6 +92,7 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                         context.Handler = async httpContext =>
                         {
                             httpContext.Response.StatusCode = 400;
+                            await httpContext.Response.WriteAsync($"kernel {kernelName} not found");
                             await httpContext.Response.CompleteAsync();
                         };
                         return;
@@ -131,10 +132,19 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                         context.Handler = async httpContext =>
                         {
                             httpContext.Response.ContentType = JsonFormatter.MimeType;
+                            if (value is string)
+                            {
+                                await using var writer = new StreamWriter(httpContext.Response.Body);
+                                await writer.WriteAsync(JsonConvert.ToString(value));
 
-                            await using var writer = new StreamWriter(httpContext.Response.Body);
-
-                            value.FormatTo(writer, JsonFormatter.MimeType);
+                                await httpContext.Response.WriteAsync(JsonConvert.SerializeObject(value));
+                            }
+                            else
+                            {
+                                await using var writer = new StreamWriter(httpContext.Response.Body);
+                                value.FormatTo(writer, JsonFormatter.MimeType);
+                            }
+                            
                         };
                     }
                 }
