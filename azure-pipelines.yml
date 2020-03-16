@@ -17,7 +17,7 @@ variables:
   - name: _DotNetArtifactsCategory
     value: .NETCore
   - name: DotNetSdkVersion
-    value: '3.1.101'
+    value: '3.1.200'
   - name: TryDotNetPackagesPath
     value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
 
