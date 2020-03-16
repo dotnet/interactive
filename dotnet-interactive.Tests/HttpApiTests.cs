@@ -55,9 +55,25 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             var responseContent = await response.Content.ReadAsStringAsync();
 
-            var value = JToken.Parse(responseContent).Value<int>();
+            var value = JsonConvert.DeserializeObject(responseContent);
 
             value.Should().Be(123);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "var a = \"Code value\";")]
+        [InlineData(Language.FSharp, "let a = \"Code value\"")]
+        public async Task can_get_variable_value_whn_variable_is_string(Language language, string code)
+        {
+            await _server.Kernel.SendAsync(new SubmitCode(code, language.LanguageName()));
+
+            var response = await _server.HttpClient.GetAsync($"/variables/{language.LanguageName()}/a");
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            
+            var value = JsonConvert.DeserializeObject(responseContent);
+
+            value.Should().Be("Code value");
         }
 
         [Fact]
