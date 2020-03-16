@@ -20,9 +20,7 @@ using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Utility;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using XPlot.Plotly;
 using Task = System.Threading.Tasks.Task;
 
@@ -41,12 +39,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             new CSharpParseOptions(LanguageVersion.Default, kind: SourceCodeKind.Script);
 
         private WorkspaceFixture _fixture;
-
-        private readonly JsonSerializer _jsonSerializer = JsonSerializer.CreateDefault(new JsonSerializerSettings()
-        {
-            ContractResolver = new CamelCasePropertyNamesContractResolver(),
-            NullValueHandling = NullValueHandling.Ignore,
-        });
 
         internal ScriptOptions ScriptOptions =
             ScriptOptions.Default
@@ -117,7 +109,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             {
                 case "textDocument/hover":
                     // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
-                    var hoverParams = request.ToObject<HoverParams>(_jsonSerializer);
+                    var hoverParams = request.ToLspObject<HoverParams>();
                     result = TextDocumentHover(hoverParams);
                     break;
                 default:

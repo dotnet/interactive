@@ -7,25 +7,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Newtonsoft.Json;
+using Microsoft.DotNet.Interactive.LanguageService;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.App.HttpRouting
 {
     public class LspRouter : IRouter
     {
         private readonly IKernel _kernel;
-        private readonly JsonSerializerSettings _serializerSettings;
 
         public LspRouter(IKernel kernel)
         {
             _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
-            _serializerSettings = new JsonSerializerSettings()
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                NullValueHandling = NullValueHandling.Ignore,
-            };
         }
 
         public VirtualPathData GetVirtualPath(VirtualPathContext context)
@@ -61,9 +54,7 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                         var stringBody = await lspBodyReader.ReadToEndAsync();
                         var request = JObject.Parse(stringBody);
                         var response = await kernelBase.LspMethod(methodName, request);
-                        var responseJson = (response is {})
-                            ? JsonConvert.SerializeObject(response, _serializerSettings)
-                            : string.Empty;
+                        var responseJson = response.SerializeLspObject();
                         context.Handler = async httpContext =>
                         {
                             httpContext.Response.ContentType = "application/json";
