@@ -45,8 +45,19 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         {
             var command = completionRequestCompleted.Command as RequestCompletion;
 
-            var pos = SourceUtilities.ComputeReplacementStartPosition(command.Code, command.CursorPosition);
-            var reply = new CompleteReply(pos, command.CursorPosition, matches: completionRequestCompleted.CompletionList.Select(e => e.InsertText ?? e.DisplayText).ToList());
+            int startPosition, endPosition;
+            if (completionRequestCompleted.ReplacementStartIndex != null)
+            {
+                startPosition = completionRequestCompleted.ReplacementStartIndex.Value;
+                endPosition = completionRequestCompleted.ReplacementEndIndex.Value;
+            }
+            else
+            {
+                startPosition = SourceUtilities.ComputeReplacementStartPosition(command.Code, command.CursorPosition);
+                endPosition = command.CursorPosition;
+            }
+
+            var reply = new CompleteReply(startPosition, endPosition, matches: completionRequestCompleted.CompletionList.Select(e => e.InsertText ?? e.DisplayText).ToList());
 
             jupyterMessageSender.Send(reply);
         }

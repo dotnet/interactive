@@ -197,12 +197,21 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             context.Publish(completionRequestReceived);
 
-            var completionList =
-                GetCompletionList(
-                    requestCompletion.Code,
-                    requestCompletion.CursorPosition);
+            CommandCompletion completion = CommandCompletion.CompleteInput(requestCompletion.Code, requestCompletion.CursorPosition, null, _lazyPwsh.Value);
 
-            context.Publish(new CompletionRequestCompleted(completionList, requestCompletion));
+            var completionList = completion.CompletionMatches.Select(c => new CompletionItem(
+                displayText: c.CompletionText,
+                kind: c.ResultType.ToString(),
+                documentation: c.ToolTip
+            ));
+
+            context.Publish(new CompletionRequestCompleted(
+                completionList,
+                requestCompletion,
+                // PowerShell's replacement length is inclusive while Jupyter's ReplacementEndColumn is exclusive so we
+                // have to add one to the ReplaceLength for completions to be correct.
+                completion.ReplacementIndex,
+                completion.ReplacementLength + 1));
 
             return Task.CompletedTask;
         }
@@ -214,19 +223,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             // what PowerShell itself does today.
             Parser.ParseInput(code, out Token[] tokens, out errors);
             return errors.Length == 0 || !errors[0].IncompleteInput;
-        }
-
-        private IEnumerable<CompletionItem> GetCompletionList(
-            string code,
-            int cursorPosition)
-        {
-            CommandCompletion completion = CommandCompletion.CompleteInput(code, cursorPosition, null, _lazyPwsh.Value);
-
-            return completion.CompletionMatches.Select(c => new CompletionItem(
-                displayText: c.CompletionText,
-                kind: c.ResultType.ToString(),
-                documentation: c.ToolTip
-            ));
         }
 
         private void ReportError(ErrorRecord error, PowerShell pwsh)

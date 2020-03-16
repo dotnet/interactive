@@ -707,15 +707,15 @@ Console.Write(2);
 
 
         [Theory(Timeout = 45000)]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task it_returns_completion_list_for_types(Language language)
+        [InlineData(Language.CSharp, "System.", "IO")]
+        [InlineData(Language.FSharp, "System.", "IO")]
+        // PowerShell language completion uses a startPostion and endPosition so the result is different
+        // than other languages.
+        [InlineData(Language.PowerShell, "[System.", "System.IO")]
+        public async Task it_returns_completion_list_for_types(Language language, string codeToComplete, string expectedCompletion)
         {
             var kernel = CreateKernel(language);
-
-            var source = "System.Console."; // same code is valid regardless of the language
-
-            await kernel.SendAsync(new RequestCompletion(source, 15));
+            await kernel.SendAsync(new RequestCompletion(codeToComplete, codeToComplete.Length));
 
             KernelEvents
                 .Should()
@@ -726,7 +726,7 @@ Console.Write(2);
                 .Single()
                 .CompletionList
                 .Should()
-                .Contain(i => i.DisplayText == "ReadLine");
+                .Contain(i => i.DisplayText == expectedCompletion);
         }
 
         [Theory(Timeout = 45000)]
