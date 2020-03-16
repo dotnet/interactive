@@ -31,11 +31,11 @@
 
   <ItemGroup>
     <Content Remove="resources\logo-32x32.png" />
-    <Content Remove="resources\dotnet-interactive.js" />
+    <Content Remove="resources\*.js" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="resources\dotnet-interactive.js" />
+    <None Remove="resources\*.js" />
   </ItemGroup>
 
   <ItemGroup>
@@ -105,9 +105,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="resources\dotnet-interactive.js">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
+    <EmbeddedResource Include="resources\*.js" />
   </ItemGroup>
 
   <Target Name="PrepareKernels">

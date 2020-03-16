@@ -51,15 +51,15 @@ namespace Microsoft.DotNet.Interactive.App
             app.UseCors(builder =>
                 builder
                     .AllowAnyHeader()
-                    .AllowAnyOrigin()
-                    .AllowAnyMethod());
+                    .AllowAnyMethod()
+                    .AllowAnyOrigin());
             app.UseRouting();
             app.UseRouter(r =>
             {
                 r.Routes.Add(new DiscoveryRouter(serviceProvider.GetRequiredService<BrowserFrontendEnvironment>()));
                 r.Routes.Add(new VariableRouter(serviceProvider.GetRequiredService<IKernel>()));
                 r.Routes.Add(new KernelsRouter(serviceProvider.GetRequiredService<IKernel>()));
-
+                r.Routes.Add(new LspRouter(serviceProvider.GetRequiredService<IKernel>()));
             });
         }
     }

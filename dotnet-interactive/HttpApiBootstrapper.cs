@@ -9,12 +9,17 @@ namespace Microsoft.DotNet.Interactive.App
 {
     internal static class HttpApiBootstrapper
     {
-        public static string GetJSCode(Uri[] probingUris, string seed)
+        public static string GetHtmlInjection(Uri[] probingUris, string seed)
         {
             var apiCacheBuster = $"{Process.GetCurrentProcess().Id}.{seed}";
-            var template = @"// ensure `requirejs` is available
-if ((typeof (requirejs) !== typeof (Function)) || (typeof (requirejs.config) !== typeof (Function))) 
-{
+            var template = @"
+<div>
+    <div id='dotnet-interactive-this-cell-$SEED$' style='display: none'>
+        The below script needs to be able to find the current output cell; this is an easy method to get it.
+    </div>
+    <script type='text/javascript'>
+// ensure `requirejs` is available globally
+if (typeof requirejs !== typeof Function || typeof requirejs.config !== typeof Function) {
     let requirejs_script = document.createElement('script');
     requirejs_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
     requirejs_script.setAttribute('type', 'text/javascript');
@@ -57,36 +62,41 @@ function loadDotnetInteractiveApi() {
     probeAddresses($ADDRESSES$)
         .then((root) => {
             // use probing to find host url and api resources
-            // ensure interactive helpers are loaded
-            let interactiveHelperElement = document.getElementById('dotnet-interactive-script-loaded');
-            if (!interactiveHelperElement) {
-                let apiRequire = requirejs.config({
-                    context: 'dotnet-interactive.$CACHE_BUSTER$',
-                    paths: {
-                        dotnetInteractive: `${root}resources/dotnet-interactive`
-                    }
-                });
-                apiRequire(['dotnetInteractive'],
-                    function (api) {
-                        api.init(window);
-                        let sentinelElement = document.createElement('script');
-                        sentinelElement.setAttribute('id', 'dotnet-interactive-script-loaded');
-                        sentinelElement.setAttribute('type', 'text/javascript');
-                        document.getElementsByTagName('head')[0].appendChild(sentinelElement);
-                    },
-                    function (error) {
-                        console.log(error);
-                    }
-                );
+            // load interactive helpers and language services
+            let dotnet_require = requirejs.config({
+                context: '$CACHE_BUSTER$',
+                paths: {
+                    'dotnet-interactive': `${root}resources`
+                }
+            });
+            if (!window.dotnet_require) {
+                window.dotnet_require = dotnet_require;
             }
+        
+            dotnet_require([
+                    'dotnet-interactive/dotnet-interactive',
+                    'dotnet-interactive/lsp',
+                    'dotnet-interactive/editor-detection'
+                ],
+                function (dotnet, lsp, editor) {
+                    dotnet.init(window);
+                    lsp.init(window);
+                    editor.init(window, document, root, document.getElementById('dotnet-interactive-this-cell-$SEED$'));
+                },
+                function (error) {
+                    console.log(error);
+                }
+            );
         })
         .catch(error => {console.log(error);});
-}";
-           
-            var jsProbingUris = $"[{ string.Join(", ",probingUris.Select(a => $"\"{a.AbsoluteUri}\"")) }]";
+    }
+    </script>
+</div>";
+            var jsProbingUris = $"[{ string.Join(", ", probingUris.Select(a => $"\"{a.AbsoluteUri}\"")) }]";
             var code = template;
-            code = code.Replace("$CACHE_BUSTER$", apiCacheBuster);
             code = code.Replace("$ADDRESSES$", jsProbingUris);
+            code = code.Replace("$CACHE_BUSTER$", apiCacheBuster);
+            code = code.Replace("$SEED$", seed);
 
             return code;
         }
