@@ -36,6 +36,21 @@
                 return variableValue;
             };
 
+            client.getVariables = async (request) => {
+                let response = await clientFetch("variables",
+                    {
+                        method: 'POST',
+                        cache: 'no-cache',
+                        mode: 'cors',
+                        body: JSON.stringify(request),
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                let variableBundle = await response.json();
+                return variableBundle;
+            };
+
             client.getResource = async (resource) => {
                 let response = await clientFetch(`resources/${resource}`);
                 return response;

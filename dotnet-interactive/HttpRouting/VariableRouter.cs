@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.Formatting;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.App.HttpRouting
 {
@@ -26,47 +27,131 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
             return null;
         }
 
-        public Task RouteAsync(RouteContext context)
+        public async Task RouteAsync(RouteContext context)
         {
             if (context.HttpContext.Request.Method == HttpMethods.Get)
             {
-                var segments =
-                    context.HttpContext
-                        .Request
-                        .Path
-                        .Value
-                        .Split(new[] {'/'}, StringSplitOptions.RemoveEmptyEntries);
+                SingleVariableRequest(context);
+            }
+            else if (context.HttpContext.Request.Method == HttpMethods.Post)
+            {
+                await BatchVariableRequest(context);
+            }
+        }
 
-                if (segments[0] == "variables")
+        private async Task BatchVariableRequest(RouteContext context)
+        {
+            var segments =
+                context.HttpContext
+                    .Request
+                    .Path
+                    .Value
+                    .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (segments.Length == 1 && segments[0] == "variables")
+            {
+                using var reader = new StreamReader(context.HttpContext.Request.Body);
+                var source = await reader.ReadToEndAsync();
+                var query = JObject.Parse(source);
+                var response = new JObject();
+                foreach (var kernelProperty in query.Properties())
                 {
-                    var targetKernel = _kernel;
-
-                    if (_kernel.Name != segments[1])
-                    {
-                        if (_kernel is CompositeKernel composite)
-                        {
-                            targetKernel = composite.ChildKernels.FirstOrDefault(k => k.Name == segments[1]);
-                        }
-                    }
-
+                    var kernelName = kernelProperty.Name;
+                    var propertyBag = new JObject();
+                    response[kernelName] = propertyBag;
+                    var targetKernel = GetKernel(kernelName);
                     if (targetKernel is KernelBase kernelBase)
                     {
-                        if (kernelBase.TryGetVariable(segments[2], out var value))
+                        foreach (var variableName in kernelProperty.Value.Values<string>())
                         {
-                            context.Handler = async httpContext =>
+                            if (kernelBase.TryGetVariable(variableName, out var value))
                             {
-                                httpContext.Response.ContentType = JsonFormatter.MimeType;
-
-                                await using var writer = new StreamWriter(httpContext.Response.Body);
-
-                                value.FormatTo(writer, JsonFormatter.MimeType);
-                            };
+                                var formatted = value;
+                                if (value.GetType() != typeof(string))
+                                {
+                                    await using var writer = new StringWriter();
+                                    value.FormatTo(writer, JsonFormatter.MimeType);
+                                    formatted = JToken.Parse(writer.ToString());
+                                }
+                                
+                                propertyBag[variableName] = JToken.FromObject(formatted);
+                            }
+                            else
+                            {
+                                context.Handler = async httpContext =>
+                                {
+                                    httpContext.Response.StatusCode = 400;
+                                    await httpContext.Response.CompleteAsync();
+                                };
+                                return;
+                            }
                         }
+                    }
+                    else
+                    {
+                        context.Handler = async httpContext =>
+                        {
+                            httpContext.Response.StatusCode = 400;
+                            await httpContext.Response.CompleteAsync();
+                        };
+                        return;
+                    }
+                }
+
+                context.Handler = async httpContext =>
+                {
+                    httpContext.Response.ContentType = JsonFormatter.MimeType;
+
+                    await using var writer = new StreamWriter(httpContext.Response.Body);
+                    await writer.WriteLineAsync(response.ToString());
+                };
+            }
+        }
+
+        private void SingleVariableRequest(RouteContext context)
+        {
+            var segments =
+                context.HttpContext
+                    .Request
+                    .Path
+                    .Value
+                    .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (segments[0] == "variables")
+            {
+                var kernelName = segments[1];
+                var variableName = segments[2];
+
+                var targetKernel = GetKernel(kernelName);
+
+                if (targetKernel is KernelBase kernelBase)
+                {
+                    if (kernelBase.TryGetVariable(variableName, out var value))
+                    {
+                        context.Handler = async httpContext =>
+                        {
+                            httpContext.Response.ContentType = JsonFormatter.MimeType;
+
+                            await using var writer = new StreamWriter(httpContext.Response.Body);
+
+                            value.FormatTo(writer, JsonFormatter.MimeType);
+                        };
                     }
                 }
             }
+        }
 
-            return Task.CompletedTask;
+        private IKernel GetKernel(string kernelName)
+        {
+            IKernel targetKernel = null;
+            if (_kernel.Name != kernelName)
+            {
+                if (_kernel is CompositeKernel composite)
+                {
+                    targetKernel = composite.ChildKernels.FirstOrDefault(k => k.Name == kernelName);
+                }
+            }
+            return targetKernel;
         }
     }
 }
