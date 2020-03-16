@@ -49,7 +49,9 @@ namespace Microsoft.DotNet.Interactive.App
                 FileProvider = new EmbeddedFileProvider(typeof(Startup).Assembly)
             });
             app.UseCors(builder =>
-                builder.AllowAnyOrigin()
+                builder
+                    .AllowAnyHeader()
+                    .AllowAnyOrigin()
                     .AllowAnyMethod());
             app.UseRouting();
             app.UseRouter(r =>
