@@ -136,15 +136,12 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                             {
                                 await using var writer = new StreamWriter(httpContext.Response.Body);
                                 await writer.WriteAsync(JsonConvert.ToString(value));
-
-                                await httpContext.Response.WriteAsync(JsonConvert.SerializeObject(value));
                             }
                             else
                             {
                                 await using var writer = new StreamWriter(httpContext.Response.Body);
                                 value.FormatTo(writer, JsonFormatter.MimeType);
                             }
-                            
                         };
                     }
                 }
