@@ -55,9 +55,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             var responseContent = await response.Content.ReadAsStringAsync();
 
-            var value = JsonConvert.DeserializeObject(responseContent);
-
-            value.Should().Be(123);
+            responseContent.Should().BeJsonEquivalentTo(123);
         }
 
         [Theory]
@@ -71,9 +69,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             var responseContent = await response.Content.ReadAsStringAsync();
             
-            var value = JsonConvert.DeserializeObject(responseContent);
-
-            value.Should().Be("Code value");
+            responseContent.Should().BeJsonEquivalentTo("Code value");
         }
 
         [Fact]
@@ -84,31 +80,35 @@ var a = 123;
 var b = ""1/2/3"";
 var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
 
+            await _server.Kernel.SendAsync(new SubmitCode(@"
+let d = 567", Language.FSharp.LanguageName()));
+
 
             var request = new
             {
-                csharp = new[] { "a", "f", "b" }
-              
+                csharp = new[] { "a", "f", "b" },
+                fsharp = new[] { "d" }
             };
 
             var response = await _server.HttpClient.PostAsync("/variables/",new StringContent(JsonConvert.SerializeObject( request)));
 
             var responseContent = await response.Content.ReadAsStringAsync();
 
-            var envelope = JObject.Parse(responseContent);
+            var expected = new
+            {
+                csharp = new
+                {
+                    a = 123,
+                    b = "1/2/3",
+                    f = new { Field = "string value" }
+                },
+                fsharp = new
+                {
+                    d = 567
+                }
+            };
 
-            envelope["csharp"]["a"].Value<int>()
-                .Should()
-                .Be(123);
-
-            envelope["csharp"]["b"].Value<string>()
-                .Should()
-                .Be("1/2/3");
-
-            envelope["csharp"]["f"].Value<JObject>()["Field"]
-                .Value<string>()
-                .Should()
-                .Be("string value");
+            responseContent.Should().BeJsonEquivalentTo(expected);
         }
 
         [Fact]

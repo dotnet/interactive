@@ -13,11 +13,19 @@ using FluentAssertions.Primitives;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
+using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
     public static class AssertionExtensions
     {
+        public static void BeJsonEquivalentTo<T>(this StringAssertions assertion, T expected)
+        {
+            var obj = JsonConvert.DeserializeObject(assertion.Subject, expected.GetType());
+            obj.Should().BeEquivalentTo(expected);
+            
+        }
+
         public static AndConstraint<GenericCollectionAssertions<T>> BeEquivalentSequenceTo<T>(
             this GenericCollectionAssertions<T> assertions,
             params object[] expectedValues)
