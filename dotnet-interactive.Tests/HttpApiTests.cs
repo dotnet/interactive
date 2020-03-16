@@ -96,6 +96,26 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         }
 
         [Fact]
+        public async Task bulk_variable_request_is_returned_with_application_json_content_type()
+        {
+            await _server.Kernel.SendAsync(new SubmitCode(@"
+var a = 123;
+var b = ""1/2/3"";
+var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
+
+
+            var request = new
+            {
+                csharp = new[] { "a", "f", "b" }
+
+            };
+
+            var response = await _server.HttpClient.PostAsync("/variables/", new StringContent(JsonConvert.SerializeObject(request)));
+
+            response.Content.Headers.ContentType.MediaType.Should().Be("application/json");
+        }
+
+        [Fact]
         public async Task Variable_serialization_can_be_customized_using_Formatter()
         {
             Formatter<FileInfo>.Register(
