@@ -22,7 +22,6 @@ using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Utility;
-using Newtonsoft.Json.Linq;
 using XPlot.Plotly;
 using Task = System.Threading.Tasks.Task;
 
@@ -30,7 +29,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
 {
     public class CSharpKernel :
         KernelBase,
-        IExtensibleKernel
+        IExtensibleKernel,
+        ISupportHover
     {
         internal const string DefaultKernelName = "csharp";
 
@@ -104,25 +104,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return false;
         }
 
-        public override async Task<LspResponse> LspMethod(string methodName, JObject request)
-        {
-            LspResponse result;
-            switch (methodName)
-            {
-                case "textDocument/hover":
-                    // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
-                    var hoverParams = request.ToLspObject<HoverParams>();
-                    result = await TextDocumentHover(hoverParams);
-                    break;
-                default:
-                    result = null;
-                    break;
-            }
-
-            return result;
-        }
-
-        public async Task<TextDocumentHoverResponse> TextDocumentHover(HoverParams hoverParams)
+        public async Task<TextDocumentHoverResponse> Hover(HoverParams hoverParams)
         {
             if (!hoverParams.TextDocument.Uri.TryDecodeDocumentFromDataUri(out var documentContents))
             {

@@ -53,7 +53,20 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                         var lspBodyReader = new StreamReader(context.HttpContext.Request.Body);
                         var stringBody = await lspBodyReader.ReadToEndAsync();
                         var request = JObject.Parse(stringBody);
-                        var response = await kernelBase.LspMethod(methodName, request);
+
+                        LspResponse response = null;
+                        switch (methodName)
+                        {
+                            case "textDocument/hover":
+                                // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
+                                var hoverParams = request.ToLspObject<HoverParams>();
+                                if (kernelBase is ISupportHover hover)
+                                {
+                                    response = await hover.Hover(hoverParams);
+                                }
+                                break;
+                        }
+
                         var responseJson = response.SerializeLspObject();
                         context.Handler = async httpContext =>
                         {
