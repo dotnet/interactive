@@ -709,9 +709,9 @@ Console.Write(2);
         [Theory(Timeout = 45000)]
         [InlineData(Language.CSharp, "System.", "IO")]
         [InlineData(Language.FSharp, "System.", "IO")]
-        // PowerShell language completion uses a startPostion and endPosition so the result is different
-        // than other languages.
         [InlineData(Language.PowerShell, "[System.", "System.IO")]
+        // Also tests index is calculated properly.
+        [InlineData(Language.PowerShell, "$a = [System.", "System.IO")]
         public async Task it_returns_completion_list_for_types(Language language, string codeToComplete, string expectedCompletion)
         {
             var kernel = CreateKernel(language);
