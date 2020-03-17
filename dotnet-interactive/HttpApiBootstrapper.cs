@@ -3,41 +3,100 @@
 
 using System;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.App
 {
     internal static class HttpApiBootstrapper
     {
-        public static string GetJSCode(Uri apiRoot)
+        public static string GetHtmlInjection(Uri[] probingUris, string seed)
         {
-            var id = $"{Process.GetCurrentProcess().Id}.{apiRoot.Port}";
-            var template = @"#!javascript
-if ((typeof(requirejs) !==  typeof(Function)) || (typeof(requirejs.config) !== typeof(Function))) { 
-    let script = document.createElement(""script""); 
-    script.setAttribute(""src"", ""https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js""); 
-    script.onload = function(){
+            var apiCacheBuster = $"{Process.GetCurrentProcess().Id}.{seed}";
+            var template = @"
+<div>
+    <div id='dotnet-interactive-this-cell-$SEED$' style='display: none'>
+        The below script needs to be able to find the current output cell; this is an easy method to get it.
+    </div>
+    <script type='text/javascript'>
+// ensure `requirejs` is available globally
+if (typeof requirejs !== typeof Function || typeof requirejs.config !== typeof Function) {
+    let requirejs_script = document.createElement('script');
+    requirejs_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
+    requirejs_script.setAttribute('type', 'text/javascript');
+    requirejs_script.onload = function () {
         loadDotnetInteractiveApi();
     };
-    document.getElementsByTagName(""head"")[0].appendChild(script); 
+
+    document.getElementsByTagName('head')[0].appendChild(requirejs_script);
 }
 else {
     loadDotnetInteractiveApi();
 }
 
-function loadDotnetInteractiveApi(){
-    let apiRequire = requirejs.config({context:""dotnet-interactive.$SEED$"",paths:{dotnetInteractive:""$API_URL$""}});
-    apiRequire(['dotnetInteractive'], 
-    function(api) {       
-        api.createDotnetInteractiveClient(""$HOST$"", window);
-    },
-    function(error){
-        console.log(error);
-    });
-}";
-            var jsUri = new Uri(apiRoot, "/resources/dotnet-interactive");
-            var code = template.Replace("$HOST$", apiRoot.ToString());
-            code = code.Replace("$API_URL$", jsUri.ToString());
-            code = code.Replace("$SEED$", id);
+async function probeAddresses(probingAddresses) {
+    if (Array.isArray(probingAddresses)) {
+        for (let i = 0; i < probingAddresses.length; i++) {
+            
+            let rootUrl = probingAddresses[i];
+
+            if (!rootUrl.endsWith('/')) {
+                rootUrl = `${rootUrl}/`;
+            }
+
+            let response = await fetch(`${rootUrl}discovery`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain'
+                },
+                body: probingAddresses[i]
+            });
+
+            if (response.status == 200) {
+                return rootUrl;
+            }
+        }
+    }
+}
+
+function loadDotnetInteractiveApi() {
+    probeAddresses($ADDRESSES$)
+        .then((root) => {
+            // use probing to find host url and api resources
+            // load interactive helpers and language services
+            let dotnet_require = requirejs.config({
+                context: '$CACHE_BUSTER$',
+                paths: {
+                    'dotnet-interactive': `${root}resources`
+                }
+            });
+            if (!window.dotnet_require) {
+                window.dotnet_require = dotnet_require;
+            }
+        
+            dotnet_require([
+                    'dotnet-interactive/dotnet-interactive',
+                    'dotnet-interactive/lsp',
+                    'dotnet-interactive/editor-detection'
+                ],
+                function (dotnet, lsp, editor) {
+                    dotnet.init(window);
+                    lsp.init(window);
+                    editor.init(window, document, root, document.getElementById('dotnet-interactive-this-cell-$SEED$'));
+                },
+                function (error) {
+                    console.log(error);
+                }
+            );
+        })
+        .catch(error => {console.log(error);});
+    }
+    </script>
+</div>";
+            var jsProbingUris = $"[{ string.Join(", ", probingUris.Select(a => $"\"{a.AbsoluteUri}\"")) }]";
+            var code = template;
+            code = code.Replace("$ADDRESSES$", jsProbingUris);
+            code = code.Replace("$CACHE_BUSTER$", apiCacheBuster);
+            code = code.Replace("$SEED$", seed);
 
             return code;
         }

@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
         /// </summary>
         internal void Hide()
         {
-            _displayValue.Update(string.Empty);
+            _displayValue?.Update(string.Empty);
         }
 
         /// <summary>

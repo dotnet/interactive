@@ -5,6 +5,7 @@ using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.HttpRouting;
+using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -48,14 +49,17 @@ namespace Microsoft.DotNet.Interactive.App
                 FileProvider = new EmbeddedFileProvider(typeof(Startup).Assembly)
             });
             app.UseCors(builder =>
-                builder.AllowAnyOrigin()
-                    .AllowAnyMethod());
+                builder
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowAnyOrigin());
             app.UseRouting();
             app.UseRouter(r =>
             {
+                r.Routes.Add(new DiscoveryRouter(serviceProvider.GetRequiredService<BrowserFrontendEnvironment>()));
                 r.Routes.Add(new VariableRouter(serviceProvider.GetRequiredService<IKernel>()));
                 r.Routes.Add(new KernelsRouter(serviceProvider.GetRequiredService<IKernel>()));
-
+                r.Routes.Add(new LspRouter(serviceProvider.GetRequiredService<IKernel>()));
             });
         }
     }

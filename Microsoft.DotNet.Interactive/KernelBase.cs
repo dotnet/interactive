@@ -14,7 +14,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Utility;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -39,16 +41,18 @@ namespace Microsoft.DotNet.Interactive
 
             Pipeline = new KernelCommandPipeline(this);
 
+            AddCaptureConsoleMiddleware();
+
             AddSetKernelMiddleware();
 
-            AddCaptureConsoleMiddleware();
-           
             AddDirectiveMiddlewareAndCommonCommandHandlers();
 
             _disposables.Add(_kernelEvents);
         }
 
         internal KernelCommandPipeline Pipeline { get; }
+
+        internal CompositeKernel ParentKernel { get; set; }
 
         public void AddMiddleware(
             KernelCommandPipelineMiddleware middleware,
@@ -66,18 +70,7 @@ namespace Microsoft.DotNet.Interactive
 
         private void AddSetKernelMiddleware()
         {
-            AddMiddleware(async (command, context, next) =>
-            {
-                SetHandlingKernel(command, context);
-
-                var previousKernel = context.CurrentKernel;
-
-                context.CurrentKernel = this;
-
-                await next(command, context);
-
-                context.CurrentKernel = previousKernel;
-            });
+            AddMiddleware(SetKernel);
         }
 
         private void AddCaptureConsoleMiddleware()
@@ -101,7 +94,8 @@ namespace Microsoft.DotNet.Interactive
         {
             AddMiddleware(
                 (command, context, next) =>
-                    command switch
+                {
+                    return command switch
                     {
                         SubmitCode submitCode =>
                         HandleDirectivesAndSubmitCode(
@@ -110,7 +104,21 @@ namespace Microsoft.DotNet.Interactive
                             next),
 
                         _ => next(command, context)
-                    });
+                    };
+                });
+        }
+
+        private async Task SetKernel(IKernelCommand command, KernelInvocationContext context, KernelPipelineContinuation next)
+        {
+            SetHandlingKernel(command, context);
+
+            var previousKernel = context.CurrentKernel;
+
+            context.CurrentKernel = this;
+
+            await next(command, context);
+
+            context.CurrentKernel = previousKernel;
         }
 
         private async Task HandleDirectivesAndSubmitCode(
@@ -166,6 +174,15 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+        public FrontendEnvironment FrontendEnvironment
+        {
+            get => _frontendEnvironment ??=
+                       ParentKernel?.FrontendEnvironment ??
+                       new AutomationEnvironment();
+            set => _frontendEnvironment = value;
+            
+        }
+
         public IObservable<IKernelEvent> KernelEvents => _kernelEvents;
 
         public string Name { get; set; }
@@ -174,7 +191,12 @@ namespace Microsoft.DotNet.Interactive
 
         public abstract bool TryGetVariable(string name, out object value);
 
-        public void AddDirective(Command command) => _submissionParser.AddDirective(command);
+        public void AddDirective(Command command) => _submissionParser.AddDirective(command); 
+        
+        public virtual Task<LspResponse> LspMethod(string methodName, JObject request)
+        {
+            return Task.FromResult<LspResponse>(null);
+        }
 
         private class KernelOperation
         {
@@ -235,6 +257,8 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly ConcurrentQueue<KernelOperation> _commandQueue =
             new ConcurrentQueue<KernelOperation>();
+
+        private FrontendEnvironment _frontendEnvironment;
 
         public Task<IKernelCommandResult> SendAsync(
             IKernelCommand command,

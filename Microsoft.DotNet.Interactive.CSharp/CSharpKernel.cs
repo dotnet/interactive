@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -19,7 +19,9 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Utility;
+using Newtonsoft.Json.Linq;
 using XPlot.Plotly;
 using Task = System.Threading.Tasks.Task;
 
@@ -92,6 +94,36 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             value = default;
             return false;
+        }
+
+        public override Task<LspResponse> LspMethod(string methodName, JObject request)
+        {
+            LspResponse result;
+            switch (methodName)
+            {
+                case "textDocument/hover":
+                    // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
+                    var hoverParams = request.ToLspObject<HoverParams>();
+                    result = TextDocumentHover(hoverParams);
+                    break;
+                default:
+                    result = null;
+                    break;
+            }
+
+            return Task.FromResult(result);
+        }
+
+        public TextDocumentHoverResponse TextDocumentHover(HoverParams hoverParams)
+        {
+            return new TextDocumentHoverResponse()
+            {
+                Contents = new MarkupContent()
+                {
+                    Kind = MarkupKind.Markdown,
+                    Value = $"textDocument/hover at position ({hoverParams.Position.Line}, {hoverParams.Position.Character}) with `markdown`",
+                },
+            };
         }
 
         protected override async Task HandleSubmitCode(

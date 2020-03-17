@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Tests
     public class JavaScriptKernelTests
     {
         [Fact]
-        public async Task javascript_emits_string_as_content_within_a_script_element()
+        public async Task javascript_kernel_emits_code_as_it_was_given()
         {
             using var kernel = new CompositeKernel
             {
@@ -24,23 +24,22 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SendAsync(new SubmitCode(
-                                       $"#!javascript\n{scriptContent}"));
+            await kernel.SendAsync(new SubmitCode($"#!javascript\n{scriptContent}"));
 
             var formatted =
                 events
                     .OfType<DisplayedValueProduced>()
-                    .SelectMany(v => v.FormattedValues)
+                    .Select(v => v.Value)
+                    .Cast<ScriptContent>()
                     .ToArray();
 
             formatted
                 .Should()
-                .ContainSingle(v => v.MimeType == "text/html")
+                .ContainSingle()
                 .Which
-                .Value
-                .Trim()
+                .ScriptValue
                 .Should()
-                .Contain($@"<script type=""text/javascript"">{scriptContent}</script>");
+                .Be(scriptContent);
         }
     }
 }

@@ -21,8 +21,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     {
         private int _executionCount;
 
-        public ExecuteRequestHandler(IKernel kernel, JupyterFrontendEnvironment frontendEnvironment, IScheduler scheduler = null)
-            : base(kernel, scheduler ?? CurrentThreadScheduler.Instance, frontendEnvironment)
+        public ExecuteRequestHandler(IKernel kernel, IScheduler scheduler = null)
+            : base(kernel, scheduler ?? CurrentThreadScheduler.Instance)
         {
         }
 
@@ -148,8 +148,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             var value = displayEvent.Value;
             PubSubMessage dataMessage;
 
-            CreateDefaultFormattedValueIfEmpty(formattedValues, value);
-
             switch (displayEvent)
             {
                 case DisplayedValueProduced _:
@@ -211,16 +209,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             }
 
             return defaultText;
-        }
-
-        private static void CreateDefaultFormattedValueIfEmpty(Dictionary<string, object> formattedValues, object value)
-        {
-            if (formattedValues.Count == 0)
-            {
-                formattedValues.Add(
-                    HtmlFormatter.MimeType,
-                    value.ToDisplayString("text/html"));
-            }
         }
 
         private void OnCommandHandled(IJupyterMessageSender jupyterMessageSender)

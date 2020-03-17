@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 {
     public class KernelInvocationContextTests
     {
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Current_differs_per_async_context()
         {
             var barrier = new Barrier(2);
@@ -49,39 +49,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                           .NotBeNull();
         }
 
-        private class TestFrontendEnvironment : FrontendEnvironmentBase
-        {
-            
-        }
-
-        [Fact(Timeout = 45000)]
-        public async Task can_provide_access_to_fronted_capabilities()
-        {
-            var cSharpKernel = new CSharpKernel();
-            using var kernel = new CompositeKernel
-            {
-                cSharpKernel
-            };
-            
-            kernel.UseFrontedEnvironment(_ => new TestFrontendEnvironment());
-
-            using var kernelEvents = kernel.KernelEvents.ToSubscribedList();
-            
-            FrontendEnvironmentBase frontendEnvironment = null;
-
-            kernel.AddMiddleware(async (command, context, next) =>
-            {
-                frontendEnvironment = context.FrontendEnvironment;
-                await next(command, context);
-            });
-
-            await kernel.SendAsync(new SubmitCode("2"));
-            frontendEnvironment
-                .Should()
-                .BeOfType<TestFrontendEnvironment>();
-        }
-
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task When_a_command_spawns_another_command_then_parent_context_is_not_complete_until_child_context_is_complete()
         {
             using var kernel = new CompositeKernel
@@ -113,7 +81,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .BeEquivalentSequenceTo(1, 2, 3);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task When_Fail_is_called_CommandFailed_is_published()
         {
             var command = new SubmitCode("123");
@@ -128,7 +96,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .ContainSingle<CommandFailed>();
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task When_Fail_is_called_CommandHandled_is_not_published()
         {
             var command = new SubmitCode("123");
@@ -143,7 +111,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .NotContain(e => e is CommandHandled);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task When_Complete_is_called_then_CommandHandled_is_published()
         {
             var command = new SubmitCode("123");
@@ -158,7 +126,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .ContainSingle<CommandHandled>();
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task When_Complete_is_called_then_CommandFailed_is_not_published()
         {
             var command = new SubmitCode("123");
@@ -173,7 +141,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .NotContain(e => e is CommandFailed);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task When_Complete_is_called_then_no_further_events_are_published()
         {
             var command = new SubmitCode("123");
@@ -189,7 +157,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             events.Should().NotContain(e => e is ErrorProduced);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task When_Fail_is_called_then_no_further_events_are_published()
         {
             var command = new SubmitCode("123");
@@ -205,7 +173,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             events.Should().NotContain(e => e is DisplayedValueProduced);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task When_multiple_commands_are_active_then_context_does_not_publish_CommandHandled_until_all_are_complete()
         {
             var outerSubmitCode = new SubmitCode("abc");
@@ -221,7 +189,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             events.Should().NotContain(e => e is CommandHandled);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task When_outer_context_is_completed_then_inner_commands_can_no_longer_be_used_to_publish_events()
         {
             await using var outer = KernelInvocationContext.Establish(new SubmitCode("abc"));
@@ -236,7 +204,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             events.Should().NotContain(e => e is ErrorProduced);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task When_inner_context_is_completed_then_no_further_events_can_be_published_for_it()
         {
             await using var outer = KernelInvocationContext.Establish(new SubmitCode("abc"));
@@ -268,7 +236,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             KernelInvocationContext.Current.Should().BeNull();
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task When_inner_context_fails_then_CommandFailed_is_published_for_outer_command()
         {
             await using var outer = KernelInvocationContext.Establish(new SubmitCode("abc"));
@@ -288,7 +256,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .Be(outer.Command);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task When_inner_context_fails_then_no_further_events_can_be_published()
         {
             var command = new SubmitCode("abc");

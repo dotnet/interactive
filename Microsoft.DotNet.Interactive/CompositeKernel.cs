@@ -45,12 +45,18 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(kernel));
             }
 
-            _childKernels.Add(kernel);
-
             if (kernel is KernelBase kernelBase)
             {
+                if (kernelBase.ParentKernel != null)
+                {
+                    throw new InvalidOperationException("Kernel already has a parent.");
+                }
+
+                kernelBase.ParentKernel = this;
                 kernelBase.AddMiddleware(LoadExtensions);
             }
+
+            _childKernels.Add(kernel);
 
             var chooseKernelCommand = new Command(
                 $"#!{kernel.Name}", 
@@ -139,7 +145,7 @@ namespace Microsoft.DotNet.Interactive
                 };
             }
 
-            return kernel ?? throw new NoSuitableKernelException(command);
+            return kernel ?? this;
         }
 
         public override bool TryGetVariable(string name, out object value)

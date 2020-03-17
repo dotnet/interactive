@@ -89,11 +89,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
             Func<T, IEnumerable> getKeys = null;
             Func<T, IEnumerable> getValues = instance => (IEnumerable)instance;
 
-            var dictionaryGenericType = typeof(T).GetInterfaces()
+            var dictionaryGenericType = typeof(T).GetAllInterfaces()
                                                  .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
-            var dictionaryObjectType = typeof(T).GetInterfaces()
+            var dictionaryObjectType = typeof(T).GetAllInterfaces()
                                                 .FirstOrDefault(i => i == typeof(IDictionary));
-            var enumerableGenericType = typeof(T).GetInterfaces()
+            var enumerableGenericType = typeof(T).GetAllInterfaces()
                                                  .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
 
             if (dictionaryGenericType != null || dictionaryObjectType != null)
@@ -123,9 +123,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }
             }
 
-            var destructurer = valueType != null
-                ? Destructurer.Create(valueType)
-                : null;
+            var destructurerCache = new Dictionary<Type, IDestructurer>();
+            if (valueType != null)
+            {
+                destructurerCache.Add(valueType, Destructurer.Create(valueType));
+            }
 
             return new HtmlFormatter<T>((instance, writer) =>
             {
@@ -161,15 +163,20 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     if (index < Formatter.ListExpansionLimit)
                     {
-                        if (destructurer == null)
+                        IDestructurer destructurer;
+
+                        if (item == null)
                         {
-                            if (item != null)
+                            destructurer = NonDestructurer.Instance;
+                        }
+                        else
+                        {
+                            var itemType = item.GetType();
+
+                            if (!destructurerCache.TryGetValue(itemType, out destructurer))
                             {
                                 destructurer = Destructurer.Create(item.GetType());
-                            }
-                            else
-                            {
-                                destructurer = NonDestructurer.Instance;
+                                destructurerCache.Add(itemType, destructurer);
                             }
                         }
 

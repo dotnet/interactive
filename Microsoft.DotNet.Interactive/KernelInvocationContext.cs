@@ -23,7 +23,6 @@ namespace Microsoft.DotNet.Interactive
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
         private readonly List<Func<KernelInvocationContext, Task>> _onCompleteActions = new List<Func<KernelInvocationContext, Task>>();
-        private FrontendEnvironmentBase _frontendEnvironment;
 
         private readonly CancellationTokenSource _cancellationTokenSource;
 
@@ -153,12 +152,6 @@ namespace Microsoft.DotNet.Interactive
 
             // This method is not async because it would prevent the setting of _current.Value to null from flowing up to the caller.
             return new ValueTask(Task.CompletedTask);
-        }
-
-        public FrontendEnvironmentBase FrontendEnvironment
-        {
-            get => _frontendEnvironment ?? new AutomationEnvironment();
-            internal set => _frontendEnvironment = value;
         }
     }
 }

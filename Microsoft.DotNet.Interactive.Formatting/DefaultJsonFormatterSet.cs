@@ -12,10 +12,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             if (typeof(JToken).IsAssignableFrom(type))
             {
-                formatter = Formatter.Create(
-                    type,
-                    (value, writer) => writer.Write(value.ToString()),
-                    JsonFormatter.MimeType);
+                formatter = new JsonFormatter<JToken>();
                 return true;
             }
 

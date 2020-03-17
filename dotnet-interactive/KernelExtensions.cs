@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.App
         public static T UseAbout<T>(this T kernel)
             where T : KernelBase
         {
-            var about = new Command("#!about")
+            var about = new Command("#!about", "Show version and build information")
             {
                 Handler = CommandHandler.Create<KernelInvocationContext>(
                     async context => await context.DisplayAsync(VersionSensor.Version()))
@@ -30,7 +30,6 @@ namespace Microsoft.DotNet.Interactive.App
 
             Formatter<VersionSensor.BuildInfo>.Register((info, writer) =>
             {
-                // https://github.com/dotnet/swag/tree/master/netlogo
                 var url = "https://github.com/dotnet/interactive";
 
                 PocketView html = table(
@@ -65,34 +64,26 @@ namespace Microsoft.DotNet.Interactive.App
             return kernel;
         }
 
-        public static T UseHttpApi<T>(this T kernel, StartupOptions startupOptions)
+        public static T UseHttpApi<T>(this T kernel, StartupOptions startupOptions, HttpProbingSettings httpProbingSettings)
             where T : KernelBase
         {
 
             var initApiCommand = new Command("#!enable-http")
             {
+                IsHidden = true,
                 Handler = CommandHandler.Create((KernelInvocationContext context) =>
                 {
                     if (context.Command is SubmitCode submitCode)
                     {
-                        var scriptContent =
-                            HttpApiBootstrapper.GetJSCode(new Uri($"http://localhost:{startupOptions.HttpPort}"));
-
-                        string value =
-                            script[type: "text/javascript"](
-
-                                    scriptContent.ToHtmlContent())
-                                .ToString();
-
-                        context.Publish(new DisplayedValueProduced(
-                            scriptContent,
-                            context.Command,
-                            formattedValues: new[]
+                        var probingUrls = httpProbingSettings != null
+                            ? httpProbingSettings.AddressList
+                            : new[]
                             {
-                                new FormattedValue("text/html",
-                                    value)
-                            }));
-
+                                new Uri($"http://localhost:{startupOptions.HttpPort}")
+                            };
+                        var html =
+                            HttpApiBootstrapper.GetHtmlInjection(probingUrls, startupOptions.HttpPort?.ToString() ?? Guid.NewGuid().ToString("N"));
+                        context.Display(html, "text/html");
                         context.Complete(submitCode);
                     }
                 })

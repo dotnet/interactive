@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive
                 var preferredMimeType = Formatter.PreferredMimeTypeFor(returnValueType) ??
                       (returnValueType?.IsPrimitive == true
                           ? PlainTextFormatter.MimeType
-                          : Formatter.GetDefaultMimeType());
+                          : Formatter.DefaultMimeType);
 
                 if (!string.IsNullOrWhiteSpace(preferredMimeType))
                 {

@@ -131,7 +131,7 @@ new [] {1,2,3}");
                 .Be("Alias '#!csharp' is already in use.");
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task can_handle_commands_targeting_composite_kernel_directly()
         {
             using var kernel = new CompositeKernel
@@ -158,7 +158,7 @@ new [] {1,2,3}");
                 .Be(submitCode);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task commands_targeting_compositeKernel_are_not_routed_to_childKernels()
         {
             var receivedOnFakeKernel = new List<IKernelCommand>();
@@ -180,7 +180,7 @@ new [] {1,2,3}");
                 .BeEmpty();
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Handling_kernel_can_be_specified_by_setting_the_kernel_name_in_the_command()
         {
             var receivedOnFakeKernel = new List<IKernelCommand>();
@@ -221,7 +221,7 @@ new [] {1,2,3}");
                 .Be("hello!");
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Handling_kernel_can_be_specified_as_a_default()
         {
             var receivedOnFakeKernel = new List<IKernelCommand>();
@@ -255,7 +255,25 @@ new [] {1,2,3}");
                 .Be("hello!");
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
+        public async Task When_no_default_kernel_is_specified_then_kernel_directives_can_be_used()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel(),
+                new FSharpKernel()
+            };
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SubmitCodeAsync(@"
+#!csharp 
+new [] {1,2,3}");
+                
+            events.Should().NotContainErrors();
+        }
+
+        [Fact]
         public async Task Events_published_by_child_kernel_are_visible_in_parent_kernel()
         {
             var subKernel = new CSharpKernel();
@@ -278,7 +296,7 @@ new [] {1,2,3}");
                     typeof(CommandHandled));
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Deferred_commands_on_composite_kernel_are_execute_on_first_submission()
         {
             var deferredCommandExecuted = false;
@@ -318,7 +336,7 @@ new [] {1,2,3}");
                     typeof(CommandHandled));
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Deferred_commands_on_composite_kernel_can_use_directives()
         {
             var deferredCommandExecuted = false;
@@ -377,6 +395,43 @@ new [] {1,2,3}");
 
             csharpKernelWasDisposed.Should().BeTrue();
             fsharpKernelWasDisposed.Should().BeTrue();
+        }
+
+        [Fact]
+        public void When_frontend_environment_is_set_then_it_is_also_assigned_to_child_kernels()
+        {
+            using var compositeKernel = new CompositeKernel
+            {
+                new CSharpKernel()
+            };
+
+            compositeKernel.FrontendEnvironment = new AutomationEnvironment();
+
+            compositeKernel
+                .ChildKernels
+                .OfType<KernelBase>()
+                .Single()
+                .FrontendEnvironment
+                .Should()
+                .BeSameAs(compositeKernel.FrontendEnvironment);
+        }
+        
+        [Fact]
+        public void When_child_kernel_is_added_then_its_frontend_environment_is_obtained_from_the_parent()
+        {
+            using var compositeKernel = new CompositeKernel();
+
+            compositeKernel.FrontendEnvironment = new AutomationEnvironment();
+
+            compositeKernel.Add(new CSharpKernel());
+
+            compositeKernel
+                .ChildKernels
+                .OfType<KernelBase>()
+                .Single()
+                .FrontendEnvironment
+                .Should()
+                .BeSameAs(compositeKernel.FrontendEnvironment);
         }
     }
 }

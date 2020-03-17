@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.CommandLine.Rendering;
 using System.Dynamic;
 using System.Linq;
 using System.Text.Encodings.Web;
@@ -17,7 +18,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
         }
 
-        protected override bool TryInferFormatter(Type type, out ITypeFormatter formatter)
+        protected override bool TryInferFormatter(
+            Type type, 
+            out ITypeFormatter formatter)
         {
             if (type.IsGenericType &&
                 type.GetGenericTypeDefinition() == typeof(ReadOnlyMemory<>))
@@ -37,6 +40,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         writer.Write(array.ToDisplayString());
                     },
                     PlainTextFormatter.MimeType);
+                return true;
+            }
+
+            if (typeof(TextSpan).IsAssignableFrom(type))
+            {
+                formatter = new PlainTextFormatter<TextSpan>((span, writer) =>
+                {
+                    writer.Write(span.ToString(OutputMode.Ansi));
+                });
                 return true;
             }
 
@@ -85,7 +97,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     writer.Write(memory.Span.ToString());
                 }),
-                
+
                 [typeof(TimeSpan)] = new PlainTextFormatter<TimeSpan>((timespan, writer) =>
                 {
                     writer.Write(timespan.ToString());

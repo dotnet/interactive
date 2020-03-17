@@ -4,7 +4,6 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -26,13 +25,9 @@ namespace Microsoft.DotNet.Interactive
             SubmitCode command,
             KernelInvocationContext context)
         {
-            var scriptContent = command.Code;
+            var scriptContent = new ScriptContent(command.Code);
 
-            string value = PocketViewTags.script[type: "text/javascript"](Kernel.HTML(
-                                                                              scriptContent))
-                                         .ToString();
-
-            await context.DisplayAsync(value, "text/html");
+            await context.DisplayAsync(scriptContent);
         }
 
         protected override Task HandleRequestCompletion(RequestCompletion command, KernelInvocationContext context)

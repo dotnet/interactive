@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
+using System.CommandLine.Rendering;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;

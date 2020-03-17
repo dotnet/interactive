@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             writer
                 .ToString()
                 .Should()
-                .Be(jtoken.ToString());
+                .Be(jtoken.ToString(Newtonsoft.Json.Formatting.None));
         }
 
         public static IEnumerable<object[]> JTokens()
@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
             IEnumerable<JToken> jtokens()
             {
-                yield return JToken.FromObject(1);
+                yield return JToken.FromObject(789);
                 
                 yield return JToken.FromObject("123");
                 
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 yield return JToken.FromObject(new Dictionary<string, object>
                 {
                     ["anInt"] = 1,
-                    ["aString"] = "123",
+                    ["aString"] = "456",
                     ["anArray"] = new[] { 1, 2, 3 },
                     ["anObject"] = new { parent = new { child = new { age = 5 } } }
                 });

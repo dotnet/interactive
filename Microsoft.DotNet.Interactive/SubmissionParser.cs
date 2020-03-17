@@ -15,7 +15,7 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal class SubmissionParser
+    public class SubmissionParser
     {
         private Parser _directiveParser;
 

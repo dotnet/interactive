@@ -58,7 +58,7 @@ open System.Linq"
     [<Extension>]
     static member UseWho(kernel: FSharpKernel) =
         let detailedName = "#!whos"
-        let command = Command(detailedName)
+        let command = Command(detailedName, "Display the names of the current top-level variables and their values.")
         command.Handler <- CommandHandler.Create(
             fun (parseResult: ParseResult) (context: KernelInvocationContext) ->
                 let detailed = parseResult.CommandResult.Command.Name = detailedName
