@@ -137,20 +137,10 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 return null;
             }
 
-            var markdown = info.ToMarkdownString();
-            if (string.IsNullOrWhiteSpace(markdown))
-            {
-                return null;
-            }
-
             var linePosSpan = text.Lines.GetLinePositionSpan(info.Span);
             return new TextDocumentHoverResponse()
             {
-                Contents = new MarkupContent()
-                {
-                    Kind = MarkupKind.Markdown,
-                    Value = markdown,
-                },
+                Contents = info.ToMarkupContent(),
                 Range = linePosSpan.ToLspRange(),
             };
         }

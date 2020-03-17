@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             };
         }
 
-        public static string ToMarkdownString(this QuickInfoItem info)
+        public static MarkupContent ToMarkupContent(this QuickInfoItem info)
         {
             var stringBuilder = new StringBuilder();
             var description = info.Sections.FirstOrDefault(s => QuickInfoSectionKinds.Description.Equals(s.Kind))?.Text ?? string.Empty;
@@ -44,7 +44,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 }
             }
 
-            return stringBuilder.ToString();
+            return new MarkupContent()
+            {
+                Kind = MarkupKind.Markdown,
+                Value = stringBuilder.ToString(),
+            };
         }
     }
 }
