@@ -208,10 +208,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             context.Publish(new CompletionRequestCompleted(
                 completionList,
                 requestCompletion,
-                // PowerShell's replacement length is inclusive while Jupyter's ReplacementEndColumn is exclusive so we
-                // have to add one to the ReplaceLength for completions to be correct.
                 completion.ReplacementIndex,
-                completion.ReplacementLength + 1));
+                // The end index is the start index plus the length of the replacement.
+                completion.ReplacementIndex + completion.ReplacementLength));
 
             return Task.CompletedTask;
         }
