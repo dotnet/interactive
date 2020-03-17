@@ -124,7 +124,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public async Task<TextDocumentHoverResponse> TextDocumentHover(HoverParams hoverParams)
         {
-            var documentContents = hoverParams.TextDocument.Uri.DecodeDocumentFromDataUri();
+            if (!hoverParams.TextDocument.Uri.TryDecodeDocumentFromDataUri(out var documentContents))
+            {
+                return null;
+            }
+
             var document = await GetDocumentWithCodeAsync(documentContents);
 
             var text = await document.GetTextAsync();
