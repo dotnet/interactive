@@ -1,0 +1,27 @@
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+{
+  "compilerOptions": {
+    "lib": [
+      "es2015",
+      "dom"
+    ],
+    "declaration": false,
+    "noImplicitAny": true,
+    "module": "amd",
+    "target": "es5",
+    "allowJs": false,
+    "outFile": "./dist/dotnet-ineractive.js",
+    "types": [
+      "node",
+      "mocha"
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

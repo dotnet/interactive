@@ -1,0 +1,6 @@
+--ui bdd
+--timeout 10000
+--require requirejs
+--require source-map-support/register
+--require ts-node/register 
+tests/**/*.spec.ts

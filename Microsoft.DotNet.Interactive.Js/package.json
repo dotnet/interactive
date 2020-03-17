@@ -1,0 +1,46 @@
+{
+  "name": "microsoft.dotnet.interactive.js",
+  "version": "1.0.0",
+  "description": "Javascript api Microsoft.DotNet.Interactive",
+  "main": "dist/dotnet-interactive.js",
+  "module": "dist/dotnet-interactive.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "mocha --opts mocha.opts",
+    "test2": "mocha -r ts-node/register tests/**/*.spec.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dotnet/interactive.git"
+  },
+  "keywords": [
+    "dotnet",
+    "interactive",
+    "javascript"
+  ],
+  "author": "Microsoft",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dotnet/interactive/issues"
+  },
+  "homepage": "https://github.com/dotnet/interactive#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/chai": "^4.2.11",
+    "@types/chai-as-promised": "^7.1.2",
+    "@types/mocha": "^7.0.2",
+    "@types/node": "^13.9.1",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^7.1.0",
+    "mocha-typescript": "^1.1.17",
+    "requirejs": "^2.3.6",
+    "source-map-support": "^0.5.16",
+    "ts-mocha": "^7.0.0",
+    "ts-node": "^8.6.2",
+    "typescript": "^3.8.3"
+  }
+}
