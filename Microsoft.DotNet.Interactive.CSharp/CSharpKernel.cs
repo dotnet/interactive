@@ -12,8 +12,10 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Microsoft.CodeAnalysis.QuickInfo;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Scripting;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
@@ -102,7 +104,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return false;
         }
 
-        public override Task<LspResponse> LspMethod(string methodName, JObject request)
+        public override async Task<LspResponse> LspMethod(string methodName, JObject request)
         {
             LspResponse result;
             switch (methodName)
@@ -110,25 +112,46 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 case "textDocument/hover":
                     // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
                     var hoverParams = request.ToLspObject<HoverParams>();
-                    result = TextDocumentHover(hoverParams);
+                    result = await TextDocumentHover(hoverParams);
                     break;
                 default:
                     result = null;
                     break;
             }
 
-            return Task.FromResult(result);
+            return result;
         }
 
-        public TextDocumentHoverResponse TextDocumentHover(HoverParams hoverParams)
+        public async Task<TextDocumentHoverResponse> TextDocumentHover(HoverParams hoverParams)
         {
+            var documentContents = hoverParams.TextDocument.Uri.DecodeDocumentFromDataUri();
+            var document = await GetDocumentWithCodeAsync(documentContents);
+
+            var text = await document.GetTextAsync();
+            var position = text.Lines.GetPosition(new LinePosition(hoverParams.Position.Line, hoverParams.Position.Character));
+
+            var service = QuickInfoService.GetService(document);
+            var info = await service.GetQuickInfoAsync(document, position);
+            if (info == null)
+            {
+                return null;
+            }
+
+            var markdown = info.ToMarkdownString();
+            if (string.IsNullOrWhiteSpace(markdown))
+            {
+                return null;
+            }
+
+            var linePosSpan = text.Lines.GetLinePositionSpan(info.Span);
             return new TextDocumentHoverResponse()
             {
                 Contents = new MarkupContent()
                 {
                     Kind = MarkupKind.Markdown,
-                    Value = $"textDocument/hover at position ({hoverParams.Position.Line}, {hoverParams.Position.Character}) with `markdown`",
+                    Value = markdown,
                 },
+                Range = linePosSpan.ToLspRange(),
             };
         }
 
@@ -253,27 +276,12 @@ namespace Microsoft.DotNet.Interactive.CSharp
             string code,
             int cursorPosition)
         {
-            var compilation = ScriptState.Script.GetCompilation();
-            var originalCode =
-                ScriptState?.Script.Code ?? string.Empty;
-
-            var buffer = new StringBuilder(originalCode);
-            if (!string.IsNullOrWhiteSpace(originalCode) && !originalCode.EndsWith(Environment.NewLine))
-            {
-                buffer.AppendLine();
-            }
-
-            buffer.AppendLine(code);
-            var fullScriptCode = buffer.ToString();
+            var document = await GetDocumentWithCodeAsync(code);
+            var text = await document.GetTextAsync();
+            var fullScriptCode = text.ToString();
             var offset = fullScriptCode.LastIndexOf(code, StringComparison.InvariantCulture);
             var absolutePosition = Math.Max(offset, 0) + cursorPosition;
 
-            if (_fixture == null || ShouldRebuild())
-            {
-                _fixture = new WorkspaceFixture(compilation.Options, compilation.References);
-            }
-
-            var document = _fixture.ForkDocument(fullScriptCode);
             var service = CompletionService.GetService(document);
 
             var completionList = await service.GetCompletionsAsync(document, absolutePosition);
@@ -292,11 +300,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var items = completionList.Items.Select(item => item.ToModel(symbolToSymbolKey, document)).ToArray();
 
             return items;
-
-            bool ShouldRebuild()
-            {
-                return compilation.References.Count() != _fixture.MetadataReferences.Count();
-            }
         }
 
         public async Task LoadExtensionsFromDirectoryAsync(
@@ -309,12 +312,43 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 context);
         }
 
+        private async Task<Document> GetDocumentWithCodeAsync(string code)
+        {
+            if (ScriptState == null)
+            {
+                ScriptState = await CSharpScript.RunAsync(string.Empty, ScriptOptions);
+            }
+
+            var compilation = ScriptState.Script.GetCompilation();
+            var originalCode = ScriptState.Script.Code ?? string.Empty;
+
+            var buffer = new StringBuilder(originalCode);
+            if (!string.IsNullOrWhiteSpace(originalCode) && !originalCode.EndsWith(Environment.NewLine))
+            {
+                buffer.AppendLine();
+            }
+
+            buffer.AppendLine(code);
+            var fullScriptCode = buffer.ToString();
+
+            if (_fixture == null || ShouldRebuild())
+            {
+                _fixture = new WorkspaceFixture(compilation.Options, compilation.References);
+            }
+
+            var document = _fixture.ForkDocument(fullScriptCode);
+            return document;
+
+            bool ShouldRebuild()
+            {
+                return compilation.References.Count() != _fixture.MetadataReferences.Count();
+            }
+        }
+
         private bool HasReturnValue =>
             ScriptState != null &&
             (bool)_hasReturnValueMethod.Invoke(ScriptState.Script, null);
 
         internal NativeAssemblyLoadHelper NativeAssemblyLoadHelper { get; }
     }
-
-
 }

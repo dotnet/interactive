@@ -9,12 +9,12 @@ define(function () {
         init: function (global) {
             let lsp = {};
 
-            lsp.textDocumentHover = async function (element, line, column) {
+            lsp.textDocumentHover = async function (element, textDocument, line, column) {
                 let host = getHostFromElement(element);
                 let url = `${host}lsp/textDocument/hover`;
                 let request = {
                     textDocument: {
-                        uri: "TODO: what does a file path mean?"
+                        uri: textDocument
                     },
                     position: {
                         line: line,

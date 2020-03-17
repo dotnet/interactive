@@ -60,7 +60,9 @@
                 }
 
                 if (foundColumn) {
-                    global.Lsp.textDocumentHover(element, lineNumber, columnNumber).then(function (result) {
+                    let content = element.CodeMirror.doc.getValue();
+                    let textDocument = 'data:text/plain;base64,' + btoa(content);
+                    global.Lsp.textDocumentHover(element, textDocument, lineNumber, columnNumber).then(function (result) {
                         hoverDiv.style.top = `${event.pageY}px`;
                         hoverDiv.style.left = `${event.pageX}px`;
                         hoverDiv.style.display = 'inline';

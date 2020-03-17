@@ -198,20 +198,21 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         }
 
         [Theory]
-        [InlineData(Language.CSharp)]
-        public async Task lsp_textDocument_hover_returns_expected_placeholder(Language language)
+        [InlineData(Language.CSharp, "Console.WriteLine()", 0, 10)]
+        public async Task lsp_textDocument_hover_returns_expected_content(Language language, string code, int line, int column)
         {
             using var _ = new AssertionScope();
-            var request = JObject.Parse(@"
-{
-    ""textDocument"": {
-        ""uri"": ""path/to/document""
-    },
-    ""position"": {
-        ""line"": 1,
-        ""character"": 2
-    }
-}
+            var encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(code));
+            var request = JObject.Parse($@"
+{{
+    ""textDocument"": {{
+        ""uri"": ""data:text/plain;base64,{encoded}""
+    }},
+    ""position"": {{
+        ""line"": {line},
+        ""character"": {column}
+    }}
+}}
 ");
             var response = await GetServer(language).HttpClient.PostJsonAsync("/lsp/textDocument/hover", request);
             await response.ShouldSucceed();
@@ -220,7 +221,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
             var responseType = json["contents"]["kind"].Value<string>();
             responseType.Should().Be("markdown");
             var markdownContent = json["contents"]["value"].Value<string>();
-            markdownContent.Should().Be("textDocument/hover at position (1, 2) with `markdown`");
+            markdownContent.Should().Match("void Console.WriteLine() (+ * overloads)");
         }
 
         [Theory]
