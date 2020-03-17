@@ -125,9 +125,10 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         private const string ClientId = "245e1dee-74ef-4257-a8c8-8208296e1dfd";
         private const string UserAgent = "PowerShell.Enter-AzShell";
         private const string CommandToStartPwsh = "stty -echo && cat | pwsh -noninteractive -f - && exit";
-        private const string CommandToSetPrompt = @"Remove-Item Function:\Prompt -Force; New-Item -Path Function:\Prompt -Value { ""PS>`n"" } -Options constant -Force > $null; New-Alias -Name help -Value Get-Help -Force";
-        private const string PwshPrompt = "PS>\r\n";
+        private const string CommandToSetPrompt = @"Remove-Item Function:\Prompt -Force; New-Item -Path Function:\Prompt -Value { ""8f0a62bb-598d-4355-a14e-e33867c62891`n"" } -Options constant -Force > $null; New-Alias -Name help -Value Get-Help -Force";
+        private const string PwshPrompt = "8f0a62bb-598d-4355-a14e-e33867c62891\r\n";
 
+        // Mimic 'ctrl+d': end of transmission.
         private static readonly byte[] _exitSessionCommand = new byte[] { 4 };
 
         private static string _cachedAccessToken;
@@ -357,7 +358,11 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         private async Task ReadPipeAsync(PipeReader reader)
         {
-            Stream stdout = Console.OpenStandardOutput();
+            // We depend on the echoed prompt string to determine if the code execution is
+            // done. Note that the submitted code may contain multiple statements which will
+            // result in multiple prompt strings (one after each statement) echoed back.
+            // If we receive a prompt string and there is no more incoming bytes after that,
+            // then we know the whole submitted code has done execution.
             bool potentialEndOfExecution = false;
 
             while (true)
@@ -392,17 +397,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
                     if (_sessionInitialized)
                     {
-                        if (PwshPrompt.Equals(line, StringComparison.Ordinal) ||
-                            (line.EndsWith(PwshPrompt, StringComparison.Ordinal) &&
-                             line.StartsWith(VTColorUtils.EscapeCharacters)))
-                        {
-                            // The line is the prompt string, either exactly or with some escape sequences prepended.
-                            potentialEndOfExecution = buffer.Length == 0;
-                        }
-                        else
-                        {
-                            Console.Write(line);
-                        }
+                        potentialEndOfExecution = ProcessMessageDuringSession(
+                            line,
+                            buffer.Length == 0);
                     }
                     else
                     {
@@ -424,34 +421,59 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             reader.Complete();
         }
 
+        private bool ProcessMessageDuringSession(string line, bool noRemainingBytes)
+        {
+            if (PwshPrompt.Equals(line, StringComparison.Ordinal))
+            {
+                // The line is exactly the prompt string.
+                return noRemainingBytes;
+            }
+
+            if (line.EndsWith(PwshPrompt, StringComparison.Ordinal))
+            {
+                if (line.StartsWith(VTColorUtils.EscapeCharacters))
+                {
+                    // The line is the prompt string with some escape sequences prepended.
+                    return noRemainingBytes;
+                }
+
+                // This can happen when executing a native executable that writes some
+                // output without an ending new line.
+                int index = line.LastIndexOf(PwshPrompt);
+                Console.Write(line.Remove(index));
+            }
+            else
+            {
+                Console.Write(line);
+            }
+
+            return false;
+        }
+
         private void ProcessMessageAtSessionInitialization(string line)
         {
             // Handle incoming messages at session startup.
-            if (line.IndexOf(CommandToStartPwsh) != -1)
-            {
-                // The 'CommandToStartPwsh' will be echoed back, and we don't want to
-                // show anything before seeing that echo.
-                string color = VTColorUtils.CombineColorSequences(ConsoleColor.Green, VTColorUtils.DefaultConsoleColor);
-                Console.Write($"\n{color}Welcome to Azure Cloud Shell!{VTColorUtils.ResetColor}\n");
-                Console.Write($"{color}Submitted code will run in the Azure Cloud Shell, type 'exit' to quit.{VTColorUtils.ResetColor}\n\n");
-            }
-            else if (line.IndexOf("MOTD:") != -1)
+            if (line.Contains("MOTD:"))
             {
                 // Let's display the message-of-the-day from PowerShell Azure Shell.
-                Console.Write(line);
+                Console.WriteLine("\n" + line);
                 // Also, seeing this message means we are now in pwsh.
                 _codeExecutedTaskSource?.SetResult(null);
             }
-            else if (line.IndexOf("VERBOSE: ") != -1)
+            else if (line.Contains("VERBOSE: "))
             {
                 // Let's show the verbose message generated from the profile.
                 Console.Write(line);
             }
-            else if (line.IndexOf(CommandToSetPrompt) != -1)
+            else if (line.Contains(CommandToSetPrompt))
             {
                 // pwsh will echo the command passed to it.
                 // It's okay to show incoming messages after this very first command is echoed back.
                 _sessionInitialized = true;
+
+                string color = VTColorUtils.CombineColorSequences(ConsoleColor.Green, VTColorUtils.DefaultConsoleColor);
+                Console.WriteLine($"\n{color}Welcome to Azure Cloud Shell!{VTColorUtils.ResetColor}");
+                Console.WriteLine($"{color}Submitted code will run in the Azure Cloud Shell, type 'exit' to quit.{VTColorUtils.ResetColor}");
             }
         }
 
