@@ -336,10 +336,12 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     Formatter<MathString>.Register((math, writer) => writer.Write(math.ToString()), "text/latex");
                     Formatter<ScriptContent>.Register((script, writer) =>
                     {
-                        var fullCode = $@"createDotnetInteractiveClient('{browserFrontendEnvironment.ApiUri.AbsoluteUri}').then(function (interactive) {{
+                        var fullCode = $@"if (typeof window.createDotnetInteractiveClient === typeof Function) {{
+createDotnetInteractiveClient('{browserFrontendEnvironment.ApiUri.AbsoluteUri}').then(function (interactive) {{
 let notebookScope = getDotnetInteractiveScope('{browserFrontendEnvironment.ApiUri.AbsoluteUri}');
 {script.ScriptValue}
-}});";
+}});
+}}";
                         IHtmlContent content = PocketViewTags.script[type: "text/javascript"](fullCode.ToHtmlContent());
                         content.WriteTo(writer, HtmlEncoder.Default);
                     }, HtmlFormatter.MimeType);
