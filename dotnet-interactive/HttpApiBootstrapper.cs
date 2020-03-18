@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.App
 {
     internal static class HttpApiBootstrapper
     {
-        public static string GetHtmlInjection(Uri[] probingUris, string seed)
+        public static string GetHtmlInjection(Uri[] probingUris, string seed, bool enableLsp = false)
         {
             var apiCacheBuster = $"{Process.GetCurrentProcess().Id}.{seed}";
             var template = @"
@@ -80,8 +80,7 @@ function loadDotnetInteractiveApi() {
                 ],
                 function (dotnet, lsp, editor) {
                     dotnet.init(window);
-                    lsp.init(window);
-                    editor.init(window, document, root, document.getElementById('dotnet-interactive-this-cell-$SEED$'));
+                    $LSP$
                 },
                 function (error) {
                     console.log(error);
@@ -92,11 +91,19 @@ function loadDotnetInteractiveApi() {
     }
     </script>
 </div>";
+
+            var lspInit = @"
+                    lsp.init(window);
+                    editor.init(window, document, root, document.getElementById('dotnet-interactive-this-cell-$SEED$'));
+";
+            
             var jsProbingUris = $"[{ string.Join(", ", probingUris.Select(a => $"\"{a.AbsoluteUri}\"")) }]";
             var code = template;
+            code = code.Replace("$LSP$", enableLsp ? lspInit : string.Empty);
             code = code.Replace("$ADDRESSES$", jsProbingUris);
             code = code.Replace("$CACHE_BUSTER$", apiCacheBuster);
             code = code.Replace("$SEED$", seed);
+            
 
             return code;
         }
