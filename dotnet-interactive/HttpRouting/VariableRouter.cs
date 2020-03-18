@@ -134,18 +134,17 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                     {
                         context.Handler = async httpContext =>
                         {
-                            await using (var writer = new StreamWriter(httpContext.Response.Body))
-                            {
-                                httpContext.Response.ContentType = JsonFormatter.MimeType;
-                                if (value is string)
-                                {
-                                    await writer.WriteAsync(JsonConvert.ToString(value));
-                                }
-                                else
-                                {
-                                    await writer.WriteAsync(value.ToDisplayString(JsonFormatter.MimeType));
+                            await using var writer = new StreamWriter(httpContext.Response.Body);
 
-                                }
+                            httpContext.Response.ContentType = JsonFormatter.MimeType;
+                            if (value is string)
+                            {
+                                await writer.WriteAsync(JsonConvert.ToString(value));
+                            }
+                            else
+                            {
+                                await writer.WriteAsync(value.ToDisplayString(JsonFormatter.MimeType));
+
                             }
 
                             await httpContext.Response.CompleteAsync();
