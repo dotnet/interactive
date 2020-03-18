@@ -195,11 +195,24 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
             else
             {
-                var completionList = GetCompletionList(
+                CommandCompletion results = CommandCompletion.CompleteInput(
                     requestCompletion.Code,
-                    requestCompletion.CursorPosition);
+                    requestCompletion.CursorPosition,
+                    options: null,
+                    _lazyPwsh.Value);
 
-                completion = new CompletionRequestCompleted(completionList, requestCompletion);
+                var completionItems = results.CompletionMatches.Select(
+                    c => new CompletionItem(
+                        displayText: c.CompletionText,
+                        kind: c.ResultType.ToString(),
+                        documentation: c.ToolTip));
+
+                completion = new CompletionRequestCompleted(
+                    completionItems,
+                    requestCompletion,
+                    results.ReplacementIndex,
+                    // The end index is the start index plus the length of the replacement.
+                    results.ReplacementIndex + results.ReplacementLength);
             }
 
             context.Publish(completion);
@@ -254,32 +267,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             {
                 ((PSKernelHostUserInterface)_psHost.UI).ResetProgress();
             }
-        }
-
-        protected override Task HandleRequestCompletion(
-            RequestCompletion requestCompletion,
-            KernelInvocationContext context)
-        {
-            var completionRequestReceived = new CompletionRequestReceived(requestCompletion);
-
-            context.Publish(completionRequestReceived);
-
-            CommandCompletion completion = CommandCompletion.CompleteInput(requestCompletion.Code, requestCompletion.CursorPosition, null, _lazyPwsh.Value);
-
-            var completionList = completion.CompletionMatches.Select(
-                c => new CompletionItem(
-                    displayText: c.CompletionText,
-                    kind: c.ResultType.ToString(),
-                    documentation: c.ToolTip));
-
-            context.Publish(new CompletionRequestCompleted(
-                completionList,
-                requestCompletion,
-                completion.ReplacementIndex,
-                // The end index is the start index plus the length of the replacement.
-                completion.ReplacementIndex + completion.ReplacementLength));
-
-            return Task.CompletedTask;
         }
 
         private static bool IsCompleteSubmission(string code, out ParseError[] errors)
