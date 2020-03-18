@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.Formatting;
 using Newtonsoft.Json;
@@ -103,8 +104,10 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                 {
                     httpContext.Response.ContentType = JsonFormatter.MimeType;
 
-                    await using var writer = new StreamWriter(httpContext.Response.Body);
-                    await writer.WriteLineAsync(response.ToString());
+                    await using var writer = new StreamWriter(httpContext.Response.Body) { AutoFlush = false };
+
+                    await writer.WriteAsync(response.ToString());
+                    await httpContext.Response.CompleteAsync();
                 };
             }
         }
@@ -131,17 +134,21 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                     {
                         context.Handler = async httpContext =>
                         {
-                            httpContext.Response.ContentType = JsonFormatter.MimeType;
-                            if (value is string)
+                            await using (var writer = new StreamWriter(httpContext.Response.Body))
                             {
-                                await using var writer = new StreamWriter(httpContext.Response.Body);
-                                await writer.WriteAsync(JsonConvert.ToString(value));
+                                httpContext.Response.ContentType = JsonFormatter.MimeType;
+                                if (value is string)
+                                {
+                                    await writer.WriteAsync(JsonConvert.ToString(value));
+                                }
+                                else
+                                {
+                                    await writer.WriteAsync(value.ToDisplayString(JsonFormatter.MimeType));
+
+                                }
                             }
-                            else
-                            {
-                                await using var writer = new StreamWriter(httpContext.Response.Body);
-                                value.FormatTo(writer, JsonFormatter.MimeType);
-                            }
+
+                            await httpContext.Response.CompleteAsync();
                         };
                     }
                 }
