@@ -174,8 +174,9 @@ namespace Microsoft.DotNet.Interactive
                     var displayedValues = new Dictionary<string, DisplayedValue>();
 
                     var newlyRequestedPackages =
-                        restoreContext.RequestedPackageReferences
-                                      .Except(restoreContext.ResolvedPackageReferences, PackageReferenceComparer.Instance);
+                            restoreContext.RequestedPackageReferences
+                                          .Except(restoreContext.ResolvedPackageReferences, PackageReferenceComparer.Instance);
+
                     var requestedPackageIds = new Dictionary<string, PackageReference>();
 
                     foreach (var package in newlyRequestedPackages)
@@ -210,21 +211,24 @@ namespace Microsoft.DotNet.Interactive
 
                         foreach (var resolvedReference in result.ResolvedReferences)
                         {
-                            context.Publish(
-                                new DisplayedValueUpdated(
-                                    $"Installed package {resolvedReference.PackageName} version {resolvedReference.PackageVersion}",
-                                    PackageReferenceComparer.GetDisplayValueId(resolvedReference)));
+                            if (displayedValues.TryGetValue(
+                                PackageReferenceComparer.GetDisplayValueId(resolvedReference), out var displayedValue))
+                            {
+                                displayedValue.Update(
+                                    $"Installed package {resolvedReference.PackageName} version {resolvedReference.PackageVersion}");
+                            }
 
                             context.Publish(new PackageAdded(resolvedReference));
                         }
 
-                        // Update message for requested packages that did not yield a resolution
-                        foreach ((string key, PackageReference package) in requestedPackageIds)
+                        foreach (var (id, package) in requestedPackageIds)
                         {
-                            var id = PackageReferenceComparer.GetDisplayValueId(package);
-                            var message = messages[package] + ".";
-                            context.Publish(new DisplayedValueUpdated(message, PackageReferenceComparer.GetDisplayValueId(package)));
-                            messages[package] = message;
+                            if (displayedValues.TryGetValue(
+                                PackageReferenceComparer.GetDisplayValueId(package), out var displayedValue))
+                            {
+                                displayedValue.Update(
+                                    $"Installed package {package.PackageName} version {package.PackageVersion}");
+                            }
                         }
                     }
                     else
