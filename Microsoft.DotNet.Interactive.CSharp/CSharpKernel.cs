@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,12 +29,33 @@ using Task = System.Threading.Tasks.Task;
 namespace Microsoft.DotNet.Interactive.CSharp
 {
     public class CSharpKernel :
-        KernelBase, 
+        KernelBase,
         IExtensibleKernel,
         ISupportNuget
     {
         internal const string DefaultKernelName = "csharp";
-        internal const string DefaultScriptExtension = ".csx";
+
+        private DependencyProvider _dependencies;
+
+        private Lazy<IDependencyManagerProvider> _idm;
+
+        // C# delegates on class field initializers can't invoke instance methods or data, so make it a property backed by an unitialized field.
+        // A race can happen, in both the Lazy () and in the field initializer, but it doesn't really matter, since they are both effectively side effect free.
+        private IDependencyManagerProvider GetIdm(ResolvingErrorReport reportError)
+        {
+            if (_dependencies == null)
+            {
+                // This indicates a bug in notbook code. For a Kernel to support nuget
+                // it must have initialized using InitializeDependencyProvider before calling ISupportNuget.Resolve
+                // this should be done in KernelSupportsNugetExtensions.UseNugetDirective<T>(this T kernel)
+                throw new InvalidOperationException("Internal error --- must invoke ISupportNuget.InitializeDependencyProvider before ISupportNuget.Resolve()");
+            }
+            if (_idm == null)
+            {
+                _idm = new Lazy<IDependencyManagerProvider>(() => _dependencies?.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget"));
+            }
+            return _idm.Value;
+        }
 
         private static readonly MethodInfo _hasReturnValueMethod = typeof(Script)
             .GetMethod("HasReturnValue", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -65,7 +87,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public CSharpKernel() : base(DefaultKernelName)
         {
-            Name = DefaultKernelName;
             RegisterForDisposal(() =>
             {
                 ScriptState = null;
@@ -303,48 +324,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 context);
         }
 
-        // This error is invoked from within the package manager library, which happens in a seperate
-        // process, we scrape stdio for error messages in RestoreAsync method below.
-        private ResolvingErrorReport ReportError = (ErrorReportType errorType, int code, string message) =>
-        {
-            if (errorType == ErrorReportType.Error)
-            {
-                Console.WriteLine("PackageManagement Error {0} {1}", code, message);
-            }
-            else
-            {
-                Console.WriteLine("PackageManagement Warning {0} {1}", code, message);
-            }
-        };
-
-        private object _lockObject = new object();
-        private DependencyProvider _dependencies;
-        private IDependencyManagerProvider _idm;
-        private AssemblyResolutionProbe _assemblyProbingPaths;
-        private NativeResolutionProbe _nativeProbingRoots;
-
-        private void EnsureDependencyProviderLoaded()
-        {
-            if (_dependencies == null)
-            {
-                lock (_lockObject)
-                {
-                    if (_dependencies is null)
-                    {
-                        _dependencies = new DependencyProvider(_assemblyProbingPaths, _nativeProbingRoots);
-                        _idm = _dependencies.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", ReportError, "nuget");
-                    }
-                }
-            }
-        }
-
         void ISupportNuget.InitializeDependencyProvider(AssemblyResolutionProbe assemblyProbingPaths, NativeResolutionProbe nativeProbingRoots)
         {
-            lock (_lockObject)
-            {
-                _assemblyProbingPaths = assemblyProbingPaths;
-                _nativeProbingRoots = nativeProbingRoots;
-            }
+            _dependencies = new DependencyProvider(assemblyProbingPaths, nativeProbingRoots);
         }
 
         void ISupportNuget.RegisterNugetResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
@@ -356,10 +338,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
             ScriptOptions = ScriptOptions.AddReferences(references);
         }
 
-        IResolveDependenciesResult ISupportNuget.Resolve(IEnumerable<string> packageManagerTextLines, string executionTfm)
+        IResolveDependenciesResult ISupportNuget.Resolve(IEnumerable<string> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
         {
-            EnsureDependencyProviderLoaded();
-            return _dependencies.Resolve(_idm, ".csx", packageManagerTextLines, ReportError, executionTfm);
+            return _dependencies?.Resolve(GetIdm(reportError), ".csx", packageManagerTextLines, reportError, executionTfm);
         }
 
         private bool HasReturnValue =>

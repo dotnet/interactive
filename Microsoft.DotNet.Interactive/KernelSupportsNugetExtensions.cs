@@ -171,20 +171,21 @@ namespace Microsoft.DotNet.Interactive
                 KernelCommandInvocation restore = async (_, context) =>
                 {
                     var messages = new Dictionary<PackageReference, string>(new PackageReferenceComparer());
+                    var displayedValues = new Dictionary<string, DisplayedValue>();
 
                     var newlyRequestedPackages =
                         restoreContext.RequestedPackageReferences
                                       .Except(restoreContext.ResolvedPackageReferences, PackageReferenceComparer.Instance);
+                    var requestedPackageIds = new Dictionary<string, PackageReference>();
 
                     foreach (var package in newlyRequestedPackages)
                     {
                         var message = InstallingPackageMessage(package) + "...";
-                        context.Publish(
-                            new DisplayedValueProduced(
-                                message,
-                                context.Command,
-                                valueId: PackageReferenceComparer.GetDisplayValueId(package)));
+                        var displayedValue = context.Display(message);
+                        var id = PackageReferenceComparer.GetDisplayValueId(package);
+                        displayedValues[id] = displayedValue;
                         messages.Add(package, message);
+                        requestedPackageIds.Add(id, package);
                     }
 
                     // Restore packages
@@ -193,6 +194,8 @@ namespace Microsoft.DotNet.Interactive
                     {
                         foreach (var key in messages.Keys.ToArray())
                         {
+                            var id = PackageReferenceComparer.GetDisplayValueId(key);
+                            requestedPackageIds.Remove(id);
                             var message = messages[key] + ".";
                             context.Publish(new DisplayedValueUpdated(message, PackageReferenceComparer.GetDisplayValueId(key)));
                             messages[key] = message;
@@ -213,6 +216,15 @@ namespace Microsoft.DotNet.Interactive
                                     PackageReferenceComparer.GetDisplayValueId(resolvedReference)));
 
                             context.Publish(new PackageAdded(resolvedReference));
+                        }
+
+                        // Update message for requested packages that did not yield a resolution
+                        foreach ((string key, PackageReference package) in requestedPackageIds)
+                        {
+                            var id = PackageReferenceComparer.GetDisplayValueId(package);
+                            var message = messages[package] + ".";
+                            context.Publish(new DisplayedValueUpdated(message, PackageReferenceComparer.GetDisplayValueId(package)));
+                            messages[package] = message;
                         }
                     }
                     else

@@ -195,17 +195,25 @@ namespace Microsoft.DotNet.Interactive
                                          .Where(r => !_resolvedPackageReferences.ContainsKey(r.PackageName.ToLower(CultureInfo.InvariantCulture)))
                                          .ToArray();
 
+            var errors = new List<string>();
+
+            ResolvingErrorReport ReportError = (ErrorReportType errorType, int code, string message) =>
+            {
+                errors.Add($"PackageManagement {(errorType.IsError ? "Error" : "Warning")} {code} {message}");
+            };
+
             var result =
                 await Task.Run(() => {
-                    return _iSupportNuget.Resolve(GetPackageManagerLines(), restoreTfm);
+                    return _iSupportNuget.Resolve(GetPackageManagerLines(), restoreTfm, ReportError);
                 });
 
             if (!result.Success)
             {
+                errors.AddRange(result.StdOut);
                 return new PackageRestoreResult(
                     succeeded: false,
                     requestedPackages: newlyRequested,
-                    errors: result.StdOut);
+                    errors: errors);
             }
             else
             {

@@ -17,6 +17,6 @@ namespace Microsoft.DotNet.Interactive
 
         // Summary:
         //     Resolve reference for a list of package manager lines
-        public abstract IResolveDependenciesResult Resolve(IEnumerable<string> packageManagerTextLines, string executionTfm);
+        public abstract IResolveDependenciesResult Resolve(IEnumerable<string> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError);
     }
 }

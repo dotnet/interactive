@@ -26,8 +26,6 @@ open FSharp.Compiler.SourceCodeServices
 type FSharpKernel() as this =
     inherit KernelBase("fsharp")
 
-    let DefaultScriptExtension = ".fsx"
-
     let resolvedAssemblies = List<string>()
     static let lockObj = Object();
 
@@ -142,27 +140,14 @@ type FSharpKernel() as this =
             context.Publish(CompletionRequestCompleted(completionItems, requestCompletion))
         }
 
-    let _lockObject = obj()
-    let mutable _dependencies = Unchecked.defaultof<DependencyProvider>
-    let mutable _idm = Unchecked.defaultof<IDependencyManagerProvider>
-    let mutable _assemblyProbingPaths = Unchecked.defaultof<AssemblyResolutionProbe>
-    let mutable _nativeProbingRoots = Unchecked.defaultof<NativeResolutionProbe>
+    let mutable dependencies: DependencyProvider option = None
 
-    let reportError =
-        let report errorType err msg =
-            let error = err, msg
-            match errorType with
-            | ErrorReportType.Warning -> Console.WriteLine("PackageManagement Error {0} {1}", err, msg);
-            | ErrorReportType.Error -> Console.WriteLine("PackageManagement Warning {0} {1}", err, msg);
-        ResolvingErrorReport (report)
-
-    let ensureDependencyProviderLoaded () =
-        // Convert to isNull _dependencies once DependencyProvider is annotated with AllowsNullAttribute
-        if _dependencies = Unchecked.defaultof<DependencyProvider> then
-            lock _lockObject (fun () ->
-                if _dependencies = Unchecked.defaultof<DependencyProvider> then
-                    _dependencies <- new DependencyProvider(_assemblyProbingPaths, _nativeProbingRoots)
-                    _idm <- _dependencies.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget"))
+    let getIdm(reportError: ResolvingErrorReport) : IDependencyManagerProvider =
+        let idm = new Lazy<IDependencyManagerProvider>((fun () ->
+            match dependencies with
+            | None -> raise (new InvalidOperationException("Internal error --- must invoke ISupportNuget.InitializeDependencyProvider before ISupportNuget.Resolve()"))
+            | Some deps -> deps.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget")))
+        idm.Force()
 
     member _.GetCurrentVariable(variableName: string) =
         let result, _errors =
@@ -197,10 +182,7 @@ type FSharpKernel() as this =
     interface ISupportNuget with
 
         member this.InitializeDependencyProvider(assemblyProbingPaths, nativeProbingRoots) =
-
-            lock _lockObject (fun () ->
-                _assemblyProbingPaths <- assemblyProbingPaths
-                _nativeProbingRoots <- nativeProbingRoots )
+            dependencies <- Some (new DependencyProvider(assemblyProbingPaths, nativeProbingRoots))
 
         member this.RegisterNugetResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
             // Generate #r and #I from packageReferences
@@ -224,7 +206,8 @@ type FSharpKernel() as this =
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command)
 
-        member this.Resolve(packageManagerTextLines:IEnumerable<string>, executionTfm: string): IResolveDependenciesResult =
+        member this.Resolve(packageManagerTextLines:IEnumerable<string>, executionTfm: string, reportError: ResolvingErrorReport): IResolveDependenciesResult =
             //     Resolve reference for a list of package manager lines
-            ensureDependencyProviderLoaded();
-            _dependencies.Resolve(_idm, ".fsx", packageManagerTextLines, reportError, executionTfm)
+            match dependencies with
+            | None -> raise (new InvalidOperationException("Internal error --- must invoke ISupportNuget.InitializeDependencyProvider before ISupportNuget.Resolve()"))
+            | Some deps -> deps.Resolve(getIdm(reportError), ".fsx", packageManagerTextLines, reportError, executionTfm)
