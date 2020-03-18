@@ -7,5 +7,11 @@ namespace Microsoft.DotNet.Interactive.LanguageService
     {
         public int Line { get; set; }
         public int Character { get; set; }
+
+        public Position(int line, int character)
+        {
+            Line = line;
+            Character = character;
+        }
     }
 }

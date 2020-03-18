@@ -203,26 +203,19 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         public async Task lsp_textDocument_hover_returns_expected_content(Language language, string code, int line, int column)
         {
             using var _ = new AssertionScope();
-            var encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(code));
-            var request = JObject.Parse($@"
-{{
-    ""textDocument"": {{
-        ""uri"": ""data:text/plain;base64,{encoded}""
-    }},
-    ""position"": {{
-        ""line"": {line},
-        ""character"": {column}
-    }}
-}}
-");
+            var hoverParams = new HoverParams()
+            {
+                TextDocument = TextDocument.FromDocumentContents(code),
+                Position = new Position(line, column),
+            };
+            var request = JObject.FromObject(hoverParams);
             var response = await GetServer(language).HttpClient.PostJsonAsync("/lsp/textDocument/hover", request);
             await response.ShouldSucceed();
             var responseJson = await response.Content.ReadAsStringAsync();
             var json = JObject.Parse(responseJson);
-            var responseType = json["contents"]["kind"].Value<string>();
-            responseType.Should().Be("markdown");
-            var markdownContent = json["contents"]["value"].Value<string>();
-            markdownContent.Should().Match("void Console.WriteLine() (+ * overloads)");
+            var hoverResponse = json.ToLspObject<TextDocumentHoverResponse>();
+            hoverResponse.Contents.Kind.Should().Be(MarkupKind.Markdown);
+            hoverResponse.Contents.Value.Should().Match("void Console.WriteLine() (+ * overloads)");
         }
 
         [Theory]
@@ -260,11 +253,11 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
 
             // ensure we can get http info about it
-            var encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes("Console.WriteLine(one);"));
-            //                                                                              ^ (0, 20)
+            var code = "Console.WriteLine(one);";
+            //                             ^ (0, 20)
             var request = new HoverParams()
             {
-                TextDocument = new TextDocument() { Uri = $"data:text/plain;base64,{encoded}" },
+                TextDocument = TextDocument.FromDocumentContents(code),
                 Position = new Position()
                 {
                     Line = 0,
@@ -281,37 +274,6 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
             response = await GetServer().HttpClient.GetAsync($"/variables/{Language.CSharp.LanguageName()}/one");
             var responseContent = await response.Content.ReadAsStringAsync();
             responseContent.Should().BeJsonEquivalentTo(1);
-        }
-
-        [Fact]
-        public async Task lsp_textDocument_hover_handles_growing_script_offsets()
-        {
-            // evaluate some code
-            await GetServer().Kernel.SubmitCodeAsync("var one = 1;");
-
-            // get hover info
-            var encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes("Console.WriteLine(one);"));
-            //                                                                              ^ (0, 20)
-            var request = new HoverParams()
-            {
-                TextDocument = new TextDocument() { Uri = $"data:text/plain;base64,{encoded}" },
-                Position = new Position()
-                {
-                    Line = 0,
-                    Character = 20,
-                },
-            };
-            var response = await GetServer().HttpClient.PostJsonAsync("/lsp/textDocument/hover", request.SerializeLspObject());
-            await response.ShouldSucceed();
-            var responseJson = await response.Content.ReadAsStringAsync();
-            var hover = JsonConvert.DeserializeObject<TextDocumentHoverResponse>(responseJson);
-
-            // ensure the position information is correct, e.g., line 0 not line 1
-            using var _ = new AssertionScope();
-            hover.Range.Start.Line.Should().Be(0);
-            hover.Range.Start.Character.Should().Be(18);
-            hover.Range.End.Line.Should().Be(0);
-            hover.Range.End.Character.Should().Be(21);
         }
 
         [Fact]
