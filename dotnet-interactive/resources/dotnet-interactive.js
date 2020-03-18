@@ -31,9 +31,14 @@
             client.fetch = clientFetch;
 
             client.getVariable = async (kernel, variable) => {
-                let response = await clientFetch(`variables/${kernel}/${variable}`);
-                let variableValue = await response.json();
-                return variableValue;
+                let response = await clientFetch(`variables/${kernel}/${variable}`,
+                    {
+                        method: 'GET',
+                        cache: 'no-cache',
+                        mode: 'cors'
+                    });
+                let variableBundle = await response.json();
+                return variableBundle;
             };
 
             client.getVariables = async (request) => {
