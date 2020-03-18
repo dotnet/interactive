@@ -12,6 +12,7 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Tests;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -248,6 +249,72 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         }
 
         [Fact]
+        public async Task lsp_methods_run_deferred_commands()
+        {
+            // declare a variable in deferred code
+            var kernelBase = GetServer().Kernel as KernelBase;
+            kernelBase.DeferCommand(new SubmitCode("var one = 1;"));
+
+            // it's not defined
+            var response = await GetServer().HttpClient.GetAsync($"/variables/{Language.CSharp.LanguageName()}/one");
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+
+            // ensure we can get http info about it
+            var encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes("Console.WriteLine(one);"));
+            //                                                                              ^ (0, 20)
+            var request = new HoverParams()
+            {
+                TextDocument = new TextDocument() { Uri = $"data:text/plain;base64,{encoded}" },
+                Position = new Position()
+                {
+                    Line = 0,
+                    Character = 20,
+                },
+            };
+            response = await GetServer().HttpClient.PostJsonAsync("/lsp/textDocument/hover", request.SerializeLspObject());
+            await response.ShouldSucceed();
+            var responseJson = await response.Content.ReadAsStringAsync();
+            var hover = JsonConvert.DeserializeObject<TextDocumentHoverResponse>(responseJson);
+            hover.Contents.Value.Should().Be("(field) int one");
+
+            // and it now exists
+            response = await GetServer().HttpClient.GetAsync($"/variables/{Language.CSharp.LanguageName()}/one");
+            var responseContent = await response.Content.ReadAsStringAsync();
+            responseContent.Should().BeJsonEquivalentTo(1);
+        }
+
+        [Fact]
+        public async Task lsp_textDocument_hover_handles_growing_script_offsets()
+        {
+            // evaluate some code
+            await GetServer().Kernel.SubmitCodeAsync("var one = 1;");
+
+            // get hover info
+            var encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes("Console.WriteLine(one);"));
+            //                                                                              ^ (0, 20)
+            var request = new HoverParams()
+            {
+                TextDocument = new TextDocument() { Uri = $"data:text/plain;base64,{encoded}" },
+                Position = new Position()
+                {
+                    Line = 0,
+                    Character = 20,
+                },
+            };
+            var response = await GetServer().HttpClient.PostJsonAsync("/lsp/textDocument/hover", request.SerializeLspObject());
+            await response.ShouldSucceed();
+            var responseJson = await response.Content.ReadAsStringAsync();
+            var hover = JsonConvert.DeserializeObject<TextDocumentHoverResponse>(responseJson);
+
+            // ensure the position information is correct, e.g., line 0 not line 1
+            using var _ = new AssertionScope();
+            hover.Range.Start.Line.Should().Be(0);
+            hover.Range.Start.Character.Should().Be(18);
+            hover.Range.End.Line.Should().Be(0);
+            hover.Range.End.Character.Should().Be(21);
+        }
+
+        [Fact]
         public async Task can_get_static_content()
         {
             var response = await GetServer().HttpClient.GetAsync("/resources/logo-32x32.png");
@@ -292,9 +359,14 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
 
     internal static class HttpClientTestExtensions
     {
-        public static async Task<HttpResponseMessage> PostJsonAsync(this HttpClient client, string requestUri, JObject requestBody)
+        public static Task<HttpResponseMessage> PostJsonAsync(this HttpClient client, string requestUri, JObject requestBody)
         {
-            var content = new StringContent(requestBody.ToString(), Encoding.UTF8, "application/json");
+            return client.PostJsonAsync(requestUri, requestBody.ToString());
+        }
+
+        public static async Task<HttpResponseMessage> PostJsonAsync(this HttpClient client, string requestUri, string requestBody)
+        {
+            var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
             var response = await client.PostAsync(requestUri, content);
             return response;
         }

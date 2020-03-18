@@ -111,23 +111,25 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 return null;
             }
 
-            var document = await GetDocumentWithCodeAsync(documentContents);
-
+            var (document, offset) = GetDocumentWithOffsetFromCode(documentContents);
             var text = await document.GetTextAsync();
-            var position = text.Lines.GetPosition(new LinePosition(hoverParams.Position.Line, hoverParams.Position.Character));
+            var cursorPosition = text.Lines.GetPosition(new LinePosition(hoverParams.Position.Line, hoverParams.Position.Character));
+            var absolutePosition = cursorPosition + offset;
 
             var service = QuickInfoService.GetService(document);
-            var info = await service.GetQuickInfoAsync(document, position);
+            var info = await service.GetQuickInfoAsync(document, absolutePosition);
             if (info == null)
             {
                 return null;
             }
 
+            var scriptSpanStart = text.Lines.GetLinePosition(offset);
             var linePosSpan = text.Lines.GetLinePositionSpan(info.Span);
+            var correctedLinePosSpan = linePosSpan.SubtractLineOffset(scriptSpanStart);
             return new TextDocumentHoverResponse()
             {
                 Contents = info.ToMarkupContent(),
-                Range = linePosSpan.ToLspRange(),
+                Range = correctedLinePosSpan.ToLspRange(),
             };
         }
 
@@ -169,24 +171,22 @@ namespace Microsoft.DotNet.Interactive.CSharp
                     if (ScriptState == null)
                     {
                         ScriptState = await CSharpScript.RunAsync(
-                                                            code,
+                                                            string.Empty,
                                                             ScriptOptions,
                                                             cancellationToken: context.CancellationToken)
                                                         .UntilCancelled(context.CancellationToken);
                     }
-                    else
-                    {
-                        ScriptState = await ScriptState.ContinueWithAsync(
-                                                           code,
-                                                           ScriptOptions,
-                                                           catchException: e =>
-                                                           {
-                                                               exception = e;
-                                                               return true;
-                                                           },
-                                                           cancellationToken: context.CancellationToken)
-                                                       .UntilCancelled(context.CancellationToken);
-                    }
+
+                    ScriptState = await ScriptState.ContinueWithAsync(
+                                                        code,
+                                                        ScriptOptions,
+                                                        catchException: e =>
+                                                        {
+                                                            exception = e;
+                                                            return true;
+                                                        },
+                                                        cancellationToken: context.CancellationToken)
+                                                    .UntilCancelled(context.CancellationToken);
                 }
                 catch (CompilationErrorException cpe)
                 {
@@ -252,11 +252,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
             string code,
             int cursorPosition)
         {
-            var document = await GetDocumentWithCodeAsync(code);
+            var (document, offset) = GetDocumentWithOffsetFromCode(code);
             var text = await document.GetTextAsync();
-            var fullScriptCode = text.ToString();
-            var offset = fullScriptCode.LastIndexOf(code, StringComparison.InvariantCulture);
-            var absolutePosition = Math.Max(offset, 0) + cursorPosition;
+            var absolutePosition = cursorPosition + offset;
 
             var service = CompletionService.GetService(document);
 
@@ -288,13 +286,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 context);
         }
 
-        private async Task<Document> GetDocumentWithCodeAsync(string code)
+        private (Document document, int offset) GetDocumentWithOffsetFromCode(string code)
         {
-            if (ScriptState == null)
-            {
-                ScriptState = await CSharpScript.RunAsync(string.Empty, ScriptOptions);
-            }
-
             var compilation = ScriptState.Script.GetCompilation();
             var originalCode = ScriptState.Script.Code ?? string.Empty;
 
@@ -304,6 +297,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 buffer.AppendLine();
             }
 
+            var offset = buffer.Length;
             buffer.AppendLine(code);
             var fullScriptCode = buffer.ToString();
 
@@ -313,7 +307,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
 
             var document = _fixture.ForkDocument(fullScriptCode);
-            return document;
+            return (document, offset);
 
             bool ShouldRebuild()
             {

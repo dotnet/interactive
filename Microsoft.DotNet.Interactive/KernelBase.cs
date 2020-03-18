@@ -303,7 +303,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        internal Task RunDeferredCommandsAsync()
+        public Task RunDeferredCommandsAsync()
         {
             var tcs = new TaskCompletionSource<Unit>();
             UndeferCommands();

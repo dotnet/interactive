@@ -20,6 +20,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
             };
         }
 
+        public static LinePosition SubtractLineOffset(this LinePosition linePos, LinePosition offset)
+        {
+            return new LinePosition(linePos.Line - offset.Line, linePos.Character);
+        }
+
         public static Range ToLspRange(this LinePositionSpan linePosSpan)
         {
             return new Range()
@@ -27,6 +32,13 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 Start = linePosSpan.Start.ToLspPosition(),
                 End = linePosSpan.End.ToLspPosition(),
             };
+        }
+
+        public static LinePositionSpan SubtractLineOffset(this LinePositionSpan linePosSpan, LinePosition offset)
+        {
+            return new LinePositionSpan(
+                linePosSpan.Start.SubtractLineOffset(offset),
+                linePosSpan.End.SubtractLineOffset(offset));
         }
 
         public static MarkupContent ToMarkupContent(this QuickInfoItem info)

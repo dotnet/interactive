@@ -44,11 +44,13 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                     // TODO: figure out how to switch kernels based on #!fsharp, etc.
                     if (targetKernel is CompositeKernel composite)
                     {
+                        await composite.RunDeferredCommandsAsync();
                         targetKernel = composite.ChildKernels.FirstOrDefault(k => k.Name == composite.DefaultKernelName);
                     }
 
                     if (targetKernel is KernelBase kernelBase)
                     {
+                        await kernelBase.RunDeferredCommandsAsync();
                         var methodName = segments[1];
                         var lspBodyReader = new StreamReader(context.HttpContext.Request.Body);
                         var stringBody = await lspBodyReader.ReadToEndAsync();
