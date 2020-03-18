@@ -104,9 +104,11 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                 {
                     httpContext.Response.ContentType = JsonFormatter.MimeType;
 
-                    await using var writer = new StreamWriter(httpContext.Response.Body) { AutoFlush = false };
+                    await using (var writer = new StreamWriter(httpContext.Response.Body))
+                    {
+                        await writer.WriteAsync(response.ToString());
+                    }
 
-                    await writer.WriteAsync(response.ToString());
                     await httpContext.Response.CompleteAsync();
                 };
             }
@@ -134,17 +136,18 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                     {
                         context.Handler = async httpContext =>
                         {
-                            await using var writer = new StreamWriter(httpContext.Response.Body);
-
-                            httpContext.Response.ContentType = JsonFormatter.MimeType;
-                            if (value is string)
+                            await using (var writer = new StreamWriter(httpContext.Response.Body))
                             {
-                                await writer.WriteAsync(JsonConvert.ToString(value));
-                            }
-                            else
-                            {
-                                await writer.WriteAsync(value.ToDisplayString(JsonFormatter.MimeType));
 
+                                httpContext.Response.ContentType = JsonFormatter.MimeType;
+                                if (value is string)
+                                {
+                                    await writer.WriteAsync(JsonConvert.ToString(value));
+                                }
+                                else
+                                {
+                                    await writer.WriteAsync(value.ToDisplayString(JsonFormatter.MimeType));
+                                }
                             }
 
                             await httpContext.Response.CompleteAsync();
