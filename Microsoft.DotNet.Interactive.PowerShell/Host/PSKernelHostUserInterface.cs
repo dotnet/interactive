@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
         private string ReadInput(string prompt)
         {
             var context = KernelInvocationContext.Current;
-            if (context?.CurrentKernel is PowerShellKernel psKernel && psKernel.ReadInput != null)
+            if (context?.HandlingKernel is PowerShellKernel psKernel && psKernel.ReadInput != null)
             {
                 return psKernel.ReadInput(prompt);
             }
@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
         private PasswordString ReadPassword(string prompt)
         {
             var context = KernelInvocationContext.Current;
-            if (context?.CurrentKernel is PowerShellKernel psKernel && psKernel.ReadPassword != null)
+            if (context?.HandlingKernel is PowerShellKernel psKernel && psKernel.ReadPassword != null)
             {
                 return psKernel.ReadPassword(prompt);
             }
