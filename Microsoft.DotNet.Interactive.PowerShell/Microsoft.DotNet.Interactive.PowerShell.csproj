@@ -1,16 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk" InitialTargets="GetNuGetPackageRoot;CopyGalleryModules;">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>latest</LangVersion>
     <NoWarn>$(NoWarn);2003;CS8002;NU1608;</NoWarn> <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
-
-    <BuildDependsOn>
-      GetNuGetPackageRoot; 
-      CopyGalleryModules;
-      $(BuildDependsOn)
-    </BuildDependsOn>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -107,10 +101,9 @@
   </ItemGroup>
 
   <!-- Copies anything in the Modules folder into the output (including the helper module's module manifest) -->
-  <ItemGroup>
-    <Content Include="Modules\**" PackageCopyToOutput="true">
-      <Link>Modules\%(RecursiveDir)\%(FileName)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+  <Target Name="foo" AfterTargets="CopyGalleryModules">
+    <ItemGroup>
+      <Content Include="Modules\**" PackageCopyToOutput="true" LinkBase="Modules" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
 </Project>
