@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
         protected override void ProcessRecord()
         {
             var context = KernelInvocationContext.Current;
-            if (context?.CurrentKernel is PowerShellKernel psKernel)
+            if (context?.HandlingKernel is PowerShellKernel psKernel)
             {
                 if (Runspace.DefaultRunspace.Id != psKernel.DefaultRunspaceId)
                 {
@@ -41,9 +41,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
                     this.ThrowTerminatingError(error);
                 }
 
-                psKernel.AzShell = ParameterSetName == TenantIdSetName
+                var azShell = ParameterSetName == TenantIdSetName
                     ? new AzShellConnectionUtils(TenantId != Guid.Empty ? TenantId.ToString() : null)
                     : new AzShellConnectionUtils(Reset.IsPresent);
+
+                psKernel.AzShell = azShell;
+                psKernel.RegisterForDisposal(azShell);
 
                 var windowSize = Host.UI.RawUI.WindowSize;
                 psKernel.AzShell.ConnectAndInitializeAzShell(windowSize.Width, windowSize.Height).Wait();
