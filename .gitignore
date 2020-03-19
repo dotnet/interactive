@@ -357,6 +357,7 @@ wwwroot/client/
 
 *.trx
 Untitled*.ipynb
+NotebookExamples/**/*.csv
 
 Microsoft\.DotNet\.Try\.js/\.rpt2_cache/
 
