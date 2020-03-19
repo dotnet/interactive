@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.CommandLine.Rendering;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -104,7 +105,7 @@ namespace Microsoft.DotNet.Interactive
 
                     if (alreadyGotten is { } && !string.IsNullOrWhiteSpace(pkg.PackageVersion) && pkg.PackageVersion != alreadyGotten.PackageVersion)
                     {
-                        var errorMessage = $"{GenerateErrorMessage(pkg, alreadyGotten)}";
+                        var errorMessage = GenerateErrorMessage(pkg, alreadyGotten).ToString(OutputMode.NonAnsi);
                         context.Publish(new ErrorProduced(errorMessage));
                     }
                     else
@@ -113,28 +114,29 @@ namespace Microsoft.DotNet.Interactive
 
                         if (added is null)
                         {
-                            var errorMessage = $"{GenerateErrorMessage(pkg)}";
+                            var errorMessage = GenerateErrorMessage(pkg).ToString(OutputMode.NonAnsi);
                             context.Publish(new ErrorProduced(errorMessage));
                         }
                     }
 
-                    static string GenerateErrorMessage(
+                    static System.CommandLine.Rendering.TextSpan GenerateErrorMessage(
                         PackageReference requested,
                         PackageReference existing = null)
                     {
+                        var spanFormatter = new TextSpanFormatter();
                         if (existing != null)
                         {
                             if (!string.IsNullOrEmpty(requested.PackageName))
                             {
                                 if (!string.IsNullOrEmpty(requested.PackageVersion))
                                 {
-                                    return
-                                        $"{requested.PackageName} version {requested.PackageVersion} cannot be added because version {existing.PackageVersion} was added previously.";
+                                    return spanFormatter.ParseToSpan(
+                                        $"{Ansi.Color.Foreground.Red}{requested.PackageName} version {requested.PackageVersion} cannot be added because version {existing.PackageVersion} was added previously.{Ansi.Color.Off}");
                                 }
                             }
                         }
 
-                        return $"Invalid Package specification: '{requested}'";
+                        return spanFormatter.ParseToSpan($"Invalid Package specification: '{requested}'");
                     }
                 }
 
@@ -181,9 +183,9 @@ namespace Microsoft.DotNet.Interactive
 
                     foreach (var package in newlyRequestedPackages)
                     {
+                        var id = PackageReferenceComparer.GetDisplayValueId(package);
                         var message = InstallingPackageMessage(package) + "...";
                         var displayedValue = context.Display(message);
-                        var id = PackageReferenceComparer.GetDisplayValueId(package);
                         displayedValues[id] = displayedValue;
                         messages.Add(package, message);
                         requestedPackageIds.Add(id, package);
