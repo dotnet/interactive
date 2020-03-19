@@ -8,8 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <!-- temporarily disabled due to https://github.com/dotnet/interactive/issues/272 -->
-    <!--<IsPackable>true</IsPackable>-->
+    <IsPackable>true</IsPackable>
     <PackageDescription>Microsoft.DotNet.Interactive.IKernel implementation for PowerShell</PackageDescription>
     <PackageTags>interactive PowerShell</PackageTags>
   </PropertyGroup>
@@ -29,30 +28,35 @@
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)Modules\**"
              Link="Modules\%(RecursiveDir)%(FileName)%(Extension)"
+             PackagePath="lib/$(TargetFramework)/Modules"
              CopyToOutputDirectory="PreserveNewest" />
 
     <!-- PackageManagement -->
     <Content Include="$(PkgPackageManagement)\**"
-             Exclude="$(PkgPackageManagement)\**\*.nupkg;$(PkgPackageManagement)\**\.nupkg.metadata;$(PkgPackageManagement)\**\*.nuspec;$(PkgPackageManagement)\**\*.sha512;$(PkgPackageManagement)\**\fullclr\**"
+             Exclude="$(PkgPackageManagement)\**\*.nupkg;$(PkgPackageManagement)\**\*.nuspec;$(PkgPackageManagement)\**\*.sha512;$(PkgPackageManagement)\**\fullclr\**"
              Link="Modules\PackageManagement\%(RecursiveDir)%(FileName)%(Extension)"
+             PackagePath="lib/$(TargetFramework)/Modules/PackageManagement"
              CopyToOutputDirectory="PreserveNewest" />
 
     <!-- PowerShellGet -->
     <Content Include="$(PkgPowerShellGet)\**"
-             Exclude="$(PkgPowerShellGet)\**\*.nupkg;$(PkgPowerShellGet)\**\.nupkg.metadata;$(PkgPowerShellGet)\**\*.nuspec;$(PkgPowerShellGet)\**\*.sha512"
+             Exclude="$(PkgPowerShellGet)\**\*.nupkg;$(PkgPowerShellGet)\**\*.nuspec;$(PkgPowerShellGet)\**\*.sha512"
              Link="Modules\PowerShellGet\%(RecursiveDir)%(FileName)%(Extension)"
+             PackagePath="lib/$(TargetFramework)/Modules/PowerShellGet"
              CopyToOutputDirectory="PreserveNewest" />
 
     <!-- Microsoft.PowerShell.Archive -->
     <Content Include="$(PkgMicrosoft_PowerShell_Archive)\**"
-             Exclude="$(PkgMicrosoft_PowerShell_Archive)\**\*.nupkg;$(PkgMicrosoft_PowerShell_Archive)\**\.nupkg.metadata;$(PkgMicrosoft_PowerShell_Archive)\**\*.nuspec;$(PkgMicrosoft_PowerShell_Archive)\**\*.sha512"
+             Exclude="$(PkgMicrosoft_PowerShell_Archive)\**\*.nupkg;$(PkgMicrosoft_PowerShell_Archive)\**\*.nuspec;$(PkgMicrosoft_PowerShell_Archive)\**\*.sha512"
              Link="Modules\Microsoft.PowerShell.Archive\%(RecursiveDir)%(FileName)%(Extension)"
+             PackagePath="lib/$(TargetFramework)/Modules/Microsoft.PowerShell.Archive"
              CopyToOutputDirectory="PreserveNewest" />
 
     <!-- ThreadJob -->
     <Content Include="$(PkgThreadJob)\**"
-             Exclude="$(PkgThreadJob)\**\*.nupkg;$(PkgThreadJob)\**\.nupkg.metadata;$(PkgThreadJob)\**\*.nuspec;$(PkgThreadJob)\**\*.sha512"
+             Exclude="$(PkgThreadJob)\**\*.nupkg;$(PkgThreadJob)\**\*.nuspec;$(PkgThreadJob)\**\*.sha512"
              Link="Modules\ThreadJob\%(RecursiveDir)%(FileName)%(Extension)"
+             PackagePath="lib/$(TargetFramework)/Modules/ThreadJob"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
