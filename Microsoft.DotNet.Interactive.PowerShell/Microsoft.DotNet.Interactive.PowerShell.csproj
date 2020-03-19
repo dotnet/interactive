@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" InitialTargets="GetNuGetPackageRoot">
+﻿<Project Sdk="Microsoft.NET.Sdk" InitialTargets="GetNuGetPackageRoot;CopyGalleryModules;">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -55,7 +55,7 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="CopyGalleryModules" AfterTargets="Restore;CollectPackageReferences">
+  <Target Name="CopyGalleryModules">
     <!-- PackageManagement -->
     <CreateItem Include="$(NuGetPackageRoot)packagemanagement\$(PackageManagementVersion)\**"
                 Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.nuspec;$(NuGetPackageRoot)**\*.sha512;$(NuGetPackageRoot)**\fullclr\**">
@@ -101,10 +101,9 @@
   </ItemGroup>
 
   <!-- Copies anything in the Modules folder into the output (including the helper module's module manifest) -->
-  <ItemGroup>
-    <Content Include="Modules\**" PackageCopyToOutput="true">
-      <Link>Modules\%(RecursiveDir)\%(FileName)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+  <Target Name="foo" AfterTargets="CopyGalleryModules">
+    <ItemGroup>
+      <Content Include="Modules\**" PackageCopyToOutput="true" LinkBase="Modules" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
 </Project>
