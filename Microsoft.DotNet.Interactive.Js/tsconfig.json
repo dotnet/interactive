@@ -8,10 +8,10 @@
     ],
     "declaration": false,
     "noImplicitAny": true,
-    "module": "amd",
+    "module": "umd",
     "target": "es5",
     "allowJs": false,
-    "outFile": "./dist/dotnet-ineractive.js",
+    "outDir": "./dist",
     "types": [
       "node",
       "mocha"

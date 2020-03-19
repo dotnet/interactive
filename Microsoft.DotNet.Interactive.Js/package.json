@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "description": "Javascript api Microsoft.DotNet.Interactive",
   "main": "dist/dotnet-interactive.js",
-  "module": "dist/dotnet-interactive.js",
+  "module": "dist/dotnet-interactive.es.js",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "npm run rollup",
     "test": "mocha --opts mocha.opts",
-    "test2": "mocha -r ts-node/register tests/**/*.spec.ts"
+    "rollup": "rollup -c"
   },
   "repository": {
     "type": "git",
@@ -27,20 +27,27 @@
     "url": "https://github.com/dotnet/interactive/issues"
   },
   "homepage": "https://github.com/dotnet/interactive#readme",
-  "dependencies": {},
+  "dependencies": {
+    "@microsoft/signalr": "^3.1.2",
+    "rxjs": "^6.5.4"
+  },
   "devDependencies": {
-    "@types/chai": "^4.2.11",
-    "@types/chai-as-promised": "^7.1.2",
-    "@types/mocha": "^7.0.2",
-    "@types/node": "^13.9.1",
-    "chai": "^4.2.0",
-    "chai-as-promised": "^7.1.1",
-    "mocha": "^7.1.0",
-    "mocha-typescript": "^1.1.17",
-    "requirejs": "^2.3.6",
-    "source-map-support": "^0.5.16",
-    "ts-mocha": "^7.0.0",
-    "ts-node": "^8.6.2",
-    "typescript": "^3.8.3"
+    "@types/chai": "4.2.11",
+    "@types/chai-as-promised": "7.1.2",
+    "@types/mocha": "7.0.2",
+    "@types/node": "13.9.1",
+    "chai": "4.2.0",
+    "chai-as-promised": "7.1.1",
+    "mocha": "7.1.1",
+    "mocha-typescript": "1.1.17",
+    "requirejs": "2.3.6",
+    "source-map-support": "0.5.16",
+    "ts-mocha": "7.0.0",
+    "ts-node": "8.6.2",
+    "typescript": "3.8.3",
+    "rollup": "2.1.0",
+    "rollup-plugin-commonjs": "10.1.0",
+    "rollup-plugin-node-resolve": "5.2.0",
+    "rollup-plugin-typescript2": "0.26.0"
   }
 }
