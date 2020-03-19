@@ -28,35 +28,40 @@
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)Modules\**"
              Link="Modules\%(RecursiveDir)%(FileName)%(Extension)"
-             PackagePath="lib/$(TargetFramework)/Modules"
+             PackagePath="contentFiles/any/any/Modules"
+             PackageCopyToOutput="true"
              CopyToOutputDirectory="PreserveNewest" />
 
     <!-- PackageManagement -->
     <Content Include="$(PkgPackageManagement)\**"
              Exclude="$(PkgPackageManagement)\**\*.nupkg;$(PkgPackageManagement)\**\*.nuspec;$(PkgPackageManagement)\**\*.sha512;$(PkgPackageManagement)\**\fullclr\**"
              Link="Modules\PackageManagement\%(RecursiveDir)%(FileName)%(Extension)"
-             PackagePath="lib/$(TargetFramework)/Modules/PackageManagement"
+             PackagePath="contentFiles/any/any/Modules/PackageManagement"
+             PackageCopyToOutput="true"
              CopyToOutputDirectory="PreserveNewest" />
 
     <!-- PowerShellGet -->
     <Content Include="$(PkgPowerShellGet)\**"
              Exclude="$(PkgPowerShellGet)\**\*.nupkg;$(PkgPowerShellGet)\**\*.nuspec;$(PkgPowerShellGet)\**\*.sha512"
              Link="Modules\PowerShellGet\%(RecursiveDir)%(FileName)%(Extension)"
-             PackagePath="lib/$(TargetFramework)/Modules/PowerShellGet"
+             PackagePath="contentFiles/any/any/Modules/PowerShellGet"
+             PackageCopyToOutput="true"
              CopyToOutputDirectory="PreserveNewest" />
 
     <!-- Microsoft.PowerShell.Archive -->
     <Content Include="$(PkgMicrosoft_PowerShell_Archive)\**"
              Exclude="$(PkgMicrosoft_PowerShell_Archive)\**\*.nupkg;$(PkgMicrosoft_PowerShell_Archive)\**\*.nuspec;$(PkgMicrosoft_PowerShell_Archive)\**\*.sha512"
              Link="Modules\Microsoft.PowerShell.Archive\%(RecursiveDir)%(FileName)%(Extension)"
-             PackagePath="lib/$(TargetFramework)/Modules/Microsoft.PowerShell.Archive"
+             PackagePath="contentFiles/any/any/Modules/Microsoft.PowerShell.Archive"
+             PackageCopyToOutput="true"
              CopyToOutputDirectory="PreserveNewest" />
 
     <!-- ThreadJob -->
     <Content Include="$(PkgThreadJob)\**"
              Exclude="$(PkgThreadJob)\**\*.nupkg;$(PkgThreadJob)\**\*.nuspec;$(PkgThreadJob)\**\*.sha512"
              Link="Modules\ThreadJob\%(RecursiveDir)%(FileName)%(Extension)"
-             PackagePath="lib/$(TargetFramework)/Modules/ThreadJob"
+             PackagePath="contentFiles/any/any/Modules/ThreadJob"
+             PackageCopyToOutput="true"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
