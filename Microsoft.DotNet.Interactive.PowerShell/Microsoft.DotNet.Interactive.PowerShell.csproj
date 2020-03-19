@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" InitialTargets="GetNuGetPackageRoot;CopyGalleryModules;">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -18,76 +18,43 @@
     <NoWarn>;NU5104;NU5100;2003;8002</NoWarn>
   </PropertyGroup>
 
-  <!-- PowerShell Module Versions -->
-  <PropertyGroup>
-    <PackageManagementVersion>1.4.6</PackageManagementVersion>
-    <PowerShellGetVersion>2.2.3</PowerShellGetVersion>
-    <MicrosoftPowerShellArchiveVersion>1.2.5</MicrosoftPowerShellArchiveVersion>
-    <ThreadJobVersion>2.0.3</ThreadJobVersion>
-  </PropertyGroup>
-
   <!-- PowerShell Module Package References -->
   <ItemGroup>
-    <PackageReference Include="PackageManagement" Version="$(PackageManagementVersion)">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="PowerShellGet" Version="$(PowerShellGetVersion)">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.PowerShell.Archive" Version="$(MicrosoftPowerShellArchiveVersion)">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="ThreadJob" Version="$(ThreadJobVersion)">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
+    <PackageReference Include="PackageManagement" Version="1.4.6" GeneratePathProperty="true" />
+    <PackageReference Include="PowerShellGet" Version="2.2.3" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.PowerShell.Archive" Version="1.2.5" GeneratePathProperty="true" />
+    <PackageReference Include="ThreadJob" Version="2.0.3" GeneratePathProperty="true" />
   </ItemGroup>
 
-  <!-- Get NuGetPackageRoot if it's not defined -->
-  <Target Name="GetNuGetPackageRoot" Condition=" '$(NuGetPackageRoot)' == '' ">
-    <Exec Command="dotnet nuget locals global-packages --list --force-english-output" ConsoleToMSBuild="true">
-      <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec" />
-    </Exec>
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)Modules\**"
+             Link="Modules\%(RecursiveDir)%(FileName)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
 
-    <PropertyGroup>
-      <RegexForOutputOfExec>info : global-packages: (.*)</RegexForOutputOfExec>
-      <RegexMatch>$([System.Text.RegularExpressions.Regex]::Match($(OutputOfExec), $(RegexForOutputOfExec)).Groups[1].Value)</RegexMatch>
-      <NuGetPackageRoot>$(RegexMatch)</NuGetPackageRoot>
-    </PropertyGroup>
-  </Target>
-
-  <Target Name="CopyGalleryModules">
     <!-- PackageManagement -->
-    <CreateItem Include="$(NuGetPackageRoot)packagemanagement\$(PackageManagementVersion)\**"
-                Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.nuspec;$(NuGetPackageRoot)**\*.sha512;$(NuGetPackageRoot)**\fullclr\**">
-      <Output ItemName="PackageManagementFiles" TaskParameter="Include" />
-    </CreateItem>
-    <Copy SourceFiles="@(PackageManagementFiles)"
-          DestinationFolder="$(MSBuildProjectDirectory)\Modules\PackageManagement\%(RecursiveDir)"/>
+    <Content Include="$(PkgPackageManagement)\**"
+             Exclude="$(PkgPackageManagement)\**\*.nupkg;$(PkgPackageManagement)\**\.nupkg.metadata;$(PkgPackageManagement)\**\*.nuspec;$(PkgPackageManagement)\**\*.sha512;$(PkgPackageManagement)\**\fullclr\**"
+             Link="Modules\PackageManagement\%(RecursiveDir)%(FileName)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
 
     <!-- PowerShellGet -->
-    <CreateItem Include="$(NuGetPackageRoot)powershellget\$(PowerShellGetVersion)\**"
-                Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.nuspec;$(NuGetPackageRoot)**\*.sha512">
-      <Output ItemName="PowerShellGetFiles" TaskParameter="Include" />
-    </CreateItem>
-    <Copy SourceFiles="@(PowerShellGetFiles)"
-          DestinationFolder="$(MSBuildProjectDirectory)\Modules\PowerShellGet\%(RecursiveDir)"/>
+    <Content Include="$(PkgPowerShellGet)\**"
+             Exclude="$(PkgPowerShellGet)\**\*.nupkg;$(PkgPowerShellGet)\**\.nupkg.metadata;$(PkgPowerShellGet)\**\*.nuspec;$(PkgPowerShellGet)\**\*.sha512"
+             Link="Modules\PowerShellGet\%(RecursiveDir)%(FileName)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
 
     <!-- Microsoft.PowerShell.Archive -->
-    <CreateItem Include="$(NuGetPackageRoot)microsoft.powershell.archive\$(MicrosoftPowerShellArchiveVersion)\**"
-                Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.nuspec;$(NuGetPackageRoot)**\*.sha512">
-      <Output ItemName="ArchiveFiles" TaskParameter="Include" />
-    </CreateItem>
-    <Copy SourceFiles="@(ArchiveFiles)"
-          DestinationFolder="$(MSBuildProjectDirectory)\Modules\Microsoft.PowerShell.Archive\%(RecursiveDir)"/>
+    <Content Include="$(PkgMicrosoft_PowerShell_Archive)\**"
+             Exclude="$(PkgMicrosoft_PowerShell_Archive)\**\*.nupkg;$(PkgMicrosoft_PowerShell_Archive)\**\.nupkg.metadata;$(PkgMicrosoft_PowerShell_Archive)\**\*.nuspec;$(PkgMicrosoft_PowerShell_Archive)\**\*.sha512"
+             Link="Modules\Microsoft.PowerShell.Archive\%(RecursiveDir)%(FileName)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
 
     <!-- ThreadJob -->
-    <CreateItem Include="$(NuGetPackageRoot)threadjob\$(ThreadJobVersion)\**"
-                Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.nuspec;$(NuGetPackageRoot)**\*.sha512">
-      <Output ItemName="ThreadJobFiles" TaskParameter="Include" />
-    </CreateItem>
-    <Copy SourceFiles="@(ThreadJobFiles)"
-          DestinationFolder="$(MSBuildProjectDirectory)\Modules\ThreadJob\%(RecursiveDir)"/>
-  </Target>
+    <Content Include="$(PkgThreadJob)\**"
+             Exclude="$(PkgThreadJob)\**\*.nupkg;$(PkgThreadJob)\**\.nupkg.metadata;$(PkgThreadJob)\**\*.nuspec;$(PkgThreadJob)\**\*.sha512"
+             Link="Modules\ThreadJob\%(RecursiveDir)%(FileName)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <!-- The dependencies for this project -->
   <ItemGroup>
@@ -100,10 +67,4 @@
     <PackageReference Include="XPlot.Plotly" Version="3.0.1" />
   </ItemGroup>
 
-  <!-- Copies anything in the Modules folder into the output (including the helper module's module manifest) -->
-  <Target Name="foo" AfterTargets="CopyGalleryModules">
-    <ItemGroup>
-      <Content Include="Modules\**" PackageCopyToOutput="true" LinkBase="Modules" CopyToOutputDirectory="PreserveNewest" />
-    </ItemGroup>
-  </Target>
 </Project>
