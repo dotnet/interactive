@@ -1,10 +1,16 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" InitialTargets="GetNuGetPackageRoot">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>latest</LangVersion>
     <NoWarn>$(NoWarn);2003;CS8002;NU1608;</NoWarn> <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
+
+    <BuildDependsOn>
+      GetNuGetPackageRoot; 
+      CopyGalleryModules;
+      $(BuildDependsOn)
+    </BuildDependsOn>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -55,7 +61,7 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="CopyGalleryModules" AfterTargets="Restore;CollectPackageReferences">
+  <Target Name="CopyGalleryModules">
     <!-- PackageManagement -->
     <CreateItem Include="$(NuGetPackageRoot)packagemanagement\$(PackageManagementVersion)\**"
                 Exclude="$(NuGetPackageRoot)**\*.nupkg;$(NuGetPackageRoot)**\*.nuspec;$(NuGetPackageRoot)**\*.sha512;$(NuGetPackageRoot)**\fullclr\**">
