@@ -19,10 +19,10 @@
 
   <!-- PowerShell Module Package References -->
   <ItemGroup>
-    <PackageReference Include="PackageManagement" Version="1.4.6" GeneratePathProperty="true" />
-    <PackageReference Include="PowerShellGet" Version="2.2.3" GeneratePathProperty="true" />
-    <PackageReference Include="Microsoft.PowerShell.Archive" Version="1.2.5" GeneratePathProperty="true" />
-    <PackageReference Include="ThreadJob" Version="2.0.3" GeneratePathProperty="true" />
+    <PackageReference Include="PackageManagement" Version="1.4.6" PrivateAssets="all" GeneratePathProperty="true" />
+    <PackageReference Include="PowerShellGet" Version="2.2.3" PrivateAssets="all" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.PowerShell.Archive" Version="1.2.5" PrivateAssets="all" GeneratePathProperty="true" />
+    <PackageReference Include="ThreadJob" Version="2.0.3" PrivateAssets="all" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>
