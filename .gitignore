@@ -373,8 +373,4 @@ docs/\.ionide/
 *.bak
 NotebookExamples/*/Samples/housing.csv
 
-#PowerShell restored modules
-Microsoft\.DotNet\.Interactive\.PowerShell/Modules/*
-!Microsoft\.DotNet\.Interactive\.PowerShell/Modules/Microsoft\.DotNet\.Interactive\.PowerShell/*
-
 Microsoft.DotNet.Interactive.Js/dist/
