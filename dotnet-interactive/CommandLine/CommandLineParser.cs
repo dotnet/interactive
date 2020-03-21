@@ -283,6 +283,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             compositeKernel.Add(
                 new FSharpKernel()
                     .UseDefaultFormatting()
+                    .UseNugetDirective()
                     .UseKernelHelpers()
                     .UseWho()
                     .UseDefaultNamespaces()
