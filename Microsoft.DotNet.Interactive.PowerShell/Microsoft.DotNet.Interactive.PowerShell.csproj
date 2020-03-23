@@ -31,7 +31,7 @@
              Link="Modules\%(RecursiveDir)%(FileName)%(Extension)"
              PackagePath="contentFiles/any/any/Modules"
              PackageCopyToOutput="true"
-             CopyToOutputDirectory="PreserveNewest" />
+             CopyToOutputDirectory="PreserveNewest"/>
 
     <!-- PackageManagement -->
     <Content Include="$(PkgPackageManagement)\**"
@@ -39,7 +39,8 @@
              Link="Modules\PackageManagement\%(RecursiveDir)%(FileName)%(Extension)"
              PackagePath="contentFiles/any/any/Modules/PackageManagement"
              PackageCopyToOutput="true"
-             CopyToOutputDirectory="PreserveNewest" />
+             CopyToOutputDirectory="PreserveNewest" 
+             Condition="'$(PkgPackageManagement)' != ''" />
 
     <!-- PowerShellGet -->
     <Content Include="$(PkgPowerShellGet)\**"
@@ -47,7 +48,8 @@
              Link="Modules\PowerShellGet\%(RecursiveDir)%(FileName)%(Extension)"
              PackagePath="contentFiles/any/any/Modules/PowerShellGet"
              PackageCopyToOutput="true"
-             CopyToOutputDirectory="PreserveNewest" />
+             CopyToOutputDirectory="PreserveNewest" 
+             Condition="'$(PkgPowerShellGet)' != ''" />
 
     <!-- Microsoft.PowerShell.Archive -->
     <Content Include="$(PkgMicrosoft_PowerShell_Archive)\**"
@@ -55,7 +57,8 @@
              Link="Modules\Microsoft.PowerShell.Archive\%(RecursiveDir)%(FileName)%(Extension)"
              PackagePath="contentFiles/any/any/Modules/Microsoft.PowerShell.Archive"
              PackageCopyToOutput="true"
-             CopyToOutputDirectory="PreserveNewest" />
+             CopyToOutputDirectory="PreserveNewest" 
+             Condition="'$(PkgMicrosoft_PowerShell_Archive)' != ''" />
 
     <!-- ThreadJob -->
     <Content Include="$(PkgThreadJob)\**"
@@ -63,7 +66,8 @@
              Link="Modules\ThreadJob\%(RecursiveDir)%(FileName)%(Extension)"
              PackagePath="contentFiles/any/any/Modules/ThreadJob"
              PackageCopyToOutput="true"
-             CopyToOutputDirectory="PreserveNewest" />
+             CopyToOutputDirectory="PreserveNewest" 
+             Condition="'$(PkgThreadJob)' != ''" />
   </ItemGroup>
 
   <!-- The dependencies for this project -->
