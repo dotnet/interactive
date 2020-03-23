@@ -37,26 +37,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         private DependencyProvider _dependencies;
 
-        private Lazy<IDependencyManagerProvider> _idm;
-
-        // C# delegates on class field initializers can't invoke instance methods or data, so make it a property backed by an unitialized field.
-        // A race can happen, in both the Lazy () and in the field initializer, but it doesn't really matter, since they are both effectively side effect free.
-        private IDependencyManagerProvider GetIdm(ResolvingErrorReport reportError)
-        {
-            if (_dependencies == null)
-            {
-                // This indicates a bug in notbook code. For a Kernel to support nuget
-                // it must have initialized using InitializeDependencyProvider before calling ISupportNuget.Resolve
-                // this should be done in KernelSupportsNugetExtensions.UseNugetDirective<T>(this T kernel)
-                throw new InvalidOperationException("Internal error --- must invoke ISupportNuget.InitializeDependencyProvider before ISupportNuget.Resolve()");
-            }
-            if (_idm == null)
-            {
-                _idm = new Lazy<IDependencyManagerProvider>(() => _dependencies?.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget"));
-            }
-            return _idm.Value;
-        }
-
         private static readonly MethodInfo _hasReturnValueMethod = typeof(Script)
             .GetMethod("HasReturnValue", BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -340,7 +320,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         IResolveDependenciesResult ISupportNuget.Resolve(IEnumerable<string> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
         {
-            return _dependencies?.Resolve(GetIdm(reportError), ".csx", packageManagerTextLines, reportError, executionTfm);
+            // The F# dependecymanager, caches these in a map, we can cache locally if we have a perf problem.
+            IDependencyManagerProvider iDependencyManager = _dependencies?.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
+            return _dependencies?.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm);
         }
 
         private bool HasReturnValue =>
