@@ -31,7 +31,7 @@
              Link="Modules\%(RecursiveDir)%(FileName)%(Extension)"
              PackagePath="contentFiles/any/any/Modules"
              PackageCopyToOutput="true"
-             CopyToOutputDirectory="PreserveNewest"/>
+             CopyToOutputDirectory="PreserveNewest" />
 
     <!-- PackageManagement -->
     <Content Include="$(PkgPackageManagement)\**"
