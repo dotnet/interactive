@@ -32,11 +32,10 @@ namespace Microsoft.DotNet.Interactive
         public PackageRestoreContext(ISupportNuget iSupportNuget)
         {
             _iSupportNuget = iSupportNuget;
-            _iSupportNuget.InitializeDependencyProvider(AssemblyProbingPaths, NativeProbingRoots);
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
         }
 
-        private IEnumerable<string> AssemblyProbingPaths()
+        internal IEnumerable<string> AssemblyProbingPaths()
         {
             foreach (var package in _resolvedPackageReferences.Values)
             {
@@ -45,7 +44,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private IEnumerable<string> NativeProbingRoots ()
+        internal IEnumerable<string> NativeProbingRoots ()
         {
             foreach (var package in _resolvedPackageReferences.Values)
             {

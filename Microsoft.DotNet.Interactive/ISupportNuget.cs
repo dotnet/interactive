@@ -9,9 +9,9 @@ namespace Microsoft.DotNet.Interactive
 {
     public interface ISupportNuget
     {
-        // Summary:
-        //     Construct if needed and register new DependencyProvider
-        public abstract void InitializeDependencyProvider(AssemblyResolutionProbe assemblyProbingPaths = null, NativeResolutionProbe nativeProbingRoots = null);
+        public AssemblyResolutionProbe AssemblyProbingPaths { get; set; }
+
+        public NativeResolutionProbe NativeProbingRoots { get; set; }
 
         public abstract void RegisterNugetResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> packageReferences);
 

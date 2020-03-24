@@ -20,6 +20,10 @@ namespace Microsoft.DotNet.Interactive
         public static T UseNugetDirective<T>(this T kernel) where T: KernelBase, ISupportNuget
         {
             var restoreContext = new PackageRestoreContext(kernel);
+            var iSupportNuget = kernel as ISupportNuget;
+            iSupportNuget.AssemblyProbingPaths = restoreContext.AssemblyProbingPaths;
+            iSupportNuget.NativeProbingRoots = restoreContext.NativeProbingRoots;
+
             kernel.SetProperty(restoreContext);
             kernel.RegisterForDisposal(restoreContext);
 

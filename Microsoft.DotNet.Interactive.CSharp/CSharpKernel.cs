@@ -35,6 +35,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
     {
         internal const string DefaultKernelName = "csharp";
 
+        private object lockObject = new object();
         private DependencyProvider _dependencies;
 
         private static readonly MethodInfo _hasReturnValueMethod = typeof(Script)
@@ -87,7 +88,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             out object value)
         {
             if (ScriptState?.Variables
-                           .LastOrDefault(v => v.Name == name) is {} variable)
+                           .LastOrDefault(v => v.Name == name) is { } variable)
             {
                 value = variable.Value;
                 return true;
@@ -304,10 +305,17 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 context);
         }
 
-        void ISupportNuget.InitializeDependencyProvider(AssemblyResolutionProbe assemblyProbingPaths, NativeResolutionProbe nativeProbingRoots)
-        {
-            _dependencies = new DependencyProvider(assemblyProbingPaths, nativeProbingRoots);
-        }
+        //private Lazy<DependencyProvider> _dependencies2 = new Lazy<DependencyProvider>(() => GetDependencyProvider());
+
+        //private DependencyProvider GetDependencyProvider()
+        //{
+        //    var iSupportNuget = this as ISupportNuget;
+        //    return new DependencyProvider(iSupportNuget.AssemblyProbingPaths, iSupportNuget.NativeProbingRoots);
+        //}
+
+        AssemblyResolutionProbe ISupportNuget.AssemblyProbingPaths { get; set; }
+
+        NativeResolutionProbe ISupportNuget.NativeProbingRoots { get; set; }
 
         void ISupportNuget.RegisterNugetResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
         {
@@ -320,9 +328,29 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         IResolveDependenciesResult ISupportNuget.Resolve(IEnumerable<string> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
         {
-            // The F# dependecymanager, caches these in a map, we can cache locally if we have a perf problem.
-            IDependencyManagerProvider iDependencyManager = _dependencies?.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
-            return _dependencies?.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm);
+            // C# does not allow a static field to have a func that references an instance field.
+            //
+            if (_dependencies == null)
+            {
+                lock (lockObject)
+                {
+                    if (_dependencies == null)
+                    {
+                        var iSupportNuget = this as ISupportNuget;
+                        _dependencies = new DependencyProvider(iSupportNuget.AssemblyProbingPaths, iSupportNuget.NativeProbingRoots);
+                    }
+                }
+            }
+
+            IDependencyManagerProvider iDependencyManager = _dependencies.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
+            if (iDependencyManager == null)
+            {
+                // If this happens it is because of a bug in the Dependency provider. or deployment failed to deploy the nuget provider dll.
+                // We guarantee the presence of the nuget provider, by shipping it with the notebook product
+                throw new InvalidOperationException("Internal error - must invoke ISupportNuget.InitializeDependencyProvider before ISupportNuget.Resolve()");
+            }
+
+            return _dependencies.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm);
         }
 
         private bool HasReturnValue =>

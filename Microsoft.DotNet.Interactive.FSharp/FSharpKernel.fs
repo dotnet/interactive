@@ -140,14 +140,11 @@ type FSharpKernel() as this =
             context.Publish(CompletionRequestCompleted(completionItems, requestCompletion))
         }
 
-    let mutable dependencies: DependencyProvider option = None
-
-    let getIdm(reportError: ResolvingErrorReport) : IDependencyManagerProvider =
-        let idm = new Lazy<IDependencyManagerProvider>((fun () ->
-            match dependencies with
-            | None -> raise (new InvalidOperationException("Internal error --- must invoke ISupportNuget.InitializeDependencyProvider before ISupportNuget.Resolve()"))
-            | Some deps -> deps.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget")))
-        idm.Force()
+    let mutable dependencies =
+        let createDependencyProvider () =
+            let iSupportNuget = this :> ISupportNuget
+            new DependencyProvider(iSupportNuget.AssemblyProbingPaths, iSupportNuget.NativeProbingRoots)
+        lazy (createDependencyProvider ())
 
     member _.GetCurrentVariable(variableName: string) =
         let result, _errors =
@@ -180,9 +177,8 @@ type FSharpKernel() as this =
             false
 
     interface ISupportNuget with
-
-        member this.InitializeDependencyProvider(assemblyProbingPaths, nativeProbingRoots) =
-            dependencies <- Some (new DependencyProvider(assemblyProbingPaths, nativeProbingRoots))
+        member val AssemblyProbingPaths : AssemblyResolutionProbe = null with get, set
+        member val NativeProbingRoots : NativeResolutionProbe = null with get, set
 
         member this.RegisterNugetResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
             // Generate #r and #I from packageReferences
@@ -206,8 +202,9 @@ type FSharpKernel() as this =
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command)
 
+        //     Resolve reference for a list of package manager lines
         member this.Resolve(packageManagerTextLines:IEnumerable<string>, executionTfm: string, reportError: ResolvingErrorReport): IResolveDependenciesResult =
-            //     Resolve reference for a list of package manager lines
-            match dependencies with
-            | None -> raise (new InvalidOperationException("Internal error --- must invoke ISupportNuget.InitializeDependencyProvider before ISupportNuget.Resolve()"))
-            | Some deps -> deps.Resolve(getIdm(reportError), ".fsx", packageManagerTextLines, reportError, executionTfm)
+            let idm = dependencies.Force().TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget")
+            match idm with
+            | null -> raise (new InvalidOperationException("Internal error - unable to locate the nuget package manager, please try to reinstall."))
+            | idm -> dependencies.Force().Resolve(idm, ".fsx", packageManagerTextLines, reportError, executionTfm)

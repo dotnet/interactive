@@ -888,6 +888,27 @@ using XPlot.Plotly;");
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
+        public async Task Pound_r_nuget_does_not_accept_invalid_keys(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            // nugt is an invalid provider key should fail
+            await kernel.SubmitCodeAsync(@"#r ""nugt:System.Text.Json""");
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            events
+                .OfType<ErrorProduced>()
+                .Last()
+                .Value
+                .Should()
+                .Be("Microsoft.ML.AutoML version 0.16.1-preview cannot be added because version 0.16.0-preview was added previously.");
+        }
+
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
         public async Task When_restore_fails_then_an_error_is_displayed(Language language)
         {
             var kernel = CreateKernel(language);

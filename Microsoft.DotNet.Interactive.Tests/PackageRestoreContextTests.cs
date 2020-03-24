@@ -26,8 +26,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task Returns_new_references_if_they_are_added(Language language)
         {
             var kernel = CreateBaseKernel(language) as ISupportNuget;
-
-            using var restoreContext = new PackageRestoreContext((ISupportNuget)kernel);
+            using var restoreContext = new PackageRestoreContext(kernel);
             var added = restoreContext.GetOrAddPackageReference("FluentAssertions", "5.7.0");
             added.Should().NotBeNull();
 
@@ -35,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             result.Errors.Should().BeEmpty();
             var assemblyPaths = result.ResolvedReferences.SelectMany(r => r.AssemblyPaths).ToArray();
-            
+
             assemblyPaths.Should().Contain(r => r.Name.Equals("FluentAssertions.dll"));
             assemblyPaths.Should().Contain(r => r.Name.Equals("System.Configuration.ConfigurationManager.dll"));
 
@@ -52,7 +51,6 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task Returns_references_when_package_version_is_not_specified(Language language)
         {
             var kernel = CreateBaseKernel(language) as ISupportNuget;
-
             using var restoreContext = new PackageRestoreContext(kernel);
             var added = restoreContext.GetOrAddPackageReference("NewtonSoft.Json");
             added.Should().NotBeNull();
@@ -77,7 +75,6 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task Returns_failure_if_package_installation_fails(Language language)
         {
             var kernel = CreateBaseKernel(language) as ISupportNuget;
-
             using var restoreContext = new PackageRestoreContext(kernel);
             var added = restoreContext.GetOrAddPackageReference("not-a-real-package-definitely-not", "5.7.0");
             added.Should().NotBeNull();
@@ -93,7 +90,6 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task Returns_failure_if_adding_package_twice_at_different_versions(Language language)
         {
             var kernel = CreateBaseKernel(language) as ISupportNuget;
-
             using var restoreContext = new PackageRestoreContext(kernel);
             var added = restoreContext.GetOrAddPackageReference("another-not-a-real-package-definitely-not", "5.7.0");
             added.Should().NotBeNull();
@@ -112,7 +108,6 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task Packages_from_previous_requests_are_not_returned_in_subsequent_results(Language language)
         {
             var kernel = CreateBaseKernel(language) as ISupportNuget;
-
             using var restoreContext = new PackageRestoreContext(kernel);
             var added = restoreContext.GetOrAddPackageReference("FluentAssertions", "5.7.0");
             added.Should().NotBeNull();
@@ -139,7 +134,6 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task Can_get_path_to_nuget_packaged_assembly(Language language)
         {
             var kernel = CreateBaseKernel(language) as ISupportNuget;
-
             using var restoreContext = new PackageRestoreContext(kernel);
             restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
 
@@ -171,7 +165,6 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task Can_get_path_to_nuget_package_root(Language language)
         {
             var kernel = CreateBaseKernel(language) as ISupportNuget;
-
             using var restoreContext = new PackageRestoreContext(kernel);
             restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
 
@@ -194,7 +187,6 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task Can_get_path_to_nuget_package_when_multiple_packages_are_added(Language language)
         {
             var kernel = CreateBaseKernel(language) as ISupportNuget;
-
             using var restoreContext = new PackageRestoreContext(kernel);
             restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
             restoreContext.GetOrAddPackageReference("htmlagilitypack", "1.11.12");
