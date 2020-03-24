@@ -150,7 +150,7 @@
           DependsOnTargets="InstallNodeModules" 
           BeforeTargets="BeforeBuild"
           Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'"  >
-    <Exec Command="npm build" WorkingDirectory="$(JsApiRoot)" />
+    <Exec Command="npm run build" WorkingDirectory="$(JsApiRoot)" />
   </Target>
 
   <Target Name="CopyKernelSpecificFiles" DependsOnTargets="PrepareKernels;CopyLogoFiles">
