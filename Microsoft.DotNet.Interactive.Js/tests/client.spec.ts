@@ -6,7 +6,7 @@ import * as interactive from "../src/dotnet-interactive"
 
 describe("dotnet-interactive", () => {
     describe("initialisation", () => {
-        it("injects function to create scope for dotnet", () => {
+        it("injects function to create scope for dotnet interactive", () => {
             let global : any = {};
             interactive.init(global);
 
@@ -15,7 +15,7 @@ describe("dotnet-interactive", () => {
             .equal('function');
         });
 
-        it("injects function to create client", () => {
+        it("injects function to create dotnet interactive client", () => {
             let global : any = {};
             interactive.init(global);
 
