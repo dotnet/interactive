@@ -8,18 +8,11 @@ import pkg from './package.json';
 
 export default {
 
-    input: 'src/dotnet-interactive.ts',
     output: [
         {
             sourcemap: 'inline',
-            file: pkg.main,
             format: 'umd',
             name: 'interactive',
-        },
-        {
-            sourcemap: 'inline',
-            file: pkg.module,
-            format: 'es',
         }
     ],
     external: [
