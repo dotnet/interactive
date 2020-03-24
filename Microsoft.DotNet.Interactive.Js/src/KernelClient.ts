@@ -49,10 +49,11 @@ export function init(global: any) {
         }
         let client : DotnetInteractiveClient = {
             GetVariable: async (kernelName: string, variableName: string): Promise<any> => {
+                return null;
 
             },
             GetVariables: async (variableRequest: VariableRequest): Promise<VariableResponse> =>{
-
+                return null;
             }
         } 
         return client;
