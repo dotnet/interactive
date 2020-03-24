@@ -121,6 +121,38 @@
     </ItemGroup>
   </Target>
 
+  <PropertyGroup>
+    <JsApiRoot>$(MSBuildThisFileDirectory)/../Microsoft.DotNet.Interactive.Js/</JsApiRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <TypescriptInputs Include="$(JsApiRoot)mocha.opts" />
+    <TypescriptInputs Include="$(JsApiRoot)package.json" />
+    <TypescriptInputs Include="$(JsApiRoot)package-lock.json" />
+    <TypescriptInputs Include="$(JsApiRoot)rollup.config.js" />
+    <TypescriptInputs Include="$(JsApiRoot)tsconfig.json" />
+    <TypescriptInputs Include="$(JsApiRoot)src/**/*.ts" />
+
+    <TypescriptOutputFiles Include="$(JsApiRoot)dist/dotnet-interactive-client.js" />
+    <TypescriptOutputFiles Include="$(JsApiRoot)dist/dotnet-interactive-code-mirror.js" />
+
+    <EmbeddedResource Include="@(TypescriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)"/>
+  </ItemGroup>
+
+  <Target Name="InstallNodeModules" 
+          Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'" >
+    <Exec Command="npm i" WorkingDirectory="$(JsApiRoot)" />
+  </Target>
+
+  <Target Name="CompileTypescript"
+          Inputs="@(TypescriptInputs)"
+          Outputs="@(TypescriptOutputFiles)"
+          DependsOnTargets="InstallNodeModules" 
+          BeforeTargets="Build"
+          Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'"  >
+    <Exec Command="npm build" WorkingDirectory="$(JsApiRoot)" />
+  </Target>
+
   <Target Name="CopyKernelSpecificFiles" DependsOnTargets="PrepareKernels;CopyLogoFiles">
     <CreateItem Include="%(KernelFolders.Identity)/**/*.json" AdditionalMetadata="Destination=$([System.IO.Path]::GetFileName(%(KernelFolders.Identity)))">
       <Output TaskParameter="Include" ItemName="KernelSpecificJsonFiles" />
@@ -145,3 +177,4 @@
   </Target>
 
 </Project>
+
