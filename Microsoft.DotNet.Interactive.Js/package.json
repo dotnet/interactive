@@ -29,8 +29,8 @@
   },
   "homepage": "https://github.com/dotnet/interactive#readme",
   "dependencies": {
-    "@microsoft/signalr": "^3.1.2",
-    "rxjs": "^6.5.4",
+    "@microsoft/signalr": "3.1.2",
+    "rxjs": "6.5.4",
     "cross-fetch": "2.2.2"
   },
   "devDependencies": {
