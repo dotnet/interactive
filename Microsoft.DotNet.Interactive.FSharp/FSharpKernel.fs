@@ -136,7 +136,7 @@ type FSharpKernel() as this =
             context.Publish(CompletionRequestCompleted(completionItems, requestCompletion))
         }
 
-    let mutable dependencies =
+    let dependencies =
         let createDependencyProvider () =
             let iSupportNuget = this :> ISupportNuget
             new DependencyProvider(iSupportNuget.AssemblyProbingPaths, iSupportNuget.NativeProbingRoots)
