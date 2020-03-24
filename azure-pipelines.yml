@@ -20,6 +20,8 @@ variables:
     value: '3.1.200'
   - name: TryDotNetPackagesPath
     value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
+  - name: NodeJSVersion
+    value: '12.16.1'
 
 stages:
 - stage: build
@@ -79,6 +81,11 @@ stages:
         - checkout: self
           clean: true
 
+        - task: NodeTool@0
+          displayName: Add NodeJS/npm
+          inputs:
+            versionSpec: $(NodeJSVersion)        
+
         - task: UseDotNet@2
           displayName: Add dotnet 3.0
           inputs:
@@ -102,6 +109,10 @@ stages:
           displayName: Build / Test
           env:
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+
+        - script: npm run test
+          displayName: NPM tests
+          workingDirectory: "$(Build.SourcesDirectory)/Microsoft.DotNet.Interactive.Js"
 
         # Prevent symbols packages from being saved in the following `packages` artifact because they're incomplete.
         # See `eng/AfterSolutionBuild.targets:StripFilesFromSymbolPackages` for details.
@@ -152,6 +163,11 @@ stages:
         - checkout: self
           clean: true
 
+        - task: NodeTool@0
+          displayName: Add NodeJS/npm
+          inputs:
+            versionSpec: $(NodeJSVersion)
+
         - task: UseDotNet@2
           displayName: Add dotnet 3.0
           inputs:
@@ -171,6 +187,10 @@ stages:
           displayName: Build / Test
           env:
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+
+        - script: npm run test
+          displayName: NPM tests
+          workingDirectory: "$(Build.SourcesDirectory)/Microsoft.DotNet.Interactive.Js"
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
