@@ -148,7 +148,7 @@
           Inputs="@(TypescriptInputs)"
           Outputs="@(TypescriptOutputFiles)"
           DependsOnTargets="InstallNodeModules" 
-          BeforeTargets="Build"
+          BeforeTargets="BeforeBuild"
           Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'"  >
     <Exec Command="npm build" WorkingDirectory="$(JsApiRoot)" />
   </Target>
