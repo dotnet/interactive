@@ -18,7 +18,7 @@ open Microsoft.DotNet.Interactive.Commands
 open Microsoft.DotNet.Interactive.Events
 open Microsoft.DotNet.Interactive.Utility
 
-open Interactive.DependencyManager;
+open Microsoft.Interactive.DependencyManager;
 open FSharp.Compiler.Interactive.Shell
 open FSharp.Compiler.Scripting
 open FSharp.Compiler.SourceCodeServices
@@ -26,7 +26,6 @@ open FSharp.Compiler.SourceCodeServices
 type FSharpKernel() as this =
     inherit KernelBase("fsharp")
 
-    let resolvedAssemblies = List<string>()
     static let lockObj = Object();
 
     let variables = HashSet<string>()
@@ -37,8 +36,6 @@ type FSharpKernel() as this =
         let valueBoundHandler = new Handler<(obj * Type * string)>(fun _ (_, _, name) -> variables.Add(name) |> ignore)
         do script.ValueBound.AddHandler valueBoundHandler
         do registerForDisposal(fun () -> script.ValueBound.RemoveHandler valueBoundHandler)
-
-        let handler = new Handler<string> (fun o s -> resolvedAssemblies.Add(s))
         script
 
     let script = lazy createScript this.RegisterForDisposal
@@ -101,7 +98,6 @@ type FSharpKernel() as this =
         async {
             let codeSubmissionReceived = CodeSubmissionReceived(codeSubmission)
             context.Publish(codeSubmissionReceived)
-            resolvedAssemblies.Clear()
             let tokenSource = cancellationTokenSource
             let result, errors =
                 try

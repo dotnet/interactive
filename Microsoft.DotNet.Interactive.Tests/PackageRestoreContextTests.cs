@@ -10,7 +10,7 @@ using Xunit;
 using Xunit.Abstractions;
 using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Utility;
-using Interactive.DependencyManager;
+using Microsoft.Interactive.DependencyManager;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {

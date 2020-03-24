@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using static Pocket.Logger;
-using Interactive.DependencyManager;
+using Microsoft.Interactive.DependencyManager;
 using System.Runtime.InteropServices.ComTypes;
 using System.Collections.ObjectModel;
 using System.Globalization;

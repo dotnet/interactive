@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using Interactive.DependencyManager;
+using Microsoft.Interactive.DependencyManager;
 using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive

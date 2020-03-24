@@ -887,24 +887,29 @@ using XPlot.Plotly;");
 
         [Theory]
         [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
+        //[InlineData(Language.FSharp)]   /// Reenable when --- https://github.com/dotnet/fsharp/issues/8775
         public async Task Pound_r_nuget_does_not_accept_invalid_keys(Language language)
         {
             var kernel = CreateKernel(language);
 
+            // C# and F# should both fail, but the messages will be different because they handle it differently internally.
+            var expectedMessage = language switch
+            {
+                Language.CSharp => "Metadata file 'nugt:System.Text.Json' could not be found",
+                Language.FSharp => "interactive error Package manager key 'nugt' was not registered"
+            };
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
             // nugt is an invalid provider key should fail
             await kernel.SubmitCodeAsync(@"#r ""nugt:System.Text.Json""");
 
-            using var events = kernel.KernelEvents.ToSubscribedList();
-
-            events
-                .OfType<ErrorProduced>()
-                .Last()
-                .Value
-                .Should()
-                .Be("Microsoft.ML.AutoML version 0.16.1-preview cannot be added because version 0.16.0-preview was added previously.");
+            events.Should()
+                  .ContainSingle<CommandFailed>()
+                  .Which
+                  .Message
+                  .Should()
+                  .Contain(expectedMessage);
         }
-
 
         [Theory]
         [InlineData(Language.CSharp)]
