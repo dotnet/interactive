@@ -45,7 +45,7 @@ export function init(global: any) {
         if(typeof(clientFetch) === undefined){
             cf = defaukltClientFetch;
         }
-        
+
         let client = new KernelClientImpl(cf, rootUrl);
         return client;
     }
