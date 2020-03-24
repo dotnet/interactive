@@ -1,1 +1,1 @@
-export * from "./KernelClient";
+export * from "./dotnet-interactive/KernelClient";
