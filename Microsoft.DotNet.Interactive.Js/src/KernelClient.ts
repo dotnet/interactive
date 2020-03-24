@@ -16,8 +16,8 @@ export interface KernelClient {
 }
 
 export interface DotnetInteractiveClient {
-    GetVariable(kernelName: string, variableName: string): any
-    GetVariables(variableRequest: VariableRequest): VariableResponse;
+    GetVariable(kernelName: string, variableName: string): Promise<any>
+    GetVariables(variableRequest: VariableRequest): Promise<VariableResponse>;
 }
 
 export class DotnetInteractiveScopeContainer {
@@ -39,6 +39,23 @@ export function init(global: any) {
         }
 
         return global.interactiveScopes[key];
+    }
+
+    global.createDotnetInteractiveClient = async (address: string) : Promise<DotnetInteractiveClient> => {
+        let root = new URL(address);
+        async function clientFetch(input : RequestInfo, init : RequestInit) : Promise<Response>{
+           let response = await fetch(input, init);
+           return response;
+        }
+        let client : DotnetInteractiveClient = {
+            GetVariable: async (kernelName: string, variableName: string): Promise<any> => {
+
+            },
+            GetVariables: async (variableRequest: VariableRequest): Promise<VariableResponse> =>{
+
+            }
+        } 
+        return client;
     }
     
 }

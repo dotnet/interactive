@@ -4,18 +4,25 @@
 import { expect } from "chai";
 import * as interactive from "../src/dotnet-interactive"
 
-describe("client", () => {
-    describe("not sure", () => {
-        it("runs", () => {
-            let client = interactive.createClient();
-            let value = client.GetVariable("code");            
-            expect(value).to.eq(1);
+describe("dotnet-interactive", () => {
+    describe("initialisation", () => {
+        it("injects function to create scope for dotnet", () => {
+            let global : any = {};
+            interactive.init(global);
+
+            expect(typeof(global.getDotnetInteractiveScope))
+            .to
+            .equal('function');
         });
 
-        it("runs again", () => {
-            let client = interactive.createClient();
-            let value = client.GetStuff();            
-            expect(value).to.eq(1);
+        it("injects function to create client", () => {
+            let global : any = {};
+            interactive.init(global);
+
+            expect(typeof(global.createDotnetInteractiveClient))
+            .to
+            .equal('function');
         });
+       
     });
 });
