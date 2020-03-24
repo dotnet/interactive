@@ -30,7 +30,7 @@ RUN rm -rf /var/lib/apt/lists/*
 ENV DOTNET_SDK_VERSION 3.1.200
 
 RUN curl -SL --output dotnet.tar.gz https://dotnetcli.blob.core.windows.net/dotnet/Sdk/$DOTNET_SDK_VERSION/dotnet-sdk-$DOTNET_SDK_VERSION-linux-x64.tar.gz \
-    && dotnet_sha512='eeee75323be762c329176d5856ec2ecfd16f06607965614df006730ed648a5b5d12ac7fd1942fe37cfc97e3013e796ef278e7c7bc4f32b8680585c4884a8a6a1' \
+    && dotnet_sha512='5b9398c7bfe7f67cd9f38fdd4e6e429e1b6aaac0fe04672be0f8dca26580fb46906fd1d2deea6a7d3fb07d77e898f067d3ac1805fe077dc7c1adf9515c9bc9a9' \
     && echo "$dotnet_sha512 dotnet.tar.gz" | sha512sum -c - \
     && mkdir -p /usr/share/dotnet \
     && tar -zxf dotnet.tar.gz -C /usr/share/dotnet \
@@ -59,7 +59,7 @@ USER ${USER}
 RUN pip install nteract_on_jupyter
 
 # Install lastest build from master branch of Microsoft.DotNet.Interactive from myget
-RUN dotnet tool install -g Microsoft.dotnet-interactive --version 1.0.116910 --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json"
+RUN dotnet tool install -g Microsoft.dotnet-interactive --version 1.0.117301 --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json"
 
 ENV PATH="${PATH}:${HOME}/.dotnet/tools"
 RUN echo "$PATH"
