@@ -178,6 +178,42 @@ stages:
       enableTelemetry: true
       helixRepo: dotnet/interactive
       jobs:
+      - job: Dockerfile_Main
+        pool:
+          vmImage: ubuntu-16.04
+        steps:
+        - checkout: self
+          clean: true
+        - task: Docker@2
+          displayName: Build main Dockerfile
+          inputs:
+            command: build
+            Dockerfile: "$(Build.SourcesDirectory)/Dockerfile"
+
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableMicrobuild: true
+      enableTelemetry: true
+      helixRepo: dotnet/interactive
+      jobs:
+      - job: Dockerfile_Binder_Dependency
+        pool:
+          vmImage: ubuntu-16.04
+        steps:
+        - checkout: self
+          clean: true
+        - task: Docker@2
+          displayName: Build Binder dependency Dockerfile
+          inputs:
+            command: build
+            Dockerfile: "$(Build.SourcesDirectory)/Binder Dependencies/Dockerfile"
+
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableMicrobuild: true
+      enableTelemetry: true
+      helixRepo: dotnet/interactive
+      jobs:
       - job: IntegrationTest
         dependsOn: Windows_NT
         condition: succeeded()
