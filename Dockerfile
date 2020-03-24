@@ -27,6 +27,8 @@ RUN apt-get install -y --no-install-recommends \
 RUN rm -rf /var/lib/apt/lists/*
 
 # Install .NET Core SDK
+
+# When updating the SDK version, the sha512 value a few lines down must also be updated.
 ENV DOTNET_SDK_VERSION 3.1.200
 
 RUN curl -SL --output dotnet.tar.gz https://dotnetcli.blob.core.windows.net/dotnet/Sdk/$DOTNET_SDK_VERSION/dotnet-sdk-$DOTNET_SDK_VERSION-linux-x64.tar.gz \
