@@ -8,9 +8,10 @@
     "dist"
   ],
   "scripts": {
-    "build": "npm run rollup",
+    "build": "npm run rollup-dotnet-interactive && npm run rollup-dotnet-interactive-code-mirror",
     "test": "mocha --opts mocha.opts",
-    "rollup": "rollup -c"
+    "rollup-dotnet-interactive": "rollup -c rollup.config.js -i src/dotnet-interactive.ts -o dist/dotnet-interactive.js",
+    "rollup-dotnet-interactive-code-mirror": "rollup -c rollup.config.js -i src/dotnet-interactive-code-mirror.ts -o dist/dotnet-interactive-code-mirror.js"
   },
   "repository": {
     "type": "git",
@@ -35,19 +36,20 @@
     "@types/chai": "4.2.11",
     "@types/chai-as-promised": "7.1.2",
     "@types/mocha": "7.0.2",
-    "@types/node": "13.9.1",
+    "@types/node": "13.9.3",
     "chai": "4.2.0",
     "chai-as-promised": "7.1.1",
+    "mkdirp": "1.0.3",
     "mocha": "7.1.1",
     "mocha-typescript": "1.1.17",
     "requirejs": "2.3.6",
-    "source-map-support": "0.5.16",
-    "ts-mocha": "7.0.0",
-    "ts-node": "8.6.2",
-    "typescript": "3.8.3",
     "rollup": "2.1.0",
     "rollup-plugin-commonjs": "10.1.0",
     "rollup-plugin-node-resolve": "5.2.0",
-    "rollup-plugin-typescript2": "0.26.0"
+    "rollup-plugin-typescript2": "0.26.0",
+    "source-map-support": "0.5.16",
+    "ts-mocha": "7.0.0",
+    "ts-node": "8.8.1",
+    "typescript": "3.8.3"
   }
 }
