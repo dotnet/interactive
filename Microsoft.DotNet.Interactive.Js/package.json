@@ -2,8 +2,6 @@
   "name": "microsoft.dotnet.interactive.js",
   "version": "1.0.0",
   "description": "Javascript api Microsoft.DotNet.Interactive",
-  "main": "dist/dotnet-interactive.js",
-  "module": "dist/dotnet-interactive.es.js",
   "files": [
     "dist"
   ],
