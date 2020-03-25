@@ -139,8 +139,7 @@
     <EmbeddedResource Include="@(TypescriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)"/>
   </ItemGroup>
 
-  <Target Name="InstallNodeModules" 
-          Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'" >
+  <Target Name="InstallNodeModules">
     <Exec Command="npm i" WorkingDirectory="$(JsApiRoot)" />
   </Target>
 
