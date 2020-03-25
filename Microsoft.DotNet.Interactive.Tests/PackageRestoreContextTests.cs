@@ -151,11 +151,11 @@ namespace Microsoft.DotNet.Interactive.Tests
             var version = path.Directory.Parent.Parent.Name;
             var packageName = path.Directory.Parent.Parent.Parent.Parent.Name;
 
-            name.ToLower().Should().Equals("fluentassertions.dll");
-            tfm.ToLower().Should().Equals("netcoreapp2.0");
-            reflib.ToLower().Should().Equals("lib");
-            version.ToLower().Should().Equals("5.7.0");
-            packageName.ToLower().Should().Equals("fluentassertions");
+            name.ToLower().Should().Be("fluentassertions.dll");
+            tfm.ToLower().Should().Be("netcoreapp2.0");
+            reflib.ToLower().Should().Be("lib");
+            version.ToLower().Should().Be("5.7.0");
+            packageName.ToLower().Should().Be("fluentassertions");
             path.Exists.Should().BeTrue();
         }
 
@@ -176,8 +176,8 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var version = path.Name;
             var packageName = path.Parent.Name;
-            version.ToLower().Should().Equals("5.7.0");
-            packageName.ToLower().Should().Equals("fluentassertions");
+            version.ToLower().Should().Be("5.7.0");
+            packageName.ToLower().Should().Be("fluentassertions");
             path.Exists.Should().BeTrue();
         }
 
