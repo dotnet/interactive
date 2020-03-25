@@ -21,8 +21,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var restoreContext = new PackageRestoreContext(kernel);
             var iSupportNuget = kernel as ISupportNuget;
-            iSupportNuget.AssemblyProbingPaths = restoreContext.AssemblyProbingPaths;
-            iSupportNuget.NativeProbingRoots = restoreContext.NativeProbingRoots;
+            iSupportNuget.Initialize(restoreContext.AssemblyProbingPaths, restoreContext.NativeProbingRoots);
 
             kernel.SetProperty(restoreContext);
             kernel.RegisterForDisposal(restoreContext);

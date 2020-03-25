@@ -9,9 +9,10 @@ namespace Microsoft.DotNet.Interactive
 {
     public interface ISupportNuget
     {
-        public AssemblyResolutionProbe AssemblyProbingPaths { get; set; }
-
-        public NativeResolutionProbe NativeProbingRoots { get; set; }
+        // Set assemblyProbingPaths, nativeProbingRoots for Kernel.
+        // These values are functions that return the list of discovered assemblies, and package roots
+        // They are used by the dependecymanager for Assembly and Native dll resolving
+        public abstract void Initialize(AssemblyResolutionProbe assemblyProbingPaths, NativeResolutionProbe nativeProbingRoots);
 
         public abstract void RegisterNugetResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> packageReferences);
 

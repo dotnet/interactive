@@ -136,10 +136,20 @@ type FSharpKernel() as this =
             context.Publish(CompletionRequestCompleted(completionItems, requestCompletion))
         }
 
+    let mutable _assemblyProbingPaths = Unchecked.defaultof<AssemblyResolutionProbe>
+    let mutable _nativeProbingRoots = Unchecked.defaultof<NativeResolutionProbe>
+
     let dependencies =
         let createDependencyProvider () =
-            let iSupportNuget = this :> ISupportNuget
-            new DependencyProvider(iSupportNuget.AssemblyProbingPaths, iSupportNuget.NativeProbingRoots)
+            // These may not be set to null, if they are it is a product coding error
+            // ISupportNuget.Initialize must be invoked prior to creating the DependencyManager
+            // With non null funcs
+            if isNull _assemblyProbingPaths then
+                raise (new ArgumentNullException("_assemblyProbingPaths"))
+
+            if isNull _nativeProbingRoots then
+                raise (new ArgumentNullException("_nativeProbingRoots"))
+            new DependencyProvider(_assemblyProbingPaths, _nativeProbingRoots)
         lazy (createDependencyProvider ())
 
     member _.GetCurrentVariable(variableName: string) =
@@ -173,8 +183,17 @@ type FSharpKernel() as this =
             false
 
     interface ISupportNuget with
-        member val AssemblyProbingPaths : AssemblyResolutionProbe = null with get, set
-        member val NativeProbingRoots : NativeResolutionProbe = null with get, set
+        member this.Initialize (assemblyProbingPaths: AssemblyResolutionProbe, nativeProbingRoots: NativeResolutionProbe) =
+            // These may not be set to null, if they are it is a product coding error
+            // ISupportNuget.Initialize must be invoked prior to creating the DependencyManager
+            // With non null funcs
+            if isNull assemblyProbingPaths then
+                raise (new ArgumentNullException("assemblyProbingPaths"))
+            if isNull nativeProbingRoots then
+                raise (new ArgumentNullException("nativeProbingRoots"))
+
+            _assemblyProbingPaths <- assemblyProbingPaths
+            _nativeProbingRoots <- nativeProbingRoots
 
         member this.RegisterNugetResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
             // Generate #r and #I from packageReferences

@@ -25,6 +25,7 @@ using Microsoft.DotNet.Interactive.Utility;
 using Newtonsoft.Json.Linq;
 using XPlot.Plotly;
 using Task = System.Threading.Tasks.Task;
+using System.ComponentModel;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
@@ -42,6 +43,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
             new CSharpParseOptions(LanguageVersion.Default, kind: SourceCodeKind.Script);
 
         private WorkspaceFixture _fixture;
+
+        private AssemblyResolutionProbe _assemblyProbingPaths;
+        private NativeResolutionProbe _nativeProbingRoots;
 
         internal ScriptOptions ScriptOptions =
             ScriptOptions.Default
@@ -308,13 +312,36 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         private DependencyProvider GetDependencyProvider()
         {
-            var iSupportNuget = this as ISupportNuget;
-            return new DependencyProvider(iSupportNuget.AssemblyProbingPaths, iSupportNuget.NativeProbingRoots);
+            // These may not be set to null, if they are it is a product coding error
+            // ISupportNuget.Initialize must be invoked prior to creating the DependencyManager
+            if (_assemblyProbingPaths == null)
+            {
+                throw new ArgumentNullException(nameof(_assemblyProbingPaths));
+            }
+            if (_nativeProbingRoots == null)
+            {
+                throw new ArgumentNullException(nameof(_nativeProbingRoots));
+            }
+
+            return new DependencyProvider(_assemblyProbingPaths, _nativeProbingRoots);
         }
 
-        AssemblyResolutionProbe ISupportNuget.AssemblyProbingPaths { get; set; }
-
-        NativeResolutionProbe ISupportNuget.NativeProbingRoots { get; set; }
+        // Set assemblyProbingPaths, nativeProbingRoots for Kernel.
+        // These values are functions that return the list of discovered assemblies, and package roots
+        // They are used by the dependecymanager for Assembly and Native dll resolving
+        void ISupportNuget.Initialize(AssemblyResolutionProbe assemblyProbingPaths, NativeResolutionProbe nativeProbingRoots)
+        {
+            if(assemblyProbingPaths == null)
+            {
+                throw new ArgumentNullException(nameof(assemblyProbingPaths));
+            }
+            if (nativeProbingRoots == null)
+            {
+                throw new ArgumentNullException(nameof(nativeProbingRoots));
+            }
+            _assemblyProbingPaths = assemblyProbingPaths;
+            _nativeProbingRoots = nativeProbingRoots;
+        }
 
         void ISupportNuget.RegisterNugetResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
         {
