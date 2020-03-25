@@ -29,9 +29,8 @@ export default {
                 }
             },
         }),
-        resolve({
-            jsnext: true,
-            main: true,
+        resolve({    
+            mainFields: ['browser', 'esnext', 'module', 'main'],        
             browser: true,
             customResolveOptions: {
                 moduleDirectory: 'node_modules'
