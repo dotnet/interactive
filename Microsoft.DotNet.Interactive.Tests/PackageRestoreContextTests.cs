@@ -149,7 +149,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             var tfm = path.Directory.Name;
             var reflib = path.Directory.Parent.Name;
             var version = path.Directory.Parent.Parent.Name;
-            var packageName = path.Directory.Parent.Parent.Parent.Parent.Name;
+            var packageName = path.Directory.Parent.Parent.Parent.Name;
 
             name.ToLower().Should().Be("fluentassertions.dll");
             tfm.ToLower().Should().Be("netcoreapp2.0");
