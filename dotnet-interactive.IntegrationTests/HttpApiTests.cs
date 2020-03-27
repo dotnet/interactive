@@ -49,6 +49,12 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
             await response.ShouldSucceed();
 
             response.Content.Headers.ContentType.MediaType.Should().Be("application/javascript");
+
+            // kill
+            kernelServerProcess.StandardInput.Close(); // simulate Ctrl+C
+            await Task.Delay(TimeSpan.FromSeconds(2)); // allow logs to be flushed
+            kernelServerProcess.Kill();
+            kernelServerProcess.WaitForExit(2000).Should().BeTrue();
         }
 
         private static int GetFreePort()
