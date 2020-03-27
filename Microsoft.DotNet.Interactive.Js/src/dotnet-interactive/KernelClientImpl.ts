@@ -1,4 +1,4 @@
-import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient } from "./dotnet-interactive-interfaces";
+import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch } from "./dotnet-interactive-interfaces";
 
 export class KernelClientImpl implements DotnetInteractiveClient {
 
@@ -10,8 +10,8 @@ export class KernelClientImpl implements DotnetInteractiveClient {
         this._rootUrl = rootUrl;
 
     }
-    
-    async getVariable(kernelName: string, variableName: string): Promise<any> {
+
+    public async getVariable(kernelName: string, variableName: string): Promise<any> {
         let response = await this._clientFetch(`variables/${kernelName}/${variableName}`,
             {
                 method: 'GET',
@@ -22,7 +22,8 @@ export class KernelClientImpl implements DotnetInteractiveClient {
         return variable;
 
     }
-    async getVariables(variableRequest: VariableRequest): Promise<VariableResponse> {
+
+    public async getVariables(variableRequest: VariableRequest): Promise<VariableResponse> {
         let response = await this._clientFetch("variables", {
             method: 'POST',
             cache: 'no-cache',
@@ -36,17 +37,21 @@ export class KernelClientImpl implements DotnetInteractiveClient {
         return variableBundle;
     }
 
-    getResource(resource: string): Promise<Response> {
+    public getResource(resource: string): Promise<Response> {
         return this._clientFetch(`resources/${resource}`);
     }
 
-    getResourceUrl(resource: string): string {
+    public getResourceUrl(resource: string): string {
         let resourceUrl: string = `${this._rootUrl}resources/${resource}`;
         return resourceUrl;
     }
 
-    async loadKernels(): Promise<void> {
-        let kernels = await this._clientFetch("kernels");
+    public async loadKernels(): Promise<void> {
+        let kernels = await this._clientFetch("kernels",
+        {
+            method: "GET",
+            cache: 'no-cache',
+        });
         let kernelNames = await kernels.json();
         if (Array.isArray(kernelNames)) {
             for (let i = 0; i < kernelNames.length; i++) {
@@ -61,4 +66,35 @@ export class KernelClientImpl implements DotnetInteractiveClient {
             }
         }
     }
+}
+
+export async function createDotnetInteractiveClient(address: string, clientFetch: ClientFetch = null): Promise<DotnetInteractiveClient> {
+
+    let rootUrl = address;
+    if (!address.endsWith("/")) {
+        rootUrl = `${rootUrl}/`;
+    }
+
+    async function defaukltClientFetch(input: string, requestInit: RequestInit = null): Promise<Response> {
+        let address = input;
+
+        if (!address.startsWith("http")) {
+            address = `${rootUrl}${address}`;
+        }
+
+        let response = await fetch(address, requestInit);
+        return response;
+    }
+
+    let cf: ClientFetch = clientFetch;
+
+    if (!clientFetch) {
+        cf = defaukltClientFetch;
+    }
+
+    let client = new KernelClientImpl(cf, rootUrl);
+
+    await client.loadKernels();
+
+    return client;
 }

@@ -28,20 +28,23 @@
   },
   "homepage": "https://github.com/dotnet/interactive#readme",
   "dependencies": {
-    "@microsoft/signalr": "3.1.2",
-    "rxjs": "6.5.4",
-    "cross-fetch": "2.2.2"
+    "@microsoft/signalr": "3.1.2",    
+    "rxjs": "6.5.4"
   },
   "devDependencies": {
     "@types/chai": "4.2.11",
     "@types/chai-as-promised": "7.1.2",
+    "@types/fetch-mock": "^7.3.2",
     "@types/mocha": "7.0.2",
     "@types/node": "13.9.3",
+    "@types/node-fetch": "2.5.5",
     "chai": "4.2.0",
     "chai-as-promised": "7.1.1",
+    "fetch-mock": "9.3.1",
     "mkdirp": "1.0.3",
     "mocha": "7.1.1",
     "mocha-typescript": "1.1.17",
+    "node-fetch": "^2.6.0",
     "requirejs": "2.3.6",
     "rollup": "2.1.0",
     "rollup-plugin-commonjs": "10.1.0",

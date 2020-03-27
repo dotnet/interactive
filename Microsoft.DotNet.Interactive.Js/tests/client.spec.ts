@@ -3,8 +3,12 @@
 
 import { expect } from "chai";
 import * as interactive from "../src/dotnet-interactive"
+import { createDotnetInteractiveClient } from "../src/dotnet-interactive/KernelClientImpl";
+import * as fetchMock from "fetch-mock";
 
 describe("dotnet-interactive", () => {
+    
+    afterEach(fetchMock.restore);
     describe("initialisation", () => {
         it("injects function to create scope for dotnet interactive", () => {
             let global : any = {};
@@ -22,7 +26,20 @@ describe("dotnet-interactive", () => {
             expect(typeof(global.createDotnetInteractiveClient))
             .to
             .equal('function');
-        });
-       
+        });       
     });
+
+    describe("kernele discovery", () =>{
+        it("creates kernel clients for all discovered kernesl", async () =>{
+            const rootUrl = "https://dotnet.interactive.com:999";
+            var expectedKernels = [".NET","csharp","fsharp","powershell","javascript","html"];
+            fetchMock.get(`${rootUrl}/kernels`,  expectedKernels );
+            let client : any = await createDotnetInteractiveClient(rootUrl);
+            
+            for( let kernelName of expectedKernels){
+                expect(client[kernelName]).not.to.be.undefined;
+            }
+
+        })
+    } );
 });

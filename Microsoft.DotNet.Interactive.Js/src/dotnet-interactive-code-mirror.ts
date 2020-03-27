@@ -1,1 +1,1 @@
-export * from "./dotnet-interactive/KernelClient";
+export * from "./dotnet-interactive/librayInit";
