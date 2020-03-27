@@ -277,16 +277,6 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
                        "html",
                        "javascript");
         }
-
-        [Fact]
-        public async Task can_get_javascript_api()
-        {
-            var response = await GetServer().HttpClient.GetAsync("/resources/dotnet-interactive.js");
-
-            await response.ShouldSucceed();
-
-            response.Content.Headers.ContentType.MediaType.Should().Be("application/javascript");
-        }
     }
 
     internal static class HttpClientTestExtensions
