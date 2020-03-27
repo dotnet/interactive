@@ -224,7 +224,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 var startKernelHttpCommand = new Command("http", "Starts dotnet-interactive with kernel functionality exposed over http")
                 {
                     defaultKernelOption,
-                    logPathOption,
+                    httpPortOption,
+                    logPathOption
                 };
 
                 startKernelHttpCommand.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(

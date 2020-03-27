@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
             using var listenerStarted = new ManualResetEvent(false);
             var kernelServerProcess = ProcessHelper.Start(command:
                 "dotnet",
-                args: $@"interactive http --default-kernel csharp --port {port}",
+                args: $@"interactive http --default-kernel csharp --http-port {port}",
                 new DirectoryInfo(Directory.GetCurrentDirectory()),
                 output: line =>
                 {
