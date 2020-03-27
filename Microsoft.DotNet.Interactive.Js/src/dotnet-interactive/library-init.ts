@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { DotnetInteractiveScopeContainer, DotnetInteractiveScope, DotnetInteractiveClient, ClientFetch } from "./dotnet-interactive-interfaces";
-import { KernelClientImpl, createDotnetInteractiveClient } from "./KernelClientImpl";
+import { createDotnetInteractiveClient } from "./kernel-client-impl";
 
 export function init(global: any) {
     global.getDotnetInteractiveScope = (key: string) => {
