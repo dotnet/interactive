@@ -9,7 +9,7 @@ import { asKernelClientContainer } from "./testSupprot";
 
 describe("variable api contract", () => {
     const rootUrl = "https://dotnet.interactive.com:999";
-    
+
     beforeEach(() => {
         const expectedKernels = require("./Responses/kernelsResponse.json");
         fetchMock.get(`${rootUrl}/kernels`, expectedKernels);
@@ -17,7 +17,7 @@ describe("variable api contract", () => {
 
     afterEach(fetchMock.restore);
 
-    it("car load multiple variables in a single request", async () => {
+    it("can load multiple variables in a single request", async () => {
         let expectedVariables: VariableResponse = {
             csharp:
             {
