@@ -76,7 +76,7 @@ export async function createDotnetInteractiveClient(address: string, clientFetch
         rootUrl = `${rootUrl}/`;
     }
 
-    async function defaukltClientFetch(input: string, requestInit: RequestInit = null): Promise<Response> {
+    async function defaultClientFetch(input: string, requestInit: RequestInit = null): Promise<Response> {
         let address = input;
 
         if (!address.startsWith("http")) {
@@ -90,7 +90,7 @@ export async function createDotnetInteractiveClient(address: string, clientFetch
     let cf: ClientFetch = clientFetch;
 
     if (!clientFetch) {
-        cf = defaukltClientFetch;
+        cf = defaultClientFetch;
     }
 
     let client = new KernelClientImpl(cf, rootUrl);
