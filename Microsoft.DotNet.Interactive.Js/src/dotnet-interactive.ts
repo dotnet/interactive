@@ -1,1 +1,1 @@
-export * from "./dotnet-interactive/librayInit";
+export * from "./dotnet-interactive/library-init";

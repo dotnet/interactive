@@ -1,11 +1,11 @@
 {
   "csharp":
   {
-      "a": 1,
-      "b": "2"
+      "number": 1,
+      "number_as_string": "2"
   },
   "fsharp": {
-      "c": 3,
-      "d": false
+      "number": 3,
+      "boolean": false
   }
 }
