@@ -11,7 +11,7 @@ describe("variable api contract", () => {
     const rootUrl = "https://dotnet.interactive.com:999";
 
     beforeEach(() => {
-        const expectedKernels = require("./Responses/kernelsResponse.json");
+        const expectedKernels = require("./Responses/kernels-get-response.json");
         fetchMock.get(`${rootUrl}/kernels`, expectedKernels);
     });
 
@@ -36,7 +36,7 @@ describe("variable api contract", () => {
         };
 
         fetchMock.post(`${rootUrl}/variables`,
-            require("./Responses/variableBundleResponse01.json"),
+            require("./Responses/variable-post-response.json"),
             {
                 body: varaibleRequest
             });
