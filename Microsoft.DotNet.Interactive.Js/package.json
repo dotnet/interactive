@@ -9,7 +9,7 @@
     "build": "npm run rollup-dotnet-interactive && npm run rollup-dotnet-interactive-code-mirror",
     "build-ci": "rollup -c rollup.config.js",
     "test": "mocha --opts mocha.opts",
-    "rollup-dotnet-interactive": "npm run build-ci -- -i src/dotnet-interactive.ts -o dist/dotnet-interactive-client.js",
+    "rollup-dotnet-interactive": "npm run build-ci -- -i src/dotnet-interactive.ts -o dist/dotnet-interactive.js",
     "rollup-dotnet-interactive-code-mirror": "npm run build-ci -- -i src/dotnet-interactive-code-mirror.ts -o dist/dotnet-interactive-code-mirror.js"
   },
   "repository": {
@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/dotnet/interactive#readme",
   "dependencies": {
-    "@microsoft/signalr": "3.1.2",    
+    "@microsoft/signalr": "3.1.2",
     "rxjs": "6.5.4"
   },
   "devDependencies": {

@@ -43,4 +43,16 @@ describe("dotnet-interactive", () => {
 
         })
     });
+
+    describe("scopes", () => {
+        it("can be retrieved", () => {
+            let global: any = {};
+            interactive.init(global);
+
+            let scope = global.getDotnetInteractiveScope("scopeid");
+            expect(scope).not.to.be.null;
+            expect(scope).not.to.be.undefined;
+
+        })
+    });
 });
