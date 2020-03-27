@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
 
             var response = await client.GetAsync($"{listeningAddress}/resources/dotnet-interactive.js");
 
-            await response.ShouldSucceed();
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
 
             response.Content.Headers.ContentType.MediaType.Should().Be("application/javascript");
 
