@@ -35,13 +35,11 @@ describe("variable api contract", () => {
             fsharp: ["number", "boolean"]
         };
 
-        fetchMock.mock((url, opt) => {
-            let matchesUrl = url === `${rootUrl}/variables`;
-            let matchesMEthod = opt.method === "POST";
-            let matchedBody = opt.body === JSON.stringify(varaibleRequest);
-            return matchesUrl && matchesMEthod && matchedBody;
-            },
-            require("./Responses/variableBundleResponse01.json"));
+        fetchMock.post(`${rootUrl}/variables`,
+            require("./Responses/variableBundleResponse01.json"),
+            {
+                body: varaibleRequest
+            });
 
         let client = await createDotnetInteractiveClient(rootUrl);
         let variables = await client.getVariables(varaibleRequest);
