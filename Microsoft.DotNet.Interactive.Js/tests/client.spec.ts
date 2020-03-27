@@ -33,7 +33,7 @@ describe("dotnet-interactive", () => {
     describe("kernel discovery", () => {
         it("creates kernel clients for all discovered kernesl", async () => {
             const rootUrl = "https://dotnet.interactive.com:999";
-            var expectedKernels = [".NET", "csharp", "fsharp", "powershell", "javascript", "html"];
+            const expectedKernels = require("./Responses/kernlesResponse.json");
             fetchMock.get(`${rootUrl}/kernels`, expectedKernels);
             let client = asKernelClientContainer(await createDotnetInteractiveClient(rootUrl));
 

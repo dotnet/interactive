@@ -51,6 +51,7 @@ export class KernelClientImpl implements DotnetInteractiveClient {
         {
             method: "GET",
             cache: 'no-cache',
+            mode: 'cors'
         });
         let kernelNames = await kernels.json();
         if (Array.isArray(kernelNames)) {

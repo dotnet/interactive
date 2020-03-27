@@ -10,7 +10,7 @@ import { asKernelClientContainer } from "./testSupprot";
 describe("dotnet-interactive", () => {
     const rootUrl = "https://dotnet.interactive.com:999";
     beforeEach(() => {
-        var expectedKernels = [".NET", "csharp", "fsharp", "powershell", "javascript", "html"];
+        const expectedKernels = require("./Responses/kernlesResponse.json");
         fetchMock.get(`${rootUrl}/kernels`, expectedKernels);
     })
     afterEach(fetchMock.restore);
