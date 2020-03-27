@@ -133,7 +133,7 @@
     <TypescriptInputs Include="$(JsApiRoot)tsconfig.json" />
     <TypescriptInputs Include="$(JsApiRoot)src/**/*.ts" />
 
-    <TypescriptOutputFiles Include="$(JsApiRoot)dist/dotnet-interactive-client.js" />
+    <TypescriptOutputFiles Include="$(JsApiRoot)dist/dotnet-interactive.js" />
     <TypescriptOutputFiles Include="$(JsApiRoot)dist/dotnet-interactive-code-mirror.js" />
 
     <EmbeddedResource Include="@(TypescriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)"/>

@@ -6,11 +6,11 @@ import { KernelClientImpl, createDotnetInteractiveClient } from "./KernelClientI
 
 export function init(global: any) {
     global.getDotnetInteractiveScope = (key: string) => {
-        if (typeof (global.interactiveScopes) === undefined) {
+        if (!global.interactiveScopes) {
             global.interactiveScopes = new DotnetInteractiveScopeContainer();
         }
 
-        if (typeof (global.interactiveScopes[key]) === undefined) {
+        if (!global.interactiveScopes[key]) {
             global.interactiveScopes[key] = new DotnetInteractiveScope();
         }
 
