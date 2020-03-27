@@ -33,7 +33,7 @@ describe("dotnet-interactive", () => {
                 fsharp: ["c", "d"]
             };
 
-            fetchMock.post(`${rootUrl}/variables`, expectedVariables);
+            fetchMock.post(`${rootUrl}/variables`, require("./Responses/variableBundleResponse01.json"));
 
             let client = await createDotnetInteractiveClient(rootUrl);
             let variables = await client.getVariables(varaibleRequest);
