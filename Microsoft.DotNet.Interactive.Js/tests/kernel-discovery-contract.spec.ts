@@ -13,7 +13,7 @@ describe("kernel discovery contract", () => {
     it("creates kernel clients for all discovered kernels", async () => {
         const rootUrl = "https://dotnet.interactive.com:999";
         const expectedKernels = [".NET", "csharp", "fsharp", "powershell", "javascript", "html"];
-        fetchMock.get(`${rootUrl}/kernels`, require("./Responses/kernelsResponse.json"));
+        fetchMock.get(`${rootUrl}/kernels`, require("./Responses/kernels-get-response.json"));
         let client = asKernelClientContainer(await createDotnetInteractiveClient(rootUrl));
 
         for (let kernelName of expectedKernels) {
