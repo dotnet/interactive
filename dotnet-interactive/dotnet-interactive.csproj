@@ -126,7 +126,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <TypescriptInputs Include="$(JsApiRoot)mocha.opts" />
     <TypescriptInputs Include="$(JsApiRoot)package.json" />
     <TypescriptInputs Include="$(JsApiRoot)package-lock.json" />
     <TypescriptInputs Include="$(JsApiRoot)rollup.config.js" />
