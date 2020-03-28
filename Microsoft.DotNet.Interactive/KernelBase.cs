@@ -350,7 +350,7 @@ namespace Microsoft.DotNet.Interactive
 
             _disposables.Add(disposable);
         }
-   
+
         protected abstract Task HandleSubmitCode(
             SubmitCode command, 
             KernelInvocationContext context);

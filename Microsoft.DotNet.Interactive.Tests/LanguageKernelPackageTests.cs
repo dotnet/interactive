@@ -106,82 +106,12 @@ json"
                 .Be(new { value = "hello" }.ToJson());
         }
 
-        [Theory]
-        [InlineData(Language.FSharp)]
-        public async Task it_can_load_assembly_references_using_r_directive_at_quotedpaths(Language language)
-        {
-            var kernel = CreateKernel(language);
-
-            // F# strings treat \ as an escape character.  So do C# strings, except #r in C# is special, and doesn't.  F# usually uses @ strings for paths @"c:\temp\...."
-            var dllPath = new FileInfo(typeof(JsonConvert).Assembly.Location).FullName;
-
-            var source = language switch
-            {
-                Language.FSharp => new[]
-                {
-                    $"#r @\"{dllPath}\"",
-                    @"
-open Newtonsoft.Json
-let json = JsonConvert.SerializeObject( struct {| value = ""hello"" |} )
-json
-"
-                }
-            };
-
-            await SubmitCode(kernel, source);
-
-            KernelEvents
-                .Should()
-                .ContainSingle(e => e is ReturnValueProduced);
-
-            KernelEvents
-                .OfType<ReturnValueProduced>()
-                .Single()
-                .Value
-                .Should()
-                .Be(new { value = "hello" }.ToJson());
-        }
-
-        [Theory]
-        [InlineData(Language.FSharp)]
-        public async Task it_can_load_assembly_references_using_r_directive_at_triplequotedpaths(Language language)
-        {
-            var kernel = CreateKernel(language);
-
-            var dllPath = new FileInfo(typeof(JsonConvert).Assembly.Location).FullName;
-
-            var source = language switch
-            {
-                Language.FSharp => new[]
-                {
-                    $"#r \"\"\"{dllPath}\"\"\"",
-                    @"
-open Newtonsoft.Json
-let json = JsonConvert.SerializeObject( struct {| value = ""hello"" |} )
-json
-"
-                },
-            };
-
-            await SubmitCode(kernel, source);
-
-            KernelEvents
-                .Should()
-                .ContainSingle(e => e is ReturnValueProduced);
-
-            KernelEvents
-                .OfType<ReturnValueProduced>()
-                .Single()
-                .Value
-                .Should()
-                .Be(new { value = "hello" }.ToJson());
-        }
 
         [Theory]
         [InlineData(Language.CSharp, false)]
         [InlineData(Language.FSharp, false)]
         [InlineData(Language.CSharp, true)]
-        [InlineData(Language.FSharp, true, Skip = "oops")]
+        //[InlineData(Language.FSharp, true, Skip = "FSharp, relative is not relative to cwd.")]
         public async Task it_can_load_assembly_references_using_r_directive_with_relative_path(Language language, bool changeWorkingDirectory)
         {
             var workingDirectory = Directory.GetCurrentDirectory();
@@ -223,15 +153,22 @@ json
                         .ContainSingle<CommandHandled>(c => c.Command == command);
         }
 
-        [Fact]
-        public async Task it_returns_completion_list_for_types_imported_at_runtime()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task it_returns_completion_list_for_types_imported_at_runtime(Language language)
         {
-            var kernel = CreateKernel();
+            var kernel = CreateKernel(language);
 
             var dll = new FileInfo(typeof(JsonConvert).Assembly.Location).FullName;
 
-            await kernel.SendAsync(
-                new SubmitCode($"#r \"{dll}\""));
+            var code = language switch
+            {
+                Language.CSharp => $"#r \"{dll}\"",
+                Language.FSharp => $"#r @\"{dll}\""
+            };
+
+            await kernel.SendAsync(new SubmitCode(code));
 
             await kernel.SendAsync(new RequestCompletion("Newtonsoft.Json.JsonConvert.", 28));
 
@@ -245,20 +182,21 @@ json
                         .Contain(i => i.DisplayText == "SerializeObject");
         }
 
-        [Fact]
-        public async Task When_SubmitCode_command_adds_packages_to_csharp_kernel_then_the_submission_is_not_passed_to_csharpScript()
+        [Theory]
+        [InlineData(Language.CSharp, "var a = new List<int>();")]
+        [InlineData(Language.FSharp, "let _ = List<int>()")]
+        public async Task When_SubmitCode_command_adds_packages_to_the_kernel_then_the_submission_is_not_passed_to_the_script(Language language, string assignment)
         {
-            using var kernel = CreateKernel(Language.CSharp);
+            using var kernel = CreateKernel(language);
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-
-            var command = new SubmitCode("#r \"nuget:Microsoft.ML, 1.3.1\" \nvar a = new List<int>();");
+            var command = new SubmitCode("#r \"nuget:Microsoft.ML, 1.3.1\"" + Environment.NewLine + assignment);
             await kernel.SendAsync(command);
 
             events
                 .OfType<CodeSubmissionReceived>()
                 .Should()
-                .NotContain(e => e.Code.Contains("#r"));
+                .NotContain(e => e.Code.Contains("#r \"nuget:"));
         }
 
         [Theory]
@@ -269,7 +207,7 @@ json
             using IKernel kernel = language switch
             {
                 Language.CSharp => new CompositeKernel { new CSharpKernel().UseNugetDirective() },
-                Language.FSharp => new CompositeKernel { new FSharpKernel() }
+                Language.FSharp => new CompositeKernel { new FSharpKernel().UseNugetDirective() }
             };
 
             var code = $@"
@@ -414,10 +352,12 @@ Formatter<DataFrame>.Register((df, writer) =>
             events.Should().NotContainErrors();
         }
 
-        [Fact]
-        public async Task Pound_r_nuget_disallows_empty_package_specification()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_r_nuget_disallows_empty_package_specification(Language language)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -432,10 +372,12 @@ Formatter<DataFrame>.Register((df, writer) =>
                 .Be("Unable to parse package reference: \"nuget:\"");
         }
 
-        [Fact]
-        public async Task Pound_r_nuget_disallows_version_only_package_specification()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_r_nuget_disallows_version_only_package_specification(Language language)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -454,10 +396,12 @@ Formatter<DataFrame>.Register((df, writer) =>
                 .Be("Unable to parse package reference: \"nuget:,1.0.0\"");
         }
 
-        [Fact]
-        public async Task Pound_i_nuget_allows_RestoreSources_package_specification()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_i_nuget_allows_RestoreSources_package_specification(Language language)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -470,10 +414,12 @@ Formatter<DataFrame>.Register((df, writer) =>
             events.Should().NotContainErrors();
         }
 
-        [Fact]
-        public async Task Pound_i_nuget_displays_list_of_added_sources()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_i_nuget_displays_list_of_added_sources(Language language)
         {
-             var kernel = CreateKernel(Language.CSharp);
+             var kernel = CreateKernel(language);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -491,10 +437,12 @@ Formatter<DataFrame>.Register((df, writer) =>
                   .ContainAll("Restore sources", "https://completelyFakerestoreSource");
         }
 
-        [Fact]
-        public async Task Pound_i_nuget_allows_duplicate_sources_package_specification_single_cell()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_i_nuget_allows_duplicate_sources_package_specification_single_cell(Language language)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -508,10 +456,12 @@ Formatter<DataFrame>.Register((df, writer) =>
             events.Should().NotContainErrors();
         }
 
-        [Fact]
-        public async Task Pound_i_nuget_allows_duplicate_sources_package_specification_multiple_cells()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_i_nuget_allows_duplicate_sources_package_specification_multiple_cells(Language language)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -530,10 +480,12 @@ Formatter<DataFrame>.Register((df, writer) =>
             events.Should().NotContainErrors();
         }
 
-        [Fact]
-        public async Task Pound_i_nuget_allows_multiple_sources_package_specification_single_cell()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_i_nuget_allows_multiple_sources_package_specification_single_cell(Language language)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -546,10 +498,12 @@ Formatter<DataFrame>.Register((df, writer) =>
             events.Should().NotContainErrors();
         }
 
-        [Fact]
-        public async Task Pound_i_nuget_allows_multiple_package_sources_to_be_specified_in_multiple_cells()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_i_nuget_allows_multiple_package_sources_to_be_specified_in_multiple_cells(Language language)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -569,28 +523,32 @@ Formatter<DataFrame>.Register((df, writer) =>
             events.Should().NotContainErrors();
         }
 
-        [Fact]
-        public async Task Pound_r_nuget_allows_duplicate_package_specifications_single_cell()
+        [Theory]
+        [InlineData(Language.CSharp, "using Microsoft.ML.AutoML;")]
+        [InlineData(Language.FSharp, "open Microsoft.ML.AutoML")]
+        public async Task Pound_r_nuget_allows_duplicate_package_specifications_single_cell(Language language, string code)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync(
-                @"
+            await kernel.SubmitCodeAsync(@"
 #!time
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
-using Microsoft.ML.AutoML;
 ");
+
+            await kernel.SubmitCodeAsync(code);
 
             events.Should().NotContainErrors();
         }
 
-        [Fact]
-        public async Task Pound_r_nuget_allows_duplicate_package_specifications_multiple_cells()
+        [Theory]
+        [InlineData(Language.CSharp, "using Microsoft.ML.AutoML;")]
+        [InlineData(Language.FSharp, "open Microsoft.ML.AutoML")]
+        public async Task Pound_r_nuget_allows_duplicate_package_specifications_multiple_cells(Language language, string code)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -603,26 +561,29 @@ using Microsoft.ML.AutoML;
             await kernel.SubmitCodeAsync(
                 @"
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
-using Microsoft.ML.AutoML;
 ");
+
+            await kernel.SubmitCodeAsync(code);
 
             events.Should().NotContainErrors();
         }
 
-        [Fact]
-        public async Task Pound_r_nuget_disallows_package_specifications_with_different_versions_single_cell()
+        [Theory]
+        [InlineData(Language.CSharp, "using Microsoft.ML.AutoML;")]
+        [InlineData(Language.FSharp, "open Microsoft.ML.AutoML")]
+        public async Task Pound_r_nuget_disallows_package_specifications_with_different_versions_single_cell(Language language, string code)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync(
-                @"
+            await kernel.SubmitCodeAsync(@"
 #!time
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
 #r ""nuget:Microsoft.ML.AutoML,0.16.1-preview""
-using Microsoft.ML.AutoML;
 ");
+
+            await kernel.SubmitCodeAsync(code);
 
             events
                 .OfType<ErrorProduced>()
@@ -632,10 +593,12 @@ using Microsoft.ML.AutoML;
                 .Be("Microsoft.ML.AutoML version 0.16.1-preview cannot be added because version 0.16.0-preview was added previously.");
         }
 
-        [Fact]
-        public async Task Pound_r_nuget_disallows_package_specifications_with_different_versions_multiple_cells()
+        [Theory]
+        [InlineData(Language.CSharp, "using Microsoft.ML.AutoML;")]
+        [InlineData(Language.FSharp, "open Microsoft.ML.AutoML")]
+        public async Task Pound_r_nuget_disallows_package_specifications_with_different_versions_multiple_cells(Language language, string code)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -650,8 +613,9 @@ using Microsoft.ML.AutoML;
                 @"
 #!time
 #r ""nuget:Microsoft.ML.AutoML,0.16.1-preview""
-using Microsoft.ML.AutoML;
 ");
+
+            await kernel.SubmitCodeAsync(code);
 
             events
                 .OfType<ErrorProduced>()
@@ -661,24 +625,103 @@ using Microsoft.ML.AutoML;
                 .Be("Microsoft.ML.AutoML version 0.16.1-preview cannot be added because version 0.16.0-preview was added previously.");
         }
 
-        [Fact]
-        public async Task cell_with_nuget_and_code_continues_executions_on_right_kernel()
+        /*
+        [Theory]
+        [InlineData(Language.CSharp, Language.FSharp)]
+        [InlineData(Language.FSharp, Language.CSharp)]
+        public async Task cell_with_nuget_and_code_continues_executions_on_right_kernel(Language first, Language second)
         {
+            KernelBase CreateKernel(Language language)
+            {
+                return language switch
+                {
+                    Language.CSharp =>
+                        new CSharpKernel().UseDefaultFormatting()
+                                            .UseNugetDirective()
+                                            .UseKernelHelpers()
+                                            .UseWho()
+                                            .LogEventsToPocketLogger(),
+                    Language.FSharp =>
+                        new FSharpKernel().UseDefaultFormatting()
+                                            .UseKernelHelpers()
+                                            .UseWho()
+                                            .UseDefaultNamespaces()
+                                            .LogEventsToPocketLogger()
+                };
+            }
+
             var kernel =
                 new CompositeKernel
                     {
-                        new CSharpKernel()
-                            .UseDefaultFormatting()
-                            .UseNugetDirective()
-                            .UseKernelHelpers()
-                            .UseWho()
-                            .LogEventsToPocketLogger(),
-                        new FSharpKernel()
-                            .UseDefaultFormatting()
-                            .UseKernelHelpers()
-                            .UseWho()
-                            .UseDefaultNamespaces()
-                            .LogEventsToPocketLogger()
+                        CreateKernel(first),
+                        CreateKernel(second)
+                    }
+                    .UseDefaultMagicCommands();
+
+            kernel.DefaultKernelName = first switch
+            {
+                Language.CSharp => "csharp",
+                Language.FSharp => "fsharp"
+            };
+
+            var events = kernel.KernelEvents.ToSubscribedList();
+
+            DisposeAfterTest(events);
+            DisposeAfterTest(kernel);
+
+            var code = first switch
+            {
+                Language.CSharp => @"
+#r ""nuget:NodaTime, 2.4.6""
+using Octokit;
+using NodaTime;
+using NodaTime.Extensions;
+using XPlot.Plotly; ",
+
+                Language.FSharp => @"
+#r ""nuget:NodaTime, 2.4.6""
+open Octokit
+open NodaTime
+open NodaTime.Extensions
+open XPlot.Plotly ",
+            };
+
+            var command = new SubmitCode(code);
+
+            await kernel.SendAsync(command, CancellationToken.None);
+
+            events.Should().NotContainErrors();
+
+            events
+                .Should()
+                .ContainSingle<CommandHandled>(ch => ch.Command == command);
+        }
+*/
+        [Theory]
+        [InlineData(Language.CSharp, Language.FSharp)]
+        [InlineData(Language.FSharp, Language.CSharp)]
+        public async Task cell_with_nuget_and_code_continues_executions_on_right_kernel(Language first, Language second)
+        {
+            var csk =
+                    new CSharpKernel()
+                        .UseDefaultFormatting()
+                        .UseNugetDirective()
+                        .UseKernelHelpers()
+                        .UseWho()
+                        .LogEventsToPocketLogger();
+            var fsk =
+                    new FSharpKernel()
+                        .UseDefaultFormatting()
+                        .UseKernelHelpers()
+                        .UseWho()
+                        .UseDefaultNamespaces()
+                        .LogEventsToPocketLogger();
+
+            var kernel =
+                new CompositeKernel
+                    {
+                        first switch { Language.CSharp => csk, Language.FSharp => fsk },
+                        second switch { Language.CSharp => csk, Language.FSharp => fsk }
                     }
                     .UseDefaultMagicCommands();
 
@@ -705,15 +748,16 @@ using XPlot.Plotly;");
                 .ContainSingle<CommandHandled>(ch => ch.Command == command);
         }
 
-        [Fact]
-        public async Task Pound_r_nuget_disallows_changing_version_of_loaded_dependent_packages()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_r_nuget_disallows_changing_version_of_loaded_dependent_packages(Language language)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync(
-                @"
+            await kernel.SubmitCodeAsync(@"
 #!time
 #r ""nuget: Microsoft.ML, 1.4.0""
 #r ""nuget:Microsoft.ML.AutoML,0.16.0""
@@ -721,8 +765,7 @@ using XPlot.Plotly;");
 ");
             events.Should().NotContainErrors();
 
-            await kernel.SubmitCodeAsync(
-                @"
+            await kernel.SubmitCodeAsync(@"
 #!time
 #r ""nuget: Google.Protobuf, 3.10.1""
 ");
@@ -735,15 +778,16 @@ using XPlot.Plotly;");
                 .Be("Google.Protobuf version 3.10.1 cannot be added because version 3.10.0 was added previously.");
         }
 
-        [Fact]
-        public async Task Pound_r_nuget_allows_using_version_of_loaded_dependent_packages()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_r_nuget_allows_using_version_of_loaded_dependent_packages(Language language)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync(
-                @"
+            await kernel.SubmitCodeAsync(@"
 #!time
 #r ""nuget: Microsoft.ML, 1.4.0""
 #r ""nuget:Microsoft.ML.AutoML,0.16.0""
@@ -751,40 +795,39 @@ using XPlot.Plotly;");
 ");
             events.Should().NotContainErrors();
 
-            await kernel.SubmitCodeAsync(
-                @"
+            await kernel.SubmitCodeAsync(@"
 #!time
 #r ""nuget: Google.Protobuf, 3.10.0""
 ");
             events.Should().NotContainErrors();
         }
 
-        [Fact]
-        public async Task Pound_r_nuget_with_System_Text_Json_should_succeed()
+        [Theory]
+        [InlineData(Language.CSharp, "using System.Text.Json;")]
+        [InlineData(Language.FSharp, "open System.Text.Json")]
+        public async Task Pound_r_nuget_with_System_Text_Json_should_succeed(Language language, string code)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             var events = kernel.KernelEvents.ToSubscribedList();
 
             await kernel.SubmitCodeAsync(@"
 #r ""nuget:System.Text.Json, 4.6.0""
-using System.Text.Json;
 ");
-            // It should work, no errors and the requested package should be added
-            events.Should().NotContainErrors();
 
-            // The System.Text.JSon dll ships in : Microsoft.NETCore.App.Ref
-            events.OfType<PackageAdded>()
-                  .Should()
-                  .ContainSingle(e => e.PackageReference.PackageName == "Microsoft.NETCore.App.Ref");
+            await kernel.SubmitCodeAsync(code);
+            // It should work, no errors, System.Text.Json is part of the shared framework
+            events.Should().NotContainErrors();
         }
 
-        [Fact]
-        public async Task Pound_r_nuget_with_no_version_should_not_get_the_oldest_package_version()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_r_nuget_with_no_version_should_not_get_the_oldest_package_version(Language language)
         {
             // #r "nuget: with no version specified should get the newest version of the package not the oldest:
             // For test purposes we evaluate the retrieved package is not the oldest version, since the newest may change over time.
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -801,10 +844,12 @@ using System.Text.Json;
                                       e.PackageReference.PackageVersion != "1.0.3");
         }
 
-        [Fact]
-        public async Task Pound_r_nuget_with_no_version_displays_the_version_that_was_installed()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_r_nuget_with_no_version_displays_the_version_that_was_installed(Language language)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -816,10 +861,12 @@ using System.Text.Json;
                   .ContainSingle<DisplayedValueUpdated>(e => e.Value.Equals("Installed package Its.Log version 2.10.1"));
         }
 
-        [Fact]
-        public async Task Pound_r_nuget_does_not_repeat_notifications_for_previous_r_nuget_submissions()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_r_nuget_does_not_repeat_notifications_for_previous_r_nuget_submissions(Language language)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             await kernel.SubmitCodeAsync(@"#r ""nuget:Its.Log""");
 
@@ -838,10 +885,38 @@ using System.Text.Json;
                                    .StartsWith("Installing package Its.Log"));
         }
 
-        [Fact]
-        public async Task When_restore_fails_then_an_error_is_displayed()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        //[InlineData(Language.FSharp)]   /// Reenable when --- https://github.com/dotnet/fsharp/issues/8775
+        public async Task Pound_r_nuget_does_not_accept_invalid_keys(Language language)
         {
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
+
+            // C# and F# should both fail, but the messages will be different because they handle it differently internally.
+            var expectedMessage = language switch
+            {
+                Language.CSharp => "Metadata file 'nugt:System.Text.Json' could not be found",
+                Language.FSharp => "interactive error Package manager key 'nugt' was not registered"
+            };
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            // nugt is an invalid provider key should fail
+            await kernel.SubmitCodeAsync(@"#r ""nugt:System.Text.Json""");
+
+            events.Should()
+                  .ContainSingle<CommandFailed>()
+                  .Which
+                  .Message
+                  .Should()
+                  .Contain(expectedMessage);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task When_restore_fails_then_an_error_is_displayed(Language language)
+        {
+            var kernel = CreateKernel(language);
 
             var nonexistentPackageName = Guid.NewGuid().ToString("N");
 
@@ -860,7 +935,7 @@ using System.Text.Json;
 
         [Theory]
         [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]   
+        [InlineData(Language.FSharp)]
         public async Task it_can_load_assembly_referenced_from_refs_folder_in_nugetpackage(Language language)
         {
             var kernel = CreateKernel(language);

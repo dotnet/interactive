@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -32,6 +32,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="FSharp.Compiler.Private.Scripting" />
   </ItemGroup>
 
    <ItemGroup>	
@@ -39,6 +40,7 @@
     <NuspecProperty Include="SystemRuntimeLoaderVersion=$(SystemRuntimeLoaderVersion)" />	
     <NuspecProperty Include="SystemReactiveVersion=$(SystemReactiveVersion)" />	
     <NuspecProperty Include="SystemCommandLineVersion=$(SystemCommandLineVersion)" />	
+    <NuspecProperty Include="FSharpCompilerPrivateScriptingVersion=$(FSharpCompilerPrivateScriptingVersion)" />
   </ItemGroup>
 
   <ItemGroup>

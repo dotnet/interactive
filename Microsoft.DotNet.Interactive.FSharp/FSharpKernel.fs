@@ -5,26 +5,27 @@ namespace Microsoft.DotNet.Interactive.FSharp
 
 open System
 open System.Collections.Generic
+open System.Linq
 open System.Runtime.InteropServices
+open System.Text
 open System.Threading
 open System.Threading.Tasks
 
+open Microsoft.CodeAnalysis.Tags
+open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive.Commands
 open Microsoft.DotNet.Interactive.Events
 open Microsoft.DotNet.Interactive.Utility
 
+open Microsoft.Interactive.DependencyManager;
 open FSharp.Compiler.Interactive.Shell
 open FSharp.Compiler.Scripting
-open FSharp.DependencyManager
 open FSharp.Compiler.SourceCodeServices
-open Microsoft.CodeAnalysis.Tags
-open System
 
 type FSharpKernel() as this =
     inherit KernelBase("fsharp")
 
-    let resolvedAssemblies = List<string>()
     static let lockObj = Object();
 
     let variables = HashSet<string>()
@@ -35,10 +36,6 @@ type FSharpKernel() as this =
         let valueBoundHandler = new Handler<(obj * Type * string)>(fun _ (_, _, name) -> variables.Add(name) |> ignore)
         do script.ValueBound.AddHandler valueBoundHandler
         do registerForDisposal(fun () -> script.ValueBound.RemoveHandler valueBoundHandler)
-
-        let handler = new Handler<string> (fun o s -> resolvedAssemblies.Add(s))
-        do script.AssemblyReferenceAdded.AddHandler handler
-        do registerForDisposal(fun () -> do script.AssemblyReferenceAdded.RemoveHandler handler)
         script
 
     let script = lazy createScript this.RegisterForDisposal
@@ -46,32 +43,6 @@ type FSharpKernel() as this =
     let mutable cancellationTokenSource = new CancellationTokenSource()
 
     let messageMap = Dictionary<string, string>()
-
-    let parseReference text =
-        let reference, binLogPath = FSharpDependencyManager.parsePackageReference [text]
-        (reference |> List.tryHead), binLogPath
-
-    let packageInstallingMessages (refSpec: PackageReference option * string option option) =
-        let ref, binLogPath = refSpec
-        let versionText =
-            match ref with
-            | Some ref when ref.Version <> "*" -> ", version " + ref.Version
-            | _ -> ""
-
-        let installingMessage ref = "Installing package " + ref.Include + versionText + "."
-        let loggingMessage = "Binary Logging enabled"
-        [|
-            match ref, binLogPath with
-            | Some reference, Some _ ->
-                yield installingMessage reference
-                yield loggingMessage
-            | Some reference, None ->
-                yield installingMessage reference
-            | None, Some _ ->
-                yield loggingMessage
-            | None, None ->
-                ()
-        |]
 
     let getLineAndColumn (text: string) offset =
         let rec getLineAndColumn' i l c =
@@ -125,47 +96,8 @@ type FSharpKernel() as this =
 
     let handleSubmitCode (codeSubmission: SubmitCode) (context: KernelInvocationContext) =
         async {
-            use _ = script.Value.DependencyAdding
-                    |> Observable.subscribe (fun (key, referenceText) ->
-                        if key = "nuget" then
-                            let reference = parseReference referenceText
-                            for message in packageInstallingMessages reference do
-                                let key = message
-                                messageMap.[key] <- message
-                                context.Publish(DisplayedValueProduced(message, context.Command, valueId=key))
-                        ())
-
-            use _ = script.Value.DependencyAdded
-                    |> Observable.subscribe (fun (key, referenceText) ->
-                        if key = "nuget" then
-                            let reference = parseReference referenceText
-                            match reference with
-                            | Some ref, _ ->
-                                let packageRef = ResolvedPackageReference(ref.Include, packageVersion=ref.Version, assemblyPaths=[])
-                                context.Publish(PackageAdded(packageRef))
-                            | _ -> ()
-
-                            for key in packageInstallingMessages reference do
-                                match reference with
-                                | Some ref, _ ->
-                                    let packageRef = ResolvedPackageReference(ref.Include, packageVersion=ref.Version, assemblyPaths=[])
-                                    let message = "Installed package " + packageRef.PackageName + " version " + packageRef.PackageVersion
-                                    context.Publish(DisplayedValueUpdated(message, key))
-                                | _ -> ()
-                            ())
-
-            use _ = script.Value.DependencyFailed
-                    |> Observable.subscribe (fun (key, referenceText) ->
-                        if key = "nuget" then
-                            let reference = parseReference referenceText
-                            for key in packageInstallingMessages reference do
-                                let message = messageMap.[key] + "failed!"
-                                context.Publish(DisplayedValueUpdated(message, key))
-                            ())
-
             let codeSubmissionReceived = CodeSubmissionReceived(codeSubmission)
             context.Publish(codeSubmissionReceived)
-            resolvedAssemblies.Clear()
             let tokenSource = cancellationTokenSource
             let result, errors =
                 try
@@ -204,6 +136,22 @@ type FSharpKernel() as this =
             context.Publish(CompletionRequestCompleted(completionItems, requestCompletion))
         }
 
+    let mutable _assemblyProbingPaths = Unchecked.defaultof<AssemblyResolutionProbe>
+    let mutable _nativeProbingRoots = Unchecked.defaultof<NativeResolutionProbe>
+
+    let dependencies =
+        let createDependencyProvider () =
+            // These may not be set to null, if they are it is a product coding error
+            // ISupportNuget.Initialize must be invoked prior to creating the DependencyManager
+            // With non null funcs
+            if isNull _assemblyProbingPaths then
+                raise (new ArgumentNullException("_assemblyProbingPaths"))
+
+            if isNull _nativeProbingRoots then
+                raise (new ArgumentNullException("_nativeProbingRoots"))
+            new DependencyProvider(_assemblyProbingPaths, _nativeProbingRoots)
+        lazy (createDependencyProvider ())
+
     member _.GetCurrentVariable(variableName: string) =
         let result, _errors =
             try
@@ -228,8 +176,50 @@ type FSharpKernel() as this =
 
     override this.TryGetVariable(name: string, [<Out>] value: Object byref) =
         match this.GetCurrentVariable(name) with
-        | Some(cv) -> 
+        | Some(cv) ->
             value <- cv.Value
             true
-        | None -> 
+        | None ->
             false
+
+    interface ISupportNuget with
+        member this.Initialize (assemblyProbingPaths: AssemblyResolutionProbe, nativeProbingRoots: NativeResolutionProbe) =
+            // These may not be set to null, if they are it is a product coding error
+            // ISupportNuget.Initialize must be invoked prior to creating the DependencyManager
+            // With non null funcs
+            if isNull assemblyProbingPaths then
+                raise (new ArgumentNullException("assemblyProbingPaths"))
+            if isNull nativeProbingRoots then
+                raise (new ArgumentNullException("nativeProbingRoots"))
+
+            _assemblyProbingPaths <- assemblyProbingPaths
+            _nativeProbingRoots <- nativeProbingRoots
+
+        member this.RegisterNugetResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
+            // Generate #r and #I from packageReferences
+            let sb = StringBuilder()
+            let hashset = HashSet()
+
+            for reference in packageReferences do
+                for assembly in reference.AssemblyPaths do
+                    if hashset.Add(assembly.FullName) then
+                        if assembly.Exists then
+                            sb.AppendFormat("#r @\"{0}\"", assembly.FullName) |> ignore
+                            sb.Append(Environment.NewLine) |> ignore
+
+                match reference.PackageRoot with
+                | null -> ()
+                | root ->
+                    if hashset.Add(root.FullName) then
+                        if root.Exists then
+                            sb.AppendFormat("#I @\"{0}\"", root.FullName) |> ignore
+                            sb.Append(Environment.NewLine) |> ignore
+            let command = new SubmitCode(sb.ToString(), "fsharp")
+            this.DeferCommand(command)
+
+        //     Resolve reference for a list of package manager lines
+        member this.Resolve(packageManagerTextLines:IEnumerable<string>, executionTfm: string, reportError: ResolvingErrorReport): IResolveDependenciesResult =
+            let idm = dependencies.Force().TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget")
+            match idm with
+            | null -> raise (new InvalidOperationException("Internal error - unable to locate the nuget package manager, please try to reinstall."))
+            | idm -> dependencies.Force().Resolve(idm, ".fsx", packageManagerTextLines, reportError, executionTfm)

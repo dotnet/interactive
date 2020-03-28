@@ -5,9 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Interactive.DependencyManager;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp;
@@ -23,12 +25,14 @@ using Microsoft.DotNet.Interactive.Utility;
 using Newtonsoft.Json.Linq;
 using XPlot.Plotly;
 using Task = System.Threading.Tasks.Task;
+using System.ComponentModel;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
     public class CSharpKernel :
         KernelBase,
-        IExtensibleKernel
+        IExtensibleKernel,
+        ISupportNuget
     {
         internal const string DefaultKernelName = "csharp";
 
@@ -39,6 +43,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
             new CSharpParseOptions(LanguageVersion.Default, kind: SourceCodeKind.Script);
 
         private WorkspaceFixture _fixture;
+
+        private AssemblyResolutionProbe _assemblyProbingPaths;
+        private NativeResolutionProbe _nativeProbingRoots;
 
         internal ScriptOptions ScriptOptions =
             ScriptOptions.Default
@@ -62,24 +69,16 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public CSharpKernel() : base(DefaultKernelName)
         {
-            NativeAssemblyLoadHelper = new NativeAssemblyLoadHelper(this);
-            RegisterForDisposal(NativeAssemblyLoadHelper);
+            _dependencies = new Lazy<DependencyProvider>(GetDependencyProvider);
+
             RegisterForDisposal(() =>
             {
                 ScriptState = null;
+                (_dependencies as IDisposable)?.Dispose();
             });
         }
 
         public ScriptState ScriptState { get; private set; }
-
-        internal void AddScriptReferences(IReadOnlyList<ResolvedPackageReference> assemblyPaths)
-        {
-            var references = assemblyPaths
-                             .SelectMany(r => r.AssemblyPaths)
-                             .Select(r => MetadataReference.CreateFromFile(r.FullName));
-
-            ScriptOptions = ScriptOptions.AddReferences(references);
-        }
 
         public Task<bool> IsCompleteSubmissionAsync(string code)
         {
@@ -92,7 +91,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             out object value)
         {
             if (ScriptState?.Variables
-                           .LastOrDefault(v => v.Name == name) is {} variable)
+                           .LastOrDefault(v => v.Name == name) is { } variable)
             {
                 value = variable.Value;
                 return true;
@@ -309,12 +308,65 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 context);
         }
 
+        private Lazy<DependencyProvider> _dependencies;
+
+        private DependencyProvider GetDependencyProvider()
+        {
+            // These may not be set to null, if they are it is a product coding error
+            // ISupportNuget.Initialize must be invoked prior to creating the DependencyManager
+            if (_assemblyProbingPaths == null)
+            {
+                throw new ArgumentNullException(nameof(_assemblyProbingPaths));
+            }
+            if (_nativeProbingRoots == null)
+            {
+                throw new ArgumentNullException(nameof(_nativeProbingRoots));
+            }
+
+            return new DependencyProvider(_assemblyProbingPaths, _nativeProbingRoots);
+        }
+
+        // Set assemblyProbingPaths, nativeProbingRoots for Kernel.
+        // These values are functions that return the list of discovered assemblies, and package roots
+        // They are used by the dependecymanager for Assembly and Native dll resolving
+        void ISupportNuget.Initialize(AssemblyResolutionProbe assemblyProbingPaths, NativeResolutionProbe nativeProbingRoots)
+        {
+            if(assemblyProbingPaths == null)
+            {
+                throw new ArgumentNullException(nameof(assemblyProbingPaths));
+            }
+            if (nativeProbingRoots == null)
+            {
+                throw new ArgumentNullException(nameof(nativeProbingRoots));
+            }
+            _assemblyProbingPaths = assemblyProbingPaths;
+            _nativeProbingRoots = nativeProbingRoots;
+        }
+
+        void ISupportNuget.RegisterNugetResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
+        {
+            var references = resolvedReferences
+                             .SelectMany(r => r.AssemblyPaths)
+                             .Select(r => MetadataReference.CreateFromFile(r.FullName));
+
+            ScriptOptions = ScriptOptions.AddReferences(references);
+        }
+
+        IResolveDependenciesResult ISupportNuget.Resolve(IEnumerable<string> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
+        {
+            IDependencyManagerProvider iDependencyManager = _dependencies.Value.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
+            if (iDependencyManager == null)
+            {
+                // If this happens it is because of a bug in the Dependency provider. or deployment failed to deploy the nuget provider dll.
+                // We guarantee the presence of the nuget provider, by shipping it with the notebook product
+                throw new InvalidOperationException("Internal error - unable to locate the nuget package manager, please try to reinstall.");
+            }
+
+            return _dependencies.Value.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm);
+        }
+
         private bool HasReturnValue =>
             ScriptState != null &&
             (bool)_hasReturnValueMethod.Invoke(ScriptState.Script, null);
-
-        internal NativeAssemblyLoadHelper NativeAssemblyLoadHelper { get; }
     }
-
-
 }

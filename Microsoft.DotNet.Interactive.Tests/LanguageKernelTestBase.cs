@@ -79,6 +79,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             {
                 Language.FSharp => new FSharpKernel()
                                    .UseDefaultFormatting()
+                                   .UseNugetDirective()
                                    .UseKernelHelpers()
                                    .UseWho()
                                    .UseDefaultNamespaces() as KernelBase,
@@ -106,6 +107,35 @@ namespace Microsoft.DotNet.Interactive.Tests
             DisposeAfterTest(kernel);
 
             return kernel;
+        }
+
+        protected KernelBase CreateBaseKernel(Language language)
+        {
+            var kernelBase = language switch
+            {
+                Language.FSharp => new FSharpKernel()
+                                   .UseDefaultFormatting()
+                                   .UseNugetDirective()
+                                   .UseKernelHelpers()
+                                   .UseWho()
+                                   .UseDefaultNamespaces() as KernelBase,
+                Language.CSharp => new CSharpKernel()
+                                   .UseDefaultFormatting()
+                                   .UseNugetDirective()
+                                   .UseKernelHelpers()
+                                   .UseWho(),
+                Language.PowerShell => new PowerShellKernel(),
+                _ => throw new InvalidOperationException("Unknown language specified")
+            };
+
+            kernelBase = kernelBase.LogEventsToPocketLogger();
+
+            KernelEvents = kernelBase.KernelEvents.ToSubscribedList();
+
+            DisposeAfterTest(KernelEvents);
+            DisposeAfterTest(kernelBase);
+
+            return kernelBase;
         }
 
         protected KernelBase CreateKernel()
