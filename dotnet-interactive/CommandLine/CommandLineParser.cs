@@ -8,6 +8,7 @@ using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
@@ -99,6 +100,51 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 "--http-port",
                 "Specifies the port on which to enable HTTP services");
 
+            var httpPortRangeOption = new Option<PortRange>(
+                "--http-port-range",
+                parseArgument: result =>
+                {
+                    if (result.Parent.Parent.Children.Any(c => c.Symbol == httpPortOption))
+                    {
+                        result.ErrorMessage = $"Cannot specify both {httpPortOption.Name} and {result.Symbol.Name} together";
+                        return null;
+                    }
+
+                    var pr = new PortRange();
+
+                    var source = result.Tokens[0].Value;
+
+                    if (string.IsNullOrWhiteSpace(source))
+                    {
+                        result.ErrorMessage = "Must specify a port range";
+                        return null;
+                    }
+
+                    var parts = source.Split(new[] {"-"}, StringSplitOptions.RemoveEmptyEntries);
+
+                    if (parts.Length != 2)
+                    {
+                        result.ErrorMessage = "Must specify a port range";
+                        return null;
+                    }
+
+                    if (int.TryParse(parts[0], out var start) && int.TryParse(parts[1], out var end))
+                    {
+                        pr.Start = start;
+                        pr.End = end;
+                        if (start > end)
+                        {
+                            result.ErrorMessage = "STart port must be lower then end port";
+                            return null;
+                        }
+                        return pr;
+                    }
+
+                    result.ErrorMessage = "Must specify a port range as 1000-3000";
+                    return null;
+                },
+                description: "Specifies the range of port to use to enable HTTP services");
+
             var logPathOption = new Option<DirectoryInfo>(
                 "--log-path",
                 "Enable file logging to the specified directory");
@@ -107,6 +153,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 "--default-kernel", 
                 description: "The default language for the kernel",
                 getDefaultValue: () => "csharp");
+
             var rootCommand = DotnetInteractive();
 
             rootCommand.AddCommand(Jupyter());
@@ -157,6 +204,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     defaultKernelOption,
                     logPathOption,
                     verboseOption,
+                    httpPortOption,
+                    httpPortRangeOption,
                     new Argument<FileInfo>
                     {
                         Name = "connection-file"
@@ -168,10 +217,11 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
                 {
                     logPathOption,
-                    verboseOption
+                    verboseOption,
+                    httpPortRangeOption
                 };
 
-                installCommand.Handler = CommandHandler.Create<IConsole, InvocationContext>(InstallHandler);
+                installCommand.Handler = CommandHandler.Create<IConsole, InvocationContext, PortRange>(InstallHandler);
 
                 jupyterCommand.AddCommand(installCommand);
 
@@ -215,8 +265,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     return jupyter(startupOptions, console, startServer, context);
                 }
 
-                Task<int> InstallHandler(IConsole console, InvocationContext context) =>
-                    new JupyterInstallCommand(console, new JupyterKernelSpec()).InvokeAsync();
+                Task<int> InstallHandler(IConsole console, InvocationContext context, PortRange httpPortRange) =>
+                    new JupyterInstallCommand(console, new JupyterKernelSpec(httpPortRange)).InvokeAsync();
             }
 
             Command HttpServer()
@@ -225,7 +275,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 {
                     defaultKernelOption,
                     httpPortOption,
-                    logPathOption
+                    logPathOption,
+                    httpPortRangeOption
                 };
 
                 startKernelHttpCommand.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(

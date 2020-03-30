@@ -6,6 +6,7 @@ using System.CommandLine.Binding;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App.CommandLine;
@@ -73,6 +74,49 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 .Verbose
                 .Should()
                 .BeTrue();
+        }
+
+        [Fact]
+        public void It_parses_port_range_option()
+        {
+            var result = _parser.Parse($"jupyter --http-port-range 3000-4000 {_connectionFile}");
+
+            var binder = new ModelBinder<StartupOptions>();
+
+            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+
+            options
+                .HttpPortRange
+                .Should()
+                .BeEquivalentTo(new PortRange{ Start = 3000, End = 4000 });
+        }
+
+        [Fact]
+        public void jupyter_install_parses_port_range_option()
+        {
+            var result = _parser.Parse("jupyter install --http-port-range 3000-4000");
+
+            var binder = new ModelBinder<StartupOptions>();
+
+            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+
+            options
+                .HttpPortRange
+                .Should()
+                .BeEquivalentTo(new PortRange { Start = 3000, End = 4000 });
+        }
+
+        [Theory]
+        [InlineData("jupyter --http-port 8000 --http-port-range 3000-4000")]
+        [InlineData("jupyter --http-port-range 3000-4000 --http-port 8000")]
+        public void port_range_and_port_cannot_be_specified_together(string commandLine)
+        {
+            var result =  _parser.Parse(commandLine);
+
+           result.Errors
+               .Select(e => e.Message)
+                .Should()
+                .Contain(errorMessage => errorMessage == "Cannot specify both http-port and http-port-range together");
         }
 
         [Fact]

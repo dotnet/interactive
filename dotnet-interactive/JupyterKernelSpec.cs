@@ -6,12 +6,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.App
 {
     public class JupyterKernelSpec : IJupyterKernelSpec
     {
+        private readonly PortRange _httpPortRange;
+
+        public JupyterKernelSpec(PortRange httpPortRange = null)
+        {
+            _httpPortRange = httpPortRange;
+        }
+
         public async Task<CommandLineResult> ExecuteCommand(string command, string args = "")
         {
             if (!JupyterKernelSpecExists())
