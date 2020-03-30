@@ -23,10 +23,12 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
         public StartupOptions(
             DirectoryInfo logPath = null,
-            bool verbose = false)
+            bool verbose = false,
+            PortRange httpPortRange = null)
         {
             LogPath = logPath;
             Verbose = verbose;
+            HttpPortRange = httpPortRange;
         }
 
         public DirectoryInfo LogPath { get; }
@@ -34,5 +36,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         public bool Verbose { get; }
 
         public int? HttpPort { get; internal set; }
+
+        public PortRange HttpPortRange { get; }
     }
 }
