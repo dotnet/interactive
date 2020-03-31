@@ -39,6 +39,8 @@ namespace Microsoft.DotNet.Interactive.App
                 }
             }
 
+            sources.Add(IPAddress.Loopback.ToString());
+
             var addresses = sources
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .Select(s =>
