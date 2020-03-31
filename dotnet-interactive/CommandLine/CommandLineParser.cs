@@ -110,8 +110,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         return null;
                     }
 
-                   
-
                     var source = result.Tokens[0].Value;
 
                     if (string.IsNullOrWhiteSpace(source))
