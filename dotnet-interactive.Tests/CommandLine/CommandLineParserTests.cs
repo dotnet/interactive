@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public void It_parses_port_range_option()
+        public void jupyter_command_parses_port_range_option()
         {
             var result = _parser.Parse($"jupyter --http-port-range 3000-4000 {_connectionFile}");
 
@@ -88,11 +88,11 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             options
                 .HttpPortRange
                 .Should()
-                .BeEquivalentTo(new PortRange{ Start = 3000, End = 4000 });
+                .BeEquivalentTo(new PortRange(3000, 4000));
         }
 
         [Fact]
-        public void jupyter_install_parses_port_range_option()
+        public void jupyter_install_command_parses_port_range_option()
         {
             var result = _parser.Parse("jupyter install --http-port-range 3000-4000");
 
@@ -103,7 +103,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             options
                 .HttpPortRange
                 .Should()
-                .BeEquivalentTo(new PortRange { Start = 3000, End = 4000 });
+                .BeEquivalentTo(new PortRange(3000, 4000));
         }
 
         [Theory]
@@ -111,12 +111,12 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         [InlineData("jupyter --http-port-range 3000-4000 --http-port 8000")]
         public void port_range_and_port_cannot_be_specified_together(string commandLine)
         {
-            var result =  _parser.Parse(commandLine);
+            var result = _parser.Parse(commandLine);
 
-           result.Errors
-               .Select(e => e.Message)
-                .Should()
-                .Contain(errorMessage => errorMessage == "Cannot specify both http-port and http-port-range together");
+            result.Errors
+                .Select(e => e.Message)
+                 .Should()
+                 .Contain(errorMessage => errorMessage == "Cannot specify both http-port and http-port-range together");
         }
 
         [Fact]
