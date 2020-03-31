@@ -35,23 +35,24 @@ First, make sure you have the following installed:
 
 ```console
 > jupyter kernelspec list
-  .net-csharp    ~\jupyter\kernels\.net-csharp
-  .net-fsharp    ~\jupyter\kernels\.net-fsharp
-  python3        ~\jupyter\kernels\python3
+  .net-csharp        ~\jupyter\kernels\.net-csharp
+  .net-fsharp        ~\jupyter\kernels\.net-fsharp
+  .net-powershell    ~\jupyter\kernels\.net-powershell
+  python3            ~\jupyter\kernels\python3
 ```
 
 ## Using Jupyter with .NET
 
 To launch JupyterLab, you can either type `jupyter lab` in the Anaconda Prompt or launch a notebook using the Anaconda Navigator.
 
-Once Jupyter Lab has launched in your browser, you have the option to create a notebook for C# or F#.
+Once Jupyter Lab has launched in your browser, you have the option to create notebooks using C#, F#, or PowerShell.
 
 <img src = "https://user-images.githubusercontent.com/2546640/72949473-60477900-3d56-11ea-8bc4-47352a613b78.png" width = "80%">
 
 Once the notebook opens, you can start working with .NET in the language you chose.
 
-<img src = "https://user-images.githubusercontent.com/2546640/67981834-db860c80-fbf7-11e9-89b5-29d2480ed1fa.png" width = "70%">
+<img src = "https://user-images.githubusercontent.com/547415/78056370-ddd0cc00-7339-11ea-9379-c40f8b5c1ae5.png" width = "70%">
 
-For more information on the .NET notebook experience, please check out our samples and documentation on [Binder](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab).
+For more information on the .NET notebook experience, please check out our samples and documentation on [Binder](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab) or in this repo under [NotebookExamples](https://github.com/dotnet/interactive/tree/master/NotebookExamples).
 
- Once you've created a .NET notebook, you might want to share it with others. In the [next document](CreateBinder.md), you will learn how to share your .NET notebook with others using binder. 
+ Once you've created a .NET notebook, you might want to share it with others. In the [next document](CreateBinder.md), you will learn how to share your .NET notebook with others using Binder. 
