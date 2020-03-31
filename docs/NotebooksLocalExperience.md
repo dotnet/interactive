@@ -47,10 +47,6 @@ To launch JupyterLab, you can either type `jupyter lab` in the Anaconda Prompt o
 
 Once Jupyter Lab has launched in your browser, you have the option to create notebooks using C#, F#, or PowerShell.
 
-<img src = "https://user-images.githubusercontent.com/2546640/72949473-60477900-3d56-11ea-8bc4-47352a613b78.png" width = "80%">
-
-Once the notebook opens, you can start working with .NET in the language you chose.
-
 <img src = "https://user-images.githubusercontent.com/547415/78056370-ddd0cc00-7339-11ea-9379-c40f8b5c1ae5.png" width = "70%">
 
 For more information on the .NET notebook experience, please check out our samples and documentation on [Binder](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab) or in this repo under [NotebookExamples](https://github.com/dotnet/interactive/tree/master/NotebookExamples).
