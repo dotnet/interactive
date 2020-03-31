@@ -1014,15 +1014,6 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
                     .Which
                     .Value
                     .As<string>()
-                    .EndsWith(@"runtimes\win\lib\netstandard2.0\System.Device.Gpio.dll")
-                    .Should()
-                    .Be(true);
-                KernelEvents
-                    .Should()
-                    .ContainSingle<ReturnValueProduced>()
-                    .Which
-                    .Value
-                    .As<string>()
                     .EndsWith(@"runtimes/linux/lib/netstandard2.0/System.Device.Gpio.dll")
                     .Should()
                     .Be(true);
