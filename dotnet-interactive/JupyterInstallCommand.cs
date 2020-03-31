@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.App
 
                     if (_httpPortRange != null)
                     {
-                        await ComputeKernelSpecArgs(_httpPortRange, dotnetDirectory);
+                        ComputeKernelSpecArgs(_httpPortRange, dotnetDirectory);
                     }
                     var installErrors = 0;
                     foreach (var kernelDirectory in dotnetDirectory.GetDirectories())
@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.Interactive.App
             }
         }
 
-        private async Task ComputeKernelSpecArgs(PortRange httpPortRange, DirectoryInfo directory)
+        private static void ComputeKernelSpecArgs(PortRange httpPortRange, DirectoryInfo directory)
         {
             var kernelSpecs = directory.GetFiles("kernel.json", SearchOption.AllDirectories);
 
