@@ -16,6 +16,7 @@ using Newtonsoft.Json;
 using Recipes;
 using Xunit;
 using Xunit.Abstractions;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -932,7 +933,6 @@ using XPlot.Plotly;");
                   .Contain($"error NU1101: Unable to find package {nonexistentPackageName}. No packages exist with this id in source(s): ");
         }
 
-
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
@@ -970,6 +970,64 @@ tInput.Length"
                 .Value
                 .Should()
                 .Be(4);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task it_can_load_platform_specific_assembly_in_nugetpackage(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var source = language switch
+            {
+                Language.FSharp => @"
+#r ""nuget:System.Device.Gpio""
+typeof<System.Device.Gpio.GpioController>.Assembly.Location
+",
+                Language.CSharp => @"
+#r ""nuget:System.Device.Gpio""
+typeof(System.Device.Gpio.GpioController).Assembly.Location
+"
+            };
+
+            await SubmitCode(kernel, source);
+
+            // Because this is platform specific there are platform specific results
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                KernelEvents
+                    .Should()
+                    .ContainSingle<ReturnValueProduced>()
+                    .Which
+                    .Value
+                    .As<string>()
+                    .EndsWith(@"runtimes\win\lib\netstandard2.0\System.Device.Gpio.dll")
+                    .Should()
+                    .Be(true);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                KernelEvents
+                    .Should()
+                    .ContainSingle<ReturnValueProduced>()
+                    .Which
+                    .Value
+                    .As<string>()
+                    .EndsWith(@"runtimes\win\lib\netstandard2.0\System.Device.Gpio.dll")
+                    .Should()
+                    .Be(true);
+                KernelEvents
+                    .Should()
+                    .ContainSingle<ReturnValueProduced>()
+                    .Which
+                    .Value
+                    .As<string>()
+                    .EndsWith(@"runtimes/linux/lib/netstandard2.0/System.Device.Gpio.dll")
+                    .Should()
+                    .Be(true);
+            }
+            // (OSPlatform.OSX is not supported by this library
         }
     }
 }
