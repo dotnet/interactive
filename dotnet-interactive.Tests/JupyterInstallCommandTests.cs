@@ -16,9 +16,10 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
             var console = new TestConsole();
             var kernelSpec = new  InMemoryJupyterKernelSpec(true, null);
-            var jupyterCommandLine = new JupyterInstallCommand(console, kernelSpec , new PortRange{ Start = 100, End = 400});
+            var jupyterCommandLine = new JupyterInstallCommand(console, kernelSpec , new PortRange(100,400));
 
             await jupyterCommandLine.InvokeAsync();
+            kernelSpec.InstalledKernelSpecs.Count.Should().BeGreaterThan(0);
 
             foreach (var installedKernelSpec in kernelSpec.InstalledKernelSpecs)
             {

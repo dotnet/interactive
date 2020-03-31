@@ -5,7 +5,13 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 {
     public class PortRange
     {
-        public int Start { get; set; }
-        public int End { get; set; }
+        public PortRange(int start, int end)
+        {
+            Start = start;
+            End = end;
+        }
+
+        public int Start { get;  }
+        public int End { get;  }
     }
 }

@@ -85,9 +85,7 @@ namespace Microsoft.DotNet.Interactive.App
                 StartToolLogging(options)
             };
 
-            var httpPort = options.HttpPort ??= options.HttpPortRange != null 
-                ? GetFreePortInRange(options.HttpPortRange) 
-                : GetFreePort();
+            var httpPort = options.HttpPort ??= GetFreePort(options.HttpPortRange);
 
             var probingSettings = HttpProbingSettings.Create(httpPort);
 
@@ -107,35 +105,28 @@ namespace Microsoft.DotNet.Interactive.App
 
             return webHost;
 
-            int GetFreePort()
+            int GetFreePort(PortRange httpPortRange = null)
             {
-                var l = new TcpListener(IPAddress.Loopback, 0);
-                l.Start();
-                var port = ((IPEndPoint)l.LocalEndpoint).Port;
-                l.Stop();
-                return port;
-            }
-
-            int GetFreePortInRange(PortRange httpPortRange)
-            {
-                for (var currentPort = httpPortRange.Start; currentPort <= httpPortRange.End; currentPort++)
-                {
+                var currentPort = httpPortRange?.Start ?? 0;
+                var endPort =  httpPortRange?.End ?? 0;
+                for (;currentPort <= endPort; currentPort++ ) {
                     try
                     {
                         var l = new TcpListener(IPAddress.Loopback, currentPort);
                         l.Start();
                         var port = ((IPEndPoint)l.LocalEndpoint).Port;
                         l.Stop();
-                        return currentPort;
+                        return port;
                     }
-                    catch(SocketException)
+                    catch (SocketException)
                     {
 
                     }
                 }
 
-                throw new InvalidOperationException($"Cannot find a port in range {httpPortRange.Start}-{httpPortRange.End}");
+                throw new InvalidOperationException("Cannot find a port");
             }
+
         }
 
         public static IWebHost ConstructWebHost(StartupOptions options)

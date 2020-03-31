@@ -14,7 +14,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         private readonly bool _shouldInstallSucceed;
         private readonly bool _shouldUninstallSucceed;
         private readonly IReadOnlyCollection<string> _error;
-        private List<string> _kernelSpecs = new List<string>();
 
         public InMemoryJupyterKernelSpec(
             bool shouldInstallSucceed,
@@ -26,10 +25,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             _error = error;
         }
 
-        public List<string> InstalledKernelSpecs
-        {
-            get => _kernelSpecs;
-        }
+        public List<string> InstalledKernelSpecs { get; } = new List<string>();
 
         public Task<CommandLineResult> InstallKernel(DirectoryInfo directory)
         {

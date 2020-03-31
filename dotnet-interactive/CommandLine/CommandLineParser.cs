@@ -110,7 +110,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         return null;
                     }
 
-                    var pr = new PortRange();
+                   
 
                     var source = result.Tokens[0].Value;
 
@@ -130,17 +130,18 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                     if (int.TryParse(parts[0], out var start) && int.TryParse(parts[1], out var end))
                     {
-                        pr.Start = start;
-                        pr.End = end;
                         if (start > end)
                         {
-                            result.ErrorMessage = "STart port must be lower then end port";
+                            result.ErrorMessage = "Start port must be lower then end port";
                             return null;
                         }
+
+                        var pr = new PortRange(start, end);
+
                         return pr;
                     }
 
-                    result.ErrorMessage = "Must specify a port range as 1000-3000";
+                    result.ErrorMessage = "Must specify a port range as StartPort-EndPort";
                     return null;
                 },
                 description: "Specifies the range of port to use to enable HTTP services");
