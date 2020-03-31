@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App.CommandLine;
@@ -19,12 +20,12 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var jupyterCommandLine = new JupyterInstallCommand(console, kernelSpec , new PortRange(100,400));
 
             await jupyterCommandLine.InvokeAsync();
-            kernelSpec.InstalledKernelSpecs.Count.Should().BeGreaterThan(0);
 
-            foreach (var installedKernelSpec in kernelSpec.InstalledKernelSpecs)
-            {
-                installedKernelSpec.Should().Contain("--http-port-range");
-            }
+            kernelSpec.InstalledKernelSpecs
+                .Should()
+                .HaveCount(3)
+                .And
+                .Match(s => s.All(k => k.Contains("--http-port-range")));
                
         }
 

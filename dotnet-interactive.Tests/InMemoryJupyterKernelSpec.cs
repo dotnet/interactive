@@ -4,7 +4,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using FSharp.Compiler.SourceCodeServices;
 using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
