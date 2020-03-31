@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             result.Errors
                 .Select(e => e.Message)
                  .Should()
-                 .Contain(errorMessage => errorMessage == "Cannot specify both http-port and http-port-range together");
+                 .Contain(errorMessage => errorMessage == "Cannot specify both --http-port and --http-port-range together");
         }
 
         [Fact]

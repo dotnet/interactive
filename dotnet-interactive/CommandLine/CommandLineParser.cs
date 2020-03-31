@@ -104,9 +104,11 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 "--http-port-range",
                 parseArgument: result =>
                 {
-                    if (result.Parent.Parent.Children.Any(c => c.Symbol == httpPortOption))
+                    var conflictingOption =
+                        result.Parent.Parent.Children.FirstOrDefault(c => c.Symbol == httpPortOption) as OptionResult;
+                    if (conflictingOption != null)
                     {
-                        result.ErrorMessage = $"Cannot specify both {httpPortOption.Name} and {result.Symbol.Name} together";
+                        result.ErrorMessage = $"Cannot specify both {conflictingOption.Token.Value} and {result.Parent.ToString()} together";
                         return null;
                     }
 
@@ -126,21 +128,25 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         return null;
                     }
 
-                    if (int.TryParse(parts[0], out var start) && int.TryParse(parts[1], out var end))
+                    if (!int.TryParse(parts[0], out var start) || !int.TryParse(parts[1], out var end))
                     {
-                        if (start > end)
-                        {
-                            result.ErrorMessage = "Start port must be lower then end port";
-                            return null;
-                        }
+                        result.ErrorMessage = "Must specify a port range as StartPort-EndPort";
 
-                        var pr = new PortRange(start, end);
+                        return null;
 
-                        return pr;
                     }
 
-                    result.ErrorMessage = "Must specify a port range as StartPort-EndPort";
-                    return null;
+                    if (start > end)
+                    {
+                        result.ErrorMessage = "Start port must be lower then end port";
+                        return null;
+                    }
+
+                    var pr = new PortRange(start, end);
+
+                    return pr;
+
+
                 },
                 description: "Specifies the range of port to use to enable HTTP services");
 
