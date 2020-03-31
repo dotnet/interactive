@@ -85,7 +85,9 @@ namespace Microsoft.DotNet.Interactive.App
                 StartToolLogging(options)
             };
 
-            var httpPort = options.HttpPort ??= GetFreePort();
+            var httpPort = options.HttpPort ??= options.HttpPortRange != null 
+                ? GetFreePortInRange(options.HttpPortRange) 
+                : GetFreePort();
 
             var probingSettings = HttpProbingSettings.Create(httpPort);
 
@@ -112,6 +114,27 @@ namespace Microsoft.DotNet.Interactive.App
                 var port = ((IPEndPoint)l.LocalEndpoint).Port;
                 l.Stop();
                 return port;
+            }
+
+            int GetFreePortInRange(PortRange httpPortRange)
+            {
+                for (var currentPort = httpPortRange.Start; currentPort <= httpPortRange.End; currentPort++)
+                {
+                    try
+                    {
+                        var l = new TcpListener(IPAddress.Loopback, currentPort);
+                        l.Start();
+                        var port = ((IPEndPoint)l.LocalEndpoint).Port;
+                        l.Stop();
+                        return currentPort;
+                    }
+                    catch(SocketException)
+                    {
+
+                    }
+                }
+
+                throw new InvalidOperationException($"Cannot find a port in range {httpPortRange.Start}-{httpPortRange.End}");
             }
         }
 
