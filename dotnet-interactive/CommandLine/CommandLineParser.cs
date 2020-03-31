@@ -104,11 +104,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 "--http-port-range",
                 parseArgument: result =>
                 {
-                    var conflictingOption =
-                        result.Parent.Parent.Children.FirstOrDefault(c => c.Symbol == httpPortOption) as OptionResult;
-                    if (conflictingOption != null)
+                    if (result.Parent.Parent.Children.FirstOrDefault(c => c.Symbol == httpPortOption) is OptionResult conflictingOption)
                     {
-                        result.ErrorMessage = $"Cannot specify both {conflictingOption.Token.Value} and {result.Parent.ToString()} together";
+                        var parsed = result.Parent as OptionResult;
+                        result.ErrorMessage = $"Cannot specify both {conflictingOption.Token.Value} and {parsed.Token.Value} together";
                         return null;
                     }
 
