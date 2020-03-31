@@ -6,7 +6,9 @@ using System.CommandLine.IO;
 using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Utility;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.App
 {
@@ -14,11 +16,13 @@ namespace Microsoft.DotNet.Interactive.App
     {
         private readonly IConsole _console;
         private readonly IJupyterKernelSpec _jupyterKernelSpec;
+        private readonly PortRange _httpPortRange;
 
-        public JupyterInstallCommand(IConsole console, IJupyterKernelSpec jupyterKernelSpec)
+        public JupyterInstallCommand(IConsole console, IJupyterKernelSpec jupyterKernelSpec, PortRange httpPortRange = null)
         {
             _console = console;
             _jupyterKernelSpec = jupyterKernelSpec;
+            _httpPortRange = httpPortRange;
         }
 
         public async Task<int> InvokeAsync()
@@ -39,6 +43,10 @@ namespace Microsoft.DotNet.Interactive.App
                     var dotnetDirectory = disposableDirectory.Directory;
                     ZipFile.ExtractToDirectory(zipPath, dotnetDirectory.FullName);
 
+                    if (_httpPortRange != null)
+                    {
+                        await ComputeKernelSpecArgs(_httpPortRange, dotnetDirectory);
+                    }
                     var installErrors = 0;
                     foreach (var kernelDirectory in dotnetDirectory.GetDirectories())
                     {
@@ -58,6 +66,24 @@ namespace Microsoft.DotNet.Interactive.App
 
                     return installErrors;
                 }
+            }
+        }
+
+        private async Task ComputeKernelSpecArgs(PortRange httpPortRange, DirectoryInfo directory)
+        {
+            var kernelSpecs = directory.GetFiles("kernel.json", SearchOption.AllDirectories);
+
+            foreach (var kernelSpec in kernelSpecs)
+            {
+                var parsed = JObject.Parse(File.ReadAllText(kernelSpec.FullName));
+
+                var argv = parsed["argv"].Value<JArray>();
+
+                argv.Insert(argv.Count -1, "--http-port-range");
+                argv.Insert(argv.Count - 1, $"{httpPortRange.Start}-{httpPortRange.End}");
+
+                File.WriteAllText(kernelSpec.FullName, parsed.ToString(Newtonsoft.Json.Formatting.Indented));
+
             }
         }
     }

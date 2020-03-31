@@ -266,7 +266,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 }
 
                 Task<int> InstallHandler(IConsole console, InvocationContext context, PortRange httpPortRange) =>
-                    new JupyterInstallCommand(console, new JupyterKernelSpec(httpPortRange)).InvokeAsync();
+                    new JupyterInstallCommand(console, new JupyterKernelSpec(), httpPortRange).InvokeAsync();
             }
 
             Command HttpServer()

@@ -1,10 +1,10 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using FSharp.Compiler.SourceCodeServices;
 using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         private readonly bool _shouldInstallSucceed;
         private readonly bool _shouldUninstallSucceed;
         private readonly IReadOnlyCollection<string> _error;
+        private List<string> _kernelSpecs = new List<string>();
 
         public InMemoryJupyterKernelSpec(
             bool shouldInstallSucceed,
@@ -25,12 +26,20 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             _error = error;
         }
 
+        public List<string> InstalledKernelSpecs
+        {
+            get => _kernelSpecs;
+        }
+
         public Task<CommandLineResult> InstallKernel(DirectoryInfo directory)
         {
             if (_shouldInstallSucceed)
             {
                 var installPath = Path.Combine(Directory.GetCurrentDirectory(), directory.Name.ToLower());
-
+                foreach (var kernelSpec in directory.GetFiles("kernel.json") )
+                {
+                    InstalledKernelSpecs.Add(File.ReadAllText(kernelSpec.FullName));
+                }
                 return Task.FromResult(
                     new CommandLineResult(
                         0,
