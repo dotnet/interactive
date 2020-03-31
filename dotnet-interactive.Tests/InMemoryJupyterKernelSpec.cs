@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
-    public class InMemoryJupyterKernelSpec : IJupyterKernelSpec
+    internal class InMemoryJupyterKernelSpec : IJupyterKernelSpec
     {
         private readonly bool _shouldInstallSucceed;
         private readonly bool _shouldUninstallSucceed;
