@@ -1,4 +1,4 @@
-# >NET interactive docker image
+# .NET interactive docker image
 
 This folder contains a dockerfile that generates an image with latest .NET Interactive and Jupyter. This lets you try out .NET Interactive's Jupyter experience without needing to install Jupyter directly.
 
