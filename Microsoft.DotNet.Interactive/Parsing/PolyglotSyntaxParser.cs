@@ -17,8 +17,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
         private readonly SourceText _sourceText;
         private readonly IReadOnlyList<ICommand> _directives;
         private IReadOnlyList<SyntaxToken>? _tokens;
-        private SyntaxNode _rootNode;
-        private HashSet<string> _kernelChooserDirectives;
+        private readonly SyntaxNode _rootNode;
+        private HashSet<string>? _kernelChooserDirectives;
 
         internal PolyglotSyntaxParser(
             SourceText sourceText,
@@ -53,9 +53,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 switch (currentToken)
                 {
                     case DirectiveToken directiveToken:
-                        EnsureKernelChooserSetIsInitialized();
 
-                        if (_kernelChooserDirectives.Contains(directiveToken.Text))
+                        if (IsLanguageDirective(directiveToken))
                         {
                             directiveNode = new KernelDirectiveNode(directiveToken, _sourceText);
                             currentLanguage = directiveToken.DirectiveName;
@@ -92,7 +91,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
         }
 
-        private void EnsureKernelChooserSetIsInitialized()
+        private bool IsLanguageDirective(DirectiveToken directiveToken)
         {
             if (_kernelChooserDirectives is null)
             {
@@ -101,6 +100,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         .OfType<ChooseKernelDirective>()
                         .SelectMany(c => c.Aliases));
             }
+
+            return _kernelChooserDirectives.Contains(directiveToken.Text);
         }
     }
 }
