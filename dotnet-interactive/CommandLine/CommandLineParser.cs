@@ -279,7 +279,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseJupyterHelpers()
                     .UseWho()
                     .UseXplot()
-                    .UseMathAndLaTeX());
+                    .UseMathAndLaTeX(),
+                new[] { "c#", "C#"  });
 
             compositeKernel.Add(
                 new FSharpKernel()
@@ -289,17 +290,18 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseWho()
                     .UseDefaultNamespaces()
                     .UseXplot()
-                    .UseMathAndLaTeX());
+                    .UseMathAndLaTeX(),
+                new[] { "f#", "F#"  });
 
             compositeKernel.Add(
                 new PowerShellKernel()
                     .UseJupyterHelpers()
                     .UseXplot(),
-                new[] { "#!pwsh" });
+                new[] { "pwsh" });
 
             compositeKernel.Add(
                 new JavaScriptKernel(),
-                new[] { "#!js" });
+                new[] { "js" });
             
             compositeKernel.Add(
                 new HtmlKernel());

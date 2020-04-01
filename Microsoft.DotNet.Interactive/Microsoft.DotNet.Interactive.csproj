@@ -25,6 +25,7 @@
     <PackageReference Include="System.Runtime.Loader" Version="$(SystemRuntimeLoaderVersion)" />
     <PackageReference Include="System.Reactive" Version="$(SystemReactiveVersion)" />
     <PackageReference Include="System.CommandLine" Version="$(SystemCommandLineVersion)" />
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="PocketLogger" Version="$(PocketLoggerVersion)">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>

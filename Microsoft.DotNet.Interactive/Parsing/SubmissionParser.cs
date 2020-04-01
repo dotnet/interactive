@@ -11,9 +11,10 @@ using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive.Parsing
 {
     public class SubmissionParser
     {
@@ -22,6 +23,27 @@ namespace Microsoft.DotNet.Interactive
         private RootCommand _rootCommand;
 
         public IReadOnlyList<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
+
+        public SubmissionParser(string defaultLanguage)
+        {
+            if (string.IsNullOrWhiteSpace(defaultLanguage))
+            {
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(defaultLanguage));
+            }
+
+            DefaultLanguage = defaultLanguage;
+        }
+
+        public string DefaultLanguage { get; internal set; }
+
+        public PolyglotSyntaxTree Parse(string code)
+        {
+            var sourceText = SourceText.From(code);
+
+            var parser = new PolyglotSyntaxParser(sourceText, DefaultLanguage, Directives);
+
+            return parser.Parse();
+        }
 
         public IReadOnlyList<IKernelCommand> SplitSubmission(string submission) => SplitSubmission(new SubmitCode(submission));
 

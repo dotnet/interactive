@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.LanguageService;
+using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Utility;
 using Newtonsoft.Json.Linq;
 
@@ -24,7 +25,6 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly Subject<IKernelEvent> _kernelEvents = new Subject<IKernelEvent>();
         private readonly CompositeDisposable _disposables;
-        private readonly SubmissionParser _submissionParser = new SubmissionParser();
         private readonly ConcurrentQueue<IKernelCommand> _deferredCommands = new ConcurrentQueue<IKernelCommand>();
         private readonly ConcurrentDictionary<Type, object> _properties = new ConcurrentDictionary<Type, object>();
 
@@ -36,6 +36,8 @@ namespace Microsoft.DotNet.Interactive
             }
 
             Name = name;
+
+            SubmissionParser = new SubmissionParser(Name);
 
             _disposables = new CompositeDisposable();
 
@@ -53,6 +55,8 @@ namespace Microsoft.DotNet.Interactive
         internal KernelCommandPipeline Pipeline { get; }
 
         internal CompositeKernel ParentKernel { get; set; }
+
+        public SubmissionParser SubmissionParser { get; }
 
         public void AddMiddleware(
             KernelCommandPipelineMiddleware middleware,
@@ -126,7 +130,7 @@ namespace Microsoft.DotNet.Interactive
             KernelInvocationContext context,
             KernelPipelineContinuation continueOnCurrentPipeline)
         {
-            var commands = _submissionParser.SplitSubmission(submitCode);
+            var commands = SubmissionParser.SplitSubmission(submitCode);
 
             if (!commands.Contains(submitCode))
             {
@@ -187,11 +191,11 @@ namespace Microsoft.DotNet.Interactive
 
         public string Name { get; set; }
 
-        public IReadOnlyCollection<ICommand> Directives => _submissionParser.Directives;
+        public IReadOnlyCollection<ICommand> Directives => SubmissionParser.Directives;
 
         public abstract bool TryGetVariable(string name, out object value);
 
-        public void AddDirective(Command command) => _submissionParser.AddDirective(command); 
+        public void AddDirective(Command command) => SubmissionParser.AddDirective(command); 
         
         public virtual Task<LspResponse> LspMethod(string methodName, JObject request)
         {

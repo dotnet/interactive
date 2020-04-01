@@ -375,3 +375,6 @@ docs/\.ionide/
 NotebookExamples/*/Samples/housing.csv
 
 Microsoft.DotNet.Interactive.Js/dist/
+
+.fake
+.ionide
