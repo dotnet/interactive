@@ -5,8 +5,6 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -14,7 +12,6 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
-using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -26,6 +23,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly ConcurrentQueue<PackageAdded> _packages = new ConcurrentQueue<PackageAdded>();
         private readonly List<IKernel> _childKernels = new List<IKernel>();
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
+        private string _defaultKernelName;
 
         public CompositeKernel() : base(".NET")
         {
@@ -36,7 +34,15 @@ namespace Microsoft.DotNet.Interactive
                 .Subscribe(_packages.Enqueue));
         }
 
-        public string DefaultKernelName { get; set; }
+        public string DefaultKernelName
+        {
+            get => _defaultKernelName;
+            set
+            {
+                _defaultKernelName = value;
+                SubmissionParser.DefaultLanguage = value;
+            }
+        }
 
         public void Add(IKernel kernel, IEnumerable<string> aliases = null)
         {
@@ -58,22 +64,18 @@ namespace Microsoft.DotNet.Interactive
 
             _childKernels.Add(kernel);
 
-            var chooseKernelCommand = new Command(
-                $"#!{kernel.Name}", 
-                $"Run the code that follows using the {kernel.Name} kernel.")
+            if (_childKernels.Count == 1)
             {
-                Handler = CommandHandler.Create<KernelInvocationContext>(
-                    context =>
-                    {
-                        context.HandlingKernel = kernel;
-                    })
-            };
+                DefaultKernelName = kernel.Name;
+            }
+
+            var chooseKernelCommand = new ChooseKernelDirective(kernel);
 
             if (aliases is { })
             {
                 foreach (var alias in aliases)
                 {
-                    chooseKernelCommand.AddAlias(alias);
+                    chooseKernelCommand.AddAlias($"#!{alias}");
                 }
             }
 

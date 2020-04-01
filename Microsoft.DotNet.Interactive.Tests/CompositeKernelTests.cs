@@ -70,8 +70,8 @@ new [] {1,2,3}");
             var cSharpKernel = new CSharpKernel();
             var fSharpKernel = new FSharpKernel();
             using var kernel = new CompositeKernel();
-            kernel.Add(cSharpKernel, new[] { "#!C#" });
-            kernel.Add(fSharpKernel, new[] { "#!F#" });
+            kernel.Add(cSharpKernel, new[] { "C#" });
+            kernel.Add(fSharpKernel, new[] { "F#" });
             kernel.DefaultKernelName = fSharpKernel.Name;
 
             using var events = kernel.KernelEvents.ToSubscribedList();
@@ -272,6 +272,17 @@ new [] {1,2,3}");
 new [] {1,2,3}");
                 
             events.Should().NotContainErrors();
+        }
+
+        [Fact]
+        public void When_only_one_subkernel_is_present_then_default_kernel_name_returns_its_name()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel()
+            };
+
+            kernel.DefaultKernelName.Should().Be("csharp");
         }
 
         [Fact]

@@ -13,6 +13,7 @@ using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Pocket;

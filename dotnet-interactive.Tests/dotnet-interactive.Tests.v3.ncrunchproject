@@ -1,8 +1,6 @@
 ﻿<ProjectConfiguration>
   <Settings>
-    <AdditionalFilesToIncludeForProject>
-      <Value>..\dotnet-interactive\wwwroot\**.*</Value>
-    </AdditionalFilesToIncludeForProject>
+    <AdditionalFilesToIncludeForProject />
     <IgnoredTests>
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.CommandLineParserTests.kernel_server_honors_log_path</TestName>
