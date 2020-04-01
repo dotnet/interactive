@@ -1,10 +1,10 @@
 # >NET interactive docker image
 
-This folder conains a docker fiel to generate an image to use latest .NET interactive tool without the need to isntall anacoda on your machine.
+This folder contains a dockerfile that generates an image with latest .NET Interactive and Jupyter. This lets you try out .NET Interactive's Jupyter experience without needing to install Jupyter directly.
 
 ## Build instructions
 
-Build the docker file to create the image.
+You can build the Docker image by running the following command in this directory:
 
 ```powershell
 > docker build . --tag dotnet-interactive:1.0
