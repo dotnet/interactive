@@ -36,23 +36,28 @@ else {
 async function probeAddresses(probingAddresses) {
     if (Array.isArray(probingAddresses)) {
         for (let i = 0; i < probingAddresses.length; i++) {
-            
+
             let rootUrl = probingAddresses[i];
 
             if (!rootUrl.endsWith('/')) {
                 rootUrl = `${rootUrl}/`;
             }
 
-            let response = await fetch(`${rootUrl}discovery`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'text/plain'
-                },
-                body: probingAddresses[i]
-            });
+            try {
+                let response = await fetch(`${rootUrl}discovery`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
+                    body: probingAddresses[i]
+                });
 
-            if (response.status == 200) {
-                return rootUrl;
+                if (response.status == 200) {
+                    return rootUrl;
+                }
+            }
+            catch (e) {
+
             }
         }
     }
