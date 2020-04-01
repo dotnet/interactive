@@ -42,8 +42,7 @@ EXPOSE 8888
 EXPOSE ${HTTP_PORT_RANGE}
 
 RUN mkdir notebooks
+
 WORKDIR notebooks
-ENTRYPOINT jupyter lab \ 
-	--ip=0.0.0.0 \
-    --allow-root \
-	--notebook-dir=/notebooks/
+
+ENTRYPOINT jupyter lab --ip=0.0.0.0  --allow-root  --notebook-dir=/notebooks/
