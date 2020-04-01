@@ -44,21 +44,31 @@ async function probeAddresses(probingAddresses) {
             }
 
             try {
-                let response = await fetch(`${rootUrl}discovery`, {
+                let response = await timeout(1000, fetch(`${rootUrl}discovery`, {
                     method: 'POST',
+                    timeout: 1000,
                     headers: {
                         'Content-Type': 'text/plain'
                     },
                     body: probingAddresses[i]
-                });
+                }));
 
                 if (response.status == 200) {
                     return rootUrl;
                 }
             }
-            catch (e) {}
+            catch (e) { }
         }
     }
+}
+
+function timeout(ms, promise) {
+    return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+            reject(new Error(""timeout""))
+        }, ms)
+        promise.then(resolve, reject)
+    });
 }
 
 function loadDotnetInteractiveApi() {
