@@ -34,6 +34,15 @@ else {
 }
 
 async function probeAddresses(probingAddresses) {
+    function timeout(ms, promise) {
+        return new Promise(function (resolve, reject) {
+            setTimeout(function () {
+                reject(new Error('timeout'))
+            }, ms)
+            promise.then(resolve, reject)
+        })
+    }
+
     if (Array.isArray(probingAddresses)) {
         for (let i = 0; i < probingAddresses.length; i++) {
 
@@ -60,15 +69,6 @@ async function probeAddresses(probingAddresses) {
             catch (e) { }
         }
     }
-}
-
-function timeout(ms, promise) {
-    return new Promise(function (resolve, reject) {
-        setTimeout(function () {
-            reject(new Error(""timeout""))
-        }, ms)
-        promise.then(resolve, reject)
-    });
 }
 
 function loadDotnetInteractiveApi() {
