@@ -56,9 +56,7 @@ async function probeAddresses(probingAddresses) {
                     return rootUrl;
                 }
             }
-            catch (e) {
-
-            }
+            catch (e) {}
         }
     }
 }
