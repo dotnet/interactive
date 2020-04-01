@@ -29,3 +29,13 @@ To run it execute the following command:
 Rember to match the port range with the range used when building the image.
 
 A JupyterLab instance will be published on `http://127.0.0.1:8888/`. Check the output of the `docker run` command for the full URL which includes the Jupyter authentication token.
+
+## Persistent storage and local notebooks
+
+Local folder can be mounted using the ```-v option```, follow the instruction to expose your host drive to Docker.
+
+On windows the following command will mount a local folder into the running image at the ```/notebooks``` mountpoint
+
+```powershell
+docker run --rm -it -p 8888:8888 -p 1100-1200:1100-1200 -v c:\notebooks:/notebooks --name dotnet-interactive-image dotnet-interactive:1.0
+```
