@@ -21,5 +21,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         public SubmissionType SubmissionType { get; }
 
         public override string ToString() => $"{nameof(SubmitCode)}: {Code.TruncateForDisplay()}";
+
+        internal bool SuppressSplit { get; set; }
     }
 }

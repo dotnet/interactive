@@ -129,6 +129,12 @@ namespace Microsoft.DotNet.Interactive
             KernelInvocationContext context,
             KernelPipelineContinuation continueOnCurrentPipeline)
         {
+            if (submitCode.SuppressSplit)
+            {
+                await continueOnCurrentPipeline(submitCode, context);
+                return;
+            }
+
             var commands = SubmissionParser.SplitSubmission(submitCode);
 
             if (!commands.Contains(submitCode))

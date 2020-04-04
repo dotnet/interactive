@@ -71,8 +71,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
             _childNodesAndTokens.Add(child);
         }
 
+        public IEnumerable<SyntaxNodeOrToken> ChildNodes => _childNodesAndTokens.OfType<SyntaxNode>();
+
         public IEnumerable<SyntaxNodeOrToken> ChildTokens => _childNodesAndTokens.OfType<SyntaxToken>();
-        
+
         public IEnumerable<SyntaxNodeOrToken> ChildNodesAndTokens => _childNodesAndTokens;
 
         public IEnumerable<SyntaxNodeOrToken> DescendantNodesAndTokensAndSelf()

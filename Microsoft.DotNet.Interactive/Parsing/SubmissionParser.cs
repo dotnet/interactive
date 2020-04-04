@@ -45,7 +45,55 @@ namespace Microsoft.DotNet.Interactive.Parsing
             return parser.Parse();
         }
 
-        public IReadOnlyList<IKernelCommand> SplitSubmission(string submission) => SplitSubmission(new SubmitCode(submission));
+        public IReadOnlyList<IKernelCommand> SplitSubmission2(SubmitCode originalSubmitCode)
+        {
+            var list = new List<IKernelCommand>();
+
+            var tree = Parse(originalSubmitCode.Code);
+
+            var nodes = tree.GetRoot().ChildNodes.ToArray();
+            foreach (var nodeOrToken in nodes)
+            {
+                switch (nodeOrToken)
+                {
+                    case KernelDirectiveNode kernelDirectiveNode:
+                        break;
+                    
+                    case DirectiveNode directiveNode:
+                        // FIX: (SplitSubmission2) needs parsing
+                        // IKernelCommand c =new DirectiveCommand();
+                        break;
+                    
+                    case LanguageNode languageNode:
+                        var kernelCommand = new SubmitCode(
+                            languageNode.Text,
+                            languageNode.Language,
+                            originalSubmitCode.SubmissionType);
+                        kernelCommand.SuppressSplit = true;
+                        list.Add(kernelCommand);
+
+                        break;
+                    case PolyglotSubmissionNode polyglotSubmissionNode:
+                        break;
+                    case SyntaxNode syntaxNode:
+                        break;
+                    case DirectiveToken directiveToken:
+                        break;
+                    case LanguageToken languageToken:
+                        break;
+                    case DirectiveArgsToken directiveArgsToken:
+                        break;
+                    case TriviaToken triviaToken:
+                        break;
+                    case SyntaxToken syntaxToken:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(nodeOrToken));
+                }
+            }
+
+            return list;
+        }
 
         public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode originalSubmitCode)
         {
