@@ -202,7 +202,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
         public ConsoleColor VerboseBackgroundColor { get; set; } = VTColorUtils.DefaultConsoleColor;
 
         // Progress colors
-        public ConsoleColor ProgressForegroundColor { get; set; } = ConsoleColor.Yellow;
-        public ConsoleColor ProgressBackgroundColor { get; set; } = ConsoleColor.DarkCyan;
+        public ConsoleColor ProgressForegroundColor { get; set; } = ConsoleColor.Black;
+        public ConsoleColor ProgressBackgroundColor { get; set; } = ConsoleColor.DarkYellow;
     }
 }
