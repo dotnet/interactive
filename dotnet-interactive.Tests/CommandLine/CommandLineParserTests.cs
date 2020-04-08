@@ -24,6 +24,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         private StartupOptions _startOptions;
         private readonly Parser _parser;
         private readonly FileInfo _connectionFile;
+        private DirectoryInfo _locationDirectory;
 
         public CommandLineParserTests(ITestOutputHelper output)
         {
@@ -44,6 +45,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 firstTimeUseNoticeSentinel: new NopFirstTimeUseNoticeSentinel());
 
             _connectionFile = new FileInfo(Path.GetTempFileName());
+            _locationDirectory = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()));
         }
 
         public void Dispose()
@@ -89,6 +91,18 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 .HttpPortRange
                 .Should()
                 .BeEquivalentTo(new PortRange(3000, 4000));
+        }
+
+        [Fact]
+        public void jupyter_install_command_parses_location_option()
+        {
+            Directory.CreateDirectory(_locationDirectory.FullName);
+            
+            var result = _parser.Parse($"jupyter install --location {_locationDirectory}");
+
+            var option = result.CommandResult.OptionResult("--location");
+
+            option.Should().NotBeNull();
         }
 
         [Fact]
@@ -174,7 +188,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public void kernel_server__honors_default_kernel_option()
+        public void kernel_server_honors_default_kernel_option()
         {
             var result = _parser.Parse("stdio --default-kernel bsharp");
             var binder = new ModelBinder<KernelServerOptions>();

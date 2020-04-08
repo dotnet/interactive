@@ -12,5 +12,6 @@ namespace Microsoft.DotNet.Interactive.App
         Task<CommandLineResult> InstallKernel(DirectoryInfo directory);
 
         Task<CommandLineResult> UninstallKernel(DirectoryInfo directory);
+        bool CanInstall { get;}
     }
 }
