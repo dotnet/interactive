@@ -35,6 +35,8 @@ namespace Microsoft.DotNet.Interactive.App
             return ExecuteCommand($@"uninstall ""{sourceDirectory.FullName}""");
         }
 
+        public bool CanInstall => JupyterKernelSpec.JupyterKernelSpecExists();
+
         public static bool JupyterKernelSpecExists()
         {
             var command = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 

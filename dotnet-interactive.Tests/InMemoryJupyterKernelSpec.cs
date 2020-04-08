@@ -55,5 +55,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 return Task.FromResult(new CommandLineResult(1));
             }
         }
+
+        public bool CanInstall { get; } = true;
     }
 }
