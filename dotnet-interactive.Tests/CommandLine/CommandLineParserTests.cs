@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         private StartupOptions _startOptions;
         private readonly Parser _parser;
         private readonly FileInfo _connectionFile;
-        private DirectoryInfo _locationDirectory;
+        private DirectoryInfo _kernelSpecInstallPath;
 
         public CommandLineParserTests(ITestOutputHelper output)
         {
@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 firstTimeUseNoticeSentinel: new NopFirstTimeUseNoticeSentinel());
 
             _connectionFile = new FileInfo(Path.GetTempFileName());
-            _locationDirectory = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()));
+            _kernelSpecInstallPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()));
         }
 
         public void Dispose()
@@ -96,9 +96,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         [Fact]
         public void jupyter_install_command_parses_path_option()
         {
-            Directory.CreateDirectory(_locationDirectory.FullName);
+            Directory.CreateDirectory(_kernelSpecInstallPath.FullName);
             
-            var result = _parser.Parse($"jupyter install --path {_locationDirectory}");
+            var result = _parser.Parse($"jupyter install --path {_kernelSpecInstallPath}");
 
             var option = result.CommandResult.OptionResult("--path");
 
