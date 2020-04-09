@@ -39,9 +39,9 @@ namespace Microsoft.DotNet.Interactive.Tests
             };
 
             var extensionDll = await CreateExtensionAssembly(
-                                    projectDir,
-                                    code,
-                                    dllDir);
+                                   projectDir,
+                                   code,
+                                   dllDir);
 
             var kernel = (IExtensibleKernel)CreateKernel(language);
 
@@ -54,9 +54,9 @@ namespace Microsoft.DotNet.Interactive.Tests
                 context);
 
             events.Should()
-                    .NotContain(e => e is CommandFailed)
-                    .And
-                    .ContainSingle<DisplayedValueUpdated>(dv => dv.Value.ToString().Contains(extensionDll.FullName));
+                  .NotContain(e => e is CommandFailed)
+                  .And
+                  .ContainSingle<DisplayedValueUpdated>(dv => dv.Value.ToString().Contains(extensionDll.FullName));
         }
 
         [Theory]
