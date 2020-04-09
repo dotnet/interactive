@@ -30,10 +30,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
     <IsPackable>true</IsPackable>
     <PackageId>{packageName}</PackageId>
     <PackageVersion>{packageVersion}</PackageVersion>
+    <AssemblyName>{packageName}</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include=""$(OutputPath)/Extension.dll"" Pack=""true"" PackagePath=""interactive-extensions/dotnet"" />
+    <None Include=""$(OutputPath)/{packageName}.dll"" Pack=""true"" PackagePath=""interactive-extensions/dotnet"" />
   </ItemGroup>
 
   <ItemGroup>
