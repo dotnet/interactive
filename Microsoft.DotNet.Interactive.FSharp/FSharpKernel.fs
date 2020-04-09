@@ -5,6 +5,7 @@ namespace Microsoft.DotNet.Interactive.FSharp
 
 open System
 open System.Collections.Generic
+open System.IO
 open System.Linq
 open System.Runtime.InteropServices
 open System.Text
@@ -16,6 +17,7 @@ open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive.Commands
 open Microsoft.DotNet.Interactive.Events
+open Microsoft.DotNet.Interactive.Extensions
 open Microsoft.DotNet.Interactive.Utility
 
 open Microsoft.Interactive.DependencyManager;
@@ -37,6 +39,8 @@ type FSharpKernel() as this =
         do script.ValueBound.AddHandler valueBoundHandler
         do registerForDisposal(fun () -> script.ValueBound.RemoveHandler valueBoundHandler)
         script
+
+    let extensionLoader: AssemblyBasedExtensionLoader = new AssemblyBasedExtensionLoader()
 
     let script = lazy createScript this.RegisterForDisposal
     do base.RegisterForDisposal(fun () -> if script.IsValueCreated then (script.Value :> IDisposable).Dispose())
@@ -223,3 +227,7 @@ type FSharpKernel() as this =
             match idm with
             | null -> raise (new InvalidOperationException("Internal error - unable to locate the nuget package manager, please try to reinstall."))
             | idm -> dependencies.Force().Resolve(idm, ".fsx", packageManagerTextLines, reportError, executionTfm)
+
+    interface IExtensibleKernel with
+        member this.LoadExtensionsFromDirectoryAsync(directory:DirectoryInfo, context:KernelInvocationContext) =
+            extensionLoader.LoadFromDirectoryAsync(directory, this, context)

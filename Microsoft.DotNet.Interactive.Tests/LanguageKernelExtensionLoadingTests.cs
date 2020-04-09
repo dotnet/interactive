@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
@@ -21,19 +22,28 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
         }
 
-        [Fact]
-        public async Task It_loads_extensions_in_specified_directory_via_a_command()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task It_loads_extensions_in_specified_directory_via_a_command(Language language)
         {
             var projectDir = DirectoryUtility.CreateDirectory();
 
             var dllDir = projectDir.CreateSubdirectory("extension");
 
+            var code = language switch
+            {
+                Language.CSharp => @"await kernel.SendAsync(new SubmitCode(""display(\""C# extension installed\"");""));",
+                Language.FSharp => @"await kernel.SendAsync(new SubmitCode(""display(\""F# extension installed\"");""));",
+                _ => throw new NotSupportedException("This test does not support the specified language.")
+            };
+
             var extensionDll = await CreateExtensionAssembly(
                                    projectDir,
-                                   @"await kernel.SendAsync(new SubmitCode(""display(\""csharp extension installed\"");""));",
+                                   code,
                                    dllDir);
 
-            var kernel = (IExtensibleKernel) CreateKernel(Language.CSharp);
+            var kernel = (IExtensibleKernel)CreateKernel(language);
 
             await using var context = KernelInvocationContext.Establish(new SubmitCode(""));
 
@@ -49,8 +59,10 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .ContainSingle<DisplayedValueUpdated>(dv => dv.Value.ToString().Contains(extensionDll.FullName));
         }
 
-        [Fact]
-        public async Task It_throws_when_extension_throws_during_load()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task It_throws_when_extension_throws_during_load(Language language)
         {
             var projectDir = DirectoryUtility.CreateDirectory();
 
@@ -61,7 +73,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 "throw new Exception();",
                 dllDir);
 
-            var kernel = (IExtensibleKernel) CreateKernel(Language.CSharp);
+            var kernel = (IExtensibleKernel) CreateKernel(language);
             await using var context = KernelInvocationContext.Establish(new SubmitCode(""));
 
             using var events = context.KernelEvents.ToSubscribedList();
@@ -74,12 +86,14 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .ContainSingle<CommandFailed>(cf => cf.Exception is KernelExtensionLoadException);
         }
 
-        [Fact]
-        public async Task It_loads_extensions_found_in_nuget_packages()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task It_loads_extensions_found_in_nuget_packages(Language language)
         {
             var projectDir = DirectoryUtility.CreateDirectory();
 
-            var packageName = "MyTestExtension";
+            var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
             var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
             var guid = Guid.NewGuid().ToString();
 
@@ -89,7 +103,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                             packageName,
                             packageVersion);
 
-            var kernel = CreateKernel(Language.CSharp);
+            var kernel = CreateKernel(language);
 
             await kernel.SubmitCodeAsync($@"
 #i ""nuget:{nupkg.Directory.FullName}""
