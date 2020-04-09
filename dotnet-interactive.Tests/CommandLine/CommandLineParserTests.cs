@@ -94,13 +94,13 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public void jupyter_install_command_parses_location_option()
+        public void jupyter_install_command_parses_path_option()
         {
             Directory.CreateDirectory(_locationDirectory.FullName);
             
-            var result = _parser.Parse($"jupyter install --location {_locationDirectory}");
+            var result = _parser.Parse($"jupyter install --path {_locationDirectory}");
 
-            var option = result.CommandResult.OptionResult("--location");
+            var option = result.CommandResult.OptionResult("--path");
 
             option.Should().NotBeNull();
         }

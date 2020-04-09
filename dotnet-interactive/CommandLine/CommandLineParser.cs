@@ -153,8 +153,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 "--log-path",
                 "Enable file logging to the specified directory");
 
-            var locationOption = new Option<DirectoryInfo>(
-                "--location",
+            var pathOption = new Option<DirectoryInfo>(
+                "--path",
                 "Installs the kernelspecs to the specified directory")
                 .ExistingOnly();
 
@@ -228,7 +228,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     logPathOption,
                     verboseOption,
                     httpPortRangeOption,
-                    locationOption
+                    pathOption
                 };
 
                 installCommand.Handler = CommandHandler.Create<IConsole, InvocationContext, PortRange, DirectoryInfo>(InstallHandler);
@@ -276,7 +276,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 }
 
                 Task<int> InstallHandler(IConsole console, InvocationContext context, PortRange httpPortRange, DirectoryInfo location) =>
-                    new JupyterInstallCommand(console, new JupyterKernelSpec(), httpPortRange, location).InvokeAsync();
+                    new JupyterInstallCommand(console, new JupyterKernelSpecInstaller(), httpPortRange, location).InvokeAsync();
             }
 
             Command HttpServer()

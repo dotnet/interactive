@@ -4,58 +4,56 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
-    internal class InMemoryJupyterKernelSpec : IJupyterKernelSpec
+    internal class InMemoryJupyterKernelSpecInstaller : IJupyterKernelSpecInstaller
     {
         private readonly bool _shouldInstallSucceed;
         private readonly bool _shouldUninstallSucceed;
-        private readonly IReadOnlyCollection<string> _error;
+        private readonly string _message;
 
-        public InMemoryJupyterKernelSpec(
+        public InMemoryJupyterKernelSpecInstaller(
             bool shouldInstallSucceed,
-            IReadOnlyCollection<string> error,
+            string message,
             bool shouldUninstallSucceed = true)
         {
             _shouldInstallSucceed = shouldInstallSucceed;
             _shouldUninstallSucceed = shouldUninstallSucceed;
-            _error = error;
+            _message = message;
         }
 
         public List<string> InstalledKernelSpecs { get; } = new List<string>();
 
-        public Task<CommandLineResult> InstallKernel(DirectoryInfo directory)
+        public Task<KernelSpecInstallResults> InstallKernel(DirectoryInfo kernelSpecPath, DirectoryInfo destination = null)
         {
             if (_shouldInstallSucceed)
             {
-                var installPath = Path.Combine(Directory.GetCurrentDirectory(), directory.Name.ToLower());
-                foreach (var kernelSpec in directory.GetFiles("kernel.json") )
+                var installPath = Path.Combine(Directory.GetCurrentDirectory(), kernelSpecPath.Name.ToLower());
+                foreach (var kernelSpec in kernelSpecPath.GetFiles("kernel.json") )
                 {
                     InstalledKernelSpecs.Add(File.ReadAllText(kernelSpec.FullName));
                 }
                 return Task.FromResult(
-                    new CommandLineResult(
-                        0,
-                        output: new List<string> { $"[InstallKernelSpec] Installed kernelspec {directory.Name} in {installPath}" }));
+                    new KernelSpecInstallResults(
+                        true,
+                        string.Join('\n', _message, 
+                        $"[InstallKernelSpec] Installed kernelspec {kernelSpecPath.Name} in {installPath}" )));
             }
 
-            return Task.FromResult(new CommandLineResult(1, error: _error));
+            return Task.FromResult(new KernelSpecInstallResults(false,  _message));
         }
 
-        public Task<CommandLineResult> UninstallKernel(DirectoryInfo directory)
+        public Task<KernelSpecInstallResults> UninstallKernel(DirectoryInfo directory)
         {
             if (_shouldUninstallSucceed)
             {
-                return Task.FromResult(new CommandLineResult(0));
+                return Task.FromResult(new KernelSpecInstallResults(true));
             }
             else
             {
-                return Task.FromResult(new CommandLineResult(1));
+                return Task.FromResult(new KernelSpecInstallResults(false));
             }
         }
-
-        public bool CanInstall { get; } = true;
     }
 }

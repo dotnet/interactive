@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             _output = output;
         }
 
-        public abstract IJupyterKernelSpec GetJupyterKernelSpec(bool success, IReadOnlyCollection<string> error = null);
+        public abstract IJupyterKernelSpecInstaller GetJupyterKernelSpec(bool success, string message = null);
 
         [FactDependsOnJupyterOnPath(Skip = "causing test run to abort so skipping while we investigate")]
         public async Task Returns_success_output_when_kernel_installation_succeeded()
@@ -35,24 +35,23 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var kernelDir = CreateDirectory();
 
             var result = await kernelSpec.InstallKernel(kernelDir);
-            result.Error.Should().BeEmpty();
-            result.ExitCode.Should().Be(0);
+            result.Succeeded.Should().BeTrue();
 
             _kernelInstallations.Add(new DirectoryInfo(kernelDir.Name));
 
             //The actual jupyter instance is returning the output in the error field
-            result.Output.First().Should().MatchEquivalentOf($"[InstallKernelSpec] Installed kernelspec {kernelDir.Name} in *{kernelDir.Name}");
+            result.Message.Should().MatchEquivalentOf($"[InstallKernelSpec] Installed kernelspec {kernelDir.Name} in *{kernelDir.Name}");
         }
 
         [FactDependsOnJupyterNotOnPath]
-        public async Task Returns_failure_when_kernel_installation_did_not_succeed()
+        public async Task Uses_default_paths_when_kernelspec_module_is_not_on_path()
         {
-            var kernelSpec = GetJupyterKernelSpec(false, error: new[] { "Could not find jupyter kernelspec module" });
+            var kernelSpec = GetJupyterKernelSpec(true, message:  "kernelspec module not available, Installing using default paths" );
             var kernelDir = CreateDirectory();
 
             var result = await kernelSpec.InstallKernel(kernelDir);
-            result.ExitCode.Should().Be(1);
-            result.Error.Should().BeEquivalentTo("Could not find jupyter kernelspec module");
+            result.Succeeded.Should().BeTrue();
+            result.Message.Should().Match("kernelspec module not available, Installing using default paths*");
         }
 
         public void Dispose()
@@ -82,9 +81,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
         }
 
-        public override IJupyterKernelSpec GetJupyterKernelSpec(bool success, IReadOnlyCollection<string> error = null)
+        public override IJupyterKernelSpecInstaller GetJupyterKernelSpec(bool success, string message = null)
         {
-            return new JupyterKernelSpec();
+            return new JupyterKernelSpecInstaller();
         }
     }
 
@@ -94,9 +93,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
         }
 
-        public override IJupyterKernelSpec GetJupyterKernelSpec(bool success, IReadOnlyCollection<string> error = null)
+        public override IJupyterKernelSpecInstaller GetJupyterKernelSpec(bool success, string message = null)
         {
-            return new InMemoryJupyterKernelSpec(success, error);
+            return new InMemoryJupyterKernelSpecInstaller(success, message);
         }
     }
 }

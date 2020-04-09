@@ -3,15 +3,13 @@
 
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.App
 {
-    public interface IJupyterKernelSpec
+    public interface IJupyterKernelSpecInstaller
     {
-        Task<CommandLineResult> InstallKernel(DirectoryInfo directory);
+        Task<KernelSpecInstallResults> InstallKernel(DirectoryInfo kernelSpecPath, DirectoryInfo destination = null);
 
-        Task<CommandLineResult> UninstallKernel(DirectoryInfo directory);
-        bool CanInstall { get;}
+        Task<KernelSpecInstallResults> UninstallKernel(DirectoryInfo kernelSpecPath);
     }
 }
