@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using FluentAssertions;
 using System.Threading.Tasks;
+using FluentAssertions.Execution;
 using Xunit.Abstractions;
 using static Microsoft.DotNet.Interactive.Tests.Utility.DirectoryUtility;
 
@@ -34,6 +35,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var kernelDir = CreateDirectory();
 
             var result = await kernelSpec.InstallKernel(kernelDir);
+            using var scope = new AssertionScope();
             result.Succeeded.Should().BeTrue();
 
             _kernelInstallations.Add(new DirectoryInfo(kernelDir.Name));
@@ -49,8 +51,27 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var kernelDir = CreateDirectory();
 
             var result = await kernelSpec.InstallKernel(kernelDir);
+
+            using var scope = new AssertionScope();
             result.Succeeded.Should().BeTrue();
             result.Message.Should().Match("The kernelspec module is not available*");
+        }
+
+        [FactDependsOnJupyterNotInstalled]
+        public async Task Fails_to_install_when_jupyter_is_not_installed()
+        {
+            var defaultPath = JupyterKernelSpecInstaller.GetDefaultDirectory();
+            var kernelSpec = GetJupyterKernelSpec(false, message: string.Join('\n',  "The kernelspec module is not available",
+                $"The kernelspec path ${defaultPath.FullName} does not exist."
+                ));
+            var kernelDir = CreateDirectory();
+
+            var result = await kernelSpec.InstallKernel(kernelDir);
+
+            using var scope = new AssertionScope();
+            result.Succeeded.Should().BeFalse();
+            result.Message.Should().Match("The kernelspec module is not available*");
+            result.Message.Should().Match($"*The kernelspec path ${defaultPath.FullName} does not exist.*");
         }
 
         public void Dispose()
