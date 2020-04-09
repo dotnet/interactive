@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using FluentAssertions;
-using System.Linq;
 using System.Threading.Tasks;
 using Xunit.Abstractions;
 using static Microsoft.DotNet.Interactive.Tests.Utility.DirectoryUtility;
