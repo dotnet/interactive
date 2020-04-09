@@ -8,10 +8,10 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 {
     internal static  class JupyterKernelSpecModule
     {
-        private static bool? _exists;
+        private static bool? _isOnPAth;
 
-        public static bool Exists => _exists ??= CheckExists();
-        private static bool CheckExists()
+        public static bool IsOnPath => _isOnPAth ??= CheckIsOnPath();
+        private static bool CheckIsOnPath()
         {
             var command = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                 ? "where"

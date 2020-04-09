@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         }
 
         [FactDependsOnJupyterNotOnPath]
-        public async Task Uses_default_paths_when_kernelspec_module_is_not_on_path()
+        public async Task Uses_default_kernel_paths_when_kernelspec_module_is_not_on_path_and_jupyter_is_installed()
         {
             var kernelSpec = GetJupyterKernelSpec(true, message: "The kernelspec module is not available");
             var kernelDir = CreateDirectory();
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         }
 
         [FactDependsOnJupyterNotInstalled]
-        public async Task Fails_to_install_when_jupyter_is_not_installed()
+        public async Task Fails_to_install_kernels__when_jupyter_is_not_installed()
         {
             var defaultPath = JupyterKernelSpecInstaller.GetDefaultDirectory();
             var kernelSpec = GetJupyterKernelSpec(false, message: string.Join('\n',  "The kernelspec module is not available",

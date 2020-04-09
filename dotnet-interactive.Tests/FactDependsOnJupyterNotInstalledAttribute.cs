@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Collections.Generic;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
@@ -26,17 +27,15 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             ITestMethod testMethod,
             IAttributeInfo factAttribute)
         {
-            if (testMethod.TestClass.Class.Name.Contains("Integration") && (JupyterKernelSpecModule.Exists || Jupyter.IsInstalled))
+            if (!testMethod.TestClass.Class.Name.Contains("Integration") && !JupyterKernelSpecModule.IsOnPath && ! Jupyter.DefaultKernelPathExists)
             {
-                yield break;
+                yield return new XunitTestCase(
+                    messageSink,
+                    TestMethodDisplay.ClassAndMethod,
+                    new TestMethodDisplayOptions(),
+                    testMethod
+                );
             }
-
-            yield return new XunitTestCase(
-                messageSink,
-                TestMethodDisplay.ClassAndMethod,
-                new TestMethodDisplayOptions(),
-                testMethod
-            );
         }
     }
 }
