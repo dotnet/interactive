@@ -3,18 +3,24 @@
 
 using System.CommandLine.Parsing;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
     internal class DirectiveCommand : KernelCommandBase
     {
-        public DirectiveCommand(ParseResult parseResult)
+        public DirectiveCommand(
+            ParseResult parseResult, 
+            DirectiveNode directiveNode = null)
         {
             ParseResult = parseResult;
+            DirectiveNode = directiveNode;
         }
 
         public ParseResult ParseResult { get; }
-        
+
+        public DirectiveNode DirectiveNode { get; }
+
         public override async Task InvokeAsync(KernelInvocationContext context)
         {
             await ParseResult.InvokeAsync();

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 
@@ -15,6 +16,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
     {
         public string DefaultLanguage { get; }
         private readonly SourceText _sourceText;
+        private readonly Parser _directiveParser;
         private readonly IReadOnlyList<ICommand> _directives;
         private IReadOnlyList<SyntaxToken>? _tokens;
         private readonly SyntaxNode _rootNode;
@@ -23,10 +25,12 @@ namespace Microsoft.DotNet.Interactive.Parsing
         internal PolyglotSyntaxParser(
             SourceText sourceText,
             string defaultLanguage,
+            Parser directiveParser,
             IReadOnlyList<ICommand> directives)
         {
             DefaultLanguage = defaultLanguage;
             _sourceText = sourceText;
+            _directiveParser = directiveParser;
             _directives = directives;
             _rootNode = new PolyglotSubmissionNode(defaultLanguage, _sourceText);
         }
@@ -42,9 +46,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         private void ParseSubmission()
         {
-            DirectiveNode? directiveNode = null;
-
             var currentLanguage = DefaultLanguage;
+
+            DirectiveNode? directiveNode = null;
 
             for (var i = 0; i < _tokens!.Count; i++)
             {
@@ -58,19 +62,29 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         {
                             directiveNode = new KernelDirectiveNode(directiveToken, _sourceText);
                             currentLanguage = directiveToken.DirectiveName;
+                            _rootNode.Add(directiveNode);
                         }
                         else
                         {
                             directiveNode = new DirectiveNode(directiveToken, _sourceText);
+
+                            if (_tokens.Count >= i + 2 &&
+                                _tokens[i + 1] is TriviaToken trivia &&
+                                _tokens[i + 2] is DirectiveArgsToken directiveArgs)
+                            {
+                                var fullDirectiveText = directiveToken.Text + trivia.Text + directiveArgs.Text;
+
+                                //i += 2;
+                                var directiveParseResult = _directiveParser.Parse(fullDirectiveText);
+
+                                
+
+
+                            }
+
+                            _rootNode.Add(directiveNode);
                         }
 
-                        _rootNode.Add(directiveNode);
-
-                        break;
-
-                    case DirectiveArgsToken directiveArgs:
-                        directiveNode!.Add(directiveArgs);
-                        directiveNode = null;
                         break;
 
                     case LanguageToken languageToken:

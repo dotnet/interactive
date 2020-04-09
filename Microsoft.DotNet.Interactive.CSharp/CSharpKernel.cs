@@ -45,6 +45,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         private WorkspaceFixture _fixture;
         private AssemblyResolutionProbe _assemblyProbingPaths;
+        private readonly Lazy<DependencyProvider> _dependencies;
         private NativeResolutionProbe _nativeProbingRoots;
         private readonly Lazy<DependencyProvider> _dependencies;
 
@@ -306,7 +307,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 this,
                 context);
         }
-
 
         private DependencyProvider GetDependencyProvider()
         {

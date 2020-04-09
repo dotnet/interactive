@@ -89,15 +89,20 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
 
             // look ahead to see if this is a directive
-            var isDirective =
-                _sourceText.Length >= _textWindow.End + 2 &&
-                _sourceText[_textWindow.End + 1] == '!' &&
-                !char.IsWhiteSpace(_sourceText[_textWindow.End + 2]);
+            var textIsLongEnoughToContainDirective =
+                _sourceText.Length >= _textWindow.End + 2;
 
-            if (!isDirective)
+            if (!textIsLongEnoughToContainDirective)
             {
                 return;
-            } 
+            }
+
+            if (!IsShebangAndNoFollowingWhitespace(_textWindow.End + 1, '!') &&
+                !IsCharacterThenWhitespace('r') &&
+                !IsCharacterThenWhitespace('i'))
+            {
+                return;
+            }
 
             if (!_textWindow.IsEmpty)
             {
@@ -126,6 +131,31 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
 
             FlushToken(TokenKind.Directive);
+
+            bool IsShebangAndNoFollowingWhitespace(int position, char value)
+            {
+                return _sourceText[position] == value &&
+                       !char.IsWhiteSpace(_sourceText[position + 1]);
+            }
+            
+            bool IsCharacterThenWhitespace(char value)
+            {
+                var isChar = _sourceText[_textWindow.End + 1] == value;
+
+                if (!isChar)
+                {
+                    return false;
+                }
+
+                var isFollowedByWhitespace = char.IsWhiteSpace(_sourceText[_textWindow.End + 2]);
+
+                if (!isFollowedByWhitespace)
+                {
+                    return false;
+                }
+
+                return true;
+            }
         }
 
         private void LexDirectiveArgs()

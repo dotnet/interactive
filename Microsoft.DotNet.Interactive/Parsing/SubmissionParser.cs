@@ -40,37 +40,39 @@ namespace Microsoft.DotNet.Interactive.Parsing
         {
             var sourceText = SourceText.From(code);
 
-            var parser = new PolyglotSyntaxParser(sourceText, DefaultLanguage, Directives);
+            var parser = new PolyglotSyntaxParser(
+                sourceText, 
+                DefaultLanguage, 
+                GetDirectiveParser(),
+                Directives);
 
             return parser.Parse();
         }
 
         public IReadOnlyList<IKernelCommand> SplitSubmission2(SubmitCode originalSubmitCode)
         {
-            var list = new List<IKernelCommand>();
+            var commands = new List<IKernelCommand>();
+            var compilerDirectives = new List<DirectiveNode>();
+
+            var hoistedCommandsIndex = 0;
 
             var tree = Parse(originalSubmitCode.Code);
 
             var nodes = tree.GetRoot().ChildNodes.ToArray();
+
             foreach (var nodeOrToken in nodes)
             {
                 switch (nodeOrToken)
                 {
                     case KernelDirectiveNode kernelDirectiveNode:
                         break;
-                    
+
                     case DirectiveNode directiveNode:
-                        // FIX: (SplitSubmission2) needs parsing
-                        // IKernelCommand c =new DirectiveCommand();
+                        
                         break;
-                    
+
                     case LanguageNode languageNode:
-                        var kernelCommand = new SubmitCode(
-                            languageNode.Text,
-                            languageNode.Language,
-                            originalSubmitCode.SubmissionType);
-                        kernelCommand.SuppressSplit = true;
-                        list.Add(kernelCommand);
+                        commands.Add(new SubmitCode(languageNode));
 
                         break;
                     case PolyglotSubmissionNode polyglotSubmissionNode:
@@ -92,7 +94,17 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 }
             }
 
-            return list;
+            foreach (var compilerDirective in compilerDirectives)
+            {
+                AddHoistedCommand(new SubmitCode(compilerDirective));
+            }
+
+            return commands;
+
+            void AddHoistedCommand(IKernelCommand command)
+            {
+                commands.Insert(hoistedCommandsIndex++, command);
+            }
         }
 
         public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode originalSubmitCode)
@@ -101,7 +113,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             var lines = new Queue<string>(
                 originalSubmitCode.Code.Split(new[] { "\r\n", "\n" },
-                                      StringSplitOptions.None));
+                                              StringSplitOptions.None));
 
             var linesToForward = new List<string>();
             var commands = new List<IKernelCommand>();
@@ -115,7 +127,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 if (currentLine.TrimStart().StartsWith("#"))
                 {
                     var parseResult = directiveParser.Parse(currentLine);
-                    var command = parseResult.CommandResult.Command;
 
                     if (parseResult.Errors.Count == 0)
                     {
@@ -128,7 +139,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                         var runDirective = new DirectiveCommand(parseResult);
 
-                        if (command.Name == "#r")
+                        if (parseResult.CommandResult.Command.Name == "#r")
                         {
                             var value = parseResult.CommandResult.GetArgumentValueOrDefault<PackageReferenceOrFileInfo>("package");
 
@@ -141,7 +152,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                 packageCommands.Add(runDirective);
                             }
                         }
-                        else if (command.Name == "#i")
+                        else if (parseResult.CommandResult.Command.Name == "#i")
                         {
                             packageCommands.Add(runDirective);
                         }
@@ -152,7 +163,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     }
                     else
                     {
-                        if (command == parseResult.Parser.Configuration.RootCommand)
+                        if (parseResult.CommandResult.Command == parseResult.Parser.Configuration.RootCommand)
                         {
                             linesToForward.Add(currentLine);
                         }
