@@ -17,22 +17,22 @@ namespace Microsoft.DotNet.Interactive.App
         {
             _kernelSpecModule = new JupyterKernelSpecModule();
         }
-        public async Task<KernelSpecInstallResults> InstallKernel(DirectoryInfo sourceDirectory, DirectoryInfo destination = null)
+        public async Task<KernelSpecInstallResult> InstallKernel(DirectoryInfo sourceDirectory, DirectoryInfo destination = null)
         {
 
             if (destination != null)
             {
                 var (succeeded, message) = CopyKernelSpecFiles(sourceDirectory, destination);
-                return new KernelSpecInstallResults(succeeded, message);
+                return new KernelSpecInstallResult(succeeded, message);
             }
-            else 
+            else
             {
                 try
                 {
                     var result = await _kernelSpecModule.InstallKernel(sourceDirectory);
                     if (result.ExitCode == 0)
                     {
-                        return new KernelSpecInstallResults(true,
+                        return new KernelSpecInstallResult(true,
                             string.Join('\n', result.Output.Concat(result.Error)));
                     }
                 }
@@ -45,18 +45,26 @@ namespace Microsoft.DotNet.Interactive.App
                     }
                 }
 
+                var notAvailable = "The kernelspec module is not available.";
+
                 var location = GetDefaultDirectory();
+                
+                if (!location.Exists)
+                {
+                    return new  KernelSpecInstallResult(false, string.Join('\n', notAvailable, $"The kernelspec path ${location.FullName} does not exist."));
+                }
+
                 var (succeeded, message) = CopyKernelSpecFiles(sourceDirectory, location);
-                return new KernelSpecInstallResults(succeeded, string.Join('\n', "kernelspec module not available, Installing using default paths", message));
+                return new KernelSpecInstallResult(succeeded, string.Join('\n', notAvailable, $"Installing using default path {location.FullName}.", message));
             }
         }
-        
-        public async Task<KernelSpecInstallResults> UninstallKernel(DirectoryInfo sourceDirectory)
+
+        public async Task<KernelSpecInstallResult> UninstallKernel(DirectoryInfo sourceDirectory)
         {
             var commandLineResult = await _kernelSpecModule.UninstallKernel(sourceDirectory);
             var message = string.Join('\n', commandLineResult.Output.Concat(commandLineResult.Error));
 
-            var result = new KernelSpecInstallResults(commandLineResult.ExitCode == 0,
+            var result = new KernelSpecInstallResult(commandLineResult.ExitCode == 0,
                 message
             );
 
@@ -78,10 +86,10 @@ namespace Microsoft.DotNet.Interactive.App
 
             if (!location.Exists)
             {
-                return (false,  $"Directory {location.FullName} does not exists");
+                return (false, $"Directory {location.FullName} does not exists");
             }
 
-            string message;
+            string message = string.Empty;
             var success = true;
             var destination = new DirectoryInfo(Path.Combine(location.FullName, source.Name));
 
@@ -90,7 +98,7 @@ namespace Microsoft.DotNet.Interactive.App
                 if (destination.Exists)
                 {
                     destination.Delete(true);
-                   message = $"[InstallKernelSpec] Removing existing kernelspec in {destination.FullName}";
+                    message += $"Removing existing kernelspec in {destination.FullName}\n";
                 }
 
                 destination.Create();
@@ -108,13 +116,13 @@ namespace Microsoft.DotNet.Interactive.App
                 }
 
 
-                message = ($"[InstallKernelSpec] Installed kernelspec {source.Name} in {destination.FullName}");
+                message += $"Installed kernelspec {source.Name} in {destination.FullName}";
 
             }
             catch (IOException ioe)
             {
                 success = false;
-                message  = (ioe.Message);
+                message = (ioe.Message);
             }
 
             return (success, message);

@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
         public List<string> InstalledKernelSpecs { get; } = new List<string>();
 
-        public Task<KernelSpecInstallResults> InstallKernel(DirectoryInfo kernelSpecPath, DirectoryInfo destination = null)
+        public Task<KernelSpecInstallResult> InstallKernel(DirectoryInfo kernelSpecPath, DirectoryInfo destination = null)
         {
             if (_shouldInstallSucceed)
             {
@@ -35,24 +35,24 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                     InstalledKernelSpecs.Add(File.ReadAllText(kernelSpec.FullName));
                 }
                 return Task.FromResult(
-                    new KernelSpecInstallResults(
+                    new KernelSpecInstallResult(
                         true,
                         string.Join('\n', _message, 
                         $"[InstallKernelSpec] Installed kernelspec {kernelSpecPath.Name} in {installPath}" )));
             }
 
-            return Task.FromResult(new KernelSpecInstallResults(false,  _message));
+            return Task.FromResult(new KernelSpecInstallResult(false,  _message));
         }
 
-        public Task<KernelSpecInstallResults> UninstallKernel(DirectoryInfo directory)
+        public Task<KernelSpecInstallResult> UninstallKernel(DirectoryInfo directory)
         {
             if (_shouldUninstallSucceed)
             {
-                return Task.FromResult(new KernelSpecInstallResults(true));
+                return Task.FromResult(new KernelSpecInstallResult(true));
             }
             else
             {
-                return Task.FromResult(new KernelSpecInstallResults(false));
+                return Task.FromResult(new KernelSpecInstallResult(false));
             }
         }
     }
