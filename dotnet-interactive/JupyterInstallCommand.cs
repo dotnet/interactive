@@ -58,19 +58,20 @@ namespace Microsoft.DotNet.Interactive.App
 
                     foreach (var kernelSpecSourcePath in dotnetDirectory.GetDirectories())
                     {
+                        var kernelDisplayName = GetKernelDisplayName(kernelSpecSourcePath);
                         var results = await _jupyterKernelSpecInstaller.InstallKernel(kernelSpecSourcePath, _path);
 
 
                         if (results.Succeeded)
                         {
                             _console.Out.WriteLine(results.Message);
-                            _console.Out.WriteLine(".NET kernel installation succeeded");
+                            _console.Out.WriteLine($"Installed \"{kernelDisplayName}\" kernel.");
                         }
                         else
                         {
                             errorCount++;
                             _console.Error.WriteLine(
-                                $".NET kernel installation failed with error: {results.Message}");
+                                $"Failed to install \"{kernelDisplayName}\" kernel. The error was: {results.Message}.");
                         }
 
                     }
@@ -78,6 +79,14 @@ namespace Microsoft.DotNet.Interactive.App
             }
 
             return errorCount;
+        }
+
+        private string GetKernelDisplayName(DirectoryInfo directory)
+        {
+            var kernelSpec = directory.GetFiles("kernel.json", SearchOption.AllDirectories).Single();
+
+            var parsed = JObject.Parse(File.ReadAllText(kernelSpec.FullName));
+            return parsed["display_name"].Value<string>();
         }
 
         private static void ComputeKernelSpecArgs(PortRange httpPortRange, DirectoryInfo directory)

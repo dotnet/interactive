@@ -3,13 +3,13 @@
 
 namespace Microsoft.DotNet.Interactive.App
 {
-    public class KernelSpecInstallResults
+    public class KernelSpecInstallResult
     {
         public bool Succeeded { get;  }
 
         public string Message { get; }
 
-        public KernelSpecInstallResults(bool succeeded, string message = null)
+        public KernelSpecInstallResult(bool succeeded, string message = null)
         {
             Succeeded = succeeded;
             Message = message;

@@ -5,6 +5,7 @@ using System.CommandLine.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Xunit;
 
@@ -38,11 +39,11 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 new InMemoryJupyterKernelSpecInstaller(false, message: "Could not find jupyter kernelspec module"));
 
             await installCommand.InvokeAsync();
-
-            console.Error.ToString().Should()
-                   .Contain(".NET kernel installation failed")
-                   .And
-                   .Contain("Could not find jupyter kernelspec module");
+            var consoleError = console.Error.ToString();
+            using var scope = new AssertionScope();
+            consoleError.Should().Contain("Failed to install \".NET (F#)\" kernel. The error was: Could not find jupyter kernelspec module.");
+            consoleError.Should().Contain("Failed to install \".NET (C#)\" kernel. The error was: Could not find jupyter kernelspec module.");
+            consoleError.Should().Contain("Failed to install \".NET (PowerShell)\" kernel. The error was: Could not find jupyter kernelspec module.");
         }
 
         [Fact]
@@ -54,9 +55,13 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             await jupyterCommandLine.InvokeAsync();
 
             var consoleOut = console.Out.ToString();
+
+            using var scope = new AssertionScope();
+
             consoleOut.Should().MatchEquivalentOf("*[InstallKernelSpec] Installed kernelspec .net-csharp in *.net-csharp*");
             consoleOut.Should().MatchEquivalentOf("*[InstallKernelSpec] Installed kernelspec .net-fsharp in *.net-fsharp*");
-            consoleOut.Should().Contain(".NET kernel installation succeeded");
+            consoleOut.Should().Contain("Installed \".NET (F#)\" kernel.");
+            consoleOut.Should().Contain("Installed \".NET (C#)\" kernel.");
         }
     }
 }

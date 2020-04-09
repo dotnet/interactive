@@ -8,8 +8,8 @@ namespace Microsoft.DotNet.Interactive.App
 {
     public interface IJupyterKernelSpecInstaller
     {
-        Task<KernelSpecInstallResults> InstallKernel(DirectoryInfo kernelSpecPath, DirectoryInfo destination = null);
+        Task<KernelSpecInstallResult> InstallKernel(DirectoryInfo kernelSpecPath, DirectoryInfo destination = null);
 
-        Task<KernelSpecInstallResults> UninstallKernel(DirectoryInfo kernelSpecPath);
+        Task<KernelSpecInstallResult> UninstallKernel(DirectoryInfo kernelSpecPath);
     }
 }

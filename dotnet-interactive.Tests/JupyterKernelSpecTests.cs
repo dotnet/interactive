@@ -45,12 +45,12 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         [FactDependsOnJupyterNotOnPath]
         public async Task Uses_default_paths_when_kernelspec_module_is_not_on_path()
         {
-            var kernelSpec = GetJupyterKernelSpec(true, message:  "kernelspec module not available, Installing using default paths" );
+            var kernelSpec = GetJupyterKernelSpec(true, message: "The kernelspec module is not available");
             var kernelDir = CreateDirectory();
 
             var result = await kernelSpec.InstallKernel(kernelDir);
             result.Succeeded.Should().BeTrue();
-            result.Message.Should().Match("kernelspec module not available, Installing using default paths*");
+            result.Message.Should().Match("The kernelspec module is not available*");
         }
 
         public void Dispose()
