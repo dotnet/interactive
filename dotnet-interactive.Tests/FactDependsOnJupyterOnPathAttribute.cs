@@ -27,18 +27,15 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             ITestMethod testMethod,
             IAttributeInfo factAttribute)
         {
-            if (testMethod.TestClass.Class.Name.Contains("Integration") && 
-                !JupyterKernelSpecModule.Exists)
+            if (!testMethod.TestClass.Class.Name.Contains("Integration") && JupyterKernelSpecModule.IsOnPath)
             {
-                yield break;
+                yield return new XunitTestCase(
+                    messageSink,
+                    TestMethodDisplay.ClassAndMethod,
+                    new TestMethodDisplayOptions(),
+                    testMethod
+                );
             }
-
-            yield return new XunitTestCase(
-                messageSink,
-                TestMethodDisplay.ClassAndMethod,
-                new TestMethodDisplayOptions(),
-                testMethod
-            );
         }
     }
 }

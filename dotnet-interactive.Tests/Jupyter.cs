@@ -5,10 +5,10 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 {
     internal static class Jupyter
     {
-        private static bool? _isInstalled;
-        public static bool IsInstalled => _isInstalled ??= CheckIsInstalled();
+        private static bool? _defaultKernelPathExists;
+        public static bool DefaultKernelPathExists => _defaultKernelPathExists ??= CheckDefaultKernelPathExists();
 
-        private static bool CheckIsInstalled()
+        private static bool CheckDefaultKernelPathExists()
         {
             var expectedPath = JupyterKernelSpecInstaller.GetDefaultDirectory();
 
