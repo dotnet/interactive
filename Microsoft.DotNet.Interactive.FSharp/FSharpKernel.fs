@@ -230,4 +230,4 @@ type FSharpKernel() as this =
 
     interface IExtensibleKernel with
         member this.LoadExtensionsFromDirectoryAsync(directory:DirectoryInfo, context:KernelInvocationContext) =
-            extensionLoader.LoadFromDirectoryAsync(directory, this, context);
+            extensionLoader.LoadFromDirectoryAsync(directory, this, context)
