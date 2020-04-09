@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
     {
         private static bool? _exists;
 
-        public static bool Exists => (_exists ??= CheckExists());
+        public static bool Exists => _exists ??= CheckExists();
         private static bool CheckExists()
         {
             var command = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)

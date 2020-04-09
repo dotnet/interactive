@@ -47,15 +47,15 @@ namespace Microsoft.DotNet.Interactive.App
 
                 var notAvailable = "The kernelspec module is not available.";
 
-                var location = GetDefaultDirectory();
+                destination = GetDefaultDirectory();
                 
-                if (!location.Exists)
+                if (!destination.Exists)
                 {
-                    return new  KernelSpecInstallResult(false, string.Join('\n', notAvailable, $"The kernelspec path ${location.FullName} does not exist."));
+                    return new  KernelSpecInstallResult(false, string.Join('\n', notAvailable, $"The kernelspec path ${destination.FullName} does not exist."));
                 }
 
-                var (succeeded, message) = CopyKernelSpecFiles(sourceDirectory, location);
-                return new KernelSpecInstallResult(succeeded, string.Join('\n', notAvailable, $"Installing using default path {location.FullName}.", message));
+                var (succeeded, message) = CopyKernelSpecFiles(sourceDirectory, destination);
+                return new KernelSpecInstallResult(succeeded, string.Join('\n', notAvailable, $"Installing using default path {destination.FullName}.", message));
             }
         }
 
@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.Interactive.App
         }
 
 
-        private DirectoryInfo GetDefaultDirectory()
+        public static  DirectoryInfo GetDefaultDirectory()
         {
             DirectoryInfo directory;
             switch (Environment.OSVersion.Platform)
