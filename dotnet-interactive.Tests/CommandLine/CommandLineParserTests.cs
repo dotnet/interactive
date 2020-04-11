@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
@@ -102,7 +103,10 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
 
             var option = result.CommandResult.OptionResult("--path");
 
+            using var scope = new AssertionScope();
+
             option.Should().NotBeNull();
+            result.FindResultFor(option.Option).GetValueOrDefault<DirectoryInfo>().FullName.Should().BeEquivalentTo(_kernelSpecInstallPath.FullName);
         }
 
         [Fact]

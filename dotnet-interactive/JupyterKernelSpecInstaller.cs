@@ -146,7 +146,7 @@ namespace Microsoft.DotNet.Interactive.App
                     directory = new DirectoryInfo("~/Library/Jupyter/kernels");
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new PlatformNotSupportedException();
             }
 
             return directory;
