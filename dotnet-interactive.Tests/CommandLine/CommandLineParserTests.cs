@@ -106,7 +106,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             using var scope = new AssertionScope();
 
             option.Should().NotBeNull();
-            result.FindResultFor(option.Option).GetValueOrDefault<DirectoryInfo>().FullName.Should().BeEquivalentTo(_kernelSpecInstallPath.FullName);
+            result.FindResultFor(option.Option).GetValueOrDefault<DirectoryInfo>().FullName.Should().Be(_kernelSpecInstallPath.FullName);
         }
 
         [Fact]
