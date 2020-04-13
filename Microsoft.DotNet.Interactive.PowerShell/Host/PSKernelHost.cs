@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
 {
     public class PSKernelHost : PSHost, IHostSupportsInteractiveSession
     {
-        private const string HostName = "PowerShell Jupyter Host";
+        private const string HostName = "Microsoft.dotnet-interactive";
 
         private readonly Version _hostVersion;
         private readonly Guid _instanceId;

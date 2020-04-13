@@ -104,6 +104,24 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 PSModulePathEnvName,
                 $"{psJupyterModulePath}{Path.PathSeparator}{psModulePath}");
 
+            // Set $PROFILE.
+            string allUsersCurrentHost = DollarProfileHelper.GetFullProfileFileName(_psHost.Name, forCurrentUser: false);
+            string currentUserCurrentHost = DollarProfileHelper.GetFullProfileFileName(_psHost.Name, forCurrentUser: true);
+            PSObject dollarProfile = DollarProfileHelper.GetDollarProfile(allUsersCurrentHost, currentUserCurrentHost);
+
+            pwsh.Runspace.SessionStateProxy.SetVariable("PROFILE", dollarProfile);
+
+            // Run the PROFILE scripts if they exist.
+            if (File.Exists(allUsersCurrentHost))
+            {
+                pwsh.AddScript(allUsersCurrentHost).InvokeAndClearCommands();
+            }
+
+            if (File.Exists(currentUserCurrentHost))
+            {
+                pwsh.AddScript(currentUserCurrentHost).InvokeAndClearCommands();
+            }
+
             RegisterForDisposal(pwsh);
             return pwsh;
         }
