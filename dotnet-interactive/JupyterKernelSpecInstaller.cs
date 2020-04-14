@@ -2,77 +2,129 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.CommandLine;
+using System.CommandLine.IO;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.App
 {
     public class JupyterKernelSpecInstaller : IJupyterKernelSpecInstaller
     {
-        private readonly JupyterKernelSpecModule _kernelSpecModule;
+        private readonly IConsole _console;
+        private readonly IJupyterKernelSpecModule _kernelSpecModule;
 
-        public JupyterKernelSpecInstaller()
+        public JupyterKernelSpecInstaller(IConsole console): this(console, new JupyterKernelSpecModule())
         {
-            _kernelSpecModule = new JupyterKernelSpecModule();
         }
-        public async Task<KernelSpecInstallResult> InstallKernel(DirectoryInfo sourceDirectory, DirectoryInfo destination = null)
+
+        public JupyterKernelSpecInstaller(IConsole console, IJupyterKernelSpecModule jupyterKernelSpecModule)
         {
+            _console = console ?? throw new ArgumentNullException(nameof(console));
+            _kernelSpecModule = jupyterKernelSpecModule;
+        }
+
+
+        public async Task<bool> InstallKernel(DirectoryInfo sourceDirectory, DirectoryInfo destination = null)
+        {
+            var kernelDisplayName = GetKernelDisplayName(sourceDirectory);
 
             if (destination != null)
             {
-                var (succeeded, message) = CopyKernelSpecFiles(sourceDirectory, destination);
-                return new KernelSpecInstallResult(succeeded, message);
+                return InstallKernelSpecToDirectory(sourceDirectory, destination, kernelDisplayName);
+            }
+
+            try
+            {
+                var result = await _kernelSpecModule.InstallKernel(sourceDirectory);
+                if (result.ExitCode == 0)
+                {
+                    _console.Out.WriteLine($"Installed \"{kernelDisplayName}\" kernel.");
+                    return true;
+                }
+            }
+            catch (Win32Exception w32e)
+            {
+                // file not found when executing process
+                if (!w32e.Source.Contains(typeof(System.Diagnostics.Process).FullName))
+                {
+                    _console.Error.WriteLine($"Failed installing \"{kernelDisplayName}\" kernel.");
+                    throw;
+                }
+            }
+
+            destination = _kernelSpecModule.GetDefaultKernelSpecDirectory();
+
+            _console.Out.WriteLine("The kernelspec module is not available.");
+
+            return InstallKernelSpecToDirectory(destination, destination, kernelDisplayName);
+        }
+
+        private bool InstallKernelSpecToDirectory(DirectoryInfo sourceDirectory, DirectoryInfo destination,
+            string kernelDisplayName)
+        {
+            if (!destination.Exists)
+            {
+                _console.Error.WriteLine($"The kernelspec path ${destination.FullName} does not exist.");
+                _console.Error.WriteLine($"Failed to install \"{kernelDisplayName}\" kernel.");
+
+                return false;
+            }
+            _console.Out.WriteLine($"Installing using path {destination.FullName}.");
+            var succeeded = CopyKernelSpecFiles(sourceDirectory, destination);
+            if (succeeded)
+            {
+                _console.Out.WriteLine($"Installed \"{kernelDisplayName}\" kernel.");
             }
             else
             {
-                try
-                {
-                    var result = await _kernelSpecModule.InstallKernel(sourceDirectory);
-                    if (result.ExitCode == 0)
-                    {
-                        return new KernelSpecInstallResult(true,
-                            string.Join('\n', result.Output.Concat(result.Error)));
-                    }
-                }
-                catch (Win32Exception w32e)
-                {
-                    // file not found when executing process
-                    if (!w32e.Source.Contains(typeof(System.Diagnostics.Process).FullName))
-                    {
-                        throw;
-                    }
-                }
-
-                var notAvailable = "The kernelspec module is not available.";
-
-                destination = GetDefaultDirectory();
-                
-                if (!destination.Exists)
-                {
-                    return new  KernelSpecInstallResult(false, string.Join('\n', notAvailable, $"The kernelspec path ${destination.FullName} does not exist."));
-                }
-
-                var (succeeded, message) = CopyKernelSpecFiles(sourceDirectory, destination);
-                return new KernelSpecInstallResult(succeeded, string.Join('\n', notAvailable, $"Installing using default path {destination.FullName}.", message));
+                _console.Error.WriteLine(
+                    $"Failed to install \"{kernelDisplayName}\" kernel.");
             }
+
+            return succeeded;
         }
 
-        public async Task<KernelSpecInstallResult> UninstallKernel(DirectoryInfo sourceDirectory)
+        private string GetKernelDisplayName(DirectoryInfo directory)
         {
-            var commandLineResult = await _kernelSpecModule.UninstallKernel(sourceDirectory);
-            var message = string.Join('\n', commandLineResult.Output.Concat(commandLineResult.Error));
+            var kernelSpec = directory.GetFiles("kernel.json", SearchOption.AllDirectories).Single();
 
-            var result = new KernelSpecInstallResult(commandLineResult.ExitCode == 0,
-                message
-            );
+            var parsed = JObject.Parse(File.ReadAllText(kernelSpec.FullName));
+            return parsed["display_name"].Value<string>();
+        }
+
+        public async Task<bool> UninstallKernel(DirectoryInfo sourceDirectory)
+        {
+            if (!sourceDirectory.Exists)
+            {
+                _console.Error.WriteLine($"Failed to uninstall. The kernelspec path ${sourceDirectory.FullName} does not exist.");
+
+                return false;
+            }
+
+            var kernelDisplayName = GetKernelDisplayName(sourceDirectory);
+            var commandLineResult = await _kernelSpecModule.UninstallKernel(sourceDirectory);
+            
+            var result = commandLineResult.ExitCode == 0;
+
+            if (result)
+            {
+                _console.Out.WriteLine($"Installed \"{kernelDisplayName}\" kernel.");
+            }
+            else
+            {
+                _console.Error.WriteLine(
+                    $"Failed to uninstall \"{kernelDisplayName}\" kernel.");
+            }
 
             return result;
         }
 
 
-        private (bool succeeded, string message) CopyKernelSpecFiles(DirectoryInfo source, DirectoryInfo location)
+        private bool CopyKernelSpecFiles(DirectoryInfo source, DirectoryInfo location)
         {
             if (source == null)
             {
@@ -86,19 +138,17 @@ namespace Microsoft.DotNet.Interactive.App
 
             if (!location.Exists)
             {
-                return (false, $"Directory {location.FullName} does not exists");
+                _console.Error.WriteLine($"Directory {location.FullName} does not exists");
+                return false;
             }
 
-            string message = string.Empty;
-            var success = true;
-            var destination = new DirectoryInfo(Path.Combine(location.FullName, source.Name));
 
             try
             {
+                var destination = new DirectoryInfo(Path.Combine(location.FullName, source.Name));
                 if (destination.Exists)
                 {
                     destination.Delete(true);
-                    message += $"Removing existing kernelspec in {destination.FullName}\n";
                 }
 
                 destination.Create();
@@ -114,42 +164,15 @@ namespace Microsoft.DotNet.Interactive.App
                 {
                     File.Copy(newPath, newPath.Replace(source.FullName, destination.FullName));
                 }
-
-
-                message += $"Installed kernelspec {source.Name} in {destination.FullName}";
-
             }
             catch (IOException ioe)
             {
-                success = false;
-                message = (ioe.Message);
+                _console.Error.WriteLine(ioe.Message);
+                return false;
             }
 
-            return (success, message);
+            return true;
         }
 
-
-        public static  DirectoryInfo GetDefaultDirectory()
-        {
-            DirectoryInfo directory;
-            switch (Environment.OSVersion.Platform)
-            {
-                case PlatformID.Win32S:
-                case PlatformID.Win32Windows:
-                case PlatformID.Win32NT:
-                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "jupyter", "kernels"));
-                    break;
-                case PlatformID.Unix:
-                    directory = new DirectoryInfo("~/.local/share/jupyter/kernels");
-                    break;
-                case PlatformID.MacOSX:
-                    directory = new DirectoryInfo("~/Library/Jupyter/kernels");
-                    break;
-                default:
-                    throw new PlatformNotSupportedException();
-            }
-
-            return directory;
-        }
     }
 }

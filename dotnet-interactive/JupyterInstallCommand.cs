@@ -1,13 +1,9 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.IO;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Utility;
@@ -58,20 +54,11 @@ namespace Microsoft.DotNet.Interactive.App
 
                     foreach (var kernelSpecSourcePath in dotnetDirectory.GetDirectories())
                     {
-                        var kernelDisplayName = GetKernelDisplayName(kernelSpecSourcePath);
-                        var results = await _jupyterKernelSpecInstaller.InstallKernel(kernelSpecSourcePath, _path);
-
-
-                        if (results.Succeeded)
-                        {
-                            _console.Out.WriteLine(results.Message);
-                            _console.Out.WriteLine($"Installed \"{kernelDisplayName}\" kernel.");
-                        }
-                        else
+                        var succeeded = await _jupyterKernelSpecInstaller.InstallKernel(kernelSpecSourcePath, _path);
+                        
+                        if (!succeeded)
                         {
                             errorCount++;
-                            _console.Error.WriteLine(
-                                $"Failed to install \"{kernelDisplayName}\" kernel. The error was: {results.Message}.");
                         }
 
                     }
@@ -79,14 +66,6 @@ namespace Microsoft.DotNet.Interactive.App
             }
 
             return errorCount;
-        }
-
-        private string GetKernelDisplayName(DirectoryInfo directory)
-        {
-            var kernelSpec = directory.GetFiles("kernel.json", SearchOption.AllDirectories).Single();
-
-            var parsed = JObject.Parse(File.ReadAllText(kernelSpec.FullName));
-            return parsed["display_name"].Value<string>();
         }
 
         private static void ComputeKernelSpecArgs(PortRange httpPortRange, DirectoryInfo directory)
