@@ -2,11 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Utility;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive
@@ -41,6 +44,34 @@ namespace Microsoft.DotNet.Interactive
             Task.Run(() =>
                          kernel.SendAsync(new DisplayValue(value, formatted)))
                 .Wait();
+        }
+
+        public static KernelBase GetKernel(string name)
+        {
+            var kernel = KernelInvocationContext.Current.HandlingKernel;
+
+            KernelBase foundKernel = null;
+
+            if (kernel is KernelBase kernelBase)
+            {
+                var root = kernelBase.RecurseWhileNotNull(k => k.ParentKernel).Last();
+
+                foundKernel = root switch
+                {
+                    CompositeKernel c => c.ChildKernels
+                                          .OfType<KernelBase>()
+                                          .FlattenBreadthFirst(
+                                              b => b switch
+                                              {
+                                                  CompositeKernel composite => composite.ChildKernels.OfType<KernelBase>(),
+                                                  _ => Array.Empty<KernelBase>()
+                                              })
+                                          .SingleOrDefault(k => k.Name == name),
+                    _ => null
+                };
+            }
+
+            return foundKernel ?? throw new KeyNotFoundException($"Kernel \"{name}\" was not found.");
         }
     }
 }

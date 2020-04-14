@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Utility
                 yield return current;
             }
         }
-        
+
         internal static IEnumerable<T> FlattenDepthFirst<T>(
             this IEnumerable<T> source,
             Func<T, IEnumerable<T>> children)
@@ -53,6 +53,19 @@ namespace Microsoft.DotNet.Interactive.Utility
                 }
 
                 yield return current;
+            }
+        }
+
+        internal static IEnumerable<T> RecurseWhileNotNull<T>(
+            this T source,
+            Func<T, T> next)
+            where T : class
+        {
+            yield return source;
+
+            while ((source = next(source)) != null)
+            {
+                yield return source;
             }
         }
     }
