@@ -6,11 +6,19 @@ using System.IO;
 using System.Management.Automation;
 using System.Threading.Tasks;
 using FluentAssertions;
+using System.Linq;
+using System.Management.Automation;
+using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Tests;
+using XPlot.Plotly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Tests
 {
-    public class PowerShellKernelTests
+    public class PowerShellKernelTests : LanguageKernelTests
     {
         private readonly string _allUsersCurrentHostProfilePath = Path.Combine(Path.GetDirectoryName(typeof(PSObject).Assembly.Location), "Microsoft.dotnet-interactive_profile.ps1");
 

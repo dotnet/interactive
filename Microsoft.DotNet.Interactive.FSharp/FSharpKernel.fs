@@ -199,7 +199,7 @@ type FSharpKernel() as this =
             _assemblyProbingPaths <- assemblyProbingPaths
             _nativeProbingRoots <- nativeProbingRoots
 
-        member this.RegisterNugetResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
+        member this.RegisterResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
             // Generate #r and #I from packageReferences
             let sb = StringBuilder()
             let hashset = HashSet()

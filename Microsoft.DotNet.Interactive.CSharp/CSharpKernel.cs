@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,7 +24,6 @@ using Microsoft.DotNet.Interactive.Utility;
 using Newtonsoft.Json.Linq;
 using XPlot.Plotly;
 using Task = System.Threading.Tasks.Task;
-using System.ComponentModel;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
@@ -343,7 +341,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             _nativeProbingRoots = nativeProbingRoots;
         }
 
-        void ISupportNuget.RegisterNugetResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
+        void ISupportNuget.RegisterResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
         {
             var references = resolvedReferences
                              .SelectMany(r => r.AssemblyPaths)
