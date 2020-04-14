@@ -17,12 +17,13 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public async Task Appends_http_port_range_arguments()
         {
             var console = new TestConsole();
-            var kernelSpec = new InMemoryJupyterKernelSpecInstaller(true, null);
-            var jupyterCommandLine = new JupyterInstallCommand(console, kernelSpec, new PortRange(100, 400));
+            var kernelSpecModule = new JupyterKernelSpecModuleSimulator(true);
+            var kernelSpecInstaller = new JupyterKernelSpecInstaller(console,kernelSpecModule);
+            var jupyterCommandLine = new JupyterInstallCommand(console, kernelSpecInstaller, new PortRange(100, 400));
 
             await jupyterCommandLine.InvokeAsync();
 
-            kernelSpec.InstalledKernelSpecs
+            kernelSpecModule.InstalledKernelSpecs
                 .Should()
                 .HaveCount(3)
                 .And
@@ -34,23 +35,27 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public async Task Returns_error_when_jupyter_paths_could_not_be_obtained()
         {
             var console = new TestConsole();
+            var kernelSpecModule = new JupyterKernelSpecModuleSimulator(false);
+            var kernelSpecInstaller = new JupyterKernelSpecInstaller(console, kernelSpecModule);
             var installCommand = new JupyterInstallCommand(
                 console,
-                new InMemoryJupyterKernelSpecInstaller(false, message: "Could not find jupyter kernelspec module"));
+                kernelSpecInstaller);
 
             await installCommand.InvokeAsync();
             var consoleError = console.Error.ToString();
             using var scope = new AssertionScope();
-            consoleError.Should().Contain("Failed to install \".NET (F#)\" kernel. The error was: Could not find jupyter kernelspec module.");
-            consoleError.Should().Contain("Failed to install \".NET (C#)\" kernel. The error was: Could not find jupyter kernelspec module.");
-            consoleError.Should().Contain("Failed to install \".NET (PowerShell)\" kernel. The error was: Could not find jupyter kernelspec module.");
+            consoleError.Should().Contain("Failed to install \".NET (F#)\" kernel.");
+            consoleError.Should().Contain("Failed to install \".NET (C#)\" kernel.");
+            consoleError.Should().Contain("Failed to install \".NET (PowerShell)\" kernel.");
         }
 
         [Fact]
         public async Task Prints_to_console_when_kernel_installation_succeeded()
         {
             var console = new TestConsole();
-            var jupyterCommandLine = new JupyterInstallCommand(console, new InMemoryJupyterKernelSpecInstaller(true, null));
+            var kernelSpecModule = new JupyterKernelSpecModuleSimulator(true);
+            var kernelSpecInstaller = new JupyterKernelSpecInstaller(console, kernelSpecModule);
+            var jupyterCommandLine = new JupyterInstallCommand(console, kernelSpecInstaller);
 
             await jupyterCommandLine.InvokeAsync();
 
@@ -58,8 +63,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             using var scope = new AssertionScope();
 
-            consoleOut.Should().MatchEquivalentOf("*[InstallKernelSpec] Installed kernelspec .net-csharp in *.net-csharp*");
-            consoleOut.Should().MatchEquivalentOf("*[InstallKernelSpec] Installed kernelspec .net-fsharp in *.net-fsharp*");
             consoleOut.Should().Contain("Installed \".NET (F#)\" kernel.");
             consoleOut.Should().Contain("Installed \".NET (C#)\" kernel.");
         }

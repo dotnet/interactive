@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
         private static bool CheckDefaultKernelPathExists()
         {
-            var expectedPath = JupyterKernelSpecInstaller.GetDefaultDirectory();
+            var expectedPath = new JupyterKernelSpecModule().GetDefaultKernelSpecDirectory();
 
             return expectedPath.Exists;
         }

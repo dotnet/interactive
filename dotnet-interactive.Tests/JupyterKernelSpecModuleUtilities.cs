@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
-    internal static  class JupyterKernelSpecModule
+    internal class JupyterKernelSpecModuleUtilities
     {
         private static bool? _isOnPAth;
 
