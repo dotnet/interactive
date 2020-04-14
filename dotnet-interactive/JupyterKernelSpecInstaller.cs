@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.App
         }
 
 
-        public async Task<bool> InstallKernel(DirectoryInfo sourceDirectory, DirectoryInfo destination = null)
+        public async Task<bool> TryInstallKernelAsync(DirectoryInfo sourceDirectory, DirectoryInfo destination = null)
         {
             var kernelDisplayName = GetKernelDisplayName(sourceDirectory);
 
@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Interactive.App
                 // file not found when executing process
                 if (!w32e.Source.Contains(typeof(System.Diagnostics.Process).FullName))
                 {
-                    _console.Error.WriteLine($"Failed installing \"{kernelDisplayName}\" kernel.");
+                    _console.Error.WriteLine($"Failed to install \"{kernelDisplayName}\" kernel.");
                     throw;
                 }
             }

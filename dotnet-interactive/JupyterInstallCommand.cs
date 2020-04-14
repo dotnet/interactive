@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Interactive.App
 
                     foreach (var kernelSpecSourcePath in dotnetDirectory.GetDirectories())
                     {
-                        var succeeded = await _jupyterKernelSpecInstaller.InstallKernel(kernelSpecSourcePath, _path);
+                        var succeeded = await _jupyterKernelSpecInstaller.TryInstallKernelAsync(kernelSpecSourcePath, _path);
                         
                         if (!succeeded)
                         {
