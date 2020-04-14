@@ -96,59 +96,6 @@ namespace Microsoft.DotNet.Interactive.App
             return parsed["display_name"].Value<string>();
         }
 
-        public async Task<bool> UninstallKernel(string kernelspecName)
-        {
-            if (string.IsNullOrWhiteSpace(kernelspecName))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(kernelspecName));
-            }
-
-            try
-            {
-                var result = await _kernelSpecModule.UninstallKernel(kernelspecName);
-                if (result.ExitCode == 0)
-                {
-                    _console.Out.WriteLine($"Uninstalled \"{kernelspecName}\" kernelspec.");
-                    return true;
-                }
-            }
-            catch (Win32Exception w32e)
-            {
-                // file not found when executing process
-                if (!w32e.Source.Contains(typeof(System.Diagnostics.Process).FullName))
-                {
-                    _console.Error.WriteLine($"Failed installing \"{kernelspecName}\" kernelspec.");
-                    throw;
-                }
-            }
-
-            var location = new DirectoryInfo(Path.Combine(_kernelSpecModule.GetDefaultKernelSpecDirectory().FullName, kernelspecName));
-
-            _console.Out.WriteLine("The kernelspec module is not available.");
-            if (!location.Exists)
-            {
-                _console.Error.WriteLine($"Directory {location.FullName} does not exists");
-                return false;
-            }
-
-            try
-            {
-                var kernelDisplayName = GetKernelDisplayName(location);
-
-                location.Delete(true);
-                _console.Out.WriteLine($"Uninstalled \"{kernelDisplayName}\" kernel.");
-
-            }
-            catch (IOException ioe)
-            {
-                _console.Error.WriteLine(ioe.Message);
-                return false;
-            }
-
-
-            return true;
-        }
-
 
         private bool CopyKernelSpecFiles(DirectoryInfo source, DirectoryInfo location)
         {

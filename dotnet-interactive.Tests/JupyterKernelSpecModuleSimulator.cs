@@ -39,15 +39,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             return Task.FromResult(new CommandLineResult(_success ? 0 : 1));
         }
 
-        public Task<CommandLineResult> UninstallKernel(string kernelspecName)
-        {
-            if (!_success && _withException != null)
-            {
-                throw _withException;
-            }
-            return Task.FromResult(new CommandLineResult(_success ? 0 : 1));
-        }
-
         public DirectoryInfo GetDefaultKernelSpecDirectory()
         {
             return _success
