@@ -9,7 +9,5 @@ namespace Microsoft.DotNet.Interactive.App
     public interface IJupyterKernelSpecInstaller
     {
         Task<bool> InstallKernel(DirectoryInfo kernelSpecPath, DirectoryInfo destination = null);
-
-        Task<bool> UninstallKernel(string kernelspecName);
     }
 }

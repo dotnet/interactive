@@ -10,7 +10,6 @@ namespace Microsoft.DotNet.Interactive.App
 {
     public class JupyterKernelSpecModule: IJupyterKernelSpecModule
     {
-
         private async Task<CommandLineResult> ExecuteCommand(string command, string args = "")
         {
             return await Utility.CommandLine.Execute("jupyter", $"kernelspec {command} {args}");
@@ -19,11 +18,6 @@ namespace Microsoft.DotNet.Interactive.App
         public Task<CommandLineResult> InstallKernel(DirectoryInfo sourceDirectory)
         {
             return ExecuteCommand($@"install ""{sourceDirectory.FullName}""", "--user");
-        }
-
-        public Task<CommandLineResult> UninstallKernel(string kernelspecName)
-        {
-            return ExecuteCommand($@"uninstall ""{kernelspecName}""");
         }
 
         public  DirectoryInfo GetDefaultKernelSpecDirectory()
