@@ -42,6 +42,7 @@ namespace Microsoft.DotNet.Interactive.App
                 var result = await _kernelSpecModule.InstallKernel(sourceDirectory);
                 if (result.ExitCode == 0)
                 {
+                    _console.Out.WriteLine("Installing using jupyter kernelspec module.");
                     _console.Out.WriteLine($"Installed \"{kernelDisplayName}\" kernel.");
                     return true;
                 }
@@ -57,9 +58,6 @@ namespace Microsoft.DotNet.Interactive.App
             }
 
             destination = _kernelSpecModule.GetDefaultKernelSpecDirectory();
-
-            _console.Error.WriteLine("The kernelspec module is not available.");
-
             return InstallKernelSpecToDirectory(destination, destination, kernelDisplayName);
         }
 
