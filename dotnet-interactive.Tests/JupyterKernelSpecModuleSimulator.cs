@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             return Task.FromResult(new CommandLineResult(_success ? 0 : 1));
         }
 
-        public Task<CommandLineResult> UninstallKernel(DirectoryInfo sourceDirectory)
+        public Task<CommandLineResult> UninstallKernel(string kernelspecName)
         {
             if (!_success && _withException != null)
             {

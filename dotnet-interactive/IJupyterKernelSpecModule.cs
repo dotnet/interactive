@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.App
     public interface IJupyterKernelSpecModule
     {
         Task<CommandLineResult> InstallKernel(DirectoryInfo sourceDirectory);
-        Task<CommandLineResult> UninstallKernel(DirectoryInfo sourceDirectory);
+        Task<CommandLineResult> UninstallKernel(string kernelSpecName);
         DirectoryInfo GetDefaultKernelSpecDirectory();
     }
 }
