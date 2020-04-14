@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.Interactive.App
 
             if (!location.Exists)
             {
-                _console.Error.WriteLine($"Directory {location.FullName} does not exists");
+                _console.Error.WriteLine($"Directory {location.FullName} does not exist.");
                 return false;
             }
 
