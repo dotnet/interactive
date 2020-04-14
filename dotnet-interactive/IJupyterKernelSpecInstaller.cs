@@ -10,6 +10,6 @@ namespace Microsoft.DotNet.Interactive.App
     {
         Task<bool> InstallKernel(DirectoryInfo kernelSpecPath, DirectoryInfo destination = null);
 
-        Task<bool> UninstallKernel(DirectoryInfo kernelSpecPath);
+        Task<bool> UninstallKernel(string kernelspecName);
     }
 }

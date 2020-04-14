@@ -21,9 +21,9 @@ namespace Microsoft.DotNet.Interactive.App
             return ExecuteCommand($@"install ""{sourceDirectory.FullName}""", "--user");
         }
 
-        public Task<CommandLineResult> UninstallKernel(DirectoryInfo sourceDirectory)
+        public Task<CommandLineResult> UninstallKernel(string kernelspecName)
         {
-            return ExecuteCommand($@"uninstall ""{sourceDirectory.FullName}""");
+            return ExecuteCommand($@"uninstall ""{kernelspecName}""");
         }
 
         public  DirectoryInfo GetDefaultKernelSpecDirectory()

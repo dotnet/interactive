@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.App
         private readonly IConsole _console;
         private readonly IJupyterKernelSpecModule _kernelSpecModule;
 
-        public JupyterKernelSpecInstaller(IConsole console): this(console, new JupyterKernelSpecModule())
+        public JupyterKernelSpecInstaller(IConsole console) : this(console, new JupyterKernelSpecModule())
         {
         }
 
@@ -96,31 +96,57 @@ namespace Microsoft.DotNet.Interactive.App
             return parsed["display_name"].Value<string>();
         }
 
-        public async Task<bool> UninstallKernel(DirectoryInfo sourceDirectory)
+        public async Task<bool> UninstallKernel(string kernelspecName)
         {
-            if (!sourceDirectory.Exists)
+            if (string.IsNullOrWhiteSpace(kernelspecName))
             {
-                _console.Error.WriteLine($"Failed to uninstall. The kernelspec path ${sourceDirectory.FullName} does not exist.");
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(kernelspecName));
+            }
 
+            try
+            {
+                var result = await _kernelSpecModule.UninstallKernel(kernelspecName);
+                if (result.ExitCode == 0)
+                {
+                    _console.Out.WriteLine($"Uninstalled \"{kernelspecName}\" kernelspec.");
+                    return true;
+                }
+            }
+            catch (Win32Exception w32e)
+            {
+                // file not found when executing process
+                if (!w32e.Source.Contains(typeof(System.Diagnostics.Process).FullName))
+                {
+                    _console.Error.WriteLine($"Failed installing \"{kernelspecName}\" kernelspec.");
+                    throw;
+                }
+            }
+
+            var location = new DirectoryInfo(Path.Combine(_kernelSpecModule.GetDefaultKernelSpecDirectory().FullName, kernelspecName));
+
+            _console.Out.WriteLine("The kernelspec module is not available.");
+            if (!location.Exists)
+            {
+                _console.Error.WriteLine($"Directory {location.FullName} does not exists");
                 return false;
             }
 
-            var kernelDisplayName = GetKernelDisplayName(sourceDirectory);
-            var commandLineResult = await _kernelSpecModule.UninstallKernel(sourceDirectory);
-            
-            var result = commandLineResult.ExitCode == 0;
-
-            if (result)
+            try
             {
-                _console.Out.WriteLine($"Installed \"{kernelDisplayName}\" kernel.");
+                var kernelDisplayName = GetKernelDisplayName(location);
+
+                location.Delete(true);
+                _console.Out.WriteLine($"Uninstalled \"{kernelDisplayName}\" kernel.");
+
             }
-            else
+            catch (IOException ioe)
             {
-                _console.Error.WriteLine(
-                    $"Failed to uninstall \"{kernelDisplayName}\" kernel.");
+                _console.Error.WriteLine(ioe.Message);
+                return false;
             }
 
-            return result;
+
+            return true;
         }
 
 
@@ -141,7 +167,6 @@ namespace Microsoft.DotNet.Interactive.App
                 _console.Error.WriteLine($"Directory {location.FullName} does not exists");
                 return false;
             }
-
 
             try
             {
