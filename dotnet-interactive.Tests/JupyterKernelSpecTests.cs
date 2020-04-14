@@ -46,7 +46,8 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             using var scope = new AssertionScope();
             result.Should().BeTrue();
             _kernelInstallations.Add(new DirectoryInfo(kernelDir.Name));
-            output.Should().MatchEquivalentOf($"Installed * kernel.");
+            output.Should().MatchEquivalentOf("*Installing using jupyter kernelspec module.*");
+            output.Should().MatchEquivalentOf("*Installed * kernel.");
 
         }
 
@@ -68,11 +69,11 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             
             var kernelSpecInstaller = new JupyterKernelSpecInstaller(Console, jupyterKernelSpecModuleSimulator);
             var result = await kernelSpecInstaller.TryInstallKernelAsync(kernelDir);
-            var error = Console.Error.ToString();
+            var output = Console.Out.ToString();
 
             using var scope = new AssertionScope();
             result.Should().BeTrue();
-            error.Should().Match("The kernelspec module is not available*");
+            output.Should().Match($"Installing using path { destination.FullName}.*");
         }
 
         [Fact]
@@ -97,7 +98,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             using var scope = new AssertionScope();
             result.Should().BeFalse();
-            error.Should().Match("The kernelspec module is not available*");
             error.Should().Match($"*The kernelspec path ${defaultPath.FullName} does not exist.*");
         }
 
