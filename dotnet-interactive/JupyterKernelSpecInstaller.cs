@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.App
 
             destination = _kernelSpecModule.GetDefaultKernelSpecDirectory();
 
-            _console.Out.WriteLine("The kernelspec module is not available.");
+            _console.Error.WriteLine("The kernelspec module is not available.");
 
             return InstallKernelSpecToDirectory(destination, destination, kernelDisplayName);
         }
@@ -73,7 +73,9 @@ namespace Microsoft.DotNet.Interactive.App
 
                 return false;
             }
+            
             _console.Out.WriteLine($"Installing using path {destination.FullName}.");
+            
             var succeeded = CopyKernelSpecFiles(sourceDirectory, destination);
             if (succeeded)
             {

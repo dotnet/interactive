@@ -42,11 +42,10 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             var result = await kernelSpecInstaller.TryInstallKernelAsync(kernelDir);
             var output = Console.Out.ToString();
+
             using var scope = new AssertionScope();
             result.Should().BeTrue();
-
             _kernelInstallations.Add(new DirectoryInfo(kernelDir.Name));
-
             output.Should().MatchEquivalentOf($"Installed * kernel.");
 
         }
@@ -66,15 +65,14 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             {
                 Source = typeof(System.Diagnostics.Process).FullName
             });
+            
             var kernelSpecInstaller = new JupyterKernelSpecInstaller(Console, jupyterKernelSpecModuleSimulator);
-
-            var defaultPath = new JupyterKernelSpecModule().GetDefaultKernelSpecDirectory();
             var result = await kernelSpecInstaller.TryInstallKernelAsync(kernelDir);
-            var output = Console.Out.ToString();
+            var error = Console.Error.ToString();
 
             using var scope = new AssertionScope();
             result.Should().BeTrue();
-            output.Should().Match("The kernelspec module is not available*");
+            error.Should().Match("The kernelspec module is not available*");
         }
 
         [Fact]
@@ -93,16 +91,13 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             });
 
             var defaultPath = jupyterKernelSpecModuleSimulator.GetDefaultKernelSpecDirectory();
-
             var kernelSpecInstaller = new JupyterKernelSpecInstaller(Console, jupyterKernelSpecModuleSimulator);
-            
             var result = await kernelSpecInstaller.TryInstallKernelAsync(kernelDir);
-            var output = Console.Out.ToString();
             var error = Console.Error.ToString();
 
             using var scope = new AssertionScope();
             result.Should().BeFalse();
-            output.Should().Match("The kernelspec module is not available*");
+            error.Should().Match("The kernelspec module is not available*");
             error.Should().Match($"*The kernelspec path ${defaultPath.FullName} does not exist.*");
         }
 
