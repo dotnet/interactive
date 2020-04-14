@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var kernelSpecInstaller = new JupyterKernelSpecInstaller(Console, jupyterKernelSpecModuleSimulator);
            
 
-            var result = await kernelSpecInstaller.InstallKernel(kernelDir);
+            var result = await kernelSpecInstaller.TryInstallKernelAsync(kernelDir);
             var output = Console.Out.ToString();
             using var scope = new AssertionScope();
             result.Should().BeTrue();
@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var kernelSpecInstaller = new JupyterKernelSpecInstaller(Console, jupyterKernelSpecModuleSimulator);
 
             var defaultPath = new JupyterKernelSpecModule().GetDefaultKernelSpecDirectory();
-            var result = await kernelSpecInstaller.InstallKernel(kernelDir);
+            var result = await kernelSpecInstaller.TryInstallKernelAsync(kernelDir);
             var output = Console.Out.ToString();
 
             using var scope = new AssertionScope();
@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             var kernelSpecInstaller = new JupyterKernelSpecInstaller(Console, jupyterKernelSpecModuleSimulator);
             
-            var result = await kernelSpecInstaller.InstallKernel(kernelDir);
+            var result = await kernelSpecInstaller.TryInstallKernelAsync(kernelDir);
             var output = Console.Out.ToString();
             var error = Console.Error.ToString();
 
