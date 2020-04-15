@@ -2,33 +2,35 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.IO;
 using System.Management.Automation;
-using System.Reflection;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Host
 {
     internal static class DollarProfileHelper
     {
-        public delegate string GetFullProfileFileNameDelegate(
-            string hostId,
-            bool forCurrentUser);
+        private const string _profileName = "Microsoft.dotnet-interactive_profile.ps1";
 
-        private static Lazy<GetFullProfileFileNameDelegate> s_LazyGetFullProfileFileName =
-            new Lazy<GetFullProfileFileNameDelegate>(() =>
+        public static string GetFullProfileFilePath(bool forCurrentUser)
+        {
+            if (!forCurrentUser)
             {
-                // Grab GetFullProfileName static method which handles a lot of the profile
-                // path generation.
-                MethodInfo method = typeof(HostUtilities).GetMethod(
-                    "GetFullProfileFileName",
-                    BindingFlags.Static | BindingFlags.NonPublic,
-                    null,
-                    new [] { typeof(string), typeof(bool) },
-                    null);
+                string pshome = Path.GetDirectoryName(typeof(PSObject).Assembly.Location);
+                return Path.Combine(pshome, _profileName);
+            }
 
-                return (GetFullProfileFileNameDelegate)method.CreateDelegate(typeof(GetFullProfileFileNameDelegate));
-            });
+            string configPath;
+            if (Platform.IsWindows)
+            {
+                configPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "PowerShell");
+            }
+            else
+            {
+                configPath = Platform.SelectProductNameForDirectory(Platform.XDG_Type.CONFIG);
+            }
 
-        public static GetFullProfileFileNameDelegate GetFullProfileFileName = s_LazyGetFullProfileFileName.Value;
+            return Path.Combine(configPath, _profileName);
+        }
 
         public static PSObject GetDollarProfile(string allUsersCurrentHost, string currentUserCurrentHost)
         {
