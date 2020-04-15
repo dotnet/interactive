@@ -3,15 +3,26 @@
 
 using System;
 using System.IO;
-using System.Management.Automation;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Host
 {
+    using System.Management.Automation;
+
     internal static class DollarProfileHelper
     {
         private const string _profileName = "Microsoft.dotnet-interactive_profile.ps1";
 
-        public static string GetFullProfileFilePath(bool forCurrentUser)
+        private static Lazy<string> _lazyAllUsersCurrentHost = new Lazy<string>(() =>
+            DollarProfileHelper.GetFullProfileFilePath(forCurrentUser: false));
+        private static Lazy<string> _lazyCurrentUserCurrentHost = new Lazy<string>(() =>
+            DollarProfileHelper.GetFullProfileFilePath(forCurrentUser: true));
+
+        private static string _allUsersCurrentHost => _lazyAllUsersCurrentHost.Value;
+        private static string _currentUserCurrentHost => _lazyCurrentUserCurrentHost.Value;
+
+        private static bool _haveRunProfiles;
+
+        private static string GetFullProfileFilePath(bool forCurrentUser)
         {
             if (!forCurrentUser)
             {
@@ -32,14 +43,35 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
             return Path.Combine(configPath, _profileName);
         }
 
-        public static PSObject GetDollarProfile(string allUsersCurrentHost, string currentUserCurrentHost)
+        public static void SetDollarProfile(PowerShell pwsh)
         {
-            PSObject returnValue = new PSObject(currentUserCurrentHost);
-            returnValue.Properties.Add(new PSNoteProperty("AllUsersCurrentHost", allUsersCurrentHost));
-            returnValue.Properties.Add(new PSNoteProperty("CurrentUserCurrentHost", currentUserCurrentHost));
-
+            PSObject dollarProfile = new PSObject(_currentUserCurrentHost);
+            dollarProfile.Properties.Add(new PSNoteProperty("AllUsersCurrentHost", _allUsersCurrentHost));
+            dollarProfile.Properties.Add(new PSNoteProperty("CurrentUserCurrentHost", _currentUserCurrentHost));
             // TODO: Decide on whether or not we want to support running the AllHosts profiles
-            return returnValue;
+
+            pwsh.Runspace.SessionStateProxy.SetVariable("PROFILE", dollarProfile);
+        }
+
+        public static void RunProfilesIfNeeded(PowerShell pwsh, PowerShellKernel pwshKernel)
+        {
+            if (_haveRunProfiles)
+            {
+                return;
+            }
+
+            _haveRunProfiles = true;
+
+            // Run the PROFILE scripts if they exist.
+            if (File.Exists(_allUsersCurrentHost))
+            {
+                pwshKernel.RunSubmitCodeLocally(pwsh, _allUsersCurrentHost);
+            }
+
+            if (File.Exists(_currentUserCurrentHost))
+            {
+                pwshKernel.RunSubmitCodeLocally(pwsh, _currentUserCurrentHost);
+            }
         }
     }
 }

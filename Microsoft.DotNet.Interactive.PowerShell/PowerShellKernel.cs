@@ -105,22 +105,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 $"{psJupyterModulePath}{Path.PathSeparator}{psModulePath}");
 
             // Set $PROFILE.
-            string allUsersCurrentHost = DollarProfileHelper.GetFullProfileFilePath(forCurrentUser: false);
-            string currentUserCurrentHost = DollarProfileHelper.GetFullProfileFilePath(forCurrentUser: true);
-            PSObject dollarProfile = DollarProfileHelper.GetDollarProfile(allUsersCurrentHost, currentUserCurrentHost);
-
-            pwsh.Runspace.SessionStateProxy.SetVariable("PROFILE", dollarProfile);
-
-            // Run the PROFILE scripts if they exist.
-            if (File.Exists(allUsersCurrentHost))
-            {
-                pwsh.AddScript(allUsersCurrentHost).InvokeAndClearCommands();
-            }
-
-            if (File.Exists(currentUserCurrentHost))
-            {
-                pwsh.AddScript(currentUserCurrentHost).InvokeAndClearCommands();
-            }
+            DollarProfileHelper.SetDollarProfile(pwsh);
 
             RegisterForDisposal(pwsh);
             return pwsh;
@@ -188,6 +173,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 context.Fail(null, "Command cancelled");
                 return;
             }
+
+            DollarProfileHelper.RunProfilesIfNeeded(pwsh, this);
 
             if (AzShell != null)
             {
@@ -267,7 +254,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
         }
 
-        private void RunSubmitCodeLocally(PowerShell pwsh, string code)
+        internal void RunSubmitCodeLocally(PowerShell pwsh, string code)
         {
             try
             {
