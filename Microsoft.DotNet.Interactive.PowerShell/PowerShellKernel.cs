@@ -105,8 +105,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 $"{psJupyterModulePath}{Path.PathSeparator}{psModulePath}");
 
             // Set $PROFILE.
-            string allUsersCurrentHost = DollarProfileHelper.GetFullProfileFileName(_psHost.Name, forCurrentUser: false);
-            string currentUserCurrentHost = DollarProfileHelper.GetFullProfileFileName(_psHost.Name, forCurrentUser: true);
+            string allUsersCurrentHost = DollarProfileHelper.GetFullProfileFilePath(forCurrentUser: false);
+            string currentUserCurrentHost = DollarProfileHelper.GetFullProfileFilePath(forCurrentUser: true);
             PSObject dollarProfile = DollarProfileHelper.GetDollarProfile(allUsersCurrentHost, currentUserCurrentHost);
 
             pwsh.Runspace.SessionStateProxy.SetVariable("PROFILE", dollarProfile);
