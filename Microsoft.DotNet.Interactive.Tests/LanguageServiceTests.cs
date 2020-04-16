@@ -24,12 +24,10 @@ namespace Microsoft.DotNet.Interactive.Tests
             return kernel.SendAsync(command);
         }
 
-        [Theory]
-        [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
-        public async Task HoverOnUnsupportedLanguageServiceReturnsNothing(Language language)
+        [Fact]
+        public async Task hover_on_unsupported_language_service_returns_nothing()
         {
-            using var kernel = CreateKernel(language);
+            using var kernel = new FakeKernel();
 
             var commandResult = await SendHoverRequest(kernel, "code", 0, 0);
 
@@ -42,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         [Theory]
         [InlineData(Language.CSharp, "var x = 1234;", 0, 10, "readonly struct System.Int32")]
-        public async Task HoverRequestReturnsExpectedResult(Language language, string code, int line, int character, string expected)
+        public async Task hover_request_returns_expected_result(Language language, string code, int line, int character, string expected)
         {
             using var kernel = CreateKernel(language);
 
@@ -66,7 +64,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [InlineData(Language.CSharp, "var x = 1; // hovering on a negative character", 0, -1)]
         [InlineData(Language.CSharp, "var x = 1; // hovering on a non-existent line", 10, 2)]
         [InlineData(Language.CSharp, "var x = 1; // hovering on a negative line", -1, 2)]
-        public async Task InvalidHoverRequestReturnsNoResult(Language language, string code, int line, int character)
+        public async Task invalid_hover_request_returns_no_result(Language language, string code, int line, int character)
         {
             using var kernel = CreateKernel(language);
 
@@ -81,7 +79,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         [Theory]
         [InlineData(Language.CSharp, "var one = 1;", "Console.WriteLine(one)", 0, 20, "(field) int one")]
-        public async Task LanguageServiceMethodsRunDeferredCommands(Language language, string deferredCode, string actualCode, int line, int character, string expected)
+        public async Task language_service_methods_run_deferred_commands(Language language, string deferredCode, string actualCode, int line, int character, string expected)
         {
             // declare a variable in deferred code
             using var kernel = CreateKernel(language);
