@@ -25,15 +25,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
                 return Path.Combine(pshome, _profileName);
             }
 
-            string configPath;
-            if (Platform.IsWindows)
-            {
-                configPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "PowerShell");
-            }
-            else
-            {
-                configPath = Platform.SelectProductNameForDirectory(Platform.XDG_Type.CONFIG);
-            }
+            string configPath = Platform.IsWindows
+                ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "PowerShell")
+                : Platform.SelectProductNameForDirectory(Platform.XDG_Type.CONFIG);
 
             return Path.Combine(configPath, _profileName);
         }
