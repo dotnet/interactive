@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.LanguageService;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -37,6 +38,8 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(ErrorProduced)] = typeof(KernelEventEnvelope<ErrorProduced>),
                 [nameof(IncompleteCodeSubmissionReceived)] = typeof(KernelEventEnvelope<IncompleteCodeSubmissionReceived>),
                 [nameof(InputRequested)] = typeof(KernelEventEnvelope<InputRequested>),
+                [nameof(LanguageServiceHoverResponseProduced)] = typeof(KernelEventEnvelope<LanguageServiceHoverResponseProduced>),
+                [nameof(LanguageServiceNoResultProduced)] = typeof(KernelEventEnvelope<LanguageServiceNoResultProduced>),
                 [nameof(PackageAdded)] = typeof(KernelEventEnvelope<PackageAdded>),
                 [nameof(PasswordRequested)] = typeof(KernelEventEnvelope<PasswordRequested>),
                 [nameof(ReturnValueProduced)] = typeof(KernelEventEnvelope<ReturnValueProduced>),

@@ -1,10 +1,9 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.DotNet.Interactive.LanguageService
+namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class TextDocument
+    public abstract class LanguageServiceCommandBase : KernelCommandBase
     {
-        public string Uri { get; set; }
     }
 }

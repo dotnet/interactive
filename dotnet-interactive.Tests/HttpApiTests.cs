@@ -10,8 +10,12 @@ using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Microsoft.DotNet.Interactive.App.Lsp;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.LanguageService;
+using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Newtonsoft.Json;
@@ -199,52 +203,70 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         }
 
         [Theory]
-        [InlineData(Language.CSharp)]
-        public async Task lsp_textDocument_hover_returns_expected_placeholder(Language language)
+        [InlineData(Language.CSharp, "var x = 1234;", 0, 10, "readonly struct System.Int32")]
+        public async Task lsp_textDocument_hover_returns_expected_result(Language language, string code, int line, int character, string expected)
         {
             using var _ = new AssertionScope();
-            var request = JObject.Parse(@"
-{
-    ""textDocument"": {
-        ""uri"": ""path/to/document""
-    },
-    ""position"": {
-        ""line"": 1,
-        ""character"": 2
-    }
-}
-");
-            var response = await GetServer(language).HttpClient.PostJsonAsync("/lsp/textDocument/hover", request);
+            var request = new HoverParams(
+                TextDocument.FromDocumentContents(code),
+                new Lsp.Position(line, character));
+            var response = await GetServer(language).HttpClient.PostObjectAsJsonAsync("/lsp/textDocument/hover", request);
             await response.ShouldSucceed();
             var responseJson = await response.Content.ReadAsStringAsync();
-            var json = JObject.Parse(responseJson);
-            var responseType = json["contents"]["kind"].Value<string>();
-            responseType.Should().Be("markdown");
-            var markdownContent = json["contents"]["value"].Value<string>();
-            markdownContent.Should().Be("textDocument/hover at position (1, 2) with `markdown`");
+            var hoverResponse = LspSerializer.JsonSerializer.DeserializeFromString<HoverResponse>(responseJson);
+            hoverResponse.Contents.Kind.Should().Be(Lsp.MarkupKind.Markdown);
+            hoverResponse.Contents.Value.Should().Be(expected);
         }
 
         [Theory]
         [InlineData(Language.CSharp)]
-        public async Task unimplemented_lsp_methods_return_empty_string(Language language)
+        public async Task lsp_textDocument_hover_returns_no_result_on_malformed_request_object(Language language)
         {
-            // language kernels that implement LSP handling, but not for the specified method
-            var response = await GetServer(language).HttpClient.PostJsonAsync($"/lsp/not/a/method", new JObject());
+            using var _ = new AssertionScope();
+            var request = new
+            {
+                SomeField = 1,
+                SomeOtherField = "test",
+            };
+            var response = await GetServer(language).HttpClient.PostObjectAsJsonAsync("/lsp/textDocument/hover", request);
             await response.ShouldSucceed();
             var responseJson = await response.Content.ReadAsStringAsync();
-            responseJson.Should().BeEmpty();
+            responseJson.Should().Be("null");
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        public async Task lsp_textDocument_hover_returns_no_result_on_empty_request(Language language)
+        {
+            using var _ = new AssertionScope();
+            var response = await GetServer(language).HttpClient.PostObjectAsJsonAsync("/lsp/textDocument/hover", new object());
+            await response.ShouldSucceed();
+            var responseJson = await response.Content.ReadAsStringAsync();
+            responseJson.Should().Be("null");
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell)]
+        public async Task unimplemented_lsp_methods_return_no_result(Language language)
+        {
+            var response = await GetServer(language).HttpClient.PostObjectAsJsonAsync($"/lsp/not/a/method", new object()); // payload doesn't matter
+            await response.ShouldSucceed();
+            var responseJson = await response.Content.ReadAsStringAsync();
+            responseJson.Should().Be("null");
         }
 
         [Theory]
         [InlineData(Language.FSharp)]
         [InlineData(Language.PowerShell)]
-        public async Task unimplemented_lsp_handlers_return_empty_string(Language language)
+        public async Task unimplemented_lsp_handlers_return_no_result(Language language)
         {
-            // language kernels that don't implement any LSP handling
-            var response = await GetServer(language).HttpClient.PostJsonAsync($"/lsp/textDocument/hover", new JObject());
+            // language kernels that don't implement the appropriate LSP handling
+            var response = await GetServer(language).HttpClient.PostObjectAsJsonAsync($"/lsp/textDocument/hover", new object()); // payload doesn't matter
             await response.ShouldSucceed();
             var responseJson = await response.Content.ReadAsStringAsync();
-            responseJson.Should().BeEmpty();
+            responseJson.Should().Be("null");
         }
 
         [Fact]
@@ -282,9 +304,10 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
 
     internal static class HttpClientTestExtensions
     {
-        public static async Task<HttpResponseMessage> PostJsonAsync(this HttpClient client, string requestUri, JObject requestBody)
+        public static async Task<HttpResponseMessage> PostObjectAsJsonAsync(this HttpClient client, string requestUri, object request)
         {
-            var content = new StringContent(requestBody.ToString(), Encoding.UTF8, "application/json");
+            var requestJObject = JObject.FromObject(request, LspSerializer.JsonSerializer);
+            var content = new StringContent(requestJObject.ToString(), Encoding.UTF8, "application/json");
             var response = await client.PostAsync(requestUri, content);
             return response;
         }

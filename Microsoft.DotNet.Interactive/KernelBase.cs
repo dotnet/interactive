@@ -17,7 +17,6 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Utility;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -193,13 +192,8 @@ namespace Microsoft.DotNet.Interactive
 
         public IReadOnlyCollection<ICommand> Directives => SubmissionParser.Directives;
 
-        public void AddDirective(Command command) => SubmissionParser.AddDirective(command); 
+        public void AddDirective(Command command) => SubmissionParser.AddDirective(command);
         
-        public virtual Task<LspResponse> LspMethod(string methodName, JObject request)
-        {
-            return Task.FromResult<LspResponse>(null);
-        }
-
         private class KernelOperation
         {
             public KernelOperation(IKernelCommand command, TaskCompletionSource<IKernelCommandResult> taskCompletionSource)
@@ -384,8 +378,34 @@ namespace Microsoft.DotNet.Interactive
                                 return HandleRequestCompletion(requestCompletion, invocationContext);
                             };
                             break;
+
+                        // language services
+
+                        case RequestHoverTextCommand hoverCommand:
+                            ApplyLanguageServiceHandlerOrDefault<RequestHoverTextCommand>(hoverCommand, handlingKernel => (_kernelCommand, context) => handlingKernel.Handle(hoverCommand, context));
+                            break;
                     }
                 }
+            }
+        }
+
+        private void ApplyLanguageServiceHandlerOrDefault<THandlerType>(
+            KernelCommandBase command,
+            Func<IKernelLanguageService<THandlerType>, KernelCommandInvocation> handlerGenerator
+        ) where THandlerType: LanguageServiceCommandBase
+        {
+            if (this is IKernelLanguageService<THandlerType> handlingKernel)
+            {
+                command.Handler = handlerGenerator(handlingKernel);
+            }
+            else
+            {
+                // default behavior is to return no result
+                command.Handler = (command, context) =>
+                {
+                    context.Publish(new LanguageServiceNoResultProduced(command));
+                    return Task.CompletedTask;
+                };
             }
         }
 
