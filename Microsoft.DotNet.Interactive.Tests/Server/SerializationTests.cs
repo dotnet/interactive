@@ -4,11 +4,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using FluentAssertions;
 using System.Linq;
+using FluentAssertions;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
@@ -118,6 +119,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new RequestDiagnostics();
 
+                yield return new RequestHoverTextCommand("document-contents", new Position(1, 2));
+
                 yield return new SubmitCode("123", "csharp", SubmissionType.Run);
 
                 yield return new UpdateDisplayedValue(
@@ -146,10 +149,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     submitCode);
 
                 yield return new CommandFailed(
-                   new InvalidOperationException("Oooops!"), 
+                   new InvalidOperationException("Oooops!"),
                    submitCode,
                    "oops");
-                
+
                 yield return new CommandHandled(submitCode);
 
                 yield return new CompleteCodeSubmissionReceived(submitCode);
@@ -195,6 +198,15 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 yield return new IncompleteCodeSubmissionReceived(submitCode);
 
                 yield return new InputRequested("prompt", submitCode);
+
+                var requestHoverTextCommand = new RequestHoverTextCommand("document-contents", new Position(1, 2));
+
+                yield return new LanguageServiceHoverResponseProduced(
+                    requestHoverTextCommand,
+                    new MarkupContent(MarkupKind.Plaintext, "plaintext"),
+                    new LanguageService.Range(new Position(1, 2), new Position(3, 4)));
+
+                yield return new LanguageServiceNoResultProduced(requestHoverTextCommand);
 
                 yield return new PackageAdded(
                     new ResolvedPackageReference("ThePackage", "1.2.3", new[] { new FileInfo(Path.GetTempFileName()) }));

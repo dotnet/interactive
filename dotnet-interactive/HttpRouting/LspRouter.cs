@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.DotNet.Interactive.LanguageService;
+using Microsoft.DotNet.Interactive.App.Lsp;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.App.HttpRouting
@@ -53,8 +53,10 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                         var lspBodyReader = new StreamReader(context.HttpContext.Request.Body);
                         var stringBody = await lspBodyReader.ReadToEndAsync();
                         var request = JObject.Parse(stringBody);
-                        var response = await kernelBase.LspMethod(methodName, request);
-                        var responseJson = response.SerializeLspObject();
+                        var response = await kernelBase.HandleLspMethod(methodName, request);
+                        using var writer = new StringWriter();
+                        LspSerializer.JsonSerializer.Serialize(writer, response);
+                        var responseJson = writer.ToString();
                         context.Handler = async httpContext =>
                         {
                             httpContext.Response.ContentType = "application/json";

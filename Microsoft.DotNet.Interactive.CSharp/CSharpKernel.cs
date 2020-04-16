@@ -9,20 +9,21 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Interactive.DependencyManager;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Microsoft.CodeAnalysis.QuickInfo;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Scripting;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Utility;
-using Newtonsoft.Json.Linq;
+using Microsoft.Interactive.DependencyManager;
 using XPlot.Plotly;
 using Task = System.Threading.Tasks.Task;
 
@@ -31,7 +32,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
     public class CSharpKernel :
         DotNetLanguageKernel,
         IExtensibleKernel,
-        ISupportNuget
+        ISupportNuget,
+        IKernelLanguageService<RequestHoverTextCommand>
     {
         internal const string DefaultKernelName = "csharp";
 
@@ -114,34 +116,29 @@ namespace Microsoft.DotNet.Interactive.CSharp
             scriptVariable.Value = value;
         }
 
-        public override Task<LspResponse> LspMethod(string methodName, JObject request)
+        public async Task Handle(RequestHoverTextCommand command, KernelInvocationContext context)
         {
-            LspResponse result;
-            switch (methodName)
+            if (!command.DocumentIdentifier.TryDecodeDocumentFromDataUri(out var documentContents))
             {
-                case "textDocument/hover":
-                    // https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
-                    var hoverParams = request.ToLspObject<HoverParams>();
-                    result = TextDocumentHover(hoverParams);
-                    break;
-                default:
-                    result = null;
-                    break;
+                return;
             }
 
-            return Task.FromResult(result);
-        }
-
-        public TextDocumentHoverResponse TextDocumentHover(HoverParams hoverParams)
-        {
-            return new TextDocumentHoverResponse
+            var (document, offset) = GetDocumentWithOffsetFromCode(documentContents);
+            var text = await document.GetTextAsync();
+            var cursorPosition = text.Lines.GetPosition(new LinePosition(command.Position.Line, command.Position.Character));
+            var absolutePosition = cursorPosition + offset;
+            var service = QuickInfoService.GetService(document);
+            var info = await service.GetQuickInfoAsync(document, absolutePosition);
+            if (info == null)
             {
-                Contents = new MarkupContent
-                {
-                    Kind = MarkupKind.Markdown,
-                    Value = $"textDocument/hover at position ({hoverParams.Position.Line}, {hoverParams.Position.Character}) with `markdown`",
-                }
-            };
+                return;
+            }
+
+            var scriptSpanStart = text.Lines.GetLinePosition(offset);
+            var linePosSpan = text.Lines.GetLinePositionSpan(info.Span);
+            var correctedLinePosSpan = linePosSpan.SubtractLineOffset(scriptSpanStart);
+
+            context.PublishHoverResponse(command, info.ToMarkupContent(), correctedLinePosSpan.ToLanguageServiceRange());
         }
 
         protected override async Task HandleSubmitCode(
@@ -276,27 +273,10 @@ namespace Microsoft.DotNet.Interactive.CSharp
             string code,
             int cursorPosition)
         {
-            var compilation = ScriptState.Script.GetCompilation();
-            var originalCode =
-                ScriptState?.Script.Code ?? string.Empty;
+            var (document, offset) = GetDocumentWithOffsetFromCode(code);
+            var text = await document.GetTextAsync();
+            var absolutePosition = cursorPosition + offset;
 
-            var buffer = new StringBuilder(originalCode);
-            if (!string.IsNullOrWhiteSpace(originalCode) && !originalCode.EndsWith(Environment.NewLine))
-            {
-                buffer.AppendLine();
-            }
-
-            buffer.AppendLine(code);
-            var fullScriptCode = buffer.ToString();
-            var offset = fullScriptCode.LastIndexOf(code, StringComparison.InvariantCulture);
-            var absolutePosition = Math.Max(offset, 0) + cursorPosition;
-
-            if (_fixture == null || ShouldRebuild())
-            {
-                _fixture = new WorkspaceFixture(compilation.Options, compilation.References);
-            }
-
-            var document = _fixture.ForkDocument(fullScriptCode);
             var service = CompletionService.GetService(document);
 
             var completionList = await service.GetCompletionsAsync(document, absolutePosition);
@@ -315,11 +295,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var items = completionList.Items.Select(item => item.ToModel(symbolToSymbolKey, document)).ToArray();
 
             return items;
-
-            bool ShouldRebuild()
-            {
-                return compilation.References.Count() != _fixture.MetadataReferences.Count();
-            }
         }
 
         public async Task LoadExtensionsFromDirectoryAsync(
@@ -384,6 +359,35 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
 
             return _dependencies.Value.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm);
+        }
+
+        private (Document document, int offset) GetDocumentWithOffsetFromCode(string code)
+        {
+            var compilation = ScriptState.Script.GetCompilation();
+            var originalCode = ScriptState.Script.Code ?? string.Empty;
+
+            var buffer = new StringBuilder(originalCode);
+            if (!string.IsNullOrWhiteSpace(originalCode) && !originalCode.EndsWith(Environment.NewLine))
+            {
+                buffer.AppendLine();
+            }
+
+            var offset = buffer.Length;
+            buffer.AppendLine(code);
+            var fullScriptCode = buffer.ToString();
+
+            if (_fixture == null || ShouldRebuild())
+            {
+                _fixture = new WorkspaceFixture(compilation.Options, compilation.References);
+            }
+
+            var document = _fixture.ForkDocument(fullScriptCode);
+            return (document, offset);
+
+            bool ShouldRebuild()
+            {
+                return compilation.References.Count() != _fixture.MetadataReferences.Count();
+            }
         }
 
         private bool HasReturnValue =>

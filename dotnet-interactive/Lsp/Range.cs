@@ -1,7 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.DotNet.Interactive.LanguageService
+namespace Microsoft.DotNet.Interactive.App.Lsp
 {
     public class Range
     {
@@ -12,6 +12,18 @@ namespace Microsoft.DotNet.Interactive.LanguageService
         {
             Start = start;
             End = end;
+        }
+
+        public static Range FromLanguageServiceRange(LanguageService.Range range)
+        {
+            if (range == null)
+            {
+                return null;
+            }
+
+            return new Range(
+                Position.FromLanguageServicePosition(range.Start),
+                Position.FromLanguageServicePosition(range.End));
         }
     }
 }
