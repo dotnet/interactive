@@ -15,8 +15,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
         private static readonly string _allUsersCurrentHost = DollarProfileHelper.GetFullProfileFilePath(forCurrentUser: false);
         private static readonly string _currentUserCurrentHost = DollarProfileHelper.GetFullProfileFilePath(forCurrentUser: true);
 
-        private static bool _haveRunProfiles;
-
         private static string GetFullProfileFilePath(bool forCurrentUser)
         {
             if (!forCurrentUser)
