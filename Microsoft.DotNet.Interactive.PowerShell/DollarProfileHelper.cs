@@ -49,6 +49,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
                 return;
             }
 
+            pwshKernel.HasRunProfiles = true;
+
             // Run the PROFILE scripts if they exist.
             if (File.Exists(_allUsersCurrentHost))
             {
