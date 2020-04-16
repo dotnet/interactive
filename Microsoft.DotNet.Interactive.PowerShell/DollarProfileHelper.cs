@@ -12,13 +12,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
     {
         private const string _profileName = "Microsoft.dotnet-interactive_profile.ps1";
 
-        private static Lazy<string> _lazyAllUsersCurrentHost = new Lazy<string>(() =>
-            DollarProfileHelper.GetFullProfileFilePath(forCurrentUser: false));
-        private static Lazy<string> _lazyCurrentUserCurrentHost = new Lazy<string>(() =>
-            DollarProfileHelper.GetFullProfileFilePath(forCurrentUser: true));
-
-        private static string _allUsersCurrentHost => _lazyAllUsersCurrentHost.Value;
-        private static string _currentUserCurrentHost => _lazyCurrentUserCurrentHost.Value;
+        private static readonly string _allUsersCurrentHost = DollarProfileHelper.GetFullProfileFilePath(forCurrentUser: false);
+        private static readonly string _currentUserCurrentHost = DollarProfileHelper.GetFullProfileFilePath(forCurrentUser: true);
 
         private static bool _haveRunProfiles;
 
@@ -55,12 +50,10 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
 
         public static void RunProfilesIfNeeded(PowerShell pwsh, PowerShellKernel pwshKernel)
         {
-            if (_haveRunProfiles)
+            if (pwshKernel.HasRunProfiles)
             {
                 return;
             }
-
-            _haveRunProfiles = true;
 
             // Run the PROFILE scripts if they exist.
             if (File.Exists(_allUsersCurrentHost))

@@ -31,6 +31,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         private readonly PSKernelHost _psHost;
         private readonly Lazy<PowerShell> _lazyPwsh;
 
+        internal Lazy<bool> _lazyHasRunProfile;
+        internal bool HasRunProfiles => _lazyHasRunProfile.Value;
+
         public Func<string, string> ReadInput { get; set; }
         public Func<string, PasswordString> ReadPassword { get; set; }
 
@@ -71,6 +74,10 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             _psHost = new PSKernelHost();
             _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);
+            _lazyHasRunProfile = new Lazy<bool>(() => {
+                DollarProfileHelper.RunProfilesIfNeeded(_lazyPwsh.Value, this);
+                return true;
+            });
         }
 
         private PowerShell CreatePowerShell()
