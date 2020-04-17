@@ -73,6 +73,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             _psHost = new PSKernelHost();
             _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);
+
+            var command = new SubmitCode(DollarProfileHelper.GetProfileScript());
+            DeferCommand(command);
         }
 
         private PowerShell CreatePowerShell()
@@ -92,6 +95,10 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 iss.ExecutionPolicy = ExecutionPolicy.RemoteSigned;
             }
 
+            // Set $PROFILE.
+            PSObject profileValue = DollarProfileHelper.GetProfileValue();
+            iss.Variables.Add(new SessionStateVariableEntry("PROFILE", profileValue, "The $PROFILE."));
+
             var runspace = RunspaceFactory.CreateRunspace(_psHost, iss);
             runspace.Open();
             var pwsh = PowerShell.Create(runspace);
@@ -105,9 +112,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             Environment.SetEnvironmentVariable(
                 PSModulePathEnvName,
                 $"{psJupyterModulePath}{Path.PathSeparator}{psModulePath}");
-
-            // Set $PROFILE.
-            DollarProfileHelper.SetDollarProfile(pwsh);
 
             RegisterForDisposal(pwsh);
             return pwsh;
@@ -174,8 +178,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 context.Fail(null, "Command cancelled");
                 return;
             }
-
-            DollarProfileHelper.RunProfilesIfNeeded(this);
 
             if (AzShell != null)
             {

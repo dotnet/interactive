@@ -7,13 +7,14 @@ using System.IO;
 namespace Microsoft.DotNet.Interactive.PowerShell.Host
 {
     using System.Management.Automation;
+    using System.Text;
 
     internal static class DollarProfileHelper
     {
         private const string _profileName = "Microsoft.dotnet-interactive_profile.ps1";
 
-        private static readonly string _allUsersCurrentHost = DollarProfileHelper.GetFullProfileFilePath(forCurrentUser: false);
-        private static readonly string _currentUserCurrentHost = DollarProfileHelper.GetFullProfileFilePath(forCurrentUser: true);
+        internal static string AllUsersCurrentHost => GetFullProfileFilePath(forCurrentUser: false);
+        internal static string CurrentUserCurrentHost => GetFullProfileFilePath(forCurrentUser: true);
 
         private static string GetFullProfileFilePath(bool forCurrentUser)
         {
@@ -30,35 +31,29 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
             return Path.Combine(configPath, _profileName);
         }
 
-        public static void SetDollarProfile(PowerShell pwsh)
+        public static PSObject GetProfileValue()
         {
-            PSObject dollarProfile = new PSObject(_currentUserCurrentHost);
-            dollarProfile.Properties.Add(new PSNoteProperty("AllUsersCurrentHost", _allUsersCurrentHost));
-            dollarProfile.Properties.Add(new PSNoteProperty("CurrentUserCurrentHost", _currentUserCurrentHost));
+            PSObject dollarProfile = new PSObject(CurrentUserCurrentHost);
+            dollarProfile.Properties.Add(new PSNoteProperty("AllUsersCurrentHost", AllUsersCurrentHost));
+            dollarProfile.Properties.Add(new PSNoteProperty("CurrentUserCurrentHost", CurrentUserCurrentHost));
             // TODO: Decide on whether or not we want to support running the AllHosts profiles
 
-            pwsh.Runspace.SessionStateProxy.SetVariable("PROFILE", dollarProfile);
+            return dollarProfile;
         }
 
-        public static void RunProfilesIfNeeded(PowerShellKernel pwshKernel)
+        public static string GetProfileScript()
         {
-            if (pwshKernel.HasRunProfiles)
+            var profileScript = new StringBuilder();
+            if (File.Exists(AllUsersCurrentHost))
             {
-                return;
+                profileScript.AppendLine($"& '{AllUsersCurrentHost}'");
+            }
+            if (File.Exists(CurrentUserCurrentHost))
+            {
+                profileScript.AppendLine($"& '{CurrentUserCurrentHost}'");
             }
 
-            pwshKernel.HasRunProfiles = true;
-
-            // Run the PROFILE scripts if they exist.
-            if (File.Exists(_allUsersCurrentHost))
-            {
-                pwshKernel.RunSubmitCodeLocally(_allUsersCurrentHost);
-            }
-
-            if (File.Exists(_currentUserCurrentHost))
-            {
-                pwshKernel.RunSubmitCodeLocally(_currentUserCurrentHost);
-            }
+            return profileScript.ToString();
         }
     }
 }
