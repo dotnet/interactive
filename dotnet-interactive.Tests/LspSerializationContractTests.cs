@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             _configuration = _configuration.SetInteractive(true);
         }
 
-        private void Descent<T>(T expected, JsonSerializer serializer, [CallerMemberName] string testName = null, [CallerFilePath] string filePath = null)
+        private void Dissent<T>(T expected, JsonSerializer serializer, [CallerMemberName] string testName = null, [CallerFilePath] string filePath = null)
         {
             var pathToJson = Path.Combine(Path.GetDirectoryName(filePath), $"{GetType().Name}.{testName}.expected.json");
             if (!File.Exists(pathToJson))
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var hoverParams = new HoverParams(
                 new TextDocument("document-uri"),
                 new Position(1, 2));
-            Descent(hoverParams, LspSerializer.JsonSerializer);
+            Dissent(hoverParams, LspSerializer.JsonSerializer);
         }
 
         [Fact]
