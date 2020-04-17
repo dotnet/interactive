@@ -4,7 +4,7 @@
 using System;
 using System.IO;
 
-namespace Microsoft.DotNet.Interactive.PowerShell.Host
+namespace Microsoft.DotNet.Interactive.PowerShell
 {
     using System.Management.Automation;
     using System.Text;
