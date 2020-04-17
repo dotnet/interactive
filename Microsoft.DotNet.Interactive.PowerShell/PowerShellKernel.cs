@@ -36,7 +36,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         public Func<string, PasswordString> ReadPassword { get; set; }
 
         internal AzShellConnectionUtils AzShell { get; set; }
-        internal bool HasRunProfiles { get; set; }
         internal int DefaultRunspaceId
         {
             get { return _lazyPwsh.IsValueCreated ? Pwsh.Runspace.Id : -1; }
