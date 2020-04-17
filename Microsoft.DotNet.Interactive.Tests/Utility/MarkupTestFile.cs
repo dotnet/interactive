@@ -241,6 +241,26 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         public static void GetPosition(string input, out string output, out int? cursorPosition)
             => GetPositionAndSpans(input, out output, out cursorPosition, out ImmutableArray<TextSpan> spans);
 
+        public static void GetLineAndColumn(string input, out string output, out int line, out int column)
+        {
+            GetPosition(input, out output, out var position);
+            line = 0;
+            column = 0;
+            for (int i = 0; i < position; i++)
+            {
+                switch (output[i])
+                {
+                    case '\n':
+                        line++;
+                        column = 0;
+                        break;
+                    default:
+                        column++;
+                        break;
+                }
+            }
+        }
+
         public static void GetPositionAndSpan(string input, out string output, out int? cursorPosition, out TextSpan? textSpan)
         {
             GetPositionAndSpans(input, out output, out cursorPosition, out ImmutableArray<TextSpan> spans);
