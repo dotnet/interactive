@@ -39,11 +39,12 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "var x = 1234;", 0, 10, "readonly struct System.Int32")]
-        public async Task hover_request_returns_expected_result(Language language, string code, int line, int character, string expected)
+        [InlineData(Language.CSharp, "var x = 12$$34;", "readonly struct System.Int32")]
+        public async Task hover_request_returns_expected_result(Language language, string markupCode, string expected)
         {
             using var kernel = CreateKernel(language);
 
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
             var commandResult = await SendHoverRequest(kernel, code, line, character);
 
             commandResult
@@ -59,12 +60,27 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "var x = 1; // hovering in a comment", 0, 20)]
+        [InlineData(Language.CSharp, "var x = 1; // hovering$$ in a comment")]
+        public async Task invalid_hover_request_returns_no_result(Language language, string markupCode)
+        {
+            using var kernel = CreateKernel(language);
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            var commandResult = await SendHoverRequest(kernel, code, line, character);
+
+            commandResult
+                .KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .NotContain(kv => kv.GetType() == typeof(LanguageServiceHoverResponseProduced));
+        }
+
+        [Theory]
         [InlineData(Language.CSharp, "var x = 1; // hovering past the end of the line", 0, 200)]
         [InlineData(Language.CSharp, "var x = 1; // hovering on a negative character", 0, -1)]
         [InlineData(Language.CSharp, "var x = 1; // hovering on a non-existent line", 10, 2)]
         [InlineData(Language.CSharp, "var x = 1; // hovering on a negative line", -1, 2)]
-        public async Task invalid_hover_request_returns_no_result(Language language, string code, int line, int character)
+        public async Task out_of_bounds_hover_request_returns_no_result(Language language, string code, int line, int character)
         {
             using var kernel = CreateKernel(language);
 
@@ -78,15 +94,16 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "var one = 1;", "Console.WriteLine(one)", 0, 20, "(field) int one")]
-        public async Task language_service_methods_run_deferred_commands(Language language, string deferredCode, string actualCode, int line, int character, string expected)
+        [InlineData(Language.CSharp, "var one = 1;", "Console.WriteLine(o$$ne)", "(field) int one")]
+        public async Task language_service_methods_run_deferred_commands(Language language, string deferredCode, string markupCode, string expected)
         {
             // declare a variable in deferred code
             using var kernel = CreateKernel(language);
             kernel.DeferCommand(new SubmitCode(deferredCode));
 
             // send the actual language service request that depends on the deferred code
-            var commandResult = await SendHoverRequest(kernel, actualCode, line, character);
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            var commandResult = await SendHoverRequest(kernel, code, line, character);
 
             commandResult
                 .KernelEvents
