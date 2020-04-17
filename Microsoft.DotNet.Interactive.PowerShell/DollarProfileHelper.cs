@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
             pwsh.Runspace.SessionStateProxy.SetVariable("PROFILE", dollarProfile);
         }
 
-        public static void RunProfilesIfNeeded(PowerShell pwsh, PowerShellKernel pwshKernel)
+        public static void RunProfilesIfNeeded(PowerShellKernel pwshKernel)
         {
             if (pwshKernel.HasRunProfiles)
             {
@@ -52,12 +52,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
             // Run the PROFILE scripts if they exist.
             if (File.Exists(_allUsersCurrentHost))
             {
-                pwshKernel.RunSubmitCodeLocally(pwsh, _allUsersCurrentHost);
+                pwshKernel.RunSubmitCodeLocally(_allUsersCurrentHost);
             }
 
             if (File.Exists(_currentUserCurrentHost))
             {
-                pwshKernel.RunSubmitCodeLocally(pwsh, _currentUserCurrentHost);
+                pwshKernel.RunSubmitCodeLocally(_currentUserCurrentHost);
             }
         }
     }
