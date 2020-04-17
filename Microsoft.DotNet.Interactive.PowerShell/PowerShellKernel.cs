@@ -30,6 +30,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         private readonly PSKernelHost _psHost;
         private readonly Lazy<PowerShell> _lazyPwsh;
+        private PowerShell Pwsh => _lazyPwsh.Value;
 
         public Func<string, string> ReadInput { get; set; }
         public Func<string, PasswordString> ReadPassword { get; set; }
@@ -38,7 +39,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         internal bool HasRunProfiles { get; set; }
         internal int DefaultRunspaceId
         {
-            get { return _lazyPwsh.IsValueCreated ? _lazyPwsh.Value.Runspace.Id : -1; }
+            get { return _lazyPwsh.IsValueCreated ? Pwsh.Runspace.Id : -1; }
         }
 
         static PowerShellKernel()
@@ -114,7 +115,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         public override bool TryGetVariable(string name, out object value)
         {
-            var variable = _lazyPwsh.Value.Runspace.SessionStateProxy.PSVariable.Get(name);
+            var variable = Pwsh.Runspace.SessionStateProxy.PSVariable.Get(name);
 
             if (variable != null)
             {
@@ -143,7 +144,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             context.Publish(new CodeSubmissionReceived(submitCode));
 
             string code = submitCode.Code;
-            PowerShell pwsh = _lazyPwsh.Value;
 
             // Test is the code we got is actually able to run.
             if (IsCompleteSubmission(code, out ParseError[] parseErrors))
@@ -159,7 +159,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             if (parseErrors.Length > 0)
             {
                 var parseException = new ParseException(parseErrors);
-                ReportError(parseException.ErrorRecord, pwsh);
+                ReportError(parseException.ErrorRecord);
                 return;
             }
 
@@ -175,15 +175,15 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 return;
             }
 
-            DollarProfileHelper.RunProfilesIfNeeded(pwsh, this);
+            DollarProfileHelper.RunProfilesIfNeeded(this);
 
             if (AzShell != null)
             {
-                await RunSubmitCodeInAzShell(pwsh, code);
+                await RunSubmitCodeInAzShell(code);
             }
             else
             {
-                RunSubmitCodeLocally(pwsh, code);
+                RunSubmitCodeLocally(code);
             }
         }
 
@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                     requestCompletion.Code,
                     requestCompletion.CursorPosition,
                     options: null,
-                    _lazyPwsh.Value);
+                    Pwsh);
 
                 var completionItems = results.CompletionMatches.Select(
                     c => new CompletionItem(
@@ -225,7 +225,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return Task.CompletedTask;
         }
 
-        private async Task RunSubmitCodeInAzShell(PowerShell pwsh, string code)
+        private async Task RunSubmitCodeInAzShell(string code)
         {
             code = code.Trim();
             bool shouldDispose = false;
@@ -244,7 +244,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
             catch (IOException e)
             {
-                ReportException(e, pwsh);
+                ReportException(e);
                 shouldDispose = true;
             }
 
@@ -255,19 +255,19 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
         }
 
-        internal void RunSubmitCodeLocally(PowerShell pwsh, string code)
+        internal void RunSubmitCodeLocally(string code)
         {
             try
             {
-                pwsh.AddScript(code)
+                Pwsh.AddScript(code)
                     .AddCommand(_outDefaultCommand)
                     .Commands.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output);
 
-                pwsh.InvokeAndClearCommands();
+                Pwsh.InvokeAndClearCommands();
             }
             catch (Exception e)
             {
-                ReportException(e, pwsh);
+                ReportException(e);
             }
             finally
             {
@@ -284,23 +284,23 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return errors.Length == 0 || !errors[0].IncompleteInput;
         }
 
-        private void ReportError(ErrorRecord error, PowerShell pwsh)
+        private void ReportError(ErrorRecord error)
         {
             var psObject = PSObject.AsPSObject(error);
             _writeStreamProperty.SetValue(psObject, _errorStreamValue);
 
-            pwsh.AddCommand(_outDefaultCommand)
+            Pwsh.AddCommand(_outDefaultCommand)
                 .AddParameter("InputObject", psObject)
                 .InvokeAndClearCommands();
         }
 
-        private void ReportException(Exception e, PowerShell pwsh)
+        private void ReportException(Exception e)
         {
             var error = e is IContainsErrorRecord icer
                 ? icer.ErrorRecord
                 : new ErrorRecord(e, "JupyterPSHost.ReportException", ErrorCategory.NotSpecified, targetObject: null);
 
-            ReportError(error, pwsh);
+            ReportError(error);
         }
     }
 }
