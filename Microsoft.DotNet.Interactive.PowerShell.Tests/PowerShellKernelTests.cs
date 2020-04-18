@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Tests
         [Fact]
         public async Task GetCorrectProfilePaths()
         {
-            using var kernel = new PowerShellKernel();
+            using var kernel = new PowerShellKernel().UseProfiles();
 
             // Set variables we will retrieve later.
             await kernel.SubmitCodeAsync("$currentUserCurrentHost = $PROFILE.CurrentUserCurrentHost");
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Tests
 
             try
             {
-                using var kernel = new PowerShellKernel();
+                using var kernel = new PowerShellKernel().UseProfiles();
 
                 // trigger first time setup.
                 await kernel.SubmitCodeAsync("Get-Date");
