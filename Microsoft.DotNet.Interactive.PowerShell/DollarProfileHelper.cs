@@ -7,10 +7,17 @@ using System.IO;
 namespace Microsoft.DotNet.Interactive.PowerShell
 {
     using System.Management.Automation;
+    using System.Reflection;
 
     internal static class DollarProfileHelper
     {
         private const string _profileName = "Microsoft.dotnet-interactive_profile.ps1";
+
+        // This is the easiest way to get the config directory (where the PROFILE lives), unfortunately.
+        private static readonly string _configPath = typeof(Platform).GetField(
+                "ConfigDirectory",
+                BindingFlags.Static | BindingFlags.NonPublic)
+            .GetValue(null) as string;
 
         internal static readonly string AllUsersCurrentHost = GetFullProfileFilePath(forCurrentUser: false);
         internal static readonly string CurrentUserCurrentHost = GetFullProfileFilePath(forCurrentUser: true);
@@ -23,11 +30,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 return Path.Combine(pshome, _profileName);
             }
 
-            string configPath = Platform.IsWindows
-                ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "PowerShell")
-                : Platform.SelectProductNameForDirectory(Platform.XDG_Type.CONFIG);
-
-            return Path.Combine(configPath, _profileName);
+            return Path.Combine(_configPath, _profileName);
         }
 
         public static PSObject GetProfileValue()
