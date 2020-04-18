@@ -357,7 +357,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             compositeKernel.Add(
                 new PowerShellKernel()
                     .UseJupyterHelpers()
-                    .UseXplot(),
+                    .UseXplot()
+                    .UseProfiles(),
                 new[] { "pwsh" });
 
             compositeKernel.Add(

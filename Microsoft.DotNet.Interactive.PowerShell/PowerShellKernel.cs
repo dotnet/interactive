@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         private readonly PSKernelHost _psHost;
         private readonly Lazy<PowerShell> _lazyPwsh;
-        private PowerShell Pwsh => _lazyPwsh.Value;
+        private PowerShell pwsh => _lazyPwsh.Value;
 
         public Func<string, string> ReadInput { get; set; }
         public Func<string, PasswordString> ReadPassword { get; set; }
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         internal AzShellConnectionUtils AzShell { get; set; }
         internal int DefaultRunspaceId
         {
-            get { return _lazyPwsh.IsValueCreated ? Pwsh.Runspace.Id : -1; }
+            get { return _lazyPwsh.IsValueCreated ? pwsh.Runspace.Id : -1; }
         }
 
         static PowerShellKernel()
@@ -71,9 +71,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             _psHost = new PSKernelHost();
             _lazyPwsh = new Lazy<PowerShell>(CreatePowerShell);
-
-            var command = new SubmitCode(DollarProfileHelper.GetProfileScript());
-            DeferCommand(command);
         }
 
         private PowerShell CreatePowerShell()
@@ -117,7 +114,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         public override bool TryGetVariable(string name, out object value)
         {
-            var variable = Pwsh.Runspace.SessionStateProxy.PSVariable.Get(name);
+            var variable = pwsh.Runspace.SessionStateProxy.PSVariable.Get(name);
 
             if (variable != null)
             {
@@ -205,7 +202,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                     requestCompletion.Code,
                     requestCompletion.CursorPosition,
                     options: null,
-                    Pwsh);
+                    pwsh);
 
                 var completionItems = results.CompletionMatches.Select(
                     c => new CompletionItem(
@@ -255,15 +252,15 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
         }
 
-        internal void RunSubmitCodeLocally(string code)
+        private void RunSubmitCodeLocally(string code)
         {
             try
             {
-                Pwsh.AddScript(code)
+                pwsh.AddScript(code)
                     .AddCommand(_outDefaultCommand)
                     .Commands.Commands[0].MergeMyResults(PipelineResultTypes.Error, PipelineResultTypes.Output);
 
-                Pwsh.InvokeAndClearCommands();
+                pwsh.InvokeAndClearCommands();
             }
             catch (Exception e)
             {
@@ -289,7 +286,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             var psObject = PSObject.AsPSObject(error);
             _writeStreamProperty.SetValue(psObject, _errorStreamValue);
 
-            Pwsh.AddCommand(_outDefaultCommand)
+            pwsh.AddCommand(_outDefaultCommand)
                 .AddParameter("InputObject", psObject)
                 .InvokeAndClearCommands();
         }

@@ -7,14 +7,13 @@ using System.IO;
 namespace Microsoft.DotNet.Interactive.PowerShell
 {
     using System.Management.Automation;
-    using System.Text;
 
     internal static class DollarProfileHelper
     {
         private const string _profileName = "Microsoft.dotnet-interactive_profile.ps1";
 
-        internal static string AllUsersCurrentHost => GetFullProfileFilePath(forCurrentUser: false);
-        internal static string CurrentUserCurrentHost => GetFullProfileFilePath(forCurrentUser: true);
+        internal readonly static string AllUsersCurrentHost = GetFullProfileFilePath(forCurrentUser: false);
+        internal readonly static string CurrentUserCurrentHost = GetFullProfileFilePath(forCurrentUser: true);
 
         private static string GetFullProfileFilePath(bool forCurrentUser)
         {
@@ -39,21 +38,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             // TODO: Decide on whether or not we want to support running the AllHosts profiles
 
             return dollarProfile;
-        }
-
-        public static string GetProfileScript()
-        {
-            var profileScript = new StringBuilder();
-            if (File.Exists(AllUsersCurrentHost))
-            {
-                profileScript.AppendLine($"& '{AllUsersCurrentHost}'");
-            }
-            if (File.Exists(CurrentUserCurrentHost))
-            {
-                profileScript.AppendLine($"& '{CurrentUserCurrentHost}'");
-            }
-
-            return profileScript.ToString();
         }
     }
 }
