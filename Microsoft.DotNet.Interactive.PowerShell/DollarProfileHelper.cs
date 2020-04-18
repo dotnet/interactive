@@ -12,8 +12,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
     {
         private const string _profileName = "Microsoft.dotnet-interactive_profile.ps1";
 
-        internal readonly static string AllUsersCurrentHost = GetFullProfileFilePath(forCurrentUser: false);
-        internal readonly static string CurrentUserCurrentHost = GetFullProfileFilePath(forCurrentUser: true);
+        internal static readonly string AllUsersCurrentHost = GetFullProfileFilePath(forCurrentUser: false);
+        internal static readonly string CurrentUserCurrentHost = GetFullProfileFilePath(forCurrentUser: true);
 
         private static string GetFullProfileFilePath(bool forCurrentUser)
         {
