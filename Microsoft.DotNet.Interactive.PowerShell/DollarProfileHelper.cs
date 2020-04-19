@@ -19,8 +19,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 BindingFlags.Static | BindingFlags.NonPublic)
             .GetValue(null) as string;
 
-        internal static readonly string AllUsersCurrentHost = GetFullProfileFilePath(forCurrentUser: false);
-        internal static readonly string CurrentUserCurrentHost = GetFullProfileFilePath(forCurrentUser: true);
+        internal static string AllUsersCurrentHost { get; } = GetFullProfileFilePath(forCurrentUser: false);
+        internal static string CurrentUserCurrentHost { get; } = GetFullProfileFilePath(forCurrentUser: true);
 
         private static string GetFullProfileFilePath(bool forCurrentUser)
         {
