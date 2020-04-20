@@ -381,8 +381,8 @@ namespace Microsoft.DotNet.Interactive
 
                         // language services
 
-                        case RequestHoverTextCommand hoverCommand:
-                            ApplyLanguageServiceHandlerOrDefault<RequestHoverTextCommand>(hoverCommand, handlingKernel => (_kernelCommand, context) => handlingKernel.Handle(hoverCommand, context));
+                        case RequestHoverText hoverCommand:
+                            ApplyLanguageServiceHandlerOrDefault<RequestHoverText>(hoverCommand, handlingKernel => (_kernelCommand, context) => handlingKernel.Handle(hoverCommand, context));
                             break;
                     }
                 }

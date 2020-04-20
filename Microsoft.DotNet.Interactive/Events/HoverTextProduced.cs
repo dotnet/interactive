@@ -6,12 +6,12 @@ using Microsoft.DotNet.Interactive.LanguageService;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class LanguageServiceHoverResponseProduced : KernelEventBase
+    public class HoverTextProduced : KernelEventBase
     {
         public MarkupContent Contents { get; set; }
         public Range Range { get; set; }
 
-        public LanguageServiceHoverResponseProduced(IKernelCommand command, MarkupContent contents, Range range =  null)
+        public HoverTextProduced(IKernelCommand command, MarkupContent contents, Range range =  null)
             : base(command)
         {
             Contents = contents;

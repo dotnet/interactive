@@ -7,12 +7,12 @@ using Microsoft.DotNet.Interactive.LanguageService;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class RequestHoverTextCommand : LanguageServiceCommandBase
+    public class RequestHoverText : LanguageServiceCommandBase
     {
         public string DocumentIdentifier { get; }
         public Position Position { get; }
 
-        public RequestHoverTextCommand(string documentIdentifier, Position position)
+        public RequestHoverText(string documentIdentifier, Position position)
         {
             DocumentIdentifier = documentIdentifier;
             Position = position;

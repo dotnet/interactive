@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new RequestDiagnostics();
 
-                yield return new RequestHoverTextCommand("document-contents", new Position(1, 2));
+                yield return new RequestHoverText("document-contents", new Position(1, 2));
 
                 yield return new SubmitCode("123", "csharp", SubmissionType.Run);
 
@@ -199,9 +199,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new InputRequested("prompt", submitCode);
 
-                var requestHoverTextCommand = new RequestHoverTextCommand("document-contents", new Position(1, 2));
+                var requestHoverTextCommand = new RequestHoverText("document-contents", new Position(1, 2));
 
-                yield return new LanguageServiceHoverResponseProduced(
+                yield return new HoverTextProduced(
                     requestHoverTextCommand,
                     new MarkupContent(MarkupKind.Plaintext, "plaintext"),
                     new LanguageService.Range(new Position(1, 2), new Position(3, 4)));

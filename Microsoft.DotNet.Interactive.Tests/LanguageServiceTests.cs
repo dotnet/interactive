@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         private Task<IKernelCommandResult> SendHoverRequest(KernelBase kernel, string code, int line, int character)
         {
-            var command = new RequestHoverTextCommand(RequestHoverTextCommand.MakeDataUriFromContents(code), new Position(line, character));
+            var command = new RequestHoverText(RequestHoverText.MakeDataUriFromContents(code), new Position(line, character));
             return kernel.SendAsync(command);
         }
 
@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .KernelEvents
                 .ToSubscribedList()
                 .Should()
-                .ContainSingle<LanguageServiceHoverResponseProduced>()
+                .ContainSingle<HoverTextProduced>()
                 .Which
                 .Contents
                 .Value
@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .KernelEvents
                 .ToSubscribedList()
                 .Should()
-                .NotContain(kv => kv.GetType() == typeof(LanguageServiceHoverResponseProduced));
+                .NotContain(kv => kv.GetType() == typeof(HoverTextProduced));
         }
 
         [Theory]
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .KernelEvents
                 .ToSubscribedList()
                 .Should()
-                .NotContain(kv => kv.GetType() == typeof(LanguageServiceHoverResponseProduced));
+                .NotContain(kv => kv.GetType() == typeof(HoverTextProduced));
         }
 
         [Theory]
@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .KernelEvents
                 .ToSubscribedList()
                 .Should()
-                .ContainSingle<LanguageServiceHoverResponseProduced>()
+                .ContainSingle<HoverTextProduced>()
                 .Which
                 .Contents
                 .Value

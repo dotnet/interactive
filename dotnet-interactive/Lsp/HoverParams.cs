@@ -19,16 +19,16 @@ namespace Microsoft.DotNet.Interactive.App.Lsp
             Position = position;
         }
 
-        public static HoverParams FromHoverCommand(Commands.RequestHoverTextCommand requestHoverText)
+        public static HoverParams FromHoverCommand(Commands.RequestHoverText requestHoverText)
         {
             return new HoverParams(
                 new TextDocument(requestHoverText.DocumentIdentifier),
                 Position.FromLanguageServicePosition(requestHoverText.Position));
         }
 
-        public Commands.RequestHoverTextCommand ToCommand()
+        public Commands.RequestHoverText ToCommand()
         {
-            return new Commands.RequestHoverTextCommand(
+            return new Commands.RequestHoverText(
                 TextDocument.Uri,
                 Position.ToLanguageServicePosition());
         }

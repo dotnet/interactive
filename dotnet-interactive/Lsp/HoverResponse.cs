@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.App.Lsp
             Range = range;
         }
 
-        public static HoverResponse FromLanguageServiceEvent(Events.LanguageServiceHoverResponseProduced responseEvent)
+        public static HoverResponse FromLanguageServiceEvent(Events.HoverTextProduced responseEvent)
         {
             return new HoverResponse(
                 MarkupContent.FromLanguageServiceMarkupContent(responseEvent.Contents),
