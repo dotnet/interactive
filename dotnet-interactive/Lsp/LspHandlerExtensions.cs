@@ -26,15 +26,13 @@ namespace Microsoft.DotNet.Interactive.App.Lsp
             };
         }
 
-        public static async Task<JObject> HandleLspMethod(this KernelBase kernel, string methodName, JObject request)
+        public static async Task<(bool success, JObject response)> HandleLspMethod(this KernelBase kernel, string methodName, JObject request)
         {
-            JObject response = methodName switch
+            return methodName switch
             {
                 "textDocument/hover" => await kernel.GetLanguageServiceResultOrDefault<HoverParams, RequestHoverText, HoverTextProduced, HoverResponse>(request, hp => hp.ToCommand(), HoverResponse.FromLanguageServiceEvent),
-                _ => null,
+                _ => (false, default),
             };
-
-            return response;
         }
 
         /// <summary>
@@ -50,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.App.Lsp
         /// <param name="request">The JSON-parsed request.</param>
         /// <param name="commandCtor">Function to construct an appropriate <typeparamref name="TRequestCommand"/> from the <typeparamref name="TRequest"/>.</param>
         /// <param name="resultDtor">Function to deconstruct the <typeparamref name="TResultEvent"/> into the final <typeparamref name="TResult"/>.</param>
-        private static async Task<JObject> GetLanguageServiceResultOrDefault<TRequest, TRequestCommand, TResultEvent, TResult>(
+        private static async Task<(bool success, JObject result)> GetLanguageServiceResultOrDefault<TRequest, TRequestCommand, TResultEvent, TResult>(
             this KernelBase kernel,
             JObject request,
             Func<TRequest, TRequestCommand> commandCtor,
@@ -58,11 +56,7 @@ namespace Microsoft.DotNet.Interactive.App.Lsp
             where TRequestCommand : IKernelCommand
         {
             // JObject -> TRequest
-            if (!request.TryToObject<TRequest>(out var requestParams))
-            {
-                // couldn't deserialize, shouldn't be fatal
-                return null;
-            }
+            var requestParams = request.ToObject<TRequest>(LspSerializer.JsonSerializer);
 
             // TRequest -> TRequestCommand
             var requestCommand = commandCtor(requestParams);
@@ -71,6 +65,12 @@ namespace Microsoft.DotNet.Interactive.App.Lsp
             var kernelCommandResult = await kernel.SendAsync(requestCommand);
             var resultEvent = await kernelCommandResult.KernelEvents
                 .FirstAsync(kernelEvent => DefaultAcceptableEventTypes.Contains(kernelEvent.GetType()) || kernelEvent is TResultEvent);
+
+            if (resultEvent is LanguageServiceNoResultProduced)
+            {
+                // the specified kernel doesn't support the requested interface
+                return (false, default);
+            }
 
             // TResultEvent -> TResult
             TResult resultObject = default;
@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.Interactive.App.Lsp
                 responseJson = JObject.FromObject(resultObject, LspSerializer.JsonSerializer);
             }
 
-            return responseJson;
+            return (true, responseJson);
         }
     }
 }
