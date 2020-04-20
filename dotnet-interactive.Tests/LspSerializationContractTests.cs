@@ -1,13 +1,10 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.IO;
-using System.Runtime.CompilerServices;
 using Assent;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App.Lsp;
 using Microsoft.DotNet.Interactive.Extensions;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
 
@@ -25,28 +22,24 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             _configuration = _configuration.SetInteractive(true);
         }
 
-        private void Dissent<T>(T expected, JsonSerializer serializer, [CallerMemberName] string testName = null, [CallerFilePath] string filePath = null)
-        {
-            var pathToJson = Path.Combine(Path.GetDirectoryName(filePath), $"{GetType().Name}.{testName}.expected.json");
-            if (!File.Exists(pathToJson))
-            {
-                // ensure there's something
-                File.Create(pathToJson).Close();
-            }
-
-            var json = File.ReadAllText(pathToJson);
-            var jObject = JObject.Parse(json);
-            var actual = jObject.ToObject<T>(serializer);
-            actual.Should().BeEquivalentTo(expected);
-        }
-
         [Fact]
         public void HoverParams_has_well_formed_deserialization()
         {
-            var hoverParams = new HoverParams(
+            var json = @"{
+    ""textDocument"": {
+        ""uri"": ""document-uri""
+    },
+    ""position"":{
+        ""line"": 1,
+        ""character"": 2
+    }
+}";
+            var jObject = JObject.Parse(json);
+            var actual = jObject.ToObject<HoverParams>();
+            var expected = new HoverParams(
                 new TextDocument("document-uri"),
                 new Position(1, 2));
-            Dissent(hoverParams, LspSerializer.JsonSerializer);
+            actual.Should().BeEquivalentTo(expected);
         }
 
         [Fact]
