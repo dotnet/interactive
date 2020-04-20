@@ -8,9 +8,9 @@ namespace Microsoft.DotNet.Interactive.LanguageService
 {
     public static class ContextExtensions
     {
-        public static void PublishHoverResponse(this KernelInvocationContext context, RequestHoverTextCommand command, MarkupContent contents, Range range)
+        public static void PublishHoverResponse(this KernelInvocationContext context, RequestHoverText command, MarkupContent contents, Range range)
         {
-            var response = new LanguageServiceHoverResponseProduced(command, contents, range);
+            var response = new HoverTextProduced(command, contents, range);
             context.Publish(response);
         }
 

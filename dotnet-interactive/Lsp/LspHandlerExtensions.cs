@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.App.Lsp
         {
             JObject response = methodName switch
             {
-                "textDocument/hover" => await kernel.GetLanguageServiceResultOrDefault<HoverParams, RequestHoverTextCommand, LanguageServiceHoverResponseProduced, HoverResponse>(request, hp => hp.ToCommand(), HoverResponse.FromLanguageServiceEvent),
+                "textDocument/hover" => await kernel.GetLanguageServiceResultOrDefault<HoverParams, RequestHoverText, HoverTextProduced, HoverResponse>(request, hp => hp.ToCommand(), HoverResponse.FromLanguageServiceEvent),
                 _ => null,
             };
 

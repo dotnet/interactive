@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         DotNetLanguageKernel,
         IExtensibleKernel,
         ISupportNuget,
-        IKernelLanguageService<RequestHoverTextCommand>
+        IKernelLanguageService<RequestHoverText>
     {
         internal const string DefaultKernelName = "csharp";
 
@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             scriptVariable.Value = value;
         }
 
-        public async Task Handle(RequestHoverTextCommand command, KernelInvocationContext context)
+        public async Task Handle(RequestHoverText command, KernelInvocationContext context)
         {
             if (!command.DocumentIdentifier.TryDecodeDocumentFromDataUri(out var documentContents))
             {

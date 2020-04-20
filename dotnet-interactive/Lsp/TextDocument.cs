@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.App.Lsp
 
         public static TextDocument FromDocumentContents(string code)
         {
-            return new TextDocument(RequestHoverTextCommand.MakeDataUriFromContents(code));
+            return new TextDocument(RequestHoverText.MakeDataUriFromContents(code));
         }
     }
 }
