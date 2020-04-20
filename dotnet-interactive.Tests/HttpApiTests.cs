@@ -220,7 +220,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
 
         [Theory]
         [InlineData(Language.CSharp)]
-        public async Task lsp_textDocument_hover_returns_no_result_on_malformed_request_object(Language language)
+        public async Task lsp_textDocument_hover_returns_400_on_malformed_request_object(Language language)
         {
             using var _ = new AssertionScope();
             var request = new
@@ -229,44 +229,37 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
                 SomeOtherField = "test",
             };
             var response = await GetServer(language).HttpClient.PostObjectAsJsonAsync("/lsp/textDocument/hover", request);
-            await response.ShouldSucceed();
-            var responseJson = await response.Content.ReadAsStringAsync();
-            responseJson.Should().Be("null");
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        public async Task lsp_textDocument_hover_returns_no_result_on_empty_request(Language language)
-        {
-            using var _ = new AssertionScope();
-            var response = await GetServer(language).HttpClient.PostObjectAsJsonAsync("/lsp/textDocument/hover", new object());
-            await response.ShouldSucceed();
-            var responseJson = await response.Content.ReadAsStringAsync();
-            responseJson.Should().Be("null");
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            var content = await response.Content.ReadAsStringAsync();
+            content.Should().StartWith("unable to parse request object");
         }
 
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         [InlineData(Language.PowerShell)]
-        public async Task unimplemented_lsp_methods_return_no_result(Language language)
+        public async Task unsupported_lsp_methods_return_404(Language language)
         {
+            // something that's not any LSP method
             var response = await GetServer(language).HttpClient.PostObjectAsJsonAsync($"/lsp/not/a/method", new object()); // payload doesn't matter
-            await response.ShouldSucceed();
-            var responseJson = await response.Content.ReadAsStringAsync();
-            responseJson.Should().Be("null");
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
 
         [Theory]
-        [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
-        public async Task unimplemented_lsp_handlers_return_no_result(Language language)
+        [InlineData(Language.FSharp, "let x = 12$$34")]
+        [InlineData(Language.PowerShell, "$x = 12$$34")]
+        public async Task unimplemented_lsp_handlers_return_404(Language language, string markupCode)
         {
-            // language kernels that don't implement the appropriate LSP handling
-            var response = await GetServer(language).HttpClient.PostObjectAsJsonAsync($"/lsp/textDocument/hover", new object()); // payload doesn't matter
-            await response.ShouldSucceed();
-            var responseJson = await response.Content.ReadAsStringAsync();
-            responseJson.Should().Be("null");
+            // something that's a valid LSP method, just not for the given kernel
+            var methodName = "textDocument/hover";
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            var request = new HoverParams(
+                TextDocument.FromDocumentContents(code),
+                new Lsp.Position(line, character));
+            var response = await GetServer(language).HttpClient.PostObjectAsJsonAsync($"/lsp/{methodName}", request);
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            var content = await response.Content.ReadAsStringAsync();
+            content.Should().StartWith($"method '{methodName}' not found on kernel '{language.LanguageName()}'");
         }
 
         [Fact]
