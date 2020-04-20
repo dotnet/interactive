@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.LanguageService
             context.Publish(response);
         }
 
-        public static void PublishEmptyLanguageServiceResponse(this KernelInvocationContext context, LanguageServiceCommandBase command)
+        public static void PublishEmptyLanguageServiceResponse(this KernelInvocationContext context, IKernelCommand command)
         {
             var response = new LanguageServiceNoResultProduced(command);
             context.Publish(response);

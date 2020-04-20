@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.LanguageService;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class RequestHoverText : LanguageServiceCommandBase
+    public class RequestHoverText : KernelCommandBase
     {
         public string DocumentIdentifier { get; }
         public Position Position { get; }

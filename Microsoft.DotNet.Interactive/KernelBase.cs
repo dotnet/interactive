@@ -391,10 +391,10 @@ namespace Microsoft.DotNet.Interactive
 
         private void ApplyLanguageServiceHandlerOrDefault<THandlerType>(
             KernelCommandBase command,
-            Func<IKernelLanguageService<THandlerType>, KernelCommandInvocation> handlerGenerator
-        ) where THandlerType: LanguageServiceCommandBase
+            Func<IKernelCommandHandler<THandlerType>, KernelCommandInvocation> handlerGenerator
+        ) where THandlerType: IKernelCommand
         {
-            if (this is IKernelLanguageService<THandlerType> handlingKernel)
+            if (this is IKernelCommandHandler<THandlerType> handlingKernel)
             {
                 command.Handler = handlerGenerator(handlingKernel);
             }
