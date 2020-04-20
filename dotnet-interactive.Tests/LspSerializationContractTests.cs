@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.IO;
 using Assent;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App.Lsp;
@@ -48,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var hoverResponse = new HoverResponse(
                 new MarkupContent(MarkupKind.Markdown, "content"),
                 new Range(new Position(1, 2), new Position(3, 4)));
-            var json = LspSerializer.JsonSerializer.SerializeToString(hoverResponse);
+            var json = SerializeToLspString(hoverResponse);
             this.Assent(json, _configuration);
         }
 
@@ -57,8 +58,16 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
             var hoverResponse = new HoverResponse(
                 new MarkupContent(MarkupKind.Markdown, "content"));
-            var json = LspSerializer.JsonSerializer.SerializeToString(hoverResponse);
+            var json = SerializeToLspString(hoverResponse);
             this.Assent(json, _configuration);
+        }
+
+        public static string SerializeToLspString<T>(T value)
+        {
+            using var writer = new StringWriter();
+            LspSerializer.JsonSerializer.Serialize(writer, value);
+            var json = writer.ToString();
+            return json;
         }
     }
 }

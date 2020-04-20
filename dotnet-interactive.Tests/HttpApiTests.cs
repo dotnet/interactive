@@ -213,7 +213,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
             var response = await GetServer(language).HttpClient.PostObjectAsJsonAsync("/lsp/textDocument/hover", request);
             await response.ShouldSucceed();
             var responseJson = await response.Content.ReadAsStringAsync();
-            var hoverResponse = LspSerializer.JsonSerializer.DeserializeFromString<HoverResponse>(responseJson);
+            var hoverResponse = LspDeserializeFromString<HoverResponse>(responseJson);
             hoverResponse.Contents.Kind.Should().Be(Lsp.MarkupKind.Markdown);
             hoverResponse.Contents.Value.Should().Be(expected);
         }
@@ -292,6 +292,13 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
                        "powershell",
                        "html",
                        "javascript");
+        }
+
+        public static T LspDeserializeFromString<T>(string text)
+        {
+            var reader = new StringReader(text);
+            var result = (T)LspSerializer.JsonSerializer.Deserialize(reader, typeof(T));
+            return result;
         }
     }
 
