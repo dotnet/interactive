@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         DotNetLanguageKernel,
         IExtensibleKernel,
         ISupportNuget,
-        IKernelLanguageService<RequestHoverText>
+        IKernelCommandHandler<RequestHoverText>
     {
         internal const string DefaultKernelName = "csharp";
 
