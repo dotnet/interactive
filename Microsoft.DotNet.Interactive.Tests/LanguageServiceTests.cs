@@ -3,9 +3,9 @@
 
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         private Task<IKernelCommandResult> SendHoverRequest(KernelBase kernel, string code, int line, int character)
         {
-            var command = new RequestHoverText(RequestHoverText.MakeDataUriFromContents(code), new Position(line, character));
+            var command = new RequestHoverText(RequestHoverText.MakeDataUriFromContents(code), new LinePosition(line, character));
             return kernel.SendAsync(command);
         }
 
@@ -77,9 +77,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         [Theory]
         [InlineData(Language.CSharp, "var x = 1; // hovering past the end of the line", 0, 200)]
-        [InlineData(Language.CSharp, "var x = 1; // hovering on a negative character", 0, -1)]
         [InlineData(Language.CSharp, "var x = 1; // hovering on a non-existent line", 10, 2)]
-        [InlineData(Language.CSharp, "var x = 1; // hovering on a negative line", -1, 2)]
         public async Task out_of_bounds_hover_request_returns_no_result(Language language, string code, int line, int character)
         {
             using var kernel = CreateKernel(language);

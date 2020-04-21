@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis.Text;
 using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.App.Lsp
@@ -25,14 +26,14 @@ namespace Microsoft.DotNet.Interactive.App.Lsp
             Character = character;
         }
 
-        public static Position FromLanguageServicePosition(LanguageService.Position position)
+        public static Position FromLinePosition(LinePosition linePosition)
         {
-            return new Position(position.Line, position.Character);
+            return new Position(linePosition.Line, linePosition.Character);
         }
 
-        public LanguageService.Position ToLanguageServicePosition()
+        public LinePosition ToLinePosition()
         {
-            return new LanguageService.Position(Line, Character);
+            return new LinePosition(Line, Character);
         }
     }
 }

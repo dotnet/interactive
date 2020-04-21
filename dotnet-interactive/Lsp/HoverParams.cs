@@ -23,14 +23,14 @@ namespace Microsoft.DotNet.Interactive.App.Lsp
         {
             return new HoverParams(
                 new TextDocument(requestHoverText.DocumentIdentifier),
-                Position.FromLanguageServicePosition(requestHoverText.Position));
+                Position.FromLinePosition(requestHoverText.Position));
         }
 
         public Commands.RequestHoverText ToCommand()
         {
             return new Commands.RequestHoverText(
                 TextDocument.Uri,
-                Position.ToLanguageServicePosition());
+                Position.ToLinePosition());
         }
     }
 }

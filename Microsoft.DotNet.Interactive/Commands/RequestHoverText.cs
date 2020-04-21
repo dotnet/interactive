@@ -3,16 +3,16 @@
 
 using System;
 using System.Text;
-using Microsoft.DotNet.Interactive.LanguageService;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
     public class RequestHoverText : KernelCommandBase
     {
         public string DocumentIdentifier { get; }
-        public Position Position { get; }
+        public LinePosition Position { get; }
 
-        public RequestHoverText(string documentIdentifier, Position position)
+        public RequestHoverText(string documentIdentifier, LinePosition position)
         {
             DocumentIdentifier = documentIdentifier;
             Position = position;
