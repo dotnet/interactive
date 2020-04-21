@@ -207,8 +207,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new MarkupContent(MarkupKind.Plaintext, "plaintext"),
                     new LinePositionSpan(new LinePosition(1, 2), new LinePosition(3, 4)));
 
-                yield return new LanguageServiceNoResultProduced(requestHoverTextCommand);
-
                 yield return new PackageAdded(
                     new ResolvedPackageReference("ThePackage", "1.2.3", new[] { new FileInfo(Path.GetTempFileName()) }));
 
