@@ -8,6 +8,6 @@ namespace Microsoft.DotNet.Interactive.LanguageService
 {
     public interface IKernelCommandHandler<TCommand> where TCommand: IKernelCommand
     {
-        Task Handle(TCommand command, KernelInvocationContext context);
+        Task HandleAsync(TCommand command, KernelInvocationContext context);
     }
 }

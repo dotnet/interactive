@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             scriptVariable.Value = value;
         }
 
-        public async Task Handle(RequestHoverText command, KernelInvocationContext context)
+        public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
             if (!command.DocumentIdentifier.TryDecodeDocumentFromDataUri(out var documentContents))
             {
