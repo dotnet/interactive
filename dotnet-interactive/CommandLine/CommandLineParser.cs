@@ -322,14 +322,18 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
                 {
                     defaultKernelOption,
-                    logPathOption
+                    logPathOption,
+                    new Option<bool>(
+                        alias:"--enable-http-api",
+                        description: "Enables the http protocol for interacting with the kernel.",
+                        getDefaultValue:() => false)
                 };
                 
                 startKernelServerCommand.Handler = CommandHandler.Create<StartupOptions, KernelServerOptions, IConsole, InvocationContext>(
                     (startupOptions, options, console, context) => startKernelServer(
                         startupOptions,
                         CreateKernel(options.DefaultKernel,
-                            new RemoteFrontendEnvironment(), startupOptions, null), console));
+                            new BrowserFrontendEnvironment(), startupOptions, null), console));
 
                 return startKernelServerCommand;
             }
@@ -386,11 +390,11 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                          .UseAbout();
 
 
-            SetUpFormatters(frontendEnvironment);
+            SetUpFormatters(frontendEnvironment, startupOptions);
 
             kernel.DefaultKernelName = defaultKernelName;
 
-            if (frontendEnvironment is BrowserFrontendEnvironment)
+            if (startupOptions.EnableHttpApi)
             {
                 kernel = kernel.UseHttpApi(startupOptions, httpProbingSettings);
                 var enableHttp = new SubmitCode("#!enable-http", compositeKernel.Name);
@@ -401,23 +405,13 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             return kernel;
         }
 
-        public static void SetUpFormatters(FrontendEnvironment frontendEnvironment)
+        public static void SetUpFormatters(FrontendEnvironment frontendEnvironment, StartupOptions startupOptions)
         {
             switch (frontendEnvironment)
             {
                 case AutomationEnvironment automationEnvironment:
                     break;
 
-                case RemoteFrontendEnvironment remoteFrontendEnvironment:
-                    Formatter.DefaultMimeType = HtmlFormatter.MimeType;
-                    Formatter.SetPreferredMimeTypeFor(typeof(LaTeXString), "text/latex");
-                    Formatter.SetPreferredMimeTypeFor(typeof(MathString), "text/latex");
-                    Formatter.SetPreferredMimeTypeFor(typeof(string), PlainTextFormatter.MimeType);
-                    Formatter.SetPreferredMimeTypeFor(typeof(ScriptContent), HtmlFormatter.MimeType);
-
-                    Formatter<LaTeXString>.Register((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
-                    Formatter<MathString>.Register((math, writer) => writer.Write(math.ToString()), "text/latex");
-                    break;
 
                 case BrowserFrontendEnvironment browserFrontendEnvironment:
                     Formatter.DefaultMimeType = HtmlFormatter.MimeType;
@@ -428,17 +422,21 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                     Formatter<LaTeXString>.Register((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
                     Formatter<MathString>.Register((math, writer) => writer.Write(math.ToString()), "text/latex");
-                    Formatter<ScriptContent>.Register((script, writer) =>
+                    if (startupOptions.EnableHttpApi)
                     {
-                        var fullCode = $@"if (typeof window.createDotnetInteractiveClient === typeof Function) {{
+                        Formatter<ScriptContent>.Register((script, writer) =>
+                        {
+                            var fullCode = $@"if (typeof window.createDotnetInteractiveClient === typeof Function) {{
 createDotnetInteractiveClient('{browserFrontendEnvironment.ApiUri.AbsoluteUri}').then(function (interactive) {{
 let notebookScope = getDotnetInteractiveScope('{browserFrontendEnvironment.ApiUri.AbsoluteUri}');
 {script.ScriptValue}
 }});
 }}";
-                        IHtmlContent content = PocketViewTags.script[type: "text/javascript"](fullCode.ToHtmlContent());
-                        content.WriteTo(writer, HtmlEncoder.Default);
-                    }, HtmlFormatter.MimeType);
+                            IHtmlContent content =
+                                PocketViewTags.script[type: "text/javascript"](fullCode.ToHtmlContent());
+                            content.WriteTo(writer, HtmlEncoder.Default);
+                        }, HtmlFormatter.MimeType);
+                    }
 
                     break;
 

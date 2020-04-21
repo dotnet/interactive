@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 ApiUri = new Uri("http://12.12.12.12:4242")
             };
 
-            CommandLineParser.SetUpFormatters(frontendEnvironment);
+            CommandLineParser.SetUpFormatters(frontendEnvironment, new StartupOptions());
 
             _disposables.Add(Formatter.ResetToDefault);
             _disposables.Add(new AssertionScope());

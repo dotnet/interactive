@@ -154,6 +154,18 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
+        public void jupyter_enables_http_api_by_default()
+        {
+            var result = _parser.Parse($"jupyter {_connectionFile}");
+
+            var binder = new ModelBinder<StartupOptions>();
+
+            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+
+            options.EnableHttpApi.Should().BeTrue();
+        }
+
+        [Fact]
         public void jupyter_default_kernel_option_value()
         {
             var result = _parser.Parse($"jupyter {Path.GetTempFileName()}");
@@ -192,7 +204,16 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public void kernel_server_honors_default_kernel_option()
+        public void stdio_command_does_not_enable_http_api_by_default()
+        {
+            var result = _parser.Parse("stdio");
+            var binder = new ModelBinder<StartupOptions>();
+            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+            options.EnableHttpApi.Should().BeFalse();
+        }
+
+        [Fact]
+        public void stdio_command_honors_default_kernel_option()
         {
             var result = _parser.Parse("stdio --default-kernel bsharp");
             var binder = new ModelBinder<KernelServerOptions>();
@@ -201,7 +222,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public async Task jupyter_returns_error_if_connection_file_path_is_not_passed()
+        public async Task jupyter_command_returns_error_if_connection_file_path_is_not_passed()
         {
             var testConsole = new TestConsole();
             await _parser.InvokeAsync("jupyter", testConsole);
