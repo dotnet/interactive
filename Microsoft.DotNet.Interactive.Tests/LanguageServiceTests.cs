@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .KernelEvents
                 .ToSubscribedList()
                 .Should()
-                .ContainSingle<LanguageServiceNoResultProduced>();
+                .NotContain(kv => kv.GetType() == typeof(HoverTextProduced));
         }
 
         [Theory]

@@ -39,7 +39,6 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(IncompleteCodeSubmissionReceived)] = typeof(KernelEventEnvelope<IncompleteCodeSubmissionReceived>),
                 [nameof(InputRequested)] = typeof(KernelEventEnvelope<InputRequested>),
                 [nameof(HoverTextProduced)] = typeof(KernelEventEnvelope<HoverTextProduced>),
-                [nameof(LanguageServiceNoResultProduced)] = typeof(KernelEventEnvelope<LanguageServiceNoResultProduced>),
                 [nameof(PackageAdded)] = typeof(KernelEventEnvelope<PackageAdded>),
                 [nameof(PasswordRequested)] = typeof(KernelEventEnvelope<PasswordRequested>),
                 [nameof(ReturnValueProduced)] = typeof(KernelEventEnvelope<ReturnValueProduced>),

@@ -13,16 +13,15 @@ namespace Microsoft.DotNet.Interactive.App.Lsp
 {
     internal static class LspHandlerExtensions
     {
-        private static readonly HashSet<Type> DefaultAcceptableEventTypes;
+        private static readonly HashSet<Type> CommandCompletedEventTypes;
 
         static LspHandlerExtensions()
         {
             // these event types are acceptable for all LSP requests
-            DefaultAcceptableEventTypes = new HashSet<Type>()
+            CommandCompletedEventTypes = new HashSet<Type>()
             {
                 typeof(CommandHandled),
                 typeof(CommandFailed),
-                typeof(LanguageServiceNoResultProduced),
             };
         }
 
@@ -64,9 +63,9 @@ namespace Microsoft.DotNet.Interactive.App.Lsp
             // kernel handling
             var kernelCommandResult = await kernel.SendAsync(requestCommand);
             var resultEvent = await kernelCommandResult.KernelEvents
-                .FirstAsync(kernelEvent => DefaultAcceptableEventTypes.Contains(kernelEvent.GetType()) || kernelEvent is TResultEvent);
+                .FirstAsync(kernelEvent => CommandCompletedEventTypes.Contains(kernelEvent.GetType()) || kernelEvent is TResultEvent);
 
-            if (resultEvent is LanguageServiceNoResultProduced)
+            if (CommandCompletedEventTypes.Contains(resultEvent.GetType()))
             {
                 // the specified kernel doesn't support the requested interface
                 return (false, default);

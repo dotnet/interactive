@@ -398,15 +398,6 @@ namespace Microsoft.DotNet.Interactive
             {
                 command.Handler = handlerGenerator(handlingKernel);
             }
-            else
-            {
-                // default behavior is to return no result
-                command.Handler = (command, context) =>
-                {
-                    context.Publish(new LanguageServiceNoResultProduced(command));
-                    return Task.CompletedTask;
-                };
-            }
         }
 
         protected virtual void SetHandlingKernel(
