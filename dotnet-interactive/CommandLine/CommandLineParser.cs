@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             StartServer startServer = null,
             InvocationContext context = null);
 
-        public delegate Task StartKernelServer(
+        public delegate Task StartStdIO(
             StartupOptions options,
             IKernel kernel,
             IConsole console);
@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             IServiceCollection services,
             StartServer startServer = null,
             Jupyter jupyter = null,
-            StartKernelServer startKernelServer = null,
+            StartStdIO startStdIO = null,
             ITelemetry telemetry = null,
             IFirstTimeUseNoticeSentinel firstTimeUseNoticeSentinel = null)
         {
@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             jupyter ??= JupyterCommand.Do;
 
-            startKernelServer ??= async (startupOptions, kernel, console) =>
+            startStdIO ??= async (startupOptions, kernel, console) =>
             {
                 var disposable = Program.StartToolLogging(startupOptions);
 
@@ -130,9 +130,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     if (!int.TryParse(parts[0], out var start) || !int.TryParse(parts[1], out var end))
                     {
                         result.ErrorMessage = "Must specify a port range as StartPort-EndPort";
-
                         return null;
-
                     }
 
                     if (start > end)
@@ -142,10 +140,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     }
 
                     var pr = new PortRange(start, end);
-
                     return pr;
-
-
                 },
                 description: "Specifies the range of port to use to enable HTTP services");
 
@@ -166,7 +161,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             var rootCommand = DotnetInteractive();
 
             rootCommand.AddCommand(Jupyter());
-            rootCommand.AddCommand(KernelServer());
+            rootCommand.AddCommand(StdIO());
             rootCommand.AddCommand(HttpServer());
 
             return new CommandLineBuilder(rootCommand)
@@ -208,7 +203,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             Command Jupyter()
             {
-                var jupyterCommand = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel")
+                var command = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel")
                 {
                     defaultKernelOption,
                     logPathOption,
@@ -221,7 +216,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     }.ExistingOnly()
                 };
 
-                jupyterCommand.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext>(JupyterHandler);
+                command.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext>(JupyterHandler);
 
                 var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
                 {
@@ -233,9 +228,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 installCommand.Handler = CommandHandler.Create<IConsole, InvocationContext, PortRange, DirectoryInfo>(InstallHandler);
 
-                jupyterCommand.AddCommand(installCommand);
+                command.AddCommand(installCommand);
 
-                return jupyterCommand;
+                return command;
 
                 Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context)
                 {
@@ -280,7 +275,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             Command HttpServer()
             {
-                var startKernelHttpCommand = new Command("http", "Starts dotnet-interactive with kernel functionality exposed over http")
+                var command = new Command("http", "Starts dotnet-interactive with kernel functionality exposed over http")
                 {
                     defaultKernelOption,
                     httpPortOption,
@@ -288,7 +283,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     httpPortRangeOption
                 };
 
-                startKernelHttpCommand.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
+                command.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
                     (startupOptions, options, console, context) =>
                     {
 
@@ -311,30 +306,32 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         return jupyter(startupOptions, console, startServer, context);
                     });
 
-                return startKernelHttpCommand;
+                return command;
             }
 
-            Command KernelServer()
+            Command StdIO()
             {
-                var startKernelServerCommand = new Command(
+                var command = new Command(
                     "stdio",
                     "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
                 {
                     defaultKernelOption,
                     logPathOption,
+                    httpPortOption,
+                    httpPortRangeOption,
                     new Option<bool>(
                         alias:"--enable-http-api",
                         description: "Enables the http protocol for interacting with the kernel.",
                         getDefaultValue:() => false)
                 };
                 
-                startKernelServerCommand.Handler = CommandHandler.Create<StartupOptions, KernelServerOptions, IConsole, InvocationContext>(
-                    (startupOptions, options, console, context) => startKernelServer(
+                command.Handler = CommandHandler.Create<StartupOptions, KernelServerOptions, IConsole, InvocationContext>(
+                    (startupOptions, options, console, context) => startStdIO(
                         startupOptions,
                         CreateKernel(options.DefaultKernel,
                             new BrowserFrontendEnvironment(), startupOptions, null), console));
 
-                return startKernelServerCommand;
+                return command;
             }
         }
 
