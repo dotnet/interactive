@@ -269,8 +269,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                                   c.GetRequiredService<IKernel>())
                                               .Trace())
                             .AddSingleton<IHostedService, Shell>()
-                            .AddSingleton<IHostedService, Heartbeat>()
-                          ;
+                            .AddSingleton<IHostedService, Heartbeat>();
 
                     return jupyter(startupOptions, console, startServer, context);
                 }
@@ -412,7 +411,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 case AutomationEnvironment automationEnvironment:
                     break;
 
-
                 case BrowserFrontendEnvironment browserFrontendEnvironment:
                     Formatter.DefaultMimeType = HtmlFormatter.MimeType;
                     Formatter.SetPreferredMimeTypeFor(typeof(LaTeXString), "text/latex");
@@ -432,6 +430,16 @@ let notebookScope = getDotnetInteractiveScope('{browserFrontendEnvironment.ApiUr
 {script.ScriptValue}
 }});
 }}";
+                            IHtmlContent content =
+                                PocketViewTags.script[type: "text/javascript"](fullCode.ToHtmlContent());
+                            content.WriteTo(writer, HtmlEncoder.Default);
+                        }, HtmlFormatter.MimeType);
+                    }
+                    else
+                    {
+                        Formatter<ScriptContent>.Register((script, writer) =>
+                        {
+                            var fullCode = $@"{script.ScriptValue}";
                             IHtmlContent content =
                                 PocketViewTags.script[type: "text/javascript"](fullCode.ToHtmlContent());
                             content.WriteTo(writer, HtmlEncoder.Default);
