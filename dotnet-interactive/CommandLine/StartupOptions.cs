@@ -24,11 +24,13 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         public StartupOptions(
             DirectoryInfo logPath = null,
             bool verbose = false,
-            PortRange httpPortRange = null)
+            PortRange httpPortRange = null,
+            bool enableHttpApi = true)
         {
             LogPath = logPath;
             Verbose = verbose;
             HttpPortRange = httpPortRange;
+            EnableHttpApi = enableHttpApi;
         }
 
         public DirectoryInfo LogPath { get; }
@@ -38,5 +40,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         public int? HttpPort { get; internal set; }
 
         public PortRange HttpPortRange { get; }
+        public bool EnableHttpApi { get; }
     }
 }
