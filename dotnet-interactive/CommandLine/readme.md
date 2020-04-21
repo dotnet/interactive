@@ -1,7 +1,6 @@
 # Command line API
 
-
-## HTTP API
+## Configuring the HTTP API
 
 A number of APIs are available over HTTP in `dotnet-interactive`. You can enable the API and specify which port it is enabled on in a number of ways:
 
