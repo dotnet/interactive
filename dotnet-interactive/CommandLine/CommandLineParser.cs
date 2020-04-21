@@ -385,20 +385,17 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                          .UseLog()
                          .UseAbout();
 
-            if (frontendEnvironment is BrowserFrontendEnvironment _)
-            {
-                kernel = kernel.UseHttpApi(startupOptions, httpProbingSettings);
-            }
 
             SetUpFormatters(frontendEnvironment);
 
             kernel.DefaultKernelName = defaultKernelName;
 
-            if (frontendEnvironment is BrowserFrontendEnvironment _)
+            if (frontendEnvironment is BrowserFrontendEnvironment)
             {
+                kernel = kernel.UseHttpApi(startupOptions, httpProbingSettings);
                 var enableHttp = new SubmitCode("#!enable-http", compositeKernel.Name);
                 enableHttp.PublishInternalEvents();
-                compositeKernel.DeferCommand(enableHttp);
+                kernel.DeferCommand(enableHttp);
             }
 
             return kernel;
