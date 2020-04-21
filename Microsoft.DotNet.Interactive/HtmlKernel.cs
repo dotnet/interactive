@@ -16,12 +16,6 @@ namespace Microsoft.DotNet.Interactive
         {
         }
 
-        public override bool TryGetVariable(string name, out object value)
-        {
-            value = default;
-            return false;
-        }
-
         protected override async Task HandleSubmitCode(SubmitCode command, KernelInvocationContext context)
         {
             await context.DisplayAsync(

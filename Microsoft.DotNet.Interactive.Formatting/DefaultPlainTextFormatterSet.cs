@@ -8,6 +8,7 @@ using System.CommandLine.Rendering;
 using System.Dynamic;
 using System.Linq;
 using System.Text.Encodings.Web;
+using Microsoft.DotNet.Interactive.CSharp;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -105,29 +106,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 [typeof(Type)] = new PlainTextFormatter<Type>((type, writer) =>
                 {
-                    var typeName = type.FullName ?? type.Name;
-
-                    if (typeName.Contains("`") && !type.IsAnonymous())
-                    {
-                        writer.Write(typeName.Remove(typeName.IndexOf('`')));
-                        writer.Write("<");
-                        var genericArguments = type.GetGenericArguments();
-
-                        for (var i = 0; i < genericArguments.Length; i++)
-                        {
-                            Formatter<Type>.FormatTo(genericArguments[i], writer);
-                            if (i < genericArguments.Length - 1)
-                            {
-                                writer.Write(",");
-                            }
-                        }
-
-                        writer.Write(">");
-                    }
-                    else
-                    {
-                        writer.Write(typeName);
-                    }
+                   type.WriteCSharpDeclarationTo(writer);
                 }),
 
                 [typeof(DateTime)] = new PlainTextFormatter<DateTime>((value, writer) => writer.Write(value.ToString("u"))),

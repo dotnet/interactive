@@ -10,7 +10,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.CSharp.Tests
 {
-    public class CSharpKernelTests : LanguageKernelTests
+    public class CSharpKernelTests : LanguageKernelTestBase
     {
         public CSharpKernelTests(ITestOutputHelper output) : base(output)
         {

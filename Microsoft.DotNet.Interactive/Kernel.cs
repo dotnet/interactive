@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive
                 .Wait();
         }
 
-        public static KernelBase GetKernel(string name)
+        public static IKernel GetKernel(string name)
         {
             var kernel = KernelInvocationContext.Current.HandlingKernel;
 
@@ -59,14 +59,9 @@ namespace Microsoft.DotNet.Interactive
                 foundKernel = root switch
                 {
                     CompositeKernel c => c.ChildKernels
-                                          .OfType<KernelBase>()
-                                          .FlattenBreadthFirst(
-                                              b => b switch
-                                              {
-                                                  CompositeKernel composite => composite.ChildKernels.OfType<KernelBase>(),
-                                                  _ => Array.Empty<KernelBase>()
-                                              })
+                                          .OfType<LanguageKernel>()
                                           .SingleOrDefault(k => k.Name == name),
+                    LanguageKernel k => k,
                     _ => null
                 };
             }

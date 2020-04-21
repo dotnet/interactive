@@ -17,10 +17,15 @@ namespace Microsoft.DotNet.Interactive.Tests
     {
         [Theory]
         [InlineData(
-            "fsharp",
+            "#!fsharp",
             "let x = 123",
-            "csharp",
-            "GetKernel(\"fsharp\").TryGetVariable(\"x\", out var x);\nx")]
+            "#!csharp",
+            "(GetKernel(\"fsharp\") as Microsoft.DotNet.Interactive.LanguageKernel).TryGetVariable(\"x\", out int x);\nx")]
+        [InlineData(
+            "#!fsharp",
+            "let x = 123",
+            "#!csharp",
+            "#!SOMETHING\nfsharp.TryGetVariable(\"x\", out int x);\nx")]
         public async Task Variables_can_be_read_from_other_kernels(
             string fromLanguage,
             string codeToWrite,
@@ -34,13 +39,13 @@ namespace Microsoft.DotNet.Interactive.Tests
                 new FSharpKernel()
                     .UseKernelHelpers(),
                 new PowerShellKernel()
-            };
+            }.LogEventsToPocketLogger();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync($"#!{fromLanguage}\n{codeToWrite}");
+            await kernel.SubmitCodeAsync($"{fromLanguage}\n{codeToWrite}");
 
-            await kernel.SubmitCodeAsync($"#!{toLanguage}\n{codeToRead}");
+            await kernel.SubmitCodeAsync($"{toLanguage}\n{codeToRead}");
 
             events.Should()
                   .ContainSingle<ReturnValueProduced>()
@@ -48,6 +53,14 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .Value
                   .Should()
                   .Be(123);
+        }
+
+        [Fact]
+        public void Internal_types_cannot_be_shared()
+        {
+            
+
+            throw new NotImplementedException("test not written");
         }
     }
 }

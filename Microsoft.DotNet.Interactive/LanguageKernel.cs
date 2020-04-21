@@ -1,0 +1,18 @@
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Threading.Tasks;
+
+namespace Microsoft.DotNet.Interactive
+{
+    public abstract class LanguageKernel : KernelBase
+    {
+        protected LanguageKernel(string name) : base(name)
+        {
+        }
+
+        public abstract bool TryGetVariable<T>(string name, out T value);
+
+        public abstract Task SetVariableAsync<T>(string name, T value);
+    }
+}

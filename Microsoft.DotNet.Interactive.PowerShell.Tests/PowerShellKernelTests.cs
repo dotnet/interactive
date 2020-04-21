@@ -18,7 +18,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Tests
 {
-    public class PowerShellKernelTests : LanguageKernelTests
+    public class PowerShellKernelTests : LanguageKernelTestBase
     {
         private readonly string _allUsersCurrentHostProfilePath = Path.Combine(Path.GetDirectoryName(typeof(PSObject).Assembly.Location), "Microsoft.dotnet-interactive_profile.ps1");
 
@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Tests
 
             await kernel.SubmitCodeAsync(code);
 
-            kernel.TryGetVariable("x", out var fi).Should().BeTrue();
+            kernel.TryGetVariable("x", out object fi).Should().BeTrue();
 
             fi.Should().BeOfType(expectedType);
         }

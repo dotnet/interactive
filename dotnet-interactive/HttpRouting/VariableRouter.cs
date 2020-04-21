@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.Formatting;
 using Newtonsoft.Json;
@@ -44,10 +43,10 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
         {
             var segments =
                 context.HttpContext
-                    .Request
-                    .Path
-                    .Value
-                    .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                       .Request
+                       .Path
+                       .Value
+                       .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
             if (segments.Length == 1 && segments[0] == "variables")
             {
@@ -61,11 +60,11 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                     var propertyBag = new JObject();
                     response[kernelName] = propertyBag;
                     var targetKernel = GetKernel(kernelName);
-                    if (targetKernel is KernelBase kernelBase)
+                    if (targetKernel is LanguageKernel languageKernel)
                     {
                         foreach (var variableName in kernelProperty.Value.Values<string>())
                         {
-                            if (kernelBase.TryGetVariable(variableName, out var value))
+                            if (languageKernel.TryGetVariable(variableName, out object value))
                             {
                                 if (value is string)
                                 {
@@ -118,10 +117,10 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
         {
             var segments =
                 context.HttpContext
-                    .Request
-                    .Path
-                    .Value
-                    .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                       .Request
+                       .Path
+                       .Value
+                       .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
             if (segments[0] == "variables")
             {
@@ -130,15 +129,14 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
 
                 var targetKernel = GetKernel(kernelName);
 
-                if (targetKernel is KernelBase kernelBase)
+                if (targetKernel is LanguageKernel languageKernel)
                 {
-                    if (kernelBase.TryGetVariable(variableName, out var value))
+                    if (languageKernel.TryGetVariable(variableName, out object value))
                     {
                         context.Handler = async httpContext =>
                         {
                             await using (var writer = new StreamWriter(httpContext.Response.Body))
                             {
-
                                 httpContext.Response.ContentType = JsonFormatter.MimeType;
                                 if (value is string)
                                 {

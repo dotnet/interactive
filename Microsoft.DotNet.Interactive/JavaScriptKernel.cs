@@ -14,13 +14,6 @@ namespace Microsoft.DotNet.Interactive
         public JavaScriptKernel() : base(DefaultKernelName)
         {
         }
-
-        public override bool TryGetVariable(string name, out object value)
-        {
-            value = default;
-            return false;
-        }
-
         protected override async Task HandleSubmitCode(
             SubmitCode command,
             KernelInvocationContext context)

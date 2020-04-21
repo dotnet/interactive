@@ -19,7 +19,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 {
     using System.Management.Automation;
 
-    public class PowerShellKernel : KernelBase
+    public class PowerShellKernel : 
+        LanguageKernel
     {
         internal const string DefaultKernelName = "powershell";
 
@@ -112,7 +113,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return pwsh;
         }
 
-        public override bool TryGetVariable(string name, out object value)
+        public override bool TryGetVariable<T>(string name, out T value)
         {
             var variable = pwsh.Runspace.SessionStateProxy.PSVariable.Get(name);
 
@@ -121,18 +122,24 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 switch (variable.Value)
                 {
                     case PSObject psobject:
-                        value = psobject.BaseObject;
+                        value = (T) psobject.BaseObject;
                         break;
                     default:
-                        value = variable.Value;
+                        value = (T) variable.Value;
                         break;
                 }
 
                 return true;
             }
 
-            value = null;
+            value = default;
             return false;
+        }
+
+        public override Task SetVariableAsync<T>(string name, T value)
+        {
+            _lazyPwsh.Value.Runspace.SessionStateProxy.PSVariable.Set(name, value);
+            return Task.CompletedTask;
         }
 
         protected override async Task HandleSubmitCode(

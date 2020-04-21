@@ -3,23 +3,21 @@
 
 using System;
 using System.Linq;
-using System.Management.Automation;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using XPlot.Plotly;
 using Xunit;
 using Xunit.Abstractions;
 
 #pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    public class LanguageKernelTests : LanguageKernelTestBase
+    public sealed class LanguageKernelTests : LanguageKernelTestBase
     {
         public LanguageKernelTests(ITestOutputHelper output) : base(output)
         {
@@ -730,7 +728,7 @@ Console.Write(2);
                 .Contain(i => i.DisplayText == expectedCompletion);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         [InlineData(Language.PowerShell)]
@@ -777,6 +775,95 @@ Console.Write(2);
                 .Command
                 .Should()
                 .Be(command);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell)]
+        public async Task TryGetVariable_returns_defined_variable(Language language)
+        {
+            var codeToSetVariable = language switch
+            {
+                Language.CSharp => "var x = 123;",
+                Language.FSharp => "let x = 123",
+                Language.PowerShell => "$x = 123"
+            };
+
+            var kernel = CreateKernel(language);
+
+            await kernel.SubmitCodeAsync(codeToSetVariable);
+
+            var languageKernel = kernel.ChildKernels.OfType<LanguageKernel>().Single();
+
+            var succeeded = languageKernel.TryGetVariable("x", out int x);
+
+            using var _ = new AssertionScope();
+
+            succeeded.Should().BeTrue();
+            x.Should().Be(123);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp, Skip = "Requires FSI API changes")]
+        [InlineData(Language.PowerShell)]
+        public async Task SetVariableAsync_declares_the_specified_variable(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var languageKernel = kernel.ChildKernels.OfType<LanguageKernel>().Single();
+
+            await languageKernel.SetVariableAsync("x", 123);
+
+            var succeeded = languageKernel.TryGetVariable("x", out int x);
+
+            using var _ = new AssertionScope();
+
+            succeeded.Should().BeTrue();
+            x.Should().Be(123);
+        }
+        
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp, Skip = "Requires FSI API changes")]
+        [InlineData(Language.PowerShell)]
+        public async Task SetVariableAsync_overwrites_an_existing_variable_of_the_same_type(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var languageKernel = kernel.ChildKernels.OfType<LanguageKernel>().Single();
+
+            await languageKernel.SetVariableAsync("x", 123);
+            await languageKernel.SetVariableAsync("x", 456);
+
+            var succeeded = languageKernel.TryGetVariable("x", out int x);
+
+            using var _ = new AssertionScope();
+
+            succeeded.Should().BeTrue();
+            x.Should().Be(456);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp, Skip = "Requires FSI API changes")]
+        [InlineData(Language.PowerShell)]
+        public async Task SetVariableAsync_can_redeclare_an_existing_variable_and_change_its_type(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var languageKernel = kernel.ChildKernels.OfType<LanguageKernel>().Single();
+
+            await languageKernel.SetVariableAsync("x", 123);
+            await languageKernel.SetVariableAsync("x", "hello");
+
+            var succeeded = languageKernel.TryGetVariable("x", out string x);
+
+            using var _ = new AssertionScope();
+
+            succeeded.Should().BeTrue();
+            x.Should().Be("hello");
         }
     }
 }
