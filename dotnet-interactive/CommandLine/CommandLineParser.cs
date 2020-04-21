@@ -38,13 +38,13 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             InvocationContext context);
 
         public delegate Task<int> Jupyter(
-            StartupOptions options, 
+            StartupOptions options,
             IConsole console,
             StartServer startServer = null,
             InvocationContext context = null);
 
         public delegate Task StartKernelServer(
-            StartupOptions options, 
+            StartupOptions options,
             IKernel kernel,
             IConsole console);
 
@@ -76,8 +76,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 }
 
                 var server = new StandardIOKernelServer(
-                    kernel, 
-                    Console.In, 
+                    kernel,
+                    Console.In,
                     Console.Out);
 
                 await server.Input.LastAsync();
@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             var verboseOption = new Option<bool>(
                 "--verbose",
                 "Enable verbose logging to the console");
-            
+
             var httpPortOption = new Option<int>(
                 "--http-port",
                 "Specifies the port on which to enable HTTP services");
@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         return null;
                     }
 
-                    var parts = source.Split(new[] {"-"}, StringSplitOptions.RemoveEmptyEntries);
+                    var parts = source.Split(new[] { "-" }, StringSplitOptions.RemoveEmptyEntries);
 
                     if (parts.Length != 2)
                     {
@@ -159,7 +159,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 .ExistingOnly();
 
             var defaultKernelOption = new Option<string>(
-                "--default-kernel", 
+                "--default-kernel",
                 description: "The default language for the kernel",
                 getDefaultValue: () => "csharp");
 
@@ -258,7 +258,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             .AddSingleton(c =>
                             {
                                 var frontendEnvironment = c.GetRequiredService<BrowserFrontendEnvironment>();
-                                
+
                                 var kernel = CreateKernel(options.DefaultKernel,
                                     frontendEnvironment,
                                     startupOptions,
@@ -292,10 +292,22 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 startKernelHttpCommand.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
                     (startupOptions, options, console, context) =>
                     {
-                        var frontendEnvironment = new BrowserFrontendEnvironment();
+
                         services
-                            .AddSingleton(_ => frontendEnvironment)
-                            .AddSingleton(c => CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions,null));
+                            .AddSingleton(_ =>
+                            {
+                                var frontendEnvironment = new BrowserFrontendEnvironment
+                                {
+                                    ApiUri = new Uri($"http://localhost:{startupOptions.HttpPort}")
+                                };
+                                return frontendEnvironment;
+                            })
+                            .AddSingleton(c =>
+                            {
+                                var frontendEnvironment = c.GetRequiredService<BrowserFrontendEnvironment>();
+                                return CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions,
+                                        null);
+                            });
 
                         return jupyter(startupOptions, console, startServer, context);
                     });
@@ -306,27 +318,32 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             Command KernelServer()
             {
                 var startKernelServerCommand = new Command(
-                    "stdio", 
+                    "stdio",
                     "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
                 {
                     defaultKernelOption,
-                    logPathOption,
+                    logPathOption
                 };
 
+
+
                 startKernelServerCommand.Handler = CommandHandler.Create<StartupOptions, KernelServerOptions, IConsole, InvocationContext>(
-                    (startupOptions, options, console, context) => startKernelServer(
-                        startupOptions,
-                        CreateKernel(options.DefaultKernel,
-                                     new BrowserFrontendEnvironment(), startupOptions,null), console));
+                    (startupOptions, options, console, context) =>
+                    {
+                        return startKernelServer(
+                            startupOptions,
+                            CreateKernel(options.DefaultKernel,
+                                new ReplFrontendEnvironment(), startupOptions, null), console);
+                    });
 
                 return startKernelServerCommand;
             }
         }
 
         private static IKernel CreateKernel(
-            string defaultKernelName, 
-            FrontendEnvironment frontendEnvironment, 
-            StartupOptions startupOptions, 
+            string defaultKernelName,
+            FrontendEnvironment frontendEnvironment,
+            StartupOptions startupOptions,
             HttpProbingSettings httpProbingSettings)
         {
             var compositeKernel = new CompositeKernel();
@@ -341,7 +358,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseWho()
                     .UseXplot()
                     .UseMathAndLaTeX(),
-                new[] { "c#", "C#"  });
+                new[] { "c#", "C#" });
 
             compositeKernel.Add(
                 new FSharpKernel()
@@ -352,7 +369,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseDefaultNamespaces()
                     .UseXplot()
                     .UseMathAndLaTeX(),
-                new[] { "f#", "F#"  });
+                new[] { "f#", "F#" });
 
             compositeKernel.Add(
                 new PowerShellKernel()
@@ -364,23 +381,30 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             compositeKernel.Add(
                 new JavaScriptKernel(),
                 new[] { "js" });
-            
+
             compositeKernel.Add(
                 new HtmlKernel());
 
             var kernel = compositeKernel
                          .UseDefaultMagicCommands()
                          .UseLog()
-                         .UseAbout()
-                         .UseHttpApi(startupOptions, httpProbingSettings);
-            
+                         .UseAbout();
+
+            if (frontendEnvironment is BrowserFrontendEnvironment _)
+            {
+                kernel = kernel.UseHttpApi(startupOptions, httpProbingSettings);
+            }
+
             SetUpFormatters(frontendEnvironment);
-            
 
             kernel.DefaultKernelName = defaultKernelName;
-            var enableHttp = new SubmitCode("#!enable-http", compositeKernel.Name);
-            enableHttp.PublishInternalEvents();
-            compositeKernel.DeferCommand(enableHttp);
+            if (frontendEnvironment is BrowserFrontendEnvironment _)
+            {
+                var enableHttp = new SubmitCode("#!enable-http", compositeKernel.Name);
+                enableHttp.PublishInternalEvents();
+                compositeKernel.DeferCommand(enableHttp);
+            }
+
             return kernel;
         }
 
@@ -391,13 +415,24 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 case AutomationEnvironment automationEnvironment:
                     break;
 
+                case ReplFrontendEnvironment replFrontendEnvironment:
+                    Formatter.DefaultMimeType = HtmlFormatter.MimeType;
+                    Formatter.SetPreferredMimeTypeFor(typeof(LaTeXString), "text/latex");
+                    Formatter.SetPreferredMimeTypeFor(typeof(MathString), "text/latex");
+                    Formatter.SetPreferredMimeTypeFor(typeof(string), PlainTextFormatter.MimeType);
+                    Formatter.SetPreferredMimeTypeFor(typeof(ScriptContent), HtmlFormatter.MimeType);
+
+                    Formatter<LaTeXString>.Register((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
+                    Formatter<MathString>.Register((math, writer) => writer.Write(math.ToString()), "text/latex");
+                    break;
+
                 case BrowserFrontendEnvironment browserFrontendEnvironment:
                     Formatter.DefaultMimeType = HtmlFormatter.MimeType;
                     Formatter.SetPreferredMimeTypeFor(typeof(LaTeXString), "text/latex");
                     Formatter.SetPreferredMimeTypeFor(typeof(MathString), "text/latex");
                     Formatter.SetPreferredMimeTypeFor(typeof(string), PlainTextFormatter.MimeType);
                     Formatter.SetPreferredMimeTypeFor(typeof(ScriptContent), HtmlFormatter.MimeType);
-                    
+
                     Formatter<LaTeXString>.Register((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
                     Formatter<MathString>.Register((math, writer) => writer.Write(math.ToString()), "text/latex");
                     Formatter<ScriptContent>.Register((script, writer) =>
@@ -413,7 +448,7 @@ let notebookScope = getDotnetInteractiveScope('{browserFrontendEnvironment.ApiUr
                     }, HtmlFormatter.MimeType);
 
                     break;
-                
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(frontendEnvironment));
             }
