@@ -3,7 +3,7 @@
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine
 {
-    public class ReplFrontendEnvironment : FrontendEnvironment
+    public class RemoteFrontendEnvironment : FrontendEnvironment
     {
 
     }

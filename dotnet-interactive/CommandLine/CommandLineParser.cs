@@ -329,7 +329,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     (startupOptions, options, console, context) => startKernelServer(
                         startupOptions,
                         CreateKernel(options.DefaultKernel,
-                            new ReplFrontendEnvironment(), startupOptions, null), console));
+                            new RemoteFrontendEnvironment(), startupOptions, null), console));
 
                 return startKernelServerCommand;
             }
@@ -408,7 +408,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 case AutomationEnvironment automationEnvironment:
                     break;
 
-                case ReplFrontendEnvironment replFrontendEnvironment:
+                case RemoteFrontendEnvironment remoteFrontendEnvironment:
                     Formatter.DefaultMimeType = HtmlFormatter.MimeType;
                     Formatter.SetPreferredMimeTypeFor(typeof(LaTeXString), "text/latex");
                     Formatter.SetPreferredMimeTypeFor(typeof(MathString), "text/latex");
