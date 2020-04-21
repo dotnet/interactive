@@ -11,15 +11,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
 {
     public static class LanguageServiceExtensions
     {
-        public static Position ToLanguageServicePosition(this LinePosition linePos)
-        {
-            return new Position()
-            {
-                Line = linePos.Line,
-                Character = linePos.Character,
-            };
-        }
-
         public static LinePosition SubtractLineOffset(this LinePosition linePos, LinePosition offset)
         {
             return new LinePosition(linePos.Line - offset.Line, linePos.Character);
@@ -30,13 +21,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return new LinePositionSpan(
                 linePosSpan.Start.SubtractLineOffset(offset),
                 linePosSpan.End.SubtractLineOffset(offset));
-        }
-
-        public static Range ToLanguageServiceRange(this LinePositionSpan linePosSpan)
-        {
-            return new Range(
-                linePosSpan.Start.ToLanguageServicePosition(),
-                linePosSpan.End.ToLanguageServicePosition());
         }
 
         public static MarkupContent ToMarkupContent(this QuickInfoItem info)
