@@ -439,9 +439,8 @@ let notebookScope = getDotnetInteractiveScope('{browserFrontendEnvironment.ApiUr
                     {
                         Formatter<ScriptContent>.Register((script, writer) =>
                         {
-                            var fullCode = $@"{script.ScriptValue}";
                             IHtmlContent content =
-                                PocketViewTags.script[type: "text/javascript"](fullCode.ToHtmlContent());
+                                PocketViewTags.script[type: "text/javascript"](script.ScriptValue.ToHtmlContent());
                             content.WriteTo(writer, HtmlEncoder.Default);
                         }, HtmlFormatter.MimeType);
                     }
