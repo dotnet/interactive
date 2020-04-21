@@ -324,17 +324,12 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     defaultKernelOption,
                     logPathOption
                 };
-
-
-
+                
                 startKernelServerCommand.Handler = CommandHandler.Create<StartupOptions, KernelServerOptions, IConsole, InvocationContext>(
-                    (startupOptions, options, console, context) =>
-                    {
-                        return startKernelServer(
-                            startupOptions,
-                            CreateKernel(options.DefaultKernel,
-                                new ReplFrontendEnvironment(), startupOptions, null), console);
-                    });
+                    (startupOptions, options, console, context) => startKernelServer(
+                        startupOptions,
+                        CreateKernel(options.DefaultKernel,
+                            new ReplFrontendEnvironment(), startupOptions, null), console));
 
                 return startKernelServerCommand;
             }
@@ -398,6 +393,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             SetUpFormatters(frontendEnvironment);
 
             kernel.DefaultKernelName = defaultKernelName;
+
             if (frontendEnvironment is BrowserFrontendEnvironment _)
             {
                 var enableHttp = new SubmitCode("#!enable-http", compositeKernel.Name);
