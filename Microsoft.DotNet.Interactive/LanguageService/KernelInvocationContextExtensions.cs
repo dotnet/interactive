@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.LanguageService
 {
-    public static class ContextExtensions
+    public static class KernelInvocationContextExtensions
     {
         public static void PublishHoverResponse(this KernelInvocationContext context, RequestHoverText command, MarkupContent contents, LinePositionSpan linePositionSpan)
         {
