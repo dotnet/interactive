@@ -13,12 +13,5 @@ namespace Microsoft.DotNet.Interactive.App.Lsp
             Kind = kind;
             Value = value;
         }
-
-        public static MarkupContent FromLanguageServiceMarkupContent(LanguageService.MarkupContent contents)
-        {
-            return new MarkupContent(
-                contents.Kind.ConvertMarkupKind(),
-                contents.Value);
-        }
     }
 }

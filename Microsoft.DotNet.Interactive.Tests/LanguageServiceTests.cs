@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .KernelEvents
                 .ToSubscribedList()
                 .Should()
-                .NotContain(kv => kv.GetType() == typeof(HoverTextProduced));
+                .NotContain(kv => kv.GetType().IsSubclassOf(typeof(HoverTextProduced)));
         }
 
         [Theory]
@@ -53,8 +53,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Should()
                 .ContainSingle<HoverTextProduced>()
                 .Which
-                .Contents
-                .Value
+                .Content
                 .Should()
                 .Contain(expected);
         }
@@ -72,7 +71,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .KernelEvents
                 .ToSubscribedList()
                 .Should()
-                .NotContain(kv => kv.GetType() == typeof(HoverTextProduced));
+                .NotContain(kv => kv.GetType().IsSubclassOf(typeof(HoverTextProduced)));
         }
 
         [Theory]
@@ -88,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .KernelEvents
                 .ToSubscribedList()
                 .Should()
-                .NotContain(kv => kv.GetType() == typeof(HoverTextProduced));
+                .NotContain(kv => kv.GetType().IsSubclassOf(typeof(HoverTextProduced)));
         }
 
         [Theory]
@@ -109,8 +108,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Should()
                 .ContainSingle<HoverTextProduced>()
                 .Which
-                .Contents
-                .Value
+                .Content
                 .Should()
                 .Contain(expected);
         }

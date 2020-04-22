@@ -9,9 +9,15 @@ namespace Microsoft.DotNet.Interactive.LanguageService
 {
     public static class KernelInvocationContextExtensions
     {
-        public static void PublishHoverResponse(this KernelInvocationContext context, RequestHoverText command, MarkupContent contents, LinePositionSpan linePositionSpan)
+        public static void PublishHoverMarkdownResponse(this KernelInvocationContext context, RequestHoverText command, string content, LinePositionSpan linePositionSpan)
         {
-            var response = new HoverTextProduced(command, contents, linePositionSpan);
+            var response = new HoverMarkdownProduced(command, content, linePositionSpan);
+            context.Publish(response);
+        }
+
+        public static void PublishHoverPlainTextResponse(this KernelInvocationContext context, RequestHoverText command, string content, LinePositionSpan linePositionSpan)
+        {
+            var response = new HoverPlainTextProduced(command, content, linePositionSpan);
             context.Publish(response);
         }
     }
