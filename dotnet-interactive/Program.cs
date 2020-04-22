@@ -93,15 +93,22 @@ namespace Microsoft.DotNet.Interactive.App
                           .UseKestrel()
                           .ConfigureServices(c =>
                           {
-                              c.AddSingleton(probingSettings);
+                              if (options.EnableHttpApi)
+                              {
+                                  c.AddSingleton(probingSettings);
+                              }
                               c.AddSingleton(options);
                               foreach (var serviceDescriptor in serviceCollection)
                               {
                                   c.Add(serviceDescriptor);
                               }
                           })
-                          .UseStartup<Startup>()
-                          .UseUrls(probingSettings.AddressList.Select(a => a.AbsoluteUri).ToArray());
+                          .UseStartup<Startup>();
+
+            if (options.EnableHttpApi)
+            {
+                webHost = webHost.UseUrls(probingSettings.AddressList.Select(a => a.AbsoluteUri).ToArray());
+            }
 
             return webHost;
 
