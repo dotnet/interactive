@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             "#!fsharp",
             "let x = 123",
             "#!csharp",
-            "#!SOMETHING\nfsharp.TryGetVariable(\"x\", out int x);\nx")]
+            "#!share --from fsharp x\nfsharp.TryGetVariable(\"x\", out int x);\nx", Skip = "WIP")]
         public async Task Variables_can_be_read_from_other_kernels(
             string fromLanguage,
             string codeToWrite,
@@ -35,10 +35,13 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var kernel = new CompositeKernel
             {
                 new CSharpKernel()
-                    .UseKernelHelpers(),
+                    .UseKernelHelpers()
+                    .UseDotNetVariableSharing(),
                 new FSharpKernel()
-                    .UseKernelHelpers(),
+                    .UseKernelHelpers()
+                    .UseDotNetVariableSharing(),
                 new PowerShellKernel()
+                    .UseDotNetVariableSharing()
             }.LogEventsToPocketLogger();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
@@ -55,11 +58,9 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .Be(123);
         }
 
-        [Fact]
-        public void Internal_types_cannot_be_shared()
+        [Fact(Skip = "WIP")]
+        public void Internal_types_are_shared_as_their_most_public_supertype()
         {
-            
-
             throw new NotImplementedException("test not written");
         }
     }

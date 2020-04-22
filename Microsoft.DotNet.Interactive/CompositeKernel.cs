@@ -71,40 +71,8 @@ namespace Microsoft.DotNet.Interactive
                 DefaultKernelName = kernel.Name;
             }
 
-            DeclareKernelVariables(kernel, aliases);
-
             RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));
             RegisterForDisposal(kernel);
-        }
-
-        private void DeclareKernelVariables(
-            IKernel kernel, 
-            IReadOnlyCollection<string> aliases)
-        {
-            foreach (var otherKernel in ChildKernels
-                                        .OfType<LanguageKernel>()
-                .Where(k => k != kernel))
-            {
-                otherKernel.DeferCommand(new AnonymousKernelCommand(async (command, context) =>
-                {
-                    try
-                    {
-                        await otherKernel.SetVariableAsync(
-                            kernel.Name,
-                            kernel);
-                    }
-                    catch (Exception exception)
-                    {
-                        // FIX: (DeclareKernelVariables) 
-
-                        context.Publish(new DiagnosticLogEventProduced(exception.Message));
-
-
-                    }
-                }));
-
-
-            }
         }
 
         private void AddChooseKernelDirective(

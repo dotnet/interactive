@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
     using System.Management.Automation;
 
     public class PowerShellKernel : 
-        LanguageKernel
+        DotNetLanguageKernel
     {
         internal const string DefaultKernelName = "powershell";
 
@@ -136,7 +136,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return false;
         }
 
-        public override Task SetVariableAsync<T>(string name, T value)
+        public override Task SetVariableAsync(string name, object value)
         {
             _lazyPwsh.Value.Runspace.SessionStateProxy.PSVariable.Set(name, value);
             return Task.CompletedTask;

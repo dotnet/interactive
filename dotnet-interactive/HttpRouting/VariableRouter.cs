@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
                     var propertyBag = new JObject();
                     response[kernelName] = propertyBag;
                     var targetKernel = GetKernel(kernelName);
-                    if (targetKernel is LanguageKernel languageKernel)
+                    if (targetKernel is DotNetLanguageKernel languageKernel)
                     {
                         foreach (var variableName in kernelProperty.Value.Values<string>())
                         {
@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
 
                 var targetKernel = GetKernel(kernelName);
 
-                if (targetKernel is LanguageKernel languageKernel)
+                if (targetKernel is DotNetLanguageKernel languageKernel)
                 {
                     if (languageKernel.TryGetVariable(variableName, out object value))
                     {

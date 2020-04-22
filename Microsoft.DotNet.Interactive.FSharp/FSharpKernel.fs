@@ -25,7 +25,7 @@ open FSharp.Compiler.Scripting
 open FSharp.Compiler.SourceCodeServices
 
 type FSharpKernel() as this =
-    inherit LanguageKernel("fsharp")
+    inherit DotNetLanguageKernel("fsharp")
 
     static let lockObj = Object();
 
@@ -183,7 +183,7 @@ type FSharpKernel() as this =
         | None ->
             false
 
-    override _.SetVariableAsync<'a>(name: string, value: 'a) : Task = 
+    override _.SetVariableAsync(name: string, value: Object) : Task = 
         raise (NotImplementedException())
 
     interface ISupportNuget with

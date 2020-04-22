@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public abstract class LanguageKernel : KernelBase
+    public abstract class DotNetLanguageKernel : KernelBase
     {
-        protected LanguageKernel(string name) : base(name)
+        protected DotNetLanguageKernel(string name) : base(name)
         {
         }
 
         public abstract bool TryGetVariable<T>(string name, out T value);
 
-        public abstract Task SetVariableAsync<T>(string name, T value);
+        public abstract Task SetVariableAsync(string name, object value);
     }
 }

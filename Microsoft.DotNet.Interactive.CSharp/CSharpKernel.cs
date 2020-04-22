@@ -29,7 +29,7 @@ using Task = System.Threading.Tasks.Task;
 namespace Microsoft.DotNet.Interactive.CSharp
 {
     public class CSharpKernel :
-        LanguageKernel,
+        DotNetLanguageKernel,
         IExtensibleKernel,
         ISupportNuget
     {
@@ -99,12 +99,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return false;
         }
 
-        public override async Task SetVariableAsync<T>(string name, T value)
+        public override async Task SetVariableAsync(string name, object value)
         {
             var csharpTypeDeclaration = new StringWriter();
             
             value.GetType().WriteCSharpDeclarationTo(csharpTypeDeclaration);
             
+
+
             await RunAsync($"{csharpTypeDeclaration} {name} = default;");
 
             var scriptVariable = ScriptState.GetVariable(name);

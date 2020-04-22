@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Utility;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive
@@ -50,20 +49,10 @@ namespace Microsoft.DotNet.Interactive
         {
             var kernel = KernelInvocationContext.Current.HandlingKernel;
 
-            KernelBase foundKernel = null;
+            IKernel foundKernel = null;
 
-            if (kernel is KernelBase kernelBase)
             {
-                var root = kernelBase.RecurseWhileNotNull(k => k.ParentKernel).Last();
-
-                foundKernel = root switch
-                {
-                    CompositeKernel c => c.ChildKernels
-                                          .OfType<LanguageKernel>()
-                                          .SingleOrDefault(k => k.Name == name),
-                    LanguageKernel k => k,
-                    _ => null
-                };
+                foundKernel = kernel.FindKernel(name);
             }
 
             return foundKernel ?? throw new KeyNotFoundException($"Kernel \"{name}\" was not found.");
