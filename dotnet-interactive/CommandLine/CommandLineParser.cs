@@ -98,24 +98,24 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             var httpPortOption = new Option<HttpPort>(
                 "--http-port",
-                description:"Specifies the port on which to enable HTTP services",
-                parseArgument : result =>
-                {
-                    var source = result.Tokens[0].Value;
+                description: "Specifies the port on which to enable HTTP services",
+                parseArgument: result =>
+               {
+                   var source = result.Tokens[0].Value;
 
-                    if (source == "*")
-                    {
-                        return HttpPort.Auto;
-                    }
-                    
-                    if (!int.TryParse(source, out var portNumber) )
-                    {
-                        result.ErrorMessage = "Must specify a port number or *.";
-                        return null;
-                    }
+                   if (source == "*")
+                   {
+                       return HttpPort.Auto;
+                   }
 
-                    return new HttpPort(portNumber);
-                });
+                   if (!int.TryParse(source, out var portNumber))
+                   {
+                       result.ErrorMessage = "Must specify a port number or *.";
+                       return null;
+                   }
+
+                   return new HttpPort(portNumber);
+               });
 
             var httpPortRangeOption = new Option<PortRange>(
                 "--http-port-range",
@@ -319,7 +319,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             {
                                 var frontendEnvironment = c.GetRequiredService<BrowserFrontendEnvironment>();
                                 return CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions,
-                                        null);
+                                    c.GetRequiredService<HttpProbingSettings>());
                             });
 
                         return jupyter(startupOptions, console, startServer, context);
@@ -339,7 +339,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     httpPortOption,
                     httpPortRangeOption
                 };
-                
+
                 command.Handler = CommandHandler.Create<StartupOptions, KernelServerOptions, IConsole, InvocationContext>(
                     (startupOptions, options, console, context) =>
                     {
@@ -358,7 +358,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                 {
                                     var frontendEnvironment = c.GetRequiredService<BrowserFrontendEnvironment>();
                                     var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions,
-                                        null);
+                                        c.GetRequiredService<HttpProbingSettings>());
 
                                     var server = new StandardIOKernelServer(
                                         kernel,
@@ -367,8 +367,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                                     return kernel;
                                 });
-                            startServer?.Invoke(startupOptions, context);
 
+                            startServer?.Invoke(startupOptions, context);
                             return Task.FromResult(0);
                         }
                         else
