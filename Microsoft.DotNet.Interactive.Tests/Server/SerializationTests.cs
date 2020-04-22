@@ -202,9 +202,14 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 var requestHoverTextCommand = new RequestHoverText("document-contents", new LinePosition(1, 2));
 
-                yield return new HoverTextProduced(
+                yield return new HoverMarkdownProduced(
                     requestHoverTextCommand,
-                    new MarkupContent(MarkupKind.Plaintext, "plaintext"),
+                    "markdown",
+                    new LinePositionSpan(new LinePosition(1, 2), new LinePosition(3, 4)));
+
+                yield return new HoverPlainTextProduced(
+                    requestHoverTextCommand,
+                    "plaintext",
                     new LinePositionSpan(new LinePosition(1, 2), new LinePosition(3, 4)));
 
                 yield return new PackageAdded(

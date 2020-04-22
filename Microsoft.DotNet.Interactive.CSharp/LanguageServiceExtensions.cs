@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis.QuickInfo;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.Interactive.LanguageService;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
@@ -23,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 linePosSpan.End.SubtractLineOffset(offset));
         }
 
-        public static MarkupContent ToMarkupContent(this QuickInfoItem info)
+        public static string ToMarkdownString(this QuickInfoItem info)
         {
             var stringBuilder = new StringBuilder();
             var description = info.Sections.FirstOrDefault(s => QuickInfoSectionKinds.Description.Equals(s.Kind))?.Text ?? string.Empty;
@@ -38,9 +37,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 }
             }
 
-            return new MarkupContent(
-                MarkupKind.Markdown,
-                stringBuilder.ToString());
+            return stringBuilder.ToString();
         }
     }
 }

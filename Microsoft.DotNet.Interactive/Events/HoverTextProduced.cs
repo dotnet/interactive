@@ -3,19 +3,18 @@
 
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.LanguageService;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class HoverTextProduced : KernelEventBase
+    public abstract class HoverTextProduced : KernelEventBase
     {
-        public MarkupContent Contents { get; set; }
+        public string Content { get; set; }
         public LinePositionSpan? Range { get; set; }
 
-        public HoverTextProduced(IKernelCommand command, MarkupContent contents, LinePositionSpan? range = null)
+        public HoverTextProduced(IKernelCommand command, string content, LinePositionSpan? range = null)
             : base(command)
         {
-            Contents = contents;
+            Content = content;
             Range = range;
         }
     }
