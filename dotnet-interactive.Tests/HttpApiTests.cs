@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 return testServer;
             }
 
-            var newServer = InProcessTestServer.StartServer($"http --default-kernel {language.LanguageName()}");
+            var newServer = InProcessTestServer.StartServer($"http --default-kernel {language.LanguageName()} --http-port 4242");
             _servers.Add(language, newServer);
             return newServer;
         }

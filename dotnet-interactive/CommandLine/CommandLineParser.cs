@@ -255,7 +255,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             {
                                 var frontendEnvironment = new BrowserFrontendEnvironment
                                 {
-                                    ApiUri = new Uri($"http://localhost:{startupOptions.HttpPort}")
+                                    ApiUri = new Uri($"http://localhost:{startupOptions.HttpPort.PortNumber}")
                                 };
                                 return frontendEnvironment;
                             })
@@ -308,7 +308,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             {
                                 var frontendEnvironment = new BrowserFrontendEnvironment
                                 {
-                                    ApiUri = new Uri($"http://localhost:{startupOptions.HttpPort}")
+                                    ApiUri = new Uri($"http://localhost:{startupOptions.HttpPort.PortNumber}")
                                 };
                                 return frontendEnvironment;
                             })

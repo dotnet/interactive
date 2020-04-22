@@ -168,7 +168,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public void jupyter_enables_http_api_by_default()
+        public void jupyter_does_not_enable_http_api_by_default()
         {
             var result = _parser.Parse($"jupyter {_connectionFile}");
 
@@ -176,7 +176,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
 
             var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
 
-            options.EnableHttpApi.Should().BeTrue();
+            options.EnableHttpApi.Should().BeFalse();
         }
 
         [Fact]
