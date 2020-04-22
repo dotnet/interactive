@@ -85,9 +85,9 @@ namespace Microsoft.DotNet.Interactive.App
                 StartToolLogging(options)
             };
 
-            var httpPort = options.HttpPort ??= GetFreePort(options.HttpPortRange);
+            var httpPort = options.HttpPort ??= GetFreePort(options);
 
-            var probingSettings = HttpProbingSettings.Create(httpPort);
+            var probingSettings = HttpProbingSettings.Create(httpPort.PortNumber);
 
             var webHost = new WebHostBuilder()
                           .UseKestrel()
@@ -105,10 +105,22 @@ namespace Microsoft.DotNet.Interactive.App
 
             return webHost;
 
-            int GetFreePort(PortRange httpPortRange = null)
+            HttpPort GetFreePort(StartupOptions options)
             {
-                var currentPort = httpPortRange?.Start ?? 0;
-                var endPort =  httpPortRange?.End ?? 0;
+                if (options.HttpPort != null && !options.HttpPort.IsAuto)
+                {
+                    return options.HttpPort;
+                }
+
+                var currentPort =  0;
+                var endPort =  0;
+
+                if (options.HttpPortRange != null)
+                {
+                    currentPort = options.HttpPortRange.Start;
+                    endPort = options.HttpPortRange.End;
+                }
+
                 for (;currentPort <= endPort; currentPort++ ) {
                     try
                     {
@@ -116,7 +128,7 @@ namespace Microsoft.DotNet.Interactive.App
                         l.Start();
                         var port = ((IPEndPoint)l.LocalEndpoint).Port;
                         l.Stop();
-                        return port;
+                        return new HttpPort(port);
                     }
                     catch (SocketException)
                     {

@@ -77,6 +77,25 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 script.ToDisplayString(mimeType));
 
             formattedValue.MimeType.Should().Be("text/html");
+            formattedValue.Value.Should().Be(@"<script type=""text/javascript"">alert('hello');</script>");
+        }
+
+        [Fact]
+        public void ScriptContent_type_is_wrapped_when_http_is_enabled()
+        {
+            var frontendEnvironment = new BrowserFrontendEnvironment
+            {
+                ApiUri = new Uri("http://12.12.12.12:4242")
+            };
+            CommandLineParser.SetUpFormatters(frontendEnvironment, new StartupOptions(httpPort: new HttpPort(4242)));
+            var script = new ScriptContent("alert('hello');");
+            var mimeType = Formatter.PreferredMimeTypeFor(script.GetType());
+
+            var formattedValue = new FormattedValue(
+                mimeType,
+                script.ToDisplayString(mimeType));
+
+            formattedValue.MimeType.Should().Be("text/html");
             formattedValue.Value.Should().Be($@"<script type=""text/javascript"">if (typeof window.createDotnetInteractiveClient === typeof Function) {{
 createDotnetInteractiveClient('http://12.12.12.12:4242/').then(function (interactive) {{
 let notebookScope = getDotnetInteractiveScope('http://12.12.12.12:4242/');

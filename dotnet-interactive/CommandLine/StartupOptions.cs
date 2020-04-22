@@ -25,21 +25,21 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             DirectoryInfo logPath = null,
             bool verbose = false,
             PortRange httpPortRange = null,
-            bool enableHttpApi = true)
+            HttpPort httpPort = null)
         {
             LogPath = logPath;
             Verbose = verbose;
             HttpPortRange = httpPortRange;
-            EnableHttpApi = enableHttpApi;
+            HttpPort = httpPort;
         }
 
         public DirectoryInfo LogPath { get; }
 
         public bool Verbose { get; }
 
-        public int? HttpPort { get; internal set; }
+        public HttpPort HttpPort { get; internal set; }
 
         public PortRange HttpPortRange { get; }
-        public bool EnableHttpApi { get; }
+        public bool EnableHttpApi => HttpPort != null || HttpPortRange != null;
     }
 }

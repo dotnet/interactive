@@ -3,16 +3,16 @@
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine
 {
-    public class HttPort
+    public class HttpPort
     {
-        public static HttPort Auto { get; } = new HttPort();
+        public static HttpPort Auto { get; } = new HttpPort();
 
-        public HttPort(int portNumber)
+        public HttpPort(int portNumber)
         {
             PortNumber = portNumber;
         }
 
-        private HttPort()
+        private HttpPort()
         {
 
         }
