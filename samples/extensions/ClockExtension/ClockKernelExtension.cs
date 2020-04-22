@@ -28,7 +28,7 @@ namespace ClockExtension
             {
                 var clockCommand = new Command("#!clock", "Displays a clock showing the current or specified time.")
                 {
-                    new Option<int>(new[]{"-o","--hour"},
+                    new Option<int>(new[]{"-h","--hour"},
                                     "The position of the hour hand"),
                     new Option<int>(new[]{"-m","--minute"},
                                     "The position of the minute hand"),
