@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 "--verbose",
                 "Enable verbose logging to the console");
 
-            var httpPortOption = new Option<HttPort>(
+            var httpPortOption = new Option<HttpPort>(
                 "--http-port",
                 description:"Specifies the port on which to enable HTTP services",
                 parseArgument : result =>
@@ -105,7 +105,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                     if (source == "*")
                     {
-                        return HttPort.Auto;
+                        return HttpPort.Auto;
                     }
                     
                     if (!int.TryParse(source, out var portNumber) )
@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         return null;
                     }
 
-                    return new HttPort(portNumber);
+                    return new HttpPort(portNumber);
                 });
 
             var httpPortRangeOption = new Option<PortRange>(
@@ -334,11 +334,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     defaultKernelOption,
                     logPathOption,
                     httpPortOption,
-                    httpPortRangeOption,
-                    new Option<bool>(
-                        alias:"--enable-http-api",
-                        description: "Enables the http protocol for interacting with the kernel.",
-                        getDefaultValue:() => false)
+                    httpPortRangeOption
                 };
                 
                 command.Handler = CommandHandler.Create<StartupOptions, KernelServerOptions, IConsole, InvocationContext>(
