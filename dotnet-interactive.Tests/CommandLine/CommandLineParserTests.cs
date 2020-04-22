@@ -209,7 +209,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public void it_defaults_to_csharp_kernel()
+        public void stdio_command_defaults_to_csharp_kernel()
         {
             var result = _parser.Parse("stdio");
             var binder = new ModelBinder<KernelServerOptions>();
