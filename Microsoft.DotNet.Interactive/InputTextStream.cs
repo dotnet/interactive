@@ -15,7 +15,6 @@ namespace Microsoft.DotNet.Interactive
         private readonly TextReader _input;
         private readonly Subject<string> _channel = new Subject<string>();
         private bool _complete;
-        private bool _started;
 
         public InputTextStream(TextReader input)
         {
@@ -37,12 +36,12 @@ namespace Microsoft.DotNet.Interactive
         {
             lock (_lock)
             {
-                if (_started)
+                if (IsStarted)
                 {
                     return;
                 }
 
-                _started = true;
+                IsStarted = true;
             }
 
             Task.Run(async () =>
@@ -68,6 +67,6 @@ namespace Microsoft.DotNet.Interactive
             _complete = true;
         }
 
-        public bool IsStarted => _started;
+        public bool IsStarted { get; private set; }
     }
 }
