@@ -96,9 +96,26 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 "--verbose",
                 "Enable verbose logging to the console");
 
-            var httpPortOption = new Option<int>(
+            var httpPortOption = new Option<HttPort>(
                 "--http-port",
-                "Specifies the port on which to enable HTTP services");
+                description:"Specifies the port on which to enable HTTP services",
+                parseArgument : result =>
+                {
+                    var source = result.Tokens[0].Value;
+
+                    if (source == "*")
+                    {
+                        return HttPort.Auto;
+                    }
+                    
+                    if (!int.TryParse(source, out var portNumber) )
+                    {
+                        result.ErrorMessage = "Must specify a port number or *.";
+                        return null;
+                    }
+
+                    return new HttPort(portNumber);
+                });
 
             var httpPortRangeOption = new Option<PortRange>(
                 "--http-port-range",
@@ -208,7 +225,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     defaultKernelOption,
                     logPathOption,
                     verboseOption,
-                    httpPortOption,
                     httpPortRangeOption,
                     new Argument<FileInfo>
                     {

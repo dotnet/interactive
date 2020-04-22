@@ -125,8 +125,10 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Theory]
-        [InlineData("jupyter --http-port 8000 --http-port-range 3000-4000")]
-        [InlineData("jupyter --http-port-range 3000-4000 --http-port 8000")]
+        [InlineData("stdio --http-port 8000 --http-port-range 3000-4000")]
+        [InlineData("stdio --http-port-range 3000-4000 --http-port 8000")]
+        [InlineData("http --http-port 8000 --http-port-range 3000-4000")]
+        [InlineData("http --http-port-range 3000-4000 --http-port 8000")]
         public void port_range_and_port_cannot_be_specified_together(string commandLine)
         {
             var result = _parser.Parse(commandLine);
@@ -135,6 +137,18 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 .Select(e => e.Message)
                  .Should()
                  .Contain(errorMessage => errorMessage == "Cannot specify both --http-port and --http-port-range together");
+        }
+
+
+        [Fact]
+        public void jupyter_command_does_not_parse_http_port_option()
+        {
+            var result = _parser.Parse($"jupyter {_connectionFile} --http-port 8000");
+
+            result.Errors
+                .Select(e => e.Message)
+                .Should()
+                .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port'");
         }
 
         [Fact]
