@@ -213,7 +213,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 command.AddOption(logPathOption);
                 command.AddOption(verboseOption);
-                command.AddOption(httpPortOption);
 
                 return command;
             }
@@ -302,6 +301,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 command.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
                     (startupOptions, options, console, context) =>
                     {
+                        if (startupOptions.HttpPort == null && startupOptions.HttpPortRange == null)
+                        {
+                            startupOptions.HttpPort = HttpPort.Auto;
+                        }
 
                         services
                             .AddSingleton(_ =>

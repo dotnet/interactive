@@ -152,6 +152,18 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
+        public void jupyter_command_enables_http_api_when_http_port_range_is_specified()
+        {
+            var result = _parser.Parse($"jupyter --http-port-range 3000-5000 {_connectionFile}");
+            
+            var binder = new ModelBinder<StartupOptions>();
+
+            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+
+            options.EnableHttpApi.Should().BeTrue();
+        }
+
+        [Fact]
         public void jupyter_parses_connection_file_path()
         {
             var result = _parser.Parse($"jupyter {_connectionFile}");
