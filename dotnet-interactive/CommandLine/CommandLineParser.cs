@@ -341,10 +341,44 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 };
                 
                 command.Handler = CommandHandler.Create<StartupOptions, KernelServerOptions, IConsole, InvocationContext>(
-                    (startupOptions, options, console, context) => startStdIO(
-                        startupOptions,
-                        CreateKernel(options.DefaultKernel,
-                            new BrowserFrontendEnvironment(), startupOptions, null), console));
+                    (startupOptions, options, console, context) =>
+                    {
+                        if (startupOptions.EnableHttpApi)
+                        {
+                            services
+                                .AddSingleton(_ =>
+                                {
+                                    var frontendEnvironment = new BrowserFrontendEnvironment
+                                    {
+                                        ApiUri = new Uri($"http://localhost:{startupOptions.HttpPort.PortNumber}")
+                                    };
+                                    return frontendEnvironment;
+                                })
+                                .AddSingleton(c =>
+                                {
+                                    var frontendEnvironment = c.GetRequiredService<BrowserFrontendEnvironment>();
+                                    var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions,
+                                        null);
+
+                                    var server = new StandardIOKernelServer(
+                                        kernel,
+                                        Console.In,
+                                        Console.Out);
+
+                                    return kernel;
+                                });
+                            startServer?.Invoke(startupOptions, context);
+
+                            return Task.FromResult(0);
+                        }
+                        else
+                        {
+                            return startStdIO(
+                                startupOptions,
+                                CreateKernel(options.DefaultKernel,
+                                    new BrowserFrontendEnvironment(), startupOptions, null), console);
+                        }
+                    });
 
                 return command;
             }
