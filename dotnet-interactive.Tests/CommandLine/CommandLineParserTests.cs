@@ -110,6 +110,17 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
+        public void jupyter_install_command_does_not_parse_http_port_option()
+        {
+            var result = _parser.Parse($"jupyter install --http-port 8000");
+
+            result.Errors
+                .Select(e => e.Message)
+                .Should()
+                .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port'");
+        }
+
+        [Fact]
         public void jupyter_install_command_parses_port_range_option()
         {
             var result = _parser.Parse("jupyter install --http-port-range 3000-4000");

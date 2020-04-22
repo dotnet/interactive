@@ -5,7 +5,6 @@ using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.HttpRouting;
-using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -35,8 +34,11 @@ namespace Microsoft.DotNet.Interactive.App
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddRouting();
-            services.AddCors();
+            if (StartupOptions.EnableHttpApi)
+            {
+                services.AddRouting();
+                services.AddCors();
+            }
         }
 
         public void Configure(
@@ -44,23 +46,26 @@ namespace Microsoft.DotNet.Interactive.App
             IHostApplicationLifetime lifetime,
             IServiceProvider serviceProvider)
         {
-            app.UseStaticFiles(new StaticFileOptions
+            if (StartupOptions.EnableHttpApi)
             {
-                FileProvider = new EmbeddedFileProvider(typeof(Startup).Assembly)
-            });
-            app.UseCors(builder =>
-                builder
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowAnyOrigin());
-            app.UseRouting();
-            app.UseRouter(r =>
-            {
-                r.Routes.Add(new DiscoveryRouter(serviceProvider.GetRequiredService<BrowserFrontendEnvironment>()));
-                r.Routes.Add(new VariableRouter(serviceProvider.GetRequiredService<IKernel>()));
-                r.Routes.Add(new KernelsRouter(serviceProvider.GetRequiredService<IKernel>()));
-                r.Routes.Add(new LspRouter(serviceProvider.GetRequiredService<IKernel>()));
-            });
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = new EmbeddedFileProvider(typeof(Startup).Assembly)
+                });
+                app.UseCors(builder =>
+                    builder
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowAnyOrigin());
+                app.UseRouting();
+                app.UseRouter(r =>
+                {
+                    r.Routes.Add(new DiscoveryRouter(serviceProvider.GetRequiredService<BrowserFrontendEnvironment>()));
+                    r.Routes.Add(new VariableRouter(serviceProvider.GetRequiredService<IKernel>()));
+                    r.Routes.Add(new KernelsRouter(serviceProvider.GetRequiredService<IKernel>()));
+                    r.Routes.Add(new LspRouter(serviceProvider.GetRequiredService<IKernel>()));
+                });
+            }
         }
     }
 }
