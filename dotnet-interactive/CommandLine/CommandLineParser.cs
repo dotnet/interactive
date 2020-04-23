@@ -306,15 +306,15 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                         return startStdIO(
                             startupOptions,
-                            CreateKernel(options.DefaultKernel,
-                                new BrowserFrontendEnvironment(), startupOptions, null), console);
+                            CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(), startupOptions, null),
+                            console);
                     });
 
                 return command;
             }
         }
 
-        private static IServiceCollection RegisterKernelInServiceCollection(IServiceCollection services, StartupOptions startupOptions, string defaultKernel, Action<IKernel> afterKernelCreation = null)
+        private static IServiceCollection RegisterKernelInServiceCollection(IServiceCollection services, StartupOptions startupOptions, string defaultKernel, Action<KernelBase> afterKernelCreation = null)
         {
             services
                 .AddSingleton(_ =>
@@ -328,9 +328,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 .AddSingleton<IKernel>(c =>
                 {
                     var frontendEnvironment = c.GetRequiredService<BrowserFrontendEnvironment>();
-                    var kernel =  CreateKernel(defaultKernel, frontendEnvironment, startupOptions,
+                    var kernel = CreateKernel(defaultKernel, frontendEnvironment, startupOptions,
                         c.GetRequiredService<HttpProbingSettings>());
-                    
+
                     afterKernelCreation?.Invoke(kernel);
                     return kernel;
                 });
