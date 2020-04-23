@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         {
             var disposable = Program.StartToolLogging(startupOptions);
 
-            var server = CreateServer(kernel, console);
+            var server = CreateServer(kernel as KernelBase, console);
          
             if (kernel is KernelBase kernelBase)
             {
@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             return 0;
         }
 
-        internal static StandardIOKernelServer CreateServer(IKernel kernel, IConsole console)
+        internal static StandardIOKernelServer CreateServer(KernelBase kernel, IConsole console)
         {
             var server = new StandardIOKernelServer(
                 kernel,
