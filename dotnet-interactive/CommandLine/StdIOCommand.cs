@@ -11,17 +11,15 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 {
     public static class StdIOCommand
     {
-        public static async Task<int> Do(StartupOptions startupOptions, IKernel kernel, IConsole console)
+        public static async Task<int> Do(StartupOptions startupOptions, KernelBase kernel, IConsole console)
         {
             var disposable = Program.StartToolLogging(startupOptions);
 
-            var server = CreateServer(kernel as KernelBase, console);
-         
-            if (kernel is KernelBase kernelBase)
-            {
-                kernelBase.RegisterForDisposal(disposable);
-                kernelBase.RegisterForDisposal(server);
-            }
+            var server = CreateServer(kernel, console);
+
+            kernel.RegisterForDisposal(disposable);
+            kernel.RegisterForDisposal(server);
+
             await server.Input.LastAsync();
             return 0;
         }
