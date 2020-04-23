@@ -334,10 +334,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     afterKernelCreation?.Invoke(kernel);
                     return kernel;
                 })
+                .AddSingleton<KernelBase>(c => c.GetRequiredService<CompositeKernel>())
                 .AddSingleton<IKernel>(c => c.GetRequiredService<KernelBase>());
-            {
-
-            };
 
             return services;
         }
