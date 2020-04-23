@@ -16,12 +16,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
         public KernelCommandInvocation Handle { get; set; }
 
-        public override bool TryGetVariable(string name, out object value)
-        {
-            value = null;
-            return false;
-        }
-
         protected override Task HandleSubmitCode(SubmitCode command, KernelInvocationContext context)
         {
             Handle(command, context);

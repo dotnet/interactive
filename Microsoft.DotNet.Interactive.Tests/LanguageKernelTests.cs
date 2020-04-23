@@ -3,23 +3,21 @@
 
 using System;
 using System.Linq;
-using System.Management.Automation;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using XPlot.Plotly;
 using Xunit;
 using Xunit.Abstractions;
 
 #pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    public class LanguageKernelTests : LanguageKernelTestBase
+    public sealed class LanguageKernelTests : LanguageKernelTestBase
     {
         public LanguageKernelTests(ITestOutputHelper output) : base(output)
         {
@@ -730,7 +728,7 @@ Console.Write(2);
                 .Contain(i => i.DisplayText == expectedCompletion);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         [InlineData(Language.PowerShell)]
@@ -761,30 +759,7 @@ Console.Write(2);
                         .Contain(i => i.DisplayText == "alpha");
         }
 
-        [Fact(Timeout = 45000)]
-        public async Task Script_state_is_available_within_middleware_pipeline()
-        {
-            var variableCountBeforeEvaluation = 0;
-            var variableCountAfterEvaluation = 0;
-
-            using var kernel = new CSharpKernel();
-
-            kernel.AddMiddleware(async (command, context, next) =>
-            {
-                var k = context.HandlingKernel as CSharpKernel;
-
-                await next(command, context);
-
-                variableCountAfterEvaluation = k.ScriptState.Variables.Length;
-            });
-
-            await kernel.SendAsync(new SubmitCode("var x = 1;"));
-
-            variableCountBeforeEvaluation.Should().Be(0);
-            variableCountAfterEvaluation.Should().Be(1);
-        }
-
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task When_submission_is_split_then_CommandHandled_is_published_only_for_the_root_command()
         {
             var kernel = CreateKernel(Language.CSharp);
@@ -802,165 +777,93 @@ Console.Write(2);
                 .Be(command);
         }
 
-        [Fact()]
-        public async Task PowerShell_streams_handled_in_correct_order()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell)]
+        public async Task TryGetVariable_returns_defined_variable(Language language)
         {
-            var kernel = CreateKernel(Language.PowerShell);
+            var codeToSetVariable = language switch
+            {
+                Language.CSharp => "var x = 123;",
+                Language.FSharp => "let x = 123",
+                Language.PowerShell => "$x = 123"
+            };
 
-            const string yellow_foreground = "\u001b[93m";
-            const string red_foreground = "\u001b[91m";
-            const string reset = "\u001b[0m";
+            var kernel = CreateKernel(language);
 
-            const string warningMessage = "I am a warning message";
-            const string verboseMessage = "I am a verbose message";
-            const string outputMessage = "I am output";
-            const string debugMessage = "I am a debug message";
-            const string hostMessage = "I am a message written to host";
-            const string errorMessage = "I am a non-terminating error";
+            await kernel.SubmitCodeAsync(codeToSetVariable);
 
-            var command = new SubmitCode($@"
-Write-Warning '{warningMessage}'
-Write-Verbose '{verboseMessage}' -Verbose
-'{outputMessage}'
-Write-Debug '{debugMessage}' -Debug
-Write-Host '{hostMessage}' -NoNewline
-Write-Error '{errorMessage}'
-");
+            var languageKernel = kernel.ChildKernels.OfType<DotNetLanguageKernel>().Single();
 
-            await kernel.SendAsync(command);
+            var succeeded = languageKernel.TryGetVariable("x", out int x);
 
-            Assert.Collection(KernelEvents,
-                e => e.Should().BeOfType<CodeSubmissionReceived>(),
-                e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-                e => e.Should().BeOfType<StandardOutputValueProduced>().Which
-                    .Value.ToString().Should().Contain($"{yellow_foreground}WARNING: {warningMessage}{reset}"),
-                e => e.Should().BeOfType<StandardOutputValueProduced>().Which
-                    .Value.ToString().Should().Contain($"{yellow_foreground}VERBOSE: {verboseMessage}{reset}"),
-                e => e.Should().BeOfType<StandardOutputValueProduced>().Which
-                    .Value.ToString().Should().Be(outputMessage + Environment.NewLine),
-                e => e.Should().BeOfType<StandardOutputValueProduced>().Which
-                    .Value.ToString().Should().Contain($"{yellow_foreground}DEBUG: {debugMessage}{reset}"),
-                e => e.Should().BeOfType<StandardOutputValueProduced>().Which
-                    .Value.ToString().Should().Be(hostMessage),
-                e => e.Should().BeOfType<StandardOutputValueProduced>().Which
-                    .Value.ToString().Should().Contain($"{red_foreground}Write-Error: {red_foreground}{errorMessage}{reset}"),
-                e => e.Should().BeOfType<CommandHandled>());
+            using var _ = new AssertionScope();
+
+            succeeded.Should().BeTrue();
+            x.Should().Be(123);
         }
 
-        [Fact()]
-        public async Task PowerShell_progress_sends_updated_display_values()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp, Skip = "Requires FSI API changes")]
+        [InlineData(Language.PowerShell)]
+        public async Task SetVariableAsync_declares_the_specified_variable(Language language)
         {
-            var kernel = CreateKernel(Language.PowerShell);
-            var command = new SubmitCode(@"
-for ($j = 0; $j -le 4; $j += 4 ) {
-    $p = $j * 25
-    Write-Progress -Id 1 -Activity 'Search in Progress' -Status ""$p% Complete"" -PercentComplete $p
-    Start-Sleep -Milliseconds 300
-}
-");
-            await kernel.SendAsync(command);
+            var kernel = CreateKernel(language);
 
-            Assert.Collection(KernelEvents,
-                e => e.Should().BeOfType<CodeSubmissionReceived>(),
-                e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-                e => e.Should().BeOfType<DisplayedValueProduced>().Which
-                    .Value.Should().BeOfType<string>().Which
-                    .Should().Match("* Search in Progress* 0% Complete* [ * ] *"),
-                e => e.Should().BeOfType<DisplayedValueUpdated>().Which
-                    .Value.Should().BeOfType<string>().Which
-                    .Should().Match("* Search in Progress* 100% Complete* [ooo*ooo] *"),
-                e => e.Should().BeOfType<DisplayedValueUpdated>().Which
-                    .Value.Should().BeOfType<string>().Which
-                    .Should().Be(string.Empty),
-                e => e.Should().BeOfType<CommandHandled>());
+            var languageKernel = kernel.ChildKernels.OfType<DotNetLanguageKernel>().Single();
+
+            await languageKernel.SetVariableAsync("x", 123);
+
+            var succeeded = languageKernel.TryGetVariable("x", out int x);
+
+            using var _ = new AssertionScope();
+
+            succeeded.Should().BeTrue();
+            x.Should().Be(123);
+        }
+        
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp, Skip = "Requires FSI API changes")]
+        [InlineData(Language.PowerShell)]
+        public async Task SetVariableAsync_overwrites_an_existing_variable_of_the_same_type(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var languageKernel = kernel.ChildKernels.OfType<DotNetLanguageKernel>().Single();
+
+            await languageKernel.SetVariableAsync("x", 123);
+            await languageKernel.SetVariableAsync("x", 456);
+
+            var succeeded = languageKernel.TryGetVariable("x", out int x);
+
+            using var _ = new AssertionScope();
+
+            succeeded.Should().BeTrue();
+            x.Should().Be(456);
         }
 
-        [Fact()]
-        public void PowerShell_type_accelerators_present()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp, Skip = "Requires FSI API changes")]
+        [InlineData(Language.PowerShell)]
+        public async Task SetVariableAsync_can_redeclare_an_existing_variable_and_change_its_type(Language language)
         {
-            var kernel = CreateKernel(Language.PowerShell);
+            var kernel = CreateKernel(language);
 
-            var accelerator = typeof(PSObject).Assembly.GetType("System.Management.Automation.TypeAccelerators");
-            dynamic typeAccelerators = accelerator.GetProperty("Get").GetValue(null);
-            Assert.Equal(typeAccelerators["Graph.Scatter"].FullName, $"{typeof(Graph).FullName}+Scatter");
-            Assert.Equal(typeAccelerators["Layout"].FullName, $"{typeof(Layout).FullName}+Layout");
-            Assert.Equal(typeAccelerators["Chart"].FullName, typeof(Chart).FullName);
-        }
+            var languageKernel = kernel.ChildKernels.OfType<DotNetLanguageKernel>().Single();
 
-        [Fact()]
-        public async Task PowerShell_token_variables_work()
-        {
-            var kernel = CreateKernel(Language.PowerShell);
+            await languageKernel.SetVariableAsync("x", 123);
+            await languageKernel.SetVariableAsync("x", "hello");
 
-            await kernel.SendAsync(new SubmitCode("echo /this/is/a/path"));
-            await kernel.SendAsync(new SubmitCode("$$; $^"));
+            var succeeded = languageKernel.TryGetVariable("x", out string x);
 
-            Assert.Collection(KernelEvents,
-                e => e.Should()
-                        .BeOfType<CodeSubmissionReceived>()
-                        .Which.Code
-                        .Should().Be("echo /this/is/a/path"),
-                e => e.Should()
-                        .BeOfType<CompleteCodeSubmissionReceived>()
-                        .Which.Code
-                        .Should().Be("echo /this/is/a/path"),
-                e => e.Should()
-                        .BeOfType<StandardOutputValueProduced>()
-                        .Which.Value.ToString()
-                        .Should().Be("/this/is/a/path" + Environment.NewLine),
-                e => e.Should().BeOfType<CommandHandled>(),
-                e => e.Should()
-                        .BeOfType<CodeSubmissionReceived>()
-                        .Which.Code
-                        .Should().Be("$$; $^"),
-                e => e.Should()
-                        .BeOfType<CompleteCodeSubmissionReceived>()
-                        .Which.Code
-                        .Should().Be("$$; $^"),
-                e => e.Should()
-                        .BeOfType<StandardOutputValueProduced>()
-                        .Which.Value.ToString()
-                        .Should().Be("/this/is/a/path" + Environment.NewLine),
-                e => e.Should()
-                        .BeOfType<StandardOutputValueProduced>()
-                        .Which.Value.ToString()
-                        .Should().Be("echo" + Environment.NewLine),
-                e => e.Should().BeOfType<CommandHandled>());
-        }
+            using var _ = new AssertionScope();
 
-        [Fact()]
-        public async Task PowerShell_get_history_should_work()
-        {
-            var kernel = CreateKernel(Language.PowerShell);
-
-            await kernel.SendAsync(new SubmitCode("Get-Verb > $null"));
-            await kernel.SendAsync(new SubmitCode("echo bar > $null"));
-            await kernel.SendAsync(new SubmitCode("Get-History | % CommandLine"));
-
-            var outputs = KernelEvents.OfType<StandardOutputValueProduced>();
-            outputs.Should().HaveCount(2);
-            Assert.Collection(outputs,
-                e => e.Value.As<string>().Should().Be("Get-Verb > $null" + Environment.NewLine),
-                e => e.Value.As<string>().Should().Be("echo bar > $null" + Environment.NewLine));
-        }
-
-        [Fact()]
-        public async Task PowerShell_native_executable_output_is_collected()
-        {
-            var kernel = CreateKernel(Language.PowerShell);
-
-            var command = Platform.IsWindows
-                ? new SubmitCode("ping.exe -n 1 localhost")
-                : new SubmitCode("ping -c 1 localhost");
-
-            await kernel.SendAsync(command);
-
-            var outputs = KernelEvents.OfType<StandardOutputValueProduced>();
-            outputs.Should().HaveCountGreaterThan(1);
-            outputs.Select(e => e.Value.ToString())
-                .First(s => s.Trim().Length > 0)
-                .ToLowerInvariant()
-                .Should().Match("*ping*data*");
+            succeeded.Should().BeTrue();
+            x.Should().Be("hello");
         }
     }
 }

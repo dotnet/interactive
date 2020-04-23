@@ -112,6 +112,7 @@ namespace Microsoft.DotNet.Interactive.Extensions
             if (loadExtensions)
             {
                 var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyFile.FullName);
+
                 var extensionTypes = assembly
                                      .ExportedTypes
                                      .Where(t => t.CanBeInstantiated() && typeof(IKernelExtension).IsAssignableFrom(t))

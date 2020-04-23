@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             _lockReleaser.Dispose();
         }
 
-        protected KernelBase CreateKernel(Language language)
+        protected CompositeKernel CreateKernel(Language language)
         {
             var kernelBase = language switch
             {

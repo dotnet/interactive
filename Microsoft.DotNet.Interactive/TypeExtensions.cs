@@ -14,4 +14,4 @@ namespace Microsoft.DotNet.Interactive
                    && !type.IsInterface;
         }
     }
-}   
+}

@@ -16,7 +16,7 @@ using Microsoft.DotNet.Interactive.Extensions;
 namespace Microsoft.DotNet.Interactive
 {
     public class CompositeKernel : 
-        KernelBase, 
+        KernelBase,
         IExtensibleKernel,
         IEnumerable<IKernel>
     {
@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public void Add(IKernel kernel, IEnumerable<string> aliases = null)
+        public void Add(IKernel kernel, IReadOnlyCollection<string> aliases = null)
         {
             if (kernel == null)
             {
@@ -55,12 +55,14 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (kernelBase.ParentKernel != null)
                 {
-                    throw new InvalidOperationException("Kernel already has a parent.");
+                    throw new InvalidOperationException($"Kernel \"{kernelBase.Name}\" already has a parent: \"{kernelBase.ParentKernel.Name}\".");
                 }
 
                 kernelBase.ParentKernel = this;
                 kernelBase.AddMiddleware(LoadExtensions);
             }
+
+            AddChooseKernelDirective(kernel, aliases);
 
             _childKernels.Add(kernel);
 
@@ -69,6 +71,14 @@ namespace Microsoft.DotNet.Interactive
                 DefaultKernelName = kernel.Name;
             }
 
+            RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));
+            RegisterForDisposal(kernel);
+        }
+
+        private void AddChooseKernelDirective(
+            IKernel kernel, 
+            IEnumerable<string> aliases)
+        {
             var chooseKernelCommand = new ChooseKernelDirective(kernel);
 
             if (aliases is { })
@@ -80,8 +90,6 @@ namespace Microsoft.DotNet.Interactive
             }
 
             AddDirective(chooseKernelCommand);
-            RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));
-            RegisterForDisposal(kernel);
         }
 
         private async Task LoadExtensions(
@@ -148,12 +156,6 @@ namespace Microsoft.DotNet.Interactive
             }
 
             return kernel ?? this;
-        }
-
-        public override bool TryGetVariable(string name, out object value)
-        {
-            value = null;
-            return false;
         }
 
         internal override async Task HandleAsync(

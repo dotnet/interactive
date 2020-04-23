@@ -212,7 +212,7 @@ namespace Microsoft.DotNet.Interactive
 
                     if (result.Succeeded)
                     {
-                        (kernel as ISupportNuget)?.RegisterNugetResolvedPackageReferences(result.ResolvedReferences);
+                        (kernel as ISupportNuget)?.RegisterResolvedPackageReferences(result.ResolvedReferences);
 
                         foreach (var resolvedReference in result.ResolvedReferences)
                         {

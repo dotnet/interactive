@@ -5,9 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Interactive.DependencyManager;
 using Microsoft.CodeAnalysis;
@@ -25,12 +25,11 @@ using Microsoft.DotNet.Interactive.Utility;
 using Newtonsoft.Json.Linq;
 using XPlot.Plotly;
 using Task = System.Threading.Tasks.Task;
-using System.ComponentModel;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
     public class CSharpKernel :
-        KernelBase,
+        DotNetLanguageKernel,
         IExtensibleKernel,
         ISupportNuget
     {
@@ -43,9 +42,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
             new CSharpParseOptions(LanguageVersion.Default, kind: SourceCodeKind.Script);
 
         private WorkspaceFixture _fixture;
-
         private AssemblyResolutionProbe _assemblyProbingPaths;
         private NativeResolutionProbe _nativeProbingRoots;
+        private readonly Lazy<DependencyProvider> _dependencies;
 
         internal ScriptOptions ScriptOptions =
             ScriptOptions.Default
@@ -74,7 +73,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             RegisterForDisposal(() =>
             {
                 ScriptState = null;
-                (_dependencies as IDisposable)?.Dispose();
             });
         }
 
@@ -86,19 +84,34 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
         }
 
-        public override bool TryGetVariable(
+        public override bool TryGetVariable<T>(
             string name,
-            out object value)
+            out T value)
         {
             if (ScriptState?.Variables
                            .LastOrDefault(v => v.Name == name) is { } variable)
             {
-                value = variable.Value;
+                value = (T) variable.Value;
                 return true;
             }
 
             value = default;
             return false;
+        }
+
+        public override async Task SetVariableAsync(string name, object value)
+        {
+            var csharpTypeDeclaration = new StringWriter();
+            
+            value.GetType().WriteCSharpDeclarationTo(csharpTypeDeclaration);
+            
+
+
+            await RunAsync($"{csharpTypeDeclaration} {name} = default;");
+
+            var scriptVariable = ScriptState.GetVariable(name);
+
+            scriptVariable.Value = value;
         }
 
         public override Task<LspResponse> LspMethod(string methodName, JObject request)
@@ -121,13 +134,13 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public TextDocumentHoverResponse TextDocumentHover(HoverParams hoverParams)
         {
-            return new TextDocumentHoverResponse()
+            return new TextDocumentHoverResponse
             {
-                Contents = new MarkupContent()
+                Contents = new MarkupContent
                 {
                     Kind = MarkupKind.Markdown,
                     Value = $"textDocument/hover at position ({hoverParams.Position.Line}, {hoverParams.Position.Character}) with `markdown`",
-                },
+                }
             };
         }
 
@@ -160,33 +173,16 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             if (!context.CancellationToken.IsCancellationRequested)
             {
-                ScriptOptions = ScriptOptions.WithMetadataResolver(
-                    ScriptMetadataResolver.Default.WithBaseDirectory(
-                        Directory.GetCurrentDirectory()));
-
                 try
                 {
-                    if (ScriptState == null)
-                    {
-                        ScriptState = await CSharpScript.RunAsync(
-                                                            code,
-                                                            ScriptOptions,
-                                                            cancellationToken: context.CancellationToken)
-                                                        .UntilCancelled(context.CancellationToken);
-                    }
-                    else
-                    {
-                        ScriptState = await ScriptState.ContinueWithAsync(
-                                                           code,
-                                                           ScriptOptions,
-                                                           catchException: e =>
-                                                           {
-                                                               exception = e;
-                                                               return true;
-                                                           },
-                                                           cancellationToken: context.CancellationToken)
-                                                       .UntilCancelled(context.CancellationToken);
-                    }
+                    await RunAsync(
+                        code,
+                        context.CancellationToken,
+                        e =>
+                        {
+                            exception = e;
+                            return true;
+                        });
                 }
                 catch (CompilationErrorException cpe)
                 {
@@ -229,6 +225,34 @@ namespace Microsoft.DotNet.Interactive.CSharp
             else
             {
                 context.Fail(null, "Command cancelled");
+            }
+        }
+
+        private async Task RunAsync(
+            string code, 
+            CancellationToken cancellationToken = default,
+            Func<Exception, bool> catchException = default)
+        {
+            ScriptOptions = ScriptOptions.WithMetadataResolver(
+                ScriptMetadataResolver.Default.WithBaseDirectory(
+                    Directory.GetCurrentDirectory()));
+
+            if (ScriptState == null)
+            {
+                ScriptState = await CSharpScript.RunAsync(
+                                                    code,
+                                                    ScriptOptions,
+                                                    cancellationToken: cancellationToken)
+                                                .UntilCancelled(cancellationToken);
+            }
+            else
+            {
+                ScriptState = await ScriptState.ContinueWithAsync(
+                                                   code,
+                                                   ScriptOptions,
+                                                   catchException: catchException,
+                                                   cancellationToken: cancellationToken)
+                                               .UntilCancelled(cancellationToken);
             }
         }
 
@@ -308,7 +332,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 context);
         }
 
-        private Lazy<DependencyProvider> _dependencies;
 
         private DependencyProvider GetDependencyProvider()
         {
@@ -323,7 +346,13 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 throw new ArgumentNullException(nameof(_nativeProbingRoots));
             }
 
-            return new DependencyProvider(_assemblyProbingPaths, _nativeProbingRoots);
+            var dependencyProvider = new DependencyProvider(
+                _assemblyProbingPaths, 
+                _nativeProbingRoots);
+
+            RegisterForDisposal(dependencyProvider);
+
+            return dependencyProvider;
         }
 
         // Set assemblyProbingPaths, nativeProbingRoots for Kernel.
@@ -331,19 +360,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
         // They are used by the dependecymanager for Assembly and Native dll resolving
         void ISupportNuget.Initialize(AssemblyResolutionProbe assemblyProbingPaths, NativeResolutionProbe nativeProbingRoots)
         {
-            if(assemblyProbingPaths == null)
-            {
-                throw new ArgumentNullException(nameof(assemblyProbingPaths));
-            }
-            if (nativeProbingRoots == null)
-            {
-                throw new ArgumentNullException(nameof(nativeProbingRoots));
-            }
-            _assemblyProbingPaths = assemblyProbingPaths;
-            _nativeProbingRoots = nativeProbingRoots;
+            _assemblyProbingPaths = assemblyProbingPaths ?? throw new ArgumentNullException(nameof(assemblyProbingPaths));
+            _nativeProbingRoots = nativeProbingRoots ?? throw new ArgumentNullException(nameof(nativeProbingRoots));
         }
 
-        void ISupportNuget.RegisterNugetResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
+        void ISupportNuget.RegisterResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
         {
             var references = resolvedReferences
                              .SelectMany(r => r.AssemblyPaths)

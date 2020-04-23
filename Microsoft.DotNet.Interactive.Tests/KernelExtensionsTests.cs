@@ -5,12 +5,61 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
     public class KernelExtensionsTests
     {
+        [Fact]
+        public void FindKernel_finds_a_subkernel_of_a_composite_kernel_by_name()
+        {
+            var one = new FakeKernel("one");
+            var two = new FakeKernel("two");
+            using var compositeKernel = new CompositeKernel
+            {
+                one,
+                two,
+            };
+
+            var found = compositeKernel.FindKernel("two");
+
+            found.Should().BeSameAs(two);
+        }
+
+        [Fact]
+        public void FindKernel_finds_a_subkernel_of_a_parent_composite_kernel_by_name()
+        {
+            var one = new FakeKernel("one");
+            var two = new FakeKernel("two");
+            using var compositeKernel = new CompositeKernel
+            {
+                one,
+                two,
+            };
+
+            var found = one.FindKernel("two");
+
+            found.Should().BeSameAs(two);
+        }
+
+        [Fact]
+        public void FindKernel_returns_null_for_unknown_kernel()
+        {
+            var one = new FakeKernel("one");
+            var two = new FakeKernel("two");
+            using var compositeKernel = new CompositeKernel
+            {
+                one,
+                two,
+            };
+
+            var found = compositeKernel.FindKernel("three");
+
+            found.Should().BeNull();
+        }
+
         [Fact]
         public void VisitSubkernels_does_not_recurse_by_default()
         {

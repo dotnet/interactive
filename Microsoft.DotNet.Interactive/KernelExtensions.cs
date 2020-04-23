@@ -6,11 +6,13 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Rendering;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using static System.CommandLine.Rendering.Ansi.Color;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
@@ -20,6 +22,25 @@ namespace Microsoft.DotNet.Interactive
     public static class KernelExtensions
     {
         private static readonly TextSpanFormatter _textSpanFormatter = new TextSpanFormatter();
+
+        public static IKernel FindKernel(this IKernel kernelBase, string name)
+        {
+            var root = kernelBase
+                       .RecurseWhileNotNull(k => k switch
+                           {
+                               KernelBase kb => kb.ParentKernel, 
+                               _ => null
+                           })
+                       .LastOrDefault();
+
+            return root switch
+            {
+                CompositeKernel c => c.ChildKernels
+                                      .SingleOrDefault(k => k.Name == name),
+                IKernel k when k.Name == name => k,
+                _ => null
+            };
+        }
 
         public static Task<IKernelCommandResult> SendAsync(
             this IKernel kernel,
@@ -49,7 +70,6 @@ namespace Microsoft.DotNet.Interactive
             where T : KernelBase
         {
             var command = new Command("#!log", "Enables session logging.");
-
 
             var logStarted = false;
 
@@ -98,6 +118,31 @@ namespace Microsoft.DotNet.Interactive
             });
 
             kernel.AddDirective(command);
+
+            return kernel;
+        }
+
+        public static T UseDotNetVariableSharing<T>(this T kernel)
+            where T : DotNetLanguageKernel
+        {
+            var share = new Command("#!share", "Share a .NET object between subkernels")
+            {
+                new Option<string>("--from"),
+                new Argument<string>("name")
+            };
+
+            share.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (from, name, context) =>
+            {
+                if (kernel.FindKernel(from) is DotNetLanguageKernel fromKernel)
+                {
+                    if (fromKernel.TryGetVariable(name, out object shared))
+                    {
+                        await kernel.SetVariableAsync(name, shared);
+                    }
+                }
+            });
+
+            kernel.AddDirective(share);
 
             return kernel;
         }

@@ -1,12 +1,9 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.CommandLine;
-using System.CommandLine.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -38,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                       .Should()
                       .ContainAll(
                           ".NET Interactive",
-                          "Version", 
+                          "Version",
                           "https://github.com/dotnet/interactive");
             }
         }

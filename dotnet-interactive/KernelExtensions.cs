@@ -6,7 +6,6 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Recipes;
 using XPlot.DotNet.Interactive.KernelExtensions;

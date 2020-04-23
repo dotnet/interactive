@@ -14,7 +14,6 @@ open System.Threading.Tasks
 
 open Microsoft.CodeAnalysis.Tags
 open Microsoft.DotNet.Interactive
-open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive.Commands
 open Microsoft.DotNet.Interactive.Events
 open Microsoft.DotNet.Interactive.Extensions
@@ -26,7 +25,7 @@ open FSharp.Compiler.Scripting
 open FSharp.Compiler.SourceCodeServices
 
 type FSharpKernel() as this =
-    inherit KernelBase("fsharp")
+    inherit DotNetLanguageKernel("fsharp")
 
     static let lockObj = Object();
 
@@ -40,13 +39,11 @@ type FSharpKernel() as this =
         do registerForDisposal(fun () -> script.ValueBound.RemoveHandler valueBoundHandler)
         script
 
-    let extensionLoader: AssemblyBasedExtensionLoader = new AssemblyBasedExtensionLoader()
+    let extensionLoader: AssemblyBasedExtensionLoader = AssemblyBasedExtensionLoader()
 
     let script = lazy createScript this.RegisterForDisposal
     do base.RegisterForDisposal(fun () -> if script.IsValueCreated then (script.Value :> IDisposable).Dispose())
     let mutable cancellationTokenSource = new CancellationTokenSource()
-
-    let messageMap = Dictionary<string, string>()
 
     let getLineAndColumn (text: string) offset =
         let rec getLineAndColumn' i l c =
@@ -149,10 +146,10 @@ type FSharpKernel() as this =
             // ISupportNuget.Initialize must be invoked prior to creating the DependencyManager
             // With non null funcs
             if isNull _assemblyProbingPaths then
-                raise (new ArgumentNullException("_assemblyProbingPaths"))
+                raise (new InvalidOperationException("_assemblyProbingPaths is null"))
 
             if isNull _nativeProbingRoots then
-                raise (new ArgumentNullException("_nativeProbingRoots"))
+                raise (new InvalidOperationException("_nativeProbingRoots is null"))
             new DependencyProvider(_assemblyProbingPaths, _nativeProbingRoots)
         lazy (createDependencyProvider ())
 
@@ -178,13 +175,16 @@ type FSharpKernel() as this =
     override _.HandleRequestCompletion(command: RequestCompletion, context: KernelInvocationContext): Task =
         handleRequestCompletion command context |> Async.StartAsTask :> Task
 
-    override this.TryGetVariable(name: string, [<Out>] value: Object byref) =
+    override _.TryGetVariable<'a>(name: string, [<Out>] value: 'a byref) =
         match this.GetCurrentVariable(name) with
         | Some(cv) ->
-            value <- cv.Value
+            value <- cv.Value :?> 'a
             true
         | None ->
             false
+
+    override _.SetVariableAsync(name: string, value: Object) : Task = 
+        raise (NotImplementedException())
 
     interface ISupportNuget with
         member this.Initialize (assemblyProbingPaths: AssemblyResolutionProbe, nativeProbingRoots: NativeResolutionProbe) =
@@ -192,14 +192,14 @@ type FSharpKernel() as this =
             // ISupportNuget.Initialize must be invoked prior to creating the DependencyManager
             // With non null funcs
             if isNull assemblyProbingPaths then
-                raise (new ArgumentNullException("assemblyProbingPaths"))
+                raise (ArgumentNullException("assemblyProbingPaths"))
             if isNull nativeProbingRoots then
-                raise (new ArgumentNullException("nativeProbingRoots"))
+                raise (ArgumentNullException("nativeProbingRoots"))
 
             _assemblyProbingPaths <- assemblyProbingPaths
             _nativeProbingRoots <- nativeProbingRoots
 
-        member this.RegisterNugetResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
+        member this.RegisterResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
             // Generate #r and #I from packageReferences
             let sb = StringBuilder()
             let hashset = HashSet()

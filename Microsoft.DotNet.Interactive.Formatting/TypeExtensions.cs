@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -10,7 +11,7 @@ using System.Runtime.CompilerServices;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    internal static class TypeExtensions
+    internal static partial class TypeExtensions
     {
         internal static bool CanBeInstantiated(this Type type)
         {

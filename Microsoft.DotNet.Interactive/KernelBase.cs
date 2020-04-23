@@ -193,8 +193,6 @@ namespace Microsoft.DotNet.Interactive
 
         public IReadOnlyCollection<ICommand> Directives => SubmissionParser.Directives;
 
-        public abstract bool TryGetVariable(string name, out object value);
-
         public void AddDirective(Command command) => SubmissionParser.AddDirective(command); 
         
         public virtual Task<LspResponse> LspMethod(string methodName, JObject request)
