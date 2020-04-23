@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             "#!fsharp",
             "let x = 123",
             "#!csharp",
-            "(GetKernel(\"fsharp\") as Microsoft.DotNet.Interactive.LanguageKernel).TryGetVariable(\"x\", out int x);\nx")]
+            "(GetKernel(\"fsharp\") as Microsoft.DotNet.Interactive.DotNetLanguageKernel).TryGetVariable(\"x\", out int x);\nx")]
         [InlineData(
             "#!fsharp",
             "let x = 123",
