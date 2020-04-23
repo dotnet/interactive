@@ -49,13 +49,8 @@ namespace Microsoft.DotNet.Interactive
         {
             var kernel = KernelInvocationContext.Current.HandlingKernel;
 
-            IKernel foundKernel = null;
-
-            {
-                foundKernel = kernel.FindKernel(name);
-            }
-
-            return foundKernel ?? throw new KeyNotFoundException($"Kernel \"{name}\" was not found.");
+            return kernel.FindKernel(name) ??
+                   throw new KeyNotFoundException($"Kernel \"{name}\" was not found.");
         }
     }
 }
