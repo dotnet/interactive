@@ -42,7 +42,12 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                     _startOptions = startupOptions;
                     return Task.FromResult(1);
                 },
-                telemetry: new FakeTelemetry(),
+                startStdIO: (startupOptions, kernel, console) =>
+                {
+                    _startOptions = startupOptions;
+                    return Task.FromResult(1);
+                },
+            telemetry: new FakeTelemetry(),
                 firstTimeUseNoticeSentinel: new NopFirstTimeUseNoticeSentinel());
 
             _connectionFile = new FileInfo(Path.GetTempFileName());
@@ -163,15 +168,11 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public void jupyter_command_enables_http_api_when_http_port_range_is_specified()
+        public async Task jupyter_command_enables_http_api_when_http_port_range_is_specified()
         {
-            var result = _parser.Parse($"jupyter --http-port-range 3000-5000 {_connectionFile}");
-            
-            var binder = new ModelBinder<StartupOptions>();
+            await  _parser.InvokeAsync($"jupyter --http-port-range 3000-5000 {_connectionFile}");
 
-            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
-
-            options.EnableHttpApi.Should().BeTrue();
+            _startOptions.EnableHttpApi.Should().BeTrue();
         }
 
         [Fact]
@@ -191,15 +192,10 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public void jupyter_does_not_enable_http_api_by_default()
+        public async Task jupyter_does_not_enable_http_api_by_default()
         {
-            var result = _parser.Parse($"jupyter {_connectionFile}");
-
-            var binder = new ModelBinder<StartupOptions>();
-
-            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
-
-            options.EnableHttpApi.Should().BeFalse();
+            await  _parser.InvokeAsync($"jupyter {_connectionFile}");
+            _startOptions.EnableHttpApi.Should().BeFalse();
         }
 
         [Fact]
@@ -235,26 +231,24 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         public void stdio_command_defaults_to_csharp_kernel()
         {
             var result = _parser.Parse("stdio");
-            var binder = new ModelBinder<KernelServerOptions>();
-            var options = (KernelServerOptions)binder.CreateInstance(new BindingContext(result));
+            var binder = new ModelBinder<StdIOOptions>();
+            var options = (StdIOOptions)binder.CreateInstance(new BindingContext(result));
             options.DefaultKernel.Should().Be("csharp");
         }
 
         [Fact]
-        public void stdio_command_does_not_enable_http_api_by_default()
+        public async Task stdio_command_does_not_enable_http_api_by_default()
         {
-            var result = _parser.Parse("stdio");
-            var binder = new ModelBinder<StartupOptions>();
-            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
-            options.EnableHttpApi.Should().BeFalse();
+            await _parser.InvokeAsync("stdio");
+            _startOptions.EnableHttpApi.Should().BeFalse();
         }
 
         [Fact]
         public void stdio_command_honors_default_kernel_option()
         {
             var result = _parser.Parse("stdio --default-kernel bsharp");
-            var binder = new ModelBinder<KernelServerOptions>();
-            var options = (KernelServerOptions)binder.CreateInstance(new BindingContext(result));
+            var binder = new ModelBinder<StdIOOptions>();
+            var options = (StdIOOptions)binder.CreateInstance(new BindingContext(result));
             options.DefaultKernel.Should().Be("bsharp");
         }
 
