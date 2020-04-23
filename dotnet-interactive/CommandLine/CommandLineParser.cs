@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
         public delegate Task StartStdIO(
             StartupOptions options,
-            IKernel kernel,
+            KernelBase kernel,
             IConsole console);
 
         public static Parser Create(
@@ -325,7 +325,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     };
                     return frontendEnvironment;
                 })
-                .AddSingleton<IKernel>(c =>
+                .AddSingleton(c =>
                 {
                     var frontendEnvironment = c.GetRequiredService<BrowserFrontendEnvironment>();
                     var kernel = CreateKernel(defaultKernel, frontendEnvironment, startupOptions,
@@ -333,7 +333,11 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                     afterKernelCreation?.Invoke(kernel);
                     return kernel;
-                });
+                })
+                .AddSingleton<IKernel>(c => c.GetRequiredService<KernelBase>());
+            {
+
+            };
 
             return services;
         }
