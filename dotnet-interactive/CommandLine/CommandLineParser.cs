@@ -9,7 +9,6 @@ using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Clockwise;
@@ -22,7 +21,6 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Microsoft.DotNet.Interactive.PowerShell;
-using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -66,22 +64,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             jupyter ??= JupyterCommand.Do;
 
-            startStdIO ??= async (startupOptions, kernel, console) =>
-            {
-                var disposable = Program.StartToolLogging(startupOptions);
-
-                if (kernel is KernelBase kernelBase)
-                {
-                    kernelBase.RegisterForDisposal(disposable);
-                }
-
-                var server = new StandardIOKernelServer(
-                    kernel,
-                    Console.In,
-                    Console.Out);
-
-                await server.Input.LastAsync();
-            };
+            startStdIO ??= StdIOCommand.Do;
 
             // Setup first time use notice sentinel.
             firstTimeUseNoticeSentinel ??= new FirstTimeUseNoticeSentinel(VersionSensor.Version().AssemblyInformationalVersion);
@@ -249,31 +232,15 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context)
                 {
+                    services = RegisterKernelInServiceCollection(services, startupOptions, options.DefaultKernel);
+
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
-                            .AddSingleton(_ =>
-                            {
-                                var frontendEnvironment = new BrowserFrontendEnvironment
-                                {
-                                    ApiUri = new Uri($"http://localhost:{startupOptions.HttpPort.PortNumber}")
-                                };
-                                return frontendEnvironment;
-                            })
-                            .AddSingleton<FrontendEnvironment>(c => c.GetService<BrowserFrontendEnvironment>())
+                        .AddSingleton<FrontendEnvironment>(c => c.GetService<BrowserFrontendEnvironment>())
                             .AddSingleton(c =>
                             {
                                 return CommandScheduler.Create<JupyterRequestContext>(delivery => c.GetRequiredService<ICommandHandler<JupyterRequestContext>>()
                                                                                                    .Trace()
                                                                                                    .Handle(delivery));
-                            })
-                            .AddSingleton(c =>
-                            {
-                                var frontendEnvironment = c.GetRequiredService<BrowserFrontendEnvironment>();
-
-                                var kernel = CreateKernel(options.DefaultKernel,
-                                    frontendEnvironment,
-                                    startupOptions,
-                                    c.GetRequiredService<HttpProbingSettings>());
-                                return kernel;
                             })
                             .AddSingleton(c => new JupyterRequestContextHandler(
                                                   c.GetRequiredService<IKernel>())
@@ -306,21 +273,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             startupOptions.HttpPort = HttpPort.Auto;
                         }
 
-                        services
-                            .AddSingleton(_ =>
-                            {
-                                var frontendEnvironment = new BrowserFrontendEnvironment
-                                {
-                                    ApiUri = new Uri($"http://localhost:{startupOptions.HttpPort.PortNumber}")
-                                };
-                                return frontendEnvironment;
-                            })
-                            .AddSingleton(c =>
-                            {
-                                var frontendEnvironment = c.GetRequiredService<BrowserFrontendEnvironment>();
-                                return CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions,
-                                    c.GetRequiredService<HttpProbingSettings>());
-                            });
+                        RegisterKernelInServiceCollection(services, startupOptions, options.DefaultKernel);
 
                         return jupyter(startupOptions, console, startServer, context);
                     });
@@ -340,51 +293,52 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     httpPortRangeOption
                 };
 
-                command.Handler = CommandHandler.Create<StartupOptions, KernelServerOptions, IConsole, InvocationContext>(
+                command.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
                     (startupOptions, options, console, context) =>
                     {
                         if (startupOptions.EnableHttpApi)
                         {
-                            services
-                                .AddSingleton(_ =>
-                                {
-                                    var frontendEnvironment = new BrowserFrontendEnvironment
-                                    {
-                                        ApiUri = new Uri($"http://localhost:{startupOptions.HttpPort.PortNumber}")
-                                    };
-                                    return frontendEnvironment;
-                                })
-                                .AddSingleton(c =>
-                                {
-                                    var frontendEnvironment = c.GetRequiredService<BrowserFrontendEnvironment>();
-                                    var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions,
-                                        c.GetRequiredService<HttpProbingSettings>());
-
-                                    var server = new StandardIOKernelServer(
-                                        kernel,
-                                        Console.In,
-                                        Console.Out);
-
-                                    return kernel;
-                                });
-
+                            RegisterKernelInServiceCollection(services, startupOptions, options.DefaultKernel,
+                                kernel => StdIOCommand.CreateServer(kernel, console));
                             startServer?.Invoke(startupOptions, context);
                             return Task.FromResult(0);
                         }
-                        else
-                        {
-                            return startStdIO(
-                                startupOptions,
-                                CreateKernel(options.DefaultKernel,
-                                    new BrowserFrontendEnvironment(), startupOptions, null), console);
-                        }
+
+                        return startStdIO(
+                            startupOptions,
+                            CreateKernel(options.DefaultKernel,
+                                new BrowserFrontendEnvironment(), startupOptions, null), console);
                     });
 
                 return command;
             }
         }
 
-        private static IKernel CreateKernel(
+        private static IServiceCollection RegisterKernelInServiceCollection(IServiceCollection services, StartupOptions startupOptions, string defaultKernel, Action<IKernel> afterKernelCreation = null)
+        {
+            services
+                .AddSingleton(_ =>
+                {
+                    var frontendEnvironment = new BrowserFrontendEnvironment
+                    {
+                        ApiUri = new Uri($"http://localhost:{startupOptions.HttpPort.PortNumber}")
+                    };
+                    return frontendEnvironment;
+                })
+                .AddSingleton<IKernel>(c =>
+                {
+                    var frontendEnvironment = c.GetRequiredService<BrowserFrontendEnvironment>();
+                    var kernel =  CreateKernel(defaultKernel, frontendEnvironment, startupOptions,
+                        c.GetRequiredService<HttpProbingSettings>());
+                    
+                    afterKernelCreation?.Invoke(kernel);
+                    return kernel;
+                });
+
+            return services;
+        }
+
+        private static CompositeKernel CreateKernel(
             string defaultKernelName,
             FrontendEnvironment frontendEnvironment,
             StartupOptions startupOptions,

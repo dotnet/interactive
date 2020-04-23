@@ -3,9 +3,9 @@
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine
 {
-    public class KernelServerOptions
+    public class StdIOOptions
     {
-        public KernelServerOptions(string defaultKernel)
+        public StdIOOptions(string defaultKernel)
         {
             DefaultKernel = defaultKernel;
         }
