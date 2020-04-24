@@ -5,10 +5,12 @@ import { Event, EventEnvelope } from './interfaces';
 export type CommandEventCallback = {(event: Event, eventType: string): void};
 
 export class InteractiveClient {
-    private buffer: string = "";
+    private buffer: string = '';
     private callbacks: Map<string, Array<CommandEventCallback>> = new Map();
     private next: number = 1;
     private stdin: Writable;
+
+    private _targetKernelName: string = 'csharp';
 
     constructor() {
         let childProcess = cp.spawn('dotnet', ['interactive', 'stdio']);
@@ -42,6 +44,14 @@ export class InteractiveClient {
         this.stdin = childProcess.stdin;
     }
 
+    get targetKernelName(): string {
+        return this._targetKernelName;
+    }
+
+    set targetKernelName(value: string) {
+        this._targetKernelName = value;
+    }
+
     private registerCallback(token: string, callback: CommandEventCallback) {
         if (!this.callbacks.has(token)) {
             this.callbacks.set(token, []);
@@ -73,32 +83,32 @@ export class InteractiveClient {
             code: code,
             cursorPosition: position,
         };
-        this.submitCommand("RequestCompletion", command, callback);
+        this.submitCommand('RequestCompletion', command, callback);
     }
 
     async hover(code: string, line: number, character: number, callback: CommandEventCallback) {
         let b = Buffer.from(code);
         let command = {
-            documentIdentifier: "data:text/plain;base64," + b.toString('base64'),
+            documentIdentifier: 'data:text/plain;base64,' + b.toString('base64'),
             position: {
                 line: line,
                 character: character,
             }
         };
-        this.submitCommand("RequestHoverText", command, callback);
+        this.submitCommand('RequestHoverText', command, callback);
     }
 
     async submitCode(code: string, callback: CommandEventCallback) {
         let command = {
             code: code,
             submissionType: 0,
-            targetKernelName: null
         };
-        this.submitCommand("SubmitCode", command, callback);
+        this.submitCommand('SubmitCode', command, callback);
     }
 
     private async submitCommand(commandType: string, command: any, callback: CommandEventCallback) {
-        let token = "abc" + this.next++;
+        let token = 'abc' + this.next++;
+        command.targetKernelName = this._targetKernelName;
         let submit = {
             token: token,
             commandType: commandType,

@@ -29,7 +29,8 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
         return new Promise<vscode.CompletionList>((resolve, reject) => {
             let handled = false;
             this.client.completion(document.getText(), position.line, position.character, (event, eventType) => {
-                if (eventType === "CommandHandled" && !handled) {
+                if (eventType === 'CommandHandled' && !handled) {
+                    handled = true;
                     reject();
                 } else if (eventType === 'CompletionRequestCompleted') {
                     handled = true;
@@ -59,12 +60,12 @@ export class HoverProvider implements vscode.HoverProvider {
                 let content: vscode.MarkedString | undefined = undefined;
                 let range: vscode.Range | undefined = undefined;
                 switch (eventType) {
-                    case "CommandHandled":
+                    case 'CommandHandled':
                         if (!handled) {
                             reject();
                         }
                         break;
-                    case "HoverMarkdownProduced":
+                    case 'HoverMarkdownProduced':
                         handled = true;
                         {
                             let hover = <HoverMarkdownProduced>event;
@@ -72,7 +73,7 @@ export class HoverProvider implements vscode.HoverProvider {
                             range = convertToRange(hover.range);
                         }
                         break;
-                    case "HoverPlainTextProduced":
+                    case 'HoverPlainTextProduced':
                         handled = true;
                         {
                             let hover = <HoverPlainTextProduced>event;

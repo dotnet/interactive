@@ -3,6 +3,7 @@ import { InteractiveClient } from './interactiveClient';
 import { CommandFailed, ReturnValueProduced, StandardOutputValueProduced } from './interfaces';
 
 interface NotebookFile {
+    targetKernelName: string;
     cells: Array<RawNotebookCell>;
 }
 
@@ -32,9 +33,12 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
             notebook = <NotebookFile>JSON.parse(contents);
         } catch {
             notebook = {
-                cells: []
+                targetKernelName: 'csharp',
+                cells: [],
             };
         }
+
+        this.client.targetKernelName = notebook.targetKernelName;
 
         editor.edit(editBuilder => {
             for (let cell of notebook.cells) {
@@ -70,19 +74,19 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         let source = cell.source.toString();
         return this.client.submitCode(source, (event, eventType) => {
             switch (eventType) {
-                case "CommandFailed":
+                case 'CommandFailed':
                     {
                         let err = <CommandFailed>event;
                         let output: vscode.CellErrorOutput = {
                             outputKind: vscode.CellOutputKind.Error,
-                            ename: "ename",
+                            ename: 'Error',
                             evalue: err.message,
                             traceback: [],
                         };
                         cell.outputs = [output];
                     }
                     break;
-                case "StandardOutputValueProduced":
+                case 'StandardOutputValueProduced':
                     {
                         let st = <StandardOutputValueProduced>event;
                         let output: vscode.CellStreamOutput = {
@@ -92,7 +96,7 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
                         cell.outputs = [output];
                     }
                     break;
-                case "ReturnValueProduced":
+                case 'ReturnValueProduced':
                     {
                         let rvt = <ReturnValueProduced>event;
                         let data: { [key: string]: any } = {};
@@ -112,7 +116,8 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
 
     async save(document: vscode.NotebookDocument): Promise<boolean> {
         let notebook: NotebookFile = {
-            cells: []
+            targetKernelName: this.client.targetKernelName,
+            cells: [],
         };
         for (let cell of document.cells) {
             notebook.cells.push({
