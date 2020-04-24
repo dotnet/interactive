@@ -2,9 +2,11 @@ import * as cp from 'child_process';
 import { Writable } from 'stream';
 import { Event, ReceivedInteractiveEvent } from './interfaces';
 
+export type CommandEventCallback = {(event: Event, eventType: string): void};
+
 export class InteractiveClient {
     private buffer: string = "";
-    private callbacks: Map<string, {(event: Event, eventType: string): void}[]> = new Map();
+    private callbacks: Map<string, CommandEventCallback[]> = new Map();
     private next: number = 1;
     private stdin: Writable;
 
@@ -40,7 +42,7 @@ export class InteractiveClient {
         this.stdin = childProcess.stdin;
     }
 
-    private registerCallback(token: string, callback: {(event: Event, eventType: string): void}) {
+    private registerCallback(token: string, callback: CommandEventCallback) {
         if (!this.callbacks.has(token)) {
             this.callbacks.set(token, []);
         }
@@ -48,47 +50,39 @@ export class InteractiveClient {
         this.callbacks.get(token)?.push(callback);
     }
 
-    async submitCode(code: string, callback: {(event: Event, eventType: string): void}) {
-        /*
-        let sampleReturnEvent = {
-            eventType: "ReturnValueProduced",
-            event: {
-                value: 2,
-                formattedValues: [
-                    {
-                        mimeType: "text/html",
-                        value: "2"
-                    }
-                ],
-                valueId: null
-            },
-            cause: {
-                token: "abc",
-                commandType: "SubmitCode",
-                command: {
-                    code: "1+1",
-                    submissionType: 0,
-                    targetKernelName: null
-                }
+    async hover(code: string, line: number, character: number, callback: CommandEventCallback) {
+        let b = Buffer.from(code);
+        let command = {
+            documentIdentifier: "data:text/plain;base64," + b.toString('base64'),
+            position: {
+                line: line,
+                character: character,
             }
         };
-        // */
+        this.submitCommand("RequestHoverText", command, callback);
+    }
 
+    async submitCode(code: string, callback: CommandEventCallback) {
+        let command = {
+            code: code,
+            submissionType: 0,
+            targetKernelName: null
+        };
+        this.submitCommand("SubmitCode", command, callback);
+    }
+
+    private async submitCommand(commandType: string, command: any, callback: CommandEventCallback) {
         let token = "abc" + this.next++;
         let submit = {
             token: token,
-            commandType: "SubmitCode",
-            command: {
-                code: code,
-                submissionType: 0,
-                targetKernelName: null
-            }
+            commandType: commandType,
+            command: command
         };
 
         this.registerCallback(token, callback);
 
         let str = JSON.stringify(submit);
         this.stdin.write(str);
-        this.stdin.write("\n");
+        this.stdin.write('\n');
     }
 }
