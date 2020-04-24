@@ -50,6 +50,32 @@ export class InteractiveClient {
         this.callbacks.get(token)?.push(callback);
     }
 
+    async completion(code: string, line: number, character: number, callback: CommandEventCallback) {
+        let position = 0;
+        let currentLine = 0;
+        let currentCharacter = 0;
+        for (; position < code.length; position++) {
+            if (currentLine == line && currentCharacter == character) {
+                break;
+            }
+
+            switch (code[position]) {
+                case '\n':
+                    currentLine++;
+                    currentCharacter = 0;
+                    break;
+                default:
+                    currentCharacter++;
+                    break;
+            }
+        }
+        let command = {
+            code: code,
+            cursorPosition: position,
+        };
+        this.submitCommand("RequestCompletion", command, callback);
+    }
+
     async hover(code: string, line: number, character: number, callback: CommandEventCallback) {
         let b = Buffer.from(code);
         let command = {

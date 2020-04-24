@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { InteractiveClient } from './interactiveClient';
-import { HoverMarkdownProduced, LinePositionSpan, LinePosition, HoverPlainTextProduced } from './interfaces';
+import { HoverMarkdownProduced, LinePositionSpan, LinePosition, HoverPlainTextProduced, CompletionRequestCompleted } from './interfaces';
 
 const selector = { language: 'dotnet-interactive' };
 
@@ -17,6 +17,35 @@ function convertToRange(linePositionSpan?: LinePositionSpan): (vscode.Range | un
         convertToPosition(linePositionSpan.start),
         convertToPosition(linePositionSpan.end)
     );
+}
+
+export class CompletionItemProvider implements vscode.CompletionItemProvider {
+    static readonly triggerCharacters = ['.', '('];
+
+    constructor(readonly client: InteractiveClient) {
+    }
+
+    provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
+        return new Promise<vscode.CompletionList>((resolve, reject) => {
+            let handled = false;
+            this.client.completion(document.getText(), position.line, position.character, (event, eventType) => {
+                if (eventType === "CommandHandled" && !handled) {
+                    reject();
+                } else if (eventType === 'CompletionRequestCompleted') {
+                    handled = true;
+                    let completion = <CompletionRequestCompleted>event;
+                    let completionItems: Array<vscode.CompletionItem> = [];
+                    for (let item of completion.completionList) {
+                        let vscodeItem = new vscode.CompletionItem(item.displayText, vscode.CompletionItemKind.Function);
+                        completionItems.push(vscodeItem);
+                    }
+
+                    let completionList = new vscode.CompletionList(completionItems, false);
+                    resolve(completionList);
+                }
+            });
+        });
+    }
 }
 
 export class HoverProvider implements vscode.HoverProvider {
@@ -65,6 +94,7 @@ export class HoverProvider implements vscode.HoverProvider {
 export function registerLanguageProviders(client: InteractiveClient): vscode.Disposable {
     const disposables: Array<vscode.Disposable> = [];
 
+    disposables.push(vscode.languages.registerCompletionItemProvider(selector, new CompletionItemProvider(client), ...CompletionItemProvider.triggerCharacters));
     disposables.push(vscode.languages.registerHoverProvider(selector, new HoverProvider(client)));
 
     return vscode.Disposable.from(...disposables);

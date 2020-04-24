@@ -2,6 +2,19 @@ export interface CommandFailed {
     message: string;
 }
 
+export interface CompletionItem {
+    displayText: string;
+    kind: string;
+    filterText: string;
+    sortText: string;
+    insertText: string;
+    documentation: string;
+}
+
+export interface CompletionRequestCompleted {
+    completionList: Array<CompletionItem>;
+}
+
 export interface DisplayEventBase {
     value: any;
     formattedValues: Array<any>;
@@ -34,7 +47,7 @@ export interface ReturnValueProduced extends DisplayEventBase {
 export interface StandardOutputValueProduced extends DisplayEventBase {
 }
 
-export type Event = CommandFailed | HoverMarkdownProduced | HoverPlainTextProduced | ReturnValueProduced | StandardOutputValueProduced;
+export type Event = CommandFailed | CompletionRequestCompleted | HoverMarkdownProduced | HoverPlainTextProduced | ReturnValueProduced | StandardOutputValueProduced;
 
 export interface EventEnvelope {
     eventType: string;
