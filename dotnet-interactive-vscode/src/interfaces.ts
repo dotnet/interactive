@@ -24,7 +24,7 @@ export interface HoverPlainTextProduced {
 
 export interface ReturnValueProduced {
     value: any;
-    formattedValues: any[];
+    formattedValues: Array<any>;
     valueId: string;
 }
 

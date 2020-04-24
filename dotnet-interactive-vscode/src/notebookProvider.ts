@@ -3,14 +3,14 @@ import { InteractiveClient } from './interactiveClient';
 import { CommandFailed, ReturnValueProduced } from './interfaces';
 
 interface NotebookFile {
-    cells: RawNotebookCell[];
+    cells: Array<RawNotebookCell>;
 }
 
 interface RawNotebookCell {
     kind: vscode.CellKind;
     language: string;
     content: string;
-    outputs: vscode.CellOutput[];
+    outputs: Array<vscode.CellOutput>;
 }
 
 export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvider {

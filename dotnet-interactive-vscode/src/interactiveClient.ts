@@ -6,7 +6,7 @@ export type CommandEventCallback = {(event: Event, eventType: string): void};
 
 export class InteractiveClient {
     private buffer: string = "";
-    private callbacks: Map<string, CommandEventCallback[]> = new Map();
+    private callbacks: Map<string, Array<CommandEventCallback>> = new Map();
     private next: number = 1;
     private stdin: Writable;
 

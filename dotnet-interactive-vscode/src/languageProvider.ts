@@ -63,7 +63,7 @@ export class HoverProvider implements vscode.HoverProvider {
 }
 
 export function registerLanguageProviders(client: InteractiveClient): vscode.Disposable {
-    const disposables: vscode.Disposable[] = [];
+    const disposables: Array<vscode.Disposable> = [];
 
     disposables.push(vscode.languages.registerHoverProvider(selector, new HoverProvider(client)));
 
