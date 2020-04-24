@@ -2,11 +2,15 @@ import * as cp from 'child_process';
 import * as vscode from 'vscode';
 import { Writable } from 'stream';
 
+interface NotebookFile {
+    cells: RawNotebookCell[];
+}
+
 interface RawNotebookCell {
     kind: vscode.CellKind;
     language: string;
     content: string;
-    outputs: { [key: string]: any }[];
+    outputs: vscode.CellOutput[];
 }
 
 interface InteractiveEvent {
@@ -118,21 +122,23 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         } catch {
         }
 
-        let rawCells: RawNotebookCell[];
+        let notebook: NotebookFile;
         try {
-            rawCells = <RawNotebookCell[]>JSON.parse(contents);
+            notebook = <NotebookFile>JSON.parse(contents);
         } catch {
-            rawCells = [];
+            notebook = {
+                cells: []
+            };
         }
 
         editor.edit(editBuilder => {
-            for (let rawCell of rawCells) {
+            for (let cell of notebook.cells) {
                 editBuilder.insert(
                     0,
-                    rawCell.content,
-                    rawCell.language,
-                    rawCell.kind,
-                    [], // TODO: load cell outputs?
+                    cell.content,
+                    cell.language,
+                    cell.kind,
+                    cell.outputs,
                     {
                         editable: true,
                         runnable: true
@@ -175,17 +181,19 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
     }
 
     async save(document: vscode.NotebookDocument): Promise<boolean> {
-        let rawCells: RawNotebookCell[] = [];
+        let notebook: NotebookFile = {
+            cells: []
+        };
         for (let cell of document.cells) {
-            rawCells.push({
+            notebook.cells.push({
                 language: cell.language,
                 content: cell.document.getText(),
-                outputs: [], // TODO: save cell outputs?
+                outputs: cell.outputs,
                 kind: cell.cellKind
             });
         }
 
-        await vscode.workspace.fs.writeFile(document.uri, Buffer.from(JSON.stringify(rawCells)));
+        await vscode.workspace.fs.writeFile(document.uri, Buffer.from(JSON.stringify(notebook, null, 2)));
         return true;
     }
 }
