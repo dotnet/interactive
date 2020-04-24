@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { InteractiveClient } from './interactiveClient';
-import { CommandFailed, ReturnValueProduced } from './interfaces';
+import { CommandFailed, ReturnValueProduced, StandardOutputValueProduced } from './interfaces';
 
 interface NotebookFile {
     cells: Array<RawNotebookCell>;
@@ -78,6 +78,16 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
                             ename: "ename",
                             evalue: err.message,
                             traceback: [],
+                        };
+                        cell.outputs = [output];
+                    }
+                    break;
+                case "StandardOutputValueProduced":
+                    {
+                        let st = <StandardOutputValueProduced>event;
+                        let output: vscode.CellStreamOutput = {
+                            outputKind: vscode.CellOutputKind.Text,
+                            text: st.value.toString(),
                         };
                         cell.outputs = [output];
                     }

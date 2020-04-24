@@ -2,6 +2,12 @@ export interface CommandFailed {
     message: string;
 }
 
+export interface DisplayEventBase {
+    value: any;
+    formattedValues: Array<any>;
+    valueId: string;
+}
+
 export interface LinePosition {
     line: number;
     character: number;
@@ -22,13 +28,13 @@ export interface HoverPlainTextProduced {
     range?: LinePositionSpan;
 }
 
-export interface ReturnValueProduced {
-    value: any;
-    formattedValues: Array<any>;
-    valueId: string;
+export interface ReturnValueProduced extends DisplayEventBase {
 }
 
-export type Event = CommandFailed | HoverMarkdownProduced | HoverPlainTextProduced | ReturnValueProduced;
+export interface StandardOutputValueProduced extends DisplayEventBase {
+}
+
+export type Event = CommandFailed | HoverMarkdownProduced | HoverPlainTextProduced | ReturnValueProduced | StandardOutputValueProduced;
 
 export interface EventEnvelope {
     eventType: string;
