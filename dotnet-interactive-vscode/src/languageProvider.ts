@@ -37,7 +37,7 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
                     let completion = <CompletionRequestCompleted>event;
                     let completionItems: Array<vscode.CompletionItem> = [];
                     for (let item of completion.completionList) {
-                        let vscodeItem = new vscode.CompletionItem(item.displayText, vscode.CompletionItemKind.Function);
+                        let vscodeItem = new vscode.CompletionItem(item.displayText, this.mapCompletionItem(item.kind));
                         completionItems.push(vscodeItem);
                     }
 
@@ -46,6 +46,28 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
                 }
             });
         });
+    }
+
+    private mapCompletionItem(completionItemText: string): vscode.CompletionItemKind {
+        // incomplete mapping from http://sourceroslyn.io/#Microsoft.CodeAnalysis.Workspaces/Tags/WellKnownTags.cs
+        switch (completionItemText) {
+            case "Class": return vscode.CompletionItemKind.Class;
+            case "Constant": return vscode.CompletionItemKind.Constant;
+            case "Delegate": return vscode.CompletionItemKind.Function;
+            case "Enum": return vscode.CompletionItemKind.Enum;
+            case "EnumMember": return vscode.CompletionItemKind.EnumMember;
+            case "Event": return vscode.CompletionItemKind.Event;
+            case "ExtensionMethod": return vscode.CompletionItemKind.Method;
+            case "Field": return vscode.CompletionItemKind.Field;
+            case "Interface": return vscode.CompletionItemKind.Interface;
+            case "Local": return vscode.CompletionItemKind.Variable;
+            case "Method": return vscode.CompletionItemKind.Method;
+            case "Module": return vscode.CompletionItemKind.Module;
+            case "Namespace": return vscode.CompletionItemKind.Module;
+            case "Property": return vscode.CompletionItemKind.Property;
+            case "Structure": return vscode.CompletionItemKind.Struct;
+            default: return vscode.CompletionItemKind.Text; // what's an appropriate default?
+        }
     }
 }
 
