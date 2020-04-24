@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 {
     public sealed class FirstTimeUseNoticeSentinel : IFirstTimeUseNoticeSentinel
     {
-        public const string SkipFirstTimeExperienceEnvironmentVariableName = "DOTNET_TRY_SKIP_FIRST_TIME_EXPERIENCE";
+        public const string SkipFirstTimeExperienceEnvironmentVariableName = "DOTNET_INTERACTIVE_SKIP_FIRST_TIME_EXPERIENCE";
 
         private readonly string _sentinel;
         private readonly string _dotnetTryUserProfileFolderPath;
