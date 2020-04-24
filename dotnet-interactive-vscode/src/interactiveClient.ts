@@ -65,7 +65,7 @@ export class InteractiveClient {
         let currentLine = 0;
         let currentCharacter = 0;
         for (; position < code.length; position++) {
-            if (currentLine == line && currentCharacter == character) {
+            if (currentLine === line && currentCharacter === character) {
                 break;
             }
 
