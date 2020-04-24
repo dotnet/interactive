@@ -30,7 +30,7 @@ export interface ReturnValueProduced {
 
 export type Event = CommandFailed | HoverMarkdownProduced | HoverPlainTextProduced | ReturnValueProduced;
 
-export interface ReceivedInteractiveEvent {
+export interface EventEnvelope {
     eventType: string;
     event: Event;
     cause: {token: string};

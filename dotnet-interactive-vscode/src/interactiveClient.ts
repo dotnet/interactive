@@ -1,6 +1,6 @@
 import * as cp from 'child_process';
 import { Writable } from 'stream';
-import { Event, ReceivedInteractiveEvent } from './interfaces';
+import { Event, EventEnvelope } from './interfaces';
 
 export type CommandEventCallback = {(event: Event, eventType: string): void};
 
@@ -27,11 +27,11 @@ export class InteractiveClient {
                 i = this.buffer.indexOf('\n');
                 let obj = JSON.parse(temp);
                 try {
-                    let received = <ReceivedInteractiveEvent>obj;
-                    let callbacks = this.callbacks.get(received.cause.token);
+                    let envelope = <EventEnvelope>obj;
+                    let callbacks = this.callbacks.get(envelope.cause.token);
                     if (callbacks) {
                         for (let callback of callbacks) {
-                            callback(received.event, received.eventType);
+                            callback(envelope.event, envelope.eventType);
                         }
                     }
                 } catch {
