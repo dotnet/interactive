@@ -1,15 +1,10 @@
 import * as cp from 'child_process';
 import { Writable } from 'stream';
-
-interface InteractiveEvent {
-    eventType: string;
-    event: any;
-    cause: {token: string};
-}
+import { Event, ReceivedInteractiveEvent } from './interfaces';
 
 export class InteractiveClient {
     private buffer: string = "";
-    private callbacks: Map<string, {(event: InteractiveEvent): void}[]> = new Map();
+    private callbacks: Map<string, {(event: Event, eventType: string): void}[]> = new Map();
     private next: number = 1;
     private stdin: Writable;
 
@@ -30,11 +25,11 @@ export class InteractiveClient {
                 i = this.buffer.indexOf('\n');
                 let obj = JSON.parse(temp);
                 try {
-                    let event = <InteractiveEvent>obj;
-                    let callbacks = this.callbacks.get(event.cause.token);
+                    let received = <ReceivedInteractiveEvent>obj;
+                    let callbacks = this.callbacks.get(received.cause.token);
                     if (callbacks) {
                         for (let callback of callbacks) {
-                            callback(event);
+                            callback(received.event, received.eventType);
                         }
                     }
                 } catch {
@@ -45,7 +40,7 @@ export class InteractiveClient {
         this.stdin = childProcess.stdin;
     }
 
-    private registerCallback(token: string, callback: {(event: InteractiveEvent): void}) {
+    private registerCallback(token: string, callback: {(event: Event, eventType: string): void}) {
         if (!this.callbacks.has(token)) {
             this.callbacks.set(token, []);
         }
@@ -53,7 +48,7 @@ export class InteractiveClient {
         this.callbacks.get(token)?.push(callback);
     }
 
-    async submitCode(code: string, returnValueProducedCallback: {(returnValueProduced: any): void}) {
+    async submitCode(code: string, callback: {(event: Event, eventType: string): void}) {
         /*
         let sampleReturnEvent = {
             eventType: "ReturnValueProduced",
@@ -90,11 +85,7 @@ export class InteractiveClient {
             }
         };
 
-        this.registerCallback(token, (event) => {
-            if (event.eventType === "ReturnValueProduced") {
-                returnValueProducedCallback(event.event);
-            }
-        });
+        this.registerCallback(token, callback);
 
         let str = JSON.stringify(submit);
         this.stdin.write(str);

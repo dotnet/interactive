@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { InteractiveClient } from './interactiveClient';
+import { CommandFailed, ReturnValueProduced } from './interfaces';
 
 interface NotebookFile {
     cells: RawNotebookCell[];
@@ -67,18 +68,35 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         }
 
         let source = cell.source.toString();
-        return this.client.submitCode(source, returnValueProduced => {
-            let data: { [key: string]: any } = {};
-            for (let formattedValue of returnValueProduced.formattedValues) {
-                data[formattedValue.mimeType] = formattedValue.value;
+        return this.client.submitCode(source, (event, eventType) => {
+            switch (eventType) {
+                case "CommandFailed":
+                    {
+                        let err = <CommandFailed>event;
+                        let output: vscode.CellErrorOutput = {
+                            outputKind: vscode.CellOutputKind.Error,
+                            ename: "ename",
+                            evalue: err.message,
+                            traceback: [],
+                        };
+                        cell.outputs = [output];
+                    }
+                    break;
+                case "ReturnValueProduced":
+                    {
+                        let rvt = <ReturnValueProduced>event;
+                        let data: { [key: string]: any } = {};
+                        for (let formatted of rvt.formattedValues) {
+                            data[formatted.mimeType] = formatted.value;
+                        }
+                        let output: vscode.CellDisplayOutput = {
+                            outputKind: vscode.CellOutputKind.Rich,
+                            data: data
+                        };
+                        cell.outputs = [output];
+                    }
+                    break;
             }
-
-            let output: vscode.CellDisplayOutput = {
-                outputKind: vscode.CellOutputKind.Rich,
-                data: data
-            };
-
-            cell.outputs = [output];
         });
     }
 
