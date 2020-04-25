@@ -23,7 +23,7 @@ using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Utility;
-using Microsoft.Interactive.DependencyManager;
+using Microsoft.Interactive.DependencyManager;          //@@@@@@@@@@@@@@@@@@@@@
 using XPlot.Plotly;
 using Task = System.Threading.Tasks.Task;
 
@@ -45,7 +45,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         private WorkspaceFixture _fixture;
         private AssemblyResolutionProbe _assemblyProbingPaths;
-        private readonly Lazy<DependencyProvider> _dependencies;
         private NativeResolutionProbe _nativeProbingRoots;
 
         internal ScriptOptions ScriptOptions =
@@ -70,8 +69,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public CSharpKernel() : base(DefaultKernelName)
         {
-            _dependencies = new Lazy<DependencyProvider>(GetDependencyProvider);
-
             RegisterForDisposal(() =>
             {
                 ScriptState = null;
@@ -322,15 +319,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return dependencyProvider;
         }
 
-        // Set assemblyProbingPaths, nativeProbingRoots for Kernel.
-        // These values are functions that return the list of discovered assemblies, and package roots
-        // They are used by the dependecymanager for Assembly and Native dll resolving
-        void ISupportNuget.Initialize(AssemblyResolutionProbe assemblyProbingPaths, NativeResolutionProbe nativeProbingRoots)
-        {
-            _assemblyProbingPaths = assemblyProbingPaths ?? throw new ArgumentNullException(nameof(assemblyProbingPaths));
-            _nativeProbingRoots = nativeProbingRoots ?? throw new ArgumentNullException(nameof(nativeProbingRoots));
-        }
-
         void ISupportNuget.RegisterResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
         {
             var references = resolvedReferences
@@ -338,19 +326,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              .Select(r => MetadataReference.CreateFromFile(r.FullName));
 
             ScriptOptions = ScriptOptions.AddReferences(references);
-        }
-
-        IResolveDependenciesResult ISupportNuget.Resolve(IEnumerable<string> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
-        {
-            IDependencyManagerProvider iDependencyManager = _dependencies.Value.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
-            if (iDependencyManager == null)
-            {
-                // If this happens it is because of a bug in the Dependency provider. or deployment failed to deploy the nuget provider dll.
-                // We guarantee the presence of the nuget provider, by shipping it with the notebook product
-                throw new InvalidOperationException("Internal error - unable to locate the nuget package manager, please try to reinstall.");
-            }
-
-            return _dependencies.Value.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm);
         }
 
         private (Document document, int offset) GetDocumentWithOffsetFromCode(string code)

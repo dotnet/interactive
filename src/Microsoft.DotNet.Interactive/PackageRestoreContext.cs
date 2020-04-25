@@ -20,7 +20,7 @@ using System.Globalization;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class PackageRestoreContext : IDisposable
+    public class PackageRestoreContext : IDisposable, IPackageRestoreContext
     {
         private const string restoreTfm = "netcoreapp3.1";
         private const string packageKey = "nuget";
@@ -28,14 +28,19 @@ namespace Microsoft.DotNet.Interactive
         private readonly ConcurrentDictionary<string, PackageReference> _requestedPackageReferences = new ConcurrentDictionary<string, PackageReference>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, ResolvedPackageReference> _resolvedPackageReferences = new Dictionary<string, ResolvedPackageReference>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _restoreSources = new HashSet<string>();
+        private readonly DependencyProvider _dependencies;
+        private readonly IPackageRestoreContext _iPackageRestoreContext;
 
         public PackageRestoreContext(ISupportNuget iSupportNuget)
         {
             _iSupportNuget = iSupportNuget;
+
+            _dependencies = new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots);
+            _iPackageRestoreContext = this as IPackageRestoreContext;
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
         }
 
-        internal IEnumerable<string> AssemblyProbingPaths()
+        private IEnumerable<string> AssemblyProbingPaths()
         {
             foreach (var package in _resolvedPackageReferences.Values)
             {
@@ -44,7 +49,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        internal IEnumerable<string> NativeProbingRoots ()
+        private IEnumerable<string> NativeProbingRoots ()
         {
             foreach (var package in _resolvedPackageReferences.Values)
             {
@@ -109,11 +114,11 @@ namespace Microsoft.DotNet.Interactive
         private IEnumerable<string> GetPackageManagerLines()
         {
             // return restore sources
-            foreach( var rs in RestoreSources)
+            foreach( var rs in _iPackageRestoreContext.RestoreSources)
             {
                 yield return $"RestoreSources={rs}";
             }
-            foreach (var pr in RequestedPackageReferences)
+            foreach (var pr in _iPackageRestoreContext.RequestedPackageReferences)
             {
                 yield return $"Include={pr.PackageName}, Version={pr.PackageVersion}";
             }
@@ -188,11 +193,25 @@ namespace Microsoft.DotNet.Interactive
             Log.Info("OnAssemblyLoad: {location}", args.LoadedAssembly.Location);
         }
 
+        private IResolveDependenciesResult Resolve(IEnumerable<string> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
+        {
+            IDependencyManagerProvider iDependencyManager = _dependencies.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
+            if (iDependencyManager == null)
+            {
+                // If this happens it is because of a bug in the Dependency provider. or deployment failed to deploy the nuget provider dll.
+                // We guarantee the presence of the nuget provider, by shipping it with the notebook product
+                throw new InvalidOperationException("Internal error - unable to locate the nuget package manager, please try to reinstall.");
+            }
+
+            return _dependencies.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm);
+        }
+
+
         public async Task<PackageRestoreResult> RestoreAsync()
         {
-            var newlyRequested = RequestedPackageReferences
-                                         .Where(r => !_resolvedPackageReferences.ContainsKey(r.PackageName.ToLower(CultureInfo.InvariantCulture)))
-                                         .ToArray();
+            var newlyRequested = _requestedPackageReferences
+                                        .Where(r => !_resolvedPackageReferences.ContainsKey(r.PackageName.ToLower(CultureInfo.InvariantCulture)))
+                                        .ToArray();
 
             var errors = new List<string>();
 
@@ -203,7 +222,7 @@ namespace Microsoft.DotNet.Interactive
 
             var result =
                 await Task.Run(() => {
-                    return _iSupportNuget.Resolve(GetPackageManagerLines(), restoreTfm, ReportError);
+                    return Resolve(GetPackageManagerLines(), restoreTfm, ReportError);
                 });
 
             if (!result.Success)
@@ -245,6 +264,7 @@ namespace Microsoft.DotNet.Interactive
         {
             try
             {
+                (_dependencies as IDisposable)?.Dispose();
                 AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
             }
             catch

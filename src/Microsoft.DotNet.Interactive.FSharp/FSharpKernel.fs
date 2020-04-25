@@ -19,7 +19,6 @@ open Microsoft.DotNet.Interactive.Events
 open Microsoft.DotNet.Interactive.Extensions
 open Microsoft.DotNet.Interactive.Utility
 
-open Microsoft.Interactive.DependencyManager;
 open FSharp.Compiler.Interactive.Shell
 open FSharp.Compiler.Scripting
 open FSharp.Compiler.SourceCodeServices
@@ -128,22 +127,6 @@ type FSharpKernel() as this =
             context.Publish(CompletionRequestCompleted(completionItems, requestCompletion))
         }
 
-    let mutable _assemblyProbingPaths = Unchecked.defaultof<AssemblyResolutionProbe>
-    let mutable _nativeProbingRoots = Unchecked.defaultof<NativeResolutionProbe>
-
-    let dependencies =
-        let createDependencyProvider () =
-            // These may not be set to null, if they are it is a product coding error
-            // ISupportNuget.Initialize must be invoked prior to creating the DependencyManager
-            // With non null funcs
-            if isNull _assemblyProbingPaths then
-                raise (new InvalidOperationException("_assemblyProbingPaths is null"))
-
-            if isNull _nativeProbingRoots then
-                raise (new InvalidOperationException("_nativeProbingRoots is null"))
-            new DependencyProvider(_assemblyProbingPaths, _nativeProbingRoots)
-        lazy (createDependencyProvider ())
-
     member _.GetCurrentVariable(variableName: string) =
         let result, _errors =
             try
@@ -178,18 +161,6 @@ type FSharpKernel() as this =
         raise (NotImplementedException())
 
     interface ISupportNuget with
-        member this.Initialize (assemblyProbingPaths: AssemblyResolutionProbe, nativeProbingRoots: NativeResolutionProbe) =
-            // These may not be set to null, if they are it is a product coding error
-            // ISupportNuget.Initialize must be invoked prior to creating the DependencyManager
-            // With non null funcs
-            if isNull assemblyProbingPaths then
-                raise (ArgumentNullException("assemblyProbingPaths"))
-            if isNull nativeProbingRoots then
-                raise (ArgumentNullException("nativeProbingRoots"))
-
-            _assemblyProbingPaths <- assemblyProbingPaths
-            _nativeProbingRoots <- nativeProbingRoots
-
         member this.RegisterResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
             // Generate #r and #I from packageReferences
             let sb = StringBuilder()
@@ -211,13 +182,6 @@ type FSharpKernel() as this =
                             sb.Append(Environment.NewLine) |> ignore
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command)
-
-        //     Resolve reference for a list of package manager lines
-        member this.Resolve(packageManagerTextLines:IEnumerable<string>, executionTfm: string, reportError: ResolvingErrorReport): IResolveDependenciesResult =
-            let idm = dependencies.Force().TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget")
-            match idm with
-            | null -> raise (new InvalidOperationException("Internal error - unable to locate the nuget package manager, please try to reinstall."))
-            | idm -> dependencies.Force().Resolve(idm, ".fsx", packageManagerTextLines, reportError, executionTfm)
 
     interface IExtensibleKernel with
         member this.LoadExtensionsFromDirectoryAsync(directory:DirectoryInfo, context:KernelInvocationContext) =
