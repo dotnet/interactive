@@ -127,6 +127,8 @@ type FSharpKernel() as this =
             context.Publish(CompletionRequestCompleted(completionItems, requestCompletion))
         }
 
+    let _packageRestoreContext = lazy (new PackageRestoreContext(this))
+
     member _.GetCurrentVariable(variableName: string) =
         let result, _errors =
             try
@@ -182,6 +184,15 @@ type FSharpKernel() as this =
                             sb.Append(Environment.NewLine) |> ignore
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command)
+
+        member this.PackageRestoreContext = _packageRestoreContext.Value
+
+    interface IPackageRestoreContext with
+        member _.RestoreSources = _packageRestoreContext.Value.RestoreSources;
+
+        member _.RequestedPackageReferences = _packageRestoreContext.Value.RequestedPackageReferences;
+
+        member _.ResolvedPackageReferences = _packageRestoreContext.Value.ResolvedPackageReferences;
 
     interface IExtensibleKernel with
         member this.LoadExtensionsFromDirectoryAsync(directory:DirectoryInfo, context:KernelInvocationContext) =

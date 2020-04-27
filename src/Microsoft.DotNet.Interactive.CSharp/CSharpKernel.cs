@@ -23,7 +23,6 @@ using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Utility;
-using Microsoft.Interactive.DependencyManager;          //@@@@@@@@@@@@@@@@@@@@@
 using XPlot.Plotly;
 using Task = System.Threading.Tasks.Task;
 
@@ -33,6 +32,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         DotNetLanguageKernel,
         IExtensibleKernel,
         ISupportNuget,
+        IPackageRestoreContext,
         IKernelCommandHandler<RequestHoverText>
     {
         internal const string DefaultKernelName = "csharp";
@@ -44,8 +44,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             new CSharpParseOptions(LanguageVersion.Default, kind: SourceCodeKind.Script);
 
         private WorkspaceFixture _fixture;
-        private AssemblyResolutionProbe _assemblyProbingPaths;
-        private NativeResolutionProbe _nativeProbingRoots;
+        private Lazy<PackageRestoreContext> _packageRestoreContext;
 
         internal ScriptOptions ScriptOptions =
             ScriptOptions.Default
@@ -69,6 +68,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public CSharpKernel() : base(DefaultKernelName)
         {
+            _packageRestoreContext = new Lazy<PackageRestoreContext>(() => new PackageRestoreContext(this));
             RegisterForDisposal(() =>
             {
                 ScriptState = null;
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             if (ScriptState?.Variables
                            .LastOrDefault(v => v.Name == name) is { } variable)
             {
-                value = (T) variable.Value;
+                value = (T)variable.Value;
                 return true;
             }
 
@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         public override async Task SetVariableAsync(string name, object value)
         {
             var csharpTypeDeclaration = new StringWriter();
-            
+
             value.GetType().WriteCSharpDeclarationTo(csharpTypeDeclaration);
 
             await RunAsync($"{csharpTypeDeclaration} {name} = default;");
@@ -216,7 +216,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         }
 
         private async Task RunAsync(
-            string code, 
+            string code,
             CancellationToken cancellationToken = default,
             Func<Exception, bool> catchException = default)
         {
@@ -297,27 +297,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 context);
         }
 
-        private DependencyProvider GetDependencyProvider()
-        {
-            // These may not be set to null, if they are it is a product coding error
-            // ISupportNuget.Initialize must be invoked prior to creating the DependencyManager
-            if (_assemblyProbingPaths == null)
-            {
-                throw new ArgumentNullException(nameof(_assemblyProbingPaths));
-            }
-            if (_nativeProbingRoots == null)
-            {
-                throw new ArgumentNullException(nameof(_nativeProbingRoots));
-            }
-
-            var dependencyProvider = new DependencyProvider(
-                _assemblyProbingPaths, 
-                _nativeProbingRoots);
-
-            RegisterForDisposal(dependencyProvider);
-
-            return dependencyProvider;
-        }
 
         void ISupportNuget.RegisterResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
         {
@@ -327,6 +306,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             ScriptOptions = ScriptOptions.AddReferences(references);
         }
+
+        PackageRestoreContext ISupportNuget.PackageRestoreContext => _packageRestoreContext.Value;
+
 
         private (Document document, int offset) GetDocumentWithOffsetFromCode(string code)
         {
@@ -360,5 +342,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
         private bool HasReturnValue =>
             ScriptState != null &&
             (bool)_hasReturnValueMethod.Invoke(ScriptState.Script, null);
+
+        IEnumerable<string> IPackageRestoreContext.RestoreSources => ((ISupportNuget) this).PackageRestoreContext.RestoreSources;
+
+        IEnumerable<PackageReference> IPackageRestoreContext.RequestedPackageReferences => ((ISupportNuget)this).PackageRestoreContext.RequestedPackageReferences;
+
+        IEnumerable<ResolvedPackageReference> IPackageRestoreContext.ResolvedPackageReferences => ((ISupportNuget)this).PackageRestoreContext.ResolvedPackageReferences;
     }
 }

@@ -422,7 +422,7 @@ Formatter<DataFrame>.Register((df, writer) =>
         [InlineData(Language.FSharp)]
         public async Task Pound_i_nuget_displays_list_of_added_sources(Language language)
         {
-             var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -438,6 +438,11 @@ Formatter<DataFrame>.Register((df, writer) =>
                   .Value
                   .Should()
                   .ContainAll("Restore sources", "https://completelyFakerestoreSource");
+
+            var iPackageRestoreContext = (IPackageRestoreContext)kernel;
+            iPackageRestoreContext.RestoreSources
+                                  .Should()
+                                  .Contain("https://completely FakerestoreSource");
         }
 
         [Theory]

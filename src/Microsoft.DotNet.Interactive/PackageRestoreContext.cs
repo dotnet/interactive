@@ -210,6 +210,7 @@ namespace Microsoft.DotNet.Interactive
         public async Task<PackageRestoreResult> RestoreAsync()
         {
             var newlyRequested = _requestedPackageReferences
+                                        .Select(r => r.Value)
                                         .Where(r => !_resolvedPackageReferences.ContainsKey(r.PackageName.ToLower(CultureInfo.InvariantCulture)))
                                         .ToArray();
 
