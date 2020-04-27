@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { InteractiveClient } from './interactiveClient';
 import { CommandFailed, ReturnValueProduced, StandardOutputValueProduced } from './interfaces';
+import { ClientMapper } from './clientMapper';
 
 interface NotebookFile {
     targetKernelName: string;
@@ -15,8 +15,7 @@ interface RawNotebookCell {
 }
 
 export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvider {
-
-    constructor(readonly client: InteractiveClient) {
+    constructor(readonly clientMapper: ClientMapper) {
     }
 
     async resolveNotebook(editor: vscode.NotebookEditor): Promise<void> {
@@ -38,7 +37,7 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
             };
         }
 
-        this.client.targetKernelName = notebook.targetKernelName;
+        let _client = this.clientMapper.addClient(notebook.targetKernelName, editor.document.uri);
 
         editor.edit(editBuilder => {
             for (let cell of notebook.cells) {
@@ -71,8 +70,9 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
             return Promise.resolve();
         }
 
+        let client = this.clientMapper.getClient(document.uri);
         let source = cell.source.toString();
-        return this.client.submitCode(source, (event, eventType) => {
+        return client.submitCode(source, (event, eventType) => {
             switch (eventType) {
                 case 'CommandFailed':
                     {
@@ -115,8 +115,9 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
     }
 
     async save(document: vscode.NotebookDocument): Promise<boolean> {
+        let client = this.clientMapper.getClient(document.uri);
         let notebook: NotebookFile = {
-            targetKernelName: this.client.targetKernelName,
+            targetKernelName: client.targetKernelName,
             cells: [],
         };
         for (let cell of document.cells) {

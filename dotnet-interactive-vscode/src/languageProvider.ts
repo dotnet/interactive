@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { InteractiveClient } from './interactiveClient';
 import { HoverMarkdownProduced, LinePositionSpan, LinePosition, HoverPlainTextProduced, CompletionRequestCompleted } from './interfaces';
+import { ClientMapper } from './clientMapper';
 
 const selector = { language: 'dotnet-interactive' };
 
@@ -22,13 +22,14 @@ function convertToRange(linePositionSpan?: LinePositionSpan): (vscode.Range | un
 export class CompletionItemProvider implements vscode.CompletionItemProvider {
     static readonly triggerCharacters = ['.', '('];
 
-    constructor(readonly client: InteractiveClient) {
+    constructor(readonly clientMapper: ClientMapper) {
     }
 
     provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
         return new Promise<vscode.CompletionList>((resolve, reject) => {
             let handled = false;
-            this.client.completion(document.getText(), position.line, position.character, (event, eventType) => {
+            let client = this.clientMapper.getClient(document.uri);
+            client.completion(document.getText(), position.line, position.character, (event, eventType) => {
                 if (eventType === 'CommandHandled' && !handled) {
                     handled = true;
                     reject();
@@ -72,13 +73,14 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
 }
 
 export class HoverProvider implements vscode.HoverProvider {
-    constructor(readonly client: InteractiveClient) {
+    constructor(readonly clientMapper: ClientMapper) {
     }
 
     provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Hover> {
         return new Promise<vscode.Hover>((resolve, reject) => {
             let handled = false;
-            this.client.hover(document.getText(), position.line, position.character, (event, eventType) => {
+            let client = this.clientMapper.getClient(document.uri);
+            client.hover(document.getText(), position.line, position.character, (event, eventType) => {
                 let content: vscode.MarkedString | undefined = undefined;
                 let range: vscode.Range | undefined = undefined;
                 switch (eventType) {
@@ -114,11 +116,11 @@ export class HoverProvider implements vscode.HoverProvider {
     }
 }
 
-export function registerLanguageProviders(client: InteractiveClient): vscode.Disposable {
+export function registerLanguageProviders(clientMapper: ClientMapper): vscode.Disposable {
     const disposables: Array<vscode.Disposable> = [];
 
-    disposables.push(vscode.languages.registerCompletionItemProvider(selector, new CompletionItemProvider(client), ...CompletionItemProvider.triggerCharacters));
-    disposables.push(vscode.languages.registerHoverProvider(selector, new HoverProvider(client)));
+    disposables.push(vscode.languages.registerCompletionItemProvider(selector, new CompletionItemProvider(clientMapper), ...CompletionItemProvider.triggerCharacters));
+    disposables.push(vscode.languages.registerHoverProvider(selector, new HoverProvider(clientMapper)));
 
     return vscode.Disposable.from(...disposables);
 }

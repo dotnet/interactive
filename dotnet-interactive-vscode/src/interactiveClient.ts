@@ -9,10 +9,10 @@ export class InteractiveClient {
     private callbacks: Map<string, Array<CommandEventCallback>> = new Map();
     private next: number = 1;
     private stdin: Writable;
+    private _targetKernelName: string;
 
-    private _targetKernelName: string = 'csharp';
-
-    constructor() {
+    constructor(targetKernelName: string) {
+        this._targetKernelName = targetKernelName;
         let childProcess = cp.spawn('dotnet', ['interactive', 'stdio']);
         childProcess.on('exit', (code: number, _signal: string) => {
             //
@@ -46,10 +46,6 @@ export class InteractiveClient {
 
     get targetKernelName(): string {
         return this._targetKernelName;
-    }
-
-    set targetKernelName(value: string) {
-        this._targetKernelName = value;
     }
 
     private registerCallback(token: string, callback: CommandEventCallback) {
@@ -108,7 +104,7 @@ export class InteractiveClient {
 
     private async submitCommand(commandType: string, command: any, callback: CommandEventCallback) {
         let token = 'abc' + this.next++;
-        command.targetKernelName = this._targetKernelName;
+        command.targetKernelName = this.targetKernelName;
         let submit = {
             token: token,
             commandType: commandType,
