@@ -23,12 +23,7 @@ export class ClientMapper {
         return client;
     }
 
-    getClient(uri: vscode.Uri): InteractiveClient {
-        let client = this.clientMap.get(ClientMapper.keyFromUri(uri));
-        if (client === undefined) {
-            throw `Unable to find interactive client for uri '${uri}'`;
-        }
-
-        return client;
+    getClient(uri: vscode.Uri): InteractiveClient | undefined {
+        return this.clientMap.get(ClientMapper.keyFromUri(uri));
     }
 }

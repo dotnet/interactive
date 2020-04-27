@@ -29,6 +29,11 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
         return new Promise<vscode.CompletionList>((resolve, reject) => {
             let handled = false;
             let client = this.clientMapper.getClient(document.uri);
+            if (client === undefined) {
+                reject();
+                return;
+            }
+
             client.completion(document.getText(), position.line, position.character, (event, eventType) => {
                 if (eventType === 'CommandHandled' && !handled) {
                     handled = true;
@@ -80,6 +85,11 @@ export class HoverProvider implements vscode.HoverProvider {
         return new Promise<vscode.Hover>((resolve, reject) => {
             let handled = false;
             let client = this.clientMapper.getClient(document.uri);
+            if (client === undefined) {
+                reject();
+                return;
+            }
+
             client.hover(document.getText(), position.line, position.character, (event, eventType) => {
                 let content: vscode.MarkedString | undefined = undefined;
                 let range: vscode.Range | undefined = undefined;

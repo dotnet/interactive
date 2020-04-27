@@ -71,6 +71,10 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         }
 
         let client = this.clientMapper.getClient(document.uri);
+        if (client === undefined) {
+            return Promise.resolve();
+        }
+
         let source = cell.source.toString();
         return client.submitCode(source, (event, eventType) => {
             switch (eventType) {
@@ -116,6 +120,10 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
 
     async save(document: vscode.NotebookDocument): Promise<boolean> {
         let client = this.clientMapper.getClient(document.uri);
+        if (client === undefined) {
+            return false;
+        }
+
         let notebook: NotebookFile = {
             targetKernelName: client.targetKernelName,
             cells: [],
