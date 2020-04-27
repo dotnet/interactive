@@ -439,10 +439,10 @@ Formatter<DataFrame>.Register((df, writer) =>
                   .Should()
                   .ContainAll("Restore sources", "https://completelyFakerestoreSource");
 
-            var iPackageRestoreContext = (IPackageRestoreContext)kernel;
-            iPackageRestoreContext.RestoreSources
-                                  .Should()
-                                  .Contain("https://completely FakerestoreSource");
+            var iPackageRestoreContext = (IPackageRestoreContext)kernel.FindKernel(kernel.DefaultKernelName);
+            var restoreSources = iPackageRestoreContext.RestoreSources;
+            restoreSources.Should()
+                          .ContainSingle("https://completely FakerestoreSource");
         }
 
         [Theory]
@@ -462,6 +462,11 @@ Formatter<DataFrame>.Register((df, writer) =>
 ");
 
             events.Should().NotContainErrors();
+
+            var iPackageRestoreContext = (IPackageRestoreContext)kernel.FindKernel(kernel.DefaultKernelName);
+            var restoreSources = iPackageRestoreContext.RestoreSources;
+            restoreSources.Should()
+                          .ContainSingle("https://completely FakerestoreSource");
         }
 
         [Theory]
@@ -486,6 +491,11 @@ Formatter<DataFrame>.Register((df, writer) =>
 ");
 
             events.Should().NotContainErrors();
+
+            var iPackageRestoreContext = (IPackageRestoreContext)kernel.FindKernel(kernel.DefaultKernelName);
+            var restoreSources = iPackageRestoreContext.RestoreSources;
+            restoreSources.Should()
+                          .ContainSingle("https://completely FakerestoreSource");
         }
 
         [Theory]
@@ -504,6 +514,11 @@ Formatter<DataFrame>.Register((df, writer) =>
 ");
 
             events.Should().NotContainErrors();
+
+            var iPackageRestoreContext = (IPackageRestoreContext)kernel.FindKernel(kernel.DefaultKernelName);
+            var restoreSources = iPackageRestoreContext.RestoreSources;
+            restoreSources.Should()
+                          .ContainSingle("https://completely FakerestoreSource");
         }
 
         [Theory]
@@ -522,6 +537,11 @@ Formatter<DataFrame>.Register((df, writer) =>
 ");
             events.Should().NotContainErrors();
 
+            var iPackageRestoreContext = (IPackageRestoreContext)kernel.FindKernel(kernel.DefaultKernelName);
+            var restoreSources = iPackageRestoreContext.RestoreSources;
+            restoreSources.Should()
+                          .ContainSingle("https://completelyFakerestoreSource");
+
             await kernel.SubmitCodeAsync(
                 @"
 #!time
@@ -529,6 +549,11 @@ Formatter<DataFrame>.Register((df, writer) =>
 ");
 
             events.Should().NotContainErrors();
+
+            restoreSources.Should()
+                          .Contain("https://completelyFakerestoreSource")
+                          .And
+                          .Contain("https://anotherCompletelyFakerestoreSource");
         }
 
         [Theory]
@@ -549,6 +574,12 @@ Formatter<DataFrame>.Register((df, writer) =>
             await kernel.SubmitCodeAsync(code);
 
             events.Should().NotContainErrors();
+
+            var iPackageRestoreContext = (IPackageRestoreContext)kernel.FindKernel(kernel.DefaultKernelName);
+            var resolvedPackageReferences = iPackageRestoreContext.ResolvedPackageReferences;
+            resolvedPackageReferences.Should()
+                                     .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0-preview");
+
         }
 
         [Theory]
@@ -574,6 +605,11 @@ Formatter<DataFrame>.Register((df, writer) =>
             await kernel.SubmitCodeAsync(code);
 
             events.Should().NotContainErrors();
+
+            var iPackageRestoreContext = (IPackageRestoreContext)kernel.FindKernel(kernel.DefaultKernelName);
+            var resolvedPackageReferences = iPackageRestoreContext.ResolvedPackageReferences;
+            resolvedPackageReferences.Should()
+                                     .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0-preview");
         }
 
         [Theory]
@@ -599,6 +635,11 @@ Formatter<DataFrame>.Register((df, writer) =>
                 .Value
                 .Should()
                 .Be("Microsoft.ML.AutoML version 0.16.1-preview cannot be added because version 0.16.0-preview was added previously.");
+
+            var iPackageRestoreContext = (IPackageRestoreContext)kernel.FindKernel(kernel.DefaultKernelName);
+            var resolvedPackageReferences = iPackageRestoreContext.ResolvedPackageReferences;
+            resolvedPackageReferences.Should()
+                                     .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0-preview");
         }
 
         [Theory]
@@ -631,6 +672,11 @@ Formatter<DataFrame>.Register((df, writer) =>
                 .Value
                 .Should()
                 .Be("Microsoft.ML.AutoML version 0.16.1-preview cannot be added because version 0.16.0-preview was added previously.");
+
+            var iPackageRestoreContext = (IPackageRestoreContext)kernel.FindKernel(kernel.DefaultKernelName);
+            var resolvedPackageReferences = iPackageRestoreContext.ResolvedPackageReferences;
+            resolvedPackageReferences.Should()
+                                     .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0-preview");
         }
 
         /*
@@ -781,6 +827,17 @@ using XPlot.Plotly;");
                 .Value
                 .Should()
                 .Be("Google.Protobuf version 3.10.1 cannot be added because version 3.10.0 was added previously.");
+
+            var iPackageRestoreContext = (IPackageRestoreContext)kernel.FindKernel(kernel.DefaultKernelName);
+            var resolvedPackageReferences = iPackageRestoreContext.ResolvedPackageReferences;
+            resolvedPackageReferences.Should()
+                                     .ContainSingle(r => r.PackageName == "Microsoft.ML" && r.PackageVersion == "1.4.0")
+                                     .And
+                                     .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0")
+                                     .And
+                                     .ContainSingle(r => r.PackageName == "Microsoft.Data.Analysis" && r.PackageVersion == "0.1.0")
+                                     .And
+                                     .ContainSingle(r => r.PackageName == "google.protobuf" && r.PackageVersion == "3.10.0");
         }
 
         [Theory]
@@ -805,6 +862,17 @@ using XPlot.Plotly;");
 #r ""nuget: Google.Protobuf, 3.10.0""
 ");
             events.Should().NotContainErrors();
+
+            var iPackageRestoreContext = (IPackageRestoreContext)kernel.FindKernel(kernel.DefaultKernelName);
+            var resolvedPackageReferences = iPackageRestoreContext.ResolvedPackageReferences;
+            resolvedPackageReferences.Should()
+                                     .Contain(r => r.PackageName == "Microsoft.ML" && r.PackageVersion == "1.4.0")
+                                     .And
+                                     .Contain(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0")
+                                     .And
+                                     .Contain(r => r.PackageName == "Microsoft.Data.Analysis" && r.PackageVersion == "0.1.0")
+                                     .And
+                                     .Contain(r => r.PackageName == "google.protobuf" && r.PackageVersion == "3.10.0");
         }
 
         [Theory]
@@ -847,6 +915,11 @@ using XPlot.Plotly;");
                   .Should()
                   .ContainSingle(e => e.PackageReference.PackageName == "Microsoft.DotNet.PlatformAbstractions" &&
                                       e.PackageReference.PackageVersion != "1.0.3");
+
+            var iPackageRestoreContext = (IPackageRestoreContext)kernel.FindKernel(kernel.DefaultKernelName);
+            var resolvedPackageReferences = iPackageRestoreContext.ResolvedPackageReferences;
+            resolvedPackageReferences.Should()
+                                     .ContainSingle(r => r.PackageName == "Microsoft.DotNet.PlatformAbstractions");
         }
 
         [Theory]
@@ -864,6 +937,11 @@ using XPlot.Plotly;");
 
             events.Should()
                   .ContainSingle<DisplayedValueUpdated>(e => e.Value.Equals("Installed package Its.Log version 2.10.1"));
+
+            var iPackageRestoreContext = (IPackageRestoreContext)kernel.FindKernel(kernel.DefaultKernelName);
+            var resolvedPackageReferences = iPackageRestoreContext.ResolvedPackageReferences;
+            resolvedPackageReferences.Should()
+                                     .ContainSingle(r => r.PackageName == "Its.Log" && r.PackageVersion == "2.10.1");
         }
 
         [Theory]
@@ -914,6 +992,11 @@ using XPlot.Plotly;");
                   .Message
                   .Should()
                   .Contain(expectedMessage);
+
+            var iPackageRestoreContext = (IPackageRestoreContext)kernel.FindKernel(kernel.DefaultKernelName);
+            var resolvedPackageReferences = iPackageRestoreContext.ResolvedPackageReferences;
+            resolvedPackageReferences.Should()
+                                     .NotContain(r => r.PackageName == "System.Text.Json");
         }
 
         [Theory]
@@ -935,6 +1018,11 @@ using XPlot.Plotly;");
                   .Message
                   .Should()
                   .Contain($"error NU1101: Unable to find package {nonexistentPackageName}. No packages exist with this id in source(s): ");
+
+            var iPackageRestoreContext = (IPackageRestoreContext)kernel.FindKernel(kernel.DefaultKernelName);
+            var resolvedPackageReferences = iPackageRestoreContext.ResolvedPackageReferences;
+            resolvedPackageReferences.Should()
+                                     .NotContain(r => r.PackageName == $"{nonexistentPackageName}");
         }
 
         [Theory]
