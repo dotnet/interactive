@@ -4,7 +4,7 @@ import { InteractiveClient } from "./interactiveClient";
 export class ClientMapper {
     private clientMap: Map<string, InteractiveClient> = new Map();
 
-    private static keyFromUri(uri: vscode.Uri): string {
+    static keyFromUri(uri: vscode.Uri): string {
         // TODO: `path` property can look like:
         // TODO:   /c:/path/to/notebook/file, cell X
         // TODO: need access to `vscode.CellUri` to properly parse
