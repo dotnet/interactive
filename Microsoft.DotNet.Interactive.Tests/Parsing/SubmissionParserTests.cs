@@ -41,14 +41,9 @@ x
 
             var tree = parser.Parse(code);
 
-            var _ = new AssertionScope();
-
             tree.GetRoot()
                 .Should()
-                .ContainSingle<LanguageNode>(n => n.Text == "#r \"/path/to/a.dll\"");
-            tree.GetRoot()
-                .Should()
-                .ContainSingle<LanguageNode>(n => n.Text == code);
+                .ContainSingle<LanguageNode>(n => n.Text == "#r \"/path/to/a.dll\"\n");
         }
 
         [Fact]
