@@ -47,7 +47,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
         private AssemblyResolutionProbe _assemblyProbingPaths;
         private readonly Lazy<DependencyProvider> _dependencies;
         private NativeResolutionProbe _nativeProbingRoots;
-        private readonly Lazy<DependencyProvider> _dependencies;
 
         internal ScriptOptions ScriptOptions =
             ScriptOptions.Default

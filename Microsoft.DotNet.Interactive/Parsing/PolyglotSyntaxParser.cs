@@ -74,9 +74,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             {
                                 var fullDirectiveText = directiveToken.Text + trivia.Text + directiveArgs.Text;
 
-                                //i += 2;
+                                i += 2;
                                 var directiveParseResult = _directiveParser.Parse(fullDirectiveText);
 
+                                directiveNode.Add(directiveArgs);
                                 
 
 
@@ -86,6 +87,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         }
 
                         break;
+
 
                     case LanguageToken languageToken:
                         var languageNode = new LanguageNode(currentLanguage, _sourceText);

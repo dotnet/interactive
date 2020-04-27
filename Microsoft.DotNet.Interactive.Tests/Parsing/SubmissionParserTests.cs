@@ -41,13 +41,14 @@ x
 
             var tree = parser.Parse(code);
 
+            var _ = new AssertionScope();
+
             tree.GetRoot()
                 .Should()
-                .ContainSingle<LanguageNode>()
-                .Which
-                .Text
+                .ContainSingle<LanguageNode>(n => n.Text == "#r \"/path/to/a.dll\"");
+            tree.GetRoot()
                 .Should()
-                .Be(code);
+                .ContainSingle<LanguageNode>(n => n.Text == code);
         }
 
         [Fact]
@@ -112,7 +113,7 @@ x
             throw new NotImplementedException("test not written");
         }
 
-        [Fact]
+        [Fact(Skip="")]
         public void PLAYGROUND()
         {
             var tree = CSharpSyntaxTree.ParseText("var x = 4124");
