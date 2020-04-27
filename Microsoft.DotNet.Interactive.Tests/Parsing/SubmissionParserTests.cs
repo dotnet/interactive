@@ -81,13 +81,12 @@ x
                 .Trim()
                 .Should()
                 .Be("#r \"nuget:SomePackage\"");
-
         }
 
         [Fact]
         public void Pound_i_is_a_valid_directive()
         {
-           var parser = CreateSubmissionParser("csharp");
+            var parser = CreateSubmissionParser("csharp");
 
             var tree = parser.Parse("var x = 1;\n#i \"nuget:/some/path\"\nx");
 
@@ -105,6 +104,22 @@ x
         [Fact]
         public void Directive_parsing_errors_are_available_as_diagnostics()
         {
+            var parser = CreateSubmissionParser("csharp");
+
+            var tree = parser.Parse("var x = 1;\n#!");
+
+            tree.GetRoot()
+                .ChildNodes
+                .Should()
+                .ContainSingle<DirectiveNode>()
+                .Which
+                .Text
+                .Trim()
+                .Should()
+                .Be("#i \"nuget:/some/path\"");
+
+
+
             throw new NotImplementedException("test not written");
         }
 
