@@ -162,6 +162,7 @@ type FSharpKernel() as this =
     override _.SetVariableAsync(name: string, value: Object) : Task = 
         raise (NotImplementedException())
 
+    // Integrate nuget package management to the F# Kernel
     interface ISupportNuget with
         member this.RegisterResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
             // Generate #r and #I from packageReferences
