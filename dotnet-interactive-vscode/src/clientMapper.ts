@@ -17,10 +17,9 @@ export class ClientMapper {
         }
     }
 
-    addClient(targetKernelName: string, uri: vscode.Uri): InteractiveClient {
+    addClient(targetKernelName: string, uri: vscode.Uri) {
         let client = new InteractiveClient(targetKernelName);
         this.clientMap.set(ClientMapper.keyFromUri(uri), client);
-        return client;
     }
 
     getClient(uri: vscode.Uri): InteractiveClient | undefined {

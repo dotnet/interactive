@@ -2,12 +2,12 @@ import * as vscode from 'vscode';
 import { CommandFailed, ReturnValueProduced, StandardOutputValueProduced } from './interfaces';
 import { ClientMapper } from './clientMapper';
 
-interface NotebookFile {
+export interface NotebookFile {
     targetKernelName: string;
     cells: Array<RawNotebookCell>;
 }
 
-interface RawNotebookCell {
+export interface RawNotebookCell {
     kind: vscode.CellKind;
     language: string;
     content: string;
@@ -27,18 +27,8 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         } catch {
         }
 
-        let notebook: NotebookFile;
-        try {
-            notebook = <NotebookFile>JSON.parse(contents);
-        } catch {
-            notebook = {
-                targetKernelName: 'csharp',
-                cells: [],
-            };
-        }
-
-        let _client = this.clientMapper.addClient(notebook.targetKernelName, editor.document.uri);
-
+        let notebook = DotNetInteractiveNotebookProvider.parseNotebook(contents);
+        this.clientMapper.addClient(notebook.targetKernelName, editor.document.uri);
         editor.edit(editBuilder => {
             for (let cell of notebook.cells) {
                 editBuilder.insert(
@@ -139,5 +129,19 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
 
         await vscode.workspace.fs.writeFile(document.uri, Buffer.from(JSON.stringify(notebook, null, 2)));
         return true;
+    }
+
+    static parseNotebook(contents: string): NotebookFile {
+        let notebook: NotebookFile;
+        try {
+            notebook = <NotebookFile>JSON.parse(contents);
+        } catch {
+            notebook = {
+                targetKernelName: 'csharp',
+                cells: [],
+            };
+        }
+
+        return notebook;
     }
 }
