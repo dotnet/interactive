@@ -9,7 +9,10 @@ namespace Microsoft.DotNet.Interactive
 {
     public interface ISupportNuget
     {
-        public PackageRestoreContext PackageRestoreContext { get; }
-        public void RegisterResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> packageReferences);
+        // KernelSupportsNugetExtension relies on access to the full PackageRestoreContextClass for state mutation
+        PackageRestoreContext PackageRestoreContext { get; }
+
+        // Notifies Kernel that packagereferencing is complete, and provides a list of PackageReferences
+        void RegisterResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> packageReferences);
     }
 }

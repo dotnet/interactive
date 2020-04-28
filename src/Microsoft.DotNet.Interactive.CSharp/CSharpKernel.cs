@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public CSharpKernel() : base(DefaultKernelName)
         {
-            _packageRestoreContext = new Lazy<PackageRestoreContext>(() => new PackageRestoreContext(this));
+            _packageRestoreContext = new Lazy<PackageRestoreContext>(() => new PackageRestoreContext());
             RegisterForDisposal(() =>
             {
                 ScriptState = null;
@@ -343,10 +343,10 @@ namespace Microsoft.DotNet.Interactive.CSharp
             ScriptState != null &&
             (bool)_hasReturnValueMethod.Invoke(ScriptState.Script, null);
 
-        IEnumerable<string> IPackageRestoreContext.RestoreSources => ((ISupportNuget) this).PackageRestoreContext.RestoreSources;
+        public IEnumerable<string> RestoreSources => ((ISupportNuget) this).PackageRestoreContext.RestoreSources;
 
-        IEnumerable<PackageReference> IPackageRestoreContext.RequestedPackageReferences => ((ISupportNuget)this).PackageRestoreContext.RequestedPackageReferences;
+        public IEnumerable<PackageReference> RequestedPackageReferences => ((ISupportNuget)this).PackageRestoreContext.RequestedPackageReferences;
 
-        IEnumerable<ResolvedPackageReference> IPackageRestoreContext.ResolvedPackageReferences => ((ISupportNuget)this).PackageRestoreContext.ResolvedPackageReferences;
+        public IEnumerable<ResolvedPackageReference> ResolvedPackageReferences => ((ISupportNuget)this).PackageRestoreContext.ResolvedPackageReferences;
     }
 }

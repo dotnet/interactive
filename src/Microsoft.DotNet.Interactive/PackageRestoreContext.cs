@@ -24,17 +24,14 @@ namespace Microsoft.DotNet.Interactive
     {
         private const string restoreTfm = "netcoreapp3.1";
         private const string packageKey = "nuget";
-        private readonly ISupportNuget _iSupportNuget;
         private readonly ConcurrentDictionary<string, PackageReference> _requestedPackageReferences = new ConcurrentDictionary<string, PackageReference>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, ResolvedPackageReference> _resolvedPackageReferences = new Dictionary<string, ResolvedPackageReference>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _restoreSources = new HashSet<string>();
         private readonly DependencyProvider _dependencies;
         private readonly IPackageRestoreContext _iPackageRestoreContext;
 
-        public PackageRestoreContext(ISupportNuget iSupportNuget)
+        public PackageRestoreContext()
         {
-            _iSupportNuget = iSupportNuget;
-
             _dependencies = new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots);
             _iPackageRestoreContext = this as IPackageRestoreContext;
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;

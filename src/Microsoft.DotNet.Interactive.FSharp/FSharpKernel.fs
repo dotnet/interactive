@@ -127,7 +127,7 @@ type FSharpKernel() as this =
             context.Publish(CompletionRequestCompleted(completionItems, requestCompletion))
         }
 
-    let _packageRestoreContext = lazy (new PackageRestoreContext(this))
+    let _packageRestoreContext = lazy (new PackageRestoreContext())
 
     member _.GetCurrentVariable(variableName: string) =
         let result, _errors =
