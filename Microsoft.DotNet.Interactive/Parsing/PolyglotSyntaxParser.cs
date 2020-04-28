@@ -19,7 +19,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
         private readonly Parser _directiveParser;
         private readonly IReadOnlyList<ICommand> _directives;
         private IReadOnlyList<SyntaxToken>? _tokens;
-        private readonly SyntaxNode _rootNode;
         private HashSet<string>? _kernelChooserDirectives;
 
         internal PolyglotSyntaxParser(
@@ -32,23 +31,30 @@ namespace Microsoft.DotNet.Interactive.Parsing
             _sourceText = sourceText;
             _directiveParser = directiveParser;
             _directives = directives;
-            _rootNode = new PolyglotSubmissionNode(defaultLanguage, _sourceText);
         }
 
         public PolyglotSyntaxTree Parse()
         {
-            _tokens = new Lexer(_sourceText).Lex();
+            var tree= new PolyglotSyntaxTree(_sourceText);
 
-            ParseSubmission();
+            _tokens = new Lexer(_sourceText, tree).Lex();
 
-            return new PolyglotSyntaxTree(_sourceText, _rootNode);
+            var rootNode = new PolyglotSubmissionNode(
+                DefaultLanguage, 
+                _sourceText,
+                tree);
+
+            tree.RootNode = rootNode;
+
+            ParseSubmission(rootNode);
+
+            return tree;
+
         }
 
-        private void ParseSubmission()
+        private void ParseSubmission(PolyglotSubmissionNode rootNode)
         {
             var currentLanguage = DefaultLanguage;
-
-            DirectiveNode? directiveNode = null;
 
             for (var i = 0; i < _tokens!.Count; i++)
             {
@@ -58,47 +64,56 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 {
                     case DirectiveToken directiveToken:
 
+                        DirectiveNode directiveNode;
+
                         if (IsLanguageDirective(directiveToken))
                         {
-                            directiveNode = new KernelDirectiveNode(directiveToken, _sourceText);
+                            directiveNode = new KernelDirectiveNode(directiveToken, _sourceText, rootNode.SyntaxTree);
                             currentLanguage = directiveToken.DirectiveName;
-                            _rootNode.Add(directiveNode);
                         }
                         else
                         {
-                            directiveNode = new DirectiveNode(directiveToken, _sourceText);
-
-                            if (_tokens.Count >= i + 2 &&
-                                _tokens[i + 1] is TriviaToken trivia &&
-                                _tokens[i + 2] is DirectiveArgsToken directiveArgs)
-                            {
-                                var fullDirectiveText = directiveToken.Text + trivia.Text + directiveArgs.Text;
-
-                                i += 2;
-                                var directiveParseResult = _directiveParser.Parse(fullDirectiveText);
-
-                                directiveNode.Add(directiveArgs);
-                                
-
-
-                            }
-
-                            _rootNode.Add(directiveNode);
+                            directiveNode = new DirectiveNode(
+                                directiveToken, 
+                                _sourceText,
+                                rootNode.SyntaxTree);
                         }
+
+                        rootNode.Add(directiveNode);
+
+                        if (_tokens.Count > i + 1 &&
+                            _tokens[i + 1] is TriviaToken triviaNode)
+                        {
+                            i += 1;
+
+                            directiveNode.Add(triviaNode);
+                        }
+
+                        if (_tokens.Count > i + 1 &&
+                            _tokens[i + 1] is DirectiveArgsToken directiveArgs)
+                        {
+                            i += 1;
+
+                            directiveNode.Add(directiveArgs);
+                        }
+
+                        directiveNode.LanguageSpecificParseResult = new DirectiveLanguageService(_directiveParser, directiveNode);
 
                         break;
 
-
                     case LanguageToken languageToken:
-                        var languageNode = new LanguageNode(currentLanguage, _sourceText);
+                        var languageNode = new LanguageNode(
+                            currentLanguage, 
+                            _sourceText,
+                            rootNode.SyntaxTree);
                         languageNode.Add(languageToken);
 
-                        _rootNode.Add(languageNode);
+                        rootNode.Add(languageNode);
 
                         break;
 
                     case TriviaToken trivia:
-                        (directiveNode ?? _rootNode).Add(trivia);
+                        rootNode.Add(trivia);
                         break;
 
                     default:

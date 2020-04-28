@@ -4,6 +4,8 @@
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 
+#nullable enable
+
 namespace Microsoft.DotNet.Interactive.Parsing
 {
     [DebuggerStepThrough]
@@ -11,7 +13,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
     {
         internal KernelDirectiveNode(
             DirectiveToken directiveToken, 
-            SourceText sourceText) : base(directiveToken, sourceText)
+            SourceText sourceText,
+            PolyglotSyntaxTree? syntaxTree) : base(directiveToken, sourceText, syntaxTree)
         {
             KernelName = directiveToken.DirectiveName;
         }

@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.Interactive
                         }
                     }
 
-                    static System.CommandLine.Rendering.TextSpan GenerateErrorMessage(
+                    static TextSpan GenerateErrorMessage(
                         PackageReference requested,
                         PackageReference existing = null)
                     {

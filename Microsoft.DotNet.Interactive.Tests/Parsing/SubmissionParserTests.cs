@@ -102,40 +102,42 @@ x
         }
 
         [Fact]
-        public void Directive_parsing_errors_are_available_as_diagnostics()
+        public void Submission_with_terminating_shebang_includes_it_in_language_node()
         {
             var parser = CreateSubmissionParser("csharp");
 
             var tree = parser.Parse("var x = 1;\n#!");
 
             tree.GetRoot()
-                .ChildNodes
                 .Should()
-                .ContainSingle<DirectiveNode>()
+                .ContainSingle<LanguageNode>()
                 .Which
                 .Text
-                .Trim()
                 .Should()
-                .Be("#i \"nuget:/some/path\"");
-
-
-
-            throw new NotImplementedException("test not written");
+                .EndWith("#!");
         }
 
-        [Fact(Skip="")]
-        public void PLAYGROUND()
+        [Fact]
+        public void Directive_parsing_errors_are_available_as_diagnostics()
         {
-            var tree = CSharpSyntaxTree.ParseText("var x = 4124");
+            var parser = CreateSubmissionParser("csharp");
 
-            var diagnostics = tree.GetRoot().GetDiagnostics();
+            var tree = parser.Parse("#!csharp --invalid-option\nvar x = 1;");
 
-            foreach (var diagnostic in diagnostics)
-            {
-                Console.WriteLine(diagnostic);
-            }
-
-            throw new NotImplementedException("test not written");
+            var node = tree.GetRoot()
+                           .ChildNodes
+                           .Should()
+                           .ContainSingle<DirectiveNode>()
+                           .Which;
+            node
+                .GetDiagnostics()
+                .Should()
+                .ContainSingle(d => d.Severity == DiagnosticSeverity.Error)
+                .Which
+                .Location
+                .SourceSpan
+                .Should()
+                .BeEquivalentTo(node.Span);
         }
 
         [Theory]
@@ -232,6 +234,7 @@ x
             using var compositeKernel = new CompositeKernel();
 
             compositeKernel.DefaultKernelName = defaultLanguage;
+
             compositeKernel.Add(
                 new CSharpKernel()
                     .UseNugetDirective(),

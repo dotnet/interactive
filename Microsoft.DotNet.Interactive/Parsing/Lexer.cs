@@ -12,11 +12,13 @@ namespace Microsoft.DotNet.Interactive.Parsing
     {
         private TextWindow _textWindow;
         private readonly SourceText _sourceText;
+        private readonly PolyglotSyntaxTree _syntaxTree;
         private readonly List<SyntaxToken> _tokens = new List<SyntaxToken>();
 
-        public Lexer(SourceText sourceText)
+        public Lexer(SourceText sourceText, PolyglotSyntaxTree syntaxTree)
         {
             _sourceText = sourceText;
+            _syntaxTree = syntaxTree;
         }
 
         public IReadOnlyList<SyntaxToken> Lex()
@@ -48,10 +50,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             SyntaxToken token = kind switch
             {
-                TokenKind.Language => new LanguageToken(_sourceText, _textWindow.Span),
-                TokenKind.Directive => new DirectiveToken(_sourceText, _textWindow.Span),
-                TokenKind.DirectiveArgs => new DirectiveArgsToken(_sourceText, _textWindow.Span),
-                TokenKind.Trivia => new TriviaToken(_sourceText, _textWindow.Span),
+                TokenKind.Language => new LanguageToken(_sourceText, _textWindow.Span, _syntaxTree),
+                TokenKind.Directive => new DirectiveToken(_sourceText, _textWindow.Span, _syntaxTree),
+                TokenKind.DirectiveArgs => new DirectiveArgsToken(_sourceText, _textWindow.Span, _syntaxTree),
+                TokenKind.Trivia => new TriviaToken(_sourceText, _textWindow.Span, _syntaxTree),
                 _ => throw new ArgumentOutOfRangeException()
             };
 
@@ -134,8 +136,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             bool IsShebangAndNoFollowingWhitespace(int position, char value)
             {
+                var next = position + 1;
+
                 return _sourceText[position] == value &&
-                       !char.IsWhiteSpace(_sourceText[position + 1]);
+                       _sourceText.Length > next &&
+                       !char.IsWhiteSpace(_sourceText[next]);
             }
             
             bool IsCharacterThenWhitespace(char value)

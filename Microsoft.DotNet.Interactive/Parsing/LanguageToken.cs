@@ -9,9 +9,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
     [DebuggerStepThrough]
     public class LanguageToken : SyntaxToken
     {
-        public LanguageToken(
+        internal LanguageToken(
             SourceText text,
-            TextSpan span) : base(text, span)
+            TextSpan span,
+            PolyglotSyntaxTree? syntaxTree) : base(text, span, syntaxTree)
         {
         }
     }

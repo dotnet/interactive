@@ -10,17 +10,20 @@ namespace Microsoft.DotNet.Interactive.Parsing
     public class PolyglotSyntaxTree
     {
         private readonly SourceText _sourceText;
-        private readonly SyntaxNode _root;
+        private SyntaxNode _root;
 
-        public PolyglotSyntaxTree(
-            SourceText sourceText,
-            SyntaxNode root)
+        public PolyglotSyntaxTree(SourceText sourceText)
         {
             _sourceText = sourceText;
-            _root = root;
         }
 
         public int Length => _sourceText.Length;
+
+        internal SyntaxNode RootNode
+        {
+            get => _root;
+            set => _root = value;
+        }
 
         public SyntaxNode GetRoot()
         {

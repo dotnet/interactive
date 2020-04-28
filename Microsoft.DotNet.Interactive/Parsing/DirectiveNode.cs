@@ -11,7 +11,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
     [DebuggerStepThrough]
     public class DirectiveNode : LanguageNode
     {
-        internal DirectiveNode(DirectiveToken directiveToken, SourceText sourceText) : base("#!-directive", sourceText)
+        internal DirectiveNode(
+            DirectiveToken directiveToken, 
+            SourceText sourceText,
+            PolyglotSyntaxTree? syntaxTree) : base("#!-directive", sourceText, syntaxTree)
         {
             Add(directiveToken);
         }
