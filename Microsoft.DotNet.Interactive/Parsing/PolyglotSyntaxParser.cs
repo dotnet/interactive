@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             directiveNode.Add(directiveArgs);
                         }
 
-                        directiveNode.LanguageSpecificParseResult = new DirectiveLanguageService(_directiveParser, directiveNode);
+                        directiveNode.DirectiveParser = _directiveParser;
 
                         break;
 

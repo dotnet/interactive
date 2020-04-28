@@ -22,10 +22,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         public string Language { get; }
 
-        internal LanguageSpecificParseResult? LanguageSpecificParseResult { get; set; }
-
         public override IEnumerable<Diagnostic> GetDiagnostics() =>
-            LanguageSpecificParseResult?.GetDiagnostics() ??
             LanguageSpecificParseResult.None.GetDiagnostics();
     }
 }

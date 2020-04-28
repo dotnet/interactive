@@ -24,18 +24,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         public DirectiveNode Node { get; }
 
-        public override IEnumerable<Diagnostic> GetDiagnostics()
-        {
-            EnsureParsed();
-
-            foreach (var error in _parseResult!.Errors)
-            {
-                yield return new Diagnostic(
-                    error.Message,
-                    DiagnosticSeverity.Error,
-                    new Location(Node.SyntaxTree, Node.Span));
-            }
-        }
 
         private void EnsureParsed()
         {

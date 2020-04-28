@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             return parser.Parse();
         }
 
-        public IReadOnlyList<IKernelCommand> SplitSubmission2(SubmitCode originalSubmitCode)
+        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode originalSubmitCode)
         {
             var commands = new List<IKernelCommand>();
             var compilerDirectives = new List<DirectiveNode>();
@@ -64,31 +64,59 @@ namespace Microsoft.DotNet.Interactive.Parsing
             {
                 switch (nodeOrToken)
                 {
-                    case KernelDirectiveNode kernelDirectiveNode:
-                        break;
-
                     case DirectiveNode directiveNode:
-                        
+
+                        var parseResult = directiveNode.GetDirectiveParseResult();
+
+                        if (parseResult.Errors.Any())
+                        {
+                            commands.Clear();
+                            commands.Add(
+                                new AnonymousKernelCommand((kernelCommand, context) =>
+                                {
+                                    var message =
+                                        string.Join(Environment.NewLine,
+                                                    parseResult.Errors
+                                                               .Select(e => e.ToString()));
+
+                                    context.Fail(message: message);
+                                    return Task.CompletedTask;
+                                }));
+                        }
+                        else
+                        {
+                            commands.Add(
+                                new DirectiveCommand(parseResult, directiveNode));
+                        }
+
                         break;
 
                     case LanguageNode languageNode:
                         commands.Add(new SubmitCode(languageNode));
 
                         break;
+
                     case PolyglotSubmissionNode polyglotSubmissionNode:
                         break;
+                    
                     case SyntaxNode syntaxNode:
                         break;
+                    
                     case DirectiveToken directiveToken:
                         break;
+                    
                     case LanguageToken languageToken:
                         break;
+                    
                     case DirectiveArgsToken directiveArgsToken:
                         break;
+                    
                     case TriviaToken triviaToken:
                         break;
+                    
                     case SyntaxToken syntaxToken:
                         break;
+                    
                     default:
                         throw new ArgumentOutOfRangeException(nameof(nodeOrToken));
                 }
@@ -107,7 +135,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
         }
 
-        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode originalSubmitCode)
+        public IReadOnlyList<IKernelCommand> SplitSubmission_old(SubmitCode originalSubmitCode)
         {
             var directiveParser = GetDirectiveParser();
 
