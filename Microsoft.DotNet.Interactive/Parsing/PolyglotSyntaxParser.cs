@@ -35,12 +35,12 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         public PolyglotSyntaxTree Parse()
         {
-            var tree= new PolyglotSyntaxTree(_sourceText);
+            var tree = new PolyglotSyntaxTree(_sourceText);
 
             _tokens = new Lexer(_sourceText, tree).Lex();
 
             var rootNode = new PolyglotSubmissionNode(
-                DefaultLanguage, 
+                DefaultLanguage,
                 _sourceText,
                 tree);
 
@@ -49,7 +49,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
             ParseSubmission(rootNode);
 
             return tree;
-
         }
 
         private void ParseSubmission(PolyglotSubmissionNode rootNode)
@@ -74,7 +73,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         else
                         {
                             directiveNode = new DirectiveNode(
-                                directiveToken, 
+                                directiveToken,
                                 _sourceText,
                                 rootNode.SyntaxTree);
                         }
@@ -103,7 +102,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                     case LanguageToken languageToken:
                         var languageNode = new LanguageNode(
-                            currentLanguage, 
+                            currentLanguage,
                             _sourceText,
                             rootNode.SyntaxTree);
                         languageNode.Add(languageToken);

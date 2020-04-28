@@ -7,7 +7,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
 {
     public class Diagnostic
     {
-        internal Diagnostic(DiagnosticSeverity severity, Location location)
+        internal Diagnostic(
+            string message,
+            DiagnosticSeverity severity, 
+            Location location)
         {
             Severity = severity;
             Location = location;

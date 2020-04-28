@@ -4,6 +4,8 @@
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 
+#nullable enable
+
 namespace Microsoft.DotNet.Interactive.Parsing
 {
     [DebuggerStepThrough]

@@ -27,7 +27,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         public PolyglotSyntaxTree? SyntaxTree { get; }
 
-
         public string Text => _sourceText.GetSubText(Span).ToString();
     }
 }
