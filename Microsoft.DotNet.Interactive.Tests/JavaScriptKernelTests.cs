@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Which
                 .ScriptValue
                 .Should()
-                .Be(scriptContent);
+                .Be("\n"+ scriptContent);
         }
     }
 }

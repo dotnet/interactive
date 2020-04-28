@@ -8,14 +8,14 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Parsing
 {
-    internal class Lexer
+    internal class PolyglotLexer
     {
         private TextWindow _textWindow;
         private readonly SourceText _sourceText;
         private readonly PolyglotSyntaxTree _syntaxTree;
         private readonly List<SyntaxToken> _tokens = new List<SyntaxToken>();
 
-        public Lexer(SourceText sourceText, PolyglotSyntaxTree syntaxTree)
+        public PolyglotLexer(SourceText sourceText, PolyglotSyntaxTree syntaxTree)
         {
             _sourceText = sourceText;
             _syntaxTree = syntaxTree;
@@ -33,33 +33,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
 
             return _tokens;
-        }
-
-        [DebuggerHidden]
-        private bool More()
-        {
-            return _textWindow.End < _sourceText.Length;
-        }
-
-        private void FlushToken(TokenKind kind)
-        {
-            if (_textWindow.IsEmpty)
-            {
-                return;
-            }
-
-            SyntaxToken token = kind switch
-            {
-                TokenKind.Language => new LanguageToken(_sourceText, _textWindow.Span, _syntaxTree),
-                TokenKind.Directive => new DirectiveToken(_sourceText, _textWindow.Span, _syntaxTree),
-                TokenKind.DirectiveArgs => new DirectiveArgsToken(_sourceText, _textWindow.Span, _syntaxTree),
-                TokenKind.Trivia => new TriviaToken(_sourceText, _textWindow.Span, _syntaxTree),
-                _ => throw new ArgumentOutOfRangeException()
-            };
-
-            _tokens.Add(token);
-
-            _textWindow = new TextWindow(_textWindow.End, _sourceText.Length);
         }
 
         private void LexTrivia()
@@ -232,8 +205,35 @@ namespace Microsoft.DotNet.Interactive.Parsing
             FlushToken(TokenKind.Language);
         }
 
+        private void FlushToken(TokenKind kind)
+        {
+            if (_textWindow.IsEmpty)
+            {
+                return;
+            }
+
+            SyntaxToken token = kind switch
+            {
+                TokenKind.Language => new LanguageToken(_sourceText, _textWindow.Span, _syntaxTree),
+                TokenKind.Directive => new DirectiveToken(_sourceText, _textWindow.Span, _syntaxTree),
+                TokenKind.DirectiveArgs => new DirectiveArgsToken(_sourceText, _textWindow.Span, _syntaxTree),
+                TokenKind.Trivia => new TriviaToken(_sourceText, _textWindow.Span, _syntaxTree),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            _tokens.Add(token);
+
+            _textWindow = new TextWindow(_textWindow.End, _sourceText.Length);
+        }
+
         [DebuggerHidden]
         private char GetNextChar() => _sourceText[_textWindow.End];
+
+        [DebuggerHidden]
+        private bool More()
+        {
+            return _textWindow.End < _sourceText.Length;
+        }
 
         private string CurrentTextWindow => _sourceText.GetSubText(_textWindow.Span).ToString();
 

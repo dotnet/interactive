@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
         {
             var tree = new PolyglotSyntaxTree(_sourceText);
 
-            _tokens = new Lexer(_sourceText, tree).Lex();
+            _tokens = new PolyglotLexer(_sourceText, tree).Lex();
 
             var rootNode = new PolyglotSubmissionNode(
                 DefaultLanguage,

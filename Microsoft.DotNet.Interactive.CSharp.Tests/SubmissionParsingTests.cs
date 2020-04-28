@@ -29,8 +29,8 @@ namespace Microsoft.DotNet.Interactive.CSharp.Tests
             });
 
             kernel.UseNugetDirective();
-
             var path = Path.GetTempFileName();
+            // FIX: (pound_r_is_not_split_into_separate_command_from_csharp_code) 
             var poundR_and_usingStatement = $@"#r ""{path}""{Environment.NewLine}using Some.Namespace;";
             var nextSubmission = "// the code";
 

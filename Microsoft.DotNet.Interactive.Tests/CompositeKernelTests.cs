@@ -149,7 +149,6 @@ new [] {1,2,3}");
                 Handler = (kernelCommand, context) => Task.CompletedTask
             };
 
-
             await kernel.SendAsync(submitCode);
             events.Should()
                 .ContainSingle<CommandHandled>()

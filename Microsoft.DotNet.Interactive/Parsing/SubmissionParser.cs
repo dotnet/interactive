@@ -82,11 +82,34 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                     context.Fail(message: message);
                                     return Task.CompletedTask;
                                 }));
+                            break;
+                        }
+
+                        var directiveCommand = new DirectiveCommand(parseResult, directiveNode);
+                        
+                        if (parseResult.CommandResult.Command.Name == "#r")
+                        {
+                            var value = parseResult.CommandResult.GetArgumentValueOrDefault<PackageReferenceOrFileInfo>("package");
+
+                            if (value.Value is FileInfo)
+                            {
+                                // FIX: (SplitSubmission) 
+                                AddHoistedCommand(new SubmitCode(directiveNode.Text));
+                                // linesToForward.Add(currentLine);
+                            }
+                            else
+                            {
+                                AddHoistedCommand(directiveCommand);
+                            }
+                        }
+                        else if (parseResult.CommandResult.Command.Name == "#i")
+                        {
+                            AddHoistedCommand(directiveCommand);
                         }
                         else
                         {
                             commands.Add(
-                                new DirectiveCommand(parseResult, directiveNode));
+                                directiveCommand);
                         }
 
                         break;
