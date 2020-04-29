@@ -1,18 +1,7 @@
 import * as vscode from 'vscode';
-import { CommandFailed, ReturnValueProduced, StandardOutputValueProduced, EventEnvelope } from '../events';
-import { ClientMapper } from '../clientMapper';
-
-export interface NotebookFile {
-    targetKernelName: string;
-    cells: Array<RawNotebookCell>;
-}
-
-export interface RawNotebookCell {
-    kind: vscode.CellKind;
-    language: string;
-    content: string;
-    outputs: Array<vscode.CellOutput>;
-}
+import { CommandFailed, ReturnValueProduced, StandardOutputValueProduced, EventEnvelope } from './../events';
+import { ClientMapper } from './../clientMapper';
+import { NotebookFile, InteractiveNotebook } from '../interactiveNotebook';
 
 export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvider {
     constructor(readonly clientMapper: ClientMapper) {
@@ -27,7 +16,7 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         } catch {
         }
 
-        let notebook = DotNetInteractiveNotebookProvider.parseNotebook(contents);
+        let notebook = InteractiveNotebook.parse(contents);
         this.clientMapper.addClient(notebook.targetKernelName, editor.document.uri);
         editor.edit(editBuilder => {
             for (let cell of notebook.cells) {
@@ -142,19 +131,5 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
 
         await vscode.workspace.fs.writeFile(document.uri, Buffer.from(JSON.stringify(notebook, null, 2)));
         return true;
-    }
-
-    static parseNotebook(contents: string): NotebookFile {
-        let notebook: NotebookFile;
-        try {
-            notebook = <NotebookFile>JSON.parse(contents);
-        } catch {
-            notebook = {
-                targetKernelName: 'csharp',
-                cells: [],
-            };
-        }
-
-        return notebook;
     }
 }
