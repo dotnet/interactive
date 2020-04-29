@@ -114,6 +114,14 @@ stages:
           displayName: NPM tests
           workingDirectory: "$(Build.SourcesDirectory)/Microsoft.DotNet.Interactive.Js"
 
+        - script: npm i
+          displayName: Install NPM packages for VS Code extension
+          workingDirectory: "$(Build.SourcesDirectory)/dotnet-interactive-vscode"
+
+        - script: npm run ciTest
+          displayName: Run VS Code extension tests
+          workingDirectory: "$(Build.SourcesDirectory)/dotnet-interactive-vscode"
+
         # Prevent symbols packages from being saved in the following `packages` artifact because they're incomplete.
         # See `eng/AfterSolutionBuild.targets:StripFilesFromSymbolPackages` for details.
         - script: del /S $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\*.symbols.nupkg
