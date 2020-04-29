@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -34,13 +35,26 @@ namespace Microsoft.DotNet.Interactive.Tests
                     .Cast<ScriptContent>()
                     .ToArray();
 
-            formatted
-                .Should()
-                .ContainSingle()
-                .Which
-                .ScriptValue
-                .Should()
-                .Be("\n"+ scriptContent);
+            if (SubmissionParser.USE_NEW_BEHAVIOR)
+            {
+                formatted
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .ScriptValue
+                    .Should()
+                    .Be("\n" + scriptContent);
+            }
+            else
+            {
+                formatted
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .ScriptValue
+                    .Should()
+                    .Be(scriptContent);
+            }
         }
     }
 }

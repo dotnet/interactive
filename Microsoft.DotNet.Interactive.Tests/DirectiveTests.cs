@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -191,6 +192,11 @@ i");
         [Fact]
         public async Task When_an_unrecognized_directive_is_encountered_an_error_is_produced()
         {
+            if (!SubmissionParser.USE_NEW_BEHAVIOR)
+            {
+                return;
+            }
+
             using var kernel = new CompositeKernel
             {
                 new CSharpKernel()

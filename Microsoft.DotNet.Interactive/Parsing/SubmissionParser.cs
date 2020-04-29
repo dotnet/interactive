@@ -49,14 +49,21 @@ namespace Microsoft.DotNet.Interactive.Parsing
             return parser.Parse();
         }
 
-        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode originalSubmitCode)
+        public const bool USE_NEW_BEHAVIOR = false;
+
+        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode) =>
+            USE_NEW_BEHAVIOR
+                ? SplitSubmission_New(submitCode)
+                : SplitSubmission_Old(submitCode);
+
+        public IReadOnlyList<IKernelCommand> SplitSubmission_New(
+            SubmitCode submitCode)
         {
             var commands = new List<IKernelCommand>();
-            var compilerDirectives = new List<DirectiveNode>();
 
             var hoistedCommandsIndex = 0;
 
-            var tree = Parse(originalSubmitCode.Code);
+            var tree = Parse(submitCode.Code);
 
             var nodes = tree.GetRoot().ChildNodes.ToArray();
 
@@ -145,11 +152,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 }
             }
 
-            foreach (var compilerDirective in compilerDirectives)
-            {
-                AddHoistedCommand(new SubmitCode(compilerDirective));
-            }
-
             return commands;
 
             void AddHoistedCommand(IKernelCommand command)
@@ -158,7 +160,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
         }
 
-        public IReadOnlyList<IKernelCommand> SplitSubmission_old(SubmitCode originalSubmitCode)
+        public IReadOnlyList<IKernelCommand> SplitSubmission_Old(SubmitCode originalSubmitCode)
         {
             var directiveParser = GetDirectiveParser();
 

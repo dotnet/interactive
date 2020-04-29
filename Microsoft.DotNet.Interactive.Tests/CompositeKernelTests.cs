@@ -150,6 +150,7 @@ new [] {1,2,3}");
             };
 
             await kernel.SendAsync(submitCode);
+
             events.Should()
                 .ContainSingle<CommandHandled>()
                 .Which
@@ -175,6 +176,7 @@ new [] {1,2,3}");
             };
 
             var submitCode = new SubmitCode("//command", kernel.Name);
+
             await kernel.SendAsync(submitCode);
             receivedOnFakeKernel.Should()
                 .BeEmpty();
