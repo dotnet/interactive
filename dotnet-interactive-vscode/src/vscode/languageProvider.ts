@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { LinePositionSpan, LinePosition, CompletionRequestCompleted } from '../events';
 import { ClientMapper } from '../clientMapper';
 import { Hover } from './../languageServices/hover';
+import { provideCompletion } from '../languageServices/completion';
 
 const selector = { language: 'dotnet-interactive' };
 
@@ -28,31 +29,14 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
 
     provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
         return new Promise<vscode.CompletionList>((resolve, reject) => {
-            let handled = false;
-            let client = this.clientMapper.getClient(document.uri);
-            if (client === undefined) {
-                reject();
-                return;
-            }
-
-            client.completion(document.getText(), position.line, position.character).subscribe({
-                next: value => {
-                    if (value.eventType === 'CommandHandled' && !handled) {
-                        handled = true;
-                        reject();
-                    } else if (value.eventType === 'CompletionRequestCompleted') {
-                        handled = true;
-                        let completion = <CompletionRequestCompleted>value.event;
-                        let completionItems: Array<vscode.CompletionItem> = [];
-                        for (let item of completion.completionList) {
-                            let vscodeItem = new vscode.CompletionItem(item.displayText, this.mapCompletionItem(item.kind));
-                            completionItems.push(vscodeItem);
-                        }
-    
-                        let completionList = new vscode.CompletionList(completionItems, false);
-                        resolve(completionList);
-                    }
+            provideCompletion(this.clientMapper, document, position, token).then(result => {
+                let completionItems: Array<vscode.CompletionItem> = [];
+                for (let item of result) {
+                    let vscodeItem = new vscode.CompletionItem(item.displayText, this.mapCompletionItem(item.kind));
+                    completionItems.push(vscodeItem);
                 }
+                let completionList = new vscode.CompletionList(completionItems, false);
+                resolve(completionList);
             });
         });
     }

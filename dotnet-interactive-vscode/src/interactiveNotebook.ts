@@ -96,7 +96,9 @@ export class InteractiveNotebook {
                         err: err
                     });
                 },
-                complete: () => {}
+                complete: () => {
+                    resolve([]);
+                }
             });
         });
     }
