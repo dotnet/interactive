@@ -122,6 +122,14 @@ stages:
           displayName: Run VS Code extension tests
           workingDirectory: "$(Build.SourcesDirectory)/dotnet-interactive-vscode"
 
+        - task: PublishTestResults@2
+          displayName: Publish VS Code Extension Test Results
+          inputs:
+            testResultsFormat: VSTest
+            testResultsFiles: '**/*.trx'
+            searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
+          condition: always()
+
         # Prevent symbols packages from being saved in the following `packages` artifact because they're incomplete.
         # See `eng/AfterSolutionBuild.targets:StripFilesFromSymbolPackages` for details.
         - script: del /S $(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\*.symbols.nupkg
