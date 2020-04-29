@@ -1,18 +1,16 @@
 import { expect } from 'chai';
 
 //import * as vscode from 'vscode';
-//import { ClientMapper } from '../../clientMapper';
+import { ClientMapper } from './../../clientMapper';
 //import { DotNetInteractiveNotebookProvider } from '../../notebookProvider';
 
-/*suite('Extension Test Suite', () => {
-    vscode.window.showInformationMessage('Start all tests.');
-
-    test('Parse notebook cell URI', () => {
-        expect(ClientMapper.keyFromUri(vscode.Uri.parse("vscode-notebook:/c:/path/to/file"))).to.equal("/c:/path/to/file");
-        expect(ClientMapper.keyFromUri(vscode.Uri.parse("vscode-notebook:/c:/path/to/file, cell 1"))).to.equal("/c:/path/to/file");
+describe('Extension Test Suite', () => {
+    it('Parse notebook cell URI', () => {
+        expect(ClientMapper.keyFromUri({path: "/c:/path/to/file"})).to.equal("/c:/path/to/file");
+        expect(ClientMapper.keyFromUri({path: "/c:/path/to/file, cell 1"})).to.equal("/c:/path/to/file");
     });
 
-    test('Parse notebook from valid JSON', () => {
+    /*it('Parse notebook from valid JSON', () => {
         let valid = {
             targetKernelName: 'fsharp',
             cells: [
@@ -31,9 +29,9 @@ import { expect } from 'chai';
         expect(notebook.cells[0].content).to.equal("let x = 1");
     });
 
-    test('Parse notebook from invalid JSON', () => {
+    it('Parse notebook from invalid JSON', () => {
         let notebook = DotNetInteractiveNotebookProvider.parseNotebook('invalid json should still result in a notebook');
         expect(notebook.targetKernelName).to.equal("csharp");
         expect(notebook.cells).length.to.be.empty;
-    });
-}); // */
+    }); // */
+});
