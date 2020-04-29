@@ -163,9 +163,16 @@ type FSharpKernel() as this =
     override _.SetVariableAsync(name: string, value: Object) : Task = 
         raise (NotImplementedException())
 
+    member _.RestoreSources = _packageRestoreContext.Value.RestoreSources;
+
+    member _.RequestedPackageReferences = _packageRestoreContext.Value.RequestedPackageReferences;
+
+    member _.ResolvedPackageReferences = _packageRestoreContext.Value.ResolvedPackageReferences;
+
+
     // Integrate nuget package management to the F# Kernel
     interface ISupportNuget with
-        member this.RegisterResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
+        member _.RegisterResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
             // Generate #r and #I from packageReferences
             let sb = StringBuilder()
             let hashset = HashSet()
@@ -187,14 +194,14 @@ type FSharpKernel() as this =
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command)
 
-        member this.PackageRestoreContext = _packageRestoreContext.Value
+        member _.PackageRestoreContext = _packageRestoreContext.Value
 
     interface IPackageRestoreContext with
-        member _.RestoreSources = _packageRestoreContext.Value.RestoreSources;
+        member _.RestoreSources = this.RestoreSources;
 
-        member _.RequestedPackageReferences = _packageRestoreContext.Value.RequestedPackageReferences;
+        member _.RequestedPackageReferences = this.RequestedPackageReferences;
 
-        member _.ResolvedPackageReferences = _packageRestoreContext.Value.ResolvedPackageReferences;
+        member _.ResolvedPackageReferences = this.ResolvedPackageReferences;
 
     interface IExtensibleKernel with
         member this.LoadExtensionsFromDirectoryAsync(directory:DirectoryInfo, context:KernelInvocationContext) =

@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public interface ISupportNuget
+    public interface ISupportNuget : IPackageRestoreContext
     {
         // KernelSupportsNugetExtension relies on access to the full PackageRestoreContextClass for state mutation
         PackageRestoreContext PackageRestoreContext { get; }
