@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { CommandFailed, ReturnValueProduced, StandardOutputValueProduced, EventEnvelope } from './../events';
 import { ClientMapper } from './../clientMapper';
 import { NotebookFile, InteractiveNotebook } from '../interactiveNotebook';
 
@@ -43,71 +42,20 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         }, 0);
     }
 
-    executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell | undefined, token: vscode.CancellationToken): Promise<void> {
+    async executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell | undefined, token: vscode.CancellationToken): Promise<void> {
         if (!cell) {
             // TODO: run everything
-            return Promise.resolve();
+            return;
         }
 
         let client = this.clientMapper.getClient(document.uri);
         if (client === undefined) {
-            return Promise.resolve();
+            return;
         }
 
         let source = cell.source.toString();
-        client.submitCode(source).subscribe({
-            next: value => {
-                switch (value.eventType) {
-                    case 'CommandFailed':
-                        {
-                            let err = <CommandFailed>value.event;
-                            let output: vscode.CellErrorOutput = {
-                                outputKind: vscode.CellOutputKind.Error,
-                                ename: 'Error',
-                                evalue: err.message,
-                                traceback: [],
-                            };
-                            cell.outputs = [output];
-                        }
-                        break;
-                    case 'StandardOutputValueProduced':
-                        {
-                            let st = <StandardOutputValueProduced>value.event;
-                            let output: vscode.CellStreamOutput = {
-                                outputKind: vscode.CellOutputKind.Text,
-                                text: st.value.toString(),
-                            };
-                            cell.outputs = [output];
-                        }
-                        break;
-                    case 'ReturnValueProduced':
-                        {
-                            let rvt = <ReturnValueProduced>value.event;
-                            let data: { [key: string]: any } = {};
-                            for (let formatted of rvt.formattedValues) {
-                                data[formatted.mimeType] = formatted.value;
-                            }
-                            let output: vscode.CellDisplayOutput = {
-                                outputKind: vscode.CellOutputKind.Rich,
-                                data: data
-                            };
-                            cell.outputs = [output];
-                        }
-                        break;
-                }
-            },
-            error: err => {
-                cell.outputs = [{
-                    outputKind: vscode.CellOutputKind.Error,
-                    ename: 'Error',
-                    evalue: `Unknown error: ${err}`,
-                    traceback: [],
-                }];
-            },
-            complete: () => {}
-        });
-
-        return Promise.resolve();
+        let outputs = await InteractiveNotebook.execute(source, client);
+        cell.outputs = outputs;
     }
 
     async save(document: vscode.NotebookDocument): Promise<boolean> {

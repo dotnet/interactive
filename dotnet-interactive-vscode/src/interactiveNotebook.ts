@@ -1,3 +1,6 @@
+import { InteractiveClient } from "./interactiveClient";
+import { CommandFailed, StandardOutputValueProduced, ReturnValueProduced } from "./events";
+
 // begin interface matching from vscode
 
 export enum CellKind {
@@ -45,6 +48,59 @@ export interface NotebookFile {
 }
 
 export class InteractiveNotebook {
+    static async execute(source: string, client: InteractiveClient): Promise<Array<CellOutput>> {
+        return new Promise((resolve, reject) => {
+            client.submitCode(source).subscribe({
+                next: value => {
+                    switch (value.eventType) {
+                        case 'CommandFailed':
+                            {
+                                let err = <CommandFailed>value.event;
+                                let output: CellErrorOutput = {
+                                    outputKind: CellOutputKind.Error,
+                                    ename: 'Error',
+                                    evalue: err.message,
+                                    traceback: [],
+                                };
+                                resolve([output]);
+                            }
+                            break;
+                        case 'StandardOutputValueProduced':
+                            {
+                                let st = <StandardOutputValueProduced>value.event;
+                                let output: CellStreamOutput = {
+                                    outputKind: CellOutputKind.Text,
+                                    text: st.value.toString(),
+                                };
+                                resolve([output]);
+                            }
+                            break;
+                        case 'ReturnValueProduced':
+                            {
+                                let rvt = <ReturnValueProduced>value.event;
+                                let data: { [key: string]: any } = {};
+                                for (let formatted of rvt.formattedValues) {
+                                    data[formatted.mimeType] = formatted.value;
+                                }
+                                let output: CellDisplayOutput = {
+                                    outputKind: CellOutputKind.Rich,
+                                    data: data
+                                };
+                                resolve([output]);
+                            }
+                            break;
+                    }
+                },
+                error: err => {
+                    reject({
+                        err: err
+                    });
+                },
+                complete: () => {}
+            });
+        });
+    }
+
     static parse(contents: string): NotebookFile {
         let notebook: NotebookFile;
         try {

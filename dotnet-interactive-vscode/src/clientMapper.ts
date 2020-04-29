@@ -24,9 +24,10 @@ export class ClientMapper {
         }
     }
 
-    addClient(targetKernelName: string, uri: HasPath) {
+    addClient(targetKernelName: string, uri: HasPath): InteractiveClient {
         let client = new InteractiveClient(this.clientAdapterCreator(targetKernelName));
         this.clientMap.set(ClientMapper.keyFromUri(uri), client);
+        return client;
     }
 
     getClient(uri: HasPath): InteractiveClient | undefined {
