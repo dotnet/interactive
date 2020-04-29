@@ -128,6 +128,7 @@ type FSharpKernel() as this =
         }
 
     let _packageRestoreContext = lazy (new PackageRestoreContext())
+    do base.RegisterForDisposal(fun () -> if _packageRestoreContext.IsValueCreated then _packageRestoreContext.Value.Dispose())
 
     member _.GetCurrentVariable(variableName: string) =
         let result, _errors =

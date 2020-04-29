@@ -209,7 +209,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public async Task Pound_r_nuget_allows_duplicate_package_specifications_single_cell()
+        public async Task Allows_duplicate_package_specifications()
         {
             using var restoreContext = new PackageRestoreContext();
             restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0-preview");

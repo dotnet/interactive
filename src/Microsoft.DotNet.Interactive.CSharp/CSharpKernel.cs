@@ -71,6 +71,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
             _packageRestoreContext = new Lazy<PackageRestoreContext>(() => new PackageRestoreContext());
             RegisterForDisposal(() =>
             {
+                _packageRestoreContext?.Value?.Dispose();
+                _packageRestoreContext = null;
                 ScriptState = null;
             });
         }
