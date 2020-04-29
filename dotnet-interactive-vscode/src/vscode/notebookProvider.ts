@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { CommandFailed, ReturnValueProduced, StandardOutputValueProduced } from './interfaces';
-import { ClientMapper } from './clientMapper';
+import { CommandFailed, ReturnValueProduced, StandardOutputValueProduced, EventEnvelope } from '../events';
+import { ClientMapper } from '../clientMapper';
 
 export interface NotebookFile {
     targetKernelName: string;
@@ -66,46 +66,59 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         }
 
         let source = cell.source.toString();
-        return client.submitCode(source, (event, eventType) => {
-            switch (eventType) {
-                case 'CommandFailed':
-                    {
-                        let err = <CommandFailed>event;
-                        let output: vscode.CellErrorOutput = {
-                            outputKind: vscode.CellOutputKind.Error,
-                            ename: 'Error',
-                            evalue: err.message,
-                            traceback: [],
-                        };
-                        cell.outputs = [output];
-                    }
-                    break;
-                case 'StandardOutputValueProduced':
-                    {
-                        let st = <StandardOutputValueProduced>event;
-                        let output: vscode.CellStreamOutput = {
-                            outputKind: vscode.CellOutputKind.Text,
-                            text: st.value.toString(),
-                        };
-                        cell.outputs = [output];
-                    }
-                    break;
-                case 'ReturnValueProduced':
-                    {
-                        let rvt = <ReturnValueProduced>event;
-                        let data: { [key: string]: any } = {};
-                        for (let formatted of rvt.formattedValues) {
-                            data[formatted.mimeType] = formatted.value;
+        client.submitCode(source).subscribe({
+            next: value => {
+                switch (value.eventType) {
+                    case 'CommandFailed':
+                        {
+                            let err = <CommandFailed>value.event;
+                            let output: vscode.CellErrorOutput = {
+                                outputKind: vscode.CellOutputKind.Error,
+                                ename: 'Error',
+                                evalue: err.message,
+                                traceback: [],
+                            };
+                            cell.outputs = [output];
                         }
-                        let output: vscode.CellDisplayOutput = {
-                            outputKind: vscode.CellOutputKind.Rich,
-                            data: data
-                        };
-                        cell.outputs = [output];
-                    }
-                    break;
-            }
+                        break;
+                    case 'StandardOutputValueProduced':
+                        {
+                            let st = <StandardOutputValueProduced>value.event;
+                            let output: vscode.CellStreamOutput = {
+                                outputKind: vscode.CellOutputKind.Text,
+                                text: st.value.toString(),
+                            };
+                            cell.outputs = [output];
+                        }
+                        break;
+                    case 'ReturnValueProduced':
+                        {
+                            let rvt = <ReturnValueProduced>value.event;
+                            let data: { [key: string]: any } = {};
+                            for (let formatted of rvt.formattedValues) {
+                                data[formatted.mimeType] = formatted.value;
+                            }
+                            let output: vscode.CellDisplayOutput = {
+                                outputKind: vscode.CellOutputKind.Rich,
+                                data: data
+                            };
+                            cell.outputs = [output];
+                        }
+                        break;
+                }
+            },
+            error: err => {
+                cell.outputs = [{
+                    outputKind: vscode.CellOutputKind.Error,
+                    ename: 'Error',
+                    evalue: `Unknown error: ${err}`,
+                    traceback: [],
+                }];
+            },
+            complete: () => {}
         });
+
+        return Promise.resolve();
     }
 
     async save(document: vscode.NotebookDocument): Promise<boolean> {

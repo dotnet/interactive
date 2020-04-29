@@ -1,10 +1,17 @@
-import * as vscode from 'vscode';
 import { InteractiveClient } from "./interactiveClient";
+import { ClientAdapterBase } from './clientAdapterBase';
+
+interface HasPath {
+    path: string;
+}
 
 export class ClientMapper {
     private clientMap: Map<string, InteractiveClient> = new Map();
 
-    static keyFromUri(uri: vscode.Uri): string {
+    constructor(readonly clientAdapterCreator: {(targetKernelName: string): ClientAdapterBase}) {
+    }
+
+    static keyFromUri(uri: HasPath): string {
         // TODO: `path` property can look like:
         // TODO:   /c:/path/to/notebook/file, cell X
         // TODO: need access to `vscode.CellUri` to properly parse
@@ -17,12 +24,12 @@ export class ClientMapper {
         }
     }
 
-    addClient(targetKernelName: string, uri: vscode.Uri) {
-        let client = new InteractiveClient(targetKernelName);
+    addClient(targetKernelName: string, uri: HasPath) {
+        let client = new InteractiveClient(this.clientAdapterCreator(targetKernelName));
         this.clientMap.set(ClientMapper.keyFromUri(uri), client);
     }
 
-    getClient(uri: vscode.Uri): InteractiveClient | undefined {
+    getClient(uri: HasPath): InteractiveClient | undefined {
         return this.clientMap.get(ClientMapper.keyFromUri(uri));
     }
 }

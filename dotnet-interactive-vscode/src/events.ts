@@ -2,6 +2,9 @@ export interface CommandFailed {
     message: string;
 }
 
+export interface CommandHandled {
+}
+
 export interface CompletionItem {
     displayText: string;
     kind: string;
@@ -47,7 +50,7 @@ export interface ReturnValueProduced extends DisplayEventBase {
 export interface StandardOutputValueProduced extends DisplayEventBase {
 }
 
-export type Event = CommandFailed | CompletionRequestCompleted | HoverMarkdownProduced | HoverPlainTextProduced | ReturnValueProduced | StandardOutputValueProduced;
+export type Event = CommandFailed | CommandHandled | CompletionRequestCompleted | HoverMarkdownProduced | HoverPlainTextProduced | ReturnValueProduced | StandardOutputValueProduced;
 
 export interface EventEnvelope {
     eventType: string;

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
-import { HoverMarkdownProduced, LinePositionSpan, LinePosition, HoverPlainTextProduced, CompletionRequestCompleted } from './interfaces';
-import { ClientMapper } from './clientMapper';
+import { LinePositionSpan, LinePosition, CompletionRequestCompleted } from '../events';
+import { ClientMapper } from '../clientMapper';
+import { Hover } from './../languageServices/hover';
 
 const selector = { language: 'dotnet-interactive' };
 
@@ -34,21 +35,23 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
                 return;
             }
 
-            client.completion(document.getText(), position.line, position.character, (event, eventType) => {
-                if (eventType === 'CommandHandled' && !handled) {
-                    handled = true;
-                    reject();
-                } else if (eventType === 'CompletionRequestCompleted') {
-                    handled = true;
-                    let completion = <CompletionRequestCompleted>event;
-                    let completionItems: Array<vscode.CompletionItem> = [];
-                    for (let item of completion.completionList) {
-                        let vscodeItem = new vscode.CompletionItem(item.displayText, this.mapCompletionItem(item.kind));
-                        completionItems.push(vscodeItem);
+            client.completion(document.getText(), position.line, position.character).subscribe({
+                next: value => {
+                    if (value.eventType === 'CommandHandled' && !handled) {
+                        handled = true;
+                        reject();
+                    } else if (value.eventType === 'CompletionRequestCompleted') {
+                        handled = true;
+                        let completion = <CompletionRequestCompleted>value.event;
+                        let completionItems: Array<vscode.CompletionItem> = [];
+                        for (let item of completion.completionList) {
+                            let vscodeItem = new vscode.CompletionItem(item.displayText, this.mapCompletionItem(item.kind));
+                            completionItems.push(vscodeItem);
+                        }
+    
+                        let completionList = new vscode.CompletionList(completionItems, false);
+                        resolve(completionList);
                     }
-
-                    let completionList = new vscode.CompletionList(completionItems, false);
-                    resolve(completionList);
                 }
             });
         });
@@ -83,44 +86,12 @@ export class HoverProvider implements vscode.HoverProvider {
 
     provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Hover> {
         return new Promise<vscode.Hover>((resolve, reject) => {
-            let handled = false;
-            let client = this.clientMapper.getClient(document.uri);
-            if (client === undefined) {
-                reject();
-                return;
-            }
-
-            client.hover(document.getText(), position.line, position.character, (event, eventType) => {
-                let content: vscode.MarkedString | undefined = undefined;
-                let range: vscode.Range | undefined = undefined;
-                switch (eventType) {
-                    case 'CommandHandled':
-                        if (!handled) {
-                            reject();
-                        }
-                        break;
-                    case 'HoverMarkdownProduced':
-                        handled = true;
-                        {
-                            let hover = <HoverMarkdownProduced>event;
-                            content = new vscode.MarkdownString(hover.content);
-                            range = convertToRange(hover.range);
-                        }
-                        break;
-                    case 'HoverPlainTextProduced':
-                        handled = true;
-                        {
-                            let hover = <HoverPlainTextProduced>event;
-                            content = hover.content;
-                            range = convertToRange(hover.range);
-                        }
-                        break;
-                }
-
-                if (content !== undefined) {
-                    let hover = new vscode.Hover(content, range);
-                    resolve(hover);
-                }
+            Hover.provideHover(this.clientMapper, document, position, token).then(result => {
+                let contents = result.isMarkdown
+                    ? new vscode.MarkdownString(result.contents)
+                    : result.contents;
+                let hover = new vscode.Hover(contents, convertToRange(result.range));
+                resolve(hover);
             });
         });
     }
