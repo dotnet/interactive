@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
 import { ClientAdapterBase } from "./../../clientAdapterBase";
-import { EventEnvelope, Event } from "./../../events";
+import { EventEnvelope } from "./../../events";
 
 // Replays all events given to it
 export class TestClientAdapter extends ClientAdapterBase {
