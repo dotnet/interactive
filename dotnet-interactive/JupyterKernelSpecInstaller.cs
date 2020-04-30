@@ -58,6 +58,7 @@ namespace Microsoft.DotNet.Interactive.App
             }
 
             destination = _kernelSpecModule.GetDefaultKernelSpecDirectory();
+
             return InstallKernelSpecToDirectory(destination, destination, kernelDisplayName);
         }
 

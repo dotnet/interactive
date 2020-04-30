@@ -22,13 +22,50 @@ namespace Microsoft.DotNet.Interactive.App
 
         public  DirectoryInfo GetDefaultKernelSpecDirectory()
         {
+            
+            var directory = GetDefaultAnacondaKernelSpecDirectory();
+            if (!directory.Exists)
+            {
+                directory = GetDefaultJupyterKernelSpecDirectory();
+            }
+
+            return directory;
+        }
+
+        private static DirectoryInfo GetDefaultAnacondaKernelSpecDirectory()
+        {
             DirectoryInfo directory;
             switch (Environment.OSVersion.Platform)
             {
                 case PlatformID.Win32S:
                 case PlatformID.Win32Windows:
                 case PlatformID.Win32NT:
-                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "jupyter", "kernels"));
+                    directory = new DirectoryInfo(Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Continuum", "anaconda3", "share", "jupyter", "kernels"));
+                    break;
+                case PlatformID.Unix:
+                    directory = new DirectoryInfo("~/anaconda3/share/jupyter/kernels");
+                    break;
+                case PlatformID.MacOSX:
+                    directory = new DirectoryInfo("~/opt/anaconda3/share/jupyter/kernels");
+                    break;
+                default:
+                    throw new PlatformNotSupportedException();
+            }
+
+            return directory;
+        }
+
+        private static DirectoryInfo GetDefaultJupyterKernelSpecDirectory()
+        {
+            DirectoryInfo directory;
+            switch (Environment.OSVersion.Platform)
+            {
+                case PlatformID.Win32S:
+                case PlatformID.Win32Windows:
+                case PlatformID.Win32NT:
+                    directory = new DirectoryInfo(Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "jupyter", "kernels"));
                     break;
                 case PlatformID.Unix:
                     directory = new DirectoryInfo("~/.local/share/jupyter/kernels");
