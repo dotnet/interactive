@@ -35,8 +35,7 @@ When installing `dotnet-interactive` it is possible to provide the path for inst
 
 | Command                                                      | Destination path
 |--------------------------------------------------------------|--------------------------------
-dotnet interactive jupyter install                             | Will use the kernelspec module if available, if it is not present will attempt ot use platform specific folders for python or anaconda paths
+dotnet interactive jupyter install                             | Use the kernelspec module if available. If not found, attempt to use well-known platform-specific folders for Python or Anaconda .
 dotnet interactive jupyter install --path c:\my_path | Will install the kernelspecs at the location if it exists
-
 
 
