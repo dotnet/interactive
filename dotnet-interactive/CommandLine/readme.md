@@ -31,11 +31,10 @@ dotnet interactive jupyter install --http-port-range 8001-9000 | Enabled on auto
 
 ## Installing kernels
 
-When installing `dotnet-interactive` it is possible to provide the path for installing the kernel specs, the path msut exists.
+When installing `dotnet-interactive` you can provide a path where the kernelspec  files used by Jupyter to configure a kernel will be installed. The provided path must be an existing directory.
 
 | Command                                                      | Destination path
 |--------------------------------------------------------------|--------------------------------
 dotnet interactive jupyter install                             | Use the kernelspec module if available. If not found, attempt to use well-known platform-specific folders for Python or Anaconda .
 dotnet interactive jupyter install --path c:\my_path | Will install the kernelspecs at the location if it exists
-
 
