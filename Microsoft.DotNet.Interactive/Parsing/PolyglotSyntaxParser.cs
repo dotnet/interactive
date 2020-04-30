@@ -105,9 +105,13 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         {
                             directiveNode.DirectiveParser = _rootKernelDirectiveParser;
                         }
-                        else
+                        else if (_subkernelDirectiveParsersByLanguageName != null)
                         {
                             directiveNode.DirectiveParser = _subkernelDirectiveParsersByLanguageName[currentLanguage]();
+                        }
+                        else
+                        {
+
                         }
 
                         break;
