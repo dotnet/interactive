@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.Interactive.App
 
             destination = _kernelSpecModule.GetDefaultKernelSpecDirectory();
 
-            return InstallKernelSpecToDirectory(destination, destination, kernelDisplayName);
+            return InstallKernelSpecToDirectory(sourceDirectory, destination, kernelDisplayName);
         }
 
         private bool InstallKernelSpecToDirectory(DirectoryInfo sourceDirectory, DirectoryInfo destination,
@@ -98,44 +98,44 @@ namespace Microsoft.DotNet.Interactive.App
         }
 
 
-        private bool CopyKernelSpecFiles(DirectoryInfo source, DirectoryInfo location)
+        private bool CopyKernelSpecFiles(DirectoryInfo source, DirectoryInfo destination)
         {
             if (source == null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (location == null)
+            if (destination == null)
             {
-                throw new ArgumentNullException(nameof(location));
+                throw new ArgumentNullException(nameof(destination));
             }
 
-            if (!location.Exists)
+            if (!destination.Exists)
             {
-                _console.Error.WriteLine($"Directory {location.FullName} does not exist.");
+                _console.Error.WriteLine($"Directory {destination.FullName} does not exist.");
                 return false;
             }
 
             try
             {
-                var destination = new DirectoryInfo(Path.Combine(location.FullName, source.Name));
-                if (destination.Exists)
+                var kernelSpecDestinationPath = new DirectoryInfo(Path.Combine(destination.FullName, source.Name));
+                if (kernelSpecDestinationPath.Exists)
                 {
-                    destination.Delete(true);
+                    kernelSpecDestinationPath.Delete(true);
                 }
 
-                destination.Create();
+                kernelSpecDestinationPath.Create();
 
                 // First create all of the directories
                 foreach (var dirPath in Directory.GetDirectories(source.FullName, "*", SearchOption.AllDirectories))
                 {
-                    Directory.CreateDirectory(dirPath.Replace(source.FullName, destination.FullName));
+                    Directory.CreateDirectory(dirPath.Replace(source.FullName, kernelSpecDestinationPath.FullName));
                 }
 
                 // Copy all the files
                 foreach (var newPath in Directory.GetFiles(source.FullName, "*.*", SearchOption.AllDirectories))
                 {
-                    File.Copy(newPath, newPath.Replace(source.FullName, destination.FullName));
+                    File.Copy(newPath, newPath.Replace(source.FullName, kernelSpecDestinationPath.FullName));
                 }
             }
             catch (IOException ioe)
