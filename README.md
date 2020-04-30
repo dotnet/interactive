@@ -38,7 +38,7 @@ First, make sure you have the following installed:
 > dotnet tool install -g --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json" Microsoft.dotnet-interactive
 ```
 
-- Register .NET Interactive as a Jupyter kernel by running the following within your Anaconda Prompt (Read the [install command line documentation](dotnet-interactive/CommandLine/readme.md) for more details):
+- Register .NET Interactive as a Jupyter kernel by running the following within your Anaconda Prompt. (More details [here](dotnet-interactive/CommandLine/readme.md)):
 
 ```console
 > dotnet interactive jupyter install
@@ -85,6 +85,5 @@ As we are still in the early stages of development, we may not take any feature 
 |    [Azure Synapse Analytics ](https://azure.microsoft.com/en-us/services/synapse-analytics/)   |Azure HDInsight (HDI)  |
 |:-------------:|:-------------:|
 | Azure Synapse Analytics uses the .NET kernel to write and run quick ad-hoc queries in addition to developing complete, end-to-end big data scenarios, such as reading in data, transforming it, and visualizing it|You can launch Jupyter notebooks from your HDInsight cluster to run big data queries against the compute resources in that cluster. |
-
 
 
