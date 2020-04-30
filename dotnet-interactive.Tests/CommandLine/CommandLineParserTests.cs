@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             var logPath = new DirectoryInfo(Path.GetTempPath());
 
             await _parser.InvokeAsync($"jupyter --log-path {logPath} {_connectionFile}", _console);
-
+            
             _startOptions
                 .LogPath
                 .FullName
@@ -104,14 +104,12 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         {
             Directory.CreateDirectory(_kernelSpecInstallPath.FullName);
             
-            var result = _parser.Parse($"jupyter install --path {_kernelSpecInstallPath}");
+            var result = _parser.InvokeAsync($"jupyter install --path {_kernelSpecInstallPath}");
 
-            var option = result.CommandResult.OptionResult("--path");
+            var installedKernels = _kernelSpecInstallPath.GetDirectories();
 
-            using var scope = new AssertionScope();
-
-            option.Should().NotBeNull();
-            result.FindResultFor(option.Option).GetValueOrDefault<DirectoryInfo>().FullName.Should().Be(_kernelSpecInstallPath.FullName);
+            installedKernels.Select(d => d.Name)
+                .Should().BeEquivalentTo(".net-csharp", ".net-fsharp", ".net-powershell");
         }
 
         [Fact]
