@@ -61,6 +61,7 @@
     "tdd": "npm test -- --watch"
   },
   "devDependencies": {
+    "@types/chai": "^4.2.11",
     "@types/glob": "^7.1.1",
     "@types/mocha": "^7.0.2",
     "@types/node": "^13.11.0",
