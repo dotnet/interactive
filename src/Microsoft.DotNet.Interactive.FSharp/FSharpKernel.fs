@@ -30,18 +30,19 @@ type FSharpKernel() as this =
 
     let variables = HashSet<string>()
 
-    let createScript registerForDisposal  =  
+    let createScript registerForDisposal =  
         let script = lock lockObj (fun () -> new FSharpScript(additionalArgs=[|"/langversion:preview"|]))
-
         let valueBoundHandler = new Handler<(obj * Type * string)>(fun _ (_, _, name) -> variables.Add(name) |> ignore)
         do script.ValueBound.AddHandler valueBoundHandler
-        do registerForDisposal(fun () -> script.ValueBound.RemoveHandler valueBoundHandler)
+        do registerForDisposal(fun () ->
+            script.ValueBound.RemoveHandler valueBoundHandler
+            (script :> IDisposable).Dispose())
         script
+
+    let script = lazy createScript this.RegisterForDisposal
 
     let extensionLoader: AssemblyBasedExtensionLoader = AssemblyBasedExtensionLoader()
 
-    let script = lazy createScript this.RegisterForDisposal
-    do base.RegisterForDisposal(fun () -> if script.IsValueCreated then (script.Value :> IDisposable).Dispose())
     let mutable cancellationTokenSource = new CancellationTokenSource()
 
     let kindString (glyph: FSharpGlyph) =
@@ -127,8 +128,12 @@ type FSharpKernel() as this =
             context.Publish(CompletionRequestCompleted(completionItems, requestCompletion))
         }
 
-    let _packageRestoreContext = lazy (new PackageRestoreContext())
-    do base.RegisterForDisposal(fun () -> if _packageRestoreContext.IsValueCreated then _packageRestoreContext.Value.Dispose())
+    let createPackageRestoreContext registerForDisposal =
+        let packageRestoreContext = new PackageRestoreContext()
+        do registerForDisposal(fun () -> packageRestoreContext.Dispose())
+        packageRestoreContext
+
+    let _packageRestoreContext = lazy createPackageRestoreContext this.RegisterForDisposal
 
     member _.GetCurrentVariable(variableName: string) =
         let result, _errors =
