@@ -192,7 +192,7 @@ i");
         [Fact]
         public async Task When_an_unrecognized_directive_is_encountered_an_error_is_produced()
         {
-            if (!SubmissionParser.USE_NEW_BEHAVIOR)
+            if (!SubmissionParser.USE_NEW_SUBMISSION_SPLITTER)
             {
                 return;
             }

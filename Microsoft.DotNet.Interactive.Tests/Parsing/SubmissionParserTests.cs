@@ -168,7 +168,7 @@ x
 
             MarkupTestFile.GetSpan(markupCode, out var code, out var span);
 
-            var tree = new SubmissionParser("csharp").Parse(code);
+            var tree = CreateSubmissionParser("csharp").Parse(code);
 
             var textSpan = tree.GetRoot()
                                .FindNode(span)

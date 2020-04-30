@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive
 
             Name = name;
 
-            SubmissionParser = new SubmissionParser(Name);
+            SubmissionParser = new SubmissionParser(this);
 
             _disposables = new CompositeDisposable();
 
@@ -189,7 +189,6 @@ namespace Microsoft.DotNet.Interactive
                        ParentKernel?.FrontendEnvironment ??
                        new AutomationEnvironment();
             set => _frontendEnvironment = value;
-            
         }
 
         public IObservable<IKernelEvent> KernelEvents => _kernelEvents;

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
@@ -16,21 +15,21 @@ namespace Microsoft.DotNet.Interactive.Parsing
     {
         public string DefaultLanguage { get; }
         private readonly SourceText _sourceText;
-        private readonly Parser _directiveParser;
-        private readonly IReadOnlyList<ICommand> _directives;
+        private readonly Parser _rootKernelDirectiveParser;
+        private readonly IDictionary<string, Func<Parser>> _subkernelDirectiveParsersByLanguageName;
         private IReadOnlyList<SyntaxToken>? _tokens;
         private HashSet<string>? _kernelChooserDirectives;
 
         internal PolyglotSyntaxParser(
             SourceText sourceText,
             string defaultLanguage,
-            Parser directiveParser,
-            IReadOnlyList<ICommand> directives)
+            Parser rootKernelDirectiveParser,
+            IDictionary<string, Func<Parser>> subkernelDirectiveParsersByLanguageName = null)
         {
             DefaultLanguage = defaultLanguage;
             _sourceText = sourceText;
-            _directiveParser = directiveParser;
-            _directives = directives;
+            _rootKernelDirectiveParser = rootKernelDirectiveParser;
+            _subkernelDirectiveParsersByLanguageName = subkernelDirectiveParsersByLanguageName;
         }
 
         public PolyglotSyntaxTree Parse()
@@ -96,7 +95,20 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             directiveNode.Add(directiveArgs);
                         }
 
-                        directiveNode.DirectiveParser = _directiveParser;
+                        var directiveName = directiveNode.First().Text;
+
+                        if (_rootKernelDirectiveParser
+                            .Configuration
+                            .RootCommand
+                            .Children
+                            .Any(c => c.HasAlias(directiveName)))
+                        {
+                            directiveNode.DirectiveParser = _rootKernelDirectiveParser;
+                        }
+                        else
+                        {
+                            directiveNode.DirectiveParser = _subkernelDirectiveParsersByLanguageName[currentLanguage]();
+                        }
 
                         break;
 
@@ -123,15 +135,20 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         private bool IsLanguageDirective(DirectiveToken directiveToken)
         {
-            if (_kernelChooserDirectives is null)
+            if (_kernelChooserDirectives is null &&
+                _subkernelDirectiveParsersByLanguageName != null)
             {
                 _kernelChooserDirectives = new HashSet<string>(
-                    _directives
+                    _rootKernelDirectiveParser
+                        .Configuration
+                        .RootCommand
+                        .Children
                         .OfType<ChooseKernelDirective>()
-                        .SelectMany(c => c.Aliases));
+                        .SelectMany(c => c.Aliases)
+                );
             }
 
-            return _kernelChooserDirectives.Contains(directiveToken.Text);
+            return _kernelChooserDirectives?.Contains(directiveToken.Text) == true;
         }
     }
 }

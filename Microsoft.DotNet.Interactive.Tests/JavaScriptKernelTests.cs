@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                     .Cast<ScriptContent>()
                     .ToArray();
 
-            if (SubmissionParser.USE_NEW_BEHAVIOR)
+            if (SubmissionParser.USE_NEW_SUBMISSION_SPLITTER)
             {
                 formatted
                     .Should()

@@ -12,9 +12,12 @@ namespace Microsoft.DotNet.Interactive.Parsing
             DiagnosticSeverity severity, 
             Location location)
         {
+            Message = message;
             Severity = severity;
             Location = location;
         }
+
+        public string Message { get; }
 
         public DiagnosticSeverity Severity { get; }
 

@@ -18,20 +18,22 @@ namespace Microsoft.DotNet.Interactive.Parsing
 {
     public class SubmissionParser
     {
+        private readonly KernelBase _kernel;
         private Parser _directiveParser;
 
         private RootCommand _rootCommand;
 
         public IReadOnlyList<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
 
-        public SubmissionParser(string defaultLanguage)
+        public SubmissionParser(KernelBase kernel)
         {
-            if (string.IsNullOrWhiteSpace(defaultLanguage))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(defaultLanguage));
-            }
+            _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
 
-            DefaultLanguage = defaultLanguage;
+            DefaultLanguage = kernel switch
+            {
+                CompositeKernel c => c.DefaultKernelName,
+                _ => kernel.Name
+            };
         }
 
         public string DefaultLanguage { get; internal set; }
@@ -44,15 +46,15 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 sourceText, 
                 DefaultLanguage, 
                 GetDirectiveParser(),
-                Directives);
+                GetSubkernelDirectiveParsers());
 
             return parser.Parse();
         }
 
-        public const bool USE_NEW_BEHAVIOR = false;
+        public const bool USE_NEW_SUBMISSION_SPLITTER = true;
 
         public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode) =>
-            USE_NEW_BEHAVIOR
+            USE_NEW_SUBMISSION_SPLITTER
                 ? SplitSubmission_New(submitCode)
                 : SplitSubmission_Old(submitCode);
 
@@ -64,16 +66,16 @@ namespace Microsoft.DotNet.Interactive.Parsing
             var hoistedCommandsIndex = 0;
 
             var tree = Parse(submitCode.Code);
-
             var nodes = tree.GetRoot().ChildNodes.ToArray();
 
-            foreach (var nodeOrToken in nodes)
+            foreach (var node in nodes)
             {
-                switch (nodeOrToken)
+                ParseResult parseResult;
+                switch (node)
                 {
                     case DirectiveNode directiveNode:
 
-                        var parseResult = directiveNode.GetDirectiveParseResult();
+                        parseResult = directiveNode.GetDirectiveParseResult();
 
                         if (parseResult.Errors.Any())
                         {
@@ -115,8 +117,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         }
                         else
                         {
-                            commands.Add(
-                                directiveCommand);
+                            commands.Add(directiveCommand);
                         }
 
                         break;
@@ -148,7 +149,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         break;
                     
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(nodeOrToken));
+                        throw new ArgumentOutOfRangeException(nameof(node));
                 }
             }
 
@@ -282,7 +283,22 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
         }
 
-        private Parser GetDirectiveParser()
+        internal IDictionary<string, Func<Parser>> GetSubkernelDirectiveParsers()
+        {
+            if (!(_kernel is CompositeKernel compositeKernel))
+            {
+                return null;
+            }
+
+            return compositeKernel
+                   .ChildKernels
+                   .OfType<KernelBase>()
+                   .ToDictionary(
+                       child => child.Name,
+                       child => new Func<Parser>(() => child.SubmissionParser.GetDirectiveParser()));
+        }
+
+        internal Parser GetDirectiveParser()
         {
             if (_directiveParser == null)
             {
