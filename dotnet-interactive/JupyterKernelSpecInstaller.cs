@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.Interactive.App
         {
             if (!destination.Exists)
             {
-                _console.Error.WriteLine($"The kernelspec path ${destination.FullName} does not exist.");
+                _console.Error.WriteLine($"The kernelspec path {destination.FullName} does not exist.");
                 _console.Error.WriteLine($"Failed to install \"{kernelDisplayName}\" kernel.");
 
                 return false;

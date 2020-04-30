@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             using var scope = new AssertionScope();
             result.Should().BeFalse();
-            error.Should().Match($"*The kernelspec path ${defaultPath.FullName} does not exist.*");
+            error.Should().Match($"*The kernelspec path {defaultPath.FullName} does not exist.*");
         }
 
         private void UnpackKernelsSpecTo(DirectoryInfo destination)
