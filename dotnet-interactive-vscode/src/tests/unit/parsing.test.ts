@@ -16,7 +16,6 @@ describe('Extension Test Suite', () => {
             cells: [
                 {
                     kind: CellKind.Code,
-                    language: 'dotnet-interactive',
                     content: 'let x = 1',
                     outputs: [],
                 }

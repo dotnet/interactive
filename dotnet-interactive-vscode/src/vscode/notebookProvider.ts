@@ -21,7 +21,7 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
                 editBuilder.insert(
                     0,
                     cell.content,
-                    cell.language,
+                    notebook.targetKernelName,
                     cell.kind,
                     cell.outputs,
                     {
@@ -69,7 +69,6 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         };
         for (let cell of document.cells) {
             notebook.cells.push({
-                language: cell.language,
                 content: cell.document.getText(),
                 outputs: cell.outputs,
                 kind: cell.cellKind
