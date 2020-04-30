@@ -108,8 +108,10 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
 
             var installedKernels = _kernelSpecInstallPath.GetDirectories();
 
-            installedKernels.Select(d => d.Name)
-                .Should().BeEquivalentTo(".net-csharp", ".net-fsharp", ".net-powershell");
+            installedKernels
+                .Select(d => d.Name)
+                .Should()
+                .BeEquivalentTo(".net-csharp", ".net-fsharp", ".net-powershell");
         }
 
         [Fact]
