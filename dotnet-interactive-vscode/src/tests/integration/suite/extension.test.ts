@@ -1,15 +1,22 @@
 import { expect } from 'chai';
 
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
-import * as vscode from 'vscode';
-// import * as myExtension from '../extension';
+import { StdioClientAdapter } from '../../../stdioClientAdapter';
+import { ClientMapper } from '../../../clientMapper';
+import { CellOutputKind, InteractiveNotebook } from '../../../interactiveNotebook';
 
 suite('Extension Test Suite', () => {
-    vscode.window.showInformationMessage('Start all tests.');
-
-    test('Sample test', () => {
-        expect([1, 2, 3].indexOf(5)).to.equal(-1);
-        expect([1, 2, 3].indexOf(0)).to.equal(-1);
-    });
+    test('Execute against real kernel', async () => {
+        let clientMapper = new ClientMapper(targetKernelName => new StdioClientAdapter(targetKernelName));
+        let client = clientMapper.addClient('csharp', { path: 'some/path' });
+        let code = '1+1';
+        let outputs = await InteractiveNotebook.execute(code, client);
+            expect(outputs).to.deep.equal([
+                {
+                    outputKind: CellOutputKind.Rich,
+                    data: {
+                        'text/html': '2'
+                    }
+                }
+            ]);
+    }).timeout(10000);
 });
