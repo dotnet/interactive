@@ -1,7 +1,8 @@
 import { expect } from 'chai';
 
 import { ClientMapper } from './../../clientMapper';
-import { CellKind, InteractiveNotebook } from '../../interactiveNotebook';
+import { parseNotebook } from '../../interactiveNotebook';
+import { CellKind } from '../../interfaces/vscode';
 
 describe('Extension Test Suite', () => {
     it('Parse notebook cell URI', () => {
@@ -22,14 +23,14 @@ describe('Extension Test Suite', () => {
             ]
         };
         let validJson = JSON.stringify(valid);
-        let notebook = InteractiveNotebook.parse(validJson);
+        let notebook = parseNotebook(validJson);
         expect(notebook.targetKernelName).to.equal("fsharp");
         expect(notebook.cells.length).to.equal(1);
         expect(notebook.cells[0].content).to.equal("let x = 1");
     });
 
     it('Parse notebook from invalid JSON', () => {
-        let notebook = InteractiveNotebook.parse('invalid json should still result in a notebook');
+        let notebook = parseNotebook('invalid json should still result in a notebook');
         expect(notebook.targetKernelName).to.equal("csharp");
         expect(notebook.cells).length.to.be.empty;
     });

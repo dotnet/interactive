@@ -44,8 +44,8 @@
     ],
     "commands": [
       {
-        "command": "dotnet-interactive-vscode.helloWorld",
-        "title": "Hello World"
+        "command": "dotnet-interactive.exportAsJupyterNotebook",
+        "title": "DotNet Interactive: Export as Jupyter Notebook"
       }
     ]
   },

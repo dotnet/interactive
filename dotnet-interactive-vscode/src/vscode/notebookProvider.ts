@@ -1,21 +1,20 @@
 import * as vscode from 'vscode';
 import { ClientMapper } from './../clientMapper';
-import { NotebookFile, InteractiveNotebook } from '../interactiveNotebook';
+import { NotebookFile, execute, parseNotebook } from '../interactiveNotebook';
 
 export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvider {
     constructor(readonly clientMapper: ClientMapper) {
     }
 
     async resolveNotebook(editor: vscode.NotebookEditor): Promise<void> {
-        editor.document.languages = ['dotnet-interactive'];
-
         let contents = '';
         try {
             contents = Buffer.from(await vscode.workspace.fs.readFile(editor.document.uri)).toString('utf-8');
         } catch {
         }
 
-        let notebook = InteractiveNotebook.parse(contents);
+        let notebook = parseNotebook(contents);
+        editor.document.languages = [notebook.targetKernelName];
         this.clientMapper.addClient(notebook.targetKernelName, editor.document.uri);
         editor.edit(editBuilder => {
             for (let cell of notebook.cells) {
@@ -54,7 +53,7 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         }
 
         let source = cell.source.toString();
-        let outputs = await InteractiveNotebook.execute(source, client);
+        let outputs = await execute(source, client);
         cell.outputs = outputs;
     }
 

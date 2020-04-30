@@ -1,8 +1,9 @@
 import { expect } from 'chai';
 
 import { ClientMapper } from './../../clientMapper';
-import { CellOutputKind, InteractiveNotebook } from '../../interactiveNotebook';
+import { execute } from '../../interactiveNotebook';
 import { TestClientAdapter } from './testClientAdapter';
+import { CellOutputKind } from '../../interfaces/vscode';
 
 describe('Notebook tests', () => {
     for (let language of ['csharp', 'fsharp']) {
@@ -42,7 +43,7 @@ describe('Notebook tests', () => {
                 ]
             }));
             let client = clientMapper.addClient('csharp', { path: 'test/path' });
-            let outputs = await InteractiveNotebook.execute(code, client);
+            let outputs = await execute(code, client);
             expect(outputs).to.deep.equal([
                 {
                     outputKind: CellOutputKind.Rich,
