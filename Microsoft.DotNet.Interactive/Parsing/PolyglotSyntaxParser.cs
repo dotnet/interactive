@@ -4,8 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
+using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Commands;
 
 #nullable enable
 
@@ -77,8 +79,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                 rootNode.SyntaxTree);
                         }
 
-                        rootNode.Add(directiveNode);
-
                         if (_tokens.Count > i + 1 &&
                             _tokens[i + 1] is TriviaToken triviaNode)
                         {
@@ -96,6 +96,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         }
 
                         var directiveName = directiveNode.First().Text;
+                        var directiveText = directiveNode.Text;
 
                         if (_rootKernelDirectiveParser
                             .Configuration
@@ -105,14 +106,30 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         {
                             directiveNode.DirectiveParser = _rootKernelDirectiveParser;
                         }
-                        else if (_subkernelDirectiveParsersByLanguageName != null)
+                        else if (_subkernelDirectiveParsersByLanguageName != null &&
+                                 _subkernelDirectiveParsersByLanguageName.TryGetValue(currentLanguage, out var getParser))
                         {
-                            directiveNode.DirectiveParser = _subkernelDirectiveParsersByLanguageName[currentLanguage]();
+                            directiveNode.DirectiveParser = getParser();
                         }
-                        else
-                        {
 
+                        if (directiveNode.DirectiveParser != null)
+                        {
+                            if (directiveText == "#r")
+                            {
+                                var parseResult = directiveNode.DirectiveParser.Parse(directiveText);
+
+                                var value = parseResult.CommandResult.GetArgumentValueOrDefault<PackageReferenceOrFileInfo>("package");
+
+                                if (value.Value is FileInfo)
+                                {
+                                    // #r <file> is treated as a LanguageNode to be handled by the compiler
+
+                                    break;
+                                }
+                            }
                         }
+
+                        rootNode.Add(directiveNode);
 
                         break;
 

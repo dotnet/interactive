@@ -719,7 +719,7 @@ open XPlot.Plotly ",
                         .UseDefaultNamespaces()
                         .LogEventsToPocketLogger();
 
-            var kernel =
+            using var kernel =
                 new CompositeKernel
                     {
                         first switch { Language.CSharp => csk, Language.FSharp => fsk },
@@ -730,9 +730,6 @@ open XPlot.Plotly ",
             kernel.DefaultKernelName = "csharp";
 
             var events = kernel.KernelEvents.ToSubscribedList();
-
-            DisposeAfterTest(events);
-            DisposeAfterTest(kernel);
 
             var command = new SubmitCode(@"#r ""nuget:Octokit, 0.32.0""
 #r ""nuget:NodaTime, 2.4.6""
