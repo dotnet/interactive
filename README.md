@@ -38,7 +38,7 @@ First, make sure you have the following installed:
 > dotnet tool install -g --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json" Microsoft.dotnet-interactive
 ```
 
-- Register .NET Interactive as a Jupyter kernel by running the following within your Anaconda Prompt:
+- Register .NET Interactive as a Jupyter kernel by running the following within your Anaconda Prompt (Read the [install command line documentation](dotnet-interactive/CommandLine/readme.md) for more details):
 
 ```console
 > dotnet interactive jupyter install
@@ -51,8 +51,8 @@ First, make sure you have the following installed:
 
 [InstallKernelSpec] Installed kernelspec .net-fsharp in ~\jupyter\kernels\.net-fsharp
 .NET kernel installation succeeded
-```
-    
+```   
+
 - You can now verify the installation by running the following in the Anaconda Prompt:
 
 ```console
