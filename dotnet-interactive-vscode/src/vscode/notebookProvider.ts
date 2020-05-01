@@ -1,15 +1,13 @@
 import * as vscode from 'vscode';
 import { ClientMapper } from './../clientMapper';
-import { NotebookFile, execute, parseNotebook } from '../interactiveNotebook';
+import { NotebookFile, execute, parseNotebook, serializeNotebook, editorLanguages } from '../interactiveNotebook';
 
 export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvider {
-    static readonly editorLanguages = ['csharp', 'fsharp', 'powershell'];
-
     constructor(readonly clientMapper: ClientMapper) {
     }
 
     async resolveNotebook(editor: vscode.NotebookEditor): Promise<void> {
-        editor.document.languages = DotNetInteractiveNotebookProvider.editorLanguages;
+        editor.document.languages = editorLanguages;
         let contents = '';
         try {
             contents = Buffer.from(await vscode.workspace.fs.readFile(editor.document.uri)).toString('utf-8');
@@ -22,10 +20,10 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
             for (let cell of notebook.cells) {
                 editBuilder.insert(
                     0,
-                    cell.content,
+                    cell.contents.join('\n'),
                     cell.language,
-                    cell.kind,
-                    cell.outputs,
+                    languageToCellKind(cell.language),
+                    [], // outputs
                     {
                         editable: true,
                         runnable: true
@@ -70,14 +68,22 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         };
         for (let cell of document.cells) {
             notebook.cells.push({
-                content: cell.document.getText(),
                 language: cell.language,
-                outputs: cell.outputs,
-                kind: cell.cellKind
+                contents: cell.document.getText().split('\n'),
             });
         }
 
-        await vscode.workspace.fs.writeFile(document.uri, Buffer.from(JSON.stringify(notebook, null, 2)));
+        await vscode.workspace.fs.writeFile(document.uri, Buffer.from(serializeNotebook(notebook)));
         return true;
+    }
+}
+
+function languageToCellKind(language: string): vscode.CellKind {
+    switch (language) {
+        case 'md':
+        case 'markdown':
+            return vscode.CellKind.Markdown;
+        default:
+            return vscode.CellKind.Code;
     }
 }

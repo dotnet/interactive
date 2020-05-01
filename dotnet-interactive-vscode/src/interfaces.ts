@@ -1,12 +1,9 @@
 import { Observable } from "rxjs";
 import { EventEnvelope } from "./events";
-import { CellKind, CellOutput } from "./interfaces/vscode";
 
 export interface RawNotebookCell {
-    kind: CellKind;
-    content: string;
     language: string;
-    outputs: Array<CellOutput>;
+    contents: Array<string>;
 }
 
 export interface DocumentWithCells {

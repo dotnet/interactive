@@ -3,7 +3,7 @@ import { LinePositionSpan, LinePosition, CompletionRequestCompleted } from '../e
 import { ClientMapper } from '../clientMapper';
 import { Hover } from './../languageServices/hover';
 import { provideCompletion } from '../languageServices/completion';
-import { DotNetInteractiveNotebookProvider } from './notebookProvider';
+import { editorLanguages } from '../interactiveNotebook';
 
 function convertToPosition(linePosition: LinePosition): vscode.Position {
     return new vscode.Position(linePosition.line, linePosition.character);
@@ -83,8 +83,8 @@ export class HoverProvider implements vscode.HoverProvider {
 export function registerLanguageProviders(clientMapper: ClientMapper): vscode.Disposable {
     const disposables: Array<vscode.Disposable> = [];
 
-    disposables.push(vscode.languages.registerCompletionItemProvider(DotNetInteractiveNotebookProvider.editorLanguages, new CompletionItemProvider(clientMapper), ...CompletionItemProvider.triggerCharacters));
-    disposables.push(vscode.languages.registerHoverProvider(DotNetInteractiveNotebookProvider.editorLanguages, new HoverProvider(clientMapper)));
+    disposables.push(vscode.languages.registerCompletionItemProvider(editorLanguages, new CompletionItemProvider(clientMapper), ...CompletionItemProvider.triggerCharacters));
+    disposables.push(vscode.languages.registerHoverProvider(editorLanguages, new HoverProvider(clientMapper)));
 
     return vscode.Disposable.from(...disposables);
 }
