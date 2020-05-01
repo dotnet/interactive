@@ -134,6 +134,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var commandBase = command as KernelCommandBase;
 
+            // FIX: (GetHandlingKernel) assign TargetKernelName back to the command if it wasn't set
             var targetKernelName = commandBase?.TargetKernelName
                                    ?? DefaultKernelName;
 

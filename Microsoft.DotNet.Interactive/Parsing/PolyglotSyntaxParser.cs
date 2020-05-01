@@ -7,7 +7,6 @@ using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.Interactive.Commands;
 
 #nullable enable
 
@@ -26,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             SourceText sourceText,
             string defaultLanguage,
             Parser rootKernelDirectiveParser,
-            IDictionary<string, Func<Parser>> subkernelDirectiveParsersByLanguageName = null)
+            IDictionary<string, Func<Parser>> subkernelDirectiveParsersByLanguageName)
         {
             DefaultLanguage = defaultLanguage;
             _sourceText = sourceText;
@@ -96,7 +95,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         }
 
                         var directiveName = directiveNode.First().Text;
-                        var directiveText = directiveNode.Text;
 
                         if (_rootKernelDirectiveParser
                             .Configuration
@@ -114,19 +112,29 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                         if (directiveNode.DirectiveParser != null)
                         {
-                            if (directiveText == "#r")
+                            if (directiveToken.Text == "#r")
                             {
-                                var parseResult = directiveNode.DirectiveParser.Parse(directiveText);
+                                var parseResult = directiveNode.GetDirectiveParseResult();
 
-                                var value = parseResult.CommandResult.GetArgumentValueOrDefault<PackageReferenceOrFileInfo>("package");
-
-                                if (value.Value is FileInfo)
+                                if (parseResult.Errors.Count == 0)
                                 {
-                                    // #r <file> is treated as a LanguageNode to be handled by the compiler
+                                    var value = parseResult.CommandResult.GetArgumentValueOrDefault<PackageReferenceOrFileInfo>("package");
 
-                                    break;
+                                    if (value.Value is FileInfo)
+                                    {
+                                        // #r <file> is treated as a LanguageNode to be handled by the compiler
+
+                                        AddAsLanguageNode(directiveNode);
+
+                                        break;
+                                    }
                                 }
                             }
+                        }
+                        else
+                        {
+                            AddAsLanguageNode(directiveNode);
+                            break;
                         }
 
                         rootNode.Add(directiveNode);
@@ -134,6 +142,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         break;
 
                     case LanguageToken languageToken:
+                    {
                         var languageNode = new LanguageNode(
                             currentLanguage,
                             _sourceText,
@@ -141,7 +150,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         languageNode.Add(languageToken);
 
                         rootNode.Add(languageNode);
-
+                    }
                         break;
 
                     case TriviaToken trivia:
@@ -151,6 +160,18 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     default:
                         throw new ArgumentOutOfRangeException(nameof(currentToken));
                 }
+            }
+
+            void AddAsLanguageNode(DirectiveNode directiveNode)
+            {
+                var languageNode = new LanguageNode(
+                    currentLanguage,
+                    _sourceText,
+                    rootNode.SyntaxTree);
+
+                languageNode.Add(directiveNode);
+
+                rootNode.Add(languageNode);
             }
         }
 

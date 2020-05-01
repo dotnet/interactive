@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         [JsonIgnore]
         public IDictionary<string, object> Properties { get; }
 
-        public string TargetKernelName { get; }
+        public string TargetKernelName { get; set; }
 
         public virtual async Task InvokeAsync(KernelInvocationContext context)
         {

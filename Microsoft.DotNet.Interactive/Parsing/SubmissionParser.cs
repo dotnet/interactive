@@ -62,11 +62,16 @@ namespace Microsoft.DotNet.Interactive.Parsing
             SubmitCode submitCode)
         {
             var commands = new List<IKernelCommand>();
-
+            var nugetRestoreOnKernels = new HashSet<string>();
             var hoistedCommandsIndex = 0;
 
             var tree = Parse(submitCode.Code);
             var nodes = tree.GetRoot().ChildNodes.ToArray();
+
+            if (nodes.Length == 1)
+            {
+                
+            }
 
             foreach (var node in nodes)
             {
@@ -94,8 +99,12 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             break;
                         }
 
-                        var directiveCommand = new DirectiveCommand(parseResult, directiveNode);
-                        
+                        var directiveCommand = new DirectiveCommand(
+                            parseResult, 
+                            directiveNode);
+
+                        var targetKernelName = DefaultLanguage;
+
                         if (parseResult.CommandResult.Command.Name == "#r")
                         {
                             var value = parseResult.CommandResult.GetArgumentValueOrDefault<PackageReferenceOrFileInfo>("package");
@@ -103,16 +112,18 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             if (value.Value is FileInfo)
                             {
                                 // FIX: (SplitSubmission) 
-                                AddHoistedCommand(new SubmitCode(directiveNode.Text));
+                                AddHoistedCommand(new SubmitCode(directiveNode.Text, targetKernelName));
                                 // linesToForward.Add(currentLine);
                             }
                             else
                             {
                                 AddHoistedCommand(directiveCommand);
+                                nugetRestoreOnKernels.Add(targetKernelName);
                             }
                         }
                         else if (parseResult.CommandResult.Command.Name == "#i")
                         {
+                            directiveCommand.TargetKernelName = targetKernelName;
                             AddHoistedCommand(directiveCommand);
                         }
                         else
@@ -150,6 +161,19 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     
                     default:
                         throw new ArgumentOutOfRangeException(nameof(node));
+                }
+            }
+
+            foreach (var kernelName in nugetRestoreOnKernels)
+            {
+                var findKernel = _kernel.FindKernel(kernelName);
+
+                if (findKernel is KernelBase kernelBase &&
+                    kernelBase.SubmissionParser.GetDirectiveParser() is {} parser)
+                {
+                    var restore = new DirectiveCommand(
+                        parser.Parse("#!nuget-restore"));
+                    AddHoistedCommand(restore);
                 }
             }
 
@@ -258,9 +282,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             if (packageCommands.Count > 0)
             {
-                var parseResult = directiveParser.Parse("#!nuget-restore");
-
-                packageCommands.Add(new DirectiveCommand(parseResult));
+                packageCommands.Add(new DirectiveCommand(directiveParser.Parse("#!nuget-restore")));
             }
 
             return packageCommands.Concat(commands).ToArray();
