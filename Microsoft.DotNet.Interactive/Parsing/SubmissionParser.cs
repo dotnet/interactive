@@ -68,19 +68,13 @@ namespace Microsoft.DotNet.Interactive.Parsing
             var tree = Parse(submitCode.Code);
             var nodes = tree.GetRoot().ChildNodes.ToArray();
 
-            if (nodes.Length == 1)
-            {
-                
-            }
-
             foreach (var node in nodes)
             {
-                ParseResult parseResult;
                 switch (node)
                 {
                     case DirectiveNode directiveNode:
 
-                        parseResult = directiveNode.GetDirectiveParseResult();
+                        var parseResult = directiveNode.GetDirectiveParseResult();
 
                         if (parseResult.Errors.Any())
                         {
@@ -100,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         }
 
                         var directiveCommand = new DirectiveCommand(
-                            parseResult, 
+                            parseResult,
                             directiveNode);
 
                         var targetKernelName = DefaultLanguage;
@@ -134,29 +128,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         break;
 
                     case LanguageNode languageNode:
-                        commands.Add(new SubmitCode(languageNode));
+                        commands.Add(new SubmitCode(
+                                         languageNode,
+                                         submitCode.SubmissionType));
 
-                        break;
-
-                    case PolyglotSubmissionNode polyglotSubmissionNode:
-                        break;
-                    
-                    case SyntaxNode syntaxNode:
-                        break;
-                    
-                    case DirectiveToken directiveToken:
-                        break;
-                    
-                    case LanguageToken languageToken:
-                        break;
-                    
-                    case DirectiveArgsToken directiveArgsToken:
-                        break;
-                    
-                    case TriviaToken triviaToken:
-                        break;
-                    
-                    case SyntaxToken syntaxToken:
                         break;
                     
                     default:
@@ -175,6 +150,12 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         parser.Parse("#!nuget-restore"));
                     AddHoistedCommand(restore);
                 }
+            }
+
+            if (commands.Count == 0)
+            {
+                // FIX: (SplitSubmission_New) this is weird
+                commands.Add(submitCode);
             }
 
             return commands;

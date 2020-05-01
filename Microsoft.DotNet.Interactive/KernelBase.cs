@@ -136,6 +136,27 @@ namespace Microsoft.DotNet.Interactive
                 context.CommandToSignalCompletion = commands.Last();
             }
 
+            switch (commands.Count)
+            {
+                // FIX: (HandleDirectivesAndSubmitCode) clean up
+                case 0:
+                    break;
+                case 1:
+                    break;
+                case 2:
+                    break;
+                case 3:
+                    break;
+                case 4:
+                    break;
+                case 5:
+                    break;
+                case 6:
+                    break;
+                default:
+                    break;
+            }
+
             foreach (var command in commands)
             {
                 if (context.IsComplete)
@@ -143,36 +164,28 @@ namespace Microsoft.DotNet.Interactive
                     break;
                 }
 
-                if (command == submitCode)
+                switch (command)
                 {
-                    // no new context is needed
-                    await continueOnCurrentPipeline(submitCode, context);
-                }
-                else
-                {
-                    switch (command)
-                    {
-                        case AnonymousKernelCommand _:
-                        case DirectiveCommand _:
-                            await command.InvokeAsync(context);
-                            break;
-                        default:
-                            var kernel = context.HandlingKernel;
+                    case AnonymousKernelCommand _:
+                    case DirectiveCommand _:
+                        await command.InvokeAsync(context);
+                        break;
+                    default:
+                        var kernel = context.HandlingKernel;
 
-                            if (kernel == this)
-                            {
-                                var c = KernelInvocationContext.Establish(command);
+                        if (kernel == this)
+                        {
+                            var c = KernelInvocationContext.Establish(command);
 
-                                await continueOnCurrentPipeline(command, c);
-                            }
-                            else
-                            {
-                                // forward to next kernel
-                                await kernel.SendAsync(command);
-                            }
+                            await continueOnCurrentPipeline(command, c);
+                        }
+                        else
+                        {
+                            // forward to next kernel
+                            await kernel.SendAsync(command);
+                        }
 
-                            break;
-                    }
+                        break;
                 }
             }
         }

@@ -18,8 +18,9 @@ namespace Microsoft.DotNet.Interactive.Commands
         }
 
         internal SubmitCode(
-            LanguageNode languageNode) :
-            this(languageNode.Text, languageNode.Language)
+            LanguageNode languageNode,
+            SubmissionType submissionType = SubmissionType.Run) :
+            this(languageNode.Text, languageNode.Language, submissionType: submissionType)
         {
             SuppressSplit = true;
         }
