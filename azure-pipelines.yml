@@ -133,6 +133,7 @@ stages:
         - pwsh: |
             # Use the `$env:BUILD_BUILDNUMBER` variable to generate a date-stamped version and export to AzDO
             # Mimicking the behavior from https://github.com/dotnet/arcade/blob/fb38e16fba5afa5fe39013082b6049621149dc10/src/Microsoft.DotNet.Arcade.Sdk/tools/Version.BeforeCommonTargets.targets#L46-L64
+            $buildId = $env:BUILD_BUILDNUMBER
             $year = $buildId.Substring(2, 2) -as [int]
             $month = $buildId.Substring(4, 2) -as [int]
             $day = $buildId.Substring(6, 2) -as [int]
