@@ -10,7 +10,7 @@ export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
                 jcell = {
                     cell_type: 'markdown',
                     metadata: {},
-                    source: cell.source.split('\n')
+                    source: cell.source
                 };
                 break;
             case CellKind.Code:
@@ -18,7 +18,10 @@ export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
                     cell_type: 'code',
                     execution_count: 1,
                     metadata: {},
-                    source: cell.source.split('\n'),
+                    source: [
+                        `#!${cell.language}\r\n`,
+                        ...splitAndCleanLines(cell.source)
+                    ],
                     outputs: cell.outputs.map(convertCellOutputToJupyter).filter(notUndefined)
                 };
                 break;
@@ -31,10 +34,8 @@ export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
         }
     }
 
-    // these values are essentially hard-coded regardless of notebook content
-    let notebookLanguage = document.languages.length > 0
-        ? document.languages[0]
-        : 'csharp';
+    // VS Code Notebooks don't have the concept of a global notebook language, so we have to fake it.
+    let notebookLanguage = 'csharp';
     let metadata: JupyterMetadata = {
         kernelspec: {
             display_name: displayNameFromLanguage(notebookLanguage),
@@ -82,7 +83,7 @@ function convertCellOutputToJupyter(output: CellOutput): JupyterOutput | undefin
             return {
                 output_type: 'display_data',
                 data: {
-                    'text/plain': output.text.split('\n')
+                    'text/plain': splitAndCleanLines(output.text)
                 },
                 metadata: {}
             };
@@ -94,7 +95,7 @@ function convertCellOutputToJupyter(output: CellOutput): JupyterOutput | undefin
 function convertCellOutputDataToJupyter(data: { [key: string]: string }): { [key: string]: string[] } {
     let result: { [key: string]: string[] } = {};
     for (let key in data) {
-        result[key] = data[key].split('\n');
+        result[key] = splitAndCleanLines(data[key]);
     }
 
     return result;
@@ -148,4 +149,15 @@ function versionFromLanguage(language: string): string {
         default:
             return 'unknown';
     }
+}
+
+function splitAndCleanLines(source: string): Array<string> {
+    // With the exception of markdown text, jupyter stores strings in an array, one entry per line, where each line has
+    // a terminating `\r\n` except for the last line.
+    let lines = source.split('\n').map(line => line.endsWith('\r') ? line.substr(0, line.length - 1) : line);
+    for (let i = 0; i < lines.length - 1; i++) {
+        lines[i] += '\r\n';
+    }
+
+    return lines;
 }

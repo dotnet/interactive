@@ -33,10 +33,10 @@ export type CellOutput = CellStreamOutput | CellErrorOutput | CellDisplayOutput;
 export interface NotebookCell {
     cellKind: CellKind;
     source: string;
+    language: string;
     outputs: CellOutput[];
 }
 
 export interface NotebookDocument {
     cells: NotebookCell[];
-    languages: string[];
 }

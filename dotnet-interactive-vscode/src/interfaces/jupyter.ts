@@ -35,7 +35,7 @@ export type JupyterOutput = JupyterStreamOutput | JupyterDisplayDataOutput | Jup
 export interface JupyterMarkdownCell {
     cell_type: 'markdown';
     metadata: { [key: string]: any };
-    source: Array<string>;
+    source: string;
 }
 
 export interface JupyterCodeCell {

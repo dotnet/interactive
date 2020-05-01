@@ -1,35 +1,37 @@
 import { expect } from 'chai';
 
 import { convertToJupyter } from '../../interop/jupyter';
-import { CellKind, CellOutputKind, CellDisplayOutput } from '../../interfaces/vscode';
+import { CellKind, CellOutputKind, CellDisplayOutput, NotebookDocument } from '../../interfaces/vscode';
+import { JupyterNotebook } from '../../interfaces/jupyter';
 
 describe('File export tests', () => {
-    function genSimpleNotebook(language: string): any {
-        let output: CellDisplayOutput = {
-            outputKind: CellOutputKind.Rich,
-            data: {
-                'text/html': '2'
-            }
-        };
-        let notebook = {
+
+    it('Export notebook to Jupyter', () => {
+        let notebook: NotebookDocument = {
             cells: [
                 {
                     cellKind: CellKind.Code,
-                    source: '1+1',
+                    source: '[1;2;3;4]\r\n|> List.sum',
+                    language: 'fsharp',
                     outputs: [
-                        output
+                        {
+                            outputKind: CellOutputKind.Rich,
+                            data: {
+                                'text/html': '10'
+                            }
+                        }
                     ]
-                }
-            ],
-            languages: [language]
+                },
+                {
+                    cellKind: CellKind.Markdown,
+                    source: 'This is `markdown`.',
+                    language: 'markdown',
+                    outputs: []
+                },
+            ]
         };
-        return notebook;
-    }
-
-    it('Export C# notebook to Jupyter', () => {
-        let notebook = genSimpleNotebook('csharp');
         let jupyter = convertToJupyter(notebook);
-        expect(jupyter).to.deep.equal({
+        let expected: JupyterNotebook = {
             cells: [
                 {
                     cell_type: 'code',
@@ -39,7 +41,7 @@ describe('File export tests', () => {
                         {
                             data: {
                                 'text/html': [
-                                    '2'
+                                    '10'
                                 ]
                             },
                             execution_count: 1,
@@ -48,8 +50,15 @@ describe('File export tests', () => {
                         }
                     ],
                     source: [
-                        '1+1'
+                        '#!fsharp\r\n',
+                        '[1;2;3;4]\r\n',
+                        '|> List.sum'
                     ]
+                },
+                {
+                    cell_type: 'markdown',
+                    metadata: {},
+                    source: 'This is `markdown`.'
                 }
             ],
             metadata: {
@@ -68,51 +77,7 @@ describe('File export tests', () => {
             },
             nbformat: 4,
             nbformat_minor: 4
-        });
-    });
-
-    it('Export F# notebook to Jupyter', () => {
-        let notebook = genSimpleNotebook('fsharp');
-        let jupyter = convertToJupyter(notebook);
-        expect(jupyter).to.deep.equal({
-            cells: [
-                {
-                    cell_type: 'code',
-                    execution_count: 1,
-                    metadata: {},
-                    outputs: [
-                        {
-                            data: {
-                                'text/html': [
-                                    '2'
-                                ]
-                            },
-                            execution_count: 1,
-                            metadata: {},
-                            output_type: 'execute_result'
-                        }
-                    ],
-                    source: [
-                        '1+1'
-                    ]
-                }
-            ],
-            metadata: {
-                kernelspec: {
-                    display_name: '.NET (F#)',
-                    language: 'F#',
-                    name: '.net-fsharp'
-                },
-                language_info: {
-                    file_extension: '.fs',
-                    mimetype: 'text/x-fsharp',
-                    name: 'F#',
-                    pygments_lexer: 'fsharp',
-                    version: '4.5'
-                }
-            },
-            nbformat: 4,
-            nbformat_minor: 4
-        });
+        };
+        expect(jupyter).to.deep.equal(expected);
     });
 });
