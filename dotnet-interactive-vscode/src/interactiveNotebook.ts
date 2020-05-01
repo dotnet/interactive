@@ -11,6 +11,7 @@ export interface NotebookFile {
 
 export async function execute(language: string, source: string, client: InteractiveClient): Promise<Array<CellOutput>> {
     return new Promise((resolve, reject) => {
+        let outputs: Array<CellOutput> = [];
         client.submitCode(language, source).subscribe({
             next: value => {
                 switch (value.eventType) {
@@ -23,7 +24,7 @@ export async function execute(language: string, source: string, client: Interact
                                 evalue: err.message,
                                 traceback: [],
                             };
-                            resolve([output]);
+                            outputs.push(output);
                         }
                         break;
                     case 'StandardOutputValueProduced':
@@ -33,7 +34,7 @@ export async function execute(language: string, source: string, client: Interact
                                 outputKind: CellOutputKind.Text,
                                 text: st.value.toString(),
                             };
-                            resolve([output]);
+                            outputs.push(output);
                         }
                         break;
                     case 'ReturnValueProduced':
@@ -47,7 +48,7 @@ export async function execute(language: string, source: string, client: Interact
                                 outputKind: CellOutputKind.Rich,
                                 data: data
                             };
-                            resolve([output]);
+                            outputs.push(output);
                         }
                         break;
                 }
@@ -58,7 +59,7 @@ export async function execute(language: string, source: string, client: Interact
                 });
             },
             complete: () => {
-                resolve([]);
+                resolve(outputs);
             }
         });
     });
