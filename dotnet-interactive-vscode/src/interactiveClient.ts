@@ -1,10 +1,10 @@
 import { Observable } from 'rxjs';
-import { ClientAdapterBase } from './clientAdapterBase';
 import { EventEnvelope } from './events';
+import { ClientAdapter } from './interfaces';
 
 export class InteractiveClient {
 
-    constructor(readonly clientAdapter: ClientAdapterBase) {
+    constructor(readonly clientAdapter: ClientAdapter) {
     }
 
     completion(language: string, code: string, line: number, character: number): Observable<EventEnvelope> {

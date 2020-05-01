@@ -1,5 +1,5 @@
 import { InteractiveClient } from "./interactiveClient";
-import { ClientAdapterBase } from './clientAdapterBase';
+import { ClientAdapter } from "./interfaces";
 
 interface HasPath {
     path: string;
@@ -8,7 +8,7 @@ interface HasPath {
 export class ClientMapper {
     private clientMap: Map<string, InteractiveClient> = new Map();
 
-    constructor(readonly clientAdapterCreator: {(): ClientAdapterBase}) {
+    constructor(readonly clientAdapterCreator: {(): ClientAdapter}) {
     }
 
     static keyFromUri(uri: HasPath): string {

@@ -1,11 +1,9 @@
 import { Observable } from "rxjs";
-import { ClientAdapterBase } from "./../../clientAdapterBase";
 import { EventEnvelope } from "./../../events";
 
 // Replays all events given to it
-export class TestClientAdapter extends ClientAdapterBase {
+export class TestClientAdapter {
     constructor(readonly fakedEvents: { [key: string]: {eventType: string, event: any}[] }) {
-        super();
     }
 
     submitCommand(commandType: string, command: any): Observable<EventEnvelope> {

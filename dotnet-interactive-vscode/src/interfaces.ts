@@ -1,3 +1,5 @@
+import { Observable } from "rxjs";
+import { EventEnvelope } from "./events";
 import { CellKind, CellOutput } from "./interfaces/vscode";
 
 export interface RawNotebookCell {
@@ -9,4 +11,8 @@ export interface RawNotebookCell {
 
 export interface DocumentWithCells {
     cells: Array<RawNotebookCell>;
+}
+
+export interface ClientAdapter {
+    submitCommand: { (commandType: string, command: any, targetKernelName: string): Observable<EventEnvelope> };
 }

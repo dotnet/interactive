@@ -1,17 +1,15 @@
 import * as cp from 'child_process';
 import { Observable, Subscriber } from "rxjs";
 import { Writable } from 'stream';
-import { ClientAdapterBase } from "./clientAdapterBase";
 import { EventEnvelope } from "./events";
 
-export class StdioClientAdapter extends ClientAdapterBase {
+export class StdioClientAdapter {
     private buffer: string = '';
     private next: number = 1;
     private stdin: Writable;
     private subscribers: Map<string, Array<Subscriber<EventEnvelope>>> = new Map();
 
     constructor() {
-        super();
         let childProcess = cp.spawn('dotnet', ['interactive', 'stdio']);
         childProcess.on('exit', (code: number, _signal: string) => {
             //
