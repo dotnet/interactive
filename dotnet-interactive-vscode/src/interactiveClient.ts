@@ -1,10 +1,10 @@
 import { Observable } from 'rxjs';
 import { EventEnvelope } from './events';
-import { ClientAdapter } from './interfaces';
+import { ClientTransport } from './interfaces';
 
 export class InteractiveClient {
 
-    constructor(readonly clientAdapter: ClientAdapter) {
+    constructor(readonly clientTransport: ClientTransport) {
     }
 
     completion(language: string, code: string, line: number, character: number): Observable<EventEnvelope> {
@@ -31,7 +31,7 @@ export class InteractiveClient {
             cursorPosition: position,
         };
 
-        return this.clientAdapter.submitCommand('RequestCompletion', command, language);
+        return this.clientTransport.submitCommand('RequestCompletion', command, language);
     }
 
     hover(language: string, code: string, line: number, character: number): Observable<EventEnvelope> {
@@ -43,7 +43,7 @@ export class InteractiveClient {
                 character: character,
             }
         };
-        return this.clientAdapter.submitCommand('RequestHoverText', command, language);
+        return this.clientTransport.submitCommand('RequestHoverText', command, language);
     }
 
     submitCode(language: string, code: string): Observable<EventEnvelope> {
@@ -51,6 +51,6 @@ export class InteractiveClient {
             code: code,
             submissionType: 0,
         };
-        return this.clientAdapter.submitCommand('SubmitCode', command, language);
+        return this.clientTransport.submitCommand('SubmitCode', command, language);
     }
 }

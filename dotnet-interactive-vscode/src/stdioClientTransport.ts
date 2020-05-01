@@ -3,7 +3,7 @@ import { Observable, Subscriber } from "rxjs";
 import { Writable } from 'stream';
 import { EventEnvelope } from "./events";
 
-export class StdioClientAdapter {
+export class StdioClientTransport {
     private buffer: string = '';
     private next: number = 1;
     private stdin: Writable;

@@ -1,13 +1,13 @@
 import { expect } from 'chai';
 
-import { StdioClientAdapter } from '../../../stdioClientAdapter';
+import { StdioClientTransport } from '../../../stdioClientTransport';
 import { ClientMapper } from '../../../clientMapper';
 import { execute } from '../../../interactiveNotebook';
 import { CellOutputKind } from '../../../interfaces/vscode';
 
 suite('Extension Test Suite', () => {
     test('Execute against real kernel', async () => {
-        let clientMapper = new ClientMapper(() => new StdioClientAdapter());
+        let clientMapper = new ClientMapper(() => new StdioClientTransport());
         let client = clientMapper.addClient({ path: 'some/path' });
         let code = '1+1';
         let outputs = await execute('csharp', code, client);

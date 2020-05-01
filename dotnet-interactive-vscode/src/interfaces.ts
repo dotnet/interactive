@@ -10,6 +10,6 @@ export interface DocumentWithCells {
     cells: Array<RawNotebookCell>;
 }
 
-export interface ClientAdapter {
+export interface ClientTransport {
     submitCommand: { (commandType: string, command: any, targetKernelName: string): Observable<EventEnvelope> };
 }
