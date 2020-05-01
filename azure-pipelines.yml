@@ -144,7 +144,7 @@ stages:
             Write-Host "##vso[task.setvariable variable=VSCodeExtensionVersion]$extensionVersion"
           displayName: Generate VS Code Extension version
 
-        - script: npm version $(VSCodeExtensionVersion) && npx vsce package --out "$(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\dotnet-interactive-vscode.vsix"
+        - script: npm version $(VSCodeExtensionVersion) && npx vsce package --out "$(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\dotnet-interactive-vscode-$(VSCodeExtensionVersion).vsix"
           displayName: Build VS Code Extension
           workingDirectory: "$(Build.SourcesDirectory)/dotnet-interactive-vscode"
 
