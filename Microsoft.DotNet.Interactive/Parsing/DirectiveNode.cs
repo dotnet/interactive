@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             Add(directiveToken);
         }
 
-        internal Parser DirectiveParser { get; set; }
+        internal Parser? DirectiveParser { get; set; }
 
         public ParseResult GetDirectiveParseResult()
         {
