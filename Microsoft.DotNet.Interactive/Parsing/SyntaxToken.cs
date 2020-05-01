@@ -14,7 +14,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
     {
         internal SyntaxToken(
             SourceText sourceText,
-            TextSpan span) : base(sourceText)
+            TextSpan span,
+            PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
         {
             Span = span;
         }

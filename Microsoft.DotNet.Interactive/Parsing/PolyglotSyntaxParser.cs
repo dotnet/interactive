@@ -3,7 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 
@@ -15,35 +16,43 @@ namespace Microsoft.DotNet.Interactive.Parsing
     {
         public string DefaultLanguage { get; }
         private readonly SourceText _sourceText;
-        private readonly IReadOnlyList<ICommand> _directives;
+        private readonly Parser _rootKernelDirectiveParser;
+        private readonly IDictionary<string, Func<Parser>> _subkernelDirectiveParsersByLanguageName;
         private IReadOnlyList<SyntaxToken>? _tokens;
-        private readonly SyntaxNode _rootNode;
         private HashSet<string>? _kernelChooserDirectives;
 
         internal PolyglotSyntaxParser(
             SourceText sourceText,
             string defaultLanguage,
-            IReadOnlyList<ICommand> directives)
+            Parser rootKernelDirectiveParser,
+            IDictionary<string, Func<Parser>> subkernelDirectiveParsersByLanguageName)
         {
             DefaultLanguage = defaultLanguage;
             _sourceText = sourceText;
-            _directives = directives;
-            _rootNode = new PolyglotSubmissionNode(defaultLanguage, _sourceText);
+            _rootKernelDirectiveParser = rootKernelDirectiveParser;
+            _subkernelDirectiveParsersByLanguageName = subkernelDirectiveParsersByLanguageName;
         }
 
         public PolyglotSyntaxTree Parse()
         {
-            _tokens = new Lexer(_sourceText).Lex();
+            var tree = new PolyglotSyntaxTree(_sourceText);
 
-            ParseSubmission();
+            _tokens = new PolyglotLexer(_sourceText, tree).Lex();
 
-            return new PolyglotSyntaxTree(_sourceText, _rootNode);
+            var rootNode = new PolyglotSubmissionNode(
+                DefaultLanguage,
+                _sourceText,
+                tree);
+
+            tree.RootNode = rootNode;
+
+            ParseSubmission(rootNode);
+
+            return tree;
         }
 
-        private void ParseSubmission()
+        private void ParseSubmission(PolyglotSubmissionNode rootNode)
         {
-            DirectiveNode? directiveNode = null;
-
             var currentLanguage = DefaultLanguage;
 
             for (var i = 0; i < _tokens!.Count; i++)
@@ -54,54 +63,134 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 {
                     case DirectiveToken directiveToken:
 
+                        DirectiveNode directiveNode;
+
                         if (IsLanguageDirective(directiveToken))
                         {
-                            directiveNode = new KernelDirectiveNode(directiveToken, _sourceText);
+                            directiveNode = new KernelDirectiveNode(directiveToken, _sourceText, rootNode.SyntaxTree);
                             currentLanguage = directiveToken.DirectiveName;
                         }
                         else
                         {
-                            directiveNode = new DirectiveNode(directiveToken, _sourceText);
+                            directiveNode = new DirectiveNode(
+                                directiveToken,
+                                _sourceText,
+                                rootNode.SyntaxTree);
                         }
 
-                        _rootNode.Add(directiveNode);
+                        if (_tokens.Count > i + 1 &&
+                            _tokens[i + 1] is TriviaToken triviaNode)
+                        {
+                            i += 1;
 
-                        break;
+                            directiveNode.Add(triviaNode);
+                        }
 
-                    case DirectiveArgsToken directiveArgs:
-                        directiveNode!.Add(directiveArgs);
-                        directiveNode = null;
+                        if (_tokens.Count > i + 1 &&
+                            _tokens[i + 1] is DirectiveArgsToken directiveArgs)
+                        {
+                            i += 1;
+
+                            directiveNode.Add(directiveArgs);
+                        }
+
+                        var directiveName = directiveNode.First().Text;
+
+                        if (_rootKernelDirectiveParser
+                            .Configuration
+                            .RootCommand
+                            .Children
+                            .Any(c => c.HasAlias(directiveName)))
+                        {
+                            directiveNode.DirectiveParser = _rootKernelDirectiveParser;
+                        }
+                        else if (_subkernelDirectiveParsersByLanguageName != null &&
+                                 _subkernelDirectiveParsersByLanguageName.TryGetValue(currentLanguage, out var getParser))
+                        {
+                            directiveNode.DirectiveParser = getParser();
+                        }
+
+                        if (directiveNode.DirectiveParser != null)
+                        {
+                            if (directiveToken.Text == "#r")
+                            {
+                                var parseResult = directiveNode.GetDirectiveParseResult();
+
+                                if (parseResult.Errors.Count == 0)
+                                {
+                                    var value = parseResult.CommandResult.GetArgumentValueOrDefault<PackageReferenceOrFileInfo>("package");
+
+                                    if (value.Value is FileInfo)
+                                    {
+                                        // #r <file> is treated as a LanguageNode to be handled by the compiler
+
+                                        AddAsLanguageNode(directiveNode);
+
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            AddAsLanguageNode(directiveNode);
+                            break;
+                        }
+
+                        rootNode.Add(directiveNode);
+
                         break;
 
                     case LanguageToken languageToken:
-                        var languageNode = new LanguageNode(currentLanguage, _sourceText);
+                    {
+                        var languageNode = new LanguageNode(
+                            currentLanguage,
+                            _sourceText,
+                            rootNode.SyntaxTree);
                         languageNode.Add(languageToken);
 
-                        _rootNode.Add(languageNode);
-
+                        rootNode.Add(languageNode);
+                    }
                         break;
 
                     case TriviaToken trivia:
-                        (directiveNode ?? _rootNode).Add(trivia);
+                        rootNode.Add(trivia);
                         break;
 
                     default:
                         throw new ArgumentOutOfRangeException(nameof(currentToken));
                 }
             }
+
+            void AddAsLanguageNode(DirectiveNode directiveNode)
+            {
+                var languageNode = new LanguageNode(
+                    currentLanguage,
+                    _sourceText,
+                    rootNode.SyntaxTree);
+
+                languageNode.Add(directiveNode);
+
+                rootNode.Add(languageNode);
+            }
         }
 
         private bool IsLanguageDirective(DirectiveToken directiveToken)
         {
-            if (_kernelChooserDirectives is null)
+            if (_kernelChooserDirectives is null &&
+                _subkernelDirectiveParsersByLanguageName != null)
             {
                 _kernelChooserDirectives = new HashSet<string>(
-                    _directives
+                    _rootKernelDirectiveParser
+                        .Configuration
+                        .RootCommand
+                        .Children
                         .OfType<ChooseKernelDirective>()
-                        .SelectMany(c => c.Aliases));
+                        .SelectMany(c => c.Aliases)
+                );
             }
 
-            return _kernelChooserDirectives.Contains(directiveToken.Text);
+            return _kernelChooserDirectives?.Contains(directiveToken.Text) == true;
         }
     }
 }

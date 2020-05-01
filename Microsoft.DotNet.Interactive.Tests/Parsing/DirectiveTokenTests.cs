@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -17,7 +18,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Parsing
         [InlineData("#!foo\r\n")]
         public void Text_returns_directive_token_text(string code)
         {
-            var submissionParser = new SubmissionParser("csharp");
+            using var kernel = new CSharpKernel();
+
+            var submissionParser = new SubmissionParser(kernel);
 
             var tree = submissionParser.Parse(code);
 

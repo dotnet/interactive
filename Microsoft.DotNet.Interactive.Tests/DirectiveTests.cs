@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -77,7 +78,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var kernel = new CSharpKernel();
             var events = kernel.KernelEvents.ToSubscribedList();
 
-            kernel.AddDirective(new Command("#increment")
+            kernel.AddDirective(new Command("#!increment")
             {
                 Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
                 {
@@ -87,7 +88,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             await kernel.SubmitCodeAsync(@"
 var i = 0;
-#increment
+#!increment
 i");
 
             events
@@ -189,7 +190,7 @@ i");
         }
 
         [Fact]
-        public async Task When_an_unrecognized_directive_is_encountered_no_error_is_produced()
+        public async Task When_an_unrecognized_directive_is_encountered_an_error_is_produced()
         {
             using var kernel = new CompositeKernel
             {
@@ -202,7 +203,11 @@ i");
 
             events
                 .Should()
-                .ContainSingle<CommandHandled>();
+                .ContainSingle<CommandFailed>()
+                .Which
+                .Message
+                .Should()
+                .Contain("Unrecognized command or argument '#!oops'");
         }
 
         [Fact]

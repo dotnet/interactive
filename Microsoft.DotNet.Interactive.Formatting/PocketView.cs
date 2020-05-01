@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             if (value is TagTransform alias)
             {
-                _transforms.Add(binder.Name, alias);
+                _transforms[binder.Name] = alias;
 
                 return true;
             }

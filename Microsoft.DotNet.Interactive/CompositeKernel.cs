@@ -137,6 +137,11 @@ namespace Microsoft.DotNet.Interactive
             var targetKernelName = commandBase?.TargetKernelName
                                    ?? DefaultKernelName;
 
+            if (!(commandBase is null))
+            {
+                commandBase.TargetKernelName = targetKernelName;
+            }
+
             IKernel kernel;
 
             if (targetKernelName != null)

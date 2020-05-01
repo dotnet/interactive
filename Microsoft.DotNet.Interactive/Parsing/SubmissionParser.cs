@@ -18,20 +18,22 @@ namespace Microsoft.DotNet.Interactive.Parsing
 {
     public class SubmissionParser
     {
+        private readonly KernelBase _kernel;
         private Parser _directiveParser;
 
         private RootCommand _rootCommand;
 
         public IReadOnlyList<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
 
-        public SubmissionParser(string defaultLanguage)
+        public SubmissionParser(KernelBase kernel)
         {
-            if (string.IsNullOrWhiteSpace(defaultLanguage))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(defaultLanguage));
-            }
+            _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
 
-            DefaultLanguage = defaultLanguage;
+            DefaultLanguage = kernel switch
+            {
+                CompositeKernel c => c.DefaultKernelName,
+                _ => kernel.Name
+            };
         }
 
         public string DefaultLanguage { get; internal set; }
@@ -40,75 +42,33 @@ namespace Microsoft.DotNet.Interactive.Parsing
         {
             var sourceText = SourceText.From(code);
 
-            var parser = new PolyglotSyntaxParser(sourceText, DefaultLanguage, Directives);
+            var parser = new PolyglotSyntaxParser(
+                sourceText, 
+                DefaultLanguage, 
+                GetDirectiveParser(),
+                GetSubkernelDirectiveParsers());
 
             return parser.Parse();
         }
 
-        public IReadOnlyList<IKernelCommand> SplitSubmission(string submission) => SplitSubmission(new SubmitCode(submission));
-
-        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode originalSubmitCode)
+        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode) 
         {
-            var directiveParser = GetDirectiveParser();
-
-            var lines = new Queue<string>(
-                originalSubmitCode.Code.Split(new[] { "\r\n", "\n" },
-                                      StringSplitOptions.None));
-
-            var linesToForward = new List<string>();
             var commands = new List<IKernelCommand>();
-            var packageCommands = new List<IKernelCommand>();
-            var commandWasSplit = false;
+            var nugetRestoreOnKernels = new HashSet<string>();
+            var hoistedCommandsIndex = 0;
 
-            while (lines.Count > 0)
+            var tree = Parse(submitCode.Code);
+            var nodes = tree.GetRoot().ChildNodes.ToArray();
+
+            foreach (var node in nodes)
             {
-                var currentLine = lines.Dequeue();
-
-                if (currentLine.TrimStart().StartsWith("#"))
+                switch (node)
                 {
-                    var parseResult = directiveParser.Parse(currentLine);
-                    var command = parseResult.CommandResult.Command;
+                    case DirectiveNode directiveNode:
 
-                    if (parseResult.Errors.Count == 0)
-                    {
-                        commandWasSplit = true;
+                        var parseResult = directiveNode.GetDirectiveParseResult();
 
-                        if (AccumulatedSubmission() is { } cmd)
-                        {
-                            commands.Add(cmd);
-                        }
-
-                        var runDirective = new DirectiveCommand(parseResult);
-
-                        if (command.Name == "#r")
-                        {
-                            var value = parseResult.CommandResult.GetArgumentValueOrDefault<PackageReferenceOrFileInfo>("package");
-
-                            if (value.Value is FileInfo)
-                            {
-                                linesToForward.Add(currentLine);
-                            }
-                            else
-                            {
-                                packageCommands.Add(runDirective);
-                            }
-                        }
-                        else if (command.Name == "#i")
-                        {
-                            packageCommands.Add(runDirective);
-                        }
-                        else
-                        {
-                            commands.Add(runDirective);
-                        }
-                    }
-                    else
-                    {
-                        if (command == parseResult.Parser.Configuration.RootCommand)
-                        {
-                            linesToForward.Add(currentLine);
-                        }
-                        else
+                        if (parseResult.Errors.Any())
                         {
                             commands.Clear();
                             commands.Add(
@@ -121,56 +81,131 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                                     context.Fail(message: message);
                                     return Task.CompletedTask;
-                                }));
+                                }, parent: submitCode.Parent));
+                            break;
+                        }
+
+                        var directiveCommand = new DirectiveCommand(
+                            parseResult,
+                            submitCode.Parent,
+                            directiveNode);
+
+                        var targetKernelName = DefaultLanguage;
+
+                        if (parseResult.CommandResult.Command.Name == "#r")
+                        {
+                            var value = parseResult.CommandResult.GetArgumentValueOrDefault<PackageReferenceOrFileInfo>("package");
+
+                            if (value.Value is FileInfo)
+                            {
+                                AddHoistedCommand(
+                                    new SubmitCode(
+                                        directiveNode, 
+                                        submitCode.SubmissionType,
+                                        submitCode.Parent));
+                            }
+                            else
+                            {
+                                AddHoistedCommand(directiveCommand);
+                                nugetRestoreOnKernels.Add(targetKernelName);
+                            }
+                        }
+                        else if (parseResult.CommandResult.Command.Name == "#i")
+                        {
+                            directiveCommand.TargetKernelName = targetKernelName;
+                            AddHoistedCommand(directiveCommand);
+                        }
+                        else
+                        {
+                            commands.Add(directiveCommand);
+                        }
+
+                        break;
+
+                    case LanguageNode languageNode:
+                        commands.Add(new SubmitCode(
+                                         languageNode,
+                                         submitCode.SubmissionType,
+                                         submitCode.Parent));
+                        break;
+                    
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(node));
+                }
+            }
+
+            foreach (var kernelName in nugetRestoreOnKernels)
+            {
+                var findKernel = _kernel.FindKernel(kernelName);
+
+                if (findKernel is KernelBase kernelBase &&
+                    kernelBase.SubmissionParser.GetDirectiveParser() is {} parser)
+                {
+                    var restore = new DirectiveCommand(
+                        parser.Parse("#!nuget-restore"),
+                        submitCode.Parent);
+                    AddHoistedCommand(restore);
+                }
+            }
+
+            if (NoSplitWasNeeded(out var originalSubmission))
+            {
+                return originalSubmission;
+            }
+
+            foreach (var command in commands.OfType<KernelCommandBase>())
+            {
+                command.Parent = submitCode.Parent;
+            }
+
+            return commands;
+
+            void AddHoistedCommand(IKernelCommand command)
+            {
+                commands.Insert(hoistedCommandsIndex++, command);
+            }
+
+            bool NoSplitWasNeeded(out IReadOnlyList<IKernelCommand> splitSubmission)
+            {
+                if (commands.Count == 0)
+                {
+                    splitSubmission = new[] { submitCode };
+                    return true;
+                }
+
+                if (commands.Count == 1)
+                {
+                    if (commands[0] is SubmitCode sc)
+                    {
+                        if (submitCode.Code.Equals(sc.Code, StringComparison.Ordinal))
+                        {
+                            splitSubmission = new[] { submitCode };
+                            return true;
                         }
                     }
                 }
-                else
-                {
-                    linesToForward.Add(currentLine);
-                }
-            }
 
-            if (commandWasSplit)
-            {
-                if (AccumulatedSubmission() is { } newSubmitCode)
-                {
-                    commands.Add(newSubmitCode);
-                }
-            }
-            else
-            {
-                commands.Add(originalSubmitCode);
-            }
-
-            if (packageCommands.Count > 0)
-            {
-                var parseResult = directiveParser.Parse("#!nuget-restore");
-
-                packageCommands.Add(new DirectiveCommand(parseResult));
-            }
-
-            return packageCommands.Concat(commands).ToArray();
-
-            SubmitCode AccumulatedSubmission()
-            {
-                if (linesToForward.Any())
-                {
-                    var code = string.Join(Environment.NewLine, linesToForward);
-
-                    linesToForward.Clear();
-
-                    if (!string.IsNullOrWhiteSpace(code))
-                    {
-                        return new SubmitCode(code);
-                    }
-                }
-
-                return null;
+                splitSubmission = null;
+                return false;
             }
         }
 
-        private Parser GetDirectiveParser()
+        internal IDictionary<string, Func<Parser>> GetSubkernelDirectiveParsers()
+        {
+            if (!(_kernel is CompositeKernel compositeKernel))
+            {
+                return null;
+            }
+
+            return compositeKernel
+                   .ChildKernels
+                   .OfType<KernelBase>()
+                   .ToDictionary(
+                       child => child.Name,
+                       child => new Func<Parser>(() => child.SubmissionParser.GetDirectiveParser()));
+        }
+
+        internal Parser GetDirectiveParser()
         {
             if (_directiveParser == null)
             {

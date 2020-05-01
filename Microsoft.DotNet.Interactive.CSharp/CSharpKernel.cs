@@ -45,8 +45,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         private WorkspaceFixture _fixture;
         private AssemblyResolutionProbe _assemblyProbingPaths;
-        private NativeResolutionProbe _nativeProbingRoots;
         private readonly Lazy<DependencyProvider> _dependencies;
+        private NativeResolutionProbe _nativeProbingRoots;
 
         internal ScriptOptions ScriptOptions =
             ScriptOptions.Default
@@ -106,8 +106,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var csharpTypeDeclaration = new StringWriter();
             
             value.GetType().WriteCSharpDeclarationTo(csharpTypeDeclaration);
-            
-
 
             await RunAsync($"{csharpTypeDeclaration} {name} = default;");
 
@@ -306,7 +304,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 this,
                 context);
         }
-
 
         private DependencyProvider GetDependencyProvider()
         {

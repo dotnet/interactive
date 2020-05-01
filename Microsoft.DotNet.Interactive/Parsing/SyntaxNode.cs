@@ -19,7 +19,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
         private readonly List<SyntaxNodeOrToken> _childNodesAndTokens = new List<SyntaxNodeOrToken>();
         private TextSpan _span;
 
-        private protected SyntaxNode(SourceText sourceText) : base(sourceText)
+        private protected SyntaxNode(
+            SourceText sourceText,
+            PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
         {
         }
 
@@ -71,8 +73,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
             _childNodesAndTokens.Add(child);
         }
 
+        public IEnumerable<SyntaxNodeOrToken> ChildNodes => _childNodesAndTokens.OfType<SyntaxNode>();
+
         public IEnumerable<SyntaxNodeOrToken> ChildTokens => _childNodesAndTokens.OfType<SyntaxToken>();
-        
+
         public IEnumerable<SyntaxNodeOrToken> ChildNodesAndTokens => _childNodesAndTokens;
 
         public IEnumerable<SyntaxNodeOrToken> DescendantNodesAndTokensAndSelf()
@@ -92,6 +96,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     SyntaxNode node => node.ChildNodesAndTokens,
                     _ => Array.Empty<SyntaxNodeOrToken>()
                 });
+
+        public virtual IEnumerable<Diagnostic> GetDiagnostics()
+        {
+            yield break;
+        } 
 
         public IEnumerator<SyntaxNodeOrToken> GetEnumerator()
         {

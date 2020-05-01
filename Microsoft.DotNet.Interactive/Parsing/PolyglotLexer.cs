@@ -8,15 +8,17 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Parsing
 {
-    internal class Lexer
+    internal class PolyglotLexer
     {
         private TextWindow _textWindow;
         private readonly SourceText _sourceText;
+        private readonly PolyglotSyntaxTree _syntaxTree;
         private readonly List<SyntaxToken> _tokens = new List<SyntaxToken>();
 
-        public Lexer(SourceText sourceText)
+        public PolyglotLexer(SourceText sourceText, PolyglotSyntaxTree syntaxTree)
         {
             _sourceText = sourceText;
+            _syntaxTree = syntaxTree;
         }
 
         public IReadOnlyList<SyntaxToken> Lex()
@@ -31,33 +33,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
 
             return _tokens;
-        }
-
-        [DebuggerHidden]
-        private bool More()
-        {
-            return _textWindow.End < _sourceText.Length;
-        }
-
-        private void FlushToken(TokenKind kind)
-        {
-            if (_textWindow.IsEmpty)
-            {
-                return;
-            }
-
-            SyntaxToken token = kind switch
-            {
-                TokenKind.Language => new LanguageToken(_sourceText, _textWindow.Span),
-                TokenKind.Directive => new DirectiveToken(_sourceText, _textWindow.Span),
-                TokenKind.DirectiveArgs => new DirectiveArgsToken(_sourceText, _textWindow.Span),
-                TokenKind.Trivia => new TriviaToken(_sourceText, _textWindow.Span),
-                _ => throw new ArgumentOutOfRangeException()
-            };
-
-            _tokens.Add(token);
-
-            _textWindow = new TextWindow(_textWindow.End, _sourceText.Length);
         }
 
         private void LexTrivia()
@@ -89,15 +64,20 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
 
             // look ahead to see if this is a directive
-            var isDirective =
-                _sourceText.Length >= _textWindow.End + 2 &&
-                _sourceText[_textWindow.End + 1] == '!' &&
-                !char.IsWhiteSpace(_sourceText[_textWindow.End + 2]);
+            var textIsLongEnoughToContainDirective =
+                _sourceText.Length >= _textWindow.End + 2;
 
-            if (!isDirective)
+            if (!textIsLongEnoughToContainDirective)
             {
                 return;
-            } 
+            }
+
+            if (!IsShebangAndNoFollowingWhitespace(_textWindow.End + 1, '!') &&
+                !IsCharacterThenWhitespace('r') &&
+                !IsCharacterThenWhitespace('i'))
+            {
+                return;
+            }
 
             if (!_textWindow.IsEmpty)
             {
@@ -126,6 +106,34 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
 
             FlushToken(TokenKind.Directive);
+
+            bool IsShebangAndNoFollowingWhitespace(int position, char value)
+            {
+                var next = position + 1;
+
+                return _sourceText[position] == value &&
+                       _sourceText.Length > next &&
+                       !char.IsWhiteSpace(_sourceText[next]);
+            }
+            
+            bool IsCharacterThenWhitespace(char value)
+            {
+                var isChar = _sourceText[_textWindow.End + 1] == value;
+
+                if (!isChar)
+                {
+                    return false;
+                }
+
+                var isFollowedByWhitespace = char.IsWhiteSpace(_sourceText[_textWindow.End + 2]);
+
+                if (!isFollowedByWhitespace)
+                {
+                    return false;
+                }
+
+                return true;
+            }
         }
 
         private void LexDirectiveArgs()
@@ -197,8 +205,35 @@ namespace Microsoft.DotNet.Interactive.Parsing
             FlushToken(TokenKind.Language);
         }
 
+        private void FlushToken(TokenKind kind)
+        {
+            if (_textWindow.IsEmpty)
+            {
+                return;
+            }
+
+            SyntaxToken token = kind switch
+            {
+                TokenKind.Language => new LanguageToken(_sourceText, _textWindow.Span, _syntaxTree),
+                TokenKind.Directive => new DirectiveToken(_sourceText, _textWindow.Span, _syntaxTree),
+                TokenKind.DirectiveArgs => new DirectiveArgsToken(_sourceText, _textWindow.Span, _syntaxTree),
+                TokenKind.Trivia => new TriviaToken(_sourceText, _textWindow.Span, _syntaxTree),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            _tokens.Add(token);
+
+            _textWindow = new TextWindow(_textWindow.End, _sourceText.Length);
+        }
+
         [DebuggerHidden]
         private char GetNextChar() => _sourceText[_textWindow.End];
+
+        [DebuggerHidden]
+        private bool More()
+        {
+            return _textWindow.End < _sourceText.Length;
+        }
 
         private string CurrentTextWindow => _sourceText.GetSubText(_textWindow.Span).ToString();
 

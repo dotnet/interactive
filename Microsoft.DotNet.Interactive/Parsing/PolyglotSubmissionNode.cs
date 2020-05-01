@@ -13,7 +13,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
     {
         internal PolyglotSubmissionNode(
             string defaultLanguage,
-            SourceText sourceText) : base(sourceText)
+            SourceText sourceText,
+            PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
         {
             DefaultLanguage = defaultLanguage;
         }

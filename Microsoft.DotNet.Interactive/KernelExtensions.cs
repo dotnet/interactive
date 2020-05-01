@@ -23,9 +23,9 @@ namespace Microsoft.DotNet.Interactive
     {
         private static readonly TextSpanFormatter _textSpanFormatter = new TextSpanFormatter();
 
-        public static IKernel FindKernel(this IKernel kernelBase, string name)
+        public static IKernel FindKernel(this IKernel kernel, string name)
         {
-            var root = kernelBase
+            var root = kernel
                        .RecurseWhileNotNull(k => k switch
                            {
                                KernelBase kb => kb.ParentKernel, 
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 CompositeKernel c => c.ChildKernels
                                       .SingleOrDefault(k => k.Name == name),
-                IKernel k when k.Name == name => k,
+                _ when kernel.Name == name => kernel,
                 _ => null
             };
         }

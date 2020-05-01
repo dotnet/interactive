@@ -4,12 +4,17 @@
 using System.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 
+#nullable enable
+
 namespace Microsoft.DotNet.Interactive.Parsing
 {
     [DebuggerStepThrough]
     public class TriviaToken : SyntaxToken
     {
-        public TriviaToken(SourceText text, TextSpan span) : base(text, span)
+        internal TriviaToken(
+            SourceText text, 
+            TextSpan span,
+            PolyglotSyntaxTree? syntaxTree) : base(text, span, syntaxTree)
         {
         }
     }

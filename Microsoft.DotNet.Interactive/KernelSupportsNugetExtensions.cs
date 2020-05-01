@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.Interactive
                         }
                     }
 
-                    static System.CommandLine.Rendering.TextSpan GenerateErrorMessage(
+                    static TextSpan GenerateErrorMessage(
                         PackageReference requested,
                         PackageReference existing = null)
                     {
@@ -147,7 +147,6 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-
         private class PackageReferenceComparer : IEqualityComparer<PackageReference>
         {
             public bool Equals(PackageReference x, PackageReference y) =>
@@ -165,7 +164,6 @@ namespace Microsoft.DotNet.Interactive
 
             public static IEqualityComparer<PackageReference> Instance { get; } = new PackageReferenceComparer();
         }
-
 
         internal static KernelCommandInvocation DoNugetRestore(
             KernelBase kernel,
