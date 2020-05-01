@@ -8,7 +8,7 @@
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
-    "vscode": "^1.44.0"
+    "vscode": "^1.45.0"
   },
   "repository": {
     "url": "https://github.com/dotnet/interactive"
@@ -51,25 +51,25 @@
     "tdd": "npm test -- --watch"
   },
   "devDependencies": {
-    "@types/chai": "^4.2.11",
-    "@types/glob": "^7.1.1",
-    "@types/mocha": "^7.0.2",
-    "@types/node": "^13.11.0",
-    "@types/vscode": "^1.44.0",
-    "@typescript-eslint/eslint-plugin": "^2.26.0",
-    "@typescript-eslint/parser": "^2.26.0",
+    "@types/chai": "4.2.11",
+    "@types/glob": "7.1.1",
+    "@types/mocha": "7.0.2",
+    "@types/node": "13.11.0",
+    "@types/vscode": "1.44.0",
+    "@typescript-eslint/eslint-plugin": "2.26.0",
+    "@typescript-eslint/parser": "2.26.0",
     "chai": "4.2.0",
-    "eslint": "^6.8.0",
-    "glob": "^7.1.6",
-    "mocha": "^7.1.1",
-    "mocha-multi-reporters": "^1.1.7",
-    "mocha-trx-reporter": "^3.2.4",
-    "typescript": "^3.8.3",
-    "typings": "^2.1.1",
-    "vsce": "^1.75.0",
-    "vscode-test": "^1.3.0"
+    "eslint": "6.8.0",
+    "glob": "7.1.6",
+    "mocha": "7.1.1",
+    "mocha-multi-reporters": "1.1.7",
+    "mocha-trx-reporter": "3.2.4",
+    "typescript": "3.8.3",
+    "typings": "2.1.1",
+    "vsce": "1.75.0",
+    "vscode-test": "1.3.0"
   },
   "dependencies": {
-    "rxjs": "^6.5.5"
+    "rxjs": "6.5.5"
   }
 }
