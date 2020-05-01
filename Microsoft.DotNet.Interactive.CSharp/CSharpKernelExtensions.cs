@@ -62,7 +62,7 @@ using static {typeof(Kernel).FullName};
                 })
             };
 
-            // FIX: (who_and_whos) this should be a separate command with separate help
+            // TODO: (who_and_whos) this should be a separate command with separate help
             command.AddAlias("#!who");
 
             return command;
@@ -72,7 +72,8 @@ using static {typeof(Kernel).FullName};
                 if (context.Command is SubmitCode &&
                     context.HandlingKernel is CSharpKernel kernel)
                 {
-                    var variables = kernel.ScriptState.Variables.Select(v => new CurrentVariable(v.Name, v.Type, v.Value));
+                    var variables = kernel.ScriptState?.Variables.Select(v => new CurrentVariable(v.Name, v.Type, v.Value)) ??
+                                    Enumerable.Empty<CurrentVariable>();
 
                     var currentVariables = new CurrentVariables(
                         variables,

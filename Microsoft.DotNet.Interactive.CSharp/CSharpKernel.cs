@@ -106,8 +106,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var csharpTypeDeclaration = new StringWriter();
             
             value.GetType().WriteCSharpDeclarationTo(csharpTypeDeclaration);
-            
-
 
             await RunAsync($"{csharpTypeDeclaration} {name} = default;");
 

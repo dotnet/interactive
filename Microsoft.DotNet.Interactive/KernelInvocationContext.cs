@@ -56,7 +56,6 @@ namespace Microsoft.DotNet.Interactive
             else
             {
                 _childCommands.Remove(command);
-
             }
         }
 
