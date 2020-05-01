@@ -51,15 +51,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             return parser.Parse();
         }
 
-        public const bool USE_NEW_SUBMISSION_SPLITTER = true;
-
-        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode) =>
-            USE_NEW_SUBMISSION_SPLITTER
-                ? SplitSubmission_New(submitCode)
-                : SplitSubmission_Old(submitCode);
-
-        public IReadOnlyList<IKernelCommand> SplitSubmission_New(
-            SubmitCode submitCode)
+        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode) 
         {
             var commands = new List<IKernelCommand>();
             var nugetRestoreOnKernels = new HashSet<string>();
@@ -105,9 +97,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                             if (value.Value is FileInfo)
                             {
-                                // FIX: (SplitSubmission) 
                                 AddHoistedCommand(new SubmitCode(directiveNode.Text, targetKernelName));
-                                // linesToForward.Add(currentLine);
                             }
                             else
                             {
@@ -169,131 +159,19 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 }
             }
 
+            foreach (var command in commands)
+            {
+                if (command is KernelCommandBase kcb)
+                {
+                    kcb.Parent = submitCode.Parent;
+                }
+            }
+
             return commands;
 
             void AddHoistedCommand(IKernelCommand command)
             {
                 commands.Insert(hoistedCommandsIndex++, command);
-            }
-        }
-
-        public IReadOnlyList<IKernelCommand> SplitSubmission_Old(SubmitCode originalSubmitCode)
-        {
-            var directiveParser = GetDirectiveParser();
-
-            var lines = new Queue<string>(
-                originalSubmitCode.Code.Split(new[] { "\r\n", "\n" },
-                                              StringSplitOptions.None));
-
-            var linesToForward = new List<string>();
-            var commands = new List<IKernelCommand>();
-            var packageCommands = new List<IKernelCommand>();
-            var commandWasSplit = false;
-
-            while (lines.Count > 0)
-            {
-                var currentLine = lines.Dequeue();
-
-                if (currentLine.TrimStart().StartsWith("#"))
-                {
-                    var parseResult = directiveParser.Parse(currentLine);
-
-                    if (parseResult.Errors.Count == 0)
-                    {
-                        commandWasSplit = true;
-
-                        if (AccumulatedSubmission() is { } cmd)
-                        {
-                            commands.Add(cmd);
-                        }
-
-                        var runDirective = new DirectiveCommand(parseResult);
-
-                        if (parseResult.CommandResult.Command.Name == "#r")
-                        {
-                            var value = parseResult.CommandResult.GetArgumentValueOrDefault<PackageReferenceOrFileInfo>("package");
-
-                            if (value.Value is FileInfo)
-                            {
-                                linesToForward.Add(currentLine);
-                            }
-                            else
-                            {
-                                packageCommands.Add(runDirective);
-                            }
-                        }
-                        else if (parseResult.CommandResult.Command.Name == "#i")
-                        {
-                            packageCommands.Add(runDirective);
-                        }
-                        else
-                        {
-                            commands.Add(runDirective);
-                        }
-                    }
-                    else
-                    {
-                        if (parseResult.CommandResult.Command == parseResult.Parser.Configuration.RootCommand)
-                        {
-                            linesToForward.Add(currentLine);
-                        }
-                        else
-                        {
-                            commands.Clear();
-                            commands.Add(
-                                new AnonymousKernelCommand((kernelCommand, context) =>
-                                {
-                                    var message =
-                                        string.Join(Environment.NewLine,
-                                                    parseResult.Errors
-                                                               .Select(e => e.ToString()));
-
-                                    context.Fail(message: message);
-                                    return Task.CompletedTask;
-                                }));
-                        }
-                    }
-                }
-                else
-                {
-                    linesToForward.Add(currentLine);
-                }
-            }
-
-            if (commandWasSplit)
-            {
-                if (AccumulatedSubmission() is { } newSubmitCode)
-                {
-                    commands.Add(newSubmitCode);
-                }
-            }
-            else
-            {
-                commands.Add(originalSubmitCode);
-            }
-
-            if (packageCommands.Count > 0)
-            {
-                packageCommands.Add(new DirectiveCommand(directiveParser.Parse("#!nuget-restore")));
-            }
-
-            return packageCommands.Concat(commands).ToArray();
-
-            SubmitCode AccumulatedSubmission()
-            {
-                if (linesToForward.Any())
-                {
-                    var code = string.Join(Environment.NewLine, linesToForward);
-
-                    linesToForward.Clear();
-
-                    if (!string.IsNullOrWhiteSpace(code))
-                    {
-                        return new SubmitCode(code);
-                    }
-                }
-
-                return null;
             }
         }
 

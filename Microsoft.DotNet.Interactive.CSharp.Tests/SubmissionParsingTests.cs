@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.CSharp.Tests
     public class SubmissionParsingTests
     {
         [Fact]
-        public async Task pound_r_is_not_split_into_separate_command_from_csharp_code()
+        public async Task pound_r_is_split_into_separate_command_from_csharp_code()
         {
             var receivedCommands = new List<IKernelCommand>();
 
@@ -30,11 +30,11 @@ namespace Microsoft.DotNet.Interactive.CSharp.Tests
 
             kernel.UseNugetDirective();
             var path = Path.GetTempFileName();
-            // FIX: (pound_r_is_not_split_into_separate_command_from_csharp_code) 
-            var poundR_and_usingStatement = $@"#r ""{path}""{Environment.NewLine}using Some.Namespace;";
+            var poundR = $@"#r ""{path}""";
+            var usingStatement = "using Some.Namespace;";
             var nextSubmission = "// the code";
 
-            kernel.DeferCommand(new SubmitCode(poundR_and_usingStatement));
+            kernel.DeferCommand(new SubmitCode(poundR + Environment.NewLine + usingStatement));
 
             await kernel.SubmitCodeAsync(nextSubmission);
 
@@ -43,7 +43,8 @@ namespace Microsoft.DotNet.Interactive.CSharp.Tests
                 .Select(c => c.Code.Trim())
                 .Should()
                 .BeEquivalentSequenceTo(
-                    poundR_and_usingStatement,
+                    poundR,
+                    usingStatement,
                     nextSubmission);
         }
     }

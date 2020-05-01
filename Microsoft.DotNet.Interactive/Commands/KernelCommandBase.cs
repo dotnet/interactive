@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         public KernelCommandInvocation Handler { get; set; }
 
         [JsonIgnore]   
-        public IKernelCommand Parent { get; }
+        public IKernelCommand Parent { get; internal set; }
 
         [JsonIgnore]
         public IDictionary<string, object> Properties { get; }

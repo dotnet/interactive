@@ -161,19 +161,6 @@ namespace Microsoft.DotNet.Interactive
 
                             if (kernel == this)
                             {
-                                // FIX: (HandleDirectivesAndSubmitCode) remove
-                                switch (this)
-                                {
-                                    case CompositeKernel compositeKernel:
-                                        break;
-                                    case DotNetLanguageKernel dotNetLanguageKernel:
-                                        break;
-                                    case HtmlKernel htmlKernel:
-                                        break;
-                                    case JavaScriptKernel javaScriptKernel:
-                                        break;
-                                }
-
                                 var c = KernelInvocationContext.Establish(command);
 
                                 await continueOnCurrentPipeline(command, c);
