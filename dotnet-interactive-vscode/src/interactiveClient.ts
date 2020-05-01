@@ -7,11 +7,7 @@ export class InteractiveClient {
     constructor(readonly clientAdapter: ClientAdapterBase) {
     }
 
-    get targetKernelName(): string{
-        return this.clientAdapter.targetKernelName;
-    }
-
-    completion(code: string, line: number, character: number): Observable<EventEnvelope> {
+    completion(language: string, code: string, line: number, character: number): Observable<EventEnvelope> {
         let position = 0;
         let currentLine = 0;
         let currentCharacter = 0;
@@ -35,10 +31,10 @@ export class InteractiveClient {
             cursorPosition: position,
         };
 
-        return this.clientAdapter.submitCommand('RequestCompletion', command);
+        return this.clientAdapter.submitCommand('RequestCompletion', command, language);
     }
 
-    hover(code: string, line: number, character: number): Observable<EventEnvelope> {
+    hover(language: string, code: string, line: number, character: number): Observable<EventEnvelope> {
         let b = Buffer.from(code);
         let command = {
             documentIdentifier: 'data:text/plain;base64,' + b.toString('base64'),
@@ -47,14 +43,14 @@ export class InteractiveClient {
                 character: character,
             }
         };
-        return this.clientAdapter.submitCommand('RequestHoverText', command);
+        return this.clientAdapter.submitCommand('RequestHoverText', command, language);
     }
 
-    submitCode(code: string): Observable<EventEnvelope> {
+    submitCode(language: string, code: string): Observable<EventEnvelope> {
         let command = {
             code: code,
             submissionType: 0,
         };
-        return this.clientAdapter.submitCommand('SubmitCode', command);
+        return this.clientAdapter.submitCommand('SubmitCode', command, language);
     }
 }

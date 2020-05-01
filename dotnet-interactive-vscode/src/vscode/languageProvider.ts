@@ -3,8 +3,7 @@ import { LinePositionSpan, LinePosition, CompletionRequestCompleted } from '../e
 import { ClientMapper } from '../clientMapper';
 import { Hover } from './../languageServices/hover';
 import { provideCompletion } from '../languageServices/completion';
-
-const selector = { language: 'dotnet-interactive' };
+import { DotNetInteractiveNotebookProvider } from './notebookProvider';
 
 function convertToPosition(linePosition: LinePosition): vscode.Position {
     return new vscode.Position(linePosition.line, linePosition.character);
@@ -29,7 +28,7 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
 
     provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
         return new Promise<vscode.CompletionList>((resolve, reject) => {
-            provideCompletion(this.clientMapper, document, position, token).then(result => {
+            provideCompletion(this.clientMapper, document.languageId, document, position, token).then(result => {
                 let completionItems: Array<vscode.CompletionItem> = [];
                 for (let item of result) {
                     let vscodeItem = new vscode.CompletionItem(item.displayText, this.mapCompletionItem(item.kind));
@@ -70,7 +69,7 @@ export class HoverProvider implements vscode.HoverProvider {
 
     provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Hover> {
         return new Promise<vscode.Hover>((resolve, reject) => {
-            Hover.provideHover(this.clientMapper, document, position, token).then(result => {
+            Hover.provideHover(this.clientMapper, document.languageId, document, position, token).then(result => {
                 let contents = result.isMarkdown
                     ? new vscode.MarkdownString(result.contents)
                     : result.contents;
@@ -84,8 +83,8 @@ export class HoverProvider implements vscode.HoverProvider {
 export function registerLanguageProviders(clientMapper: ClientMapper): vscode.Disposable {
     const disposables: Array<vscode.Disposable> = [];
 
-    disposables.push(vscode.languages.registerCompletionItemProvider(selector, new CompletionItemProvider(clientMapper), ...CompletionItemProvider.triggerCharacters));
-    disposables.push(vscode.languages.registerHoverProvider(selector, new HoverProvider(clientMapper)));
+    disposables.push(vscode.languages.registerCompletionItemProvider(DotNetInteractiveNotebookProvider.editorLanguages, new CompletionItemProvider(clientMapper), ...CompletionItemProvider.triggerCharacters));
+    disposables.push(vscode.languages.registerHoverProvider(DotNetInteractiveNotebookProvider.editorLanguages, new HoverProvider(clientMapper)));
 
     return vscode.Disposable.from(...disposables);
 }

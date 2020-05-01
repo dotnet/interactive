@@ -3,7 +3,7 @@ import { HoverMarkdownProduced } from './../events';
 import { CancellationTokenLike, DocumentLike, HoverResult, PositionLike } from './interfaces';
 
 export class Hover {
-    static provideHover(clientMapper: ClientMapper, document: DocumentLike, position: PositionLike, token?: CancellationTokenLike): Promise<HoverResult> {
+    static provideHover(clientMapper: ClientMapper, language: string, document: DocumentLike, position: PositionLike, token?: CancellationTokenLike): Promise<HoverResult> {
         return new Promise<HoverResult>((resolve, reject) => {
             let handled = false;
             let client = clientMapper.getClient(document.uri);
@@ -12,7 +12,7 @@ export class Hover {
                 return;
             }
 
-            client.hover(document.getText(), position.line, position.character).subscribe({
+            client.hover(language, document.getText(), position.line, position.character).subscribe({
                 next: value => {
                     let hoverResult: HoverResult | undefined = undefined;
                     switch (value.eventType) {

@@ -3,10 +3,13 @@ import { ClientMapper } from './../clientMapper';
 import { NotebookFile, execute, parseNotebook } from '../interactiveNotebook';
 
 export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvider {
+    static readonly editorLanguages = ['csharp', 'fsharp', 'powershell'];
+
     constructor(readonly clientMapper: ClientMapper) {
     }
 
     async resolveNotebook(editor: vscode.NotebookEditor): Promise<void> {
+        editor.document.languages = DotNetInteractiveNotebookProvider.editorLanguages;
         let contents = '';
         try {
             contents = Buffer.from(await vscode.workspace.fs.readFile(editor.document.uri)).toString('utf-8');
@@ -14,14 +17,13 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         }
 
         let notebook = parseNotebook(contents);
-        editor.document.languages = [notebook.targetKernelName];
-        this.clientMapper.addClient(notebook.targetKernelName, editor.document.uri);
+        this.clientMapper.addClient(editor.document.uri);
         editor.edit(editBuilder => {
             for (let cell of notebook.cells) {
                 editBuilder.insert(
                     0,
                     cell.content,
-                    notebook.targetKernelName,
+                    cell.language,
                     cell.kind,
                     cell.outputs,
                     {
@@ -53,7 +55,7 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         }
 
         let source = cell.source.toString();
-        let outputs = await execute(source, client);
+        let outputs = await execute(cell.language, source, client);
         cell.outputs = outputs;
     }
 
@@ -64,12 +66,12 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         }
 
         let notebook: NotebookFile = {
-            targetKernelName: client.targetKernelName,
             cells: [],
         };
         for (let cell of document.cells) {
             notebook.cells.push({
                 content: cell.document.getText(),
+                language: cell.language,
                 outputs: cell.outputs,
                 kind: cell.cellKind
             });

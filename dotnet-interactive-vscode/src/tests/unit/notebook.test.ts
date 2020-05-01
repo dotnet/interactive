@@ -9,7 +9,7 @@ describe('Notebook tests', () => {
     for (let language of ['csharp', 'fsharp']) {
         it(`executes and returns expected value: ${language}`, async () => {
             let code = '1+1';
-            let clientMapper = new ClientMapper(targetKernelName => new TestClientAdapter(targetKernelName, {
+            let clientMapper = new ClientMapper(() => new TestClientAdapter({
                 'SubmitCode': [
                     {
                         eventType: 'CodeSubmissionReceived',
@@ -42,8 +42,8 @@ describe('Notebook tests', () => {
                     }
                 ]
             }));
-            let client = clientMapper.addClient('csharp', { path: 'test/path' });
-            let outputs = await execute(code, client);
+            let client = clientMapper.addClient({ path: 'test/path' });
+            let outputs = await execute(language, code, client);
             expect(outputs).to.deep.equal([
                 {
                     outputKind: CellOutputKind.Rich,

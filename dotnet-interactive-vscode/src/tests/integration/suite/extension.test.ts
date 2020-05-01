@@ -7,10 +7,10 @@ import { CellOutputKind } from '../../../interfaces/vscode';
 
 suite('Extension Test Suite', () => {
     test('Execute against real kernel', async () => {
-        let clientMapper = new ClientMapper(targetKernelName => new StdioClientAdapter(targetKernelName));
-        let client = clientMapper.addClient('csharp', { path: 'some/path' });
+        let clientMapper = new ClientMapper(() => new StdioClientAdapter());
+        let client = clientMapper.addClient({ path: 'some/path' });
         let code = '1+1';
-        let outputs = await execute(code, client);
+        let outputs = await execute('csharp', code, client);
             expect(outputs).to.deep.equal([
                 {
                     outputKind: CellOutputKind.Rich,

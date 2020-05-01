@@ -4,13 +4,12 @@ import { RawNotebookCell } from "./interfaces";
 import { CellDisplayOutput, CellErrorOutput, CellKind, CellOutput, CellOutputKind, CellStreamOutput, NotebookDocument } from "./interfaces/vscode";
 
 export interface NotebookFile {
-    targetKernelName: string;
     cells: Array<RawNotebookCell>;
 }
 
-export async function execute(source: string, client: InteractiveClient): Promise<Array<CellOutput>> {
+export async function execute(language: string, source: string, client: InteractiveClient): Promise<Array<CellOutput>> {
     return new Promise((resolve, reject) => {
-        client.submitCode(source).subscribe({
+        client.submitCode(language, source).subscribe({
             next: value => {
                 switch (value.eventType) {
                     case 'CommandFailed':
@@ -69,7 +68,6 @@ export function parseNotebook(contents: string): NotebookFile {
         notebook = <NotebookFile>JSON.parse(contents);
     } catch {
         notebook = {
-            targetKernelName: 'csharp',
             cells: [],
         };
     }

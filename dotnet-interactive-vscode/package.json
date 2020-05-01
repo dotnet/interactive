@@ -15,22 +15,10 @@
     "Other"
   ],
   "activationEvents": [
-    "onLanguage:dotnet-interactive",
     "onNotebookEditor:dotnet-interactive"
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "languages": [
-      {
-        "id": "dotnet-interactive",
-        "aliases": [
-          "DotNet Interactive"
-        ],
-        "filenamePatterns": [
-          "*.dotnet-interactive"
-        ]
-      }
-    ],
     "notebookProvider": [
       {
         "viewType": "dotnet-interactive",

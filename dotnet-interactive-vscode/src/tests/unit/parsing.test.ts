@@ -12,10 +12,10 @@ describe('Extension Test Suite', () => {
 
     it('Parse notebook from valid JSON', () => {
         let valid = {
-            targetKernelName: 'fsharp',
             cells: [
                 {
                     kind: CellKind.Code,
+                    language: 'fsharp',
                     content: 'let x = 1',
                     outputs: [],
                 }
@@ -23,14 +23,13 @@ describe('Extension Test Suite', () => {
         };
         let validJson = JSON.stringify(valid);
         let notebook = parseNotebook(validJson);
-        expect(notebook.targetKernelName).to.equal("fsharp");
         expect(notebook.cells.length).to.equal(1);
         expect(notebook.cells[0].content).to.equal("let x = 1");
+        expect(notebook.cells[0].language).to.equal("fsharp");
     });
 
     it('Parse notebook from invalid JSON', () => {
         let notebook = parseNotebook('invalid json should still result in a notebook');
-        expect(notebook.targetKernelName).to.equal("csharp");
         expect(notebook.cells).length.to.be.empty;
     });
 });

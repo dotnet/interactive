@@ -2,7 +2,7 @@ import { ClientMapper } from './../clientMapper';
 import { CompletionRequestCompleted, CompletionItem } from './../events';
 import { CancellationTokenLike, DocumentLike, PositionLike } from './interfaces';
 
-export function provideCompletion(clientMapper: ClientMapper, document: DocumentLike, position: PositionLike, token?: CancellationTokenLike): Promise<Array<CompletionItem>> {
+export function provideCompletion(clientMapper: ClientMapper, language: string, document: DocumentLike, position: PositionLike, token?: CancellationTokenLike): Promise<Array<CompletionItem>> {
     return new Promise<Array<CompletionItem>>((resolve, reject) => {
         let handled = false;
         let client = clientMapper.getClient(document.uri);
@@ -11,7 +11,7 @@ export function provideCompletion(clientMapper: ClientMapper, document: Document
             return;
         }
 
-        client.completion(document.getText(), position.line, position.character).subscribe({
+        client.completion(language, document.getText(), position.line, position.character).subscribe({
             next: value => {
                 switch (value.eventType) {
                     case 'CompletionRequestCompleted':

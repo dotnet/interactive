@@ -7,7 +7,7 @@ import { provideCompletion } from './../../languageServices/completion';
 
 describe('LanguageProvider tests', () => {
     it('CompletionProvider', async () => {
-        let clientMapper = new ClientMapper(targetKernelName => new TestClientAdapter(targetKernelName, {
+        let clientMapper = new ClientMapper(() => new TestClientAdapter({
             'RequestCompletion': [
                 {
                     eventType: 'CompletionRequestCompleted',
@@ -30,7 +30,7 @@ describe('LanguageProvider tests', () => {
                 }
             ]
         }));
-        clientMapper.addClient('csharp', { path: 'test/path' });
+        clientMapper.addClient({ path: 'test/path' });
 
         let code = 'Math.';
         let document = {
@@ -43,7 +43,7 @@ describe('LanguageProvider tests', () => {
         };
 
         // perform the completion request
-        let completion = await provideCompletion(clientMapper, document, position);
+        let completion = await provideCompletion(clientMapper, 'csharp', document, position);
         expect(completion).to.deep.equal([
             {
                 displayText: 'Sqrt',
@@ -57,7 +57,7 @@ describe('LanguageProvider tests', () => {
     });
 
     it('HoverProvider', async () => {
-        let clientMapper = new ClientMapper(targetKernelName => new TestClientAdapter(targetKernelName, {
+        let clientMapper = new ClientMapper(() => new TestClientAdapter({
             'RequestHoverText': [
                 {
                     eventType: 'HoverMarkdownProduced',
@@ -81,7 +81,7 @@ describe('LanguageProvider tests', () => {
                 }
             ]
         }));
-        clientMapper.addClient('csharp', { path: 'test/path' });
+        clientMapper.addClient({ path: 'test/path' });
 
         let code = 'data:text/plain;base64,dmFyIHggPSAxMjM0Ow=='; // var x = 1234;
         let document = {
@@ -94,7 +94,7 @@ describe('LanguageProvider tests', () => {
         };
 
         // perform the hover request
-        let hover = await Hover.provideHover(clientMapper, document, position);
+        let hover = await Hover.provideHover(clientMapper, 'csharp', document, position);
         expect(hover.contents).to.equal('readonly struct System.Int32');
         expect(hover.range?.start.line).to.equal(0);
         expect(hover.range?.start.character).to.equal(8);

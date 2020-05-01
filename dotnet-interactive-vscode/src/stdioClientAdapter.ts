@@ -10,9 +10,8 @@ export class StdioClientAdapter extends ClientAdapterBase {
     private stdin: Writable;
     private subscribers: Map<string, Array<Subscriber<EventEnvelope>>> = new Map();
 
-    constructor(targetKernelName: string) {
-        super(targetKernelName);
-
+    constructor() {
+        super();
         let childProcess = cp.spawn('dotnet', ['interactive', 'stdio']);
         childProcess.on('exit', (code: number, _signal: string) => {
             //
@@ -59,10 +58,12 @@ export class StdioClientAdapter extends ClientAdapterBase {
         this.subscribers.get(token)?.push(subscriber);
     }
 
-    submitCommand(commandType: string, command: any): Observable<EventEnvelope> {
+    submitCommand(commandType: string, command: any, targetKernelName: string | undefined): Observable<EventEnvelope> {
         return new Observable<EventEnvelope>(subscriber => {
             let token = 'abc' + this.next++;
-            command.targetKernelName = this.targetKernelName;
+            if (targetKernelName) {
+                command.targetKernelName = targetKernelName;
+            }
             let submit = {
                 token: token,
                 commandType: commandType,

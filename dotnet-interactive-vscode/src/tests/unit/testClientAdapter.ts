@@ -4,8 +4,8 @@ import { EventEnvelope } from "./../../events";
 
 // Replays all events given to it
 export class TestClientAdapter extends ClientAdapterBase {
-    constructor(targetKernelName: string, readonly fakedEvents: { [key: string]: {eventType: string, event: any}[] }) {
-        super(targetKernelName);
+    constructor(readonly fakedEvents: { [key: string]: {eventType: string, event: any}[] }) {
+        super();
     }
 
     submitCommand(commandType: string, command: any): Observable<EventEnvelope> {

@@ -8,7 +8,7 @@ interface HasPath {
 export class ClientMapper {
     private clientMap: Map<string, InteractiveClient> = new Map();
 
-    constructor(readonly clientAdapterCreator: {(targetKernelName: string): ClientAdapterBase}) {
+    constructor(readonly clientAdapterCreator: {(): ClientAdapterBase}) {
     }
 
     static keyFromUri(uri: HasPath): string {
@@ -24,8 +24,8 @@ export class ClientMapper {
         }
     }
 
-    addClient(targetKernelName: string, uri: HasPath): InteractiveClient {
-        let client = new InteractiveClient(this.clientAdapterCreator(targetKernelName));
+    addClient(uri: HasPath): InteractiveClient {
+        let client = new InteractiveClient(this.clientAdapterCreator());
         this.clientMap.set(ClientMapper.keyFromUri(uri), client);
         return client;
     }
