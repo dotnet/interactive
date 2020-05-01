@@ -1,5 +1,7 @@
 import { CellKind, CellOutput, CellOutputKind, NotebookDocument } from "../interfaces/vscode";
 import { JupyterCell, JupyterMetadata, JupyterNotebook, JupyterOutput } from "../interfaces/jupyter";
+import { NotebookFile } from "../interactiveNotebook";
+import { RawNotebookCell } from "../interfaces";
 
 export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
     let cells: Array<JupyterCell> = [];
@@ -20,7 +22,7 @@ export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
                     metadata: {},
                     source: [
                         `#!${cell.language}\r\n`,
-                        ...splitAndCleanLines(cell.source)
+                        ...splitAndEnsureNewlineTerminators(cell.source)
                     ],
                     outputs: cell.outputs.map(convertCellOutputToJupyter).filter(notUndefined)
                 };
@@ -59,6 +61,48 @@ export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
     return notebook;
 }
 
+export function convertFromJupyter(jupyter: JupyterNotebook): NotebookFile {
+    let cells: Array<RawNotebookCell> = [];
+    for (let jcell of jupyter.cells) {
+        switch (jcell.cell_type) {
+            case 'code':
+                cells.push({
+                    language: getCellLanguage(jcell.source, expandLanguageName(jupyter.metadata.kernelspec.language)),
+                    contents: ensureNoNewlineTerminators(jcell.source)
+                });
+                break;
+            case 'markdown':
+                cells.push({
+                    language: 'markdown',
+                    contents: splitAndCleanLines(jcell.source)
+                });
+                break;
+        }
+    }
+    return {
+        cells
+    };
+}
+
+function getCellLanguage(contents: Array<string>, defaultLanguage: string): string {
+    if (contents.length > 0 && contents[0].startsWith('#!')) {
+        return contents[0].substr(2).trimRight();
+    }
+
+    return defaultLanguage;
+}
+
+function expandLanguageName(languageName: string): string {
+    switch (languageName) {
+        case 'C#':
+            return 'csharp';
+        case 'F#':
+            return 'fsharp';
+        default:
+            return languageName;
+    }
+}
+
 function notUndefined<T>(x: T | undefined): x is T {
     return x !== undefined;
 }
@@ -83,7 +127,7 @@ function convertCellOutputToJupyter(output: CellOutput): JupyterOutput | undefin
             return {
                 output_type: 'display_data',
                 data: {
-                    'text/plain': splitAndCleanLines(output.text)
+                    'text/plain': splitAndEnsureNewlineTerminators(output.text)
                 },
                 metadata: {}
             };
@@ -95,7 +139,7 @@ function convertCellOutputToJupyter(output: CellOutput): JupyterOutput | undefin
 function convertCellOutputDataToJupyter(data: { [key: string]: string }): { [key: string]: string[] } {
     let result: { [key: string]: string[] } = {};
     for (let key in data) {
-        result[key] = splitAndCleanLines(data[key]);
+        result[key] = splitAndEnsureNewlineTerminators(data[key]);
     }
 
     return result;
@@ -152,12 +196,36 @@ function versionFromLanguage(language: string): string {
 }
 
 function splitAndCleanLines(source: string): Array<string> {
+    let lines = source.split('\n').map(line => line.endsWith('\r') ? line.substr(0, line.length - 1) : line);
+    return lines;
+}
+
+function splitAndEnsureNewlineTerminators(source: string): Array<string> {
     // With the exception of markdown text, jupyter stores strings in an array, one entry per line, where each line has
     // a terminating `\r\n` except for the last line.
-    let lines = source.split('\n').map(line => line.endsWith('\r') ? line.substr(0, line.length - 1) : line);
+    let lines = splitAndCleanLines(source);
     for (let i = 0; i < lines.length - 1; i++) {
         lines[i] += '\r\n';
     }
 
     return lines;
+}
+
+function ensureNoNewlineTerminators(lines: Array<string>): Array<string> {
+    let result = [];
+    for (let line of lines) {
+        if (line.endsWith('\r\n')) {
+            line = line.substr(0, line.length - 2);
+        }
+
+        result.push(line);
+    }
+
+    // a language-specific cell was handled elsewhere
+    if (result.length > 0 && result[0].startsWith('#!'))
+    {
+        result.shift();
+    }
+
+    return result;
 }

@@ -43,7 +43,7 @@ export interface JupyterCodeCell {
     execution_count: number;
     metadata: { [key: string]: any };
     source: Array<string>;
-    outputs: Array<JupyterOutput>;
+    outputs?: Array<JupyterOutput>;
 }
 
 export type JupyterCell = JupyterMarkdownCell | JupyterCodeCell;

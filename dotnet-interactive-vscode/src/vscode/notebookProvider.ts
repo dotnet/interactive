@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import { ClientMapper } from './../clientMapper';
 import { NotebookFile, execute, parseNotebook, serializeNotebook, editorLanguages } from '../interactiveNotebook';
+import { JupyterNotebook } from '../interfaces/jupyter';
+import { convertFromJupyter } from '../interop/jupyter';
 
 export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvider {
     constructor(readonly clientMapper: ClientMapper) {
@@ -14,7 +16,20 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         } catch {
         }
 
-        let notebook = parseNotebook(contents);
+        let notebook: NotebookFile;
+        let extension = getExtension(editor.document.uri.path);
+        switch (extension) {
+            case '.ipynb':
+                let json = JSON.parse(contents);
+                let jupyter = <JupyterNotebook>json;
+                notebook = convertFromJupyter(jupyter);
+                break;
+            case '.dotnet-interactive':
+            default:
+                notebook = parseNotebook(contents);
+                break;
+        }
+
         this.clientMapper.getOrAddClient(editor.document.uri);
         editor.edit(editBuilder => {
             for (let cell of notebook.cells) {
@@ -67,6 +82,15 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         await vscode.workspace.fs.writeFile(document.uri, Buffer.from(serializeNotebook(notebook)));
         return true;
     }
+}
+
+function getExtension(filename: string): string {
+    let dot = filename.indexOf('.');
+    if (dot < 0) {
+        return '';
+    }
+
+    return filename.substr(dot);
 }
 
 function languageToCellKind(language: string): vscode.CellKind {

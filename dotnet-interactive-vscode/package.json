@@ -28,6 +28,9 @@
         "selector": [
           {
             "filenamePattern": "*.dotnet-interactive"
+          },
+          {
+            "filenamePattern": "*.ipynb"
           }
         ]
       }
