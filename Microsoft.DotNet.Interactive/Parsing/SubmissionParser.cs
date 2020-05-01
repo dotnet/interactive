@@ -158,6 +158,17 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 commands.Add(submitCode);
             }
 
+            if (commands.Count == 1)
+            {
+                if (commands[0] is SubmitCode sc)
+                {
+                    if (submitCode.Code.Equals(sc.Code, StringComparison.Ordinal))
+                    {
+                        return new[] { submitCode };
+                    }
+                }
+            }
+
             return commands;
 
             void AddHoistedCommand(IKernelCommand command)

@@ -164,28 +164,49 @@ namespace Microsoft.DotNet.Interactive
                     break;
                 }
 
-                switch (command)
+                if (command == submitCode)
                 {
-                    case AnonymousKernelCommand _:
-                    case DirectiveCommand _:
-                        await command.InvokeAsync(context);
-                        break;
-                    default:
-                        var kernel = context.HandlingKernel;
+                    // no new context is needed
+                    await continueOnCurrentPipeline(submitCode, context);
+                }
+                else
+                {
+                    switch (command)
+                    {
+                        case AnonymousKernelCommand _:
+                        case DirectiveCommand _:
+                            await command.InvokeAsync(context);
+                            break;
+                        default:
+                            var kernel = context.HandlingKernel;
 
-                        if (kernel == this)
-                        {
-                            var c = KernelInvocationContext.Establish(command);
+                            if (kernel == this)
+                            {
+                                // FIX: (HandleDirectivesAndSubmitCode) remove
+                                switch (this)
+                                {
+                                    case CompositeKernel compositeKernel:
+                                        break;
+                                    case DotNetLanguageKernel dotNetLanguageKernel:
+                                        break;
+                                    case HtmlKernel htmlKernel:
+                                        break;
+                                    case JavaScriptKernel javaScriptKernel:
+                                        break;
+                                }
 
-                            await continueOnCurrentPipeline(command, c);
-                        }
-                        else
-                        {
-                            // forward to next kernel
-                            await kernel.SendAsync(command);
-                        }
+                                var c = KernelInvocationContext.Establish(command);
 
-                        break;
+                                await continueOnCurrentPipeline(command, c);
+                            }
+                            else
+                            {
+                                // forward to next kernel
+                                await kernel.SendAsync(command);
+                            }
+
+                            break;
+                    }
                 }
             }
         }

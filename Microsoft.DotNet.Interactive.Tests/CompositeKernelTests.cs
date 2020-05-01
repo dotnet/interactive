@@ -330,7 +330,6 @@ new [] {1,2,3}");
                     return Task.CompletedTask;
                 }
             };
-
             
             compositeKernel.DeferCommand(deferred);
 
