@@ -12,8 +12,17 @@ namespace Microsoft.DotNet.Interactive.Commands
     internal class DirectiveCommand : KernelCommandBase
     {
         public DirectiveCommand(
-            ParseResult parseResult, 
+            ParseResult parseResult,
             DirectiveNode directiveNode = null)
+        {
+            ParseResult = parseResult;
+            DirectiveNode = directiveNode;
+        }
+
+        internal DirectiveCommand(
+            ParseResult parseResult,
+            IKernelCommand parent,
+            DirectiveNode directiveNode = null) : base(null, parent)
         {
             ParseResult = parseResult;
             DirectiveNode = directiveNode;

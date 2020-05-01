@@ -7,8 +7,9 @@ namespace Microsoft.DotNet.Interactive.Commands
     {
         public AnonymousKernelCommand(
             KernelCommandInvocation handler, 
-            string targetKernelName = null)
-            : base(targetKernelName)
+            string targetKernelName = null,
+            IKernelCommand parent = null)
+            : base(targetKernelName, parent)
         {
             Handler = handler;
         }

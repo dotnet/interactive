@@ -81,12 +81,13 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                                     context.Fail(message: message);
                                     return Task.CompletedTask;
-                                }));
+                                }, parent: submitCode.Parent));
                             break;
                         }
 
                         var directiveCommand = new DirectiveCommand(
                             parseResult,
+                            submitCode.Parent,
                             directiveNode);
 
                         var targetKernelName = DefaultLanguage;
@@ -97,7 +98,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                             if (value.Value is FileInfo)
                             {
-                                AddHoistedCommand(new SubmitCode(directiveNode.Text, targetKernelName));
+                                AddHoistedCommand(
+                                    new SubmitCode(
+                                        directiveNode, 
+                                        submitCode.SubmissionType,
+                                        submitCode.Parent));
                             }
                             else
                             {
@@ -120,8 +125,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     case LanguageNode languageNode:
                         commands.Add(new SubmitCode(
                                          languageNode,
-                                         submitCode.SubmissionType));
-
+                                         submitCode.SubmissionType,
+                                         submitCode.Parent));
                         break;
                     
                     default:
@@ -137,34 +142,20 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     kernelBase.SubmissionParser.GetDirectiveParser() is {} parser)
                 {
                     var restore = new DirectiveCommand(
-                        parser.Parse("#!nuget-restore"));
+                        parser.Parse("#!nuget-restore"),
+                        submitCode.Parent);
                     AddHoistedCommand(restore);
                 }
             }
 
-            if (commands.Count == 0)
+            if (NoSplitWasNeeded(out var originalSubmission))
             {
-                // FIX: (SplitSubmission_New) this is weird
-                commands.Add(submitCode);
+                return originalSubmission;
             }
 
-            if (commands.Count == 1)
+            foreach (var command in commands.OfType<KernelCommandBase>())
             {
-                if (commands[0] is SubmitCode sc)
-                {
-                    if (submitCode.Code.Equals(sc.Code, StringComparison.Ordinal))
-                    {
-                        return new[] { submitCode };
-                    }
-                }
-            }
-
-            foreach (var command in commands)
-            {
-                if (command is KernelCommandBase kcb)
-                {
-                    kcb.Parent = submitCode.Parent;
-                }
+                command.Parent = submitCode.Parent;
             }
 
             return commands;
@@ -172,6 +163,30 @@ namespace Microsoft.DotNet.Interactive.Parsing
             void AddHoistedCommand(IKernelCommand command)
             {
                 commands.Insert(hoistedCommandsIndex++, command);
+            }
+
+            bool NoSplitWasNeeded(out IReadOnlyList<IKernelCommand> splitSubmission)
+            {
+                if (commands.Count == 0)
+                {
+                    splitSubmission = new[] { submitCode };
+                    return true;
+                }
+
+                if (commands.Count == 1)
+                {
+                    if (commands[0] is SubmitCode sc)
+                    {
+                        if (submitCode.Code.Equals(sc.Code, StringComparison.Ordinal))
+                        {
+                            splitSubmission = new[] { submitCode };
+                            return true;
+                        }
+                    }
+                }
+
+                splitSubmission = null;
+                return false;
             }
         }
 

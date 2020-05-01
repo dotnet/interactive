@@ -10,15 +10,18 @@ namespace Microsoft.DotNet.Interactive.Commands
 {
     public abstract class KernelCommandBase : IKernelCommand
     {
-        protected KernelCommandBase(string targetKernelName = null)
+        protected KernelCommandBase(string targetKernelName = null, IKernelCommand parent = null)
         {
-            var parent = KernelInvocationContext.Current?.Command;
-            
-            if (parent != this)
+            if (parent is null)
             {
-                Parent = parent;
+                parent = KernelInvocationContext.Current?.Command;
+
+                if (parent != this)
+                {
+                    Parent = parent;
+                }
             }
-            
+
             Properties = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
 
             TargetKernelName = targetKernelName;
@@ -33,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         [JsonIgnore]
         public IDictionary<string, object> Properties { get; }
 
-        public string TargetKernelName { get; set; }
+        public string TargetKernelName { get; internal set; }
 
         public virtual async Task InvokeAsync(KernelInvocationContext context)
         {

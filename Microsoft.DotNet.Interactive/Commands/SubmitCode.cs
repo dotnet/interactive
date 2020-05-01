@@ -19,9 +19,12 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         internal SubmitCode(
             LanguageNode languageNode,
-            SubmissionType submissionType = SubmissionType.Run) :
-            this(languageNode.Text, languageNode.Language, submissionType: submissionType)
+            SubmissionType submissionType = SubmissionType.Run,
+            IKernelCommand parent = null) :
+            base(languageNode.Language, parent)
         {
+            Code = languageNode.Text;
+            SubmissionType = submissionType;
             SuppressSplit = true;
         }
 
