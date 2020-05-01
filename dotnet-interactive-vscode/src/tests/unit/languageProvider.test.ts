@@ -30,7 +30,7 @@ describe('LanguageProvider tests', () => {
                 }
             ]
         }));
-        clientMapper.addClient({ path: 'test/path' });
+        clientMapper.getOrAddClient({ path: 'test/path' });
 
         let code = 'Math.';
         let document = {
@@ -81,7 +81,7 @@ describe('LanguageProvider tests', () => {
                 }
             ]
         }));
-        clientMapper.addClient({ path: 'test/path' });
+        clientMapper.getOrAddClient({ path: 'test/path' });
 
         let code = 'data:text/plain;base64,dmFyIHggPSAxMjM0Ow=='; // var x = 1234;
         let document = {

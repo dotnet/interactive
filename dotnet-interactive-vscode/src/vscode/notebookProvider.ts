@@ -15,7 +15,7 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         }
 
         let notebook = parseNotebook(contents);
-        this.clientMapper.addClient(editor.document.uri);
+        this.clientMapper.getOrAddClient(editor.document.uri);
         editor.edit(editBuilder => {
             for (let cell of notebook.cells) {
                 editBuilder.insert(
@@ -47,22 +47,13 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
             return;
         }
 
-        let client = this.clientMapper.getClient(document.uri);
-        if (client === undefined) {
-            return;
-        }
-
+        let client = this.clientMapper.getOrAddClient(document.uri);
         let source = cell.source.toString();
         let outputs = await execute(cell.language, source, client);
         cell.outputs = outputs;
     }
 
     async save(document: vscode.NotebookDocument): Promise<boolean> {
-        let client = this.clientMapper.getClient(document.uri);
-        if (client === undefined) {
-            return false;
-        }
-
         let notebook: NotebookFile = {
             cells: [],
         };

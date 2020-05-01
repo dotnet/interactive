@@ -4,7 +4,6 @@ import { ClientMapper } from './../../clientMapper';
 import { execute } from '../../interactiveNotebook';
 import { TestClientAdapter } from './testClientAdapter';
 import { CellOutputKind } from '../../interfaces/vscode';
-import { Test } from 'mocha';
 
 describe('Notebook tests', () => {
     for (let language of ['csharp', 'fsharp']) {
@@ -43,7 +42,7 @@ describe('Notebook tests', () => {
                     }
                 ]
             }));
-            let client = clientMapper.addClient({ path: 'test/path' });
+            let client = clientMapper.getOrAddClient({ path: 'test/path' });
             let outputs = await execute(language, code, client);
             expect(outputs).to.deep.equal([
                 {
@@ -121,7 +120,7 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = clientMapper.addClient({ path: 'test/path' });
+        let client = clientMapper.getOrAddClient({ path: 'test/path' });
         let outputs = await execute('csharp', code, client);
         expect(outputs).to.deep.equal([
             {

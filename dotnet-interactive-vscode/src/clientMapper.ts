@@ -24,13 +24,14 @@ export class ClientMapper {
         }
     }
 
-    addClient(uri: HasPath): InteractiveClient {
-        let client = new InteractiveClient(this.clientTransportCreator());
-        this.clientMap.set(ClientMapper.keyFromUri(uri), client);
-        return client;
-    }
+    getOrAddClient(uri: HasPath): InteractiveClient {
+        let key = ClientMapper.keyFromUri(uri);
+        let client = this.clientMap.get(key);
+        if (client === undefined) {
+            client = new InteractiveClient(this.clientTransportCreator());
+            this.clientMap.set(key, client);
+        }
 
-    getClient(uri: HasPath): InteractiveClient | undefined {
-        return this.clientMap.get(ClientMapper.keyFromUri(uri));
+        return client;
     }
 }

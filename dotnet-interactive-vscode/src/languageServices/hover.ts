@@ -6,12 +6,7 @@ export class Hover {
     static provideHover(clientMapper: ClientMapper, language: string, document: DocumentLike, position: PositionLike, token?: CancellationTokenLike): Promise<HoverResult> {
         return new Promise<HoverResult>((resolve, reject) => {
             let handled = false;
-            let client = clientMapper.getClient(document.uri);
-            if (client === undefined) {
-                reject();
-                return;
-            }
-
+            let client = clientMapper.getOrAddClient(document.uri);
             client.hover(language, document.getText(), position.line, position.character).subscribe({
                 next: value => {
                     let hoverResult: HoverResult | undefined = undefined;
