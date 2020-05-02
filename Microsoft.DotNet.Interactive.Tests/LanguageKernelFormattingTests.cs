@@ -275,5 +275,16 @@ f();"
                 .And
                 .Contain("the-outer-exception");
         }
+
+        [Fact]
+        public async Task FSharpKernel_does_not_publish_return_values_for_unit()
+        {
+            var kernel = CreateKernel(Language.FSharp);
+
+            await kernel.SubmitCodeAsync("\"Hello from F#!\" |> Console.WriteLine");
+
+            KernelEvents.Should()
+                        .NotContain(e => e is ReturnValueProduced);
+        }
     }
 }
