@@ -63,6 +63,16 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 return;
             }
 
+            switch (GetPreviousChar())
+            {
+                case default(char):
+                case '\n':
+                case '\r':
+                    break;
+                default:
+                    return;
+            }
+
             // look ahead to see if this is a directive
             var textIsLongEnoughToContainDirective =
                 _sourceText.Length >= _textWindow.End + 2;
@@ -228,6 +238,14 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         [DebuggerHidden]
         private char GetNextChar() => _sourceText[_textWindow.End];
+
+        [DebuggerHidden]
+        private char GetPreviousChar() =>
+            _textWindow.End switch
+            {
+                0 => default,
+                _ => _sourceText[_textWindow.End - 1]
+            };
 
         [DebuggerHidden]
         private bool More()
