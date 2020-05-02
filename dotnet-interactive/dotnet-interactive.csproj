@@ -177,5 +177,15 @@
     <ZipDirectory SourceDirectory="$(KernelDestinationDirectory)" DestinationFile="$(IntermediateOutputPath)/dotnetKernel.zip" Overwrite="true" />
   </Target>
 
+  <!--
+
+  Exports the stable (non-beta) version number used by this tool as an Azure DevOps variable.  This enables subsequent
+  non-MSBuild tools to have access to the Arcade-computed value.  E.g., the VS Code extension.
+
+  -->
+  <Target Name="ExportVersionNumberForAzureDevOps" AfterTargets="Build">
+    <Message Text="##vso[task.setvariable variable=StableToolVersionNumber]$(Version)" Importance="high" />
+  </Target>
+
 </Project>
 
