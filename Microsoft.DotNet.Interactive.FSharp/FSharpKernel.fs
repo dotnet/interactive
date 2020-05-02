@@ -113,6 +113,7 @@ type FSharpKernel() as this =
                     let value = value.ReflectionValue
                     let formattedValues = FormattedValue.FromObject(value)
                     context.Publish(ReturnValueProduced(value, codeSubmission, formattedValues))
+                | Some(value) -> ()
                 | None -> ()
             | Error(ex) ->
                 if not (tokenSource.IsCancellationRequested) then
