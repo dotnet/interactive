@@ -109,7 +109,7 @@ type FSharpKernel() as this =
             match result with
             | Ok(result) ->
                 match result with
-                | Some(value) ->
+                | Some(value) when value.ReflectionType <> typeof<unit>  ->
                     let value = value.ReflectionValue
                     let formattedValues = FormattedValue.FromObject(value)
                     context.Publish(ReturnValueProduced(value, codeSubmission, formattedValues))
