@@ -226,6 +226,24 @@ x
             }
         }
 
+        [Fact]
+        public void Shebang_after_the_end_of_a_line_is_not_a_node_delimiter()
+        {
+            var parser = CreateSubmissionParser();
+
+            var code = "Console.WriteLine(\"Hello from C#!\");";
+
+            var tree = parser.Parse(code);
+
+            tree.GetRoot()
+                .Should()
+                .ContainSingle<LanguageNode>()
+                .Which
+                .Text
+                .Should()
+                .Be(code);
+        }
+
         private static SubmissionParser CreateSubmissionParser(
             string defaultLanguage = "csharp")
         {
