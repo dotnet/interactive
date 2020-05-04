@@ -38,6 +38,7 @@ namespace Microsoft.DotNet.Interactive.App
             {
                 services.AddRouting();
                 services.AddCors();
+                services.AddSignalR();
             }
         }
 
@@ -64,6 +65,10 @@ namespace Microsoft.DotNet.Interactive.App
                     r.Routes.Add(new VariableRouter(serviceProvider.GetRequiredService<IKernel>()));
                     r.Routes.Add(new KernelsRouter(serviceProvider.GetRequiredService<IKernel>()));
                     r.Routes.Add(new LspRouter(serviceProvider.GetRequiredService<IKernel>()));
+                });
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapHub<KernelHub>("/kernelhub");
                 });
             }
         }

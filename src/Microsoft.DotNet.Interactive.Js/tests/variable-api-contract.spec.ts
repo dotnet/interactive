@@ -5,63 +5,70 @@ import { expect } from "chai";
 import { createDotnetInteractiveClient } from "../src/dotnet-interactive/kernel-client-impl";
 import * as fetchMock from "fetch-mock";
 import { VariableResponse, VariableRequest } from "../src/dotnet-interactive/dotnet-interactive-interfaces";
-import { asKernelClientContainer } from "./testSupprot";
+import { asKernelClientContainer, configureFetchForKernelDiscovery, createMockKernelEventStream } from "./testSupprot";
 
-describe("variable api contract", () => {
-    const rootUrl = "https://dotnet.interactive.com:999";
+describe("dotnet-interactive", () => {
+    describe("variable api contract", () => {
+        const rootUrl = "https://dotnet.interactive.com:999";
 
-    beforeEach(() => {
-        const expectedKernels = require("./Responses/kernels-get-response.json");
-        fetchMock.get(`${rootUrl}/kernels`, expectedKernels);
-    });
+        beforeEach(() => {
+            configureFetchForKernelDiscovery(rootUrl);
+        });
 
-    afterEach(fetchMock.restore);
+        afterEach(fetchMock.restore);
 
-    it("can load multiple variables in a single request", async () => {
-        let expectedVariables: VariableResponse = {
-            csharp:
-            {
-                number: 1,
-                number_as_string: "2"
-            },
-            fsharp: {
-                number: 3,
-                boolean: false
+        it("can load multiple variables in a single request", async () => {
+            let expectedVariables: VariableResponse = {
+                csharp:
+                {
+                    number: 1,
+                    number_as_string: "2"
+                },
+                fsharp: {
+                    number: 3,
+                    boolean: false
+                }
             }
-        }
 
-        let varaibleRequest: VariableRequest = {
-            csharp: ["number", "number_as_string"],
-            fsharp: ["number", "boolean"]
-        };
+            let varaibleRequest: VariableRequest = {
+                csharp: ["number", "number_as_string"],
+                fsharp: ["number", "boolean"]
+            };
 
-        fetchMock.post(`${rootUrl}/variables`,
-            require("./Responses/variable-post-response.json"),
-            {
-                body: varaibleRequest
-            });
+            fetchMock.post(`${rootUrl}/variables`,
+                require("./Responses/variable-post-response.json"),
+                {
+                    body: varaibleRequest
+                });
 
-        let client = await createDotnetInteractiveClient(rootUrl);
-        let variables = await client.getVariables(varaibleRequest);
+            let client = await createDotnetInteractiveClient({ 
+                address: rootUrl, 
+                kernelEventStreamFactory: createMockKernelEventStream});
 
-        expect(variables).to.deep.eq(expectedVariables);
-    });
+            let variables = await client.getVariables(varaibleRequest);
 
-    it("can load variable using kernel client", async () => {
-        let expectedVariable = 123;
-        let variableName = "data";
-        let kernelName = "csharp";
+            expect(variables).to.deep.eq(expectedVariables);
+        });
 
-        fetchMock.get(`${rootUrl}/variables/${kernelName}/${variableName}`,
-            {
-                body: expectedVariable,
-                status: 200
-            });
+        it("can load variable using kernel client", async () => {
+            let expectedVariable = 123;
+            let variableName = "data";
+            let kernelName = "csharp";
 
-        let client = asKernelClientContainer(await createDotnetInteractiveClient(rootUrl));
-        let csharpClient = client[kernelName];
-        let variable = await csharpClient.getVariable(variableName);
+            fetchMock.get(`${rootUrl}/variables/${kernelName}/${variableName}`,
+                {
+                    body: expectedVariable,
+                    status: 200
+                });
 
-        expect(variable).to.deep.eq(expectedVariable);
+            let client = asKernelClientContainer(await createDotnetInteractiveClient({ 
+                address: rootUrl, 
+                kernelEventStreamFactory: createMockKernelEventStream}));
+                
+            let csharpClient = client[kernelName];
+            let variable = await csharpClient.getVariable(variableName);
+
+            expect(variable).to.deep.eq(expectedVariable);
+        });
     });
 });
