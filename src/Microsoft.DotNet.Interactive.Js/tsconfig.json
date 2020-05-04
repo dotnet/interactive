@@ -1,23 +1,28 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 {
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "rxjs/*": [
+        "../node_modules/rxjs/*"
+      ]
+    },
     "lib": [
       "es2015",
       "dom",
-      "ScriptHost"      
+      "ScriptHost"
     ],
     "declaration": false,
     "noImplicitAny": true,
-    "module": "umd",
+    "module": "commonJs",
     "target": "es5",
     "allowJs": false,
     "outDir": "./dist",
     "types": [
       "node",
       "mocha",
-      "node-fetch"
+      "node-fetch",
     ]
   },
   "include": [
