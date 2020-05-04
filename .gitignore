@@ -372,9 +372,9 @@ docs/\.ionide/
 
 #Backup files
 *.bak
-NotebookExamples/*/Samples/housing.csv
+samples/notebooks/*/Samples/housing.csv
 
-Microsoft.DotNet.Interactive.Js/dist/
+src/Microsoft.DotNet.Interactive.Js/dist/
 
 .fake
 .ionide

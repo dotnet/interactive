@@ -112,15 +112,15 @@ stages:
 
         - script: npm run test
           displayName: NPM tests
-          workingDirectory: "$(Build.SourcesDirectory)/Microsoft.DotNet.Interactive.Js"
+          workingDirectory: "$(Build.SourcesDirectory)/src/Microsoft.DotNet.Interactive.Js"
 
         - script: npm i
           displayName: Install NPM packages for VS Code extension
-          workingDirectory: "$(Build.SourcesDirectory)/dotnet-interactive-vscode"
+          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode"
 
         - script: npm run ciTest
           displayName: Run VS Code extension tests
-          workingDirectory: "$(Build.SourcesDirectory)/dotnet-interactive-vscode"
+          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode"
 
         - task: PublishTestResults@2
           displayName: Publish VS Code Extension Test Results
@@ -132,7 +132,7 @@ stages:
 
         - script: npm version $(StableToolVersionNumber) && npx vsce package --out "$(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\dotnet-interactive-vscode-$(StableToolVersionNumber).vsix"
           displayName: Build VS Code Extension
-          workingDirectory: "$(Build.SourcesDirectory)/dotnet-interactive-vscode"
+          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode"
 
         # Prevent symbols packages from being saved in the following `packages` artifact because they're incomplete.
         # See `eng/AfterSolutionBuild.targets:StripFilesFromSymbolPackages` for details.
@@ -210,7 +210,7 @@ stages:
 
         - script: npm run test
           displayName: NPM tests
-          workingDirectory: "$(Build.SourcesDirectory)/Microsoft.DotNet.Interactive.Js"
+          workingDirectory: "$(Build.SourcesDirectory)/src/Microsoft.DotNet.Interactive.Js"
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
@@ -228,7 +228,7 @@ stages:
           displayName: Build official Dockerfile
           inputs:
             command: build
-            Dockerfile: "$(Build.SourcesDirectory)/docker-image/Dockerfile"
+            Dockerfile: "$(Build.SourcesDirectory)/samples/docker-image/Dockerfile"
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
@@ -264,7 +264,7 @@ stages:
           displayName: Build Binder dependency Dockerfile
           inputs:
             command: build
-            Dockerfile: "$(Build.SourcesDirectory)/Binder Dependencies/Dockerfile"
+            Dockerfile: "$(Build.SourcesDirectory)/samples/my binder/Dockerfile"
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
@@ -307,7 +307,7 @@ stages:
         - script: dotnet interactive --version
           displayName: Write version
         - script: dotnet test
-            "$(Build.SourcesDirectory)/dotnet-interactive.IntegrationTests/dotnet-interactive.IntegrationTests.csproj"
+            "$(Build.SourcesDirectory)/src/dotnet-interactive.IntegrationTests/dotnet-interactive.IntegrationTests.csproj"
             --logger "trx;LogFileName=$(Build.ArtifactStagingDirectory)/TestResults/IntegrationTests.trx"
           displayName: Execute integration tests
           env:

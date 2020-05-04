@@ -38,7 +38,7 @@ First, make sure you have the following installed:
 > dotnet tool install -g --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json" Microsoft.dotnet-interactive
 ```
 
-- Register .NET Interactive as a Jupyter kernel by running the following within your Anaconda Prompt. (More details [here](dotnet-interactive/CommandLine/readme.md)):
+- Register .NET Interactive as a Jupyter kernel by running the following within your Anaconda Prompt. (More details [here](src/dotnet-interactive/CommandLine/readme.md)):
 
 ```console
 > dotnet interactive jupyter install
