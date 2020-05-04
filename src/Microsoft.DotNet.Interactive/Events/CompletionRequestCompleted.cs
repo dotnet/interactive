@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
@@ -10,14 +11,9 @@ namespace Microsoft.DotNet.Interactive.Events
     public class CompletionRequestCompleted : KernelEventBase
     {
         /// <summary>
-        /// The start index (inclusive) of where to replace in a completion request.
+        /// The range of where to replace in a completion request.
         /// </summary>
-        public int? ReplacementStartIndex { get; }
-
-        /// <summary>
-        /// The end index (exclusive) of where to replace in a completion request.
-        /// </summary>
-        public int? ReplacementEndIndex { get; }
+        public LinePositionSpan? Range;
 
         /// <summary>
         /// The list of completion options.
@@ -27,25 +23,10 @@ namespace Microsoft.DotNet.Interactive.Events
         public CompletionRequestCompleted(
             IEnumerable<CompletionItem> completionList,
             IKernelCommand command,
-            int? replacementStartIndex = null,
-            int? replacementEndIndex = null) : base(command)
+            LinePositionSpan? range = null) : base(command)
         {
             CompletionList = completionList ?? throw new ArgumentNullException(nameof(completionList));
-
-            // replacementStartIndex and replacementEndIndex must either both be null
-            // or both be defined.
-            if (replacementStartIndex != null && replacementEndIndex == null)
-            {
-                throw new ArgumentNullException(nameof(replacementEndIndex));
-            }
-
-            if (replacementStartIndex == null && replacementEndIndex != null)
-            {
-                throw new ArgumentNullException(nameof(replacementStartIndex));
-            }
-
-            ReplacementStartIndex = replacementStartIndex;
-            ReplacementEndIndex = replacementEndIndex;
+            Range = range;
         }
     }
 }

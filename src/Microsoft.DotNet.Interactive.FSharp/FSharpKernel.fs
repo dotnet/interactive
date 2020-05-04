@@ -45,15 +45,6 @@ type FSharpKernel() as this =
     do base.RegisterForDisposal(fun () -> if script.IsValueCreated then (script.Value :> IDisposable).Dispose())
     let mutable cancellationTokenSource = new CancellationTokenSource()
 
-    let getLineAndColumn (text: string) offset =
-        let rec getLineAndColumn' i l c =
-            if i >= offset then l, c
-            else
-                match text.[i] with
-                | '\n' -> getLineAndColumn' (i + 1) (l + 1) 0
-                | _ -> getLineAndColumn' (i + 1) l (c + 1)
-        getLineAndColumn' 0 1 0
-
     let kindString (glyph: FSharpGlyph) =
         match glyph with
         | FSharpGlyph.Class -> WellKnownTags.Class
@@ -130,8 +121,7 @@ type FSharpKernel() as this =
     let handleRequestCompletion (requestCompletion: RequestCompletion) (context: KernelInvocationContext) =
         async {
             context.Publish(CompletionRequestReceived(requestCompletion))
-            let l, c = getLineAndColumn requestCompletion.Code requestCompletion.CursorPosition
-            let! declarationItems = script.Value.GetCompletionItems(requestCompletion.Code, l, c)
+            let! declarationItems = script.Value.GetCompletionItems(requestCompletion.Code, requestCompletion.Position.Line + 1, requestCompletion.Position.Character)
             let completionItems =
                 declarationItems
                 |> Array.map completionItem

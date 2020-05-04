@@ -9,27 +9,12 @@ export class InteractiveClient {
     }
 
     completion(language: string, code: string, line: number, character: number): Observable<EventEnvelope> {
-        let position = 0;
-        let currentLine = 0;
-        let currentCharacter = 0;
-        for (; position < code.length; position++) {
-            if (currentLine === line && currentCharacter === character) {
-                break;
-            }
-
-            switch (code[position]) {
-                case '\n':
-                    currentLine++;
-                    currentCharacter = 0;
-                    break;
-                default:
-                    currentCharacter++;
-                    break;
-            }
-        }
         let command: RequestCompletion = {
             code: code,
-            cursorPosition: position,
+            position: {
+                line,
+                character
+            },
         };
 
         return this.clientTransport.submitCommand('RequestCompletion', command, language);

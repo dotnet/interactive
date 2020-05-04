@@ -257,7 +257,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var completionList =
                 await GetCompletionList(
                     requestCompletion.Code,
-                    requestCompletion.CursorPosition);
+                    SourceUtilities.GetCursorOffsetFromPosition(requestCompletion.Code, requestCompletion.Position));
 
             context.Publish(new CompletionRequestCompleted(completionList, requestCompletion));
         }

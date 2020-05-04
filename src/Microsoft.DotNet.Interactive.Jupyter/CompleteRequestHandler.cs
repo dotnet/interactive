@@ -22,7 +22,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         {
             var completeRequest = GetJupyterRequest(context);
 
-            var command = new RequestCompletion(completeRequest.Code, completeRequest.CursorPosition);
+            var position = SourceUtilities.GetPositionFromCursorOffset(completeRequest.Code, completeRequest.CursorPosition);
+            var command = new RequestCompletion(completeRequest.Code, position);
 
             await SendAsync(context, command);
         }
@@ -46,15 +47,16 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             var command = completionRequestCompleted.Command as RequestCompletion;
 
             int startPosition, endPosition;
-            if (completionRequestCompleted.ReplacementStartIndex != null)
+            if (completionRequestCompleted.Range != null)
             {
-                startPosition = completionRequestCompleted.ReplacementStartIndex.Value;
-                endPosition = completionRequestCompleted.ReplacementEndIndex.Value;
+                startPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionRequestCompleted.Range.GetValueOrDefault().Start);
+                endPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionRequestCompleted.Range.GetValueOrDefault().End);
             }
             else
             {
-                startPosition = SourceUtilities.ComputeReplacementStartPosition(command.Code, command.CursorPosition);
-                endPosition = command.CursorPosition;
+                var cursorOffset = SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.Position);
+                startPosition = SourceUtilities.ComputeReplacementStartPosition(command.Code, cursorOffset);
+                endPosition = cursorOffset;
             }
 
             var reply = new CompleteReply(startPosition, endPosition, matches: completionRequestCompleted.CompletionList.Select(e => e.InsertText ?? e.DisplayText).ToList());

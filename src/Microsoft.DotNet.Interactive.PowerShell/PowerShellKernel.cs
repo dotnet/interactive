@@ -18,6 +18,7 @@ using XPlot.Plotly;
 namespace Microsoft.DotNet.Interactive.PowerShell
 {
     using System.Management.Automation;
+    using Microsoft.DotNet.Interactive.Utility;
 
     public class PowerShellKernel : 
         DotNetLanguageKernel
@@ -207,7 +208,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             {
                 CommandCompletion results = CommandCompletion.CompleteInput(
                     requestCompletion.Code,
-                    requestCompletion.CursorPosition,
+                    SourceUtilities.GetCursorOffsetFromPosition(requestCompletion.Code, requestCompletion.Position),
                     options: null,
                     pwsh);
 
@@ -217,12 +218,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                         kind: c.ResultType.ToString(),
                         documentation: c.ToolTip));
 
+                // The end index is the start index plus the length of the replacement.
+                var endIndex = results.ReplacementIndex + results.ReplacementLength;
                 completion = new CompletionRequestCompleted(
                     completionItems,
                     requestCompletion,
-                    results.ReplacementIndex,
-                    // The end index is the start index plus the length of the replacement.
-                    results.ReplacementIndex + results.ReplacementLength);
+                    SourceUtilities.GetRangeFromStartAndEndIndices(requestCompletion.Code, results.ReplacementIndex, endIndex));
             }
 
             context.Publish(completion);

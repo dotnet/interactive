@@ -3,6 +3,7 @@
 
 using System;
 using System.Text.RegularExpressions;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
@@ -41,6 +42,67 @@ namespace Microsoft.DotNet.Interactive.Utility
             }
 
             return pos;
+        }
+
+        /// <summary>
+        /// Computes the absolute offset corresponding to the given position.
+        /// </summary>
+        public static int GetCursorOffsetFromPosition(string code, LinePosition position)
+        {
+            int line = 0;
+            int character = 0;
+            int offset = 0;
+            for (; offset < code.Length; offset++)
+            {
+                if (line >= position.Line && character >= position.Character)
+                {
+                    break;
+                }
+
+                switch (code[offset])
+                {
+                    case '\n':
+                        line++;
+                        character = 0;
+                        break;
+                    default:
+                        character++;
+                        break;
+                }
+            }
+
+            return offset;
+        }
+
+        /// <summary>
+        /// Computes the line/character position based on the given cursor offset.
+        /// </summary>
+        public static LinePosition GetPositionFromCursorOffset(string code, int cursorOffset)
+        {
+            int line = 0;
+            int character = 0;
+            for (int i = 0; i < cursorOffset && i < code.Length; i++)
+            {
+                switch (code[i])
+                {
+                    case '\n':
+                        line++;
+                        character = 0;
+                        break;
+                    default:
+                        character++;
+                        break;
+                }
+            }
+
+            return new LinePosition(line, character);
+        }
+
+        public static LinePositionSpan GetRangeFromStartAndEndIndices(string code, int startIndex, int endIndex)
+        {
+            var start = GetPositionFromCursorOffset(code, startIndex);
+            var end = GetPositionFromCursorOffset(code, endIndex);
+            return new LinePositionSpan(start, end);
         }
     }
 }

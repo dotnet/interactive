@@ -2,7 +2,7 @@ import { LinePosition } from "./events";
 
 export interface RequestCompletion {
     code: string;
-    cursorPosition: number;
+    position: LinePosition;
 }
 
 export interface RequestHoverText {
