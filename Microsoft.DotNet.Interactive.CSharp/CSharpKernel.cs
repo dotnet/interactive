@@ -116,12 +116,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
-            if (!command.DocumentIdentifier.TryDecodeDocumentFromDataUri(out var documentContents))
-            {
-                return;
-            }
-
-            var (document, offset) = GetDocumentWithOffsetFromCode(documentContents);
+            var (document, offset) = GetDocumentWithOffsetFromCode(command.Code);
             var text = await document.GetTextAsync();
             var cursorPosition = text.Lines.GetPosition(new LinePosition(command.Position.Line, command.Position.Character));
             var absolutePosition = cursorPosition + offset;

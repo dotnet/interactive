@@ -89,7 +89,7 @@ describe('LanguageProvider tests', () => {
         }));
         clientMapper.getOrAddClient({ path: 'test/path' });
 
-        let code = 'data:text/plain;base64,dmFyIHggPSAxMjM0Ow=='; // var x = 1234;
+        let code = 'var x = 1234;';
         let document = {
             uri: { path: 'test/path' },
             getText: () => code,

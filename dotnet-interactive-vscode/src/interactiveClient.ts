@@ -35,9 +35,8 @@ export class InteractiveClient {
     }
 
     hover(language: string, code: string, line: number, character: number): Observable<EventEnvelope> {
-        let b = Buffer.from(code);
         let command = {
-            documentIdentifier: 'data:text/plain;base64,' + b.toString('base64'),
+            code: code,
             position: {
                 line: line,
                 character: character,

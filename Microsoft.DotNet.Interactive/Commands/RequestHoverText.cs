@@ -9,12 +9,12 @@ namespace Microsoft.DotNet.Interactive.Commands
 {
     public class RequestHoverText : KernelCommandBase
     {
-        public string DocumentIdentifier { get; }
+        public string Code { get; }
         public LinePosition Position { get; }
 
-        public RequestHoverText(string documentIdentifier, LinePosition position)
+        public RequestHoverText(string code, LinePosition position)
         {
-            DocumentIdentifier = documentIdentifier;
+            Code = code;
             Position = position;
         }
 

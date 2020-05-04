@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         private Task<IKernelCommandResult> SendHoverRequest(KernelBase kernel, string code, int line, int character)
         {
-            var command = new RequestHoverText(RequestHoverText.MakeDataUriFromContents(code), new LinePosition(line, character));
+            var command = new RequestHoverText(code, new LinePosition(line, character));
             return kernel.SendAsync(command);
         }
 
