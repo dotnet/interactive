@@ -1,6 +1,6 @@
 {
     "reporterEnabled": "spec,mocha-trx-reporter",
     "mochaTrxReporterReporterOptions": {
-        "output": "../artifacts/TestResults/Release/dotnet-interactive-vscode.trx"
+        "output": "../../artifacts/TestResults/Release/dotnet-interactive-vscode.trx"
     }
 }
