@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Events
         {
             if (content.Count == 0)
             {
-                throw new InvalidOperationException("At least one content required.");
+                throw new ArgumentException(nameof(content), "At least one content required.");
             }
 
             Content = content;
