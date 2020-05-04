@@ -1,6 +1,7 @@
 import { Observable } from 'rxjs';
 import { EventEnvelope } from './events';
 import { ClientTransport } from './interfaces';
+import { RequestCompletion, RequestHoverText, SubmissionType, SubmitCode } from './commands';
 
 export class InteractiveClient {
 
@@ -26,7 +27,7 @@ export class InteractiveClient {
                     break;
             }
         }
-        let command = {
+        let command: RequestCompletion = {
             code: code,
             cursorPosition: position,
         };
@@ -35,7 +36,7 @@ export class InteractiveClient {
     }
 
     hover(language: string, code: string, line: number, character: number): Observable<EventEnvelope> {
-        let command = {
+        let command: RequestHoverText = {
             code: code,
             position: {
                 line: line,
@@ -46,9 +47,9 @@ export class InteractiveClient {
     }
 
     submitCode(language: string, code: string): Observable<EventEnvelope> {
-        let command = {
+        let command: SubmitCode = {
             code: code,
-            submissionType: 0,
+            submissionType: SubmissionType.run,
         };
         return this.clientTransport.submitCommand('SubmitCode', command, language);
     }

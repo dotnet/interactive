@@ -1,12 +1,13 @@
 import { Observable } from "rxjs";
-import { EventEnvelope } from "./../../events";
+import { EventEnvelope } from "../../events";
+import { Command } from "../../commands";
 
 // Replays all events given to it
-export class TestClientAdapter {
+export class TestClientTransport {
     constructor(readonly fakedEvents: { [key: string]: {eventType: string, event: any}[] }) {
     }
 
-    submitCommand(commandType: string, command: any): Observable<EventEnvelope> {
+    submitCommand(commandType: string, command: Command): Observable<EventEnvelope> {
         let eventsToReturn = this.fakedEvents[commandType];
         return new Observable<EventEnvelope>(subscriber => {
             for (let event of eventsToReturn) {

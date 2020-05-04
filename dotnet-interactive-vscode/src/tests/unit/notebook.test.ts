@@ -2,14 +2,14 @@ import { expect } from 'chai';
 
 import { ClientMapper } from './../../clientMapper';
 import { execute } from '../../interactiveNotebook';
-import { TestClientAdapter } from './testClientAdapter';
+import { TestClientTransport } from './testClientTransport';
 import { CellOutputKind } from '../../interfaces/vscode';
 
 describe('Notebook tests', () => {
     for (let language of ['csharp', 'fsharp']) {
         it(`executes and returns expected value: ${language}`, async () => {
             let code = '1+1';
-            let clientMapper = new ClientMapper(() => new TestClientAdapter({
+            let clientMapper = new ClientMapper(() => new TestClientTransport({
                 'SubmitCode': [
                     {
                         eventType: 'CodeSubmissionReceived',
@@ -61,7 +61,7 @@ Console.WriteLine(1);
 Console.WriteLine(1);
 Console.WriteLine(1);
 `;
-        let clientMapper = new ClientMapper(() => new TestClientAdapter({
+        let clientMapper = new ClientMapper(() => new TestClientTransport({
             'SubmitCode': [
                 {
                     eventType: 'CodeSubmissionReceived',

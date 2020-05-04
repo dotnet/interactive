@@ -1,13 +1,13 @@
 import { expect } from 'chai';
 
 import { ClientMapper } from '../../clientMapper';
-import { TestClientAdapter } from './testClientAdapter';
+import { TestClientTransport } from './testClientTransport';
 import { Hover } from './../../languageServices/hover';
 import { provideCompletion } from './../../languageServices/completion';
 
 describe('LanguageProvider tests', () => {
     it('CompletionProvider', async () => {
-        let clientMapper = new ClientMapper(() => new TestClientAdapter({
+        let clientMapper = new ClientMapper(() => new TestClientTransport({
             'RequestCompletion': [
                 {
                     eventType: 'CompletionRequestCompleted',
@@ -57,7 +57,7 @@ describe('LanguageProvider tests', () => {
     });
 
     it('HoverProvider', async () => {
-        let clientMapper = new ClientMapper(() => new TestClientAdapter({
+        let clientMapper = new ClientMapper(() => new TestClientTransport({
             'RequestHoverText': [
                 {
                     eventType: 'HoverTextProduced',
