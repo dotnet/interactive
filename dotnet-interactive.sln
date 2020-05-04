@@ -3,51 +3,51 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29326.143
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotnet-interactive", "dotnet-interactive\dotnet-interactive.csproj", "{1A4A744F-FEF3-4361-A2E5-C5D496F7BFDC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotnet-interactive", "src\dotnet-interactive\dotnet-interactive.csproj", "{1A4A744F-FEF3-4361-A2E5-C5D496F7BFDC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B95A8485-8C53-4F56-B0CE-19C0726B5805}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{11BA3480-4584-435C-BA9A-8C554DB60E9F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive", "Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj", "{E3297A6A-95AA-4DAD-8DD1-971A45856BC2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive", "src\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj", "{E3297A6A-95AA-4DAD-8DD1-971A45856BC2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.CSharp", "Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj", "{F5E3CB90-0942-4F3D-9AB0-DBF468221D1D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.CSharp", "src\Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj", "{F5E3CB90-0942-4F3D-9AB0-DBF468221D1D}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Microsoft.DotNet.Interactive.FSharp", "Microsoft.DotNet.Interactive.FSharp\Microsoft.DotNet.Interactive.FSharp.fsproj", "{6401A91F-46E9-4736-86A4-CED8F1037895}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Microsoft.DotNet.Interactive.FSharp", "src\Microsoft.DotNet.Interactive.FSharp\Microsoft.DotNet.Interactive.FSharp.fsproj", "{6401A91F-46E9-4736-86A4-CED8F1037895}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Formatting", "Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj", "{42CC26BA-8057-4654-B23C-E6A48475B381}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Formatting", "src\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj", "{42CC26BA-8057-4654-B23C-E6A48475B381}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Jupyter", "Microsoft.DotNet.Interactive.Jupyter\Microsoft.DotNet.Interactive.Jupyter.csproj", "{60D729D3-9A95-4905-8B59-A4352C7E2BF9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Jupyter", "src\Microsoft.DotNet.Interactive.Jupyter\Microsoft.DotNet.Interactive.Jupyter.csproj", "{60D729D3-9A95-4905-8B59-A4352C7E2BF9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Jupyter.Tests", "Microsoft.DotNet.Interactive.Jupyter.Tests\Microsoft.DotNet.Interactive.Jupyter.Tests.csproj", "{A8028ABF-7D78-4ABA-B4F2-0657A1E5CF71}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Jupyter.Tests", "src\Microsoft.DotNet.Interactive.Jupyter.Tests\Microsoft.DotNet.Interactive.Jupyter.Tests.csproj", "{A8028ABF-7D78-4ABA-B4F2-0657A1E5CF71}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Telemetry", "Microsoft.DotNet.Interactive.Telemetry\Microsoft.DotNet.Interactive.Telemetry.csproj", "{047762BA-99B7-4BAF-B116-03EA585A43F4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Telemetry", "src\Microsoft.DotNet.Interactive.Telemetry\Microsoft.DotNet.Interactive.Telemetry.csproj", "{047762BA-99B7-4BAF-B116-03EA585A43F4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Telemetry.Tests", "Microsoft.DotNet.Interactive.Telemetry.Tests\Microsoft.DotNet.Interactive.Telemetry.Tests.csproj", "{59C12CAD-2598-482B-A0F6-98BB2E4522EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Telemetry.Tests", "src\Microsoft.DotNet.Interactive.Telemetry.Tests\Microsoft.DotNet.Interactive.Telemetry.Tests.csproj", "{59C12CAD-2598-482B-A0F6-98BB2E4522EC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.CSharp.Tests", "Microsoft.DotNet.Interactive.CSharp.Tests\Microsoft.DotNet.Interactive.CSharp.Tests.csproj", "{724D0614-92DC-44C4-AC7A-A92ED0A65762}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.CSharp.Tests", "src\Microsoft.DotNet.Interactive.CSharp.Tests\Microsoft.DotNet.Interactive.CSharp.Tests.csproj", "{724D0614-92DC-44C4-AC7A-A92ED0A65762}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Formatting.Tests", "Microsoft.DotNet.Interactive.Formatting.Tests\Microsoft.DotNet.Interactive.Formatting.Tests.csproj", "{E6717922-B03D-4541-944B-1442EBAD6059}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Formatting.Tests", "src\Microsoft.DotNet.Interactive.Formatting.Tests\Microsoft.DotNet.Interactive.Formatting.Tests.csproj", "{E6717922-B03D-4541-944B-1442EBAD6059}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Microsoft.DotNet.Interactive.FSharp.Tests", "Microsoft.DotNet.Interactive.FSharp.Tests\Microsoft.DotNet.Interactive.FSharp.Tests.fsproj", "{8BF966AA-96BE-4E55-AD0F-8AEC90B0254F}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Microsoft.DotNet.Interactive.FSharp.Tests", "src\Microsoft.DotNet.Interactive.FSharp.Tests\Microsoft.DotNet.Interactive.FSharp.Tests.fsproj", "{8BF966AA-96BE-4E55-AD0F-8AEC90B0254F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Tests", "Microsoft.DotNet.Interactive.Tests\Microsoft.DotNet.Interactive.Tests.csproj", "{73136CC6-D968-4D2C-AD93-B23A78B2C7DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Tests", "src\Microsoft.DotNet.Interactive.Tests\Microsoft.DotNet.Interactive.Tests.csproj", "{73136CC6-D968-4D2C-AD93-B23A78B2C7DF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotnet-interactive.Tests", "dotnet-interactive.Tests\dotnet-interactive.Tests.csproj", "{5AA74BE6-5D52-43E5-8654-5F5640F65B8F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotnet-interactive.Tests", "src\dotnet-interactive.Tests\dotnet-interactive.Tests.csproj", "{5AA74BE6-5D52-43E5-8654-5F5640F65B8F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XPlot.DotNet.Interactive.KernelExtensions", "XPlot.DotNet.Interactive.KernelExtensions\XPlot.DotNet.Interactive.KernelExtensions.csproj", "{F3479E07-528D-42FD-829B-5A801A1C8562}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XPlot.DotNet.Interactive.KernelExtensions", "src\XPlot.DotNet.Interactive.KernelExtensions\XPlot.DotNet.Interactive.KernelExtensions.csproj", "{F3479E07-528D-42FD-829B-5A801A1C8562}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotnet-interactive.Profiler", "dotnet-interactive.Profiler\dotnet-interactive.Profiler.csproj", "{71098504-D54D-4F2B-AF1F-FD54C471067B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotnet-interactive.Profiler", "src\dotnet-interactive.Profiler\dotnet-interactive.Profiler.csproj", "{71098504-D54D-4F2B-AF1F-FD54C471067B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.ExtensionLab", "Microsoft.DotNet.Interactive.ExtensionLab\Microsoft.DotNet.Interactive.ExtensionLab.csproj", "{594BA726-EBE0-4CE4-9364-B7208736977E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.ExtensionLab", "src\Microsoft.DotNet.Interactive.ExtensionLab\Microsoft.DotNet.Interactive.ExtensionLab.csproj", "{594BA726-EBE0-4CE4-9364-B7208736977E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.ExtensionLab.Tests", "Microsoft.DotNet.Interactive.ExtensionLab.Tests\Microsoft.DotNet.Interactive.ExtensionLab.Tests.csproj", "{499F936C-AE39-477B-821A-FF48F9E1A0D0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.ExtensionLab.Tests", "src\Microsoft.DotNet.Interactive.ExtensionLab.Tests\Microsoft.DotNet.Interactive.ExtensionLab.Tests.csproj", "{499F936C-AE39-477B-821A-FF48F9E1A0D0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.PowerShell", "Microsoft.DotNet.Interactive.PowerShell\Microsoft.DotNet.Interactive.PowerShell.csproj", "{CE412E28-8660-43CA-8E0B-293EAC624623}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.PowerShell", "src\Microsoft.DotNet.Interactive.PowerShell\Microsoft.DotNet.Interactive.PowerShell.csproj", "{CE412E28-8660-43CA-8E0B-293EAC624623}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.PowerShell.Tests", "Microsoft.DotNet.Interactive.PowerShell.Tests\Microsoft.DotNet.Interactive.PowerShell.Tests.csproj", "{30DE6920-EA82-4E4F-BFCA-1FF179FAA2DA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.PowerShell.Tests", "src\Microsoft.DotNet.Interactive.PowerShell.Tests\Microsoft.DotNet.Interactive.PowerShell.Tests.csproj", "{30DE6920-EA82-4E4F-BFCA-1FF179FAA2DA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotnet-interactive.IntegrationTests", "dotnet-interactive.IntegrationTests\dotnet-interactive.IntegrationTests.csproj", "{8017943B-B591-49C8-B957-40141B427AD9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotnet-interactive.IntegrationTests", "src\dotnet-interactive.IntegrationTests\dotnet-interactive.IntegrationTests.csproj", "{8017943B-B591-49C8-B957-40141B427AD9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integration-tests", "integration-tests", "{979A5022-09CA-4258-B76D-CFDC31DA71E0}"
 EndProject

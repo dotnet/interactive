@@ -49,7 +49,7 @@ ENV DOTNET_RUNNING_IN_CONTAINER=true \
     DOTNET_TRY_CLI_TELEMETRY_OPTOUT=true
 
 # Copy notebooks
-COPY ./NotebookExamples/ ${HOME}/Notebooks/
+COPY ./samples/notebooks/ ${HOME}/Notebooks/
 
 # Copy package sources
 COPY ./NuGet.config ${HOME}/nuget.config

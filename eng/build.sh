@@ -40,6 +40,6 @@ function TestUsingNPM() {
 
 # directly invoke npm tests
 # if [[ "$run_tests" == "true" ]]; then
-#     TestUsingNPM "$scriptroot/../Microsoft.DotNet.Try.Client"
-#     TestUsingNPM "$scriptroot/../Microsoft.DotNet.Try.js"
+#     TestUsingNPM "$scriptroot/../src/Microsoft.DotNet.Try.Client"
+#     TestUsingNPM "$scriptroot/../src/Microsoft.DotNet.Try.js"
 # fi
