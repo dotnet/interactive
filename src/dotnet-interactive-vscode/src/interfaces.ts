@@ -1,5 +1,6 @@
 import { Observable } from "rxjs";
 import { EventEnvelope } from "./events";
+import { Command } from "./commands";
 
 export interface RawNotebookCell {
     language: string;
@@ -11,5 +12,5 @@ export interface DocumentWithCells {
 }
 
 export interface ClientTransport {
-    submitCommand: { (commandType: string, command: any, targetKernelName: string): Observable<EventEnvelope> };
+    submitCommand: { (commandType: string, command: Command, targetKernelName: string): Observable<EventEnvelope> };
 }

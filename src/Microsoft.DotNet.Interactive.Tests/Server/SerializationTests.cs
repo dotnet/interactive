@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
@@ -202,14 +201,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 var requestHoverTextCommand = new RequestHoverText("document-contents", new LinePosition(1, 2));
 
-                yield return new HoverMarkdownProduced(
+                yield return new HoverTextProduced(
                     requestHoverTextCommand,
-                    "markdown",
-                    new LinePositionSpan(new LinePosition(1, 2), new LinePosition(3, 4)));
-
-                yield return new HoverPlainTextProduced(
-                    requestHoverTextCommand,
-                    "plaintext",
+                    new[] { new FormattedValue("text/markdown", "markdown") },
                     new LinePositionSpan(new LinePosition(1, 2), new LinePosition(3, 4)));
 
                 yield return new PackageAdded(

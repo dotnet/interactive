@@ -3,9 +3,6 @@
 
 using System;
 using System.Web;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.LanguageService
 {

@@ -1,5 +1,5 @@
 import { ClientMapper } from './../clientMapper';
-import { HoverMarkdownProduced } from './../events';
+import { HoverTextProduced } from './../events';
 import { CancellationTokenLike, DocumentLike, HoverResult, PositionLike } from './interfaces';
 
 export class Hover {
@@ -16,31 +16,35 @@ export class Hover {
                                 reject();
                             }
                             break;
-                        case 'HoverMarkdownProduced':
-                            handled = true;
-                            let hoverMarkdown = <HoverMarkdownProduced>value.event;
+                        case 'HoverTextProduced':
+                            let hoverText = <HoverTextProduced>value.event;
+                            let content = hoverText.content.sort((a, b) => mimeTypeToPriority(a.mimeType) - mimeTypeToPriority(b.mimeType))[0];
                             hoverResult = {
-                                contents: hoverMarkdown.content,
-                                isMarkdown: true,
-                                range: hoverMarkdown.range
-                            };
-                            break;
-                        case 'HoverPlainTextProduced':
-                            handled = true;
-                            let hoverPlain = <HoverMarkdownProduced>value.event;
-                            hoverResult = {
-                                contents: hoverPlain.content,
-                                isMarkdown: false,
-                                range: hoverPlain.range
+                                contents: content.value,
+                                isMarkdown: content.mimeType === 'text/markdown' || content.mimeType === 'text/x-markdown',
+                                range: hoverText.range
                             };
                             break;
                     }
 
-                    if (hoverResult !== undefined) {
+                    if (hoverResult !== undefined && !handled) {
+                        handled = true;
                         resolve(hoverResult);
                     }
                 }
             });
         });
+    }
+}
+
+function mimeTypeToPriority(mimeType: string): number {
+    switch (mimeType) {
+        case 'text/markdown':
+        case 'text/x-markdown':
+            return 1;
+        case 'text/plain':
+            return 2;
+        default:
+            return 99;
     }
 }
