@@ -1,13 +1,13 @@
 import { expect } from 'chai';
 
 import { ClientMapper } from '../../clientMapper';
-import { TestClientAdapter } from './testClientAdapter';
+import { TestClientTransport } from './testClientTransport';
 import { Hover } from './../../languageServices/hover';
 import { provideCompletion } from './../../languageServices/completion';
 
 describe('LanguageProvider tests', () => {
     it('CompletionProvider', async () => {
-        let clientMapper = new ClientMapper(() => new TestClientAdapter({
+        let clientMapper = new ClientMapper(() => new TestClientTransport({
             'RequestCompletion': [
                 {
                     eventType: 'CompletionRequestCompleted',
@@ -57,12 +57,18 @@ describe('LanguageProvider tests', () => {
     });
 
     it('HoverProvider', async () => {
-        let clientMapper = new ClientMapper(() => new TestClientAdapter({
+        let clientMapper = new ClientMapper(() => new TestClientTransport({
             'RequestHoverText': [
                 {
-                    eventType: 'HoverMarkdownProduced',
+                    eventType: 'HoverTextProduced',
                     event: {
-                        content: 'readonly struct System.Int32',
+                        content: [
+                            {
+                                mimeType: 'text/markdown',
+                                value: 'readonly struct System.Int32'
+                            }
+                        ],
+                        isMarkdown: true,
                         range: {
                             start: {
                                 line: 0,
@@ -83,7 +89,7 @@ describe('LanguageProvider tests', () => {
         }));
         clientMapper.getOrAddClient({ path: 'test/path' });
 
-        let code = 'data:text/plain;base64,dmFyIHggPSAxMjM0Ow=='; // var x = 1234;
+        let code = 'var x = 1234;';
         let document = {
             uri: { path: 'test/path' },
             getText: () => code,
@@ -95,10 +101,19 @@ describe('LanguageProvider tests', () => {
 
         // perform the hover request
         let hover = await Hover.provideHover(clientMapper, 'csharp', document, position);
-        expect(hover.contents).to.equal('readonly struct System.Int32');
-        expect(hover.range?.start.line).to.equal(0);
-        expect(hover.range?.start.character).to.equal(8);
-        expect(hover.range?.end.line).to.equal(0);
-        expect(hover.range?.end.character).to.equal(12);
+        expect(hover).to.deep.equal({
+            contents: 'readonly struct System.Int32',
+            isMarkdown: true,
+            range: {
+                start: {
+                    line: 0,
+                    character: 8
+                },
+                end: {
+                    line: 0,
+                    character: 12
+                }
+            }
+        });
     });
 });

@@ -59,6 +59,10 @@ namespace Microsoft.DotNet.Interactive.App.Lsp
 
             // TRequest -> TRequestCommand
             var requestCommand = commandCtor(requestParams);
+            if (requestCommand == null)
+            {
+                return (false, default);
+            }
 
             // kernel handling
             var kernelCommandResult = await kernel.SendAsync(requestCommand);
