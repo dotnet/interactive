@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -714,7 +715,7 @@ Console.Write(2);
         public async Task it_returns_completion_list_for_types(Language language, string codeToComplete, string expectedCompletion)
         {
             var kernel = CreateKernel(language);
-            await kernel.SendAsync(new RequestCompletion(codeToComplete, codeToComplete.Length));
+            await kernel.SendAsync(new RequestCompletion(codeToComplete, new LinePosition(0, codeToComplete.Length)));
 
             KernelEvents
                 .Should()
@@ -745,7 +746,7 @@ Console.Write(2);
 
             await SubmitCode(kernel, source);
 
-            await kernel.SendAsync(new RequestCompletion("al", 2));
+            await kernel.SendAsync(new RequestCompletion("al", new LinePosition(0, 2)));
 
             KernelEvents
                         .Should()

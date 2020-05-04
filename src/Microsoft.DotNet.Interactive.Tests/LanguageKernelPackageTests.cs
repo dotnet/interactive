@@ -18,6 +18,7 @@ using Recipes;
 using Xunit;
 using Xunit.Abstractions;
 using System.Runtime.InteropServices;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -172,7 +173,7 @@ json"
 
             await kernel.SendAsync(new SubmitCode(code));
 
-            await kernel.SendAsync(new RequestCompletion("Newtonsoft.Json.JsonConvert.", 28));
+            await kernel.SendAsync(new RequestCompletion("Newtonsoft.Json.JsonConvert.", new LinePosition(0, 28)));
 
             KernelEvents.Should()
                         .ContainSingle(e => e is CompletionRequestReceived);
