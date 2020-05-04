@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.CodeAnalysis.Text;
@@ -39,8 +40,8 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "var x = 12$$34;", "readonly struct System.Int32")]
-        public async Task hover_request_returns_expected_result(Language language, string markupCode, string expected)
+        [InlineData(Language.CSharp, "var x = 12$$34;", "text/markdown", "readonly struct System.Int32")]
+        public async Task hover_request_returns_expected_result(Language language, string markupCode, string expectedMimeType, string expectedContent)
         {
             using var kernel = CreateKernel(language);
 
@@ -55,7 +56,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Which
                 .Content
                 .Should()
-                .Contain(expected);
+                .ContainEquivalentOf(new FormattedValue(expectedMimeType, expectedContent));
         }
 
         [Theory]
@@ -91,8 +92,8 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "var one = 1;", "Console.WriteLine(o$$ne)", "(field) int one")]
-        public async Task language_service_methods_run_deferred_commands(Language language, string deferredCode, string markupCode, string expected)
+        [InlineData(Language.CSharp, "var one = 1;", "Console.WriteLine(o$$ne)", "text/markdown", "(field) int one")]
+        public async Task language_service_methods_run_deferred_commands(Language language, string deferredCode, string markupCode, string expectedMimeType, string expectedContent)
         {
             // declare a variable in deferred code
             using var kernel = CreateKernel(language);
@@ -110,7 +111,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Which
                 .Content
                 .Should()
-                .Contain(expected);
+                .ContainEquivalentOf(new FormattedValue(expectedMimeType, expectedContent));
         }
     }
 }

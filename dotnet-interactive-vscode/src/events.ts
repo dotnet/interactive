@@ -20,8 +20,13 @@ export interface CompletionRequestCompleted {
 
 export interface DisplayEventBase {
     value: any;
-    formattedValues: Array<any>;
+    formattedValues: Array<FormattedValue>;
     valueId: string;
+}
+
+export interface FormattedValue {
+    mimeType: string;
+    value: string;
 }
 
 export interface LinePosition {
@@ -34,14 +39,9 @@ export interface LinePositionSpan {
     end: LinePosition;
 }
 
-export interface HoverMarkdownProduced {
-    content: string;
+export interface HoverTextProduced {
+    content: Array<FormattedValue>;
     range?: LinePositionSpan
-}
-
-export interface HoverPlainTextProduced {
-    content: string;
-    range?: LinePositionSpan;
 }
 
 export interface ReturnValueProduced extends DisplayEventBase {
@@ -50,7 +50,7 @@ export interface ReturnValueProduced extends DisplayEventBase {
 export interface StandardOutputValueProduced extends DisplayEventBase {
 }
 
-export type Event = CommandFailed | CommandHandled | CompletionRequestCompleted | HoverMarkdownProduced | HoverPlainTextProduced | ReturnValueProduced | StandardOutputValueProduced;
+export type Event = CommandFailed | CommandHandled | CompletionRequestCompleted | HoverTextProduced | ReturnValueProduced | StandardOutputValueProduced;
 
 export interface EventEnvelope {
     eventType: string;

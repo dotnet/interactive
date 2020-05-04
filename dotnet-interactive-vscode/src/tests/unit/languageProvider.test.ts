@@ -60,9 +60,15 @@ describe('LanguageProvider tests', () => {
         let clientMapper = new ClientMapper(() => new TestClientAdapter({
             'RequestHoverText': [
                 {
-                    eventType: 'HoverMarkdownProduced',
+                    eventType: 'HoverTextProduced',
                     event: {
-                        content: 'readonly struct System.Int32',
+                        content: [
+                            {
+                                mimeType: 'text/markdown',
+                                value: 'readonly struct System.Int32'
+                            }
+                        ],
+                        isMarkdown: true,
                         range: {
                             start: {
                                 line: 0,
@@ -95,10 +101,19 @@ describe('LanguageProvider tests', () => {
 
         // perform the hover request
         let hover = await Hover.provideHover(clientMapper, 'csharp', document, position);
-        expect(hover.contents).to.equal('readonly struct System.Int32');
-        expect(hover.range?.start.line).to.equal(0);
-        expect(hover.range?.start.character).to.equal(8);
-        expect(hover.range?.end.line).to.equal(0);
-        expect(hover.range?.end.character).to.equal(12);
+        expect(hover).to.deep.equal({
+            contents: 'readonly struct System.Int32',
+            isMarkdown: true,
+            range: {
+                start: {
+                    line: 0,
+                    character: 8
+                },
+                end: {
+                    line: 0,
+                    character: 12
+                }
+            }
+        });
     });
 });

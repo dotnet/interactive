@@ -136,7 +136,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var linePosSpan = text.Lines.GetLinePositionSpan(info.Span);
             var correctedLinePosSpan = linePosSpan.SubtractLineOffset(scriptSpanStart);
 
-            context.PublishHoverMarkdownResponse(command, info.ToMarkdownString(), correctedLinePosSpan);
+            context.PublishHoverTextMarkdownResponse(command, info.ToMarkdownString(), correctedLinePosSpan);
         }
 
         protected override async Task HandleSubmitCode(
