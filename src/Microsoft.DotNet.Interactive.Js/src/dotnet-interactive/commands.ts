@@ -11,8 +11,8 @@ export const DisplayErrorCommandType = "DisplayError";
 export const CancelCurrentCommandCommandType = "CancelCurrentCommand";
 export const AddPackageCommandType = "AddPackage";
 
-export type KernelCommandType =
-    typeof UpdateDisplayedValueCommandType
+export type KernelCommandType = typeof SubmitCodeCommandType
+    | typeof UpdateDisplayedValueCommandType
     | typeof RequestDiagnosticsCommandType
     | typeof RequestCompletionCommandType
     | typeof DisplayValueCommandType
@@ -22,6 +22,12 @@ export type KernelCommandType =
 
 export interface KernelCommand {
     targetKernelName?: string
+}
+
+export interface KernelCommandEnvelope{
+    token?: string;
+    commandType : KernelCommandType;
+    command: KernelCommand;
 }
 
 export interface AddPackage extends KernelCommand {

@@ -2,16 +2,18 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as signalR from "@microsoft/signalr";
-import { KernelEventEnvelopeStream, KernelEventEvelopeObserver, DisposableSubscription } from "./dotnet-interactive-interfaces";
+import { KernelTransport, KernelEventEvelopeObserver, DisposableSubscription } from "./dotnet-interactive-interfaces";
 import { Subject } from "rxjs";
 import { KernelEventEnvelope } from "./events";
+import { KernelCommandEnvelope, SubmitCodeCommandType, SubmitCode } from "./commands";
+import { TokenGenerator } from "./tokenGenerator";
 
-export function signalREventStreamFactory(rootUrl: string): Promise<KernelEventEnvelopeStream> {
+export function signalTransportFactory(rootUrl: string): Promise<KernelTransport> {
 
     let connection = new signalR.HubConnectionBuilder()
         .withUrl(`${rootUrl}/kernelhub`)
         .build();
-        
+
     let channel = new Subject<KernelEventEnvelope>();
 
     connection.on("kernelEvents", (message: string) => {
@@ -23,9 +25,9 @@ export function signalREventStreamFactory(rootUrl: string): Promise<KernelEventE
         .start()
         .catch(err => console.log(err));
 
-    let eventStream: KernelEventEnvelopeStream = {
+    let eventStream: KernelTransport = {
 
-        subscribe: (observer: KernelEventEvelopeObserver): DisposableSubscription => {
+        subscribeToKernelEvents: (observer: KernelEventEvelopeObserver): DisposableSubscription => {
             let sub = channel.subscribe(observer);
 
             let disposableSubscription: DisposableSubscription = {
@@ -35,6 +37,18 @@ export function signalREventStreamFactory(rootUrl: string): Promise<KernelEventE
             }
 
             return disposableSubscription;
+        },
+
+        submidCode: (codeSubmission: { code: string, language?: string, token?: string }): Promise<void> => {
+            let envelope: KernelCommandEnvelope = {
+                commandType:  SubmitCodeCommandType,
+                command: <SubmitCode> {
+                    code: codeSubmission.language,
+                    targetKernelName: codeSubmission.language
+                },
+                token: codeSubmission.token,
+            };
+            return connection.send("submitCommand", JSON.stringify(envelope));
         }
     };
 

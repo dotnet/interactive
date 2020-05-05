@@ -1,4 +1,5 @@
 import { KernelEventEnvelope } from "./events";
+import { KernelCommandEnvelope, KernelCommandType, KernelCommand } from "./commands";
 
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
@@ -24,8 +25,9 @@ export interface DisposableSubscription {
     dispose(): void;
 }
 
-export interface KernelEventEnvelopeStream{
-    subscribe(observer:KernelEventEvelopeObserver): DisposableSubscription;
+export interface KernelTransport {
+    subscribeToKernelEvents(observer: KernelEventEvelopeObserver): DisposableSubscription;
+    submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string ): Promise<void>;
 }
 
 
