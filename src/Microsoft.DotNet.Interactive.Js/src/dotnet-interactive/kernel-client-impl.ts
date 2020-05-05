@@ -1,23 +1,27 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch, KernelEventEvelopeObserver, DisposableSubscription, KernelEventEnvelopeStream } from "./dotnet-interactive-interfaces";
-import { SubmitCode } from "./commands";
+import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch, KernelEventEvelopeObserver, DisposableSubscription, KernelTransport } from "./dotnet-interactive-interfaces";
+import { TokenGenerator } from "./tokenGenerator";
+import { signalTransportFactory } from "./signalr-client";
+import { SubmitCodeCommandType, SubmitCode } from "./commands";
 
 export class KernelClientImpl implements DotnetInteractiveClient {
 
     private _clientFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
     private _rootUrl: string;
-    private _kernelEventStream: KernelEventEnvelopeStream;
+    private _kernelTransport: KernelTransport;
+    private _tokenGenerator: TokenGenerator;
 
-    constructor({ clientFetch, rootUrl, kernelEventStream }: { clientFetch: (input: RequestInfo, init: RequestInit) => Promise<Response>; rootUrl: string; kernelEventStream: KernelEventEnvelopeStream }) {
+    constructor({ clientFetch, rootUrl, kernelTransport }: { clientFetch: (input: RequestInfo, init: RequestInit) => Promise<Response>; rootUrl: string; kernelTransport: KernelTransport }) {
         this._clientFetch = clientFetch;
         this._rootUrl = rootUrl;
-        this._kernelEventStream = kernelEventStream;
+        this._kernelTransport = kernelTransport;
+        this._tokenGenerator = new TokenGenerator();
     }
 
     public subscribeToKernelEvents(observer: KernelEventEvelopeObserver): DisposableSubscription {
-        let subscription = this._kernelEventStream.subscribe(observer);
+        let subscription = this._kernelTransport.subscribeToKernelEvents(observer);
         return subscription;
     }
 
@@ -81,30 +85,12 @@ export class KernelClientImpl implements DotnetInteractiveClient {
     }
 
     public async submitCode(code: string, targetKernelName: string = null): Promise<string> {
-        let token: string = null;
-
+        let token: string = this._tokenGenerator.GetNewToken();
         let command: SubmitCode = {
             code: code,
-        };
-
-        if (targetKernelName) {
-            command.targetKernelName = targetKernelName
+            targetKernelName: targetKernelName
         }
-
-        let response = await this._clientFetch("submitCode", {
-            method: 'POST',
-            cache: 'no-cache',
-            mode: 'cors',
-            body: JSON.stringify(command),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        let etag = response.headers.get("ETag");
-        if (etag) {
-            token = etag;
-        }
+        await this._kernelTransport.submitCommand(command, SubmitCodeCommandType, token);
         return token;
     }
 }
@@ -112,7 +98,7 @@ export class KernelClientImpl implements DotnetInteractiveClient {
 export type DotnetInteractiveClientConfiguration = {
     address: string,
     clientFetch?: ClientFetch,
-    kernelEventStreamFactory?: (rootUrl: string) => Promise<KernelEventEnvelopeStream>
+    kernelTransportFactory?: (rootUrl: string) => Promise<KernelTransport>
 };
 
 function isConfiguration(config: any): config is DotnetInteractiveClientConfiguration {
@@ -122,12 +108,12 @@ export async function createDotnetInteractiveClient(configuration: string | Dotn
 
     let rootUrl = "";
     let clientFetch: ClientFetch = null;
-    let kernelEventStreamFactory: (rootUrl: string) => Promise<KernelEventEnvelopeStream> = null;
+    let kernelTransportFactory: (rootUrl: string) => Promise<KernelTransport> = null;
 
     if (isConfiguration(configuration)) {
         rootUrl = configuration.address;
         clientFetch = configuration.clientFetch;
-        kernelEventStreamFactory = configuration.kernelEventStreamFactory;
+        kernelTransportFactory = configuration.kernelTransportFactory;
     }
 
     if (!rootUrl.endsWith("/")) {
@@ -143,22 +129,22 @@ export async function createDotnetInteractiveClient(configuration: string | Dotn
 
         let response = await fetch(address, requestInit);
         return response;
-    }  
+    }
 
     if (!clientFetch) {
         clientFetch = defaultClientFetch;
     }
 
 
-    if (!kernelEventStreamFactory) {
-        kernelEventStreamFactory = kernelEventStreamFactory;
+    if (!kernelTransportFactory) {
+        kernelTransportFactory = signalTransportFactory;
     }
 
-    let eventStream = await kernelEventStreamFactory(rootUrl);
+    let transport = await kernelTransportFactory(rootUrl);
     let client = new KernelClientImpl({
         clientFetch: clientFetch,
         rootUrl,
-        kernelEventStream: eventStream
+        kernelTransport: transport
     });
 
     await client.loadKernels();

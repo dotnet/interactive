@@ -5,7 +5,7 @@ import { expect } from "chai";
 import { createDotnetInteractiveClient } from "../src/dotnet-interactive/kernel-client-impl";
 import * as fetchMock from "fetch-mock";
 
-import { configureFetchForKernelDiscovery, createMockKernelEventStream  } from "./testSupprot";
+import { configureFetchForKernelDiscovery, createMockKernelTransport, MockKernelTransport } from "./testSupprot";
 
 describe("dotnet-interactive", () => {
     describe("kernel client", () => {
@@ -17,19 +17,20 @@ describe("dotnet-interactive", () => {
             it("returns token for correlation", async () => {
                 const rootUrl = "https://dotnet.interactive.com:999";
                 configureFetchForKernelDiscovery(rootUrl);
-                fetchMock.post(`${rootUrl}/submitCode`,
-                    {
-                        status: 200,
-                        headers: {
-                            ETag: "commadnToken"
-                        }
-                    });
+
+
+                let transport: MockKernelTransport = null;
 
                 let client = await createDotnetInteractiveClient({
-                    address:rootUrl, 
-                    kernelEventStreamFactory: createMockKernelEventStream});
+                    address: rootUrl,
+                    kernelTransportFactory: async (url: string) => {
+                        let mock = await createMockKernelTransport(url);
+                        transport = <MockKernelTransport>mock;
+                        return mock;
+                    }
+                });
                 let token = await client.submitCode("var a = 12");
-                expect(token).to.be.eq("commadnToken");
+                expect(token).to.eq(transport.codeSubmissions[0].token);
             });
 
         });

@@ -21,11 +21,10 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
             _disposables.Add( _kernel.KernelEvents.Subscribe(onNext: async kernelEvent => await PublishEvent(kernelEvent)) );
         }
 
-        public async Task SubmitCode(string code, string kernelName)
+        public async Task SubmitCommand(string kernelCommandEnvelope)
         {
-            var command = new SubmitCode(code, targetKernelName:kernelName);
-            var token = command.GetToken();
-            await Clients.Caller.SendAsync("commandSubmitted", token);
+            var envelope = KernelCommandEnvelope.Deserialize(kernelCommandEnvelope);
+            var command = envelope.Command;
             await _kernel.SendAsync(command);
         }
 
