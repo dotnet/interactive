@@ -5,8 +5,7 @@ import * as signalR from "@microsoft/signalr";
 import { KernelTransport, KernelEventEvelopeObserver, DisposableSubscription } from "./dotnet-interactive-interfaces";
 import { Subject } from "rxjs";
 import { KernelEventEnvelope } from "./events";
-import { KernelCommandEnvelope, SubmitCodeCommandType, SubmitCode } from "./commands";
-import { TokenGenerator } from "./tokenGenerator";
+import { KernelCommandEnvelope, SubmitCodeCommandType, SubmitCode, KernelCommand, KernelCommandType } from "./commands";
 
 export function signalTransportFactory(rootUrl: string): Promise<KernelTransport> {
 
@@ -39,14 +38,11 @@ export function signalTransportFactory(rootUrl: string): Promise<KernelTransport
             return disposableSubscription;
         },
 
-        submidCode: (codeSubmission: { code: string, language?: string, token?: string }): Promise<void> => {
+        submitCommand: (command: KernelCommand, commandType: KernelCommandType, token: string ): Promise<void> => {
             let envelope: KernelCommandEnvelope = {
                 commandType:  SubmitCodeCommandType,
-                command: <SubmitCode> {
-                    code: codeSubmission.language,
-                    targetKernelName: codeSubmission.language
-                },
-                token: codeSubmission.token,
+                command: command,
+                token: token,
             };
             return connection.send("submitCommand", JSON.stringify(envelope));
         }
