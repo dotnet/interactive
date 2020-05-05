@@ -1,5 +1,5 @@
 import { ClientMapper } from './../clientMapper';
-import { HoverTextProduced } from './../events';
+import { CommandHandledType, HoverTextProduced, HoverTextProducedType } from './../contracts';
 import { CancellationTokenLike, DocumentLike, HoverResult, PositionLike } from './interfaces';
 
 export class Hover {
@@ -11,12 +11,12 @@ export class Hover {
                 next: value => {
                     let hoverResult: HoverResult | undefined = undefined;
                     switch (value.eventType) {
-                        case 'CommandHandled':
+                        case CommandHandledType:
                             if (!handled) {
                                 reject();
                             }
                             break;
-                        case 'HoverTextProduced':
+                        case HoverTextProducedType:
                             let hoverText = <HoverTextProduced>value.event;
                             let content = hoverText.content.sort((a, b) => mimeTypeToPriority(a.mimeType) - mimeTypeToPriority(b.mimeType))[0];
                             hoverResult = {

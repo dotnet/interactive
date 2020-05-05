@@ -1,5 +1,5 @@
 import { ClientMapper } from './../clientMapper';
-import { CompletionRequestCompleted, CompletionItem } from './../events';
+import { CompletionRequestCompleted, CompletionRequestCompletedType, CompletionItem } from './../contracts';
 import { CancellationTokenLike, DocumentLike, PositionLike } from './interfaces';
 
 export function provideCompletion(clientMapper: ClientMapper, language: string, document: DocumentLike, position: PositionLike, token?: CancellationTokenLike): Promise<Array<CompletionItem>> {
@@ -9,7 +9,7 @@ export function provideCompletion(clientMapper: ClientMapper, language: string, 
         client.completion(language, document.getText(), position.line, position.character).subscribe({
             next: value => {
                 switch (value.eventType) {
-                    case 'CompletionRequestCompleted':
+                    case CompletionRequestCompletedType:
                         handled = true;
                         let completion = <CompletionRequestCompleted>value.event;
                         let completionItems = completion.completionList;
