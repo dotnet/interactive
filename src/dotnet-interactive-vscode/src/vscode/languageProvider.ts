@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { LinePositionSpan, LinePosition, CompletionRequestCompleted } from '../events';
+import { LinePositionSpan, LinePosition } from '../contracts';
 import { ClientMapper } from '../clientMapper';
 import { Hover } from './../languageServices/hover';
 import { provideCompletion } from '../languageServices/completion';

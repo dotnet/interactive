@@ -1,14 +1,13 @@
 import { Observable } from 'rxjs';
-import { EventEnvelope } from './events';
 import { ClientTransport } from './interfaces';
-import { RequestCompletion, RequestHoverText, SubmissionType, SubmitCode } from './commands';
+import { KernelEventEnvelope, RequestCompletion, RequestCompletionType, RequestHoverText, RequestHoverTextType, SubmissionType, SubmitCode, SubmitCodeType } from './contracts';
 
 export class InteractiveClient {
 
     constructor(readonly clientTransport: ClientTransport) {
     }
 
-    completion(language: string, code: string, line: number, character: number): Observable<EventEnvelope> {
+    completion(language: string, code: string, line: number, character: number): Observable<KernelEventEnvelope> {
         let command: RequestCompletion = {
             code: code,
             position: {
@@ -17,10 +16,10 @@ export class InteractiveClient {
             },
         };
 
-        return this.clientTransport.submitCommand('RequestCompletion', command, language);
+        return this.clientTransport.submitCommand(RequestCompletionType, command, language);
     }
 
-    hover(language: string, code: string, line: number, character: number): Observable<EventEnvelope> {
+    hover(language: string, code: string, line: number, character: number): Observable<KernelEventEnvelope> {
         let command: RequestHoverText = {
             code: code,
             position: {
@@ -28,14 +27,14 @@ export class InteractiveClient {
                 character: character,
             }
         };
-        return this.clientTransport.submitCommand('RequestHoverText', command, language);
+        return this.clientTransport.submitCommand(RequestHoverTextType, command, language);
     }
 
-    submitCode(language: string, code: string): Observable<EventEnvelope> {
+    submitCode(language: string, code: string): Observable<KernelEventEnvelope> {
         let command: SubmitCode = {
             code: code,
-            submissionType: SubmissionType.run,
+            submissionType: SubmissionType.Run,
         };
-        return this.clientTransport.submitCommand('SubmitCode', command, language);
+        return this.clientTransport.submitCommand(SubmitCodeType, command, language);
     }
 }

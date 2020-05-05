@@ -1,13 +1,13 @@
 import * as cp from 'child_process';
 import { Observable, Subscriber } from "rxjs";
 import { Writable } from 'stream';
-import { EventEnvelope } from "./events";
+import { KernelCommand, KernelCommandType, KernelEventEnvelope } from "./contracts";
 
 export class StdioClientTransport {
     private buffer: string = '';
     private next: number = 1;
     private stdin: Writable;
-    private subscribers: Map<string, Array<Subscriber<EventEnvelope>>> = new Map();
+    private subscribers: Map<string, Array<Subscriber<KernelEventEnvelope>>> = new Map();
 
     constructor() {
         let childProcess = cp.spawn('dotnet', ['interactive', 'stdio']);
@@ -26,16 +26,19 @@ export class StdioClientTransport {
                 i = this.buffer.indexOf('\n');
                 let obj = JSON.parse(temp);
                 try {
-                    let envelope = <EventEnvelope>obj;
-                    let subscribers = this.subscribers.get(envelope.cause.token);
-                    if (subscribers) {
-                        for (let i = subscribers.length - 1; i >= 0; i--) {
-                            subscribers[i].next(envelope);
+                    let envelope = <KernelEventEnvelope>obj;
+                    let token = envelope.cause?.token;
+                    if (token) {
+                        let subscribers = this.subscribers.get(token);
+                        if (subscribers) {
+                            for (let i = subscribers.length - 1; i >= 0; i--) {
+                                subscribers[i].next(envelope);
 
-                            // TODO: is this correct?
-                            if (envelope.eventType === 'CommandHandled' || envelope.eventType === 'CommandFailed') {
-                                subscribers[i].complete();
-                                delete subscribers[i];
+                                // TODO: is this correct?
+                                if (envelope.eventType === 'CommandHandled' || envelope.eventType === 'CommandFailed') {
+                                    subscribers[i].complete();
+                                    delete subscribers[i];
+                                }
                             }
                         }
                     }
@@ -48,7 +51,7 @@ export class StdioClientTransport {
         this.stdin = childProcess.stdin;
     }
 
-    private registerSubscriber(token: string, subscriber: Subscriber<EventEnvelope>) {
+    private registerSubscriber(token: string, subscriber: Subscriber<KernelEventEnvelope>) {
         if (!this.subscribers.has(token)) {
             this.subscribers.set(token, []);
         }
@@ -56,8 +59,8 @@ export class StdioClientTransport {
         this.subscribers.get(token)?.push(subscriber);
     }
 
-    submitCommand(commandType: string, command: any, targetKernelName: string | undefined): Observable<EventEnvelope> {
-        return new Observable<EventEnvelope>(subscriber => {
+    submitCommand(commandType: KernelCommandType, command: KernelCommand, targetKernelName: string | undefined): Observable<KernelEventEnvelope> {
+        return new Observable<KernelEventEnvelope>(subscriber => {
             let token = 'abc' + this.next++;
             if (targetKernelName) {
                 command.targetKernelName = targetKernelName;

@@ -1,5 +1,5 @@
 import { InteractiveClient } from "./interactiveClient";
-import { CommandFailed, StandardOutputValueProduced, ReturnValueProduced } from "./events";
+import { CommandFailed, CommandFailedType, StandardOutputValueProduced, StandardOutputValueProducedType, ReturnValueProduced, ReturnValueProducedType } from "./contracts";
 import { RawNotebookCell } from "./interfaces";
 import { CellDisplayOutput, CellErrorOutput, CellOutput, CellOutputKind, CellStreamOutput } from "./interfaces/vscode";
 
@@ -15,7 +15,7 @@ export async function execute(language: string, source: string, client: Interact
         client.submitCode(language, source).subscribe({
             next: value => {
                 switch (value.eventType) {
-                    case 'CommandFailed':
+                    case CommandFailedType:
                         {
                             let err = <CommandFailed>value.event;
                             let output: CellErrorOutput = {
@@ -27,7 +27,7 @@ export async function execute(language: string, source: string, client: Interact
                             outputs.push(output);
                         }
                         break;
-                    case 'StandardOutputValueProduced':
+                    case StandardOutputValueProducedType:
                         {
                             let st = <StandardOutputValueProduced>value.event;
                             let output: CellStreamOutput = {
@@ -37,7 +37,7 @@ export async function execute(language: string, source: string, client: Interact
                             outputs.push(output);
                         }
                         break;
-                    case 'ReturnValueProduced':
+                    case ReturnValueProducedType:
                         {
                             let rvt = <ReturnValueProduced>value.event;
                             let data: { [key: string]: any } = {};

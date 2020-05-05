@@ -1,4 +1,4 @@
-import { LinePositionSpan } from './../events';
+import { LinePositionSpan } from './../contracts';
 
 export interface CancellationTokenLike {
     isCancellationRequested: boolean;
