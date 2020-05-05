@@ -19,7 +19,7 @@ open Microsoft.DotNet.Interactive.Events
 open Microsoft.DotNet.Interactive.Extensions
 open Microsoft.DotNet.Interactive.Utility
 
-open Microsoft.Interactive.DependencyManager;
+open Microsoft.DotNet.DependencyManager;
 open FSharp.Compiler.Interactive.Shell
 open FSharp.Compiler.Scripting
 open FSharp.Compiler.SourceCodeServices
