@@ -23,6 +23,7 @@ using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Utility;
+using Microsoft.DotNet.DependencyManager;
 using XPlot.Plotly;
 using Task = System.Threading.Tasks.Task;
 
