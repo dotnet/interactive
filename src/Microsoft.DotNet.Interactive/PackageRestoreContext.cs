@@ -20,7 +20,7 @@ using System.Globalization;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class PackageRestoreContext : IDisposable, IPackageRestoreContext
+    public class PackageRestoreContext : IDisposable
     {
         private const string restoreTfm = "netcoreapp3.1";
         private const string packageKey = "nuget";
@@ -28,12 +28,10 @@ namespace Microsoft.DotNet.Interactive
         private readonly Dictionary<string, ResolvedPackageReference> _resolvedPackageReferences = new Dictionary<string, ResolvedPackageReference>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _restoreSources = new HashSet<string>();
         private readonly DependencyProvider _dependencies;
-        private readonly IPackageRestoreContext _iPackageRestoreContext;
 
         public PackageRestoreContext()
         {
             _dependencies = new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots);
-            _iPackageRestoreContext = this as IPackageRestoreContext;
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
         }
 
@@ -111,11 +109,11 @@ namespace Microsoft.DotNet.Interactive
         private IEnumerable<string> GetPackageManagerLines()
         {
             // return restore sources
-            foreach( var rs in _iPackageRestoreContext.RestoreSources)
+            foreach( var rs in RestoreSources)
             {
                 yield return $"RestoreSources={rs}";
             }
-            foreach (var pr in _iPackageRestoreContext.RequestedPackageReferences)
+            foreach (var pr in RequestedPackageReferences)
             {
                 yield return $"Include={pr.PackageName}, Version={pr.PackageVersion}";
             }
@@ -126,7 +124,7 @@ namespace Microsoft.DotNet.Interactive
             try
             {
                 // packageRoot looks similar to:
-                //    C:/Users/kevinr/.nuget/packages/fsharp.data/3.3.3/
+                //    C:/Users/userid/.nuget/packages/fsharp.data/3.3.3/
                 //    3.3.3 is the package version
                 // fsharp.data is the package name
                 var packageName = packageRoot.Parent.Name;

@@ -202,13 +202,6 @@ type FSharpKernel() as this =
 
         member _.PackageRestoreContext = _packageRestoreContext.Value
 
-    interface IPackageRestoreContext with
-        member _.RestoreSources = this.RestoreSources;
-
-        member _.RequestedPackageReferences = this.RequestedPackageReferences;
-
-        member _.ResolvedPackageReferences = this.ResolvedPackageReferences;
-
     interface IExtensibleKernel with
         member this.LoadExtensionsFromDirectoryAsync(directory:DirectoryInfo, context:KernelInvocationContext) =
             extensionLoader.LoadFromDirectoryAsync(directory, this, context)
