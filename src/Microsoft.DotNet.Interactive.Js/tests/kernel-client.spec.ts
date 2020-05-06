@@ -8,10 +8,34 @@ import { configureFetchForKernelDiscovery, createMockKernelTransport, MockKernel
 import { SubmitCodeType } from "../src/dotnet-interactive/contracts";
 
 describe("dotnet-interactive", () => {
+    describe("langauge kernel", () => {
+        afterEach(fetchMock.restore);
+
+        it("can submit code", async () => {
+            const rootUrl = "https://dotnet.interactive.com:999";
+            configureFetchForKernelDiscovery(rootUrl);
+
+            let transport: MockKernelTransport = null;
+
+            let client = await createDotnetInteractiveClient({
+                address: rootUrl,
+                kernelTransportFactory: async (url: string) => {
+                    let mock = await createMockKernelTransport(url);
+                    transport = <MockKernelTransport>mock;
+                    return mock;
+                }
+            });
+
+            let csharpKernel = asKernelClientContainer(client).csharp;
+
+            await csharpKernel.submitCode("var a = 12");
+            expect(transport.codeSubmissions[0].command.targetKernelName).to.be.equal("csharp");
+        });
+
+
+    });
     describe("kernel client", () => {
-
         describe("submitCode", () => {
-
             afterEach(fetchMock.restore);
 
             it("returns token for correlation", async () => {
@@ -52,28 +76,6 @@ describe("dotnet-interactive", () => {
                 await client.submitCode("var a = 12");
                 expect(transport.codeSubmissions[0].commandType).to.be.equal(SubmitCodeType);
             });
-
-            it("can be used by specific kernel clients", async () => {
-                const rootUrl = "https://dotnet.interactive.com:999";
-                configureFetchForKernelDiscovery(rootUrl);
-
-                let transport: MockKernelTransport = null;
-
-                let client = await createDotnetInteractiveClient({
-                    address: rootUrl,
-                    kernelTransportFactory: async (url: string) => {
-                        let mock = await createMockKernelTransport(url);
-                        transport = <MockKernelTransport>mock;
-                        return mock;
-                    }
-                });
-
-                let csharpKernel = asKernelClientContainer(client).csharp;
-
-                await csharpKernel.submitCode("var a = 12");
-                expect(transport.codeSubmissions[0].command.targetKernelName).to.be.equal("csharp");
-            });
-
         });
     });
 });
