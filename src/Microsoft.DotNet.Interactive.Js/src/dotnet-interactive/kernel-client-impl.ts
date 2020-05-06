@@ -76,6 +76,10 @@ export class KernelClientImpl implements DotnetInteractiveClient {
                 let kernelClient: KernelClient = {
                     getVariable: (variableName: string): Promise<any> => {
                         return this.getVariable(kernelName, variableName);
+                    },
+                    
+                    submitCode: (code: string): Promise<string> => {
+                        return this.submitCode(code, kernelName);
                     }
                 };
 

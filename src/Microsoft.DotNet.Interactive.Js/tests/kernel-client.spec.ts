@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import { createDotnetInteractiveClient } from "../src/dotnet-interactive/kernel-client-impl";
 import * as fetchMock from "fetch-mock";
-import { configureFetchForKernelDiscovery, createMockKernelTransport, MockKernelTransport } from "./testSupprot";
+import { configureFetchForKernelDiscovery, createMockKernelTransport, MockKernelTransport, asKernelClientContainer } from "./testSupprot";
 import { SubmitCodeType } from "../src/dotnet-interactive/contracts";
 
 describe("dotnet-interactive", () => {
@@ -51,6 +51,27 @@ describe("dotnet-interactive", () => {
 
                 await client.submitCode("var a = 12");
                 expect(transport.codeSubmissions[0].commandType).to.be.equal(SubmitCodeType);
+            });
+
+            it("can be used by specific kernel clients", async () => {
+                const rootUrl = "https://dotnet.interactive.com:999";
+                configureFetchForKernelDiscovery(rootUrl);
+
+                let transport: MockKernelTransport = null;
+
+                let client = await createDotnetInteractiveClient({
+                    address: rootUrl,
+                    kernelTransportFactory: async (url: string) => {
+                        let mock = await createMockKernelTransport(url);
+                        transport = <MockKernelTransport>mock;
+                        return mock;
+                    }
+                });
+
+                let csharpKernel = asKernelClientContainer(client).csharp;
+
+                await csharpKernel.submitCode("var a = 12");
+                expect(transport.codeSubmissions[0].command.targetKernelName).to.be.equal("csharp");
             });
 
         });

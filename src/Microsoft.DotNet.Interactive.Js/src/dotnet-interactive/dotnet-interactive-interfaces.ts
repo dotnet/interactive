@@ -16,6 +16,7 @@ export interface VariableResponse {
 
 export interface KernelClient {
     getVariable(variableName: string): Promise<any>;
+    submitCode(code: string): Promise<string>;
 }
 
 export interface DotnetInteractiveClient {
