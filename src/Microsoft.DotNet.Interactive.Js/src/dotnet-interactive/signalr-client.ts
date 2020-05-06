@@ -2,10 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as signalR from "@microsoft/signalr";
-import { KernelTransport, KernelEventEvelopeObserver, DisposableSubscription } from "./dotnet-interactive-interfaces";
 import { Subject } from "rxjs";
-import { KernelEventEnvelope } from "./events";
-import { KernelCommandEnvelope, SubmitCodeCommandType, SubmitCode, KernelCommand, KernelCommandType } from "./commands";
+import { KernelTransport, KernelEventEnvelope, KernelEventEvelopeObserver, DisposableSubscription, KernelCommand, KernelCommandType, KernelCommandEnvelope, SubmitCodeType } from "./contracts";
 
 export function signalTransportFactory(rootUrl: string): Promise<KernelTransport> {
 
@@ -40,7 +38,7 @@ export function signalTransportFactory(rootUrl: string): Promise<KernelTransport
 
         submitCommand: (command: KernelCommand, commandType: KernelCommandType, token: string ): Promise<void> => {
             let envelope: KernelCommandEnvelope = {
-                commandType:  SubmitCodeCommandType,
+                commandType:  SubmitCodeType,
                 command: command,
                 token: token,
             };
