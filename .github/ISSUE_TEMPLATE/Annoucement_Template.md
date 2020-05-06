@@ -7,6 +7,7 @@ The plan below captures our plans for .NET Interactive. This template is for .NE
 
 Mark | Description 
 --- | --- |
+:thumbsup: |Complete |
 :construction: | in progress |
 :hand: | blocked item|
 :tophat: | stretch goal|
