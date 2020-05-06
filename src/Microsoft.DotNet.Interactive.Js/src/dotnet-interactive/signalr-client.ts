@@ -5,27 +5,39 @@ import * as signalR from "@microsoft/signalr";
 import { Subject } from "rxjs";
 import { KernelTransport, KernelEventEnvelope, KernelEventEvelopeObserver, DisposableSubscription, KernelCommand, KernelCommandType, KernelCommandEnvelope, SubmitCodeType } from "./contracts";
 
-export function signalTransportFactory(rootUrl: string): Promise<KernelTransport> {
+
+export async function signalTransportFactory(rootUrl: string): Promise<KernelTransport> {
+
+    let hubUrl = rootUrl;
+    if (hubUrl.endsWith("/")) {
+        hubUrl = `${hubUrl}kernelhub`;
+    } else {
+        hubUrl = `${hubUrl}/kernelhub`;
+    }
 
     let connection = new signalR.HubConnectionBuilder()
-        .withUrl(`${rootUrl}/kernelhub`)
+        .configureLogging(signalR.LogLevel.Debug)
+        .withUrl(hubUrl)
+        .withAutomaticReconnect()
         .build();
 
     let channel = new Subject<KernelEventEnvelope>();
 
-    connection.on("kernelEvents", (message: string) => {
+    connection.on("kernelEvent", (message: string) => {
         let eventEnvelope = <KernelEventEnvelope>JSON.parse(message);
         channel.next(eventEnvelope)
     });
 
-    connection
+    await connection
         .start()
         .catch(err => console.log(err));
 
     let eventStream: KernelTransport = {
 
         subscribeToKernelEvents: (observer: KernelEventEvelopeObserver): DisposableSubscription => {
-            let sub = channel.subscribe(observer);
+            let sub = channel.subscribe((envelope) => {
+                observer(envelope);
+            });
 
             let disposableSubscription: DisposableSubscription = {
                 dispose: () => {
@@ -36,9 +48,9 @@ export function signalTransportFactory(rootUrl: string): Promise<KernelTransport
             return disposableSubscription;
         },
 
-        submitCommand: (command: KernelCommand, commandType: KernelCommandType, token: string ): Promise<void> => {
+        submitCommand: (command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void> => {
             let envelope: KernelCommandEnvelope = {
-                commandType:  SubmitCodeType,
+                commandType: SubmitCodeType,
                 command: command,
                 token: token,
             };

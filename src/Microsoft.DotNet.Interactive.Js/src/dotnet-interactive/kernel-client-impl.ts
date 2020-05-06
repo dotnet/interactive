@@ -5,6 +5,7 @@ import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClien
 import { TokenGenerator } from "./tokenGenerator";
 import { signalTransportFactory } from "./signalr-client";
 import { KernelTransport, KernelEventEvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType } from "./contracts";
+import { createDefaultClientFetch } from "./clientFetch";
 
 export class KernelClientImpl implements DotnetInteractiveClient {
 
@@ -77,7 +78,7 @@ export class KernelClientImpl implements DotnetInteractiveClient {
                     getVariable: (variableName: string): Promise<any> => {
                         return this.getVariable(kernelName, variableName);
                     },
-                    
+
                     submitCode: (code: string): Promise<string> => {
                         return this.submitCode(code, kernelName);
                     }
@@ -118,30 +119,24 @@ export async function createDotnetInteractiveClient(configuration: string | Dotn
         rootUrl = configuration.address;
         clientFetch = configuration.clientFetch;
         kernelTransportFactory = configuration.kernelTransportFactory;
+    } else {
+        rootUrl = configuration;
     }
 
     if (!rootUrl.endsWith("/")) {
         rootUrl = `${rootUrl}/`;
     }
 
-    async function defaultClientFetch(input: string, requestInit: RequestInit = null): Promise<Response> {
-        let address = input;
 
-        if (!address.startsWith("http")) {
-            address = `${rootUrl}${address}`;
-        }
-
-        let response = await fetch(address, requestInit);
-        return response;
-    }
 
     if (!clientFetch) {
-        clientFetch = defaultClientFetch;
+        clientFetch = createDefaultClientFetch(rootUrl);
     }
 
 
     if (!kernelTransportFactory) {
-        kernelTransportFactory = signalTransportFactory;
+       // kernelTransportFactory = httpTransportFactoryWithFetch(clientFetch);
+       kernelTransportFactory = signalTransportFactory;
     }
 
     let transport = await kernelTransportFactory(rootUrl);

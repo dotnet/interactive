@@ -5,7 +5,6 @@ using System;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
 
@@ -31,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.App.HttpRouting
         private async Task PublishEvent(IKernelEvent kernelEvent)
         {
             var eventEnvelope = KernelEventEnvelope.Create(kernelEvent);
-            await Clients.All.SendAsync("onKernelEvent", KernelEventEnvelope.Serialize(eventEnvelope));
+            await Clients.All.SendAsync("kernelEvent", KernelEventEnvelope.Serialize(eventEnvelope));
         }
 
         protected override void Dispose(bool disposing)
