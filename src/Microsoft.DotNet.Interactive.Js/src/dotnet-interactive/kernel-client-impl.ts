@@ -1,10 +1,10 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch, KernelEventEvelopeObserver, DisposableSubscription, KernelTransport } from "./dotnet-interactive-interfaces";
+import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch } from "./dotnet-interactive-interfaces";
 import { TokenGenerator } from "./tokenGenerator";
 import { signalTransportFactory } from "./signalr-client";
-import { SubmitCodeCommandType, SubmitCode } from "./commands";
+import { KernelTransport, KernelEventEvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType } from "./contracts";
 
 export class KernelClientImpl implements DotnetInteractiveClient {
 
@@ -90,7 +90,7 @@ export class KernelClientImpl implements DotnetInteractiveClient {
             code: code,
             targetKernelName: targetKernelName
         }
-        await this._kernelTransport.submitCommand(command, SubmitCodeCommandType, token);
+        await this._kernelTransport.submitCommand(command, SubmitCodeType, token);
         return token;
     }
 }

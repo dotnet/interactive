@@ -5,6 +5,7 @@ import { expect } from "chai";
 import { createDotnetInteractiveClient } from "../src/dotnet-interactive/kernel-client-impl";
 import * as fetchMock from "fetch-mock";
 import { asKernelClientContainer, createMockKernelTransport } from "./testSupprot";
+
 describe("dotnet-interactive", () => {
     describe("kernel discovery contract", () => {
 
