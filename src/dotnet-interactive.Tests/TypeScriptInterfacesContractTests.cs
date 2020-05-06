@@ -4,27 +4,29 @@
 using System.IO;
 using System.Runtime.CompilerServices;
 using FluentAssertions;
+using FluentAssertions.Common;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
     public class TypeScriptInterfacesContractTests
     {
-
-        private string GetTypeScriptContractContents(string subPath, [CallerFilePath] string thisDir = null)
+        private string GetTypeScriptContractFullPath(string subPath, [CallerFilePath] string thisDir = null)
         {
             var sourceRoot = Path.Combine(Path.GetDirectoryName(thisDir), "..", "..");
             var fullPath = Path.Combine(sourceRoot, subPath);
-            var contents = File.ReadAllText(fullPath);
-            return contents;
+            return fullPath;
         }
-
+        
         private void CheckTypeScriptInterfaceFile(string interfaceFileSubPath)
         {
-            var actual = GetTypeScriptContractContents(interfaceFileSubPath);
+            var contractFile = new FileInfo( GetTypeScriptContractFullPath(interfaceFileSubPath));
+            contractFile.Exists.Should().BeTrue($"The Typescript contract file {interfaceFileSubPath} does not exist. Please run the `src/interface-generator` tool with option --out-file {contractFile.FullName}.");
+
+            var actual = File.ReadAllText(contractFile.FullName);
             var expected = InterfaceGenerator.Generate();
             actual.Should()
-                .Be(expected, $"The contents of the TypeScript contracts file '{interfaceFileSubPath}' needs to be updated.  Please re-run the `src/interface-generator` tool.");
+                .Be(expected, $"The contents of the TypeScript contracts file '{interfaceFileSubPath}' needs to be updated.  Please re-run the `src/interface-generator` tool with option --out-file {contractFile.FullName}.");
         }
 
         [Fact]

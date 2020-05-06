@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive
 {
     public class InterfaceGenerator
     {
-        private static Dictionary<Type, string> WellKnownTypes = new Dictionary<Type, string>()
+        private static readonly Dictionary<Type, string> WellKnownTypes = new Dictionary<Type, string>()
         {
             { typeof(bool), "boolean" },
             { typeof(int), "number" },
@@ -30,16 +30,16 @@ namespace Microsoft.DotNet.Interactive
             { typeof(IKernelCommand), "KernelCommand" },
         };
 
-        private static HashSet<Type> AlwaysEmitTypes = new HashSet<Type>()
+        private static readonly HashSet<Type> AlwaysEmitTypes = new HashSet<Type>()
         {
             typeof(KernelCommandBase),
             typeof(KernelEventBase)
         };
 
-        private static HashSet<string> OptionalFields = new HashSet<string>()
+        private static readonly HashSet<string> OptionalFields = new HashSet<string>()
         {
-            "KernelCommandBase.TargetKernelName",
-            "SubmitCode.SubmissionType"
+            $"{nameof(KernelCommandBase)}.{nameof(KernelCommandBase.TargetKernelName)}",
+            $"{nameof(SubmitCode)}.{nameof(SubmitCode.SubmissionType)}"
         };
 
         public static string Generate()
@@ -140,18 +140,10 @@ namespace Microsoft.DotNet.Interactive
 
         private static string PropertyName(Type type, PropertyInfo propertyInfo)
         {
-            var isOptional = false;
-            if (OptionalFields.Contains($"{type.Name}.{propertyInfo.Name}"))
-            {
-                isOptional = true;
-            }
+            var isOptional = OptionalFields.Contains($"{type.Name}.{propertyInfo.Name}") 
+                             || propertyInfo.PropertyType.IsNullable();
 
-            if (propertyInfo.PropertyType.IsNullable())
-            {
-                isOptional = true;
-            }
-
-            var propertyName = propertyInfo.Name.CamlCase();
+            var propertyName = propertyInfo.Name.CamelCase();
             return isOptional
                 ? propertyName + "?"
                 : propertyName;
