@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive
             return baseType;
         }
 
-        public static string CamlCase(this string value)
+        public static string CamelCase(this string value)
         {
             return char.ToLower(value[0]) + value.Substring(1);
         }
