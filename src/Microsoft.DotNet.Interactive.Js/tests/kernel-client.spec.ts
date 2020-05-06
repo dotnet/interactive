@@ -4,8 +4,8 @@
 import { expect } from "chai";
 import { createDotnetInteractiveClient } from "../src/dotnet-interactive/kernel-client-impl";
 import * as fetchMock from "fetch-mock";
-
 import { configureFetchForKernelDiscovery, createMockKernelTransport, MockKernelTransport } from "./testSupprot";
+import { SubmitCodeType } from "../src/dotnet-interactive/contracts";
 
 describe("dotnet-interactive", () => {
     describe("kernel client", () => {
@@ -30,7 +30,27 @@ describe("dotnet-interactive", () => {
                     }
                 });
                 let token = await client.submitCode("var a = 12");
-                expect(token).to.eq(transport.codeSubmissions[0].token);
+                expect(token).to.be.equal(transport.codeSubmissions[0].token);
+            });
+
+            it("sends SubmitCode command", async () => {
+                const rootUrl = "https://dotnet.interactive.com:999";
+                configureFetchForKernelDiscovery(rootUrl);
+
+
+                let transport: MockKernelTransport = null;
+
+                let client = await createDotnetInteractiveClient({
+                    address: rootUrl,
+                    kernelTransportFactory: async (url: string) => {
+                        let mock = await createMockKernelTransport(url);
+                        transport = <MockKernelTransport>mock;
+                        return mock;
+                    }
+                });
+
+                await client.submitCode("var a = 12");
+                expect(transport.codeSubmissions[0].commandType).to.be.equal(SubmitCodeType);
             });
 
         });

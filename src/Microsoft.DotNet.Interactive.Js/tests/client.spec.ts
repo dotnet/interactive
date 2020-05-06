@@ -3,9 +3,7 @@
 
 import { expect } from "chai";
 import * as interactive from "../src/dotnet-interactive"
-import { createDotnetInteractiveClient } from "../src/dotnet-interactive/kernel-client-impl";
 import * as fetchMock from "fetch-mock";
-import { asKernelClientContainer } from "./testSupprot";
 
 describe("dotnet-interactive", () => {
 
