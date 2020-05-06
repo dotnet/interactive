@@ -56,7 +56,8 @@
     "pretest": "npm run compile && npm run lint",
     "test": "mocha --opts mocha.opts",
     "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json",
-    "tdd": "npm test -- --watch"
+    "tdd": "npm test -- --watch",
+    "package": "npx vsce package"
   },
   "devDependencies": {
     "@types/chai": "4.2.11",
