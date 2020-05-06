@@ -3,8 +3,12 @@
 out/tests/**
 src/**
 .gitignore
-vsc-extension-quickstart.md
-**/tsconfig.json
-**/.eslintrc.json
+mocha.opts
+testConfig.json
+tsconfig.json
+typings.json
+update-proposed-api.ps1
+.eslintignore
+.eslintrc.json
 **/*.map
 **/*.ts
