@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.Interactive.App
                 StartToolLogging(options)
             };
 
-            var httpPort = options.HttpPort ??= GetFreePort(options);
+            var httpPort = GetFreePort(options);
 
             var probingSettings = HttpProbingSettings.Create(httpPort.PortNumber);
 
