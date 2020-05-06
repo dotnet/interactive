@@ -110,23 +110,24 @@ namespace Microsoft.DotNet.Interactive.App
 
             return webHost;
 
-            HttpPort GetFreePort(StartupOptions options)
+            static HttpPort GetFreePort(StartupOptions startupOptions)
             {
-                if (options.HttpPort != null && !options.HttpPort.IsAuto)
+                if (startupOptions.HttpPort != null && !startupOptions.HttpPort.IsAuto)
                 {
-                    return options.HttpPort;
+                    return startupOptions.HttpPort;
                 }
 
-                var currentPort =  0;
-                var endPort =  0;
+                var currentPort = 0;
+                var endPort = 0;
 
-                if (options.HttpPortRange != null)
+                if (startupOptions.HttpPortRange != null)
                 {
-                    currentPort = options.HttpPortRange.Start;
-                    endPort = options.HttpPortRange.End;
+                    currentPort = startupOptions.HttpPortRange.Start;
+                    endPort = startupOptions.HttpPortRange.End;
                 }
 
-                for (;currentPort <= endPort; currentPort++ ) {
+                for (; currentPort <= endPort; currentPort++)
+                {
                     try
                     {
                         var l = new TcpListener(IPAddress.Loopback, currentPort);
@@ -143,7 +144,6 @@ namespace Microsoft.DotNet.Interactive.App
 
                 throw new InvalidOperationException("Cannot find a port");
             }
-
         }
 
         public static IWebHost ConstructWebHost(StartupOptions options)

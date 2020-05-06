@@ -5,7 +5,7 @@ import { expect } from "chai";
 import { createDotnetInteractiveClient } from "../src/dotnet-interactive/kernel-client-impl";
 import * as fetchMock from "fetch-mock";
 import { VariableResponse, VariableRequest } from "../src/dotnet-interactive/dotnet-interactive-interfaces";
-import { asKernelClientContainer, configureFetchForKernelDiscovery, createMockKernelTransport } from "./testSupprot";
+import { asKernelClientContainer, configureFetchForKernelDiscovery, createMockKernelTransport } from "./testSupport";
 
 describe("dotnet-interactive", () => {
     describe("variable api contract", () => {

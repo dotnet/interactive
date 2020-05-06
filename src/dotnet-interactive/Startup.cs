@@ -37,7 +37,18 @@ namespace Microsoft.DotNet.Interactive.App
             if (StartupOptions.EnableHttpApi)
             {
                 services.AddRouting();
-                services.AddCors();
+                services.AddCors(options =>
+                {
+                    options.AddPolicy("default", builder =>
+                    {
+                        builder
+                            .AllowAnyMethod()
+                            .AllowAnyHeader()
+                            .AllowCredentials()
+                            .SetIsOriginAllowed((host) => true);
+
+                    });
+                });
                 services.AddSignalR();
             }
         }
@@ -53,11 +64,8 @@ namespace Microsoft.DotNet.Interactive.App
                 {
                     FileProvider = new EmbeddedFileProvider(typeof(Startup).Assembly)
                 });
-                app.UseCors(builder =>
-                    builder
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowAnyOrigin());
+                app.UseWebSockets();
+                app.UseCors("default");
                 app.UseRouting();
                 app.UseRouter(r =>
                 {
