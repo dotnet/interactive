@@ -3,12 +3,17 @@
   "displayName": "DotNet Interactive Notebooks",
   "description": "DotNet Interactive Notebooks for VS Code",
   "publisher": "ms-dotnettools",
+  "author": "Microsoft Corporation",
+  "license": "MIT",
   "enableProposedApi": true,
   "preview": true,
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
     "vscode": "^1.45.0"
+  },
+  "bugs": {
+    "url": "https://github.com/dotnet/interactive/issues"
   },
   "repository": {
     "url": "https://github.com/dotnet/interactive"
