@@ -12,7 +12,7 @@ using Microsoft.DotNet.Interactive.App.Lsp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.DotNet.Interactive.App.HttpRouting
+namespace Microsoft.DotNet.Interactive.App.Http
 {
     public class LspRouter : IRouter
     {

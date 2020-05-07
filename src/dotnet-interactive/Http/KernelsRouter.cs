@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json;
 
-namespace Microsoft.DotNet.Interactive.App.HttpRouting
+namespace Microsoft.DotNet.Interactive.App.Http
 {
     public class KernelsRouter : IRouter
     {

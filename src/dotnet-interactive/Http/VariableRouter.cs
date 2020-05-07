@@ -11,7 +11,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.DotNet.Interactive.App.HttpRouting
+namespace Microsoft.DotNet.Interactive.App.Http
 {
     public class VariableRouter : IRouter
     {

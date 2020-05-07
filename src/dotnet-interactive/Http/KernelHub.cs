@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
 
-namespace Microsoft.DotNet.Interactive.App.HttpRouting
+namespace Microsoft.DotNet.Interactive.App.Http
 {
     public class KernelHub : Hub
     {
