@@ -134,7 +134,7 @@ namespace Microsoft.DotNet.Interactive
                                 if (!string.IsNullOrEmpty(requested.PackageVersion))
                                 {
                                     return spanFormatter.ParseToSpan(
-                                        $"{Ansi.Color.Foreground.Red}{requested.PackageName} version {requested.PackageVersion} cannot be added because version {existing.PackageVersion} was added previously.{Ansi.Color.Off}");
+                                        $"{Ansi.Color.Foreground.Red}{requested.PackageName} version {requested.PackageVersion} cannot be added because version {existing.PackageVersion} was added previously.{Ansi.Text.AttributesOff}");
                                 }
                             }
                         }

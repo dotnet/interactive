@@ -267,12 +267,17 @@ namespace Microsoft.DotNet.Interactive.CSharp
             int cursorPosition)
         {
             var (document, offset) = GetDocumentWithOffsetFromCode(code);
-            var text = await document.GetTextAsync();
             var absolutePosition = cursorPosition + offset;
 
             var service = CompletionService.GetService(document);
 
             var completionList = await service.GetCompletionsAsync(document, absolutePosition);
+
+            if (completionList is null)
+            {
+                return Enumerable.Empty<CompletionItem>();
+            }
+
             var semanticModel = await document.GetSemanticModelAsync();
             var symbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(semanticModel, absolutePosition, document.Project.Solution.Workspace);
 

@@ -5,9 +5,9 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class DiagnosticLogEventProduced : DiagnosticEventBase
+    public class DiagnosticLogEntryProduced : DiagnosticEventBase
     {
-        public DiagnosticLogEventProduced(
+        public DiagnosticLogEntryProduced(
             string message,
             IKernelCommand command = null) : base(command)
         {
