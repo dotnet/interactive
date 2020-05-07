@@ -4,6 +4,7 @@
 using System.IO;
 using System.Runtime.CompilerServices;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.InterfaceGen.App;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.App.Tests

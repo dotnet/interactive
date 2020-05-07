@@ -3,7 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>interface_generator</RootNamespace>
+    <RootNamespace>Microsoft.DotNet.Interactive.InterfaceGen.App</RootNamespace>
+    <AssemblyName>Microsoft.DotNet.Interactive.InterfaceGen.App</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20219.3" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20253.1" />
   </ItemGroup>
 
 </Project>

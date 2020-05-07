@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using static System.CommandLine.Rendering.Ansi.Color;
@@ -21,16 +20,14 @@ namespace Microsoft.DotNet.Interactive
 {
     public static class KernelExtensions
     {
-        private static readonly TextSpanFormatter _textSpanFormatter = new TextSpanFormatter();
-
         public static IKernel FindKernel(this IKernel kernel, string name)
         {
             var root = kernel
                        .RecurseWhileNotNull(k => k switch
-                           {
-                               KernelBase kb => kb.ParentKernel, 
-                               _ => null
-                           })
+                       {
+                           KernelBase kb => kb.ParentKernel,
+                           _ => null
+                       })
                        .LastOrDefault();
 
             return root switch
@@ -55,7 +52,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public static Task<IKernelCommandResult> SubmitCodeAsync(
-            this IKernel kernel, 
+            this IKernel kernel,
             string code)
         {
             if (kernel == null)
@@ -73,7 +70,7 @@ namespace Microsoft.DotNet.Interactive
 
             var logStarted = false;
 
-            command.Handler = CommandHandler.Create<KernelInvocationContext>(async context =>
+            command.Handler = CommandHandler.Create<KernelInvocationContext>(context =>
             {
                 if (logStarted)
                 {
@@ -82,39 +79,41 @@ namespace Microsoft.DotNet.Interactive
 
                 logStarted = true;
 
-                kernel.AddMiddleware(async (kernelCommand, context, next) =>
+                kernel.AddMiddleware(async (kernelCommand, c, next) =>
                 {
-                    await Log(context, kernelCommand.ToLogString());
+                    Log(c, kernelCommand.ToLogString());
 
-                    await next(kernelCommand, context);
+                    await next(kernelCommand, c);
                 });
 
                 var disposable = new CompositeDisposable
                 {
-                    kernel.KernelEvents.Subscribe(async e =>
+                    kernel.KernelEvents.Subscribe(e =>
                     {
                         if (KernelInvocationContext.Current is {} currentContext)
                         {
-                            if (!(e is DisplayEventBase))
+                            if (e is DiagnosticEventBase || e is DisplayEventBase)
                             {
-                                await Log(currentContext, e.ToLogString());
+                                return;
                             }
+
+                            Log(currentContext, e.ToLogString());
                         }
                     }),
-                    LogEvents.Subscribe(async e =>
+                    LogEvents.Subscribe(e =>
                     {
                         if (KernelInvocationContext.Current is {} currentContext)
                         {
-                            await Log(currentContext, e.ToLogString());
+                            Log(currentContext, e.ToLogString());
                         }
                     })
                 };
 
                 kernel.RegisterForDisposal(disposable);
 
-                await Log(context, "Logging enabled");
+                Log(context, "Logging enabled");
 
-                Task Log(KernelInvocationContext c, string message) => c.DisplayAnsi($"{Foreground.LightGray}{message}{Off}");
+                static void Log(KernelInvocationContext c, string message) => c.Publish(new DiagnosticLogEntryProduced(message));
             });
 
             kernel.AddDirective(command);
@@ -146,14 +145,6 @@ namespace Microsoft.DotNet.Interactive
 
             return kernel;
         }
-
-        internal static Task DisplayAnsi(
-            this KernelInvocationContext context, 
-            FormattableString message) =>
-            DisplayAnsi(context, _textSpanFormatter.ParseToSpan(message));
-
-        internal static Task DisplayAnsi(KernelInvocationContext context, TextSpan span) => 
-            context.DisplayAsync(span, PlainTextFormatter.MimeType);
 
         [DebuggerStepThrough]
         public static T LogEventsToPocketLogger<T>(this T kernel)

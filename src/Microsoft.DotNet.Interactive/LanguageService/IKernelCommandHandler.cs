@@ -6,7 +6,7 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.LanguageService
 {
-    public interface IKernelCommandHandler<TCommand> where TCommand: IKernelCommand
+    public interface IKernelCommandHandler<in TCommand> where TCommand: IKernelCommand
     {
         Task HandleAsync(TCommand command, KernelInvocationContext context);
     }

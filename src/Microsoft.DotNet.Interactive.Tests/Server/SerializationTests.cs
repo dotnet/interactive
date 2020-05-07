@@ -174,7 +174,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new CompletionRequestReceived(requestCompletion);
 
-                yield return new DiagnosticLogEventProduced("oops!", submitCode);
+                yield return new DiagnosticLogEntryProduced("oops!", submitCode);
 
                 yield return new DisplayedValueProduced(
                     new HtmlString("<b>hi!</b>"),

@@ -4,7 +4,7 @@
 using System;
 using System.Collections;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 {
     public static class GeneratorExtensions
     {

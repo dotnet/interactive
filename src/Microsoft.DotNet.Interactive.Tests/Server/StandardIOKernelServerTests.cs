@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
             _kernelEvents
                 .Should()
-                .ContainSingle<KernelEventEnvelope<DiagnosticLogEventProduced>>()
+                .ContainSingle<KernelEventEnvelope<DiagnosticLogEntryProduced>>()
                 .Which
                 .Event
                 .Message
