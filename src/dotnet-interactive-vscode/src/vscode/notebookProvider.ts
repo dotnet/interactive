@@ -1,24 +1,24 @@
 import * as vscode from 'vscode';
 import { ClientMapper } from './../clientMapper';
 import { NotebookFile, parseNotebook, serializeNotebook, editorLanguages } from '../interactiveNotebook';
+import { RawNotebookCell } from '../interfaces';
 import { JupyterNotebook } from '../interfaces/jupyter';
 import { convertFromJupyter } from '../interop/jupyter';
 import { CellOutput } from '../interfaces/vscode';
 
-export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvider {
+export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
     constructor(readonly clientMapper: ClientMapper) {
     }
 
-    async resolveNotebook(editor: vscode.NotebookEditor): Promise<void> {
-        editor.document.languages = editorLanguages;
+    async openNotebook(uri: vscode.Uri): Promise<vscode.NotebookData> {
         let contents = '';
         try {
-            contents = Buffer.from(await vscode.workspace.fs.readFile(editor.document.uri)).toString('utf-8');
+            contents = Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf-8');
         } catch {
         }
 
         let notebook: NotebookFile;
-        let extension = getExtension(editor.document.uri.path);
+        let extension = getExtension(uri.path);
         switch (extension) {
             case '.ipynb':
                 let json = JSON.parse(contents);
@@ -31,31 +31,26 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
                 break;
         }
 
-        this.clientMapper.getOrAddClient(editor.document.uri);
-        editor.edit(editBuilder => {
-            for (let cell of notebook.cells) {
-                editBuilder.insert(
-                    0,
-                    cell.contents.join('\n'),
-                    cell.language,
-                    languageToCellKind(cell.language),
-                    [], // outputs
-                    {
-                        editable: true,
-                        runnable: true
-                    }
-                );
-            }
-        });
-
-        setTimeout(() => {
-            for (let cell of editor.document.cells) {
-                if (cell.cellKind === vscode.CellKind.Code) {
-                    //
-                }
-            }
-        }, 0);
+        this.clientMapper.getOrAddClient(uri);
+        let notebookData: vscode.NotebookData = {
+            languages: editorLanguages,
+            metadata: {
+                hasExecutionOrder: false
+            },
+            cells: notebook.cells.map(toNotebookCellData)
+        };
+        return notebookData;
     }
+
+    saveNotebook(document: vscode.NotebookDocument, _cancellation: vscode.CancellationToken): Promise<void> {
+        return this.save(document, document.uri);
+    }
+
+    saveNotebookAs(targetResource: vscode.Uri, document: vscode.NotebookDocument, _cancellation: vscode.CancellationToken): Promise<void> {
+        return this.save(document, targetResource);
+    }
+
+    onDidChangeNotebook: vscode.Event<void> = new vscode.EventEmitter<void>().event;
 
     executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell | undefined, token: vscode.CancellationToken): Promise<void> {
         if (!cell) {
@@ -75,7 +70,7 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         });
     }
 
-    async save(document: vscode.NotebookDocument): Promise<boolean> {
+    private async save(document: vscode.NotebookDocument, targetResource: vscode.Uri): Promise<void> {
         let notebook: NotebookFile = {
             cells: [],
         };
@@ -86,9 +81,18 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
             });
         }
 
-        await vscode.workspace.fs.writeFile(document.uri, Buffer.from(serializeNotebook(notebook)));
-        return true;
+        await vscode.workspace.fs.writeFile(targetResource, Buffer.from(serializeNotebook(notebook)));
     }
+}
+
+function toNotebookCellData(cell: RawNotebookCell): vscode.NotebookCellData {
+    return {
+        cellKind: languageToCellKind(cell.language),
+        source: cell.contents.join('\n'),
+        language: cell.language,
+        outputs: [],
+        metadata: {}
+    };
 }
 
 function getExtension(filename: string): string {
