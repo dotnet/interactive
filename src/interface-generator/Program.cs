@@ -5,19 +5,19 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 {
     class Program
     {
         static int Main(string[] args)
         {
-            var command = new RootCommand()
+            var command = new RootCommand
             {
                 new Option<FileInfo>("--out-file")
                 {
                     Description = "Location to write the generated interface file",
                     Required = true
-                }
+                }.ExistingOnly()
             };
             command.Handler = CommandHandler.Create((FileInfo outFile) =>
             {

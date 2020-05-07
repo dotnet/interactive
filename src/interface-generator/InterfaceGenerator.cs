@@ -11,7 +11,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Newtonsoft.Json;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 {
     public class InterfaceGenerator
     {
