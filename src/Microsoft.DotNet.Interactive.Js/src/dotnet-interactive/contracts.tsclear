@@ -93,7 +93,7 @@ export const CommandHandledType = "CommandHandled";
 export const CompleteCodeSubmissionReceivedType = "CompleteCodeSubmissionReceived";
 export const CompletionRequestCompletedType = "CompletionRequestCompleted";
 export const CompletionRequestReceivedType = "CompletionRequestReceived";
-export const DiagnosticLogEntryProducedType = "DiagnosticLogEntryProduced";
+export const DiagnosticLogEventProducedType = "DiagnosticLogEventProduced";
 export const DisplayedValueProducedType = "DisplayedValueProduced";
 export const DisplayedValueUpdatedType = "DisplayedValueUpdated";
 export const ErrorProducedType = "ErrorProduced";
@@ -113,7 +113,7 @@ export type KernelEventType =
     | typeof CompleteCodeSubmissionReceivedType
     | typeof CompletionRequestCompletedType
     | typeof CompletionRequestReceivedType
-    | typeof DiagnosticLogEntryProducedType
+    | typeof DiagnosticLogEventProducedType
     | typeof DisplayedValueProducedType
     | typeof DisplayedValueUpdatedType
     | typeof ErrorProducedType
@@ -161,7 +161,7 @@ export interface CompletionItem {
 export interface CompletionRequestReceived extends KernelEvent {
 }
 
-export interface DiagnosticLogEntryProduced extends DiagnosticEventBase {
+export interface DiagnosticLogEventProduced extends DiagnosticEventBase {
     message: string;
 }
 
