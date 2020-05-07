@@ -27,7 +27,7 @@ export class StdioClientTransport {
                 let obj = JSON.parse(temp);
                 try {
                     let envelope = <KernelEventEnvelope>obj;
-                    let token = envelope.cause?.token;
+                    let token = envelope.command?.token;
                     if (token) {
                         let subscribers = this.subscribers.get(token);
                         if (subscribers) {
