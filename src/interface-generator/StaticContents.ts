@@ -1,7 +1,7 @@
 ﻿export interface KernelEventEnvelope {
     eventType: KernelEventType;
     event: KernelEvent;
-    cause?: KernelCommandEnvelope;
+    command?: KernelCommandEnvelope;
 }
 
 export interface KernelCommandEnvelope {
