@@ -138,19 +138,19 @@
     <TypescriptOutputFiles Include="$(JsApiRoot)dist/dotnet-interactive.js" />
     <TypescriptOutputFiles Include="$(JsApiRoot)dist/dotnet-interactive-code-mirror.js" />
 
-    <EmbeddedResource Include="@(TypescriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)"/>
+    <EmbeddedResource Include="@(TypescriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)" />
   </ItemGroup>
 
   <Target Name="InstallNodeModules">
     <Exec Command="npm i" WorkingDirectory="$(JsApiRoot)" />
   </Target>
 
-  <Target Name="CompileTypescript"
-          Inputs="@(TypescriptInputs)"
-          Outputs="@(TypescriptOutputFiles)"
+  <Target Name="CompileTypescript" 
+          Inputs="@(TypescriptInputs)" 
+          Outputs="@(TypescriptOutputFiles)" 
           DependsOnTargets="InstallNodeModules" 
-          BeforeTargets="BeforeBuild"
-          Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'"  >
+          BeforeTargets="BeforeBuild" 
+          Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'">
     <Exec Command="npm run build" WorkingDirectory="$(JsApiRoot)" />
   </Target>
 

@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 
-namespace Microsoft.DotNet.Interactive.App.HttpRouting
+namespace Microsoft.DotNet.Interactive.App.Http
 {
     public class DiscoveryRouter : IRouter
     {
