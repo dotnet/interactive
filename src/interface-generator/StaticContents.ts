@@ -10,7 +10,7 @@ export interface KernelCommandEnvelope {
     command: KernelCommand;
 }
 
-export interface KernelEventEvelopeObserver {
+export interface KernelEventEnvelopeObserver {
     (eventEnvelope: KernelEventEnvelope): void;
 }
 
@@ -19,6 +19,6 @@ export interface DisposableSubscription {
 }
 
 export interface KernelTransport {
-    subscribeToKernelEvents(observer: KernelEventEvelopeObserver): DisposableSubscription;
+    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
     submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void>;
 }

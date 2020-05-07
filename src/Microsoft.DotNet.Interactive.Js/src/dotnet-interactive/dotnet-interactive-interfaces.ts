@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelEventEvelopeObserver, DisposableSubscription } from "./contracts";
+import { KernelEventEnvelopeObserver, DisposableSubscription } from "./contracts";
 
 
 export interface VariableRequest {
@@ -20,7 +20,7 @@ export interface KernelClient {
 }
 
 export interface DotnetInteractiveClient {
-    subscribeToKernelEvents(observer: KernelEventEvelopeObserver): DisposableSubscription;
+    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
     getVariable(kernelName: string, variableName: string): Promise<any>;
     getVariables(variableRequest: VariableRequest): Promise<VariableResponse>;
     getResource(resource: string): Promise<Response>;

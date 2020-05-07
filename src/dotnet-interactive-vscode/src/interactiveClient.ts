@@ -8,7 +8,7 @@ import {
     HoverTextProduced,
     HoverTextProducedType,
     KernelEventEnvelope,
-    KernelEventEvelopeObserver,
+    KernelEventEnvelopeObserver,
     KernelTransport,
     RequestCompletion,
     RequestCompletionType,
@@ -26,7 +26,7 @@ import { CellOutput, CellErrorOutput, CellOutputKind, CellStreamOutput, CellDisp
 
 export class InteractiveClient {
     private nextToken: number = 1;
-    private tokenEventObservers: Map<string, Array<KernelEventEvelopeObserver>> = new Map<string, Array<KernelEventEvelopeObserver>>();
+    private tokenEventObservers: Map<string, Array<KernelEventEnvelopeObserver>> = new Map<string, Array<KernelEventEnvelopeObserver>>();
 
     constructor(readonly kernelTransport: KernelTransport) {
         kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
@@ -142,7 +142,7 @@ export class InteractiveClient {
         });
     }
 
-    async submitCode(language: string, code: string, observer: KernelEventEvelopeObserver, token?: string | undefined): Promise<DisposableSubscription> {
+    async submitCode(language: string, code: string, observer: KernelEventEnvelopeObserver, token?: string | undefined): Promise<DisposableSubscription> {
         let command: SubmitCode = {
             code: code,
             submissionType: SubmissionType.Run,
@@ -154,7 +154,7 @@ export class InteractiveClient {
         return disposable;
     }
 
-    private subscribeToKernelTokenEvents(token: string, observer: KernelEventEvelopeObserver): DisposableSubscription {
+    private subscribeToKernelTokenEvents(token: string, observer: KernelEventEnvelopeObserver): DisposableSubscription {
         if (!this.tokenEventObservers.get(token)) {
             this.tokenEventObservers.set(token, []);
         }

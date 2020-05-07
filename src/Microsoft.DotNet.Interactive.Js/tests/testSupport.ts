@@ -3,7 +3,7 @@
 
 import * as fetchMock from "fetch-mock";
 import { DotnetInteractiveClient, KernelClientContainer } from "../src/dotnet-interactive/dotnet-interactive-interfaces";
-import { KernelTransport, KernelCommandEnvelope, KernelEventEvelopeObserver, KernelCommand, KernelCommandType } from "../src/dotnet-interactive/contracts";
+import { KernelTransport, KernelCommandEnvelope, KernelEventEnvelopeObserver, KernelCommand, KernelCommandType } from "../src/dotnet-interactive/contracts";
 
 
 export function asKernelClientContainer(client: DotnetInteractiveClient): KernelClientContainer {
@@ -22,7 +22,7 @@ export class MockKernelTransport implements KernelTransport {
 
         this.codeSubmissions = new Array<KernelCommandEnvelope>();
     }
-    public subscribeToKernelEvents(observer: KernelEventEvelopeObserver) {
+    public subscribeToKernelEvents(observer: KernelEventEnvelopeObserver) {
         return {
             dispose: (): void => {
 

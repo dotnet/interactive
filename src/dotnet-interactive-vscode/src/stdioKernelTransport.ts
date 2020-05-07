@@ -1,13 +1,12 @@
 import * as cp from 'child_process';
-import { Observable, Subscriber } from "rxjs";
 import { Writable } from 'stream';
-import { DisposableSubscription, KernelCommand, KernelCommandType, KernelEventEnvelope, KernelEventEvelopeObserver } from "./contracts";
+import { DisposableSubscription, KernelCommand, KernelCommandType, KernelEventEnvelope, KernelEventEnvelopeObserver } from "./contracts";
 
 export class StdioKernelTransport {
     private buffer: string = '';
     private nextToken: number = 1;
     private stdin: Writable;
-    private subscribers: Array<KernelEventEvelopeObserver> = [];
+    private subscribers: Array<KernelEventEnvelopeObserver> = [];
 
     constructor() {
         let childProcess = cp.spawn('dotnet', ['interactive', 'stdio']);
@@ -38,7 +37,7 @@ export class StdioKernelTransport {
         this.stdin = childProcess.stdin;
     }
 
-    subscribeToKernelEvents(observer: KernelEventEvelopeObserver): DisposableSubscription {
+    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
         this.subscribers.push(observer);
         return {
             dispose: () => {
