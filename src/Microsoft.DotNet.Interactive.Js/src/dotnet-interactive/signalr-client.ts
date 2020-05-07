@@ -2,8 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as signalR from "@microsoft/signalr";
-import { Subject } from "rxjs";
+
 import { KernelTransport, KernelEventEnvelope, KernelEventEvelopeObserver, DisposableSubscription, KernelCommand, KernelCommandType, KernelCommandEnvelope, SubmitCodeType } from "./contracts";
+import { TokenGenerator } from "./tokenGenerator";
 
 
 export async function signalTransportFactory(rootUrl: string): Promise<KernelTransport> {
@@ -16,16 +17,21 @@ export async function signalTransportFactory(rootUrl: string): Promise<KernelTra
     }
 
     let connection = new signalR.HubConnectionBuilder()
-        .configureLogging(signalR.LogLevel.Debug)
         .withUrl(hubUrl)
         .withAutomaticReconnect()
         .build();
 
-    let channel = new Subject<KernelEventEnvelope>();
+    let tokenGenerator = new TokenGenerator();
+
+    let observers: { [key: string]: KernelEventEvelopeObserver } = {};
 
     connection.on("kernelEvent", (message: string) => {
         let eventEnvelope = <KernelEventEnvelope>JSON.parse(message);
-        channel.next(eventEnvelope)
+        let keys = Object.keys(observers);
+        for (let key of keys) {
+            let observer = observers[key];
+            observer(eventEnvelope);
+        }
     });
 
     await connection
@@ -35,13 +41,12 @@ export async function signalTransportFactory(rootUrl: string): Promise<KernelTra
     let eventStream: KernelTransport = {
 
         subscribeToKernelEvents: (observer: KernelEventEvelopeObserver): DisposableSubscription => {
-            let sub = channel.subscribe((envelope) => {
-                observer(envelope);
-            });
+            let key = tokenGenerator.GetNewToken();
+            observers[key] = observer;
 
             let disposableSubscription: DisposableSubscription = {
                 dispose: () => {
-                    sub.unsubscribe();
+                    delete observers[key];
                 }
             }
 
