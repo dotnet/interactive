@@ -1,10 +1,5 @@
 import { LinePositionSpan } from './../contracts';
 
-export interface CancellationTokenLike {
-    isCancellationRequested: boolean;
-    onCancellationRequested: {(arg: any): any};
-}
-
 export interface DocumentLike {
     uri: {path: string};
     getText: {(): string};

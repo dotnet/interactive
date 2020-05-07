@@ -3,6 +3,7 @@ import { ClientMapper } from './../clientMapper';
 import { NotebookFile, execute, parseNotebook, serializeNotebook, editorLanguages } from '../interactiveNotebook';
 import { JupyterNotebook } from '../interfaces/jupyter';
 import { convertFromJupyter } from '../interop/jupyter';
+import { CellOutput } from '../interfaces/vscode';
 
 export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvider {
     constructor(readonly clientMapper: ClientMapper) {
@@ -56,16 +57,22 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         }, 0);
     }
 
-    async executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell | undefined, token: vscode.CancellationToken): Promise<void> {
+    executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell | undefined, token: vscode.CancellationToken): Promise<void> {
         if (!cell) {
             // TODO: run everything
-            return;
+            return new Promise((resolve, reject) => resolve());
         }
 
+        cell.outputs = [];
+        let localOutputs = new Array<CellOutput>();
         let client = this.clientMapper.getOrAddClient(document.uri);
         let source = cell.source.toString();
-        let outputs = await execute(cell.language, source, client);
-        cell.outputs = outputs;
+        return execute(cell.language, source, client, cellOutput => {
+            // to properly trigger the UI update, `cell.outputs` needs to be uniquely assigned; simply setting it to the local variable has no effect
+            cell.outputs = [];
+            localOutputs.push(cellOutput);
+            cell.outputs = localOutputs;
+        });
     }
 
     async save(document: vscode.NotebookDocument): Promise<boolean> {
