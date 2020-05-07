@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.LanguageService;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -102,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.Server
         {
             var jsonObject = JObject.Parse(json);
 
-            var commandJson = jsonObject[nameof(SerializationModel.cause)];
+            var commandJson = jsonObject[nameof(SerializationModel.command)];
 
             var commandEnvelope = KernelCommandEnvelope.Deserialize(commandJson);
 
@@ -145,7 +144,7 @@ namespace Microsoft.DotNet.Interactive.Server
             {
                 @event = eventEnvelope.Event,
                 eventType = eventEnvelope.EventType,
-                cause = commandSerializationModel
+                command = commandSerializationModel
             };
 
             return JsonConvert.SerializeObject(
@@ -159,7 +158,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
             public string eventType { get; set; }
 
-            public KernelCommandEnvelope.SerializationModel cause { get; set; }
+            public KernelCommandEnvelope.SerializationModel command { get; set; }
         }
     }
 }

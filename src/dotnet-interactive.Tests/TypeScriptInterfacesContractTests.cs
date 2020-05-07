@@ -30,13 +30,13 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         }
 
         [Fact]
-        public void http_generated_TypeScript_interfaces_file_has_known_shape()
+        public void vscode_generated_TypeScript_interfaces_file_has_known_shape()
         {
             CheckTypeScriptInterfaceFile("src/Microsoft.DotNet.Interactive.Js/src/dotnet-interactive/contracts.ts");
         }
 
         [Fact]
-        public void vscode_generated_TypeScript_interfaces_file_has_known_shape()
+        public void http_generated_TypeScript_interfaces_file_has_known_shape()
         {
             CheckTypeScriptInterfaceFile("src/dotnet-interactive-vscode/src/contracts.ts");
         }
