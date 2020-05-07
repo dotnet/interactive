@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { ClientMapper } from './../clientMapper';
-import { NotebookFile, execute, parseNotebook, serializeNotebook, editorLanguages } from '../interactiveNotebook';
+import { NotebookFile, parseNotebook, serializeNotebook, editorLanguages } from '../interactiveNotebook';
 import { JupyterNotebook } from '../interfaces/jupyter';
 import { convertFromJupyter } from '../interop/jupyter';
 import { CellOutput } from '../interfaces/vscode';
@@ -67,7 +67,7 @@ export class DotNetInteractiveNotebookProvider implements vscode.NotebookProvide
         let localOutputs = new Array<CellOutput>();
         let client = this.clientMapper.getOrAddClient(document.uri);
         let source = cell.source.toString();
-        return execute(cell.language, source, client, cellOutput => {
+        return client.execute(cell.language, source, cellOutput => {
             // to properly trigger the UI update, `cell.outputs` needs to be uniquely assigned; simply setting it to the local variable has no effect
             cell.outputs = [];
             localOutputs.push(cellOutput);

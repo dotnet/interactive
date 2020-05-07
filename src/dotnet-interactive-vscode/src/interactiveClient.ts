@@ -1,4 +1,28 @@
-import { KernelEventEnvelope, KernelTransport, RequestCompletion, RequestCompletionType, RequestHoverText, RequestHoverTextType, SubmissionType, SubmitCode, SubmitCodeType, KernelEventEvelopeObserver, CompletionRequestCompleted, DisposableSubscription, CompletionRequestCompletedType, CommandHandledType, CommandFailedType, HoverTextProduced, HoverTextProducedType } from './contracts';
+import {
+    CommandFailed,
+    CommandFailedType,
+    CommandHandledType,
+    CompletionRequestCompleted,
+    CompletionRequestCompletedType,
+    DisposableSubscription,
+    HoverTextProduced,
+    HoverTextProducedType,
+    KernelEventEnvelope,
+    KernelEventEvelopeObserver,
+    KernelTransport,
+    RequestCompletion,
+    RequestCompletionType,
+    RequestHoverText,
+    RequestHoverTextType,
+    ReturnValueProduced,
+    ReturnValueProducedType,
+    StandardOutputValueProduced,
+    StandardOutputValueProducedType,
+    SubmissionType,
+    SubmitCode,
+    SubmitCodeType,
+} from './contracts';
+import { CellOutput, CellErrorOutput, CellOutputKind, CellStreamOutput, CellDisplayOutput } from './interfaces/vscode';
 
 export class InteractiveClient {
     private nextToken: number = 1;
@@ -6,6 +30,50 @@ export class InteractiveClient {
 
     constructor(readonly kernelTransport: KernelTransport) {
         kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
+    }
+
+    async execute(language: string, source: string, cellObserver: {(output: CellOutput): void}, token?: string | undefined): Promise<void> {
+        let disposable = await this.submitCode(language, source, eventEnvelope => {
+            switch (eventEnvelope.eventType) {
+                case CommandFailedType:
+                    {
+                        let err = <CommandFailed>eventEnvelope.event;
+                        let output: CellErrorOutput = {
+                            outputKind: CellOutputKind.Error,
+                            ename: 'Error',
+                            evalue: err.message,
+                            traceback: [],
+                        };
+                        cellObserver(output);
+                        disposable.dispose(); // is this correct?
+                    }
+                    break;
+                case StandardOutputValueProducedType:
+                    {
+                        let st = <StandardOutputValueProduced>eventEnvelope.event;
+                        let output: CellStreamOutput = {
+                            outputKind: CellOutputKind.Text,
+                            text: st.value.toString(),
+                        };
+                        cellObserver(output);
+                    }
+                    break;
+                case ReturnValueProducedType:
+                    {
+                        let rvt = <ReturnValueProduced>eventEnvelope.event;
+                        let data: { [key: string]: any } = {};
+                        for (let formatted of rvt.formattedValues) {
+                            data[formatted.mimeType] = formatted.value;
+                        }
+                        let output: CellDisplayOutput = {
+                            outputKind: CellOutputKind.Rich,
+                            data: data
+                        };
+                        cellObserver(output);
+                    }
+                    break;
+            }
+        }, token);
     }
 
     completion(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionRequestCompleted> {

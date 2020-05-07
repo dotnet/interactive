@@ -2,7 +2,6 @@ import { expect } from 'chai';
 
 import { StdioKernelTransport } from '../../../stdioKernelTransport';
 import { ClientMapper } from '../../../clientMapper';
-import { execute } from '../../../interactiveNotebook';
 import { CellOutputKind } from '../../../interfaces/vscode';
 
 suite('Extension Test Suite', () => {
@@ -10,7 +9,7 @@ suite('Extension Test Suite', () => {
         let clientMapper = new ClientMapper(() => new StdioKernelTransport());
         let client = clientMapper.getOrAddClient({ path: 'some/path' });
         let code = '1+1';
-        await execute('csharp', code, client, cellOutput => {
+        await client.execute('csharp', code, cellOutput => {
             expect(cellOutput).to.deep.equal({
                 outputKind: CellOutputKind.Rich,
                 data: {

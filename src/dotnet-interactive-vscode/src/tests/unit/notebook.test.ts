@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 
 import { ClientMapper } from './../../clientMapper';
-import { execute } from '../../interactiveNotebook';
 import { TestKernelTransport } from './testKernelTransport';
 import { CellOutput, CellOutputKind } from '../../interfaces/vscode';
 
@@ -48,7 +47,7 @@ describe('Notebook tests', () => {
                 ]
             }));
             let client = clientMapper.getOrAddClient({ path: 'test/path' });
-            await execute(language, code, client, cellOutput => {
+            await client.execute(language, code, cellOutput => {
                 expect(cellOutput).to.deep.equal({
                         outputKind: CellOutputKind.Rich,
                         data: {
@@ -134,7 +133,7 @@ Console.WriteLine(1);
         }));
         let client = clientMapper.getOrAddClient({ path: 'test/path' });
         let outputs: Array<CellOutput> = [];
-        await execute('csharp', code, client, cellOutput => {
+        await client.execute('csharp', code, cellOutput => {
             outputs.push(cellOutput);
             if (outputs.length === 3) {
                 expect(outputs).to.deep.equal([

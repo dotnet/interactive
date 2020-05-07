@@ -1,56 +1,9 @@
-import { InteractiveClient } from "./interactiveClient";
-import { CommandFailed, CommandFailedType, StandardOutputValueProduced, StandardOutputValueProducedType, ReturnValueProduced, ReturnValueProducedType } from "./contracts";
 import { RawNotebookCell } from "./interfaces";
-import { CellDisplayOutput, CellErrorOutput, CellOutput, CellOutputKind, CellStreamOutput } from "./interfaces/vscode";
 
 export const editorLanguages = ['csharp', 'fsharp', 'html', 'javascript', 'markdown', 'powershell'];
 
 export interface NotebookFile {
     cells: Array<RawNotebookCell>;
-}
-
-export async function execute(language: string, source: string, client: InteractiveClient, cellObserver: {(output: CellOutput): void}, token?: string | undefined): Promise<void> {
-    let disposable = await client.submitCode(language, source, eventEnvelope => {
-        switch (eventEnvelope.eventType) {
-            case CommandFailedType:
-                {
-                    let err = <CommandFailed>eventEnvelope.event;
-                    let output: CellErrorOutput = {
-                        outputKind: CellOutputKind.Error,
-                        ename: 'Error',
-                        evalue: err.message,
-                        traceback: [],
-                    };
-                    cellObserver(output);
-                    disposable.dispose(); // is this correct?
-                }
-                break;
-            case StandardOutputValueProducedType:
-                {
-                    let st = <StandardOutputValueProduced>eventEnvelope.event;
-                    let output: CellStreamOutput = {
-                        outputKind: CellOutputKind.Text,
-                        text: st.value.toString(),
-                    };
-                    cellObserver(output);
-                }
-                break;
-            case ReturnValueProducedType:
-                {
-                    let rvt = <ReturnValueProduced>eventEnvelope.event;
-                    let data: { [key: string]: any } = {};
-                    for (let formatted of rvt.formattedValues) {
-                        data[formatted.mimeType] = formatted.value;
-                    }
-                    let output: CellDisplayOutput = {
-                        outputKind: CellOutputKind.Rich,
-                        data: data
-                    };
-                    cellObserver(output);
-                }
-                break;
-        }
-    }, token);
 }
 
 const languageSpecifier = '#!';
