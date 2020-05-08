@@ -36,6 +36,7 @@ namespace Microsoft.DotNet.Interactive.App
         {
             if (StartupOptions.EnableHttpApi)
             {
+                services.AddSingleton((c) => new KernelHubConnection(c.GetRequiredService<CompositeKernel>()));
                 services.AddRouting();
                 services.AddCors(options =>
                 {

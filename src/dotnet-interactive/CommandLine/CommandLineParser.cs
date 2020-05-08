@@ -322,10 +322,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             services
                 .AddSingleton(_ =>
                 {
-                    var frontendEnvironment = new BrowserFrontendEnvironment
-                    {
-                        ApiUri = new Uri($"http://localhost:{startupOptions.HttpPort.PortNumber}")
-                    };
+                    var frontendEnvironment = new BrowserFrontendEnvironment();
                     return frontendEnvironment;
                 })
                 .AddSingleton(c =>
