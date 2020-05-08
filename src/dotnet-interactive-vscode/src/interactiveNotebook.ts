@@ -1,4 +1,5 @@
 import { RawNotebookCell } from "./interfaces";
+import { trimTrailingCarriageReturn } from './utilities';
 
 export const editorLanguages = ['csharp', 'fsharp', 'html', 'javascript', 'markdown', 'powershell'];
 
@@ -47,11 +48,7 @@ export function parseNotebook(contents: string): NotebookFile {
     }
 
     function addLine(line: string) {
-        while (line.endsWith('\r')) {
-            line = line.substr(0, line.length - 1);
-        }
-
-        lines.push(line);
+        lines.push(trimTrailingCarriageReturn(line));
     }
 
     for (let line of contents.split('\n')) {

@@ -2,6 +2,7 @@ import { CellKind, CellOutput, CellOutputKind, NotebookDocument } from "../inter
 import { JupyterCell, JupyterMetadata, JupyterNotebook, JupyterOutput } from "../interfaces/jupyter";
 import { NotebookFile } from "../interactiveNotebook";
 import { RawNotebookCell } from "../interfaces";
+import { trimTrailingCarriageReturn } from '../utilities';
 
 export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
     let cells: Array<JupyterCell> = [];
@@ -196,7 +197,7 @@ function versionFromLanguage(language: string): string {
 }
 
 function splitAndCleanLines(source: string): Array<string> {
-    let lines = source.split('\n').map(line => line.endsWith('\r') ? line.substr(0, line.length - 1) : line);
+    let lines = source.split('\n').map(trimTrailingCarriageReturn);
     return lines;
 }
 

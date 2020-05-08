@@ -4,6 +4,8 @@ import {
     CommandHandledType,
     CompletionRequestCompleted,
     CompletionRequestCompletedType,
+    DisplayedValueProducedType,
+    DisplayedValueUpdatedType,
     DisposableSubscription,
     HoverTextProduced,
     HoverTextProducedType,
@@ -18,13 +20,13 @@ import {
     RequestCompletionType,
     RequestHoverText,
     RequestHoverTextType,
-    ReturnValueProduced,
     ReturnValueProducedType,
     StandardOutputValueProduced,
     StandardOutputValueProducedType,
     SubmissionType,
     SubmitCode,
     SubmitCodeType,
+    DisplayEventBase,
 } from './contracts';
 import { CellOutput, CellErrorOutput, CellOutputKind, CellStreamOutput, CellDisplayOutput } from './interfaces/vscode';
 
@@ -36,7 +38,9 @@ export class InteractiveClient {
         kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
     }
 
-    async execute(source: string, language: string, cellObserver: {(output: CellOutput): void}, token?: string | undefined): Promise<void> {
+    async execute(source: string, language: string, observer: {(outputs: Array<CellOutput>): void}, token?: string | undefined): Promise<void> {
+        let outputs: Array<CellOutput> = [];
+        let valueIdToIndex: Map<string, number> = new Map<string, number>();
         let disposable = await this.submitCode(source, language, eventEnvelope => {
             switch (eventEnvelope.eventType) {
                 case CommandFailedType:
@@ -48,7 +52,8 @@ export class InteractiveClient {
                             evalue: err.message,
                             traceback: [],
                         };
-                        cellObserver(output);
+                        outputs.push(output);
+                        observer(outputs);
                         disposable.dispose(); // is this correct?
                     }
                     break;
@@ -59,21 +64,49 @@ export class InteractiveClient {
                             outputKind: CellOutputKind.Text,
                             text: st.value.toString(),
                         };
-                        cellObserver(output);
+                        outputs.push(output);
+                        observer(outputs);
                     }
                     break;
+                case DisplayedValueProducedType:
+                case DisplayedValueUpdatedType:
                 case ReturnValueProducedType:
                     {
-                        let rvt = <ReturnValueProduced>eventEnvelope.event;
+                        let disp = <DisplayEventBase>eventEnvelope.event;
                         let data: { [key: string]: any } = {};
-                        for (let formatted of rvt.formattedValues) {
-                            data[formatted.mimeType] = formatted.value;
+                        if (disp.formattedValues && disp.formattedValues.length > 0) {
+                            for (let formatted of disp.formattedValues) {
+                                let value: any = formatted.mimeType === 'application/json'
+                                    ? JSON.parse(formatted.value)
+                                    : formatted.value;
+                                data[formatted.mimeType] = value;
+                            }
+                        } else if (disp.value) {
+                            // no formatted values returned, this is the best we can do
+                            data['text/plain'] = disp.value.toString();
                         }
+
                         let output: CellDisplayOutput = {
                             outputKind: CellOutputKind.Rich,
-                            data: data
+                            data: data,
                         };
-                        cellObserver(output);
+
+                        if (disp.valueId) {
+                            let idx = valueIdToIndex.get(disp.valueId);
+                            if (idx !== undefined) {
+                                // udpate existing value
+                                outputs[idx] = output;
+                            } else {
+                                // add new tracked value
+                                valueIdToIndex.set(disp.valueId, outputs.length);
+                                outputs.push(output);
+                            }
+                        } else {
+                            // raw value, just push it
+                            outputs.push(output);
+                        }
+
+                        observer(outputs);
                     }
                     break;
             }

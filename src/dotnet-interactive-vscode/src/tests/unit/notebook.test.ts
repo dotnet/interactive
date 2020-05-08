@@ -2,8 +2,8 @@ import { expect } from 'chai';
 
 import { ClientMapper } from './../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
-import { CellOutput, CellOutputKind } from '../../interfaces/vscode';
-import { CodeSubmissionReceivedType, CommandHandledType, CompleteCodeSubmissionReceivedType, ReturnValueProducedType, StandardOutputValueProducedType } from '../../contracts';
+import { CellOutputKind } from '../../interfaces/vscode';
+import { CodeSubmissionReceivedType, CommandHandledType, CompleteCodeSubmissionReceivedType, DisplayedValueProducedType, DisplayedValueUpdatedType, ReturnValueProducedType, StandardOutputValueProducedType } from '../../contracts';
 
 describe('Notebook tests', () => {
     for (let language of ['csharp', 'fsharp']) {
@@ -48,19 +48,20 @@ describe('Notebook tests', () => {
                 ]
             }));
             let client = clientMapper.getOrAddClient({ path: 'test/path' });
-            await client.execute(code, language, cellOutput => {
-                expect(cellOutput).to.deep.equal({
+            await client.execute(code, language, outputs => {
+                expect(outputs).to.deep.equal([
+                    {
                         outputKind: CellOutputKind.Rich,
                         data: {
                             'text/html': '2'
                         }
                     }
-                );
+                ]);
             }, token);
         });
     }
 
-    it('multiple stdout values cause the output to grow', async () => {
+    it('multiple stdout values cause the output to grow', async (done) => {
         let token = '123';
         let code = `
 Console.WriteLine(1);
@@ -133,9 +134,7 @@ Console.WriteLine(1);
             ]
         }));
         let client = clientMapper.getOrAddClient({ path: 'test/path' });
-        let outputs: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', cellOutput => {
-            outputs.push(cellOutput);
+        await client.execute(code, 'csharp', outputs => {
             if (outputs.length === 3) {
                 expect(outputs).to.deep.equal([
                     {
@@ -151,6 +150,141 @@ Console.WriteLine(1);
                         text: '3\r\n'
                     }
                 ]);
+                done();
+            }
+        }, token);
+    });
+
+    it('updated values are replaced instead of added', async (done) => {
+        let token = '123';
+        let code = '#r nuget:Newtonsoft.Json';
+        let clientMapper = new ClientMapper(() => new TestKernelTransport({
+            'SubmitCode': [
+                {
+                    eventType: CodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: CompleteCodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: DisplayedValueProducedType,
+                    event: {
+                        valueId: 'newtonsoft.json',
+                        value: 'Installing package Newtonsoft.Json...',
+                        formattedValues: []
+                    },
+                    token
+                },
+                {
+                    eventType: DisplayedValueUpdatedType,
+                    event: {
+                        valueId: 'newtonsoft.json',
+                        value: 'Installed package Newtonsoft.Json version 1.2.3.4',
+                        formattedValues: []
+                    },
+                    token
+                },
+                {
+                    eventType: DisplayedValueProducedType,
+                    event: {
+                        valueId: null,
+                        value: 'sentinel',
+                        formattedValue: []
+                    },
+                    token
+                },
+                {
+                    eventType: CommandHandledType,
+                    event: {},
+                    token
+                }
+            ]
+        }));
+        let client = clientMapper.getOrAddClient({ path: 'test/path' });
+        await client.execute(code, 'csharp', outputs => {
+            if (outputs.length === 2) {
+                expect(outputs).to.deep.equal([
+                    {
+                        outputKind: CellOutputKind.Rich,
+                        data: {
+                            'text/plain': 'Installed package Newtonsoft.Json version 1.2.3.4'
+                        }
+                    },
+                    {
+                        outputKind: CellOutputKind.Rich,
+                        data: {
+                            'text/plain': 'sentinel'
+                        }
+                    },
+                ]);
+                done();
+            }
+        }, token);
+    });
+
+    it('returned json is property parsed', async (done) => {
+        let token = '123';
+        let code = 'JObject.FromObject(new { a = 1, b = false })';
+        let clientMapper = new ClientMapper(() => new TestKernelTransport({
+            'SubmitCode': [
+                {
+                    eventType: CodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: CompleteCodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: ReturnValueProducedType,
+                    event: {
+                        value: 2,
+                        valueId: null,
+                        formattedValues: [
+                            {
+                                mimeType: 'application/json',
+                                value: '{"a":1,"b":false}' // encoded as a string, expected to be decoded when relayed back
+                            }
+                        ]
+                    },
+                    token
+                },
+                {
+                    eventType: CommandHandledType,
+                    event: {},
+                    token
+                }
+            ]
+        }));
+        let client = clientMapper.getOrAddClient({ path: 'test/path' });
+        await client.execute(code, 'csharp', outputs => {
+            if (outputs.length === 1) {
+                expect(outputs).to.deep.equal([
+                    {
+                        outputKind: CellOutputKind.Rich,
+                        data: {
+                            'application/json': {
+                                a: 1,
+                                b: false
+                            }
+                        }
+                    }
+                ]);
+                done();
             }
         }, token);
     });
