@@ -4,6 +4,7 @@ import {
     CommandHandledType,
     CompletionRequestCompleted,
     CompletionRequestCompletedType,
+    DisplayEventBase,
     DisplayedValueProducedType,
     DisplayedValueUpdatedType,
     DisposableSubscription,
@@ -21,12 +22,12 @@ import {
     RequestHoverText,
     RequestHoverTextType,
     ReturnValueProducedType,
+    StandardErrorValueProducedType,
     StandardOutputValueProduced,
     StandardOutputValueProducedType,
     SubmissionType,
     SubmitCode,
     SubmitCodeType,
-    DisplayEventBase,
 } from './contracts';
 import { CellOutput, CellErrorOutput, CellOutputKind, CellStreamOutput, CellDisplayOutput } from './interfaces/vscode';
 
@@ -62,12 +63,13 @@ export class InteractiveClient {
                             reject();
                         }
                         break;
+                    case StandardErrorValueProducedType:
                     case StandardOutputValueProducedType:
                         {
-                            let st = <StandardOutputValueProduced>eventEnvelope.event;
+                            let disp = <DisplayEventBase>eventEnvelope.event;
                             let output: CellStreamOutput = {
                                 outputKind: CellOutputKind.Text,
-                                text: st.value.toString(),
+                                text: disp.value.toString(),
                             };
                             outputs.push(output);
                             observer(outputs);
