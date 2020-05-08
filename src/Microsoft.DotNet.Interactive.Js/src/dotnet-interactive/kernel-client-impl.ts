@@ -109,8 +109,8 @@ export type DotnetInteractiveClientConfiguration = {
 function isConfiguration(config: any): config is DotnetInteractiveClientConfiguration {
     return typeof config !== "string";
 }
-export async function createDotnetInteractiveClient(configuration: string | DotnetInteractiveClientConfiguration): Promise<DotnetInteractiveClient> {
 
+export async function createDotnetInteractiveClient(configuration: string | DotnetInteractiveClientConfiguration): Promise<DotnetInteractiveClient> {
     let rootUrl = "";
     let clientFetch: ClientFetch = null;
     let kernelTransportFactory: (rootUrl: string) => Promise<KernelTransport> = null;
@@ -127,16 +127,12 @@ export async function createDotnetInteractiveClient(configuration: string | Dotn
         rootUrl = `${rootUrl}/`;
     }
 
-
-
     if (!clientFetch) {
         clientFetch = createDefaultClientFetch(rootUrl);
     }
 
-
     if (!kernelTransportFactory) {
-       // kernelTransportFactory = httpTransportFactoryWithFetch(clientFetch);
-       kernelTransportFactory = signalTransportFactory;
+        kernelTransportFactory = signalTransportFactory;
     }
 
     let transport = await kernelTransportFactory(rootUrl);
