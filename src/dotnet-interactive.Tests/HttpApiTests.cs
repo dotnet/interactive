@@ -10,12 +10,8 @@ using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.DotNet.Interactive.App.Lsp;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.LanguageService;
-using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Newtonsoft.Json;
@@ -202,66 +198,6 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
 
-        [Theory]
-        [InlineData(Language.CSharp, "var x = 1234;", 0, 10, "readonly struct System.Int32")]
-        public async Task lsp_textDocument_hover_returns_expected_result(Language language, string code, int line, int character, string expected)
-        {
-            using var _ = new AssertionScope();
-            var request = new HoverParams(
-                TextDocument.FromDocumentContents(code),
-                new Lsp.Position(line, character));
-            var response = await GetServer(language).HttpClient.PostObjectAsJsonAsync("/lsp/textDocument/hover", request);
-            await response.ShouldSucceed();
-            var responseJson = await response.Content.ReadAsStringAsync();
-            var hoverResponse = LspDeserializeFromString<HoverResponse>(responseJson);
-            hoverResponse.Contents.Kind.Should().Be(Lsp.MarkupKind.Markdown);
-            hoverResponse.Contents.Value.Should().Be(expected);
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        public async Task lsp_textDocument_hover_returns_400_on_malformed_request_object(Language language)
-        {
-            using var _ = new AssertionScope();
-            var request = new
-            {
-                SomeField = 1,
-                SomeOtherField = "test",
-            };
-            var response = await GetServer(language).HttpClient.PostObjectAsJsonAsync("/lsp/textDocument/hover", request);
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-            var content = await response.Content.ReadAsStringAsync();
-            content.Should().StartWith("unable to parse request object");
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
-        public async Task unsupported_lsp_methods_return_404(Language language)
-        {
-            // something that's not any LSP method
-            var response = await GetServer(language).HttpClient.PostObjectAsJsonAsync($"/lsp/not/a/method", new object()); // payload doesn't matter
-            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
-        }
-
-        [Theory]
-        [InlineData(Language.FSharp, "let x = 12$$34")]
-        [InlineData(Language.PowerShell, "$x = 12$$34")]
-        public async Task unimplemented_lsp_handlers_return_404(Language language, string markupCode)
-        {
-            // something that's a valid LSP method, just not for the given kernel
-            var methodName = "textDocument/hover";
-            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
-            var request = new HoverParams(
-                TextDocument.FromDocumentContents(code),
-                new Lsp.Position(line, character));
-            var response = await GetServer(language).HttpClient.PostObjectAsJsonAsync($"/lsp/{methodName}", request);
-            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
-            var content = await response.Content.ReadAsStringAsync();
-            content.Should().StartWith($"method '{methodName}' not found on kernel '{language.LanguageName()}'");
-        }
-
         [Fact]
         public async Task can_get_static_content()
         {
@@ -293,25 +229,10 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
                        "html",
                        "javascript");
         }
-
-        public static T LspDeserializeFromString<T>(string text)
-        {
-            var reader = new StringReader(text);
-            var result = (T)LspSerializer.JsonSerializer.Deserialize(reader, typeof(T));
-            return result;
-        }
     }
 
     internal static class HttpClientTestExtensions
     {
-        public static async Task<HttpResponseMessage> PostObjectAsJsonAsync(this HttpClient client, string requestUri, object request)
-        {
-            var requestJObject = JObject.FromObject(request, LspSerializer.JsonSerializer);
-            var content = new StringContent(requestJObject.ToString(), Encoding.UTF8, "application/json");
-            var response = await client.PostAsync(requestUri, content);
-            return response;
-        }
-
         public static async Task ShouldSucceed(this HttpResponseMessage response)
         {
             if (!response.IsSuccessStatusCode)
