@@ -323,12 +323,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 .AddSingleton(_ =>
                 {
                     var frontendEnvironment = new BrowserFrontendEnvironment();
-
-                    if (startupOptions.EnableHttpApi)
-                    {
-                        frontendEnvironment.ApiUri = new Uri($"http://localhost:{startupOptions.HttpPort.PortNumber}");
-                    }
-                    
                     return frontendEnvironment;
                 })
                 .AddSingleton(c =>
