@@ -62,7 +62,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         let localOutputs = new Array<CellOutput>();
         let client = this.clientMapper.getOrAddClient(document.uri);
         let source = cell.source.toString();
-        return client.execute(cell.language, source, cellOutput => {
+        return client.execute(source, cell.language, cellOutput => {
             // to properly trigger the UI update, `cell.outputs` needs to be uniquely assigned; simply setting it to the local variable has no effect
             cell.outputs = [];
             localOutputs.push(cellOutput);

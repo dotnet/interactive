@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { ClientMapper } from './../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
 import { CellOutput, CellOutputKind } from '../../interfaces/vscode';
+import { CodeSubmissionReceivedType, CommandHandledType, CompleteCodeSubmissionReceivedType, ReturnValueProducedType, StandardOutputValueProducedType } from '../../contracts';
 
 describe('Notebook tests', () => {
     for (let language of ['csharp', 'fsharp']) {
@@ -12,21 +13,21 @@ describe('Notebook tests', () => {
             let clientMapper = new ClientMapper(() => new TestKernelTransport({
                 'SubmitCode': [
                     {
-                        eventType: 'CodeSubmissionReceived',
+                        eventType: CodeSubmissionReceivedType,
                         event: {
                             code: code
                         },
                         token
                     },
                     {
-                        eventType: 'CompleteCodeSubmissionReceived',
+                        eventType: CompleteCodeSubmissionReceivedType,
                         event: {
                             code: code
                         },
                         token
                     },
                     {
-                        eventType: 'ReturnValueProduced',
+                        eventType: ReturnValueProducedType,
                         event: {
                             value: 2,
                             valueId: null,
@@ -40,14 +41,14 @@ describe('Notebook tests', () => {
                         token
                     },
                     {
-                        eventType: 'CommandHandled',
+                        eventType: CommandHandledType,
                         event: {},
                         token
                     }
                 ]
             }));
             let client = clientMapper.getOrAddClient({ path: 'test/path' });
-            await client.execute(language, code, cellOutput => {
+            await client.execute(code, language, cellOutput => {
                 expect(cellOutput).to.deep.equal({
                         outputKind: CellOutputKind.Rich,
                         data: {
@@ -69,21 +70,21 @@ Console.WriteLine(1);
         let clientMapper = new ClientMapper(() => new TestKernelTransport({
             'SubmitCode': [
                 {
-                    eventType: 'CodeSubmissionReceived',
+                    eventType: CodeSubmissionReceivedType,
                     event: {
                         code: code
                     },
                     token
                 },
                 {
-                    eventType: 'CompleteCodeSubmissionReceived',
+                    eventType: CompleteCodeSubmissionReceivedType,
                     event: {
                         code: code
                     },
                     token
                 },
                 {
-                    eventType: 'StandardOutputValueProduced',
+                    eventType: StandardOutputValueProducedType,
                     event: {
                         valueId: null,
                         value: '1\r\n',
@@ -97,7 +98,7 @@ Console.WriteLine(1);
                     token
                 },
                 {
-                    eventType: 'StandardOutputValueProduced',
+                    eventType: StandardOutputValueProducedType,
                     event: {
                         valueId: null,
                         value: '2\r\n',
@@ -111,7 +112,7 @@ Console.WriteLine(1);
                     token
                 },
                 {
-                    eventType: 'StandardOutputValueProduced',
+                    eventType: StandardOutputValueProducedType,
                     event: {
                         valueId: null,
                         value: '3\r\n',
@@ -125,7 +126,7 @@ Console.WriteLine(1);
                     token
                 },
                 {
-                    eventType: 'CommandHandled',
+                    eventType: CommandHandledType,
                     event: {},
                     token
                 }
@@ -133,7 +134,7 @@ Console.WriteLine(1);
         }));
         let client = clientMapper.getOrAddClient({ path: 'test/path' });
         let outputs: Array<CellOutput> = [];
-        await client.execute('csharp', code, cellOutput => {
+        await client.execute(code, 'csharp', cellOutput => {
             outputs.push(cellOutput);
             if (outputs.length === 3) {
                 expect(outputs).to.deep.equal([

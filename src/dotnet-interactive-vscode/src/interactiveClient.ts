@@ -36,8 +36,8 @@ export class InteractiveClient {
         kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
     }
 
-    async execute(language: string, source: string, cellObserver: {(output: CellOutput): void}, token?: string | undefined): Promise<void> {
-        let disposable = await this.submitCode(language, source, eventEnvelope => {
+    async execute(source: string, language: string, cellObserver: {(output: CellOutput): void}, token?: string | undefined): Promise<void> {
+        let disposable = await this.submitCode(source, language, eventEnvelope => {
             switch (eventEnvelope.eventType) {
                 case CommandFailedType:
                     {
@@ -104,7 +104,7 @@ export class InteractiveClient {
         return this.submitCommandAndGetResult<HoverTextProduced>(command, RequestHoverTextType, HoverTextProducedType, token);
     }
 
-    async submitCode(language: string, code: string, observer: KernelEventEnvelopeObserver, token?: string | undefined): Promise<DisposableSubscription> {
+    async submitCode(code: string, language: string, observer: KernelEventEnvelopeObserver, token?: string | undefined): Promise<DisposableSubscription> {
         let command: SubmitCode = {
             code: code,
             submissionType: SubmissionType.Run,

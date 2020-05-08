@@ -9,7 +9,7 @@ suite('Extension Test Suite', () => {
         let clientMapper = new ClientMapper(() => new StdioKernelTransport());
         let client = clientMapper.getOrAddClient({ path: 'some/path' });
         let code = '1+1';
-        await client.execute('csharp', code, cellOutput => {
+        await client.execute(code, 'csharp', cellOutput => {
             expect(cellOutput).to.deep.equal({
                 outputKind: CellOutputKind.Rich,
                 data: {
