@@ -4,7 +4,7 @@
 import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch } from "./dotnet-interactive-interfaces";
 import { TokenGenerator } from "./tokenGenerator";
 import { signalTransportFactory } from "./signalr-client";
-import { KernelTransport, KernelEventEvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType } from "./contracts";
+import { KernelTransport, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType } from "./contracts";
 import { createDefaultClientFetch } from "./clientFetch";
 
 export interface KernelClientImplParameteres {
@@ -26,7 +26,7 @@ export class KernelClientImpl implements DotnetInteractiveClient {
         this._tokenGenerator = new TokenGenerator();
     }
 
-    public subscribeToKernelEvents(observer: KernelEventEvelopeObserver): DisposableSubscription {
+    public subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
         let subscription = this._kernelTransport.subscribeToKernelEvents(observer);
         return subscription;
     }

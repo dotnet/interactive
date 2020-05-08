@@ -1,16 +1,18 @@
 import { expect } from 'chai';
 
 import { ClientMapper } from '../../clientMapper';
-import { TestClientTransport } from './testClientTransport';
-import { Hover } from './../../languageServices/hover';
+import { TestKernelTransport } from './testKernelTransport';
 import { provideCompletion } from './../../languageServices/completion';
+import { provideHover } from './../../languageServices/hover';
+import { CommandHandledType, CompletionRequestCompletedType } from '../../contracts';
 
 describe('LanguageProvider tests', () => {
     it('CompletionProvider', async () => {
-        let clientMapper = new ClientMapper(() => new TestClientTransport({
+        let token = '123';
+        let clientMapper = new ClientMapper(() => new TestKernelTransport({
             'RequestCompletion': [
                 {
-                    eventType: 'CompletionRequestCompleted',
+                    eventType: CompletionRequestCompletedType,
                     event: {
                         completionList: [
                             {
@@ -22,11 +24,13 @@ describe('LanguageProvider tests', () => {
                                 documentation: null
                             }
                         ]
-                    }
+                    },
+                    token
                 },
                 {
-                    eventType: 'CommandHandled',
-                    event: {}
+                    eventType: CommandHandledType,
+                    event: {},
+                    token
                 }
             ]
         }));
@@ -43,7 +47,7 @@ describe('LanguageProvider tests', () => {
         };
 
         // perform the completion request
-        let completion = await provideCompletion(clientMapper, 'csharp', document, position);
+        let completion = await provideCompletion(clientMapper, 'csharp', document, position, token);
         expect(completion).to.deep.equal([
             {
                 displayText: 'Sqrt',
@@ -57,7 +61,8 @@ describe('LanguageProvider tests', () => {
     });
 
     it('HoverProvider', async () => {
-        let clientMapper = new ClientMapper(() => new TestClientTransport({
+        let token = '123';
+        let clientMapper = new ClientMapper(() => new TestKernelTransport({
             'RequestHoverText': [
                 {
                     eventType: 'HoverTextProduced',
@@ -79,11 +84,13 @@ describe('LanguageProvider tests', () => {
                                 character: 12
                             }
                         }
-                    }
+                    },
+                    token
                 },
                 {
                     eventType: 'CommandHandled',
                     event: {},
+                    token
                 }
             ]
         }));
@@ -100,7 +107,7 @@ describe('LanguageProvider tests', () => {
         };
 
         // perform the hover request
-        let hover = await Hover.provideHover(clientMapper, 'csharp', document, position);
+        let hover = await provideHover(clientMapper, 'csharp', document, position, token);
         expect(hover).to.deep.equal({
             contents: 'readonly struct System.Int32',
             isMarkdown: true,

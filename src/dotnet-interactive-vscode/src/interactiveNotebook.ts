@@ -1,68 +1,9 @@
-import { InteractiveClient } from "./interactiveClient";
-import { CommandFailed, CommandFailedType, StandardOutputValueProduced, StandardOutputValueProducedType, ReturnValueProduced, ReturnValueProducedType } from "./contracts";
 import { RawNotebookCell } from "./interfaces";
-import { CellDisplayOutput, CellErrorOutput, CellOutput, CellOutputKind, CellStreamOutput } from "./interfaces/vscode";
 
 export const editorLanguages = ['csharp', 'fsharp', 'html', 'javascript', 'markdown', 'powershell'];
 
 export interface NotebookFile {
     cells: Array<RawNotebookCell>;
-}
-
-export async function execute(language: string, source: string, client: InteractiveClient): Promise<Array<CellOutput>> {
-    return new Promise((resolve, reject) => {
-        let outputs: Array<CellOutput> = [];
-        client.submitCode(language, source).subscribe({
-            next: value => {
-                switch (value.eventType) {
-                    case CommandFailedType:
-                        {
-                            let err = <CommandFailed>value.event;
-                            let output: CellErrorOutput = {
-                                outputKind: CellOutputKind.Error,
-                                ename: 'Error',
-                                evalue: err.message,
-                                traceback: [],
-                            };
-                            outputs.push(output);
-                        }
-                        break;
-                    case StandardOutputValueProducedType:
-                        {
-                            let st = <StandardOutputValueProduced>value.event;
-                            let output: CellStreamOutput = {
-                                outputKind: CellOutputKind.Text,
-                                text: st.value.toString(),
-                            };
-                            outputs.push(output);
-                        }
-                        break;
-                    case ReturnValueProducedType:
-                        {
-                            let rvt = <ReturnValueProduced>value.event;
-                            let data: { [key: string]: any } = {};
-                            for (let formatted of rvt.formattedValues) {
-                                data[formatted.mimeType] = formatted.value;
-                            }
-                            let output: CellDisplayOutput = {
-                                outputKind: CellOutputKind.Rich,
-                                data: data
-                            };
-                            outputs.push(output);
-                        }
-                        break;
-                }
-            },
-            error: err => {
-                reject({
-                    err: err
-                });
-            },
-            complete: () => {
-                resolve(outputs);
-            }
-        });
-    });
 }
 
 const languageSpecifier = '#!';

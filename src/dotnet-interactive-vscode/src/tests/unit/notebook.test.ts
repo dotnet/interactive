@@ -1,30 +1,33 @@
 import { expect } from 'chai';
 
 import { ClientMapper } from './../../clientMapper';
-import { execute } from '../../interactiveNotebook';
-import { TestClientTransport } from './testClientTransport';
-import { CellOutputKind } from '../../interfaces/vscode';
+import { TestKernelTransport } from './testKernelTransport';
+import { CellOutput, CellOutputKind } from '../../interfaces/vscode';
+import { CodeSubmissionReceivedType, CommandHandledType, CompleteCodeSubmissionReceivedType, ReturnValueProducedType, StandardOutputValueProducedType } from '../../contracts';
 
 describe('Notebook tests', () => {
     for (let language of ['csharp', 'fsharp']) {
         it(`executes and returns expected value: ${language}`, async () => {
+            let token = '123';
             let code = '1+1';
-            let clientMapper = new ClientMapper(() => new TestClientTransport({
+            let clientMapper = new ClientMapper(() => new TestKernelTransport({
                 'SubmitCode': [
                     {
-                        eventType: 'CodeSubmissionReceived',
-                        event: {
-                            code: code
-                        }
-                    },
-                    {
-                        eventType: 'CompleteCodeSubmissionReceived',
+                        eventType: CodeSubmissionReceivedType,
                         event: {
                             code: code
                         },
+                        token
                     },
                     {
-                        eventType: 'ReturnValueProduced',
+                        eventType: CompleteCodeSubmissionReceivedType,
+                        event: {
+                            code: code
+                        },
+                        token
+                    },
+                    {
+                        eventType: ReturnValueProducedType,
                         event: {
                             value: 2,
                             valueId: null,
@@ -34,49 +37,54 @@ describe('Notebook tests', () => {
                                     value: '2'
                                 }
                             ]
-                        }
+                        },
+                        token
                     },
                     {
-                        eventType: 'CommandHandled',
-                        event: {}
+                        eventType: CommandHandledType,
+                        event: {},
+                        token
                     }
                 ]
             }));
             let client = clientMapper.getOrAddClient({ path: 'test/path' });
-            let outputs = await execute(language, code, client);
-            expect(outputs).to.deep.equal([
-                {
-                    outputKind: CellOutputKind.Rich,
-                    data: {
-                        'text/html': '2'
+            await client.execute(code, language, cellOutput => {
+                expect(cellOutput).to.deep.equal({
+                        outputKind: CellOutputKind.Rich,
+                        data: {
+                            'text/html': '2'
+                        }
                     }
-                }
-            ]);
+                );
+            }, token);
         });
     }
 
     it('multiple stdout values cause the output to grow', async () => {
+        let token = '123';
         let code = `
 Console.WriteLine(1);
 Console.WriteLine(1);
 Console.WriteLine(1);
 `;
-        let clientMapper = new ClientMapper(() => new TestClientTransport({
+        let clientMapper = new ClientMapper(() => new TestKernelTransport({
             'SubmitCode': [
                 {
-                    eventType: 'CodeSubmissionReceived',
-                    event: {
-                        code: code
-                    }
-                },
-                {
-                    eventType: 'CompleteCodeSubmissionReceived',
+                    eventType: CodeSubmissionReceivedType,
                     event: {
                         code: code
                     },
+                    token
                 },
                 {
-                    eventType: 'StandardOutputValueProduced',
+                    eventType: CompleteCodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: StandardOutputValueProducedType,
                     event: {
                         valueId: null,
                         value: '1\r\n',
@@ -86,10 +94,11 @@ Console.WriteLine(1);
                                 value: '1\r\n'
                             }
                         ]
-                    }
+                    },
+                    token
                 },
                 {
-                    eventType: 'StandardOutputValueProduced',
+                    eventType: StandardOutputValueProducedType,
                     event: {
                         valueId: null,
                         value: '2\r\n',
@@ -99,10 +108,11 @@ Console.WriteLine(1);
                                 value: '2\r\n'
                             }
                         ]
-                    }
+                    },
+                    token
                 },
                 {
-                    eventType: 'StandardOutputValueProduced',
+                    eventType: StandardOutputValueProducedType,
                     event: {
                         valueId: null,
                         value: '3\r\n',
@@ -112,29 +122,36 @@ Console.WriteLine(1);
                                 value: '3\r\n'
                             }
                         ]
-                    }
+                    },
+                    token
                 },
                 {
-                    eventType: 'CommandHandled',
-                    event: {}
+                    eventType: CommandHandledType,
+                    event: {},
+                    token
                 }
             ]
         }));
         let client = clientMapper.getOrAddClient({ path: 'test/path' });
-        let outputs = await execute('csharp', code, client);
-        expect(outputs).to.deep.equal([
-            {
-                outputKind: CellOutputKind.Text,
-                text: '1\r\n'
-            },
-            {
-                outputKind: CellOutputKind.Text,
-                text: '2\r\n'
-            },
-            {
-                outputKind: CellOutputKind.Text,
-                text: '3\r\n'
+        let outputs: Array<CellOutput> = [];
+        await client.execute(code, 'csharp', cellOutput => {
+            outputs.push(cellOutput);
+            if (outputs.length === 3) {
+                expect(outputs).to.deep.equal([
+                    {
+                        outputKind: CellOutputKind.Text,
+                        text: '1\r\n'
+                    },
+                    {
+                        outputKind: CellOutputKind.Text,
+                        text: '2\r\n'
+                    },
+                    {
+                        outputKind: CellOutputKind.Text,
+                        text: '3\r\n'
+                    }
+                ]);
             }
-        ]);
+        }, token);
     });
 });

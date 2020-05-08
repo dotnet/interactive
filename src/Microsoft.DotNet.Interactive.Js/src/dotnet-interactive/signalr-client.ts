@@ -3,7 +3,7 @@
 
 import * as signalR from "@microsoft/signalr";
 
-import { KernelTransport, KernelEventEnvelope, KernelEventEvelopeObserver, DisposableSubscription, KernelCommand, KernelCommandType, KernelCommandEnvelope, SubmitCodeType } from "./contracts";
+import { KernelTransport, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, KernelCommand, KernelCommandType, KernelCommandEnvelope, SubmitCodeType } from "./contracts";
 import { TokenGenerator } from "./tokenGenerator";
 
 
@@ -23,7 +23,7 @@ export async function signalTransportFactory(rootUrl: string): Promise<KernelTra
 
     let tokenGenerator = new TokenGenerator();
 
-    let observers: { [key: string]: KernelEventEvelopeObserver } = {};
+    let observers: { [key: string]: KernelEventEnvelopeObserver } = {};
 
     connection.on("kernelEvent", (message: string) => {
         let eventEnvelope = <KernelEventEnvelope>JSON.parse(message);
@@ -40,7 +40,7 @@ export async function signalTransportFactory(rootUrl: string): Promise<KernelTra
 
     let eventStream: KernelTransport = {
 
-        subscribeToKernelEvents: (observer: KernelEventEvelopeObserver): DisposableSubscription => {
+        subscribeToKernelEvents: (observer: KernelEventEnvelopeObserver): DisposableSubscription => {
             let key = tokenGenerator.GetNewToken();
             observers[key] = observer;
 

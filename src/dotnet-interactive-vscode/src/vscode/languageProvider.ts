@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { LinePositionSpan, LinePosition } from '../contracts';
 import { ClientMapper } from '../clientMapper';
-import { Hover } from './../languageServices/hover';
 import { provideCompletion } from '../languageServices/completion';
+import { provideHover } from './../languageServices/hover';
 import { editorLanguages } from '../interactiveNotebook';
 
 function convertToPosition(linePosition: LinePosition): vscode.Position {
@@ -28,7 +28,7 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
 
     provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
         return new Promise<vscode.CompletionList>((resolve, reject) => {
-            provideCompletion(this.clientMapper, document.languageId, document, position, token).then(result => {
+            provideCompletion(this.clientMapper, document.languageId, document, position).then(result => {
                 let completionItems: Array<vscode.CompletionItem> = [];
                 for (let item of result) {
                     let vscodeItem = new vscode.CompletionItem(item.displayText, this.mapCompletionItem(item.kind));
@@ -69,7 +69,7 @@ export class HoverProvider implements vscode.HoverProvider {
 
     provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Hover> {
         return new Promise<vscode.Hover>((resolve, reject) => {
-            Hover.provideHover(this.clientMapper, document.languageId, document, position, token).then(result => {
+            provideHover(this.clientMapper, document.languageId, document, position).then(result => {
                 let contents = result.isMarkdown
                     ? new vscode.MarkdownString(result.contents)
                     : result.contents;

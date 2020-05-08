@@ -1,5 +1,5 @@
+import { KernelTransport } from "./contracts";
 import { InteractiveClient } from "./interactiveClient";
-import { ClientTransport } from "./interfaces";
 
 interface HasPath {
     path: string;
@@ -8,7 +8,7 @@ interface HasPath {
 export class ClientMapper {
     private clientMap: Map<string, InteractiveClient> = new Map();
 
-    constructor(readonly clientTransportCreator: {(): ClientTransport}) {
+    constructor(readonly kernelTransportCreator: {(): KernelTransport}) {
     }
 
     static keyFromUri(uri: HasPath): string {
@@ -28,7 +28,7 @@ export class ClientMapper {
         let key = ClientMapper.keyFromUri(uri);
         let client = this.clientMap.get(key);
         if (client === undefined) {
-            client = new InteractiveClient(this.clientTransportCreator());
+            client = new InteractiveClient(this.kernelTransportCreator());
             this.clientMap.set(key, client);
         }
 
