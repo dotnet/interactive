@@ -7,6 +7,11 @@ import { signalTransportFactory } from "./signalr-client";
 import { KernelTransport, KernelEventEvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType } from "./contracts";
 import { createDefaultClientFetch } from "./clientFetch";
 
+export interface KernelClientImplParameteres {
+    clientFetch: (input: RequestInfo, init: RequestInit) => Promise<Response>;
+    rootUrl: string;
+    kernelTransport: KernelTransport
+}
 export class KernelClientImpl implements DotnetInteractiveClient {
 
     private _clientFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
@@ -14,10 +19,10 @@ export class KernelClientImpl implements DotnetInteractiveClient {
     private _kernelTransport: KernelTransport;
     private _tokenGenerator: TokenGenerator;
 
-    constructor({ clientFetch, rootUrl, kernelTransport }: { clientFetch: (input: RequestInfo, init: RequestInit) => Promise<Response>; rootUrl: string; kernelTransport: KernelTransport }) {
-        this._clientFetch = clientFetch;
-        this._rootUrl = rootUrl;
-        this._kernelTransport = kernelTransport;
+    constructor(parameters: KernelClientImplParameteres) {
+        this._clientFetch = parameters.clientFetch;
+        this._rootUrl = parameters.rootUrl;
+        this._kernelTransport = parameters.kernelTransport;
         this._tokenGenerator = new TokenGenerator();
     }
 
