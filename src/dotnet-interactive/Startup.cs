@@ -73,7 +73,6 @@ namespace Microsoft.DotNet.Interactive.App
                     r.Routes.Add(new DiscoveryRouter(serviceProvider.GetRequiredService<BrowserFrontendEnvironment>()));
                     r.Routes.Add(new VariableRouter(serviceProvider.GetRequiredService<IKernel>()));
                     r.Routes.Add(new KernelsRouter(serviceProvider.GetRequiredService<IKernel>()));
-                    r.Routes.Add(new LspRouter(serviceProvider.GetRequiredService<IKernel>()));
                 });
                 app.UseEndpoints(endpoints =>
                 {
