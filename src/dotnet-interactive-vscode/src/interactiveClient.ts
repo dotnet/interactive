@@ -39,78 +39,84 @@ export class InteractiveClient {
     }
 
     async execute(source: string, language: string, observer: {(outputs: Array<CellOutput>): void}, token?: string | undefined): Promise<void> {
-        let outputs: Array<CellOutput> = [];
-        let valueIdToIndex: Map<string, number> = new Map<string, number>();
-        let disposable = await this.submitCode(source, language, eventEnvelope => {
-            switch (eventEnvelope.eventType) {
-                case CommandFailedType:
-                    {
-                        let err = <CommandFailed>eventEnvelope.event;
-                        let output: CellErrorOutput = {
-                            outputKind: CellOutputKind.Error,
-                            ename: 'Error',
-                            evalue: err.message,
-                            traceback: [],
-                        };
-                        outputs.push(output);
-                        observer(outputs);
-                        disposable.dispose(); // is this correct?
-                    }
-                    break;
-                case StandardOutputValueProducedType:
-                    {
-                        let st = <StandardOutputValueProduced>eventEnvelope.event;
-                        let output: CellStreamOutput = {
-                            outputKind: CellOutputKind.Text,
-                            text: st.value.toString(),
-                        };
-                        outputs.push(output);
-                        observer(outputs);
-                    }
-                    break;
-                case DisplayedValueProducedType:
-                case DisplayedValueUpdatedType:
-                case ReturnValueProducedType:
-                    {
-                        let disp = <DisplayEventBase>eventEnvelope.event;
-                        let data: { [key: string]: any } = {};
-                        if (disp.formattedValues && disp.formattedValues.length > 0) {
-                            for (let formatted of disp.formattedValues) {
-                                let value: any = formatted.mimeType === 'application/json'
-                                    ? JSON.parse(formatted.value)
-                                    : formatted.value;
-                                data[formatted.mimeType] = value;
-                            }
-                        } else if (disp.value) {
-                            // no formatted values returned, this is the best we can do
-                            data['text/plain'] = disp.value.toString();
+        return new Promise(async (resolve, reject) => {
+            let outputs: Array<CellOutput> = [];
+            let valueIdToIndex: Map<string, number> = new Map<string, number>();
+            let disposable = await this.submitCode(source, language, eventEnvelope => {
+                switch (eventEnvelope.eventType) {
+                    case CommandHandledType:
+                        resolve();
+                        break;
+                    case CommandFailedType:
+                        {
+                            let err = <CommandFailed>eventEnvelope.event;
+                            let output: CellErrorOutput = {
+                                outputKind: CellOutputKind.Error,
+                                ename: 'Error',
+                                evalue: err.message,
+                                traceback: [],
+                            };
+                            outputs.push(output);
+                            observer(outputs);
+                            disposable.dispose(); // is this correct?
+                            reject();
                         }
+                        break;
+                    case StandardOutputValueProducedType:
+                        {
+                            let st = <StandardOutputValueProduced>eventEnvelope.event;
+                            let output: CellStreamOutput = {
+                                outputKind: CellOutputKind.Text,
+                                text: st.value.toString(),
+                            };
+                            outputs.push(output);
+                            observer(outputs);
+                        }
+                        break;
+                    case DisplayedValueProducedType:
+                    case DisplayedValueUpdatedType:
+                    case ReturnValueProducedType:
+                        {
+                            let disp = <DisplayEventBase>eventEnvelope.event;
+                            let data: { [key: string]: any } = {};
+                            if (disp.formattedValues && disp.formattedValues.length > 0) {
+                                for (let formatted of disp.formattedValues) {
+                                    let value: any = formatted.mimeType === 'application/json'
+                                        ? JSON.parse(formatted.value)
+                                        : formatted.value;
+                                    data[formatted.mimeType] = value;
+                                }
+                            } else if (disp.value) {
+                                // no formatted values returned, this is the best we can do
+                                data['text/plain'] = disp.value.toString();
+                            }
 
-                        let output: CellDisplayOutput = {
-                            outputKind: CellOutputKind.Rich,
-                            data: data,
-                        };
+                            let output: CellDisplayOutput = {
+                                outputKind: CellOutputKind.Rich,
+                                data: data,
+                            };
 
-                        if (disp.valueId) {
-                            let idx = valueIdToIndex.get(disp.valueId);
-                            if (idx !== undefined) {
-                                // udpate existing value
-                                outputs[idx] = output;
+                            if (disp.valueId) {
+                                let idx = valueIdToIndex.get(disp.valueId);
+                                if (idx !== undefined) {
+                                    // udpate existing value
+                                    outputs[idx] = output;
+                                } else {
+                                    // add new tracked value
+                                    valueIdToIndex.set(disp.valueId, outputs.length);
+                                    outputs.push(output);
+                                }
                             } else {
-                                // add new tracked value
-                                valueIdToIndex.set(disp.valueId, outputs.length);
+                                // raw value, just push it
                                 outputs.push(output);
                             }
-                        } else {
-                            // raw value, just push it
-                            outputs.push(output);
-                        }
 
-                        observer(outputs);
-                    }
-                    break;
-            }
-        }, token);
+                            observer(outputs);
+                        }
+                        break;
+                }
+            }, token);
+        });
     }
 
     completion(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionRequestCompleted> {
