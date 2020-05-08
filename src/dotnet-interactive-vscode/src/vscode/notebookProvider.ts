@@ -5,6 +5,7 @@ import { RawNotebookCell } from '../interfaces';
 import { JupyterNotebook } from '../interfaces/jupyter';
 import { convertFromJupyter } from '../interop/jupyter';
 import { CellOutput } from '../interfaces/vscode';
+import { trimTrailingCarriageReturn } from '../utilities';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
     constructor(readonly clientMapper: ClientMapper) {
@@ -75,7 +76,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         for (let cell of document.cells) {
             notebook.cells.push({
                 language: cell.language,
-                contents: cell.document.getText().split('\n'),
+                contents: cell.document.getText().split('\n').map(trimTrailingCarriageReturn),
             });
         }
 
