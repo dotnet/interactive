@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 import { ClientMapper } from './../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
-import { CellOutputKind } from '../../interfaces/vscode';
+import { CellOutput, CellOutputKind } from '../../interfaces/vscode';
 import { CodeSubmissionReceivedType, CommandHandledType, CompleteCodeSubmissionReceivedType, DisplayedValueProducedType, DisplayedValueUpdatedType, ReturnValueProducedType, StandardOutputValueProducedType } from '../../contracts';
 
 describe('Notebook tests', () => {
@@ -48,20 +48,20 @@ describe('Notebook tests', () => {
                 ]
             }));
             let client = clientMapper.getOrAddClient({ path: 'test/path' });
-            await client.execute(code, language, outputs => {
-                expect(outputs).to.deep.equal([
-                    {
-                        outputKind: CellOutputKind.Rich,
-                        data: {
-                            'text/html': '2'
-                        }
+            let result: Array<CellOutput> = [];
+            await client.execute(code, language, outputs => result = outputs, token);
+            expect(result).to.deep.equal([
+                {
+                    outputKind: CellOutputKind.Rich,
+                    data: {
+                        'text/html': '2'
                     }
-                ]);
-            }, token);
+                }
+            ]);
         });
     }
 
-    it('multiple stdout values cause the output to grow', async (done) => {
+    it('multiple stdout values cause the output to grow', async () => {
         let token = '123';
         let code = `
 Console.WriteLine(1);
@@ -134,28 +134,25 @@ Console.WriteLine(1);
             ]
         }));
         let client = clientMapper.getOrAddClient({ path: 'test/path' });
-        await client.execute(code, 'csharp', outputs => {
-            if (outputs.length === 3) {
-                expect(outputs).to.deep.equal([
-                    {
-                        outputKind: CellOutputKind.Text,
-                        text: '1\r\n'
-                    },
-                    {
-                        outputKind: CellOutputKind.Text,
-                        text: '2\r\n'
-                    },
-                    {
-                        outputKind: CellOutputKind.Text,
-                        text: '3\r\n'
-                    }
-                ]);
-                done();
+        let result: Array<CellOutput> = [];
+        await client.execute(code, 'csharp', outputs => result = outputs, token);
+        expect(result).to.deep.equal([
+            {
+                outputKind: CellOutputKind.Text,
+                text: '1\r\n'
+            },
+            {
+                outputKind: CellOutputKind.Text,
+                text: '2\r\n'
+            },
+            {
+                outputKind: CellOutputKind.Text,
+                text: '3\r\n'
             }
-        }, token);
+        ]);
     });
 
-    it('updated values are replaced instead of added', async (done) => {
+    it('updated values are replaced instead of added', async () => {
         let token = '123';
         let code = '#r nuget:Newtonsoft.Json';
         let clientMapper = new ClientMapper(() => new TestKernelTransport({
@@ -209,28 +206,25 @@ Console.WriteLine(1);
             ]
         }));
         let client = clientMapper.getOrAddClient({ path: 'test/path' });
-        await client.execute(code, 'csharp', outputs => {
-            if (outputs.length === 2) {
-                expect(outputs).to.deep.equal([
-                    {
-                        outputKind: CellOutputKind.Rich,
-                        data: {
-                            'text/plain': 'Installed package Newtonsoft.Json version 1.2.3.4'
-                        }
-                    },
-                    {
-                        outputKind: CellOutputKind.Rich,
-                        data: {
-                            'text/plain': 'sentinel'
-                        }
-                    },
-                ]);
-                done();
-            }
-        }, token);
+        let result: Array<CellOutput> = [];
+        await client.execute(code, 'csharp', outputs => result = outputs, token);
+        expect(result).to.deep.equal([
+            {
+                outputKind: CellOutputKind.Rich,
+                data: {
+                    'text/plain': 'Installed package Newtonsoft.Json version 1.2.3.4'
+                }
+            },
+            {
+                outputKind: CellOutputKind.Rich,
+                data: {
+                    'text/plain': 'sentinel'
+                }
+            },
+        ]);
     });
 
-    it('returned json is property parsed', async (done) => {
+    it('returned json is property parsed', async () => {
         let token = '123';
         let code = 'JObject.FromObject(new { a = 1, b = false })';
         let clientMapper = new ClientMapper(() => new TestKernelTransport({
@@ -271,21 +265,18 @@ Console.WriteLine(1);
             ]
         }));
         let client = clientMapper.getOrAddClient({ path: 'test/path' });
-        await client.execute(code, 'csharp', outputs => {
-            if (outputs.length === 1) {
-                expect(outputs).to.deep.equal([
-                    {
-                        outputKind: CellOutputKind.Rich,
-                        data: {
-                            'application/json': {
-                                a: 1,
-                                b: false
-                            }
-                        }
+        let result: Array<CellOutput> = [];
+        await client.execute(code, 'csharp', outputs => result = outputs, token);
+        expect(result).to.deep.equal([
+            {
+                outputKind: CellOutputKind.Rich,
+                data: {
+                    'application/json': {
+                        a: 1,
+                        b: false
                     }
-                ]);
-                done();
+                }
             }
-        }, token);
+        ]);
     });
 });
