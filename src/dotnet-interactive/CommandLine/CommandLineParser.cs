@@ -322,17 +322,20 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             services
                 .AddSingleton(_ =>
                 {
-                    var frontendEnvironment = new BrowserFrontendEnvironment
+                    var frontendEnvironment = new BrowserFrontendEnvironment();
+
+                    if (startupOptions.EnableHttpApi)
                     {
-                        ApiUri = new Uri($"http://localhost:{startupOptions.HttpPort.PortNumber}")
-                    };
+                        frontendEnvironment.ApiUri = new Uri($"http://localhost:{startupOptions.HttpPort.PortNumber}");
+                    }
+                    
                     return frontendEnvironment;
                 })
                 .AddSingleton(c =>
                 {
                     var frontendEnvironment = c.GetRequiredService<BrowserFrontendEnvironment>();
                     var kernel = CreateKernel(defaultKernel, frontendEnvironment, startupOptions,
-                        c.GetRequiredService<HttpProbingSettings>());
+                        c.GetService<HttpProbingSettings>());
 
                     afterKernelCreation?.Invoke(kernel);
                     return kernel;
@@ -347,7 +350,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             string defaultKernelName,
             FrontendEnvironment frontendEnvironment,
             StartupOptions startupOptions,
-            HttpProbingSettings httpProbingSettings)
+            HttpProbingSettings httpProbingSettings = null)
         {
             var compositeKernel = new CompositeKernel();
             compositeKernel.FrontendEnvironment = frontendEnvironment;
