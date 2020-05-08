@@ -53,8 +53,7 @@ describe('Notebook tests', () => {
                     {
                         outputKind: CellOutputKind.Rich,
                         data: {
-                            'text/html': '2',
-                            'text/plain': 2
+                            'text/html': '2'
                         }
                     }
                 ]);
@@ -225,6 +224,65 @@ Console.WriteLine(1);
                             'text/plain': 'sentinel'
                         }
                     },
+                ]);
+                done();
+            }
+        }, token);
+    });
+
+    it('returned json is property parsed', async (done) => {
+        let token = '123';
+        let code = 'JObject.FromObject(new { a = 1, b = false })';
+        let clientMapper = new ClientMapper(() => new TestKernelTransport({
+            'SubmitCode': [
+                {
+                    eventType: CodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: CompleteCodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: ReturnValueProducedType,
+                    event: {
+                        value: 2,
+                        valueId: null,
+                        formattedValues: [
+                            {
+                                mimeType: 'application/json',
+                                value: '{"a":1,"b":false}' // encoded as a string, expected to be decoded when relayed back
+                            }
+                        ]
+                    },
+                    token
+                },
+                {
+                    eventType: CommandHandledType,
+                    event: {},
+                    token
+                }
+            ]
+        }));
+        let client = clientMapper.getOrAddClient({ path: 'test/path' });
+        await client.execute(code, 'csharp', outputs => {
+            if (outputs.length === 1) {
+                expect(outputs).to.deep.equal([
+                    {
+                        outputKind: CellOutputKind.Rich,
+                        data: {
+                            'application/json': {
+                                a: 1,
+                                b: false
+                            }
+                        }
+                    }
                 ]);
                 done();
             }

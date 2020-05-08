@@ -29,7 +29,6 @@ import {
     DisplayEventBase,
 } from './contracts';
 import { CellOutput, CellErrorOutput, CellOutputKind, CellStreamOutput, CellDisplayOutput } from './interfaces/vscode';
-import { getMimeType } from './utilities';
 
 export class InteractiveClient {
     private nextToken: number = 1;
@@ -75,14 +74,17 @@ export class InteractiveClient {
                     {
                         let disp = <DisplayEventBase>eventEnvelope.event;
                         let data: { [key: string]: any } = {};
-                        if (disp.formattedValues) {
+                        if (disp.formattedValues && disp.formattedValues.length > 0) {
                             for (let formatted of disp.formattedValues) {
-                                data[formatted.mimeType] = formatted.value;
+                                let value: any = formatted.mimeType === 'application/json'
+                                    ? JSON.parse(formatted.value)
+                                    : formatted.value;
+                                data[formatted.mimeType] = value;
                             }
+                        } else if (disp.value) {
+                            // no formatted values returned, this is the best we can do
+                            data['text/plain'] = disp.value.toString();
                         }
-
-                        let mimeType = getMimeType(disp.value);
-                        data[mimeType] = disp.value;
 
                         let output: CellDisplayOutput = {
                             outputKind: CellOutputKind.Rich,
