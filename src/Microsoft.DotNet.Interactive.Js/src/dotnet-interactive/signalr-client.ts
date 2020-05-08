@@ -63,5 +63,6 @@ export async function signalTransportFactory(rootUrl: string): Promise<KernelTra
         }
     };
 
+    await connection.send("connect");
     return Promise.resolve(eventStream);
 }
