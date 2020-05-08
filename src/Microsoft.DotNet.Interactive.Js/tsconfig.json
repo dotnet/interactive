@@ -2,12 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "rxjs/*": [
-        "../node_modules/rxjs/*"
-      ]
-    },
+    "baseUrl": ".",    
     "lib": [
       "es2015",
       "dom",
