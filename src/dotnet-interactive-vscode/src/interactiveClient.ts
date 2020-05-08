@@ -25,6 +25,7 @@ import {
     SubmissionType,
     SubmitCode,
     SubmitCodeType,
+    DisplayEventBase,
 } from './contracts';
 import { CellOutput, CellErrorOutput, CellOutputKind, CellStreamOutput, CellDisplayOutput } from './interfaces/vscode';
 
@@ -36,7 +37,8 @@ export class InteractiveClient {
         kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
     }
 
-    async execute(source: string, language: string, cellObserver: {(output: CellOutput): void}, token?: string | undefined): Promise<void> {
+    async execute(source: string, language: string, observer: {(outputs: Array<CellOutput>): void}, token?: string | undefined): Promise<void> {
+        let outputs: Array<CellOutput> = [];
         let disposable = await this.submitCode(source, language, eventEnvelope => {
             switch (eventEnvelope.eventType) {
                 case CommandFailedType:
@@ -48,7 +50,8 @@ export class InteractiveClient {
                             evalue: err.message,
                             traceback: [],
                         };
-                        cellObserver(output);
+                        outputs.push(output);
+                        observer(outputs);
                         disposable.dispose(); // is this correct?
                     }
                     break;
@@ -59,21 +62,23 @@ export class InteractiveClient {
                             outputKind: CellOutputKind.Text,
                             text: st.value.toString(),
                         };
-                        cellObserver(output);
+                        outputs.push(output);
+                        observer(outputs);
                     }
                     break;
                 case ReturnValueProducedType:
                     {
-                        let rvt = <ReturnValueProduced>eventEnvelope.event;
+                        let disp = <DisplayEventBase>eventEnvelope.event;
                         let data: { [key: string]: any } = {};
-                        for (let formatted of rvt.formattedValues) {
+                        for (let formatted of disp.formattedValues) {
                             data[formatted.mimeType] = formatted.value;
                         }
                         let output: CellDisplayOutput = {
                             outputKind: CellOutputKind.Rich,
-                            data: data
+                            data: data,
                         };
-                        cellObserver(output);
+                        outputs.push(output);
+                        observer(outputs);
                     }
                     break;
             }

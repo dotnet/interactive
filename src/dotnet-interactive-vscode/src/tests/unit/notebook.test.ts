@@ -48,14 +48,15 @@ describe('Notebook tests', () => {
                 ]
             }));
             let client = clientMapper.getOrAddClient({ path: 'test/path' });
-            await client.execute(code, language, cellOutput => {
-                expect(cellOutput).to.deep.equal({
+            await client.execute(code, language, outputs => {
+                expect(outputs).to.deep.equal([
+                    {
                         outputKind: CellOutputKind.Rich,
                         data: {
                             'text/html': '2'
                         }
                     }
-                );
+                ]);
             }, token);
         });
     }
@@ -133,9 +134,7 @@ Console.WriteLine(1);
             ]
         }));
         let client = clientMapper.getOrAddClient({ path: 'test/path' });
-        let outputs: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', cellOutput => {
-            outputs.push(cellOutput);
+        await client.execute(code, 'csharp', outputs => {
             if (outputs.length === 3) {
                 expect(outputs).to.deep.equal([
                     {
