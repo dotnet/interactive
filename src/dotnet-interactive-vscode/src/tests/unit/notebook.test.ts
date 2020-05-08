@@ -2,8 +2,8 @@ import { expect } from 'chai';
 
 import { ClientMapper } from './../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
-import { CellOutput, CellOutputKind } from '../../interfaces/vscode';
-import { CodeSubmissionReceivedType, CommandHandledType, CompleteCodeSubmissionReceivedType, ReturnValueProducedType, StandardOutputValueProducedType } from '../../contracts';
+import { CellOutputKind } from '../../interfaces/vscode';
+import { CodeSubmissionReceivedType, CommandHandledType, CompleteCodeSubmissionReceivedType, DisplayedValueProducedType, DisplayedValueUpdatedType, ReturnValueProducedType, StandardOutputValueProducedType } from '../../contracts';
 
 describe('Notebook tests', () => {
     for (let language of ['csharp', 'fsharp']) {
@@ -61,7 +61,7 @@ describe('Notebook tests', () => {
         });
     }
 
-    it('multiple stdout values cause the output to grow', async () => {
+    it('multiple stdout values cause the output to grow', async (done) => {
         let token = '123';
         let code = `
 Console.WriteLine(1);
@@ -150,6 +150,82 @@ Console.WriteLine(1);
                         text: '3\r\n'
                     }
                 ]);
+                done();
+            }
+        }, token);
+    });
+
+    it('updated values are replaced instead of added', async (done) => {
+        let token = '123';
+        let code = '#r nuget:Newtonsoft.Json';
+        let clientMapper = new ClientMapper(() => new TestKernelTransport({
+            'SubmitCode': [
+                {
+                    eventType: CodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: CompleteCodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: DisplayedValueProducedType,
+                    event: {
+                        valueId: 'newtonsoft.json',
+                        value: 'Installing package Newtonsoft.Json...',
+                        formattedValues: []
+                    },
+                    token
+                },
+                {
+                    eventType: DisplayedValueUpdatedType,
+                    event: {
+                        valueId: 'newtonsoft.json',
+                        value: 'Installed package Newtonsoft.Json version 1.2.3.4',
+                        formattedValues: []
+                    },
+                    token
+                },
+                {
+                    eventType: DisplayedValueProducedType,
+                    event: {
+                        valueId: null,
+                        value: 'sentinel',
+                        formattedValue: []
+                    },
+                    token
+                },
+                {
+                    eventType: CommandHandledType,
+                    event: {},
+                    token
+                }
+            ]
+        }));
+        let client = clientMapper.getOrAddClient({ path: 'test/path' });
+        await client.execute(code, 'csharp', outputs => {
+            if (outputs.length === 2) {
+                expect(outputs).to.deep.equal([
+                    {
+                        outputKind: CellOutputKind.Rich,
+                        data: {
+                            'text/plain': 'Installed package Newtonsoft.Json version 1.2.3.4'
+                        }
+                    },
+                    {
+                        outputKind: CellOutputKind.Rich,
+                        data: {
+                            'text/plain': 'sentinel'
+                        }
+                    },
+                ]);
+                done();
             }
         }, token);
     });

@@ -4,6 +4,8 @@ import {
     CommandHandledType,
     CompletionRequestCompleted,
     CompletionRequestCompletedType,
+    DisplayedValueProducedType,
+    DisplayedValueUpdatedType,
     DisposableSubscription,
     HoverTextProduced,
     HoverTextProducedType,
@@ -18,7 +20,6 @@ import {
     RequestCompletionType,
     RequestHoverText,
     RequestHoverTextType,
-    ReturnValueProduced,
     ReturnValueProducedType,
     StandardOutputValueProduced,
     StandardOutputValueProducedType,
@@ -39,6 +40,7 @@ export class InteractiveClient {
 
     async execute(source: string, language: string, observer: {(outputs: Array<CellOutput>): void}, token?: string | undefined): Promise<void> {
         let outputs: Array<CellOutput> = [];
+        let valueIdToIndex: Map<string, number> = new Map<string, number>();
         let disposable = await this.submitCode(source, language, eventEnvelope => {
             switch (eventEnvelope.eventType) {
                 case CommandFailedType:
@@ -66,18 +68,42 @@ export class InteractiveClient {
                         observer(outputs);
                     }
                     break;
+                case DisplayedValueProducedType:
+                case DisplayedValueUpdatedType:
                 case ReturnValueProducedType:
                     {
                         let disp = <DisplayEventBase>eventEnvelope.event;
                         let data: { [key: string]: any } = {};
-                        for (let formatted of disp.formattedValues) {
-                            data[formatted.mimeType] = formatted.value;
+                        if (disp.formattedValues && disp.formattedValues.length > 0) {
+                            // has rich data
+                            for (let formatted of disp.formattedValues) {
+                                data[formatted.mimeType] = formatted.value;
+                            }
+                        } else {
+                            // just as text
+                            data['text/plain'] = disp.value;
                         }
+
                         let output: CellDisplayOutput = {
                             outputKind: CellOutputKind.Rich,
                             data: data,
                         };
-                        outputs.push(output);
+
+                        if (disp.valueId) {
+                            let idx = valueIdToIndex.get(disp.valueId);
+                            if (idx !== undefined) {
+                                // udpate existing value
+                                outputs[idx] = output;
+                            } else {
+                                // add new tracked value
+                                valueIdToIndex.set(disp.valueId, outputs.length);
+                                outputs.push(output);
+                            }
+                        } else {
+                            // raw value, just push it
+                            outputs.push(output);
+                        }
+
                         observer(outputs);
                     }
                     break;
