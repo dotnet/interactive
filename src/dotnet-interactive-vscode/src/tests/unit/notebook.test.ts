@@ -53,7 +53,8 @@ describe('Notebook tests', () => {
                     {
                         outputKind: CellOutputKind.Rich,
                         data: {
-                            'text/html': '2'
+                            'text/html': '2',
+                            'text/plain': 2
                         }
                     }
                 ]);
