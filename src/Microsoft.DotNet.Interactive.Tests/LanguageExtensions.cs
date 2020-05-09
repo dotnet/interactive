@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             {
                 Language.CSharp => "csharp",
                 Language.FSharp => "fsharp",
-                Language.PowerShell => "powershell",
+                Language.PowerShell => "pwsh",
                 _ => null
             };
         }
