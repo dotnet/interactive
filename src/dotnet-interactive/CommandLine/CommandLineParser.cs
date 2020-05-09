@@ -386,6 +386,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseXplot()
                     .UseProfiles(),
                 new[] { "pwsh" });
+                new[] { "powershell" });
 
             compositeKernel.Add(
                 new JavaScriptKernel(),

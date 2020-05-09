@@ -248,10 +248,10 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
 
             kernels.Should()
                    .BeEquivalentTo(
-                       ".NET",
-                       "csharp",
-                       "fsharp",
-                       "powershell",
+                       ".NET", 
+                       "csharp", 
+                       "fsharp", 
+                       "pwsh",
                        "html",
                        "javascript");
         }
