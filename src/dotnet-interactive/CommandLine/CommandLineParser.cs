@@ -357,7 +357,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseJupyterHelpers()
                     .UseWho()
                     .UseXplot()
-                    .UseMathAndLaTeX(),
+                    .UseMathAndLaTeX()
+                    .UseDotNetVariableSharing(),
                 new[] { "c#", "C#" });
 
             compositeKernel.Add(
@@ -368,15 +369,16 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseWho()
                     .UseDefaultNamespaces()
                     .UseXplot()
-                    .UseMathAndLaTeX(),
+                    .UseMathAndLaTeX()
+                    .UseDotNetVariableSharing(),
                 new[] { "f#", "F#" });
 
             compositeKernel.Add(
                 new PowerShellKernel()
                     .UseJupyterHelpers()
                     .UseXplot()
-                    .UseProfiles(),
-                new[] { "pwsh" });
+                    .UseProfiles()
+                    .UseDotNetVariableSharing(),
                 new[] { "powershell" });
 
             compositeKernel.Add(
