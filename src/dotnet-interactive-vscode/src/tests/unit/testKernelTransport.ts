@@ -30,4 +30,8 @@ export class TestKernelTransport {
             }
         }
     }
+
+    dispose() {
+        // noop
+    }
 }

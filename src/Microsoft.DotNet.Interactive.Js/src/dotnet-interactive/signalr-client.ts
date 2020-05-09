@@ -60,6 +60,9 @@ export async function signalTransportFactory(rootUrl: string): Promise<KernelTra
                 token: token,
             };
             return connection.send("submitCommand", JSON.stringify(envelope));
+        },
+
+        dispose: (): void => {
         }
     };
 

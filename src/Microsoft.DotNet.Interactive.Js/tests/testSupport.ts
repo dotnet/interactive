@@ -39,6 +39,9 @@ export class MockKernelTransport implements KernelTransport {
         });
         return Promise.resolve();
     }
+
+    public dispose() {
+    }
 }
 
 export function createMockKernelTransport(rootUrl: string): Promise<KernelTransport> {

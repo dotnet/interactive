@@ -4,17 +4,16 @@ import { DisposableSubscription, KernelCommand, KernelCommandType, KernelEventEn
 
 export class StdioKernelTransport {
     private buffer: string = '';
-    private nextToken: number = 1;
-    private stdin: Writable;
+    private childProcess: cp.ChildProcessWithoutNullStreams;
     private subscribers: Array<KernelEventEnvelopeObserver> = [];
 
     constructor() {
-        let childProcess = cp.spawn('dotnet', ['interactive', 'stdio']);
-        childProcess.on('exit', (code: number, _signal: string) => {
+        this.childProcess = cp.spawn('dotnet', ['interactive', 'stdio']);
+        this.childProcess.on('exit', (code: number, _signal: string) => {
             //
             let x = 1;
         });
-        childProcess.stdout.on('data', (data) => {
+        this.childProcess.stdout.on('data', (data) => {
             let str: string = data.toString();
             this.buffer += str;
 
@@ -33,8 +32,6 @@ export class StdioKernelTransport {
                 }
             }
         });
-
-        this.stdin = childProcess.stdin;
     }
 
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
@@ -58,9 +55,13 @@ export class StdioKernelTransport {
             };
 
             let str = JSON.stringify(submit);
-            this.stdin.write(str);
-            this.stdin.write('\n');
+            this.childProcess.stdin.write(str);
+            this.childProcess.stdin.write('\n');
             resolve();
         });
+    }
+
+    dispose() {
+        this.childProcess.kill();
     }
 }
