@@ -4,7 +4,6 @@ import { NotebookFile, parseNotebook, serializeNotebook, editorLanguages } from 
 import { RawNotebookCell } from '../interfaces';
 import { JupyterNotebook } from '../interfaces/jupyter';
 import { convertFromJupyter } from '../interop/jupyter';
-import { CellOutput } from '../interfaces/vscode';
 import { trimTrailingCarriageReturn } from '../utilities';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {

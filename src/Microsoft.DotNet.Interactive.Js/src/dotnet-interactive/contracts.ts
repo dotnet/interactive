@@ -240,11 +240,14 @@ export interface KernelEventEnvelopeObserver {
     (eventEnvelope: KernelEventEnvelope): void;
 }
 
-export interface DisposableSubscription {
+export interface Disposable {
     dispose(): void;
 }
 
-export interface KernelTransport {
+export interface DisposableSubscription extends Disposable {
+}
+
+export interface KernelTransport extends Disposable {
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
     submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void>;
 }

@@ -34,4 +34,13 @@ export class ClientMapper {
 
         return client;
     }
+
+    closeClient(uri: HasPath) {
+        let key = ClientMapper.keyFromUri(uri);
+        let client = this.clientMap.get(key);
+        if (client) {
+            client.dispose();
+            this.clientMap.delete(key);
+        }
+    }
 }

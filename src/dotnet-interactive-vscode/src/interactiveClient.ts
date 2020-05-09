@@ -157,6 +157,10 @@ export class InteractiveClient {
         return disposable;
     }
 
+    dispose() {
+        this.kernelTransport.dispose();
+    }
+
     private submitCommandAndGetResult<TEvent extends KernelEvent>(command: KernelCommand, commandType: KernelCommandType, expectedEventType: KernelEventType, token: string | undefined): Promise<TEvent> {
         return new Promise<TEvent>(async (resolve, reject) => {
             let handled = false;

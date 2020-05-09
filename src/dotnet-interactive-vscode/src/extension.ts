@@ -8,6 +8,7 @@ import { registerCommands } from './vscode/commands';
 export function activate(context: vscode.ExtensionContext) {
     let clientMapper = new ClientMapper(() => new StdioKernelTransport());
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', new DotNetInteractiveNotebookContentProvider(clientMapper)));
+    context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(registerLanguageProviders(clientMapper));
     registerCommands(context);
 }
