@@ -6,7 +6,7 @@ import { CellOutput, CellOutputKind } from '../../../interfaces/vscode';
 
 suite('Extension Test Suite', () => {
     test('Execute against real kernel', async () => {
-        let clientMapper = new ClientMapper(() => new StdioKernelTransport());
+        let clientMapper = new ClientMapper(() => new StdioKernelTransport('dotnet')); // assume it's globally installed for this test
         let client = clientMapper.getOrAddClient({ path: 'some/path' });
         let code = '1+1';
         let result: Array<CellOutput> = [];
