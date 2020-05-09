@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
     public class PowerShellKernel : 
         DotNetLanguageKernel
     {
-        internal const string DefaultKernelName = "powershell";
+        internal const string DefaultKernelName = "pwsh";
 
         private static readonly CmdletInfo _outDefaultCommand;
         private static readonly PropertyInfo _writeStreamProperty;

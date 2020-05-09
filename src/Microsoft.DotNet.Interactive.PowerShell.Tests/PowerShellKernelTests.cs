@@ -10,6 +10,7 @@ using System.Linq;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using XPlot.Plotly;
 using Xunit;
 using Xunit.Abstractions;
@@ -49,21 +50,25 @@ for ($j = 0; $j -le 4; $j += 4 ) {
     Start-Sleep -Milliseconds 300
 }
 ");
-            await kernel.SendAsync(command);
+            var result = await kernel.SendAsync(command);
 
-            Assert.Collection(KernelEvents,
-                e => e.Should().BeOfType<CodeSubmissionReceived>(),
-                e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-                e => e.Should().BeOfType<DisplayedValueProduced>().Which
-                    .Value.Should().BeOfType<string>().Which
-                    .Should().Match("* Search in Progress* 0% Complete* [ * ] *"),
-                e => e.Should().BeOfType<DisplayedValueUpdated>().Which
-                    .Value.Should().BeOfType<string>().Which
-                    .Should().Match("* Search in Progress* 100% Complete* [ooo*ooo] *"),
-                e => e.Should().BeOfType<DisplayedValueUpdated>().Which
-                    .Value.Should().BeOfType<string>().Which
-                    .Should().Be(string.Empty),
-                e => e.Should().BeOfType<CommandHandled>());
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should().ContainSingle();
+
+            Assert.Collection(events,
+                              e => e.Should().BeOfType<CodeSubmissionReceived>(),
+                              e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                              e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                                    .Value.Should().BeOfType<string>().Which
+                                    .Should().Match("* Search in Progress* 0% Complete* [ * ] *"),
+                              e => e.Should().BeOfType<DisplayedValueUpdated>().Which
+                                    .Value.Should().BeOfType<string>().Which
+                                    .Should().Match("* Search in Progress* 100% Complete* [ooo*ooo] *"),
+                              e => e.Should().BeOfType<DisplayedValueUpdated>().Which
+                                    .Value.Should().BeOfType<string>().Which
+                                    .Should().Be(string.Empty),
+                              e => e.Should().BeOfType<CommandHandled>());
         }
 
         [Fact]
@@ -126,13 +131,16 @@ for ($j = 0; $j -le 4; $j += 4 ) {
 
             await kernel.SendAsync(new SubmitCode("Get-Verb > $null"));
             await kernel.SendAsync(new SubmitCode("echo bar > $null"));
-            await kernel.SendAsync(new SubmitCode("Get-History | % CommandLine"));
+            var result = await kernel.SendAsync(new SubmitCode("Get-History | % CommandLine"));
 
-            var outputs = KernelEvents.OfType<StandardOutputValueProduced>();
+            var outputs = result.KernelEvents
+                                .ToSubscribedList()
+                                .OfType<StandardOutputValueProduced>();
+
             outputs.Should().HaveCount(2);
             Assert.Collection(outputs,
-                e => e.Value.As<string>().Should().Be("Get-Verb > $null" + Environment.NewLine),
-                e => e.Value.As<string>().Should().Be("echo bar > $null" + Environment.NewLine));
+                              e => e.Value.As<string>().Should().Be("Get-Verb > $null" + Environment.NewLine),
+                              e => e.Value.As<string>().Should().Be("echo bar > $null" + Environment.NewLine));
         }
 
         [Fact]

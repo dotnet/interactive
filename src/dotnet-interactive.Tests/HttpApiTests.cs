@@ -289,7 +289,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
                        ".NET", 
                        "csharp", 
                        "fsharp", 
-                       "powershell",
+                       "pwsh",
                        "html",
                        "javascript");
         }
