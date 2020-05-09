@@ -1,15 +1,25 @@
-# dotnet-interactive-vscode README
+👉👉👉 This extension is still **under development**.
+
+👉👉👉 Latest **VS Code Insiders** is required and at times this extension might be broken.
+
+---
+
+# DotNet Interactive Notebooks
+
+This extension adds support for using the `dotnet-interactive` global tool from within VS Code in a notebook-like environment.
+
+### Getting Started
+
+1. Install the [.NET SDK 3.1](https://dotnet.microsoft.com/download/visual-studio-sdks).
+1. Install latest [DotNet Interactive Global Tool](https://www.nuget.org/packages/Microsoft.dotnet-interactive/).
+1. Install latest [VS Code Insiders](https://code.visualstudio.com/insiders/).
+1. Open this directory with `code-insiders` and F5
+1. Open a file with the `.dotnet-interactive` extension.
 
 ### Development
 
-Open this directory in [VS Code Insiders](https://code.visualstudio.com/insiders/) then F5.  The extension is
-triggered by opening an existing file with the `.dotnet-interactive` extension.
-
-The `dotnet-interactive` global tool is assumed to be installed and on the path.
-
-Some APIs used in this extension are only in VS Code Insiders builds, and the file `./src/vscode.proposed.d.ts` is
-required to be present.  A fresh copy of that file can be obtained from https://github.com/microsoft/vscode/blob/master/src/vs/vscode.proposed.d.ts.
-A convenience script is located at `./update-proposed-api.ps1` that will fetch a fresh copy.
+Same steps as in [Getting Started](#Getting-Started).  Periodically the notebook APIs will change; the latest API can
+be obtained by running the `.\update-proposed-api.ps1` script.
 
 ### Deployment
 
