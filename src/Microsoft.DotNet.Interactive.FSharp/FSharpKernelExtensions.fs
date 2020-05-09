@@ -51,7 +51,12 @@ open System.Linq"
 
     [<Extension>]
     static member UseKernelHelpers(kernel: FSharpKernel) =
-        let code = openNamespaceOrType (typeof<FSharpKernelHelpers.IMarker>.DeclaringType.Namespace + "." + nameof(FSharpKernelHelpers))
+        let code = 
+            [
+                referenceFromType typeof<FSharpKernelHelpers.IMarker>
+                openNamespaceOrType (typeof<FSharpKernelHelpers.IMarker>.DeclaringType.Namespace + "." + nameof(FSharpKernelHelpers))
+            ] |> List.reduce(fun x y -> x + Environment.NewLine + y)
+
         kernel.DeferCommand(SubmitCode code) 
         kernel
 
