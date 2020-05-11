@@ -2,7 +2,7 @@
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab) [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/interactive/interactive-ci?branchName=master)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=744&branchName=master)
 
-.NET Interactive gives developers, data scientists, makers, and learners tools to write code and see the results immediately. You can explore data, experiment with code, and try new ideas. Use .NET Interactive to build .NET Jupyter notebooks or custom interactive coding experiences including bots and custom REPLs.
+.NET Interactive is a group of tools and APIs that enables users to write and learn code, explore data, and share code across multiple products and roles. Use .NET interactive to create interactive coding experiences: notebooks, web sites, bots, REPLs, and more.
 
 ## Jupyter Notebooks with .NET <img src ="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Jupyter_logo.svg/207px-Jupyter_logo.svg.png" height="1.5em" alt="Project Jupyter" >
 
@@ -11,7 +11,9 @@
 <img src = "https://user-images.githubusercontent.com/547415/78056370-ddd0cc00-7339-11ea-9379-c40f8b5c1ae5.png" width = "70%">
 <img src="https://user-images.githubusercontent.com/2546640/67912370-1b99b080-fb60-11e9-9839-0058d02488cf.png" width="62%">
 
-# Jupyter Notebooks with .NET Core | Preview 2 
+# Notebooks with .NET Core
+
+## Jupyter and nteract
 
 There are several ways to get started using .NET with Jupyter.
 

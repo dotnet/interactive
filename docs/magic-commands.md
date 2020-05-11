@@ -1,5 +1,7 @@
 # Directives, or "magic commands"
 
+<!-- TODO: Remove "directive" naming -->
+
 A directive is a scriptable shortcut to a more complex behavior. Directives are similar to the magic command concept familiar to IPython and Jupyter users. There is no distinction in .NET Interactive between a "cell magic" and a "line magic". 
 
 Directives must always occur at the beginning of a line and are prefixed with either `#!` or, less commonly, `#`. (The latter occurs only when unifying behaviors with language-specific compiler directives such as `#r`, implemented in both C# and F# script.)

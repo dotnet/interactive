@@ -1,4 +1,4 @@
-# Create .NET Jupyter Notebooks locally
+# Create .NET Jupyter Notebooks on your machine
 
 ## Installing Jupyter and .NET Interactive 
 
