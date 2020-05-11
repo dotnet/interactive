@@ -164,8 +164,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                     case '\r':
                     case '\n':
-                        _textWindow.Advance();
-
                         if (foundArgs)
                         {
                             FlushToken(TokenKind.DirectiveArgs);
