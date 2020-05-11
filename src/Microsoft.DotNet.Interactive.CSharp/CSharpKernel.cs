@@ -314,7 +314,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             ScriptOptions = ScriptOptions.AddReferences(references);
         }
 
-        PackageRestoreContext ISupportNuget.PackageRestoreContext => _packageRestoreContext.Value;
+        public PackageRestoreContext PackageRestoreContext => _packageRestoreContext.Value;
 
 
         private (Document document, int offset) GetDocumentWithOffsetFromCode(string code)
