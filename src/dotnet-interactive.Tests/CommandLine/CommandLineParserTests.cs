@@ -219,7 +219,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public async Task jupyter_command_does_enable_http_api_by_default()
+        public async Task jupyter_command_enables_http_api_by_default()
         {
             await  _parser.InvokeAsync($"jupyter {_connectionFile}");
 
