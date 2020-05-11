@@ -81,11 +81,12 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         }
 
         [Fact]
-        public void ScriptContent_type_is_wrapped_when_http_is_enabled()
+        public void ScriptContent_type_is_wrapped_when_http_is_enabled_and_flavor_is_jupyter()
         {
             var frontendEnvironment = new BrowserFrontendEnvironment
             {
-                ApiUri = new Uri("http://12.12.12.12:4242")
+                ApiUri = new Uri("http://12.12.12.12:4242"),
+                Flavor = "jupyter"
             };
             CommandLineParser.SetUpFormatters(frontendEnvironment, new StartupOptions(httpPort: new HttpPort(4242)));
             var script = new ScriptContent("alert('hello');");

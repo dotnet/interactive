@@ -184,7 +184,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context)
                 {
-                    services = RegisterKernelInServiceCollection(services, startupOptions, options.DefaultKernel);
+                    services = RegisterKernelInServiceCollection(services, startupOptions, options.DefaultKernel,  isJupyterCommand: true);
 
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
                         .AddSingleton<FrontendEnvironment>(c => c.GetService<BrowserFrontendEnvironment>())
@@ -251,7 +251,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     (startupOptions, options, console, context) =>
                     {
                         RegisterKernelInServiceCollection(services, startupOptions, options.DefaultKernel);
-
                         return startHttp(startupOptions, console, startServer, context);
                     });
 
@@ -312,12 +311,17 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             }
         }
 
-        private static IServiceCollection RegisterKernelInServiceCollection(IServiceCollection services, StartupOptions startupOptions, string defaultKernel, Action<KernelBase> afterKernelCreation = null)
+        private static IServiceCollection RegisterKernelInServiceCollection(IServiceCollection services, StartupOptions startupOptions, string defaultKernel, Action<KernelBase> afterKernelCreation = null, bool isJupyterCommand = false)
         {
             services
                 .AddSingleton(_ =>
                 {
                     var frontendEnvironment = new BrowserFrontendEnvironment();
+                    if (isJupyterCommand)
+                    {
+                        frontendEnvironment.Flavor = "jupyter";
+                    }
+
                     return frontendEnvironment;
                 })
                 .AddSingleton(c =>
@@ -417,7 +421,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                     Formatter<LaTeXString>.Register((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
                     Formatter<MathString>.Register((math, writer) => writer.Write(math.ToString()), "text/latex");
-                    if (startupOptions.EnableHttpApi)
+                    if (startupOptions.EnableHttpApi && browserFrontendEnvironment.Flavor == "jupyter")
                     {
                         Formatter<ScriptContent>.Register((script, writer) =>
                         {
