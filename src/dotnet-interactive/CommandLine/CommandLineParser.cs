@@ -185,29 +185,28 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context)
                 {
                     services = RegisterKernelInServiceCollection(
-                        services, 
-                        startupOptions, 
+                        services,
+                        startupOptions,
                         options.DefaultKernel,
                         serviceCollection =>
                         {
                             serviceCollection.AddSingleton(_ => new JupyterFrontedEnvironment());
-                            serviceCollection.AddSingleton<BrowserFrontendEnvironment>(c =>
+                            serviceCollection.AddSingleton<FrontendEnvironment>(c =>
                                 c.GetService<JupyterFrontedEnvironment>());
                         });
 
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
-                        .AddSingleton<FrontendEnvironment>(c => c.GetService<BrowserFrontendEnvironment>())
-                            .AddSingleton(c =>
-                            {
-                                return CommandScheduler.Create<JupyterRequestContext>(delivery => c.GetRequiredService<ICommandHandler<JupyterRequestContext>>()
-                                                                                                   .Trace()
-                                                                                                   .Handle(delivery));
-                            })
-                            .AddSingleton(c => new JupyterRequestContextHandler(
-                                                  c.GetRequiredService<IKernel>())
-                                              .Trace())
-                            .AddSingleton<IHostedService, Shell>()
-                            .AddSingleton<IHostedService, Heartbeat>();
+                        .AddSingleton(c =>
+                        {
+                            return CommandScheduler.Create<JupyterRequestContext>(delivery => c.GetRequiredService<ICommandHandler<JupyterRequestContext>>()
+                                .Trace()
+                                .Handle(delivery));
+                        })
+                        .AddSingleton(c => new JupyterRequestContextHandler(
+                                c.GetRequiredService<IKernel>())
+                            .Trace())
+                        .AddSingleton<IHostedService, Shell>()
+                        .AddSingleton<IHostedService, Heartbeat>();
 
                     return jupyter(startupOptions, console, startServer, context);
                 }
@@ -269,6 +268,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                 var frontendEnvironment = new BrowserFrontendEnvironment();
                                 return frontendEnvironment;
                             });
+                            serviceCollection.AddSingleton<FrontendEnvironment>(c => c.GetRequiredService<BrowserFrontendEnvironment>());
                         });
                         return startHttp(startupOptions, console, startServer, context);
                     });
@@ -336,7 +336,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             services
                 .AddSingleton(c =>
                 {
-                    var frontendEnvironment = c.GetRequiredService<BrowserFrontendEnvironment>();
+                    var frontendEnvironment = c.GetRequiredService<FrontendEnvironment>();
                     var kernel = CreateKernel(defaultKernel, frontendEnvironment, startupOptions,
                         c.GetService<HttpProbingSettings>());
 

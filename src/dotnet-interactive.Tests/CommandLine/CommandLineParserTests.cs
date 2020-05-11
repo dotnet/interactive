@@ -169,7 +169,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         {
             await _parser.InvokeAsync($"http");
 
-            using var scope = new AssertionScope();
             _serviceCollection
                 .FirstOrDefault(s => s.ServiceType == typeof(BrowserFrontendEnvironment))
                 .Should()
@@ -182,7 +181,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         {
             await _parser.InvokeAsync($"http");
 
-            using var scope = new AssertionScope();
             _serviceCollection
                 .FirstOrDefault(s => s.ServiceType == typeof(JupyterFrontedEnvironment))
                 .Should()
@@ -213,7 +211,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 .NotBeNull();
 
             _serviceCollection
-                .FirstOrDefault(s => s.ServiceType == typeof(BrowserFrontendEnvironment))
+                .FirstOrDefault(s => s.ServiceType == typeof(FrontendEnvironment))
                 .Should()
                 .NotBeNull();
 
@@ -223,6 +221,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         public async Task jupyter_command_returns_error_if_connection_file_path_is_not_passed()
         {
             var testConsole = new TestConsole();
+            
             await _parser.InvokeAsync("jupyter", testConsole);
 
             testConsole.Error.ToString().Should().Contain("Required argument missing for command: jupyter");
