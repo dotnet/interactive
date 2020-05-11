@@ -9,14 +9,8 @@ A number of APIs are available over HTTP in `dotnet-interactive`. You can enable
 dotnet interactive http                                        | Enabled on auto-selected port
 dotnet interactive http --http-port *                          | Enabled on auto-selected port
 dotnet interactive http --http-port 1234                       | Enabled on port 1234
-dotnet interactive http --http-port-range 8001-9000            | UNSUPPORTED
 dotnet interactive stdio                                       | Disabled
-dotnet interactive stdio --http-port *                         | UNSUPPORTED
-dotnet interactive stdio --http-port 1234                      | UNSUPPORTED
-dotnet interactive stdio --http-port-range 8001-9000           | UNSUPPORTED
 dotnet interactive jupyter                                     | Enabled on autoselected port between 1000 and 3000
-dotnet interactive jupyter --http-port *                       | UNSUPPORTED
-dotnet interactive jupyter --http-port 1234                    | UNSUPPORTED
 dotnet interactive jupyter --http-port-range 8001-9000         | Enabled on autoselected port between 8001 and 9000
 
 When installing `dotnet-interactive` as a Jupyter kernel, you can also configure the HTTP API's availability when the kernel is started, as follows: 
