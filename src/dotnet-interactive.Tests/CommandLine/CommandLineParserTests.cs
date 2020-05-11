@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public async Task http_command_does_not_registers_JupyterFrontedEnvironment()
+        public async Task http_command_does_not_register_JupyterFrontedEnvironment()
         {
             await _parser.InvokeAsync($"http");
 
