@@ -3,9 +3,9 @@
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine
 {
-    public class PortRange
+    public class HttpPortRange
     {
-        public PortRange(int start, int end)
+        public HttpPortRange(int start, int end)
         {
             Start = start;
             End = end;
@@ -13,5 +13,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
         public int Start { get;  }
         public int End { get;  }
+        public static HttpPortRange Default { get; } = new HttpPortRange(1000,3000);
     }
 }
