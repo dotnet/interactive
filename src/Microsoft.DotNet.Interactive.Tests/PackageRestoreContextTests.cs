@@ -20,13 +20,10 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
         }
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task Returns_new_references_if_they_are_added(Language language)
+        [Fact]
+        public async Task Returns_new_references_if_they_are_added()
         {
-            var kernel = CreateBaseKernel(language) as ISupportNuget;
-            using var restoreContext = new PackageRestoreContext(kernel);
+            using var restoreContext = new PackageRestoreContext();
             var added = restoreContext.GetOrAddPackageReference("FluentAssertions", "5.7.0");
             added.Should().NotBeNull();
 
@@ -45,13 +42,10 @@ namespace Microsoft.DotNet.Interactive.Tests
                               r.PackageVersion == "5.7.0");
         }
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task Returns_references_when_package_version_is_not_specified(Language language)
+        [Fact]
+        public async Task Returns_references_when_package_version_is_not_specified()
         {
-            var kernel = CreateBaseKernel(language) as ISupportNuget;
-            using var restoreContext = new PackageRestoreContext(kernel);
+            using var restoreContext = new PackageRestoreContext();
             var added = restoreContext.GetOrAddPackageReference("NewtonSoft.Json");
             added.Should().NotBeNull();
 
@@ -69,13 +63,10 @@ namespace Microsoft.DotNet.Interactive.Tests
                               !string.IsNullOrWhiteSpace(r.PackageVersion));
         }
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task Returns_failure_if_package_installation_fails(Language language)
+        [Fact]
+        public async Task Returns_failure_if_package_installation_fails()
         {
-            var kernel = CreateBaseKernel(language) as ISupportNuget;
-            using var restoreContext = new PackageRestoreContext(kernel);
+            using var restoreContext = new PackageRestoreContext();
             var added = restoreContext.GetOrAddPackageReference("not-a-real-package-definitely-not", "5.7.0");
             added.Should().NotBeNull();
 
@@ -84,13 +75,10 @@ namespace Microsoft.DotNet.Interactive.Tests
             result.Errors.Should().NotBeEmpty();
         }
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task Returns_failure_if_adding_package_twice_at_different_versions(Language language)
+        [Fact]
+        public async Task Returns_failure_if_adding_package_twice_at_different_versions()
         {
-            var kernel = CreateBaseKernel(language) as ISupportNuget;
-            using var restoreContext = new PackageRestoreContext(kernel);
+            using var restoreContext = new PackageRestoreContext();
             var added = restoreContext.GetOrAddPackageReference("another-not-a-real-package-definitely-not", "5.7.0");
             added.Should().NotBeNull();
 
@@ -102,13 +90,10 @@ namespace Microsoft.DotNet.Interactive.Tests
             result.Errors.Should().NotBeEmpty();
         }
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task Packages_from_previous_requests_are_not_returned_in_subsequent_results(Language language)
+        [Fact]
+        public async Task Packages_from_previous_requests_are_not_returned_in_subsequent_results()
         {
-            var kernel = CreateBaseKernel(language) as ISupportNuget;
-            using var restoreContext = new PackageRestoreContext(kernel);
+            using var restoreContext = new PackageRestoreContext();
             var added = restoreContext.GetOrAddPackageReference("FluentAssertions", "5.7.0");
             added.Should().NotBeNull();
 
@@ -128,13 +113,10 @@ namespace Microsoft.DotNet.Interactive.Tests
                         .NotContain(r => r.PackageName == "FluentAssertions");
         }
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task Can_get_path_to_nuget_packaged_assembly(Language language)
+        [Fact]
+        public async Task Can_get_path_to_nuget_packaged_assembly()
         {
-            var kernel = CreateBaseKernel(language) as ISupportNuget;
-            using var restoreContext = new PackageRestoreContext(kernel);
+            using var restoreContext = new PackageRestoreContext();
             restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
 
             await restoreContext.RestoreAsync();
@@ -159,13 +141,10 @@ namespace Microsoft.DotNet.Interactive.Tests
             path.Exists.Should().BeTrue();
         }
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task Can_get_path_to_nuget_package_root(Language language)
+        [Fact]
+        public async Task Can_get_path_to_nuget_package_root()
         {
-            var kernel = CreateBaseKernel(language) as ISupportNuget;
-            using var restoreContext = new PackageRestoreContext(kernel);
+            using var restoreContext = new PackageRestoreContext();
             restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
 
             await restoreContext.RestoreAsync();
@@ -181,13 +160,10 @@ namespace Microsoft.DotNet.Interactive.Tests
             path.Exists.Should().BeTrue();
         }
 
-        [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task Can_get_path_to_nuget_package_when_multiple_packages_are_added(Language language)
+        [Fact]
+        public async Task Can_get_path_to_nuget_package_when_multiple_packages_are_added()
         {
-            var kernel = CreateBaseKernel(language) as ISupportNuget;
-            using var restoreContext = new PackageRestoreContext(kernel);
+            using var restoreContext = new PackageRestoreContext();
             restoreContext.GetOrAddPackageReference("fluentAssertions", "5.7.0");
             restoreContext.GetOrAddPackageReference("htmlagilitypack", "1.11.12");
 
@@ -207,9 +183,102 @@ namespace Microsoft.DotNet.Interactive.Tests
             path.Exists.Should().BeTrue();
         }
 
-        // TODO: (PackageRestoreContextTests) add the same package twice
-        // TODO: (PackageRestoreContextTests) add the same package twice, once with version specified and once unspecified
-        // TODO: (PackageRestoreContextTests) add the same package twice, lower version then higher version
-        // TODO: (PackageRestoreContextTests) add the same package twice, higher version then lower version
+        [Fact]
+        public async Task Can_add_to_list_of_added_sources()
+        {
+            using var restoreContext = new PackageRestoreContext();
+            restoreContext.AddRestoreSource("https://completely FakerestoreSource");
+            await restoreContext.RestoreAsync();
+
+            var restoreSources = restoreContext.RestoreSources;
+            restoreSources.Should()
+                          .ContainSingle("https://completely FakerestoreSource");
+        }
+
+        [Fact]
+        public async Task Can_add_same_source_to_list_of_added_sources_without_error()
+        {
+            using var restoreContext = new PackageRestoreContext();
+            restoreContext.AddRestoreSource("https://completely FakerestoreSource");
+            restoreContext.AddRestoreSource("https://completely FakerestoreSource");
+
+            await restoreContext.RestoreAsync();
+            var restoreSources = restoreContext.RestoreSources;
+            restoreSources.Should()
+                          .ContainSingle("https://completely FakerestoreSource");
+        }
+
+        [Fact]
+        public async Task Allows_duplicate_package_specifications()
+        {
+            using var restoreContext = new PackageRestoreContext();
+            restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0-preview");
+            restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0-preview");
+
+            await restoreContext.RestoreAsync();
+
+            var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
+            resolvedPackageReferences.Should()
+                                     .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0-preview");
+        }
+
+
+        [Fact]
+        // Question:   should it not throw, or is ignore sufficient
+        public async Task Ignores__subsequent_package_specifications_with_different_higer_version()
+        {
+            using var restoreContext = new PackageRestoreContext();
+            restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0-preview");
+            restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.1-preview");
+
+            await restoreContext.RestoreAsync();
+
+            var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
+            resolvedPackageReferences.Should()
+                                     .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0-preview");
+        }
+
+        [Fact]
+        public async Task Disallows_package_specifications_with_with_different_lower_version()
+        {
+            using var restoreContext = new PackageRestoreContext();
+            restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.17.0-preview");
+            restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0-preview");
+            await restoreContext.RestoreAsync();
+
+            var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
+            resolvedPackageReferences.Should()
+                                     .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.17.0-preview");
+        }
+
+        [Fact]
+        public async Task Disallows_package_specifications_with_with_different_lower_unspecified_version_first()
+        {
+            using var restoreContext = new PackageRestoreContext();
+            restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "*");
+            restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0-preview");
+
+            await restoreContext.RestoreAsync();
+            var restoreSources = restoreContext.RestoreSources;
+
+            var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
+            resolvedPackageReferences.Should()
+                                     .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion != "0.16.0-preview");
+        }
+
+        [Fact]
+        public async Task Disallows_package_specifications_with_with_different_lower_unspecified_version_last()
+        {
+            using var restoreContext = new PackageRestoreContext();
+            restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0-preview");
+            restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "*");
+
+            await restoreContext.RestoreAsync();
+            var restoreSources = restoreContext.RestoreSources;
+
+            var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
+            resolvedPackageReferences.Should()
+                                     .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0-preview");
+        }
     }
 }

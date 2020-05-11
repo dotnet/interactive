@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.DotNet.Interactive.FSharp
@@ -31,18 +31,19 @@ type FSharpKernel() as this =
 
     let variables = HashSet<string>()
 
-    let createScript registerForDisposal  =  
+    let createScript registerForDisposal =  
         let script = lock lockObj (fun () -> new FSharpScript(additionalArgs=[|"/langversion:preview"|]))
-
         let valueBoundHandler = new Handler<(obj * Type * string)>(fun _ (_, _, name) -> variables.Add(name) |> ignore)
         do script.ValueBound.AddHandler valueBoundHandler
-        do registerForDisposal(fun () -> script.ValueBound.RemoveHandler valueBoundHandler)
+        do registerForDisposal(fun () ->
+            script.ValueBound.RemoveHandler valueBoundHandler
+            (script :> IDisposable).Dispose())
         script
+
+    let script = lazy createScript this.RegisterForDisposal
 
     let extensionLoader: AssemblyBasedExtensionLoader = AssemblyBasedExtensionLoader()
 
-    let script = lazy createScript this.RegisterForDisposal
-    do base.RegisterForDisposal(fun () -> if script.IsValueCreated then (script.Value :> IDisposable).Dispose())
     let mutable cancellationTokenSource = new CancellationTokenSource()
 
     let kindString (glyph: FSharpGlyph) =
@@ -128,21 +129,12 @@ type FSharpKernel() as this =
             context.Publish(CompletionRequestCompleted(completionItems, requestCompletion))
         }
 
-    let mutable _assemblyProbingPaths = Unchecked.defaultof<AssemblyResolutionProbe>
-    let mutable _nativeProbingRoots = Unchecked.defaultof<NativeResolutionProbe>
+    let createPackageRestoreContext registerForDisposal =
+        let packageRestoreContext = new PackageRestoreContext()
+        do registerForDisposal(fun () -> packageRestoreContext.Dispose())
+        packageRestoreContext
 
-    let dependencies =
-        let createDependencyProvider () =
-            // These may not be set to null, if they are it is a product coding error
-            // ISupportNuget.Initialize must be invoked prior to creating the DependencyManager
-            // With non null funcs
-            if isNull _assemblyProbingPaths then
-                raise (new InvalidOperationException("_assemblyProbingPaths is null"))
-
-            if isNull _nativeProbingRoots then
-                raise (new InvalidOperationException("_nativeProbingRoots is null"))
-            new DependencyProvider(_assemblyProbingPaths, _nativeProbingRoots)
-        lazy (createDependencyProvider ())
+    let _packageRestoreContext = lazy createPackageRestoreContext this.RegisterForDisposal
 
     member _.GetCurrentVariable(variableName: string) =
         let result, _errors =
@@ -177,20 +169,16 @@ type FSharpKernel() as this =
     override _.SetVariableAsync(name: string, value: Object) : Task = 
         raise (NotImplementedException())
 
+    member _.RestoreSources = _packageRestoreContext.Value.RestoreSources;
+
+    member _.RequestedPackageReferences = _packageRestoreContext.Value.RequestedPackageReferences;
+
+    member _.ResolvedPackageReferences = _packageRestoreContext.Value.ResolvedPackageReferences;
+
+
+    // Integrate nuget package management to the F# Kernel
     interface ISupportNuget with
-        member this.Initialize (assemblyProbingPaths: AssemblyResolutionProbe, nativeProbingRoots: NativeResolutionProbe) =
-            // These may not be set to null, if they are it is a product coding error
-            // ISupportNuget.Initialize must be invoked prior to creating the DependencyManager
-            // With non null funcs
-            if isNull assemblyProbingPaths then
-                raise (ArgumentNullException("assemblyProbingPaths"))
-            if isNull nativeProbingRoots then
-                raise (ArgumentNullException("nativeProbingRoots"))
-
-            _assemblyProbingPaths <- assemblyProbingPaths
-            _nativeProbingRoots <- nativeProbingRoots
-
-        member this.RegisterResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
+        member _.RegisterResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
             // Generate #r and #I from packageReferences
             let sb = StringBuilder()
             let hashset = HashSet()
@@ -212,12 +200,7 @@ type FSharpKernel() as this =
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command)
 
-        //     Resolve reference for a list of package manager lines
-        member this.Resolve(packageManagerTextLines:IEnumerable<string>, executionTfm: string, reportError: ResolvingErrorReport): IResolveDependenciesResult =
-            let idm = dependencies.Force().TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget")
-            match idm with
-            | null -> raise (new InvalidOperationException("Internal error - unable to locate the nuget package manager, please try to reinstall."))
-            | idm -> dependencies.Force().Resolve(idm, ".fsx", packageManagerTextLines, reportError, executionTfm)
+        member _.PackageRestoreContext = _packageRestoreContext.Value
 
     interface IExtensibleKernel with
         member this.LoadExtensionsFromDirectoryAsync(directory:DirectoryInfo, context:KernelInvocationContext) =

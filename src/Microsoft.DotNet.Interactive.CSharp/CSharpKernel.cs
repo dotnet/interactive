@@ -44,9 +44,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             new CSharpParseOptions(LanguageVersion.Default, kind: SourceCodeKind.Script);
 
         private WorkspaceFixture _fixture;
-        private AssemblyResolutionProbe _assemblyProbingPaths;
-        private readonly Lazy<DependencyProvider> _dependencies;
-        private NativeResolutionProbe _nativeProbingRoots;
+        private Lazy<PackageRestoreContext> _packageRestoreContext;
 
         internal ScriptOptions ScriptOptions =
             ScriptOptions.Default
@@ -70,10 +68,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public CSharpKernel() : base(DefaultKernelName)
         {
-            _dependencies = new Lazy<DependencyProvider>(GetDependencyProvider);
-
+            _packageRestoreContext = new Lazy<PackageRestoreContext>(() => new PackageRestoreContext());
             RegisterForDisposal(() =>
             {
+                _packageRestoreContext?.Value?.Dispose();
+                _packageRestoreContext = null;
                 ScriptState = null;
             });
         }
@@ -93,7 +92,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             if (ScriptState?.Variables
                            .LastOrDefault(v => v.Name == name) is { } variable)
             {
-                value = (T) variable.Value;
+                value = (T)variable.Value;
                 return true;
             }
 
@@ -104,7 +103,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         public override async Task SetVariableAsync(string name, object value)
         {
             var csharpTypeDeclaration = new StringWriter();
-            
+
             value.GetType().WriteCSharpDeclarationTo(csharpTypeDeclaration);
 
             await RunAsync($"{csharpTypeDeclaration} {name} = default;");
@@ -219,7 +218,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         }
 
         private async Task RunAsync(
-            string code, 
+            string code,
             CancellationToken cancellationToken = default,
             Func<Exception, bool> catchException = default)
         {
@@ -305,36 +304,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 context);
         }
 
-        private DependencyProvider GetDependencyProvider()
-        {
-            // These may not be set to null, if they are it is a product coding error
-            // ISupportNuget.Initialize must be invoked prior to creating the DependencyManager
-            if (_assemblyProbingPaths == null)
-            {
-                throw new ArgumentNullException(nameof(_assemblyProbingPaths));
-            }
-            if (_nativeProbingRoots == null)
-            {
-                throw new ArgumentNullException(nameof(_nativeProbingRoots));
-            }
-
-            var dependencyProvider = new DependencyProvider(
-                _assemblyProbingPaths, 
-                _nativeProbingRoots);
-
-            RegisterForDisposal(dependencyProvider);
-
-            return dependencyProvider;
-        }
-
-        // Set assemblyProbingPaths, nativeProbingRoots for Kernel.
-        // These values are functions that return the list of discovered assemblies, and package roots
-        // They are used by the dependecymanager for Assembly and Native dll resolving
-        void ISupportNuget.Initialize(AssemblyResolutionProbe assemblyProbingPaths, NativeResolutionProbe nativeProbingRoots)
-        {
-            _assemblyProbingPaths = assemblyProbingPaths ?? throw new ArgumentNullException(nameof(assemblyProbingPaths));
-            _nativeProbingRoots = nativeProbingRoots ?? throw new ArgumentNullException(nameof(nativeProbingRoots));
-        }
 
         void ISupportNuget.RegisterResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
         {
@@ -345,18 +314,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
             ScriptOptions = ScriptOptions.AddReferences(references);
         }
 
-        IResolveDependenciesResult ISupportNuget.Resolve(IEnumerable<string> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
-        {
-            IDependencyManagerProvider iDependencyManager = _dependencies.Value.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
-            if (iDependencyManager == null)
-            {
-                // If this happens it is because of a bug in the Dependency provider. or deployment failed to deploy the nuget provider dll.
-                // We guarantee the presence of the nuget provider, by shipping it with the notebook product
-                throw new InvalidOperationException("Internal error - unable to locate the nuget package manager, please try to reinstall.");
-            }
+        PackageRestoreContext ISupportNuget.PackageRestoreContext => _packageRestoreContext.Value;
 
-            return _dependencies.Value.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm);
-        }
 
         private (Document document, int offset) GetDocumentWithOffsetFromCode(string code)
         {
@@ -390,5 +349,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
         private bool HasReturnValue =>
             ScriptState != null &&
             (bool)_hasReturnValueMethod.Invoke(ScriptState.Script, null);
+
+        public IEnumerable<string> RestoreSources => ((ISupportNuget) this).PackageRestoreContext.RestoreSources;
+
+        public IEnumerable<PackageReference> RequestedPackageReferences => ((ISupportNuget)this).PackageRestoreContext.RequestedPackageReferences;
+
+        public IEnumerable<ResolvedPackageReference> ResolvedPackageReferences => ((ISupportNuget)this).PackageRestoreContext.ResolvedPackageReferences;
     }
 }
