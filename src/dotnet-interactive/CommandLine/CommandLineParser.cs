@@ -184,7 +184,16 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context)
                 {
-                    services = RegisterKernelInServiceCollection(services, startupOptions, options.DefaultKernel,  isJupyterCommand: true);
+                    services = RegisterKernelInServiceCollection(
+                        services, 
+                        startupOptions, 
+                        options.DefaultKernel,
+                        serviceCollection =>
+                        {
+                            serviceCollection.AddSingleton(_ => new JupyterFrontedEnvironment());
+                            serviceCollection.AddSingleton<BrowserFrontendEnvironment>(c =>
+                                c.GetService<JupyterFrontedEnvironment>());
+                        });
 
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
                         .AddSingleton<FrontendEnvironment>(c => c.GetService<BrowserFrontendEnvironment>())
@@ -250,7 +259,17 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 command.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
                     (startupOptions, options, console, context) =>
                     {
-                        RegisterKernelInServiceCollection(services, startupOptions, options.DefaultKernel);
+                        RegisterKernelInServiceCollection(
+                            services,
+                            startupOptions,
+                            options.DefaultKernel, serviceCollection =>
+                        {
+                            serviceCollection.AddSingleton(_ =>
+                            {
+                                var frontendEnvironment = new BrowserFrontendEnvironment();
+                                return frontendEnvironment;
+                            });
+                        });
                         return startHttp(startupOptions, console, startServer, context);
                     });
 
@@ -311,19 +330,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             }
         }
 
-        private static IServiceCollection RegisterKernelInServiceCollection(IServiceCollection services, StartupOptions startupOptions, string defaultKernel, Action<KernelBase> afterKernelCreation = null, bool isJupyterCommand = false)
+        private static IServiceCollection RegisterKernelInServiceCollection(IServiceCollection services, StartupOptions startupOptions, string defaultKernel, Action<IServiceCollection> configureFrontedEnvironment, Action<KernelBase> afterKernelCreation = null)
         {
+            configureFrontedEnvironment(services);
             services
-                .AddSingleton(_ =>
-                {
-                    var frontendEnvironment = new BrowserFrontendEnvironment();
-                    if (isJupyterCommand)
-                    {
-                        frontendEnvironment.Flavor = "jupyter";
-                    }
-
-                    return frontendEnvironment;
-                })
                 .AddSingleton(c =>
                 {
                     var frontendEnvironment = c.GetRequiredService<BrowserFrontendEnvironment>();
@@ -421,13 +431,13 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                     Formatter<LaTeXString>.Register((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
                     Formatter<MathString>.Register((math, writer) => writer.Write(math.ToString()), "text/latex");
-                    if (startupOptions.EnableHttpApi && browserFrontendEnvironment.Flavor == "jupyter")
+                    if (startupOptions.EnableHttpApi && browserFrontendEnvironment is JupyterFrontedEnvironment jupyterFrontedEnvironment)
                     {
                         Formatter<ScriptContent>.Register((script, writer) =>
                         {
                             var fullCode = $@"if (typeof window.createDotnetInteractiveClient === typeof Function) {{
-createDotnetInteractiveClient('{browserFrontendEnvironment.ApiUri.AbsoluteUri}').then(function (interactive) {{
-let notebookScope = getDotnetInteractiveScope('{browserFrontendEnvironment.ApiUri.AbsoluteUri}');
+createDotnetInteractiveClient('{jupyterFrontedEnvironment.DiscoveredUri.AbsoluteUri}').then(function (interactive) {{
+let notebookScope = getDotnetInteractiveScope('{jupyterFrontedEnvironment.DiscoveredUri.AbsoluteUri}');
 {script.ScriptValue}
 }});
 }}";

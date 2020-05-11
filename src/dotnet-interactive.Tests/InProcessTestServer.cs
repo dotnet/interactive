@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly ServiceCollection _serviceCollection = new ServiceCollection();
 
-        public static InProcessTestServer StartServer(string args)
+        public static InProcessTestServer StartServer(string args, Action<IServiceCollection> servicesSetup = null)
         {
             var server = new InProcessTestServer();
 
@@ -30,29 +30,29 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 server._serviceCollection,
                 (startupOptions, invocationContext) =>
                 {
+                    servicesSetup?.Invoke(server._serviceCollection);
                     builder = Program.ConstructWebHostBuilder(
-                        startupOptions, 
+                        startupOptions,
                         server._serviceCollection);
                 });
 
             parser.Invoke(args, server.Console);
 
             server._host = new TestServer(builder);
-            server.Kernel = server._host.Services.GetRequiredService<IKernel>();
-            server.FrontendEnvironment = server._host.Services.GetRequiredService<BrowserFrontendEnvironment>();
+
             return server;
         }
 
         private InProcessTestServer()
         {
         }
-        public BrowserFrontendEnvironment FrontendEnvironment { get; private set; }
+        public BrowserFrontendEnvironment FrontendEnvironment => _host.Services.GetService<BrowserFrontendEnvironment>();
 
         public IConsole Console { get; } = new TestConsole();
 
         public HttpClient HttpClient => _host.CreateClient();
 
-        public IKernel Kernel { get; private set; }
+        public IKernel Kernel => _host.Services.GetService<IKernel>();
 
         public void Dispose()
         {

@@ -20,9 +20,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
         public FormatterConfigurationTests()
         {
-            var frontendEnvironment = new BrowserFrontendEnvironment
+            var frontendEnvironment = new JupyterFrontedEnvironment
             {
-                ApiUri = new Uri("http://12.12.12.12:4242")
+                DiscoveredUri = new Uri("http://12.12.12.12:4242")
             };
 
             CommandLineParser.SetUpFormatters(frontendEnvironment, new StartupOptions());
@@ -81,13 +81,13 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         }
 
         [Fact]
-        public void ScriptContent_type_is_wrapped_when_http_is_enabled_and_flavor_is_jupyter()
+        public void ScriptContent_type_is_wrapped_when_http_and_the_frontendEnvironment_is_JupyterFrontedEnvironment()
         {
-            var frontendEnvironment = new BrowserFrontendEnvironment
+            var frontendEnvironment = new JupyterFrontedEnvironment
             {
-                ApiUri = new Uri("http://12.12.12.12:4242"),
-                Flavor = "jupyter"
+                DiscoveredUri = new Uri("http://12.12.12.12:4242")
             };
+
             CommandLineParser.SetUpFormatters(frontendEnvironment, new StartupOptions(httpPort: new HttpPort(4242)));
             var script = new ScriptContent("alert('hello');");
             var mimeType = Formatter.PreferredMimeTypeFor(script.GetType());

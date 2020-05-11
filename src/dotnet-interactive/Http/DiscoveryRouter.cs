@@ -12,9 +12,9 @@ namespace Microsoft.DotNet.Interactive.App.Http
 {
     public class DiscoveryRouter : IRouter
     {
-        private readonly BrowserFrontendEnvironment _frontendEnvironment;
+        private readonly JupyterFrontedEnvironment _frontendEnvironment;
 
-        public DiscoveryRouter(BrowserFrontendEnvironment frontendEnvironment)
+        public DiscoveryRouter(JupyterFrontedEnvironment frontendEnvironment)
         {
             _frontendEnvironment = frontendEnvironment;
         }
@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.App.Http
                     using var reader = new StreamReader(context.HttpContext.Request.Body);
                     var source = await reader.ReadToEndAsync();
                     var apiUri = new Uri( source);
-                    _frontendEnvironment.ApiUri = apiUri;
+                    _frontendEnvironment.DiscoveredUri = apiUri;
 
                     // Do something
                     context.Handler = async httpContext =>

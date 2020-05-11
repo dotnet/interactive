@@ -70,7 +70,12 @@ namespace Microsoft.DotNet.Interactive.App
                 app.UseRouting();
                 app.UseRouter(r =>
                 {
-                    r.Routes.Add(new DiscoveryRouter(serviceProvider.GetRequiredService<BrowserFrontendEnvironment>()));
+                    var frontendEnvironment = serviceProvider.GetService<JupyterFrontedEnvironment>();
+                    if (frontendEnvironment != null)
+                    {
+                        r.Routes.Add(new DiscoveryRouter(frontendEnvironment));
+                    }
+
                     r.Routes.Add(new VariableRouter(serviceProvider.GetRequiredService<IKernel>()));
                     r.Routes.Add(new KernelsRouter(serviceProvider.GetRequiredService<IKernel>()));
                 });
