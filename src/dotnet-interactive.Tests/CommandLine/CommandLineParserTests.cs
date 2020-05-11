@@ -258,7 +258,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public async Task jupyter_command_returns_error_if_connection_file_path_does_not_exits()
+        public async Task jupyter_command_returns_error_if_connection_file_path_does_not_exist()
         {
             var expected = "not_exist.json";
 
