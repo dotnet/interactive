@@ -163,12 +163,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         break;
 
                     case '\r':
-                        _textWindow.Advance();
-                        break;
-
                     case '\n':
-                        _textWindow.Advance();
-
                         if (foundArgs)
                         {
                             FlushToken(TokenKind.DirectiveArgs);

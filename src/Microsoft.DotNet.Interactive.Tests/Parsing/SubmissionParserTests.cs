@@ -41,7 +41,7 @@ x
 
             tree.GetRoot()
                 .Should()
-                .ContainSingle<LanguageNode>(n => n.Text == "#r \"/path/to/a.dll\"\n");
+                .ContainSingle<LanguageNode>(n => n.Text == "#r \"/path/to/a.dll\"");
         }
 
         [Fact]
