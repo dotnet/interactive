@@ -1,6 +1,6 @@
-# Create .NET Jupyter Notebooks
+# Create .NET Jupyter Notebooks locally
 
-## Installing the .NET kernel for Jupyter 
+## Installing Jupyter and .NET Interactive 
 
 First, make sure you have the following installed:
 
@@ -24,11 +24,12 @@ First, make sure you have the following installed:
 
 ```console
 > dotnet interactive jupyter install
-[InstallKernelSpec] Installed kernelspec .net-csharp in ~\jupyter\kernels\.net-csharp
-.NET kernel installation succeeded
-
-[InstallKernelSpec] Installed kernelspec .net-fsharp in ~\jupyter\kernels\.net-fsharp
-.NET kernel installation succeeded
+Installing using jupyter kernelspec module.
+Installed ".NET (C#)" kernel.
+Installing using jupyter kernelspec module.
+Installed ".NET (F#)" kernel.
+Installing using jupyter kernelspec module.
+Installed ".NET (PowerShell)" kernel.
 ```
     
 - You can verify the installation by running the following again in the Anaconda Prompt:

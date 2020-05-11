@@ -2,14 +2,16 @@
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab) [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/interactive/interactive-ci?branchName=master)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=744&branchName=master)
 
-.NET interactive provides data scientists and developers a way to explore data, experiment with code, and try new ideas effortlessly. Use .NET Interactive to build .NET Jupyter notebooks or custom interactive coding experiences.
+.NET Interactive gives developers, data scientists, makers, and learners tools to write code and see the results immediately. You can explore data, experiment with code, and try new ideas. Use .NET Interactive to build .NET Jupyter notebooks or custom interactive coding experiences including bots and custom REPLs.
 
-### Jupyter Notebooks with .NET
+## Jupyter Notebooks with .NET <img src ="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Jupyter_logo.svg/207px-Jupyter_logo.svg.png" height="1.5em" alt="Project Jupyter" >
+
+[Project Jupyter](https://jupyter.org/) is a popular platform for creating interactive notebooks that can be used for data science, documentation, DevOps, and much more.
 
 <img src = "https://user-images.githubusercontent.com/547415/78056370-ddd0cc00-7339-11ea-9379-c40f8b5c1ae5.png" width = "70%">
 <img src="https://user-images.githubusercontent.com/2546640/67912370-1b99b080-fb60-11e9-9839-0058d02488cf.png" width="62%">
 
-# Jupyter Notebooks with .NET Core | Preview 2 <img src ="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Jupyter_logo.svg/207px-Jupyter_logo.svg.png" width="38px" alt="dotnet bot in space" align ="right">
+# Jupyter Notebooks with .NET Core | Preview 2 
 
 There are several ways to get started using .NET with Jupyter.
 
@@ -18,54 +20,9 @@ There are several ways to get started using .NET with Jupyter.
 - [Share your own .NET notebooks with others online using Binder](docs/CreateBinder.md).
 - [Use .NET Interactive with nteract](https://nteract.io/kernels/dotnet)
 
-## How to Install .NET Interactive 
-
-First, make sure you have the following installed:
-
-- The [.NET 3.1 SDK](https://dotnet.microsoft.com/download).
-- **Jupyter**. Jupyter can be installed using [Anaconda](https://www.anaconda.com/distribution).
-
-- Open the Anaconda Prompt (Windows) or Terminal (macOS) and verify that Jupyter is installed and present on the path:
-
-```console
-> jupyter kernelspec list
-  python3        ~\jupyter\kernels\python3
-```
-
-- Next, in an ordinary console, install the `dotnet interactive` global tool:
-
-```console
-> dotnet tool install -g --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json" Microsoft.dotnet-interactive
-```
-
-- Register .NET Interactive as a Jupyter kernel by running the following within your Anaconda Prompt. (More details [here](src/dotnet-interactive/CommandLine/readme.md)):
-
-```console
-> dotnet interactive jupyter install
-
-[InstallKernelSpec] Installed kernelspec .net-powershell in ~\jupyter\kernels\.net-powershell
-.NET kernel installation succeeded
-
-[InstallKernelSpec] Installed kernelspec .net-csharp in ~\jupyter\kernels\.net-csharp
-.NET kernel installation succeeded
-
-[InstallKernelSpec] Installed kernelspec .net-fsharp in ~\jupyter\kernels\.net-fsharp
-.NET kernel installation succeeded
-```   
-
-- You can now verify the installation by running the following in the Anaconda Prompt:
-
-```console
-> jupyter kernelspec list
-  .net-csharp       ~\jupyter\kernels\.net-csharp
-  .net-fsharp       ~\jupyter\kernels\.net-fsharp
-  .net-powershell   ~\jupyter\kernels\.net-powershell
-  python3           ~\jupyter\kernels\python3
-```
-
 ## Packages
 
-We are providing a number of packages that can be used to write custom extensions for .NET Interactive or to build your own interactive experiences.
+We provide a number of packages that can be used to write custom extensions for .NET Interactive or to build your own interactive experiences.
 
 
 Package                                    | Version                                                                                                                                                         | Description
@@ -78,7 +35,7 @@ Package                                    | Version                            
 
 ## Contribution Guidelines
 
-As we are still in the early stages of development, we may not take any feature PRs at the moment, but we intend to do so in the future. If you find an bug or have a feature suggestion, please open an [issue](https://github.com/dotnet/interactive/issues/new/choose).
+You can contribute to .NET Interactive with issues and PRs. Simply filing issues for problems you encounter is a great way to contribute. Contributing code improvements is greatly appreciated. You can read more about our contribution guidelines [here](https://github.com/dotnet/runtime/blob/master/CONTRIBUTING.md).
 
 ## Customers & Partners
 
