@@ -8,5 +8,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
     public class BrowserFrontendEnvironment : FrontendEnvironment
     {
         public Uri ApiUri { get; set; }
+        public string Flavor { get; set; }
     }
 }
