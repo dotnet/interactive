@@ -25,14 +25,15 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         private StartupOptions _startOptions;
         private readonly Parser _parser;
         private readonly FileInfo _connectionFile;
-        private DirectoryInfo _kernelSpecInstallPath;
+        private readonly DirectoryInfo _kernelSpecInstallPath;
+        private readonly ServiceCollection _serviceCollection;
 
         public CommandLineParserTests(ITestOutputHelper output)
         {
             _output = output;
-
+            _serviceCollection = new ServiceCollection();
             _parser = CommandLineParser.Create(
-                new ServiceCollection(),
+                _serviceCollection,
                 startServer: (options, invocationContext) =>
                 {
                     _startOptions = options;
@@ -164,6 +165,32 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
+        public async Task http_command_registers_BrowserFrontedEnvironment()
+        {
+            await _parser.InvokeAsync($"http");
+
+            using var scope = new AssertionScope();
+            _serviceCollection
+                .FirstOrDefault(s => s.ServiceType == typeof(BrowserFrontendEnvironment))
+                .Should()
+                .NotBeNull();
+
+        }
+
+        [Fact]
+        public async Task http_command_does_not_registers_JupyterFrontedEnvironment()
+        {
+            await _parser.InvokeAsync($"http");
+
+            using var scope = new AssertionScope();
+            _serviceCollection
+                .FirstOrDefault(s => s.ServiceType == typeof(JupyterFrontedEnvironment))
+                .Should()
+                .BeNull();
+
+        }
+
+        [Fact]
         public void http_command__does_not_parse_http_port_range_option()
         {
             var result = _parser.Parse("http --http-port-range 6000-10000");
@@ -172,6 +199,24 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 .Select(e => e.Message)
                  .Should()
                  .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port-range'");
+        }
+
+        [Fact]
+        public async Task jupyter_command_registers_BrowserFrontedEnvironment()
+        {
+           await _parser.InvokeAsync($"jupyter {_connectionFile}");
+
+            using var scope = new AssertionScope();
+            _serviceCollection
+                .FirstOrDefault(s => s.ServiceType == typeof(JupyterFrontedEnvironment))
+                .Should()
+                .NotBeNull();
+
+            _serviceCollection
+                .FirstOrDefault(s => s.ServiceType == typeof(BrowserFrontendEnvironment))
+                .Should()
+                .NotBeNull();
+
         }
 
         [Fact]
