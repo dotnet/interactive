@@ -87,13 +87,10 @@ function loadDotnetInteractiveApi() {
             }
         
             dotnet_require([
-                    'dotnet-interactive/dotnet-interactive',
-                    'dotnet-interactive/lsp',
-                    'dotnet-interactive/editor-detection'
+                    'dotnet-interactive/dotnet-interactive'
                 ],
-                function (dotnet, lsp, editor) {
+                function (dotnet) {
                     dotnet.init(window);
-                    $LSP$
                 },
                 function (error) {
                     console.log(error);
@@ -104,15 +101,9 @@ function loadDotnetInteractiveApi() {
     }
     </script>
 </div>";
-
-            var lspInit = @"
-                    lsp.init(window);
-                    editor.init(window, document, root, document.getElementById('dotnet-interactive-this-cell-$SEED$'));
-";
             
             var jsProbingUris = $"[{ string.Join(", ", probingUris.Select(a => $"\"{a.AbsoluteUri}\"")) }]";
             var code = template;
-            code = code.Replace("$LSP$", enableLsp ? lspInit : string.Empty);
             code = code.Replace("$ADDRESSES$", jsProbingUris);
             code = code.Replace("$CACHE_BUSTER$", apiCacheBuster);
             code = code.Replace("$SEED$", seed);
