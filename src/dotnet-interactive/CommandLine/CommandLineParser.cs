@@ -24,6 +24,7 @@ using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.PowerShell.Commands;
 using Recipes;
 using CommandHandler = System.CommandLine.Invocation.CommandHandler;
 
@@ -46,11 +47,18 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             KernelBase kernel,
             IConsole console);
 
+        public delegate Task StartHttp(
+            StartupOptions options,
+            IConsole console,
+            StartServer startServer = null,
+            InvocationContext context = null);
+
         public static Parser Create(
             IServiceCollection services,
             StartServer startServer = null,
             Jupyter jupyter = null,
             StartStdIO startStdIO = null,
+            StartHttp startHttp = null,
             ITelemetry telemetry = null,
             IFirstTimeUseNoticeSentinel firstTimeUseNoticeSentinel = null)
         {
@@ -66,6 +74,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             startStdIO ??= StdIOCommand.Do;
 
+            startHttp ??= HttpCommand.Do;
+
             // Setup first time use notice sentinel.
             firstTimeUseNoticeSentinel ??= new FirstTimeUseNoticeSentinel(VersionSensor.Version().AssemblyInformationalVersion);
 
@@ -78,71 +88,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             var verboseOption = new Option<bool>(
                 "--verbose",
                 "Enable verbose logging to the console");
-
-            var httpPortOption = new Option<HttpPort>(
-                "--http-port",
-                description: "Specifies the port on which to enable HTTP services",
-                parseArgument: result =>
-               {
-                   var source = result.Tokens[0].Value;
-
-                   if (source == "*")
-                   {
-                       return HttpPort.Auto;
-                   }
-
-                   if (!int.TryParse(source, out var portNumber))
-                   {
-                       result.ErrorMessage = "Must specify a port number or *.";
-                       return null;
-                   }
-
-                   return new HttpPort(portNumber);
-               });
-
-            var httpPortRangeOption = new Option<PortRange>(
-                "--http-port-range",
-                parseArgument: result =>
-                {
-                    if (result.Parent.Parent.Children.FirstOrDefault(c => c.Symbol == httpPortOption) is OptionResult conflictingOption)
-                    {
-                        var parsed = result.Parent as OptionResult;
-                        result.ErrorMessage = $"Cannot specify both {conflictingOption.Token.Value} and {parsed.Token.Value} together";
-                        return null;
-                    }
-
-                    var source = result.Tokens[0].Value;
-
-                    if (string.IsNullOrWhiteSpace(source))
-                    {
-                        result.ErrorMessage = "Must specify a port range";
-                        return null;
-                    }
-
-                    var parts = source.Split(new[] { "-" }, StringSplitOptions.RemoveEmptyEntries);
-
-                    if (parts.Length != 2)
-                    {
-                        result.ErrorMessage = "Must specify a port range";
-                        return null;
-                    }
-
-                    if (!int.TryParse(parts[0], out var start) || !int.TryParse(parts[1], out var end))
-                    {
-                        result.ErrorMessage = "Must specify a port range as StartPort-EndPort";
-                        return null;
-                    }
-
-                    if (start > end)
-                    {
-                        result.ErrorMessage = "Start port must be lower then end port";
-                        return null;
-                    }
-
-                    var pr = new PortRange(start, end);
-                    return pr;
-                },
-                description: "Specifies the range of port to use to enable HTTP services");
 
             var logPathOption = new Option<DirectoryInfo>(
                 "--log-path",
@@ -202,6 +147,13 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             Command Jupyter()
             {
+                var httpPortRangeOption = new Option<HttpPortRange>(
+                 "--http-port-range",
+                 parseArgument: result =>
+                     result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
+                 description: "Specifies the range of port to use to enable HTTP services",
+                 isDefault: true
+             );
                 var command = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel")
                 {
                     defaultKernelOption,
@@ -224,7 +176,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     pathOption
                 };
 
-                installCommand.Handler = CommandHandler.Create<IConsole, InvocationContext, PortRange, DirectoryInfo>(InstallHandler);
+                installCommand.Handler = CommandHandler.Create<IConsole, InvocationContext, HttpPortRange, DirectoryInfo>(InstallHandler);
 
                 command.AddCommand(installCommand);
 
@@ -251,34 +203,56 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     return jupyter(startupOptions, console, startServer, context);
                 }
 
-                Task<int> InstallHandler(IConsole console, InvocationContext context, PortRange httpPortRange, DirectoryInfo path)
+                Task<int> InstallHandler(IConsole console, InvocationContext context, HttpPortRange httpPortRange, DirectoryInfo path)
                 {
                     var jupyterInstallCommand = new JupyterInstallCommand(console, new JupyterKernelSpecInstaller(console), httpPortRange, path);
-                    return jupyterInstallCommand .InvokeAsync();
+                    return jupyterInstallCommand.InvokeAsync();
                 }
             }
 
             Command HttpServer()
             {
+                var httpPortOption = new Option<HttpPort>(
+               "--http-port",
+               description: "Specifies the port on which to enable HTTP services",
+               parseArgument: result =>
+               {
+                   if (result.Tokens.Count == 0)
+                   {
+                       return HttpPort.Auto;
+                   }
+
+                   var source = result.Tokens[0].Value;
+
+                   if (source == "*")
+                   {
+                       return HttpPort.Auto;
+                   }
+
+                   if (!int.TryParse(source, out var portNumber))
+                   {
+                       result.ErrorMessage = "Must specify a port number or *.";
+                       return null;
+                   }
+
+                   return new HttpPort(portNumber);
+               },
+               isDefault: true);
+
+
                 var command = new Command("http", "Starts dotnet-interactive with kernel functionality exposed over http")
                 {
                     defaultKernelOption,
                     httpPortOption,
-                    logPathOption,
-                    httpPortRangeOption
+                    logPathOption
                 };
 
                 command.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
                     (startupOptions, options, console, context) =>
                     {
-                        if (startupOptions.HttpPort == null && startupOptions.HttpPortRange == null)
-                        {
-                            startupOptions.HttpPort = HttpPort.Auto;
-                        }
-
                         RegisterKernelInServiceCollection(services, startupOptions, options.DefaultKernel);
 
-                        return jupyter(startupOptions, console, startServer, context);
+                        return startHttp(startupOptions, console, startServer, context);
                     });
 
                 return command;
@@ -291,29 +265,50 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
                 {
                     defaultKernelOption,
-                    logPathOption,
-                    httpPortOption,
-                    httpPortRangeOption
+                    logPathOption
                 };
 
                 command.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
-                    (startupOptions, options, console, context) =>
-                    {
-                        if (startupOptions.EnableHttpApi)
-                        {
-                            RegisterKernelInServiceCollection(services, startupOptions, options.DefaultKernel,
-                                kernel => StdIOCommand.CreateServer(kernel, console));
-                            startServer?.Invoke(startupOptions, context);
-                            return Task.FromResult(0);
-                        }
-
-                        return startStdIO(
-                            startupOptions,
-                            CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(), startupOptions, null),
-                            console);
-                    });
+                    (startupOptions, options, console, context) => startStdIO(
+                        startupOptions,
+                        CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(), startupOptions, null),
+                        console));
 
                 return command;
+            }
+
+            static HttpPortRange ParsePortRangeOption(ArgumentResult result)
+            {
+                var source = result.Tokens[0].Value;
+
+                if (string.IsNullOrWhiteSpace(source))
+                {
+                    result.ErrorMessage = "Must specify a port range";
+                    return null;
+                }
+
+                var parts = source.Split(new[] { "-" }, StringSplitOptions.RemoveEmptyEntries);
+
+                if (parts.Length != 2)
+                {
+                    result.ErrorMessage = "Must specify a port range";
+                    return null;
+                }
+
+                if (!int.TryParse(parts[0], out var start) || !int.TryParse(parts[1], out var end))
+                {
+                    result.ErrorMessage = "Must specify a port range as StartPort-EndPort";
+                    return null;
+                }
+
+                if (start > end)
+                {
+                    result.ErrorMessage = "Start port must be lower then end port";
+                    return null;
+                }
+
+                var pr = new HttpPortRange(start, end);
+                return pr;
             }
         }
 

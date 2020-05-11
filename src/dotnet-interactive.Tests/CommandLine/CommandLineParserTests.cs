@@ -47,6 +47,11 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                     _startOptions = startupOptions;
                     return Task.FromResult(1);
                 },
+                startHttp: (startupOptions, console, startServer, context) =>
+                {
+                    _startOptions = startupOptions;
+                    return Task.FromResult(1);
+                },
             telemetry: new FakeTelemetry(),
                 firstTimeUseNoticeSentinel: new NopFirstTimeUseNoticeSentinel());
 
@@ -96,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             options
                 .HttpPortRange
                 .Should()
-                .BeEquivalentTo(new PortRange(3000, 4000));
+                .BeEquivalentTo(new HttpPortRange(3000, 4000));
         }
 
         [Fact]
@@ -137,24 +142,46 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             options
                 .HttpPortRange
                 .Should()
-                .BeEquivalentTo(new PortRange(3000, 4000));
+                .BeEquivalentTo(new HttpPortRange(3000, 4000));
         }
 
-        [Theory]
-        [InlineData("stdio --http-port 8000 --http-port-range 3000-4000")]
-        [InlineData("stdio --http-port-range 3000-4000 --http-port 8000")]
-        [InlineData("http --http-port 8000 --http-port-range 3000-4000")]
-        [InlineData("http --http-port-range 3000-4000 --http-port 8000")]
-        public void port_range_and_port_cannot_be_specified_together(string commandLine)
+        [Fact]
+        public async Task http_command_enables_http_api_by_default()
         {
-            var result = _parser.Parse(commandLine);
+            await _parser.InvokeAsync($"http");
+
+            _startOptions.EnableHttpApi.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task http_command_uses_default_port()
+        {
+            await _parser.InvokeAsync($"http");
+
+            using var scope = new AssertionScope();
+            _startOptions.HttpPort.Should().NotBeNull();
+            _startOptions.HttpPort.IsAuto.Should().BeTrue();
+        }
+
+        [Fact]
+        public void http_command__does_not_parse_http_port_range_option()
+        {
+            var result = _parser.Parse("http --http-port-range 6000-10000");
 
             result.Errors
                 .Select(e => e.Message)
                  .Should()
-                 .Contain(errorMessage => errorMessage == "Cannot specify both --http-port and --http-port-range together");
+                 .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port-range'");
         }
 
+        [Fact]
+        public async Task jupyter_command_returns_error_if_connection_file_path_is_not_passed()
+        {
+            var testConsole = new TestConsole();
+            await _parser.InvokeAsync("jupyter", testConsole);
+
+            testConsole.Error.ToString().Should().Contain("Required argument missing for command: jupyter");
+        }
 
         [Fact]
         public void jupyter_command_does_not_parse_http_port_option()
@@ -176,7 +203,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public void jupyter_parses_connection_file_path()
+        public void jupyter_command_parses_connection_file_path()
         {
             var result = _parser.Parse($"jupyter {_connectionFile}");
 
@@ -192,32 +219,46 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public async Task jupyter_does_not_enable_http_api_by_default()
+        public async Task jupyter_command_does_enable_http_api_by_default()
         {
             await  _parser.InvokeAsync($"jupyter {_connectionFile}");
-            _startOptions.EnableHttpApi.Should().BeFalse();
+
+            _startOptions.EnableHttpApi.Should().BeTrue();
         }
 
         [Fact]
-        public void jupyter_default_kernel_option_value()
+        public async Task jupyter_command_by_default_uses_port_rage()
+        {
+            await _parser.InvokeAsync($"jupyter {_connectionFile}");
+
+            using var scope = new AssertionScope();
+            _startOptions.HttpPortRange.Should().NotBeNull();
+            _startOptions.HttpPortRange.Start.Should().Be(HttpPortRange.Default.Start);
+            _startOptions.HttpPortRange.End.Should().Be(HttpPortRange.Default.End);
+        }
+
+        [Fact]
+        public void jupyter_command_default_kernel_option_value()
         {
             var result = _parser.Parse($"jupyter {Path.GetTempFileName()}");
             var binder = new ModelBinder<JupyterOptions>();
             var options = (JupyterOptions)binder.CreateInstance(new BindingContext(result));
+
             options.DefaultKernel.Should().Be("csharp");
         }
 
         [Fact]
-        public void jupyter_honors_default_kernel_option()
+        public void jupyter_command_honors_default_kernel_option()
         {
             var result = _parser.Parse($"jupyter --default-kernel bsharp {Path.GetTempFileName()}");
             var binder = new ModelBinder<JupyterOptions>();
             var options = (JupyterOptions)binder.CreateInstance(new BindingContext(result));
+
             options.DefaultKernel.Should().Be("bsharp");
         }
 
         [Fact]
-        public async Task jupyter_returns_error_if_connection_file_path_does_not_exits()
+        public async Task jupyter_command_returns_error_if_connection_file_path_does_not_exits()
         {
             var expected = "not_exist.json";
 
@@ -227,12 +268,26 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             testConsole.Error.ToString().Should().Contain("File does not exist: not_exist.json");
         }
 
+        [Theory]
+        [InlineData("stdio --http-port 8000", "Unrecognized command or argument '--http-port'")]
+        [InlineData("stdio --http-port-range 3000-4000", "Unrecognized command or argument '--http-port-range'")]
+        public void stdio_command_does_not_support_http_options(string commandLine, string expectedError)
+        {
+            var result = _parser.Parse(commandLine);
+
+            result.Errors
+                .Select(e => e.Message)
+                .Should()
+                .Contain(errorMessage => errorMessage == expectedError);
+        }
+
         [Fact]
         public void stdio_command_defaults_to_csharp_kernel()
         {
             var result = _parser.Parse("stdio");
             var binder = new ModelBinder<StdIOOptions>();
             var options = (StdIOOptions)binder.CreateInstance(new BindingContext(result));
+
             options.DefaultKernel.Should().Be("csharp");
         }
 
@@ -240,6 +295,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         public async Task stdio_command_does_not_enable_http_api_by_default()
         {
             await _parser.InvokeAsync("stdio");
+
             _startOptions.EnableHttpApi.Should().BeFalse();
         }
 
@@ -249,16 +305,10 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             var result = _parser.Parse("stdio --default-kernel bsharp");
             var binder = new ModelBinder<StdIOOptions>();
             var options = (StdIOOptions)binder.CreateInstance(new BindingContext(result));
+
             options.DefaultKernel.Should().Be("bsharp");
         }
 
-        [Fact]
-        public async Task jupyter_command_returns_error_if_connection_file_path_is_not_passed()
-        {
-            var testConsole = new TestConsole();
-            await _parser.InvokeAsync("jupyter", testConsole);
-
-            testConsole.Error.ToString().Should().Contain("Required argument missing for command: jupyter");
-        }
+       
     }
 }

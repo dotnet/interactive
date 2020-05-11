@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var console = new TestConsole();
             var kernelSpecModule = new JupyterKernelSpecModuleSimulator(true);
             var kernelSpecInstaller = new JupyterKernelSpecInstaller(console,kernelSpecModule);
-            var jupyterCommandLine = new JupyterInstallCommand(console, kernelSpecInstaller, new PortRange(100, 400));
+            var jupyterCommandLine = new JupyterInstallCommand(console, kernelSpecInstaller, new HttpPortRange(100, 400));
 
             await jupyterCommandLine.InvokeAsync();
 

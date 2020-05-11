@@ -16,10 +16,10 @@ namespace Microsoft.DotNet.Interactive.App
     {
         private readonly IConsole _console;
         private readonly IJupyterKernelSpecInstaller _jupyterKernelSpecInstaller;
-        private readonly PortRange _httpPortRange;
+        private readonly HttpPortRange _httpPortRange;
         private readonly DirectoryInfo _path;
 
-        public JupyterInstallCommand(IConsole console, IJupyterKernelSpecInstaller jupyterKernelSpecInstaller, PortRange httpPortRange = null, DirectoryInfo path = null)
+        public JupyterInstallCommand(IConsole console, IJupyterKernelSpecInstaller jupyterKernelSpecInstaller, HttpPortRange httpPortRange = null, DirectoryInfo path = null)
         {
             _console = console;
             _jupyterKernelSpecInstaller = jupyterKernelSpecInstaller;
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Interactive.App
             return errorCount;
         }
 
-        private static void ComputeKernelSpecArgs(PortRange httpPortRange, DirectoryInfo directory)
+        private static void ComputeKernelSpecArgs(HttpPortRange httpPortRange, DirectoryInfo directory)
         {
             var kernelSpecs = directory.GetFiles("kernel.json", SearchOption.AllDirectories);
 
