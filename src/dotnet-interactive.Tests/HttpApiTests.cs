@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -43,6 +44,19 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         }
 
         [Fact]
+        public async Task discovery_route_is_not_registered_without_JupyterFrontedEnvironment()
+        {
+            var server = GetServer();
+            var response = await server.HttpClient.PostAsync("/discovery", new StringContent("http://choosen.one:1000/"));
+
+            using var scope = new AssertionScope();
+
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            var frontendEnvironment = server.FrontendEnvironment;
+            frontendEnvironment.Should().NotBeOfType<JupyterFrontedEnvironment>();
+        }
+
+        [Fact]
         public async Task FrontendEnvironment_host_is_set_via_handshake()
         {
             var expectedUri = new Uri("http://choosen.one:1000/");
@@ -52,8 +66,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                  serviceCollection.AddSingleton<BrowserFrontendEnvironment>(c => c.GetService<JupyterFrontedEnvironment>());
              });
             var response = await server.HttpClient.PostAsync("/discovery", new StringContent(expectedUri.AbsoluteUri));
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            using var scope = new AssertionScope();
             
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
             var frontendEnvironment = server.FrontendEnvironment as JupyterFrontedEnvironment;
             frontendEnvironment.DiscoveredUri.Should().Be(expectedUri);
         }
