@@ -6,6 +6,7 @@ import { StdioKernelTransport } from './stdioKernelTransport';
 import { registerLanguageProviders } from './vscode/languageProvider';
 import { registerCommands } from './vscode/commands';
 import { IDotnetAcquireResult } from './interfaces/dotnet';
+import * as versions from './minVersions';
 
 import compareVersions = require("../node_modules/compare-versions");
 
@@ -24,19 +25,20 @@ export function deactivate() {
 
 async function getDotnetPath(): Promise<string> {
     // ensure valid `dotnet`
-    const validDotnetVersion: RegExp = /^(3|5)\./; // 3.x and 5.x
     const { code, output } = await processExitCodeAndOutput('dotnet', ['--version']);
     let dotnetPath: string;
-    if (code === 0 && validDotnetVersion.test(output)) {
+    if (code === 0 && compareVersions.compare(output, versions.minimumDotNetSdkVersion, '>=')) {
         // global `dotnet` is present and good
         dotnetPath = 'dotnet';
     } else {
         // need to acquire one
-        const commandResult = await vscode.commands.executeCommand<IDotnetAcquireResult>('dotnet.acquire', { version: '3.1' });
+        // don't block, just show and go
+        vscode.window.showInformationMessage(`Acquiring .NET SDK version ${versions.minimumDotNetSdkVersion}...`);
+        const commandResult = await vscode.commands.executeCommand<IDotnetAcquireResult>('dotnet.acquire', { version: versions.minimumDotNetSdkVersion });
         if (commandResult) {
             dotnetPath = commandResult.dotnetPath;
         } else {
-            throw new Error('Unable to find or acquire appropriate version of the `dotnet` CLI.');
+            throw new Error(`Unable to find or acquire .NET SDK >= ${versions.minimumDotNetSdkVersion}`);
         }
     }
 
@@ -45,7 +47,6 @@ async function getDotnetPath(): Promise<string> {
 
 async function ensureDotnetInteractive(dotnetPath: string): Promise<void> {
     // ensure valid `dotnet-interactive`
-    const minRequiredVersion = '1.0.125402';
     const validDotnetInteractiveDevVersion: RegExp = /^.*-dev$/; // e.g., 1.0.0-dev.  Locally produced versions are always assumed to be good.
     const { code, output } = await processExitCodeAndOutput(dotnetPath, ['interactive', '--version']);
     if (code === 0) {
@@ -55,9 +56,9 @@ async function ensureDotnetInteractive(dotnetPath: string): Promise<void> {
         }
 
         // otherwise we have to check the version
-        if (compareVersions.compare(output, minRequiredVersion, '<')) {
+        if (compareVersions.compare(output, versions.minimumDotNetInteractiveVersion, '<')) {
             // TODO: acquire it for them
-            await vscode.window.showErrorMessage(`Unsupported \`dotnet-interactive\` version, '${output}'.  Minimum required is '${minRequiredVersion}'.`);
+            await vscode.window.showErrorMessage(`Unsupported \`dotnet-interactive\` version, '${output}'.  Minimum required is '${versions.minimumDotNetInteractiveVersion}'.`);
             throw new Error('aborting');
         }
 
