@@ -34,6 +34,7 @@ There are several ways to get started using .NET Interactive with Jupyter.
     * Accessing kernel variables from the client with JavaScript 
 * Using the .NET Interactive [command-line interface](../src/dotnet-interactive/CommandLine/readme.md)
 * How Jupyter kernel installation works
+* Telemetry
 
 ## .NET Interactive API Guides
 
