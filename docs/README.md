@@ -10,19 +10,37 @@ There are several ways to get started using .NET Interactive with Jupyter.
 
 ### Telemetry
 
-<!-- TODO:  What we collect, how to disable it  -->
+Telemetry is collected when .NET Interactive is run for the first time on a machine. After the first run, we no longer collect telemetry. The teletry is anonymous and collects only the values for a specific subset of the verbs on the .NET Interactive CLI. Those verbs are:
 
-https://docs.microsoft.com/en-us/dotnet/core/tools/telemetry
+* dotnet interactive jupyter
+* dotnet interactive jupyter install
+* dotnet interactive stdio
+
+#### How to opt out
+
+The .NET Interactive telemetry feature is enabled by default. To opt out of the telemetry feature, set the `DOTNET_TRY_CLI_TELEMETRY_OPTOUT` environment variable to `1` or `true`.
+
+#### Disclosure
+
+The .NET Interactive tool displays text similar to the following when you first run one of the .NET Interactive CLI commands (for example, `dotnet interactive jupyter install`). Text may vary slightly depending on the version of the tool you're running. This "first run" experience is how Microsoft notifies you about data collection.
+
+```console
+Telemetry
+---------
+The .NET Core tools collect usage data in order to help us improve your experience.The data is anonymous and doesn't include command-line arguments. The data is collected by Microsoft and shared with the community. You can opt-out of telemetry by setting the DOTNET_TRY_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
+```
+
+Read more about .NET Core CLI Tools telemetry: https://aka.ms/dotnet-cli-telemetry
+To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_SKIP_FIRST_TIME_EXPERIENCE` environment variable to `true`. Note that this variable has no effect on telemetry opt out.
 
 ## Features
 
 * Support for multiple languages
-* Features:
-    * Display output
-    * Display HTML
-    * Import NuGet packages 
-    * Plotting with [Xplot](https://fslab.org/XPlot/)
-* Specific language: 
+* Display output
+* Display HTML
+* Import NuGet packages 
+* Plotting with [Xplot](https://fslab.org/XPlot/)
+* Language-specific features
     * C#
         * The [C# scripting](https://docs.microsoft.com/en-us/archive/msdn-magazine/2016/january/essential-net-csharp-scripting) dialect
         * PocketView
@@ -37,7 +55,7 @@ https://docs.microsoft.com/en-us/dotnet/core/tools/telemetry
 * Getting input from the user
 * Multi-language notebooks
     * Switching between languages
-        * Per cell
+        * Per-cell
         * Within a single cell
     * .NET variable sharing
     * Accessing kernel variables from the client with JavaScript 
