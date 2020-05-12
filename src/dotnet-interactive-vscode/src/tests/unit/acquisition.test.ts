@@ -86,6 +86,7 @@ describe('Acquisition tests', () => {
             };
             const launchOptions = await acquireDotnetInteractive(
                 args,
+                '42.42.42', // min version
                 globalStoragePath,
                 getInteractiveVersionThatReturnsNoVersionFound, // report no version installed
                 createEmptyToolManifest, // create manifest when asked
@@ -132,6 +133,7 @@ describe('Acquisition tests', () => {
             expect(manifestPath).to.not.be.a.path();
             const launchOptions = await acquireDotnetInteractive(
                 args,
+                '42.42.42', // min version
                 globalStoragePath,
                 getInteractiveVersionThatReturnsNoVersionFound, // report no version installed
                 createEmptyToolManifest, // create manifest when asked
@@ -169,6 +171,7 @@ describe('Acquisition tests', () => {
 
             const launchOptions = await acquireDotnetInteractive(
                 args,
+                '42.42.42', // min version
                 globalStoragePath,
                 getInteractiveVersionThatReturnsNoVersionFound, // report no version found
                 createToolManifestThatThrows, // throw if acquisition tries to create another manifest
@@ -207,6 +210,7 @@ describe('Acquisition tests', () => {
 
             const launchOptions = await acquireDotnetInteractive(
                 args,
+                '42.42.42', // min version
                 globalStoragePath,
                 getInteractiveVersionThatReturnsSpecificValue('0.0.0'), // report existing version 0.0.0 is installed
                 createToolManifestThatThrows, // throw if acquisition tries to create another manifest
@@ -245,6 +249,7 @@ describe('Acquisition tests', () => {
 
             const launchOptions = await acquireDotnetInteractive(
                 args,
+                '42.42.42', // min version
                 globalStoragePath,
                 getInteractiveVersionThatReturnsSpecificValue('0.0.0'), // report existing version 0.0.0 is installed
                 createToolManifestThatThrows, // throw if acquisition tries to create another manifest
@@ -285,6 +290,7 @@ describe('Acquisition tests', () => {
 
             const launchOptions = await acquireDotnetInteractive(
                 args,
+                '42.42.42', // min version
                 globalStoragePath,
                 getInteractiveVersionThatReturnsSpecificValue('43.43.43'), // report existing version 43.43.43 is installed
                 createToolManifestThatThrows, // throw if acquisition tries to create another manifest

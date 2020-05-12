@@ -45,6 +45,26 @@
         ]
       }
     ],
+    "configuration": {
+      "title": ".NET Interactive Notebook",
+      "properties": {
+        "dotnet-interactive.interactiveToolSource": {
+          "type": "string",
+          "default": "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json",
+          "description": "The NuGet source to use when acquiring the .NET Interactive tool."
+        },
+        "dotnet-interactive.minimumDotNetSdkVersion": {
+          "type": "string",
+          "default": "3.1",
+          "description": "The minimum required version of the .NET SDK."
+        },
+        "dotnet-interactive.minimumInteractiveToolVersion": {
+          "type": "string",
+          "default": "1.0.126201",
+          "description": "The minimum required version of the .NET Interactive tool."
+        }
+      }
+    },
     "commands": [
       {
         "command": "dotnet-interactive.acquire",

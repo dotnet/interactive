@@ -7,18 +7,21 @@ import { registerLanguageProviders } from './vscode/languageProvider';
 import { execute, registerCommands } from './vscode/commands';
 
 import { IDotnetAcquireResult } from './interfaces/dotnet';
-import * as versions from './minVersions';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
 
 import compareVersions = require("../node_modules/compare-versions");
 
 export async function activate(context: vscode.ExtensionContext) {
     // install dotnet or use global
+    const config = vscode.workspace.getConfiguration('dotnet-interactive');
+    const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion') || '3.1'; // some sensible fallback
     let dotnetPath: string;
-    if (await isDotnetUpToDate()) {
+    if (await isDotnetUpToDate(minDotNetSdkVersion)) {
         dotnetPath = 'dotnet';
     } else {
-        const commandResult = await vscode.commands.executeCommand<IDotnetAcquireResult>('dotnet.acquire', { version: versions.minimumDotNetSdkVersion });
+        
+        config.get('');
+        const commandResult = await vscode.commands.executeCommand<IDotnetAcquireResult>('dotnet.acquire', { version: minDotNetSdkVersion });
         dotnetPath = commandResult!.dotnetPath;
     }
 
@@ -41,7 +44,7 @@ export async function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
 }
 
-async function isDotnetUpToDate(): Promise<boolean> {
+async function isDotnetUpToDate(minVersion: string): Promise<boolean> {
     const result = await execute('dotnet', ['--version']);
-    return result.code === 0 && compareVersions.compare(result.output, versions.minimumDotNetSdkVersion, '>=');
+    return result.code === 0 && compareVersions.compare(result.output, minVersion, '>=');
 }

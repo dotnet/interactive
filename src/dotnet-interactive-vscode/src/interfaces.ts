@@ -34,7 +34,7 @@ export interface GetCurrentInteractiveVersion {
 }
 
 export interface ReportInstallationStarted {
-    (): void;
+    (version: string): void;
 }
 
 export interface InstallInteractiveTool {
