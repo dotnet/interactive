@@ -12,9 +12,9 @@ There are several ways to get started using .NET Interactive with Jupyter.
 
 Telemetry is collected when .NET Interactive is run for the first time on a machine. After the first run, we no longer collect telemetry. The teletry is anonymous and collects only the values for a specific subset of the verbs on the .NET Interactive CLI. Those verbs are:
 
-* dotnet interactive jupyter
-* dotnet interactive jupyter install
-* dotnet interactive stdio
+* `dotnet interactive jupyter`
+* `dotnet interactive jupyter install`
+* `dotnet interactive stdio`
 
 #### How to opt out
 
@@ -78,7 +78,7 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 
 * Commands and events
 * Formatter APIS 
-    * Working with mime types 
+    * Working with MIME types 
 * PocketView
 * Magic commands
 * Kernel APIs
