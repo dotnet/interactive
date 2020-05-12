@@ -31,19 +31,13 @@ type FSharpKernel() as this =
 
     let variables = HashSet<string>()
 
-    let createScript registerForDisposal =  
-        let script = lock lockObj (fun () -> new FSharpScript(additionalArgs=[|"/langversion:preview"|]))
-        let valueBoundHandler = new Handler<(obj * Type * string)>(fun _ (_, _, name) -> variables.Add(name) |> ignore)
-        do script.ValueBound.AddHandler valueBoundHandler
-        do registerForDisposal(fun () ->
-            script.ValueBound.RemoveHandler valueBoundHandler
-            (script :> IDisposable).Dispose())
-        script
-
-    let script = lazy createScript this.RegisterForDisposal
+    let createScript () =  
+        lock lockObj (fun () -> new FSharpScript(additionalArgs=[|"/langversion:preview"|]))
 
     let extensionLoader: AssemblyBasedExtensionLoader = AssemblyBasedExtensionLoader()
 
+    let script = lazy createScript ()
+    do base.RegisterForDisposal(fun () -> if script.IsValueCreated then (script.Value :> IDisposable).Dispose())
     let mutable cancellationTokenSource = new CancellationTokenSource()
 
     let kindString (glyph: FSharpGlyph) =
@@ -136,21 +130,15 @@ type FSharpKernel() as this =
 
     let _packageRestoreContext = lazy createPackageRestoreContext this.RegisterForDisposal
 
-    member _.GetCurrentVariable(variableName: string) =
-        let result, _errors =
-            try
-                script.Value.Eval("``" + variableName + "``")
-            with
-            | ex -> Error(ex), [||]
-        match result with
-        | Ok(Some(value)) -> Some (CurrentVariable(variableName, value.ReflectionType, value.ReflectionValue))
-        | _ -> None
+            if isNull _nativeProbingRoots then
+                raise (new InvalidOperationException("_nativeProbingRoots is null"))
+            new DependencyProvider(_assemblyProbingPaths, _nativeProbingRoots)
+        lazy (createDependencyProvider ())
 
     member this.GetCurrentVariables() =
-        // `ValueBound` event will make a copy of value types, so to ensure we always get the current value, we re-evaluate each variable
-        variables
-        |> Seq.filter (fun v -> v <> "it") // don't report special variable `it`
-        |> Seq.choose (this.GetCurrentVariable)
+        script.Value.Fsi.GetBoundValues()
+        |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
+        |> List.map (fun x -> CurrentVariable(x.Name, x.Value.ReflectionType, x.Value.ReflectionValue))
 
     override _.HandleSubmitCode(command: SubmitCode, context: KernelInvocationContext): Task =
         handleSubmitCode command context |> Async.StartAsTask :> Task
@@ -159,15 +147,16 @@ type FSharpKernel() as this =
         handleRequestCompletion command context |> Async.StartAsTask :> Task
 
     override _.TryGetVariable<'a>(name: string, [<Out>] value: 'a byref) =
-        match this.GetCurrentVariable(name) with
-        | Some(cv) ->
-            value <- cv.Value :?> 'a
+        match script.Value.Fsi.TryFindBoundValue(name) with
+        | Some cv ->
+            value <- cv.Value.ReflectionValue :?> 'a
             true
-        | None ->
+        | _ ->
             false
 
     override _.SetVariableAsync(name: string, value: Object) : Task = 
-        raise (NotImplementedException())
+        // script.Value.Fsi.AddBoundValue(name, value) |> ignore
+        Task.CompletedTask
 
     member _.RestoreSources = _packageRestoreContext.Value.RestoreSources;
 

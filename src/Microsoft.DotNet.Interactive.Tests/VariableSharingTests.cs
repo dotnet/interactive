@@ -4,7 +4,6 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -53,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .Be(123);
         }
 
-        [Theory(Skip = "Requires FSharpKernel.SetVariableAsync")]
+        [Theory]
         [InlineData(
             "#!csharp",
             "var x = 123;",
@@ -115,7 +114,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .Be("123:System.Int32");
         }
 
-        [Fact]
+        [Fact(Skip= "not supported in jon.sk langauge")]
         public async Task Directives_can_access_local_kernel_variables()
         {
             using var kernel = CreateKernel();
