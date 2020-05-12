@@ -22,7 +22,9 @@
     "Other"
   ],
   "activationEvents": [
-    "onNotebookEditor:dotnet-interactive"
+    "onNotebookEditor:dotnet-interactive",
+    "onCommand:dotnet-interactive.acquire",
+    "onCommand:dotnet-interactive.reportInteractiveVersion"
   ],
   "main": "./out/extension.js",
   "extensionDependencies": [
@@ -45,6 +47,14 @@
     ],
     "commands": [
       {
+        "command": "dotnet-interactive.acquire",
+        "title": "Install .NET Interactive"
+      },
+      {
+        "command": "dotnet-interactive.reportInteractiveVersion",
+        "title": "Report installed version for .NET Interactive"
+      },
+      {
         "command": "dotnet-interactive.exportAsJupyterNotebook",
         "title": "DotNet Interactive: Export as Jupyter Notebook"
       }
@@ -64,18 +74,22 @@
   },
   "devDependencies": {
     "@types/chai": "4.2.11",
+    "@types/chai-fs": "2.0.2",
     "@types/glob": "7.1.1",
     "@types/mocha": "7.0.2",
     "@types/node": "13.11.0",
+    "@types/tmp": "0.2.0",
     "@types/vscode": "1.44.0",
     "@typescript-eslint/eslint-plugin": "2.26.0",
     "@typescript-eslint/parser": "2.26.0",
     "chai": "4.2.0",
+    "chai-fs": "2.0.0",
     "eslint": "6.8.0",
     "glob": "7.1.6",
     "mocha": "7.1.1",
     "mocha-multi-reporters": "1.1.7",
     "mocha-trx-reporter": "3.2.4",
+    "tmp": "0.2.1",
     "typescript": "3.8.3",
     "vsce": "1.75.0",
     "vscode-test": "1.3.0"

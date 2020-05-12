@@ -4,9 +4,10 @@ import { StdioKernelTransport } from '../../../stdioKernelTransport';
 import { ClientMapper } from '../../../clientMapper';
 import { CellOutput, CellOutputKind } from '../../../interfaces/vscode';
 
+
 suite('Extension Test Suite', () => {
     test('Execute against real kernel', async () => {
-        let clientMapper = new ClientMapper(() => new StdioKernelTransport('dotnet', { args: ['interactive'] }));
+        let clientMapper = new ClientMapper(() => new StdioKernelTransport('dotnet', ['interactive', 'stdio']));
         let client = clientMapper.getOrAddClient({ path: 'some/path' });
         let code = '1+1';
         let result: Array<CellOutput> = [];
