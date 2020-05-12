@@ -41,10 +41,9 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 ## Features
 
 * [Support for multiple languages](polyglot.md)
-* Display output
-* Display HTML
-* Import NuGet packages 
+* [Display output](display-output.md)
 * Plotting with [Xplot](https://fslab.org/XPlot/)
+* Import NuGet packages 
 * Language-specific features
     * C#
         * The [C# scripting](https://docs.microsoft.com/en-us/archive/msdn-magazine/2016/january/essential-net-csharp-scripting) dialect
