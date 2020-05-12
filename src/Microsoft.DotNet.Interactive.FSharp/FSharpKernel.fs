@@ -175,6 +175,7 @@ type FSharpKernel() as this =
 
     member _.ResolvedPackageReferences = _packageRestoreContext.Value.ResolvedPackageReferences;
 
+    member _.PackageRestoreContext = _packageRestoreContext.Value
 
     // Integrate nuget package management to the F# Kernel
     interface ISupportNuget with
@@ -200,7 +201,7 @@ type FSharpKernel() as this =
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command)
 
-        member _.PackageRestoreContext = _packageRestoreContext.Value
+        member _.PackageRestoreContext = this.PackageRestoreContext
 
     interface IExtensibleKernel with
         member this.LoadExtensionsFromDirectoryAsync(directory:DirectoryInfo, context:KernelInvocationContext) =
