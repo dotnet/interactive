@@ -2,15 +2,21 @@
 
 ## Getting started 
 
-There are several ways to get started using .NET Interactive with Jupyter.
+### Jupyter and nteract
+
+There are several ways to get started using .NET Interactive with Jupyter, including Jupyter Notebook, JupyterLab, and nteract.
 
 * [Try sample .NET notebooks online using Binder](NotebooksOnBinder.md).
 * [Create and run .NET notebooks on your machine](NotebooksLocalExperience.md).
 * [Share .NET notebooks online using Binder](CreateBinder.md).
 
+### Visual Studio Code
+
+Work is underway to add support for the new Visual Studio Code native notebook feature. While we are still in the early stages of this effort, if you'd like to experiment with it you can find instructions [here](../src/dotnet-interactive-vscode/README.md). 
+
 ### Telemetry
 
-Telemetry is collected when .NET Interactive is run for the first time on a machine. After the first run, we no longer collect telemetry. The teletry is anonymous and collects only the values for a specific subset of the verbs on the .NET Interactive CLI. Those verbs are:
+Telemetry is collected when various .NET Interactive command lines are run. Once .NET Interactive is running, we do not collect telemetry from any further user actions. The teletry is anonymous and collected only the values for a specific subset of the verbs on the .NET Interactive CLI. Those verbs are:
 
 * `dotnet interactive jupyter`
 * `dotnet interactive jupyter install`
@@ -30,12 +36,11 @@ Telemetry
 The .NET Core tools collect usage data in order to help us improve your experience.The data is anonymous and doesn't include command-line arguments. The data is collected by Microsoft and shared with the community. You can opt-out of telemetry by setting the DOTNET_TRY_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 ```
 
-Read more about .NET Core CLI Tools telemetry: https://aka.ms/dotnet-cli-telemetry
 To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_SKIP_FIRST_TIME_EXPERIENCE` environment variable to `true`. Note that this variable has no effect on telemetry opt out.
 
 ## Features
 
-* Support for multiple languages
+* [Support for multiple languages](polyglot.md)
 * Display output
 * Display HTML
 * Import NuGet packages 
@@ -68,7 +73,7 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 ## Visualization
 
 * XPlot
-* Visuaization with JavaScript libraries
+* Visualization with JavaScript libraries
 
 ## .NET Interactive API Guides
 
