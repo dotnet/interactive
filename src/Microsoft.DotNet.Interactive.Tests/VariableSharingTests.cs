@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .Be("123:System.Int32");
         }
 
-        [Fact(Skip= "not supported in jon.sk langauge")]
+        [Fact]
         public async Task Directives_can_access_local_kernel_variables()
         {
             using var kernel = CreateKernel();
