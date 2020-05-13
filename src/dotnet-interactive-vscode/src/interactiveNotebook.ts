@@ -75,6 +75,14 @@ export function parseNotebook(contents: string): NotebookFile {
         addCell();
     }
 
+    if (cells.length === 0) {
+        // ensure there's at least one cell available
+        cells.push({
+            language: 'csharp',
+            contents: []
+        });
+    }
+
     return {
         cells
     };

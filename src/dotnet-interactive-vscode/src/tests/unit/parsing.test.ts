@@ -177,10 +177,15 @@ asdf
         });
     });
 
-    it('empty file parses as valid', () => {
+    it('empty file parses as a single empty cell', () => {
         let notebook = parseNotebook('');
         expect(notebook).to.deep.equal({
-            cells: []
+            cells: [
+                {
+                    language: 'csharp',
+                    contents: []
+                }
+            ]
         });
     });
 

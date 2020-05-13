@@ -1,15 +1,14 @@
 import * as cp from 'child_process';
 import { DisposableSubscription, KernelCommand, KernelCommandType, KernelEventEnvelope, KernelEventEnvelopeObserver } from "./contracts";
 
-
 export class StdioKernelTransport {
     private buffer: string = '';
     private childProcess: cp.ChildProcessWithoutNullStreams;
     private subscribers: Array<KernelEventEnvelopeObserver> = [];
 
-    constructor(readonly dotnetPath: string) {
-        this.childProcess = cp.spawn(this.dotnetPath, ['interactive', 'stdio']);
-        this.childProcess.on('exit', (code: number, _signal: string) => {
+    constructor(command: string, args: Array<string>, workingDirectory?: string | undefined) {
+        this.childProcess = cp.spawn(command, args, { cwd: workingDirectory });
+        this.childProcess.on('exit', (_code: number, _signal: string) => {
             //
             let x = 1;
         });
