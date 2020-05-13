@@ -96,7 +96,7 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
  
 ## Extending .NET Interactive
 
-* [Overview](extensions-overview.md)
+* [Overview](extending-dotnet-interactive.md)
 * Adding magic commands
 * Building your own extension
 * Publishing your extension 
