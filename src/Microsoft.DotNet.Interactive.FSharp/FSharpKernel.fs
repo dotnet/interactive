@@ -155,7 +155,7 @@ type FSharpKernel() as this =
             false
 
     override _.SetVariableAsync(name: string, value: Object) : Task = 
-        // script.Value.Fsi.AddBoundValue(name, value) |> ignore
+        script.Value.Fsi.AddBoundValue(name, value) |> ignore
         Task.CompletedTask
 
     member _.RestoreSources = _packageRestoreContext.Value.RestoreSources;
