@@ -29,15 +29,13 @@ type FSharpKernel() as this =
 
     static let lockObj = Object();
 
-    let variables = HashSet<string>()
-
     let createScript () =  
         lock lockObj (fun () -> new FSharpScript(additionalArgs=[|"/langversion:preview"|]))
 
+    let script = lazy createScript ()
+
     let extensionLoader: AssemblyBasedExtensionLoader = AssemblyBasedExtensionLoader()
 
-    let script = lazy createScript ()
-    do base.RegisterForDisposal(fun () -> if script.IsValueCreated then (script.Value :> IDisposable).Dispose())
     let mutable cancellationTokenSource = new CancellationTokenSource()
 
     let kindString (glyph: FSharpGlyph) =
@@ -129,11 +127,6 @@ type FSharpKernel() as this =
         packageRestoreContext
 
     let _packageRestoreContext = lazy createPackageRestoreContext this.RegisterForDisposal
-
-            if isNull _nativeProbingRoots then
-                raise (new InvalidOperationException("_nativeProbingRoots is null"))
-            new DependencyProvider(_assemblyProbingPaths, _nativeProbingRoots)
-        lazy (createDependencyProvider ())
 
     member this.GetCurrentVariables() =
         script.Value.Fsi.GetBoundValues()
