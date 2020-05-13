@@ -94,12 +94,6 @@ describe('Acquisition tests', () => {
                 installInteractiveToolWithSpecificVersion('42.42.42'), // 'install' this version when asked
                 report);
             expect(launchOptions).to.deep.equal({
-                args: [
-                    'tool',
-                    'run',
-                    'dotnet-interactive',
-                    '--'
-                ],
                 workingDirectory: globalStoragePath
             });
             expect(globalStoragePath).to.be.a.directory();

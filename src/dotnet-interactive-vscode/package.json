@@ -48,6 +48,11 @@
     "configuration": {
       "title": ".NET Interactive Notebook",
       "properties": {
+        "dotnet-interactive.kernelTransportArgsOverride": {
+          "type": "array",
+          "default": [],
+          "description": "Override command line arguments passed to start an interactive session."
+        },
         "dotnet-interactive.interactiveToolSource": {
           "type": "string",
           "default": "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json",

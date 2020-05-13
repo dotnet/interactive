@@ -28,12 +28,6 @@ export async function acquireDotnetInteractive(
     }
 
     const launchOptions: InteractiveLaunchOptions = {
-        args: [
-            'tool',
-            'run',
-            'dotnet-interactive',
-            '--'
-        ],
         workingDirectory: globalStoragePath
     };
 

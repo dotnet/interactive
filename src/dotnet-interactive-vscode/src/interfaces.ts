@@ -14,7 +14,6 @@ export interface DocumentWithCells {
 // interactive acquisition
 
 export interface InteractiveLaunchOptions {
-    args: Array<string>;
     workingDirectory: string;
 }
 

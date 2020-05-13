@@ -11,16 +11,22 @@ import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
 
 import compareVersions = require("../node_modules/compare-versions");
 
+const defaultKernelTransportArgs: Array<string> = [
+    'tool',
+    'run',
+    'dotnet-interactive',
+    '--',
+    'stdio'
+];
+
 export async function activate(context: vscode.ExtensionContext) {
     // install dotnet or use global
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
-    const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion') || '3.1'; // some sensible fallback
+    const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion');
     let dotnetPath: string;
-    if (await isDotnetUpToDate(minDotNetSdkVersion)) {
+    if (await isDotnetUpToDate(minDotNetSdkVersion!)) {
         dotnetPath = 'dotnet';
     } else {
-        
-        config.get('');
         const commandResult = await vscode.commands.executeCommand<IDotnetAcquireResult>('dotnet.acquire', { version: minDotNetSdkVersion });
         dotnetPath = commandResult!.dotnetPath;
     }
@@ -32,10 +38,13 @@ export async function activate(context: vscode.ExtensionContext) {
         dotnetPath,
     };
     const launchOptions = await vscode.commands.executeCommand<InteractiveLaunchOptions>('dotnet-interactive.acquire', installArgs);
-    let launchArgs = [...launchOptions!.args];
-    launchArgs.push('stdio');
 
-    const clientMapper = new ClientMapper(() => new StdioKernelTransport(dotnetPath, launchArgs, launchOptions!.workingDirectory));
+    let launchArgs = config.get<Array<string>>('kernelTransportArgsOverride');
+    if (!launchArgs || launchArgs.length === 0) {
+        launchArgs = defaultKernelTransportArgs;
+    }
+
+    const clientMapper = new ClientMapper(() => new StdioKernelTransport(dotnetPath, launchArgs!, launchOptions!.workingDirectory));
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', new DotNetInteractiveNotebookContentProvider(clientMapper)));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(registerLanguageProviders(clientMapper));
