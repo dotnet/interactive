@@ -76,10 +76,8 @@ describe('Acquisition tests', () => {
         // noop
     }
 
-    it("global storage doesn't exist", async () => {
-        // this tests the scenario where the extension launches for the first time and nothing exists
+    it("simulate first launch when global storage doesn't exist", async () => {
         await withFakeGlobalStorageLocation(false, async globalStoragePath => {
-            expect(globalStoragePath).to.not.be.a.path(); // sanity check that it doesn't exist
             const args = {
                 dotnetPath: 'dotnet',
                 toolVersion: undefined
@@ -115,14 +113,12 @@ describe('Acquisition tests', () => {
         });
     });
 
-    it("global storage exists, tool manifest doesn't", async () => {
-        // this tests the scenario where the global storage may have been cleared, but the directory wasn't removed
+    it("simulate global storage existing, but empty", async () => {
         await withFakeGlobalStorageLocation(true, async globalStoragePath => {
             const args = {
                 dotnetPath: 'dotnet',
                 toolVersion: undefined
             };
-            expect(globalStoragePath).to.be.a.directory(); // sanity check that it already exists
             const manifestPath = path.join(globalStoragePath, '.config', 'dotnet-tools.json');
             expect(manifestPath).to.not.be.a.path();
             const launchOptions = await acquireDotnetInteractive(
@@ -152,14 +148,12 @@ describe('Acquisition tests', () => {
         });
     });
 
-    it("global storage exsits, tool manifest exists, local tool doesn't exist", async () => {
-        // this tests the scenario where an earlier attempt to install a local interactive tool may have been interrupted
+    it("simulate global storage and tool manifest exist; local tool doesn't exist, but is added to the manifest", async () => {
         await withFakeGlobalStorageLocation(true, async globalStoragePath => {
             const args = {
                 dotnetPath: 'dotnet',
                 toolVersion: undefined
             };
-            expect(globalStoragePath).to.be.a.directory(); // sanity check that it already exists
             // prepopulate tool manifest
             await createEmptyToolManifest(args.dotnetPath, globalStoragePath);
 
@@ -191,14 +185,12 @@ describe('Acquisition tests', () => {
         });
     });
 
-    it("global storage exists, tool manifest exists, local tool exists, but is out of date with unspecified version", async () => {
-        // this tests the scenario where a local tool has already been installed, but is out of date
+    it("simulate local tool exists, is out of date, and is updated to the auto min version", async () => {
         await withFakeGlobalStorageLocation(true, async globalStoragePath => {
             const args = {
                 dotnetPath: 'dotnet',
                 toolVersion: undefined // install whatever you can
             };
-            expect(globalStoragePath).to.be.a.directory(); // sanity check that it already exists
             // prepopulate tool manifest...
             await createEmptyToolManifest(args.dotnetPath, globalStoragePath);
 
@@ -230,14 +222,12 @@ describe('Acquisition tests', () => {
         });
     });
 
-    it("global storage exists, tool manifest exists, local tool exists, but is out of date with specified version", async () => {
-        // this tests the scenario where a local tool has already been installed, but is out of date
+    it("simulate local tool exists, is out of date, and is updated to the specified min version", async () => {
         await withFakeGlobalStorageLocation(true, async globalStoragePath => {
             const args = {
                 dotnetPath: 'dotnet',
                 toolVersion: '42.42.42' // install exactly this
             };
-            expect(globalStoragePath).to.be.a.directory(); // sanity check that it already exists
             // prepopulate tool manifest...
             await createEmptyToolManifest(args.dotnetPath, globalStoragePath);
 
@@ -269,14 +259,12 @@ describe('Acquisition tests', () => {
         });
     });
 
-    it("global storage exists, tool manifest exists, local tool exists and is up to date", async () => {
-        // this tests the scenario where a local tool has already been installed and is ready to go
+    it("simulate local tool exists and is already up to date", async () => {
         await withFakeGlobalStorageLocation(true, async globalStoragePath => {
             const args = {
                 dotnetPath: 'dotnet',
                 toolVersion: '42.42.42' // request at least this version
             };
-            expect(globalStoragePath).to.be.a.directory(); // sanity check that it already exists
             // prepopulate tool manifest...
             await createEmptyToolManifest(args.dotnetPath, globalStoragePath);
             // ...with existing version
@@ -306,6 +294,24 @@ describe('Acquisition tests', () => {
                         ]
                     }
                 }
+            });
+        });
+    });
+
+    it("helper method doesn't create global storage location when it shouldn't", async () => {
+        await withFakeGlobalStorageLocation(false, globalStoragePath => {
+            return new Promise((resolve, reject) => {
+                expect(globalStoragePath).to.not.be.a.path();
+                resolve();
+            });
+        });
+    });
+
+    it("helper method creates global storage location when it should", async () => {
+        await withFakeGlobalStorageLocation(true, globalStoragePath => {
+            return new Promise((resolve, reject) => {
+                expect(globalStoragePath).to.be.a.directory();
+                resolve();
             });
         });
     });
