@@ -41,7 +41,7 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 ## Features
 
 * [Support for multiple languages](polyglot.md)
-* [Display output](display-output.md)
+* Display output ([C#](display-output-csharp.md) | F# | PowerShell)
 * Plotting with [Xplot](https://fslab.org/XPlot/)
 * Import NuGet packages 
 * Language-specific features
@@ -92,12 +92,13 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 ### JavaScript API Guide
 
 * Variable access from the client
-* require.js support
+* RequireJS support
  
-## Extending .NET Interactive
+## [Extending .NET Interactive]
 
+* [Overview](extensions-overview.md)
 * Adding magic commands
-* Build your own extension
-* Publish your extension 
+* Building your own extension
+* Publishing your extension 
 
 
