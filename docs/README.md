@@ -12,7 +12,7 @@ There are several ways to get started using .NET Interactive with Jupyter, inclu
 
 ### Visual Studio Code
 
-Work is underway to add support for the new Visual Studio Code native notebook feature. While we are still in the early stages of this effort, if you'd like to experiment with it you can find instructions [here](../src/dotnet-interactive-vscode/README.md). 
+Work is underway to add support for the new Visual Studio Code [native notebook feature](https://code.visualstudio.com/updates/v1_45#_github-issue-notebook). While we are still in the early stages of this effort, if you'd like to experiment with it you can find instructions [here](../src/dotnet-interactive-vscode/README.md). 
 
 ### Telemetry
 
