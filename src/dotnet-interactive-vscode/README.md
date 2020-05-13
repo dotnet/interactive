@@ -8,20 +8,20 @@
 
 This extension adds support for using the `dotnet-interactive` global tool from within VS Code in a notebook-like environment.
 
-### Getting Started
+## Getting Started
 
 1. Install the [.NET SDK 3.1](https://dotnet.microsoft.com/download/visual-studio-sdks).
-1. Install latest [DotNet Interactive Global Tool](https://www.nuget.org/packages/Microsoft.dotnet-interactive/).
-1. Install latest [VS Code Insiders](https://code.visualstudio.com/insiders/).
+1. Install the latest [.NET Interactive Global Tool](https://www.nuget.org/packages/Microsoft.dotnet-interactive/).
+1. Install the latest [VS Code Insiders](https://code.visualstudio.com/insiders/).
 1. Open this directory with `code-insiders` and F5
 1. Open a file with the `.dotnet-interactive` extension.
 
-### Development
+## Development
 
 Same steps as in [Getting Started](#Getting-Started).  Periodically the notebook APIs will change; the latest API can
 be obtained by running the `.\update-proposed-api.ps1` script.
 
-### Deployment
+## Deployment
 
 To create an installable `.vsix` and use it in the latest VS Code Insiders build, run the following commands:
 

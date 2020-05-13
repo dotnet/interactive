@@ -1,43 +1,32 @@
-# Use our latest version on [Binder](https://mybinder.org/)
+# Use Jupyter with .NET Interactive on [Binder](https://mybinder.org/)
 
-## Zero install. .NET Interactive with Jupyter. 
+All you need is your browser to try out the .NET Jupyter experience.
 
-**Requirement:**  All you need is your browser.
-
-To get you started, we created a set of samples in C# and F#.  These samples have been designed to provide a **zero-install** experience, allowing you to try the .NET kernel setup free.
+To get you started, we created a set of samples in C#, F#, and PowerShell. These samples have been designed to provide a **zero-install** experience, allowing you to try the .NET kernel setup free.
 
 ## Steps
 
-- Click on the **launch binder** badge below. 
+- Click on the **launch binder** badge: 
 
    [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab)
 
 
-- This launches the binder service. If this is your first time visiting, it'll take a minute or two to cold start.
+- This launches the binder service. It might take a minute or two to start.
 
-    <img src ="https://user-images.githubusercontent.com/2546640/72950702-1791bf00-3d5a-11ea-8889-20ff431d04b2.gif">
+    <img src ="https://user-images.githubusercontent.com/547415/81340591-f59c1e00-9064-11ea-956c-61d47eed28c3.gif">
 
--  Select one of the .NET folder options, `csharp` (C#) or `fsharp` (F#).
+- Explore the samples and docs on the left, or create a new notebook by choosing C#, F#, or PowerShell.
 
--  In the folder you will find a `Docs` folder and a `Samples` folder.
-
-- Docs folder - A how to guide that goes over formatting, plotting, magic commands etc. 
+- Under each language on the left, you'll find a `docs` folder with how-to guides for various features: 
    
    <img src = "https://user-images.githubusercontent.com/2546640/67980555-120e5800-fbf5-11e9-9c00-0d021b1ed21c.png" width = "40%">
 
-- Samples folder - Contains a set of samples that you learn and experiment with. 
+  You'll also find a `samples` folder containing a set of samples for specific scenarios. 
     
     <img src = "https://user-images.githubusercontent.com/2546640/67979951-be4f3f00-fbf3-11e9-90c2-16df089bafd9.png" width = "50%">
 
-- Select the `Samples` Folder, click on a `.ipynb` file that looks interesting, and when it opens you can start running the code in the cells. You can click *Run* to run the first cell. Each time you click *Run* it will run the next cell. 
+- Find a file that looks interesting. When it opens, you can start running the code in the cells. You can click ▶️ (or press `Shift-Enter`) to run the first cell. Each time you click ▶️ it will run the next cell. 
     
-- Once the notebook has loaded make sure you trust it by clicking on the  **Not Trusted** button, then on **Trust**. 
-    
-    <img src ="https://user-images.githubusercontent.com/2546640/67038545-9d63f580-f0ed-11e9-95d9-8df56a4c7b21.png" width ="60%">
-
-     *Please note the first cell might take a few seconds, since we are loading a few nuget packages*
-      
-    <img src ="https://user-images.githubusercontent.com/2546640/67975582-c48ced80-fbea-11e9-8008-908756af5dd3.png" width = "60%">
       
 - Now, you can run and edit the cells, import and plot data. 
 
@@ -49,7 +38,7 @@ To get you started, we created a set of samples in C# and F#.  These samples hav
     
     <img src = "https://user-images.githubusercontent.com/2546640/66444810-a92b2a00-ea12-11e9-855f-c933d3367778.png" width = "70%">
 
-Now that you have had a tour of .NET notebooks with binder, you can get started with building your own .NET notebooks locally on your machine. 
+Now that you have had a tour of .NET notebooks with Binder, you can get started with building your own .NET notebooks locally on your machine. 
 
 Follow the link below to get started.
  
