@@ -54,21 +54,19 @@ for ($j = 0; $j -le 4; $j += 4 ) {
 
             var events = result.KernelEvents.ToSubscribedList();
 
-            events.Should().ContainSingle();
-
             Assert.Collection(events,
-                              e => e.Should().BeOfType<CodeSubmissionReceived>(),
-                              e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-                              e => e.Should().BeOfType<DisplayedValueProduced>().Which
-                                    .Value.Should().BeOfType<string>().Which
-                                    .Should().Match("* Search in Progress* 0% Complete* [ * ] *"),
-                              e => e.Should().BeOfType<DisplayedValueUpdated>().Which
-                                    .Value.Should().BeOfType<string>().Which
-                                    .Should().Match("* Search in Progress* 100% Complete* [ooo*ooo] *"),
-                              e => e.Should().BeOfType<DisplayedValueUpdated>().Which
-                                    .Value.Should().BeOfType<string>().Which
-                                    .Should().Be(string.Empty),
-                              e => e.Should().BeOfType<CommandHandled>());
+                                       e => e.Should().BeOfType<CodeSubmissionReceived>(),
+                                       e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                                       e => e.Should().BeOfType<DisplayedValueProduced>().Which
+                                             .Value.Should().BeOfType<string>().Which
+                                             .Should().Match("* Search in Progress* 0% Complete* [ * ] *"),
+                                       e => e.Should().BeOfType<DisplayedValueUpdated>().Which
+                                             .Value.Should().BeOfType<string>().Which
+                                             .Should().Match("* Search in Progress* 100% Complete* [ooo*ooo] *"),
+                                       e => e.Should().BeOfType<DisplayedValueUpdated>().Which
+                                             .Value.Should().BeOfType<string>().Which
+                                             .Should().Be(string.Empty),
+                                       e => e.Should().BeOfType<CommandHandled>());
         }
 
         [Fact]
@@ -161,7 +159,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                 .ToLowerInvariant()
                 .Should().Match("*ping*data*");
         }
-        
+
         [Fact]
         public async Task GetCorrectProfilePaths()
         {
@@ -214,7 +212,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             }
             finally
             {
-                
+
                 File.Delete(_allUsersCurrentHostProfilePath);
             }
         }
