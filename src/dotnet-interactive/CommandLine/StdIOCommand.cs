@@ -14,12 +14,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         public static async Task<int> Do(StartupOptions startupOptions, KernelBase kernel, IConsole console)
         {
             var disposable = Program.StartToolLogging(startupOptions);
-
             var server = CreateServer(kernel, console);
-
             kernel.RegisterForDisposal(disposable);
-            kernel.RegisterForDisposal(server);
-
             await server.Input.LastAsync();
             return 0;
         }

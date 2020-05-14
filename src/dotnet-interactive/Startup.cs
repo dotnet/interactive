@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.App
                 app.UseRouting();
                 app.UseRouter(r =>
                 {
-                    var frontendEnvironment = serviceProvider.GetService<JupyterFrontedEnvironment>();
+                    var frontendEnvironment = serviceProvider.GetService<HtmlNotebookFrontedEnvironment>();
                     if (frontendEnvironment != null)
                     {
                         r.Routes.Add(new DiscoveryRouter(frontendEnvironment));

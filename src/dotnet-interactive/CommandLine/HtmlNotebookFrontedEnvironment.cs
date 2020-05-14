@@ -5,7 +5,7 @@ using System;
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine
 {
-    public class JupyterFrontedEnvironment : BrowserFrontendEnvironment
+    public class HtmlNotebookFrontedEnvironment : BrowserFrontendEnvironment
     {
         public Uri DiscoveredUri { get; set; }
     }

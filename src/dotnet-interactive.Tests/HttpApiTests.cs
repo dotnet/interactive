@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             var frontendEnvironment = server.FrontendEnvironment;
-            frontendEnvironment.Should().NotBeOfType<JupyterFrontedEnvironment>();
+            frontendEnvironment.Should().NotBeOfType<HtmlNotebookFrontedEnvironment>();
         }
 
         [Fact]
@@ -62,14 +62,14 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var expectedUri = new Uri("http://choosen.one:1000/");
             var server = GetServer(servicesSetup: (serviceCollection) =>
              {
-                 serviceCollection.AddSingleton(new JupyterFrontedEnvironment());
-                 serviceCollection.AddSingleton<BrowserFrontendEnvironment>(c => c.GetService<JupyterFrontedEnvironment>());
+                 serviceCollection.AddSingleton(new HtmlNotebookFrontedEnvironment());
+                 serviceCollection.AddSingleton<BrowserFrontendEnvironment>(c => c.GetService<HtmlNotebookFrontedEnvironment>());
              });
             var response = await server.HttpClient.PostAsync("/discovery", new StringContent(expectedUri.AbsoluteUri));
             using var scope = new AssertionScope();
             
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var frontendEnvironment = server.FrontendEnvironment as JupyterFrontedEnvironment;
+            var frontendEnvironment = server.FrontendEnvironment as HtmlNotebookFrontedEnvironment;
             frontendEnvironment.DiscoveredUri.Should().Be(expectedUri);
         }
 
