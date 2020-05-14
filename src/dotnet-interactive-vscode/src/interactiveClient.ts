@@ -63,7 +63,7 @@ export class InteractiveClient {
                             outputs.push(output);
                             observer(outputs);
                             disposable.dispose(); // is this correct?
-                            reject();
+                            reject(err);
                         }
                         break;
                     case StandardErrorValueProducedType:
@@ -178,11 +178,18 @@ export class InteractiveClient {
             let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
                 switch (eventEnvelope.eventType) {
                     case CommandFailedType:
+                        if (!handled) {
+                            handled = true;
+                            disposable.dispose();
+                            let err = <CommandFailed>eventEnvelope.event;
+                            reject(err);
+                        }
+                        break;
                     case CommandHandledType:
                         if (!handled) {
                             handled = true;
                             disposable.dispose();
-                            reject();
+                            reject('Command was handled before reporting expected result.');
                         }
                         break;
                     default:
