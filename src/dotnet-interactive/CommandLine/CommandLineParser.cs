@@ -8,7 +8,6 @@ using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
-using System.Linq;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Clockwise;
@@ -24,7 +23,6 @@ using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.PowerShell.Commands;
 using Recipes;
 using CommandHandler = System.CommandLine.Invocation.CommandHandler;
 
@@ -148,12 +146,11 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             Command Jupyter()
             {
                 var httpPortRangeOption = new Option<HttpPortRange>(
-                 "--http-port-range",
-                 parseArgument: result =>
-                     result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
-                 description: "Specifies the range of port to use to enable HTTP services",
-                 isDefault: true
-             );
+                    "--http-port-range",
+                    parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
+                    description: "Specifies the range of port to use to enable HTTP services",
+                    isDefault: true );
+
                 var command = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel")
                 {
                     defaultKernelOption,
@@ -190,9 +187,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         options.DefaultKernel,
                         serviceCollection =>
                         {
-                            serviceCollection.AddSingleton(_ => new JupyterFrontedEnvironment());
+                            serviceCollection.AddSingleton(_ => new HtmlNotebookFrontedEnvironment());
                             serviceCollection.AddSingleton<FrontendEnvironment>(c =>
-                                c.GetService<JupyterFrontedEnvironment>());
+                                c.GetService<HtmlNotebookFrontedEnvironment>());
                         });
 
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
@@ -278,19 +275,46 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             Command StdIO()
             {
+                var httpPortRangeOption = new Option<HttpPortRange>(
+                    "--http-port-range",
+                    parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
+                    description: "Specifies the range of port to use to enable HTTP services");
+
                 var command = new Command(
                     "stdio",
                     "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
                 {
                     defaultKernelOption,
-                    logPathOption
+                    logPathOption,
+                    httpPortRangeOption
                 };
 
                 command.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
-                    (startupOptions, options, console, context) => startStdIO(
-                        startupOptions,
-                        CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(), startupOptions, null),
-                        console));
+                    (startupOptions, options, console, context) =>
+                    {
+                        if (startupOptions.EnableHttpApi)
+                        {
+                            RegisterKernelInServiceCollection(
+                                services,
+                                startupOptions,
+                                options.DefaultKernel,
+                                serviceCollection =>
+                                {
+                                    serviceCollection.AddSingleton(_ => new HtmlNotebookFrontedEnvironment());
+                                    serviceCollection.AddSingleton<FrontendEnvironment>(c =>
+                                        c.GetService<HtmlNotebookFrontedEnvironment>());
+                                }, kernel =>
+                                {
+                                    StdIOCommand.CreateServer(kernel, console);
+                                });
+
+                            return startHttp(startupOptions, console, startServer, context);
+                        }
+                        return startStdIO(
+                            startupOptions,
+                            CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(), startupOptions, null),
+                            console);
+                    });
 
                 return command;
             }
@@ -434,7 +458,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                     Formatter<LaTeXString>.Register((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
                     Formatter<MathString>.Register((math, writer) => writer.Write(math.ToString()), "text/latex");
-                    if (startupOptions.EnableHttpApi && browserFrontendEnvironment is JupyterFrontedEnvironment jupyterFrontedEnvironment)
+                    if (startupOptions.EnableHttpApi && browserFrontendEnvironment is HtmlNotebookFrontedEnvironment jupyterFrontedEnvironment)
                     {
                         Formatter<ScriptContent>.Register((script, writer) =>
                         {

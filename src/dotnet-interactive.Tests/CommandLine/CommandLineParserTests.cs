@@ -182,10 +182,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             await _parser.InvokeAsync($"http");
 
             _serviceCollection
-                .FirstOrDefault(s => s.ServiceType == typeof(JupyterFrontedEnvironment))
+                .FirstOrDefault(s => s.ServiceType == typeof(HtmlNotebookFrontedEnvironment))
                 .Should()
                 .BeNull();
-
         }
 
         [Fact]
@@ -206,7 +205,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
 
             using var scope = new AssertionScope();
             _serviceCollection
-                .FirstOrDefault(s => s.ServiceType == typeof(JupyterFrontedEnvironment))
+                .FirstOrDefault(s => s.ServiceType == typeof(HtmlNotebookFrontedEnvironment))
                 .Should()
                 .NotBeNull();
 
@@ -314,7 +313,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
 
         [Theory]
         [InlineData("stdio --http-port 8000", "Unrecognized command or argument '--http-port'")]
-        [InlineData("stdio --http-port-range 3000-4000", "Unrecognized command or argument '--http-port-range'")]
         public void stdio_command_does_not_support_http_options(string commandLine, string expectedError)
         {
             var result = _parser.Parse(commandLine);
@@ -323,6 +321,28 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 .Select(e => e.Message)
                 .Should()
                 .Contain(errorMessage => errorMessage == expectedError);
+        }
+
+        [Fact]
+        public async Task stdio_command_parses_http_port_range_options()
+        {
+            await _parser.InvokeAsync("stdio --http-port-range 3000-4000");
+
+            using var scope = new AssertionScope();
+            _startOptions.HttpPortRange.Should().NotBeNull();
+            _startOptions.HttpPortRange.Start.Should().Be(3000);
+            _startOptions.HttpPortRange.End.Should().Be(4000);
+        }
+
+        [Fact]
+        public async Task stdio_command_does_register_JupyterFrontedEnvironment_when_http_is_enabled()
+        {
+            await _parser.InvokeAsync("stdio --http-port-range 3000-4000");
+
+            _serviceCollection
+                .FirstOrDefault(s => s.ServiceType == typeof(HtmlNotebookFrontedEnvironment))
+                .Should()
+                .NotBeNull();
         }
 
         [Fact]
