@@ -18,16 +18,16 @@ namespace Microsoft.DotNet.Interactive.App
         The below script needs to be able to find the current output cell; this is an easy method to get it.
     </div>
     <script type='text/javascript'>
-// ensure `requirejs` is available globally
-if (typeof requirejs !== typeof Function || typeof requirejs.config !== typeof Function) {
-    let requirejs_script = document.createElement('script');
-    requirejs_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
-    requirejs_script.setAttribute('type', 'text/javascript');
-    requirejs_script.onload = function () {
+// ensure `require` is available globally
+if (typeof require !== typeof Function || typeof require.config !== typeof Function) {
+    let require_script = document.createElement('script');
+    require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
+    require_script.setAttribute('type', 'text/javascript');
+    require_script.onload = function () {
         loadDotnetInteractiveApi();
     };
 
-    document.getElementsByTagName('head')[0].appendChild(requirejs_script);
+    document.getElementsByTagName('head')[0].appendChild(require_script);
 }
 else {
     loadDotnetInteractiveApi();
@@ -55,6 +55,8 @@ async function probeAddresses(probingAddresses) {
             try {
                 let response = await timeout(1000, fetch(`${rootUrl}discovery`, {
                     method: 'POST',
+                    cache: 'no-cache',
+                    mode: 'cors',
                     timeout: 1000,
                     headers: {
                         'Content-Type': 'text/plain'
@@ -76,12 +78,12 @@ function loadDotnetInteractiveApi() {
         .then((root) => {
             // use probing to find host url and api resources
             // load interactive helpers and language services
-            let dotnet_require = requirejs.config({
+            let dotnet_require = require.config({
                 context: '$CACHE_BUSTER$',
                 paths: {
                     'dotnet-interactive': `${root}resources`
                 }
-            });
+            }) || require;
             if (!window.dotnet_require) {
                 window.dotnet_require = dotnet_require;
             }
