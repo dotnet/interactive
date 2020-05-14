@@ -34,7 +34,9 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 
         let client = this.clientMapper.getOrAddClient(uri);
         let notebookPath = path.dirname(uri.fsPath);
-        client.changeWorkingDirectory(notebookPath);
+        client.changeWorkingDirectory(notebookPath).catch(() => {
+            vscode.window.showInformationMessage(`Unable to set notebook working directory to '${notebookPath}'.`);
+        });
 
         let notebookData: vscode.NotebookData = {
             languages: editorLanguages,
