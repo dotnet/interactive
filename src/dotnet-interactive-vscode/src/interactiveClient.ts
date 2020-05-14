@@ -1,4 +1,6 @@
 import {
+    ChangeWorkingDirectory,
+    ChangeWorkingDirectoryType,
     CommandFailed,
     CommandFailedType,
     CommandHandledType,
@@ -23,11 +25,12 @@ import {
     RequestHoverTextType,
     ReturnValueProducedType,
     StandardErrorValueProducedType,
-    StandardOutputValueProduced,
     StandardOutputValueProducedType,
     SubmissionType,
     SubmitCode,
     SubmitCodeType,
+    WorkingDirectoryChanged,
+    WorkingDirectoryChangedType,
 } from './contracts';
 import { CellOutput, CellErrorOutput, CellOutputKind, CellStreamOutput, CellDisplayOutput } from './interfaces/vscode';
 
@@ -119,6 +122,13 @@ export class InteractiveClient {
                 }
             }, token);
         });
+    }
+
+    changeWorkingDirectory(workingDirectory: string, token?: string | undefined): Promise<WorkingDirectoryChanged> {
+        let command: ChangeWorkingDirectory = {
+            workingDirectory
+        };
+        return this.submitCommandAndGetResult<WorkingDirectoryChanged>(command, ChangeWorkingDirectoryType, WorkingDirectoryChangedType, token);
     }
 
     completion(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionRequestCompleted> {

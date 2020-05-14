@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -375,6 +376,17 @@ namespace Microsoft.DotNet.Interactive
                             requestCompletion.Handler = (_, invocationContext) =>
                             {
                                 return HandleRequestCompletion(requestCompletion, invocationContext);
+                            };
+                            break;
+
+                        // process management
+
+                        case ChangeWorkingDirectory cwd:
+                            cwd.Handler = (_, _) =>
+                            {
+                                Directory.SetCurrentDirectory(cwd.WorkingDirectory);
+                                context.Publish(new WorkingDirectoryChanged(cwd, cwd.WorkingDirectory));
+                                return Task.CompletedTask;
                             };
                             break;
 

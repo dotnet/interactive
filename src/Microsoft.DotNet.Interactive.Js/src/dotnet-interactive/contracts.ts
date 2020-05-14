@@ -2,6 +2,7 @@
 
 export const AddPackageType = "AddPackage";
 export const CancelCurrentCommandType = "CancelCurrentCommand";
+export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
 export const RequestCompletionType = "RequestCompletion";
@@ -13,6 +14,7 @@ export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 export type KernelCommandType =
       typeof AddPackageType
     | typeof CancelCurrentCommandType
+    | typeof ChangeWorkingDirectoryType
     | typeof DisplayErrorType
     | typeof DisplayValueType
     | typeof RequestCompletionType
@@ -36,6 +38,10 @@ export interface PackageReference {
 }
 
 export interface CancelCurrentCommand extends KernelCommand {
+}
+
+export interface ChangeWorkingDirectory extends KernelCommand {
+    workingDirectory: string;
 }
 
 export interface DisplayError extends KernelCommand {
@@ -105,6 +111,7 @@ export const PasswordRequestedType = "PasswordRequested";
 export const ReturnValueProducedType = "ReturnValueProduced";
 export const StandardErrorValueProducedType = "StandardErrorValueProduced";
 export const StandardOutputValueProducedType = "StandardOutputValueProduced";
+export const WorkingDirectoryChangedType = "WorkingDirectoryChanged";
 
 export type KernelEventType =
       typeof CodeSubmissionReceivedType
@@ -124,7 +131,8 @@ export type KernelEventType =
     | typeof PasswordRequestedType
     | typeof ReturnValueProducedType
     | typeof StandardErrorValueProducedType
-    | typeof StandardOutputValueProducedType;
+    | typeof StandardOutputValueProducedType
+    | typeof WorkingDirectoryChangedType;
 
 export interface CodeSubmissionReceived extends KernelEvent {
     code: string;
@@ -222,6 +230,10 @@ export interface StandardErrorValueProduced extends DisplayEventBase {
 }
 
 export interface StandardOutputValueProduced extends DisplayEventBase {
+}
+
+export interface WorkingDirectoryChanged extends KernelEvent {
+    workingDirectory: string;
 }
 
 export interface KernelEventEnvelope {
