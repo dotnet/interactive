@@ -17,5 +17,9 @@ export function init(global: any) {
         return global.interactiveScopes[key];
     }
 
+    global.getJsLoader = (config: any) =>{        
+        return (<any>require).config(config) || require;
+    }
+
     global.createDotnetInteractiveClient = createDotnetInteractiveClient;
 }
