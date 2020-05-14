@@ -384,7 +384,7 @@ namespace Microsoft.DotNet.Interactive
                         case ChangeWorkingDirectory cwd:
                             cwd.Handler = (_, _) =>
                             {
-                                Directory.SetCurrentDirectory(cwd.WorkingDirectory);
+                                Directory.SetCurrentDirectory(cwd.WorkingDirectory.FullName);
                                 context.Publish(new WorkingDirectoryChanged(cwd, cwd.WorkingDirectory));
                                 return Task.CompletedTask;
                             };
