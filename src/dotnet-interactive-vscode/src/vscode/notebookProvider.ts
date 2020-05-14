@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { ClientMapper } from './../clientMapper';
 import { NotebookFile, parseNotebook, serializeNotebook, editorLanguages } from '../interactiveNotebook';
 import { RawNotebookCell } from '../interfaces';
@@ -31,7 +32,17 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
                 break;
         }
 
-        this.clientMapper.getOrAddClient(uri);
+        let client = this.clientMapper.getOrAddClient(uri);
+        let notebookPath = path.dirname(uri.fsPath);
+        client.changeWorkingDirectory(notebookPath).catch((err) => {
+            let message = `Unable to set notebook working directory to '${notebookPath}'.`;
+            if (err && err.message) {
+                message += '\n' + err.message.toString();
+            }
+
+            vscode.window.showInformationMessage(message);
+        });
+
         let notebookData: vscode.NotebookData = {
             languages: editorLanguages,
             metadata: {
@@ -39,6 +50,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
             },
             cells: notebook.cells.map(toNotebookCellData)
         };
+
         return notebookData;
     }
 

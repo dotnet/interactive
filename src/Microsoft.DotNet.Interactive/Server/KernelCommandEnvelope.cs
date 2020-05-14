@@ -27,6 +27,7 @@ namespace Microsoft.DotNet.Interactive.Server
             {
                 [nameof(AddPackage)] = typeof(KernelCommandEnvelope<AddPackage>),
                 [nameof(CancelCurrentCommand)] = typeof(KernelCommandEnvelope<CancelCurrentCommand>),
+                [nameof(ChangeWorkingDirectory)] = typeof(KernelCommandEnvelope<ChangeWorkingDirectory>),
                 [nameof(DisplayError)] = typeof(KernelCommandEnvelope<DisplayError>),
                 [nameof(DisplayValue)] = typeof(KernelCommandEnvelope<DisplayValue>),
                 [nameof(RequestCompletion)] = typeof(KernelCommandEnvelope<RequestCompletion>),

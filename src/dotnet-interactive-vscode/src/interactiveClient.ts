@@ -1,4 +1,6 @@
 import {
+    ChangeWorkingDirectory,
+    ChangeWorkingDirectoryType,
     CommandFailed,
     CommandFailedType,
     CommandHandledType,
@@ -23,11 +25,12 @@ import {
     RequestHoverTextType,
     ReturnValueProducedType,
     StandardErrorValueProducedType,
-    StandardOutputValueProduced,
     StandardOutputValueProducedType,
     SubmissionType,
     SubmitCode,
     SubmitCodeType,
+    WorkingDirectoryChanged,
+    WorkingDirectoryChangedType,
 } from './contracts';
 import { CellOutput, CellErrorOutput, CellOutputKind, CellStreamOutput, CellDisplayOutput } from './interfaces/vscode';
 
@@ -60,7 +63,7 @@ export class InteractiveClient {
                             outputs.push(output);
                             observer(outputs);
                             disposable.dispose(); // is this correct?
-                            reject();
+                            reject(err);
                         }
                         break;
                     case StandardErrorValueProducedType:
@@ -121,6 +124,13 @@ export class InteractiveClient {
         });
     }
 
+    changeWorkingDirectory(workingDirectory: string, token?: string | undefined): Promise<WorkingDirectoryChanged> {
+        let command: ChangeWorkingDirectory = {
+            workingDirectory
+        };
+        return this.submitCommandAndGetResult<WorkingDirectoryChanged>(command, ChangeWorkingDirectoryType, WorkingDirectoryChangedType, token);
+    }
+
     completion(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionRequestCompleted> {
         let command: RequestCompletion = {
             code: code,
@@ -168,11 +178,18 @@ export class InteractiveClient {
             let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
                 switch (eventEnvelope.eventType) {
                     case CommandFailedType:
+                        if (!handled) {
+                            handled = true;
+                            disposable.dispose();
+                            let err = <CommandFailed>eventEnvelope.event;
+                            reject(err);
+                        }
+                        break;
                     case CommandHandledType:
                         if (!handled) {
                             handled = true;
                             disposable.dispose();
-                            reject();
+                            reject('Command was handled before reporting expected result.');
                         }
                         break;
                     default:

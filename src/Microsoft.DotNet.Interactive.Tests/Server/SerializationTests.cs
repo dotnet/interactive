@@ -108,6 +108,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new CancelCurrentCommand();
 
+                yield return new ChangeWorkingDirectory(new DirectoryInfo("some/different/directory"));
+
                 yield return new DisplayError("oops!");
 
                 yield return new DisplayValue(
@@ -234,6 +236,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     {
                         new FormattedValue("text/plain", "123"),
                     });
+
+                yield return new WorkingDirectoryChanged(
+                    new DirectoryInfo("some/different/directory"),
+                    new ChangeWorkingDirectory(new DirectoryInfo("some/different/directory")));
             }
         }
     }
