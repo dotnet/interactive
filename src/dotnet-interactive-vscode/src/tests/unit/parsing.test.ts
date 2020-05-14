@@ -159,18 +159,39 @@ let x = 1
         });
     });
 
-    it('unrecognized language specifier is passed through unchanged', () => {
+    it('unrecognized language specifier is treated like a magic command in the current cell', () => {
         let contents = `
-#!not-a-language
-asdf
+#!csharp
+#!probably-a-magic-command
+var x = 1;
 `;
         let notebook = parseNotebook(contents);
         expect(notebook).to.deep.equal({
             cells: [
                 {
-                    language: 'not-a-language',
+                    language: 'csharp',
                     contents: [
-                        'asdf'
+                        '#!probably-a-magic-command',
+                        'var x = 1;'
+                    ]
+                }
+            ]
+        });
+    });
+
+    it('unrecognized language specifier at top of file is treated like a magic command in the first cell', () => {
+        let contents = `
+#!probably-a-magic-command
+var x = 1;
+`;
+        let notebook = parseNotebook(contents);
+        expect(notebook).to.deep.equal({
+            cells: [
+                {
+                    language: 'csharp',
+                    contents: [
+                        '#!probably-a-magic-command',
+                        'var x = 1;'
                     ]
                 }
             ]
