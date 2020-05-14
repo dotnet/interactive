@@ -238,8 +238,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     });
 
                 yield return new WorkingDirectoryChanged(
-                    new ChangeWorkingDirectory(new DirectoryInfo("some/different/directory")),
-                    new DirectoryInfo("some/different/directory"));
+                    new DirectoryInfo("some/different/directory"),
+                    new ChangeWorkingDirectory(new DirectoryInfo("some/different/directory")));
             }
         }
     }

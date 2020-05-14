@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Events
     {
         public DirectoryInfo WorkingDirectory { get; }
 
-        public WorkingDirectoryChanged(IKernelCommand command, DirectoryInfo workingDirectory)
+        public WorkingDirectoryChanged(DirectoryInfo workingDirectory, IKernelCommand command = null)
             : base(command)
         {
             WorkingDirectory = workingDirectory;

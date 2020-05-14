@@ -385,7 +385,7 @@ namespace Microsoft.DotNet.Interactive
                             cwd.Handler = (_, _) =>
                             {
                                 Directory.SetCurrentDirectory(cwd.WorkingDirectory.FullName);
-                                context.Publish(new WorkingDirectoryChanged(cwd, cwd.WorkingDirectory));
+                                context.Publish(new WorkingDirectoryChanged(cwd.WorkingDirectory, cwd));
                                 return Task.CompletedTask;
                             };
                             break;
