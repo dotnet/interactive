@@ -16,7 +16,7 @@ namespace XPlot.DotNet.Interactive.KernelExtensions
             var jsElement = chart.GetInlineJS().Replace("<script>", string.Empty).Replace("</script>",string.Empty);
             
             return $@"{divElement}
-{GetScriptElementWithRequire(jsElement)}"                   ;
+{GetScriptElementWithRequire(jsElement)}";
         }
 
         private static IHtmlContent GetScriptElementWithRequire(string script)
@@ -25,15 +25,15 @@ namespace XPlot.DotNet.Interactive.KernelExtensions
             newScript.AppendLine("<script type=\"text/javascript\">");
             newScript.AppendLine(@"
 var renderPlotly = function() {
-    var xplotRequire = requirejs.config({context:'xplot-3.0.1',paths:{plotly:'https://cdn.plot.ly/plotly-1.49.2.min'}});
+    var xplotRequire = require.config({context:'xplot-3.0.1',paths:{plotly:'https://cdn.plot.ly/plotly-1.49.2.min'}}) || require;
     xplotRequire(['plotly'], function(Plotly) {");
 
             newScript.AppendLine(script);
             newScript.AppendLine(@"});
 };
-if ((typeof(requirejs) !==  typeof(Function)) || (typeof(requirejs.config) !== typeof(Function))) { 
+if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function))) {
     var script = document.createElement(""script""); 
-    script.setAttribute(""src"", ""https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js""); 
+    script.setAttribute(""src"", ""https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"");
     script.onload = function(){
         renderPlotly();
     };

@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 ContainSingle(valueProduced =>
                     valueProduced.FormattedValues.Any(formattedValue =>
                     formattedValue.MimeType == "text/html"
-                        && formattedValue.Value.ToString().Contains("var xplotRequire = requirejs.config({context:'xplot-3.0.1',paths:{plotly:'https://cdn.plot.ly/plotly-1.49.2.min'}});")
+                        && formattedValue.Value.ToString().Contains("var xplotRequire = require.config({context:'xplot-3.0.1',paths:{plotly:'https://cdn.plot.ly/plotly-1.49.2.min'}}) || require;")
                        && formattedValue.Value.ToString().Contains("xplotRequire([\'plotly\'], function(Plotly)")
                  ));
         }
