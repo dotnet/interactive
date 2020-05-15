@@ -22,16 +22,20 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly ConcurrentQueue<PackageAdded> _packages = new ConcurrentQueue<PackageAdded>();
         private readonly List<IKernel> _childKernels = new List<IKernel>();
+        private Dictionary<string, IKernel> _kernelsByNameOrAlias;
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
         private string _defaultKernelName;
 
         public CompositeKernel() : base(".NET")
         {
             RegisterForDisposal(KernelEvents
-                .OfType<PackageAdded>()
-                .Where(pa => pa?.PackageReference.PackageRoot != null)
-                .Distinct(pa => pa.PackageReference.PackageRoot)
-                .Subscribe(_packages.Enqueue));
+                                .OfType<PackageAdded>()
+                                .Where(pa => pa?.PackageReference.PackageRoot != null)
+                                .Distinct(pa => pa.PackageReference.PackageRoot)
+                                .Subscribe(_packages.Enqueue));
+
+            _kernelsByNameOrAlias = new Dictionary<string, IKernel>();
+            _kernelsByNameOrAlias.Add(Name, this);
         }
 
         public string DefaultKernelName
@@ -65,6 +69,15 @@ namespace Microsoft.DotNet.Interactive
             AddChooseKernelDirective(kernel, aliases);
 
             _childKernels.Add(kernel);
+
+            _kernelsByNameOrAlias.Add(kernel.Name, kernel);
+            if (aliases is {})
+            {
+                foreach (var alias in aliases)
+                {
+                    _kernelsByNameOrAlias.Add(alias, kernel);
+                }
+            }
 
             if (_childKernels.Count == 1)
             {
@@ -146,9 +159,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (targetKernelName != null)
             {
-                kernel = targetKernelName == Name
-                             ? this
-                             : ChildKernels.FirstOrDefault(k => k.Name == targetKernelName);
+                _kernelsByNameOrAlias.TryGetValue(targetKernelName, out kernel);
             }
             else
             {

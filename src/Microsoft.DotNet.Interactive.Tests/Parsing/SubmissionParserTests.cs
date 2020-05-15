@@ -263,7 +263,7 @@ x
 
             compositeKernel.Add(
                 new PowerShellKernel(),
-                new[] { "pwsh" });
+                new[] { "powershell" });
 
             compositeKernel.UseDefaultMagicCommands();
 
