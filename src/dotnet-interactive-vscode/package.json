@@ -1,7 +1,7 @@
 {
   "name": "dotnet-interactive-vscode",
-  "displayName": "DotNet Interactive Notebooks",
-  "description": "DotNet Interactive Notebooks for VS Code",
+  "displayName": ".NET Interactive Notebooks",
+  "description": ".NET Interactive Notebooks for VS Code",
   "icon": "images/icon.png",
   "publisher": "ms-dotnettools",
   "author": "Microsoft Corporation",
@@ -35,7 +35,7 @@
     "notebookProvider": [
       {
         "viewType": "dotnet-interactive",
-        "displayName": "DotNet Interactive Notebook",
+        "displayName": ".NET Interactive Notebook",
         "selector": [
           {
             "filenamePattern": "*.dotnet-interactive"
@@ -96,7 +96,7 @@
       },
       {
         "command": "dotnet-interactive.exportAsJupyterNotebook",
-        "title": "DotNet Interactive: Export as Jupyter Notebook"
+        "title": ".NET Interactive: Export as Jupyter Notebook"
       }
     ]
   },
