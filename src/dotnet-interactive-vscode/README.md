@@ -4,7 +4,7 @@
 
 ---
 
-# DotNet Interactive Notebooks
+# .NET Interactive Notebooks
 
 This extension adds support for using the `dotnet-interactive` global tool from within VS Code in a notebook-like environment.
 

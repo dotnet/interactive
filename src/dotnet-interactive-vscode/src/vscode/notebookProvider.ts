@@ -81,7 +81,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         return this.save(document, targetResource);
     }
 
-    onDidChangeNotebook: vscode.Event<void> = new vscode.EventEmitter<void>().event;
+    onDidChangeNotebook: vscode.Event<vscode.NotebookDocumentEditEvent> = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>().event;
 
     executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell | undefined, token: vscode.CancellationToken): Promise<void> {
         if (!cell) {
