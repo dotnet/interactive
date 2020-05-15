@@ -94,7 +94,7 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 * Variable access from the client
 * RequireJS support
  
-## [Extending .NET Interactive]
+## Extending .NET Interactive
 
 * [Overview](extensions-overview.md)
 * Adding magic commands
