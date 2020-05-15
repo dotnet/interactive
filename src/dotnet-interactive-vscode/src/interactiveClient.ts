@@ -96,7 +96,7 @@ export class InteractiveClient {
                     case ReturnValueProducedType:
                         {
                             let disp = <DisplayEventBase>eventEnvelope.event;
-                            let output: CellDisplayOutput = displayEventToCellOutput(disp);
+                            let output = displayEventToCellOutput(disp);
 
                             if (disp.valueId) {
                                 let idx = valueIdToIndex.get(disp.valueId);
@@ -245,7 +245,7 @@ export class InteractiveClient {
     }
 }
 
-export function displayEventToCellOutput(disp: DisplayEventBase) : CellDisplayOutput {
+export function displayEventToCellOutput(disp: DisplayEventBase): CellDisplayOutput {
     let data: { [key: string]: any; } = {};
     if (disp.formattedValues && disp.formattedValues.length > 0) {
         for (let formatted of disp.formattedValues) {
@@ -254,8 +254,7 @@ export function displayEventToCellOutput(disp: DisplayEventBase) : CellDisplayOu
                 : formatted.value;
             data[formatted.mimeType] = value;
         }
-    }
-    else if (disp.value) {
+    } else if (disp.value) {
         // no formatted values returned, this is the best we can do
         data['text/plain'] = disp.value.toString();
     }
