@@ -21,7 +21,7 @@ export class StdioKernelTransport {
             while (i >= 0) {
                 let temp = this.buffer.substr(0, i + 1);
                 this.buffer = this.buffer.substr(i + 1);
-                i = this.buffer.indexOf('\n');               
+                i = this.buffer.indexOf('\n');
                 try {
                     let obj = JSON.parse(temp);
                     let envelope = <KernelEventEnvelope>obj;

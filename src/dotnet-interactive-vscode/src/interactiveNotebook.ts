@@ -3,6 +3,14 @@ import { trimTrailingCarriageReturn } from './utilities';
 
 export const editorLanguages = ['csharp', 'fsharp', 'html', 'javascript', 'markdown', 'powershell'];
 
+export const editorLanguagesToKernelNames: { [key: string]: string } = {
+    csharp: 'csharp',
+    fsharp: 'fsharp',
+    html: 'html',
+    javascript: 'javascript',
+    powershell: 'pwsh'
+};
+
 export interface NotebookFile {
     cells: Array<RawNotebookCell>;
 }
@@ -106,7 +114,7 @@ export function serializeNotebook(notebook: NotebookFile): string {
     return lines.join('\r\n');
 }
 
-function findIndexReverse<T>(arr: Array<T>, predicate: {(val: T): boolean}): number {
+function findIndexReverse<T>(arr: Array<T>, predicate: { (val: T): boolean }): number {
     let i = arr.length - 1;
     for (; i >= 0; i--) {
         let item = arr[i];
