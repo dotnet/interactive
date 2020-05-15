@@ -11,7 +11,9 @@ suite('Extension Test Suite', () => {
             command: 'dotnet',
             args: [
                 'interactive',
-                'stdio'
+                'stdio',
+                '--http-port-range',
+                '1000-3000'
             ],
             workingDirectory: __dirname
         };
