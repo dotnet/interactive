@@ -2,6 +2,7 @@
   "name": "dotnet-interactive-vscode",
   "displayName": "DotNet Interactive Notebooks",
   "description": "DotNet Interactive Notebooks for VS Code",
+  "icon": "images/icon.png",
   "publisher": "ms-dotnettools",
   "author": "Microsoft Corporation",
   "license": "MIT",
