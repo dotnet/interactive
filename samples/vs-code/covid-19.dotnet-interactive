@@ -1,0 +1,247 @@
+#!markdown
+
+# Visualizing the Johns Hopkins COVID-19 time series data
+
+**This is a work in progress.** It doesn't work yet in [Binder](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab) because it relies on HTTP communication between the kernel and the Jupyter frontend.
+
+Also, due to travel restrictions, you should run this at home on isolated compute.
+
+*And don't forget to wash your hands.*
+
+Since Johns Hopkins has put COVID-19 time series data on [GitHub](https://github.com/CSSEGISandData/COVID-19), let's take a look at it. We can download it using PowerShell:
+
+#!powershell
+
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv" -OutFile "./Confirmed.csv"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv" -OutFile "./Deaths.csv"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv" -OutFile "./Recovered.csv"
+
+#!markdown
+
+It needs a little cleaning up:
+
+#!csharp
+
+using System.IO;
+using System.Text.RegularExpressions;
+
+Clean("Confirmed.csv");
+Clean("Deaths.csv");
+Clean("Recovered.csv");
+
+void Clean(string filePath)
+{
+    var raw = File.ReadAllText(filePath);
+    var regex = new Regex("\\\"(.*?)\\\"");
+    var cleaned = regex.Replace(raw, m => m.Value.Replace(",", " in "));  
+    File.WriteAllText(filePath, cleaned);
+}
+
+"All cleaned up!"
+
+#!markdown
+
+Next, let's load it into a data frame.
+
+#!csharp
+
+#r "nuget:Microsoft.Data.Analysis,0.2.0"
+
+#!csharp
+
+using Microsoft.Data.Analysis;
+
+var deaths = DataFrame.LoadCsv("./Deaths.csv");
+var confirmed = DataFrame.LoadCsv("./Confirmed.csv");
+var recovered = DataFrame.LoadCsv("./Recovered.csv");
+var displayedValue = display("Processing data");
+var offset = 4;
+var series = new List<object>();
+for(var i = offset; i <  deaths.Columns.Count; i++){
+    await Task.Delay(100);
+    var date = deaths.Columns[i].Name;
+    var deathFiltered = deaths[deaths.Columns[i].ElementwiseNotEquals(0)];
+    var confirmedFiltered = confirmed[confirmed.Columns[i].ElementwiseNotEquals(0)];
+    var recoveredFiltered = recovered[recovered.Columns[i].ElementwiseNotEquals(0)];
+
+    displayedValue.Update($"processing {date}");
+    series.Add(new {
+        date = date,
+        deathsSeries = new {
+            latitude = deathFiltered["Lat"],
+            longitude = deathFiltered["Long"],
+            data = deathFiltered.Columns[i]
+        },
+        confirmedSeries = new {
+            latitude = confirmedFiltered["Lat"],
+            longitude = confirmedFiltered["Long"],
+            data = confirmedFiltered.Columns[i]
+        },
+        recoveredSeries = new {
+            latitude = recoveredFiltered["Lat"],
+            longitude = recoveredFiltered["Long"],
+            data = recoveredFiltered.Columns[i]
+        }
+    });
+}
+
+displayedValue.Update("Ready.");
+
+#!markdown
+
+Because we've stored our data in top-level variables (`deathsSeries`, `confirmedSeries`, `recoveredSeries`, etc.) in the C# kernel, they're accessible from JavaScript by calling `interactive.csharp.getVariable`. The data will be returned as JSON and we can plot it using the library of our choice, pulled in using [RequireJS](https://requirejs.org/). 
+
+We'll use [Plotly](https://plot.ly/).
+
+#!javascript
+
+notebookScope.plot = function (plotTarget) {
+    let loadPlotly = getJsLoader({
+        context: "COVID",
+        paths: {
+            plotly: "https://cdn.plot.ly/plotly-latest.min"
+        }
+    });
+    
+    loadPlotly(["plotly"], (Plotly) => {
+        if (typeof (notebookScope.updateInterval) !== 'undefined') {
+            clearInterval(notebookScope.updateInterval);
+        }
+
+        let index = 0;
+
+        if (typeof (document.getElementById(plotTarget)) !== 'undefined') {
+            interactive.csharp.getVariable("series")
+                .then(series => {
+                    var { deathsSeries, confirmedSeries, recoveredSeries,  date } = series[index];
+                    var recovered = {
+                        name: "Recovered",
+                        type: "scattergeo",
+                        mode: "markers",
+                        geo: "geo1",
+                        lat: recoveredSeries.latitude,
+                        lon: recoveredSeries.longitude,
+                        text: recoveredSeries.data,
+                        marker: {
+                            symbol: "square",
+                            color: "Green"
+                        }
+                    };
+
+                    var deaths = {
+                        name: "Fatal",
+                        type: "scattergeo",
+                        geo: "geo2",
+                        mode: "markers",
+                        lat: deathsSeries.latitude,
+                        lon: deathsSeries.longitude,
+                        text: deathsSeries.data,
+                        marker: {
+                            symbol: "circle",
+                            color: "Black"
+                        }
+                    };
+
+                    var confirmed = {
+                        name: "Total confirmed",
+                        type: "scattergeo",
+                        geo: "geo3",
+                        mode: "markers",
+                        lat: confirmedSeries.latitude,
+                        lon: confirmedSeries.longitude,
+                        text: confirmedSeries.data,
+                        marker: {
+                            symbol: "diamond",
+                            color: "#DC7633"
+                        }
+                    };
+                  
+
+                    var traces = [recovered, deaths, confirmed];
+
+                    var layout = {
+                        title: "COVID-19 cases (" + date + ")",
+                        grid: { columns: 3, rows: 1 },
+                        geo1: {
+                            scope: "world",
+                            showland: true,
+                            landcolor: "rgb(250,250,250)",
+                            domain: {
+                                row: 0,
+                                column: 0
+                            }
+                        },
+                        geo2: {
+                            scope: "world",
+                            showland: true,
+                            landcolor: "rgb(250,250,250)",
+                            domain: {
+                                row: 0,
+                                column: 1
+                            }
+                        },
+                        geo3: {
+                            scope: "world",
+                            showland: true,
+                            landcolor: "rgb(250,250,250)",
+                            domain: {
+                                row: 0,
+                                column: 2
+                            }
+                        }
+                    };
+                    if (typeof (document.getElementById(plotTarget)) !== 'undefined') {
+                        Plotly.newPlot(plotTarget, traces, layout);
+                    }
+                    let updateCovidPlot = () => {
+                        if (typeof (document.getElementById(plotTarget)) !== 'undefined') {
+                            index++;
+                            if (index === series.length) {
+                                clearInterval(notebookScope.updateInterval);
+                                return;
+                            }
+                            var { deathsSeries, confirmedSeries, recoveredSeries, currentSeries, date } = series[index];
+                            Plotly.animate("plotlyChartCovid", {
+                                data: [
+                                    {
+                                        lat: recoveredSeries.latitude,
+                                        lon: recoveredSeries.longitude,
+                                        text: recoveredSeries.data
+                                    },
+                                    {
+                                        lat: deathsSeries.latitude,
+                                        lon: deathsSeries.longitude,
+                                        text: deathsSeries.data
+                                    },
+                                    {
+                                        lat: confirmedSeries.latitude,
+                                        lon: confirmedSeries.longitude,
+                                        text: confirmedSeries.data
+                                    }],
+                                layout: {
+                                    title: "COVID-19 " + date
+                                }
+                            });
+                        }
+                    }
+                    notebookScope.updateInterval = setInterval(() => updateCovidPlot(), 250);
+                });
+        }
+    });
+};
+
+#!markdown
+
+Notice the `setInterval` call near the end of the previous cell. This rechecks the data in the kernel and updates the plot.
+
+Back on the kernel, we can now update the data so that the kernel can see it.
+
+Yes, this is a contrived example, and we're planning to support true streaming data, but it's a start.
+
+#!html
+
+<div id="plotlyChartCovid"></div>
+
+#!javascript
+
+notebookScope.plot("plotlyChartCovid");
