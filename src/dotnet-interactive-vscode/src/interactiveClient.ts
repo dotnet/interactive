@@ -38,11 +38,19 @@ import { editorLanguagesToKernelNames } from './interactiveNotebook';
 export class InteractiveClient {
     private nextToken: number = 1;
     private tokenEventObservers: Map<string, Array<KernelEventEnvelopeObserver>> = new Map<string, Array<KernelEventEnvelopeObserver>>();
+    private deferredCommandEventListener: KernelEventEnvelopeObserver;
 
     constructor(readonly kernelTransport: KernelTransport) {
         kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
+        this.deferredCommandEventListener = (_) =>{
+
+        };
     }
 
+    public setDeferredCommadnEventsListener(listener: KernelEventEnvelopeObserver){
+        this.deferredCommandEventListener = listener;
+    }
+    
     async execute(source: string, language: string, observer: {(outputs: Array<CellOutput>): void}, token?: string | undefined): Promise<void> {
         return new Promise(async (resolve, reject) => {
             let outputs: Array<CellOutput> = [];
@@ -209,7 +217,7 @@ export class InteractiveClient {
             });
             await this.kernelTransport.submitCommand(command, commandType, token);
         });
-    }
+    }  
 
     private subscribeToKernelTokenEvents(token: string, observer: KernelEventEnvelopeObserver): DisposableSubscription {
         if (!this.tokenEventObservers.get(token)) {
@@ -242,6 +250,9 @@ export class InteractiveClient {
                 for (let listener of listeners) {
                     listener(eventEnvelope);
                 }
+            }
+            else{
+                this.deferredCommandEventListener(eventEnvelope);
             }
         }
     }
