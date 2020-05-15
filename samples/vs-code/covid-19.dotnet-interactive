@@ -160,8 +160,13 @@ notebookScope.plot = function (plotTarget) {
                     var traces = [recovered, deaths, confirmed];
 
                     var layout = {
+                        font: {
+                            color: "rgb(240,240,240)"
+                        },
                         title: "COVID-19 cases (" + date + ")",
                         grid: { columns: 3, rows: 1 },
+                        plot_bgcolor: "rgb(128,128,128)",
+                        paper_bgcolor: "rgb(100,100,100)",
                         geo1: {
                             scope: "world",
                             showland: true,
