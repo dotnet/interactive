@@ -58,7 +58,8 @@
             "dotnet-interactive",
             "--",
             "stdio",
-            "--http-port-range 1000-3000"
+            "--http-port-range",
+            "1000-3000"
           ],
           "description": "Command and arguments used to start a notebook session."
         },
