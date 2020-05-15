@@ -6,8 +6,12 @@ import { RawNotebookCell } from '../interfaces';
 import { JupyterNotebook } from '../interfaces/jupyter';
 import { convertFromJupyter } from '../interop/jupyter';
 import { trimTrailingCarriageReturn } from '../utilities';
+import { KernelEventEnvelope, DisplayedValueProduced, DisplayedValueProducedType, ReturnValueProducedType } from '../contracts';
+import { CellDisplayOutput, CellOutputKind, CellOutput } from '../interfaces/vscode';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
+    private deferredOutput: Array<CellOutput> = [];
+
     constructor(readonly clientMapper: ClientMapper) {
     }
 
@@ -34,14 +38,6 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 
         let client = this.clientMapper.getOrAddClient(uri);
         let notebookPath = path.dirname(uri.fsPath);
-        client.changeWorkingDirectory(notebookPath).catch((err) => {
-            let message = `Unable to set notebook working directory to '${notebookPath}'.`;
-            if (err && err.message) {
-                message += '\n' + err.message.toString();
-            }
-
-            vscode.window.showInformationMessage(message);
-        });
 
         let notebookData: vscode.NotebookData = {
             languages: editorLanguages,
@@ -50,6 +46,45 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
             },
             cells: notebook.cells.map(toNotebookCellData)
         };
+
+        client.setDeferredCommadnEventsListener((eventEnvelope) => {
+            switch (eventEnvelope.eventType) {
+                case DisplayedValueProducedType:
+                case DisplayedValueProducedType:
+                case ReturnValueProducedType:
+                    let event = <DisplayedValueProduced>eventEnvelope.event;
+
+                    let data: { [key: string]: any } = {};
+                    if (event.formattedValues && event.formattedValues.length > 0) {
+                        for (let formatted of event.formattedValues) {
+                            let value: any = formatted.mimeType === 'application/json'
+                                ? JSON.parse(formatted.value)
+                                : formatted.value;
+                            data[formatted.mimeType] = value;
+                        }
+                    } else if (event.value) {
+                        // no formatted values returned, this is the best we can do
+                        data['text/plain'] = event.value.toString();
+                    }
+
+                    let output: CellDisplayOutput = {
+                        outputKind: CellOutputKind.Rich,
+                        data: data,
+                    };
+                    this.deferredOutput.push(output);
+                    break;
+            }
+
+        });
+
+        client.changeWorkingDirectory(notebookPath).catch((err) => {
+            let message = `Unable to set notebook working directory to '${notebookPath}'.`;
+            if (err && err.message) {
+                message += '\n' + err.message.toString();
+            }
+
+            vscode.window.showInformationMessage(message);
+        });
 
         return notebookData;
     }
@@ -74,9 +109,12 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         let client = this.clientMapper.getOrAddClient(document.uri);
         let source = cell.source.toString();
         return client.execute(source, cell.language, outputs => {
+            let cellOutput = [...this.deferredOutput, ...outputs];
+            this.deferredOutput = [];
+
             // to properly trigger the UI update, `cell.outputs` needs to be uniquely assigned; simply setting it to the local variable has no effect
             cell.outputs = [];
-            cell.outputs = outputs;
+            cell.outputs = cellOutput;
         });
     }
 
