@@ -1,0 +1,185 @@
+#!csharp
+
+#r "nuget:Microsoft.ML,1.4.0"
+#r "nuget:Microsoft.ML.AutoML,0.16.0"
+#r "nuget:Microsoft.Data.Analysis,0.1.0"
+
+#!csharp
+
+using Microsoft.Data.Analysis;
+using XPlot.Plotly;
+
+#!csharp
+
+using Microsoft.AspNetCore.Html;
+Formatter<DataFrame>.Register((df, writer) =>
+{
+    var headers = new List<IHtmlContent>();
+    headers.Add(th(i("index")));
+    headers.AddRange(df.Columns.Select(c => (IHtmlContent) th(c.Name)));
+    var rows = new List<List<IHtmlContent>>();
+    var take = 20;
+    for (var i = 0; i < Math.Min(take, df.RowCount); i++)
+    {
+        var cells = new List<IHtmlContent>();
+        cells.Add(td(i));
+        foreach (var obj in df[i])
+        {
+            cells.Add(td(obj));
+        }
+        rows.Add(cells);
+    }
+    
+    var t = table(
+        thead(
+            headers),
+        tbody(
+            rows.Select(
+                r => tr(r))));
+    
+    writer.Write(t);
+}, "text/html");
+
+#!csharp
+
+using System.IO;
+using System.Net.Http;
+string housingPath = "housing.csv";
+if (!File.Exists(housingPath))
+{
+    var contents = new HttpClient()
+        .GetStringAsync("https://raw.githubusercontent.com/ageron/handson-ml2/master/datasets/housing/housing.csv").Result;
+        
+    File.WriteAllText("housing.csv", contents);
+}
+
+#!csharp
+
+var housingData = DataFrame.LoadCsv(housingPath);
+housingData
+
+#!csharp
+
+housingData.Description()
+
+#!csharp
+
+Chart.Plot(
+    new Graph.Histogram()
+    {
+        x = housingData["median_house_value"],
+        nbinsx = 20
+    }
+)
+
+#!csharp
+
+var chart = Chart.Plot(
+    new Graph.Scattergl()
+    {
+        x = housingData["longitude"],
+        y = housingData["latitude"],
+        mode = "markers",
+        marker = new Graph.Marker()
+        {
+            color = housingData["median_house_value"],
+            colorscale = "Jet"
+        }
+    }
+);
+
+chart.Width = 600;
+chart.Height = 600;
+display(chart);
+
+#!csharp
+
+static T[] Shuffle<T>(T[] array)
+{
+    Random rand = new Random();
+    for (int i = 0; i < array.Length; i++)
+    {
+        int r = i + rand.Next(array.Length - i);
+        T temp = array[r];
+        array[r] = array[i];
+        array[i] = temp;
+    }
+    return array;
+}
+
+int[] randomIndices = Shuffle(Enumerable.Range(0, (int)housingData.RowCount).ToArray());
+int testSize = (int)(housingData.RowCount * .1);
+int[] trainRows = randomIndices[testSize..];
+int[] testRows = randomIndices[..testSize];
+
+DataFrame housing_train = housingData[trainRows];
+DataFrame housing_test = housingData[testRows];
+
+display(housing_train.RowCount);
+display(housing_test.RowCount);
+
+#!csharp
+
+using Microsoft.ML;
+using Microsoft.ML.Data;
+using Microsoft.ML.AutoML;
+
+#!csharp
+
+#!time
+
+var mlContext = new MLContext();
+
+var experiment = mlContext.Auto().CreateRegressionExperiment(maxExperimentTimeInSeconds: 15);
+var result = experiment.Execute(housing_train, labelColumnName:"median_house_value");
+
+#!csharp
+
+var scatters = result.RunDetails.Where(d => d.ValidationMetrics != null).GroupBy(
+    r => r.TrainerName,
+    (name, details) => new Graph.Scattergl()
+    {
+        name = name,
+        x = details.Select(r => r.RuntimeInSeconds),
+        y = details.Select(r => r.ValidationMetrics.MeanAbsoluteError),
+        mode = "markers",
+        marker = new Graph.Marker() { size = 12 }
+    });
+
+var chart = Chart.Plot(scatters);
+chart.WithXTitle("Training Time");
+chart.WithYTitle("Error");
+display(chart);
+
+Console.WriteLine($"Best Trainer:{result.BestRun.TrainerName}");
+
+#!csharp
+
+var testResults = result.BestRun.Model.Transform(housing_test);
+
+var trueValues = testResults.GetColumn<float>("median_house_value");
+var predictedValues = testResults.GetColumn<float>("Score");
+
+var predictedVsTrue = new Graph.Scattergl()
+{
+    x = trueValues,
+    y = predictedValues,
+    mode = "markers",
+};
+
+var maximumValue = Math.Max(trueValues.Max(), predictedValues.Max());
+
+var perfectLine = new Graph.Scattergl()
+{
+    x = new[] {0, maximumValue},
+    y = new[] {0, maximumValue},
+    mode = "lines",
+};
+
+var chart = Chart.Plot(new[] {predictedVsTrue, perfectLine });
+chart.WithXTitle("True Values");
+chart.WithYTitle("Predicted Values");
+chart.WithLegend(false);
+chart.Width = 600;
+chart.Height = 600;
+display(chart);

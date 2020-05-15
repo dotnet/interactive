@@ -11,18 +11,18 @@ const languageSpecifier = '#!';
 
 export function parseNotebook(contents: string): NotebookFile {
     // build a map of aliases to full language names
-    let languageMap: { [key: string]: string } = {};
+    let languageMap = new Map<string, string>();;
     for (let supportedLanguage of editorLanguages) {
         // the officially supported languages map to themselves
-        languageMap[supportedLanguage] = supportedLanguage;
+        languageMap.set(supportedLanguage, supportedLanguage);
     }
 
     // short langauge names
-    languageMap['cs'] = 'csharp';
-    languageMap['fs'] = 'fsharp';
-    languageMap['js'] = 'javascript';
-    languageMap['md'] = 'markdown';
-    languageMap['pwsh'] = 'powershell';
+    languageMap.set('cs', 'csharp');
+    languageMap.set('fs', 'fsharp');
+    languageMap.set('js', 'javascript');
+    languageMap.set('md', 'markdown');
+    languageMap.set('pwsh', 'powershell');
 
     let cells: Array<RawNotebookCell> = [];
     let currentLanguage = 'csharp';
@@ -53,17 +53,19 @@ export function parseNotebook(contents: string): NotebookFile {
 
     for (let line of contents.split('\n')) {
         if (line.startsWith(languageSpecifier)) {
-            let rawLanguage = line.substr(languageSpecifier.length).trimRight();
-            let language = languageMap[rawLanguage] || rawLanguage;
+            let rawLanguage = line.substr(languageSpecifier.length).trim();
+            let language = languageMap.get(rawLanguage);
             if (language) {
-                // finalize the current cell
+                // recognized language, finalize the current cell
                 if (lines.length > 0) {
                     addCell();
                 }
+
                 // found a new cell
                 currentLanguage = language;
                 lines = [];
             } else {
+                // unrecognized language, probably a magic command
                 addLine(line);
             }
         } else {
