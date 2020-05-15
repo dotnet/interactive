@@ -3,14 +3,6 @@ import { trimTrailingCarriageReturn } from './utilities';
 
 export const editorLanguages = ['csharp', 'fsharp', 'html', 'javascript', 'markdown', 'powershell'];
 
-export const editorLanguagesToKernelNames: { [key: string]: string } = {
-    csharp: 'csharp',
-    fsharp: 'fsharp',
-    html: 'html',
-    javascript: 'javascript',
-    powershell: 'pwsh'
-};
-
 export interface NotebookFile {
     cells: Array<RawNotebookCell>;
 }
