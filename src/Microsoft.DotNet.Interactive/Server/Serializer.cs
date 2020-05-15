@@ -6,7 +6,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
-    internal static class Serializer
+    public static class Serializer
     {
         public static readonly JsonSerializerSettings JsonSerializerSettings;
 

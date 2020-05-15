@@ -58,6 +58,11 @@ namespace Microsoft.DotNet.Interactive.Server
             {
                 streamKernelCommand = KernelCommandEnvelope.Deserialize(line);
             }
+            catch (CommandNotFoundException ex)
+            {
+                WriteEventToOutput(new DiagnosticLogEntryProduced($"Command '{ex.CommandName}' not found."));
+                return;
+            }
             catch (JsonReaderException ex)
             {
                 WriteEventToOutput(

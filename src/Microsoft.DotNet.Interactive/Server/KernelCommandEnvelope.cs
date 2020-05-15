@@ -43,7 +43,15 @@ namespace Microsoft.DotNet.Interactive.Server
                     pair => pair.Value.GetGenericArguments()[0]);
         }
 
-        internal static Type CommandTypeByName(string name) => _commandTypesByCommandTypeName[name];
+        internal static Type CommandTypeByName(string name)
+        {
+            if (!_commandTypesByCommandTypeName.TryGetValue(name, out var commandType))
+            {
+                throw new CommandNotFoundException(name);
+            }
+
+            return commandType;
+        }
 
         private readonly IKernelCommand _command;
 

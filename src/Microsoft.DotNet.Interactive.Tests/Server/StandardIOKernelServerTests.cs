@@ -198,6 +198,31 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             stdOut.Should().Contain(guid);
         }
 
+        [Fact]
+        public async Task missing_command_returns_a_diagnostic_event()
+        {
+            // since it's not a valid command we have to manually create it
+            var command = new
+            {
+                CommandType = "ThisIsNotAValidCommandType",
+                Command = new object(), // body doesn't matter
+            };
+            var writer = new StringWriter();
+            Serializer.JsonSerializer.Serialize(writer, command);
+            var commandText = writer.ToString();
+
+            await _standardIOKernelServer.WriteAsync(commandText);
+
+            _kernelEvents
+                .Should()
+                .ContainSingle<KernelEventEnvelope<DiagnosticLogEntryProduced>>()
+                .Which
+                .Event
+                .Message
+                .Should()
+                .Be("Command 'ThisIsNotAValidCommandType' not found.");
+        }
+
         public void Dispose()
         {
             _disposables.Dispose();
