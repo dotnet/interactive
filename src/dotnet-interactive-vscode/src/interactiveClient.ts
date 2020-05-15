@@ -96,23 +96,7 @@ export class InteractiveClient {
                     case ReturnValueProducedType:
                         {
                             let disp = <DisplayEventBase>eventEnvelope.event;
-                            let data: { [key: string]: any } = {};
-                            if (disp.formattedValues && disp.formattedValues.length > 0) {
-                                for (let formatted of disp.formattedValues) {
-                                    let value: any = formatted.mimeType === 'application/json'
-                                        ? JSON.parse(formatted.value)
-                                        : formatted.value;
-                                    data[formatted.mimeType] = value;
-                                }
-                            } else if (disp.value) {
-                                // no formatted values returned, this is the best we can do
-                                data['text/plain'] = disp.value.toString();
-                            }
-
-                            let output: CellDisplayOutput = {
-                                outputKind: CellOutputKind.Rich,
-                                data: data,
-                            };
+                            let output: CellDisplayOutput = displayEventToCellOutput(disp);
 
                             if (disp.valueId) {
                                 let idx = valueIdToIndex.get(disp.valueId);
@@ -259,4 +243,27 @@ export class InteractiveClient {
     private getNextToken(): string {
         return (this.nextToken++).toString();
     }
+}
+
+export function displayEventToCellOutput(disp: DisplayEventBase) : CellDisplayOutput {
+    let data: { [key: string]: any; } = {};
+    if (disp.formattedValues && disp.formattedValues.length > 0) {
+        for (let formatted of disp.formattedValues) {
+            let value: any = formatted.mimeType === 'application/json'
+                ? JSON.parse(formatted.value)
+                : formatted.value;
+            data[formatted.mimeType] = value;
+        }
+    }
+    else if (disp.value) {
+        // no formatted values returned, this is the best we can do
+        data['text/plain'] = disp.value.toString();
+    }
+
+    let output: CellDisplayOutput = {
+        outputKind: CellOutputKind.Rich,
+        data: data,
+    };
+
+    return output;
 }
