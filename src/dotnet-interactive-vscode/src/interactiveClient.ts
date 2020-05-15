@@ -218,7 +218,7 @@ export class InteractiveClient {
             await this.kernelTransport.submitCommand(command, commandType, token);
         });
     }
-    
+
     private subscribeToKernelTokenEvents(token: string, observer: KernelEventEnvelopeObserver): DisposableSubscription {
         if (!this.tokenEventObservers.get(token)) {
             this.tokenEventObservers.set(token, []);
