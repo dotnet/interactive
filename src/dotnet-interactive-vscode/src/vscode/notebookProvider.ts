@@ -6,8 +6,9 @@ import { RawNotebookCell } from '../interfaces';
 import { JupyterNotebook } from '../interfaces/jupyter';
 import { convertFromJupyter } from '../interop/jupyter';
 import { trimTrailingCarriageReturn } from '../utilities';
-import { KernelEventEnvelope, DisplayedValueProduced, DisplayedValueProducedType, ReturnValueProducedType } from '../contracts';
+import { KernelEventEnvelope, DisplayedValueProduced, DisplayedValueProducedType, ReturnValueProducedType, DisplayEventBase } from '../contracts';
 import { CellDisplayOutput, CellOutputKind, CellOutput } from '../interfaces/vscode';
+import { displayEventToCellOutput } from '../interactiveClient';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
     private deferredOutput: Array<CellOutput> = [];
@@ -52,25 +53,8 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
                 case DisplayedValueProducedType:
                 case DisplayedValueProducedType:
                 case ReturnValueProducedType:
-                    let event = <DisplayedValueProduced>eventEnvelope.event;
-
-                    let data: { [key: string]: any } = {};
-                    if (event.formattedValues && event.formattedValues.length > 0) {
-                        for (let formatted of event.formattedValues) {
-                            let value: any = formatted.mimeType === 'application/json'
-                                ? JSON.parse(formatted.value)
-                                : formatted.value;
-                            data[formatted.mimeType] = value;
-                        }
-                    } else if (event.value) {
-                        // no formatted values returned, this is the best we can do
-                        data['text/plain'] = event.value.toString();
-                    }
-
-                    let output: CellDisplayOutput = {
-                        outputKind: CellOutputKind.Rich,
-                        data: data,
-                    };
+                    let disp = <DisplayEventBase>eventEnvelope.event;
+                    let output = displayEventToCellOutput(disp);
                     this.deferredOutput.push(output);
                     break;
             }
@@ -108,9 +92,12 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         cell.outputs = [];
         let client = this.clientMapper.getOrAddClient(document.uri);
         let source = cell.source.toString();
-        return client.execute(source, cell.language, outputs => {
-            let cellOutput = [...this.deferredOutput, ...outputs];
-            this.deferredOutput = [];
+        return client.execute(source, cell.language, outputs => {            
+            let cellOutput = outputs;            
+            if (this.deferredOutput.length) {
+                cellOutput = [...this.deferredOutput, ...outputs];
+                this.deferredOutput = [];
+            }
 
             // to properly trigger the UI update, `cell.outputs` needs to be uniquely assigned; simply setting it to the local variable has no effect
             cell.outputs = [];
