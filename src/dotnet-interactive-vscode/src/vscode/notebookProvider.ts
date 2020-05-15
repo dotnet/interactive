@@ -47,7 +47,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
             cells: notebook.cells.map(toNotebookCellData)
         };
 
-        client.setDeferredCommadnEventsListener((eventEnvelope) => {
+        client.setDeferredCommandEventsListener((eventEnvelope) => {
             switch (eventEnvelope.eventType) {
                 case DisplayedValueProducedType:
                 case DisplayedValueProducedType:

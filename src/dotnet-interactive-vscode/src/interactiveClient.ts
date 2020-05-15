@@ -42,21 +42,21 @@ export class InteractiveClient {
 
     constructor(readonly kernelTransport: KernelTransport) {
         kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
-        this.deferredCommandEventListener = (_) =>{
+        this.deferredCommandEventListener = (_) => {
 
         };
     }
 
-    public setDeferredCommadnEventsListener(listener: KernelEventEnvelopeObserver){
+    public setDeferredCommandEventsListener(listener: KernelEventEnvelopeObserver) {
         this.deferredCommandEventListener = listener;
     }
-    
-    async execute(source: string, language: string, observer: {(outputs: Array<CellOutput>): void}, token?: string | undefined): Promise<void> {
+
+    async execute(source: string, language: string, observer: { (outputs: Array<CellOutput>): void }, token?: string | undefined): Promise<void> {
         return new Promise(async (resolve, reject) => {
             let outputs: Array<CellOutput> = [];
             let valueIdToIndex: Map<string, number> = new Map<string, number>();
             let mappedLanguage = editorLanguagesToKernelNames[language];
-            if(!mappedLanguage){
+            if (!mappedLanguage) {
                 mappedLanguage = language;
             }
             let disposable = await this.submitCode(source, mappedLanguage, eventEnvelope => {
@@ -217,8 +217,8 @@ export class InteractiveClient {
             });
             await this.kernelTransport.submitCommand(command, commandType, token);
         });
-    }  
-
+    }
+    
     private subscribeToKernelTokenEvents(token: string, observer: KernelEventEnvelopeObserver): DisposableSubscription {
         if (!this.tokenEventObservers.get(token)) {
             this.tokenEventObservers.set(token, []);
@@ -250,8 +250,7 @@ export class InteractiveClient {
                 for (let listener of listeners) {
                     listener(eventEnvelope);
                 }
-            }
-            else{
+            } else {
                 this.deferredCommandEventListener(eventEnvelope);
             }
         }
