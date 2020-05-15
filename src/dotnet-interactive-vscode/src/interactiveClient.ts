@@ -33,6 +33,7 @@ import {
     WorkingDirectoryChangedType,
 } from './contracts';
 import { CellOutput, CellErrorOutput, CellOutputKind, CellStreamOutput, CellDisplayOutput } from './interfaces/vscode';
+import { editorLanguagesToKernelNames } from './interactiveNotebook';
 
 export class InteractiveClient {
     private nextToken: number = 1;
@@ -46,7 +47,11 @@ export class InteractiveClient {
         return new Promise(async (resolve, reject) => {
             let outputs: Array<CellOutput> = [];
             let valueIdToIndex: Map<string, number> = new Map<string, number>();
-            let disposable = await this.submitCode(source, language, eventEnvelope => {
+            let mappedLanguage = editorLanguagesToKernelNames[language];
+            if(!mappedLanguage){
+                mappedLanguage = language;
+            }
+            let disposable = await this.submitCode(source, mappedLanguage, eventEnvelope => {
                 switch (eventEnvelope.eventType) {
                     case CommandHandledType:
                         resolve();
