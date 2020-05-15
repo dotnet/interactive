@@ -48,10 +48,22 @@
     "configuration": {
       "title": ".NET Interactive Notebook",
       "properties": {
-        "dotnet-interactive.kernelTransportArgsOverride": {
+        "dotnet-interactive.kernelTransportArgs": {
           "type": "array",
-          "default": [],
-          "description": "Override command line arguments passed to start an interactive session."
+          "default": [
+            "{dotnet_path}",
+            "tool",
+            "run",
+            "dotnet-interactive",
+            "--",
+            "stdio"
+          ],
+          "description": "Command and arguments used to start a notebook session."
+        },
+        "dotnet-interactive.kernelTransportWorkingDirectory": {
+          "type": "string",
+          "default": "{global_storage_path}",
+          "description": "The working directory in which the kernel transport process is started."
         },
         "dotnet-interactive.interactiveToolSource": {
           "type": "string",

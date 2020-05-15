@@ -2,6 +2,12 @@ export interface IsValidToolVersion {
     (actualVersion: string, minSupportedVersion: string): boolean;
 }
 
+export interface ProcessStart {
+    command: string;
+    args: Array<string>;
+    workingDirectory: string;
+}
+
 export interface RawNotebookCell {
     language: string;
     contents: Array<string>;

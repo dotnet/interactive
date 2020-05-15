@@ -10,14 +10,7 @@ import { IDotnetAcquireResult } from './interfaces/dotnet';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
 
 import compareVersions = require("../node_modules/compare-versions");
-
-const defaultKernelTransportArgs: Array<string> = [
-    'tool',
-    'run',
-    'dotnet-interactive',
-    '--',
-    'stdio'
-];
+import { processArguments } from './utilities';
 
 export async function activate(context: vscode.ExtensionContext) {
     // install dotnet or use global
@@ -39,12 +32,16 @@ export async function activate(context: vscode.ExtensionContext) {
     };
     const launchOptions = await vscode.commands.executeCommand<InteractiveLaunchOptions>('dotnet-interactive.acquire', installArgs);
 
-    let launchArgs = config.get<Array<string>>('kernelTransportArgsOverride');
-    if (!launchArgs || launchArgs.length === 0) {
-        launchArgs = defaultKernelTransportArgs;
-    }
+    // prepare kernel transport launch arguments and working directory
+    let kernelTransportArgs = config.get<Array<string>>('kernelTransportArgs')!;
+    let argsTemplate = {
+        args: kernelTransportArgs,
+        workingDirectory: config.get<string>('kernelTransportWorkingDirectory')!
+    };
+    let processStart = processArguments(argsTemplate, dotnetPath, launchOptions!.workingDirectory);
 
-    const clientMapper = new ClientMapper(() => new StdioKernelTransport(dotnetPath, launchArgs!, launchOptions!.workingDirectory));
+    // register with VS Code
+    const clientMapper = new ClientMapper(() => new StdioKernelTransport(processStart));
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', new DotNetInteractiveNotebookContentProvider(clientMapper)));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(registerLanguageProviders(clientMapper));
