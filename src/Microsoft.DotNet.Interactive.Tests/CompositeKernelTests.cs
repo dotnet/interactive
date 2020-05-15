@@ -258,6 +258,43 @@ new [] {1,2,3}");
         }
 
         [Fact]
+        public async Task Handling_kernel_can_be_specified_as_a_default_via_an_alias()
+        {
+            var receivedOnFakeKernel = new List<IKernelCommand>();
+
+            var fakeKernel = new FakeKernel("fake")
+            {
+                Handle = (command, context) =>
+                {
+                    receivedOnFakeKernel.Add(command);
+                    return Task.CompletedTask;
+                }
+            };
+
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel()
+            };
+
+            kernel.Add(fakeKernel, new[] { "totally-fake" });
+
+            kernel.DefaultKernelName = "totally-fake";
+
+            await kernel.SendAsync(
+                new SubmitCode(
+                    @"hello!"));
+
+            receivedOnFakeKernel
+                .Should()
+                .ContainSingle(c => c is SubmitCode)
+                .Which
+                .As<SubmitCode>()
+                .Code
+                .Should()
+                .Be("hello!");
+        }
+
+        [Fact]
         public async Task When_no_default_kernel_is_specified_then_kernel_directives_can_be_used()
         {
             using var kernel = new CompositeKernel
