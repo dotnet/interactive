@@ -12,6 +12,7 @@ import { displayEventToCellOutput } from '../interactiveClient';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
     private deferredOutput: Array<CellOutput> = [];
+    private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
 
     constructor(readonly clientMapper: ClientMapper) {
     }
@@ -81,7 +82,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         return this.save(document, targetResource);
     }
 
-    onDidChangeNotebook: vscode.Event<vscode.NotebookDocumentEditEvent> = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>().event;
+    onDidChangeNotebook: vscode.Event<vscode.NotebookDocumentEditEvent> = this.onDidChangeNotebookEventEmitter.event;
 
     executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell | undefined, token: vscode.CancellationToken): Promise<void> {
         if (!cell) {
