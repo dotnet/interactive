@@ -156,4 +156,85 @@ describe('File export tests', () => {
         let notebook = convertFromJupyter(jupyter);
         expect(notebook).to.deep.equal(expected);
     });
+
+    it('jupyter import can handle all newline types', () => {
+        let jupyter: JupyterNotebook = {
+            cells: [
+                {
+                    cell_type: 'code',
+                    execution_count: 1,
+                    metadata: {},
+                    source: [
+                        // CRLF
+                        'var a = 1;\r\n',
+                        'var b = a + 2;'
+                    ]
+                },
+                {
+                    cell_type: 'code',
+                    execution_count: 1,
+                    metadata: {},
+                    source: [
+                        // CR
+                        'var c = 3;\r',
+                        'var d = c + 4;'
+                    ]
+                },
+                {
+                    cell_type: 'code',
+                    execution_count: 1,
+                    metadata: {},
+                    source: [
+                        // LF
+                        'var e = 5;\n',
+                        'var f = e + 6;'
+                    ]
+                }
+            ],
+            metadata: {
+                kernelspec: {
+                    display_name: '.NET (C#)',
+                    language: 'C#',
+                    name: '.net-csharp'
+                },
+                language_info: {
+                    file_extension: '.cs',
+                    mimetype: 'text/x-csharp',
+                    name: 'C#',
+                    pygments_lexer: 'csharp',
+                    version: '8.0'
+                }
+            },
+            nbformat: 4,
+            nbformat_minor: 4
+        };
+
+        let expected: NotebookFile = {
+            cells: [
+                {
+                    language: 'csharp',
+                    contents: [
+                        'var a = 1;',
+                        'var b = a + 2;'
+                    ]
+                },
+                {
+                    language: 'csharp',
+                    contents: [
+                        'var c = 3;',
+                        'var d = c + 4;'
+                    ]
+                },
+                {
+                    language: 'csharp',
+                    contents: [
+                        'var e = 5;',
+                        'var f = e + 6;'
+                    ]
+                }
+            ]
+        };
+        let notebook = convertFromJupyter(jupyter);
+        expect(notebook).to.deep.equal(expected);
+    });
 });
