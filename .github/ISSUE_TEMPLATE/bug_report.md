@@ -4,18 +4,16 @@ about: Create a report to help us improve
 title: ''
 labels: ''
 assignees: ''
+
 ---
 
-#### Describe the bug
+### Describe the bug
 Please provide as much information as you can.
 
-#### Did this error occur while using `dotnet interactive`?
-- [ ] .NET Jupyter Notebook 
+### Please complete the following:
 
-#### Screenshots
-If applicable, add screenshots to help explain your problem.
+Which version of .NET Interactive were you using? You can find this out in a notebook by running the `#!about` magic command or, at the command line, you can run `dotnet interactive --version`.
 
-#### Please complete the following:
  - OS
     - [ ] Windows 10
     - [ ] macOS
@@ -25,8 +23,14 @@ If applicable, add screenshots to help explain your problem.
  - Browser 
     - [ ] Chrome
     - [ ] Edge
+    - [ ] Firefox
     - [ ] Safari
  - Frontend
-    - [ ] Jupyter notebook
-    - [ ] Jupyter lab
+    - [ ] Jupyter Notebook
+    - [ ] Jupyter Lab
     - [ ] nteract
+    - [ ] Visual Studio Code
+    - [ ] Other (please specify)
+
+### Screenshots
+If applicable, add screenshots to help explain your problem.
