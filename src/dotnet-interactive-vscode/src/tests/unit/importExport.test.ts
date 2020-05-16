@@ -24,6 +24,19 @@ describe('File export tests', () => {
                     ]
                 },
                 {
+                    cellKind: CellKind.Code,
+                    source: '1 + 1',
+                    language: 'csharp',
+                    outputs: [
+                        {
+                            outputKind: CellOutputKind.Rich,
+                            data: {
+                                'text/html': '2'
+                            }
+                        }
+                    ]
+                },
+                {
                     cellKind: CellKind.Markdown,
                     source: 'This is `markdown`.',
                     language: 'markdown',
@@ -54,6 +67,26 @@ describe('File export tests', () => {
                         '#!fsharp\r\n',
                         '[1;2;3;4]\r\n',
                         '|> List.sum'
+                    ]
+                },
+                {
+                    cell_type: 'code',
+                    execution_count: 1,
+                    metadata: {},
+                    outputs: [
+                        {
+                            data: {
+                                'text/html': [
+                                    '2'
+                                ]
+                            },
+                            execution_count: 1,
+                            metadata: {},
+                            output_type: 'execute_result'
+                        }
+                    ],
+                    source: [
+                        '1 + 1'
                     ]
                 },
                 {
