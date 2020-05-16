@@ -192,13 +192,17 @@ namespace Microsoft.DotNet.Interactive
                     var restorePackagesTask = restoreContext.RestoreAsync();
                     while (await Task.WhenAny(Task.Delay(500), restorePackagesTask) != restorePackagesTask)
                     {
-                        foreach (var key in messages.Keys.ToArray())
+                        foreach (var package in messages.Keys.ToArray())
                         {
-                            var id = PackageReferenceComparer.GetDisplayValueId(key);
-                            requestedPackageIds.Remove(id);
-                            var message = messages[key] + ".";
-                            context.Publish(new DisplayedValueUpdated(message, PackageReferenceComparer.GetDisplayValueId(key)));
-                            messages[key] = message;
+                            var id = PackageReferenceComparer.GetDisplayValueId(package);
+                            if (displayedValues.TryGetValue(id, out var displayedValue))
+                            {
+                                requestedPackageIds.Remove(id);
+                                var message = messages[package] + ".";
+                                messages[package] = message;
+                                displayedValue.Update(
+                                    message);
+                            }
                         }
                     }
 
