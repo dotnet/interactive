@@ -5,6 +5,8 @@ import { RawNotebookCell } from "../interfaces";
 import { trimTrailingCarriageReturn } from '../utilities';
 
 export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
+    // VS Code Notebooks don't have the concept of a global notebook language, so we have to fake it.
+    let notebookLanguage = 'csharp';
     let cells: Array<JupyterCell> = [];
     for (let cell of document.cells) {
         let jcell: JupyterCell | undefined = undefined;
@@ -17,14 +19,15 @@ export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
                 };
                 break;
             case CellKind.Code:
+                let cellSource = splitAndEnsureNewlineTerminators(cell.source);
+                if (cell.language !== notebookLanguage) {
+                    cellSource.unshift(`#!${cell.language}\r\n`);
+                }
                 jcell = {
                     cell_type: 'code',
                     execution_count: 1,
                     metadata: {},
-                    source: [
-                        `#!${cell.language}\r\n`,
-                        ...splitAndEnsureNewlineTerminators(cell.source)
-                    ],
+                    source: cellSource,
                     outputs: cell.outputs.map(convertCellOutputToJupyter).filter(notUndefined)
                 };
                 break;
@@ -37,8 +40,6 @@ export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
         }
     }
 
-    // VS Code Notebooks don't have the concept of a global notebook language, so we have to fake it.
-    let notebookLanguage = 'csharp';
     let metadata: JupyterMetadata = {
         kernelspec: {
             display_name: displayNameFromLanguage(notebookLanguage),
