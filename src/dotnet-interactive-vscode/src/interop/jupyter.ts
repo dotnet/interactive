@@ -215,8 +215,11 @@ function splitAndEnsureNewlineTerminators(source: string): Array<string> {
 function ensureNoNewlineTerminators(lines: Array<string>): Array<string> {
     let result = [];
     for (let line of lines) {
-        if (line.endsWith('\r\n')) {
-            line = line.substr(0, line.length - 2);
+        if (line.endsWith('\n')) {
+            line = line.substr(0, line.length - 1);
+        }
+        if (line.endsWith('\r')) {
+            line = line.substr(0, line.length - 1);
         }
 
         result.push(line);
