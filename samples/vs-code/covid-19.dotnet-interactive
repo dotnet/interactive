@@ -118,7 +118,7 @@ notebookScope.plot = function (plotTarget) {
                         name: "Recovered",
                         type: "scattergeo",
                         mode: "markers",
-                        geo: "geo1",
+                        geo: "geo",
                         lat: recoveredSeries.latitude,
                         lon: recoveredSeries.longitude,
                         text: recoveredSeries.data,
@@ -165,11 +165,12 @@ notebookScope.plot = function (plotTarget) {
                         },
                         title: "COVID-19 cases (" + date + ")",
                         grid: { columns: 3, rows: 1 },
-                        plot_bgcolor: "rgb(128,128,128)",
-                        paper_bgcolor: "rgb(100,100,100)",
-                        geo1: {
+                        paper_bgcolor: "rgb(60,60,60)",
+                        geo: {
                             scope: "world",
                             showland: true,
+                            showcountries: true,
+                            bgcolor: "rgb(90,90,90)",
                             landcolor: "rgb(250,250,250)",
                             domain: {
                                 row: 0,
@@ -179,6 +180,8 @@ notebookScope.plot = function (plotTarget) {
                         geo2: {
                             scope: "world",
                             showland: true,
+                            showcountries: true,
+                            bgcolor: "rgb(90,90,90)",
                             landcolor: "rgb(250,250,250)",
                             domain: {
                                 row: 0,
@@ -188,6 +191,8 @@ notebookScope.plot = function (plotTarget) {
                         geo3: {
                             scope: "world",
                             showland: true,
+                            showcountries: true,
+                            bgcolor: "rgb(90,90,90)",
                             landcolor: "rgb(250,250,250)",
                             domain: {
                                 row: 0,
