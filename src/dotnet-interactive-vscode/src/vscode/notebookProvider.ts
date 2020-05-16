@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { ClientMapper } from './../clientMapper';
-import { NotebookFile, parseNotebook, serializeNotebook, editorLanguages } from '../interactiveNotebook';
+import { NotebookFile, parseNotebook, serializeNotebook, editorLanguageAliases } from '../interactiveNotebook';
 import { RawNotebookCell } from '../interfaces';
 import { JupyterNotebook } from '../interfaces/jupyter';
 import { convertFromJupyter, convertToJupyter } from '../interop/jupyter';
 import { trimTrailingCarriageReturn } from '../utilities';
-import { KernelEventEnvelope, DisplayedValueProduced, DisplayedValueProducedType, ReturnValueProducedType, DisplayEventBase } from '../contracts';
-import { CellDisplayOutput, CellOutputKind, CellOutput } from '../interfaces/vscode';
+import { DisplayedValueProducedType, ReturnValueProducedType, DisplayEventBase } from '../contracts';
+import { CellOutput } from '../interfaces/vscode';
 import { displayEventToCellOutput } from '../interactiveClient';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
@@ -42,7 +42,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         let notebookPath = path.dirname(uri.fsPath);
 
         let notebookData: vscode.NotebookData = {
-            languages: editorLanguages,
+            languages: Array.from(editorLanguageAliases.keys()),
             metadata: {
                 hasExecutionOrder: false
             },

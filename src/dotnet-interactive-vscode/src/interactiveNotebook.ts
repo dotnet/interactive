@@ -1,7 +1,22 @@
 import { RawNotebookCell } from "./interfaces";
 import { trimTrailingCarriageReturn } from './utilities';
 
-export const editorLanguages = ['csharp', 'fsharp', 'html', 'javascript', 'markdown', 'powershell'];
+let languageAliases = new Map<string, string>();
+// full language names always map to themselves
+languageAliases.set('csharp', 'csharp');
+languageAliases.set('fsharp', 'fsharp');
+languageAliases.set('html', 'html');
+languageAliases.set('javascript', 'javascript');
+languageAliases.set('markdown', 'markdown');
+languageAliases.set('powershell', 'powershell');
+// short aliases
+languageAliases.set('cs', 'csharp');
+languageAliases.set('fs', 'fsharp');
+languageAliases.set('js', 'javascript');
+languageAliases.set('md', 'markdown');
+languageAliases.set('pwsh', 'powershell');
+
+export const editorLanguageAliases = languageAliases;
 
 export interface NotebookFile {
     cells: Array<RawNotebookCell>;
@@ -10,20 +25,6 @@ export interface NotebookFile {
 const languageSpecifier = '#!';
 
 export function parseNotebook(contents: string): NotebookFile {
-    // build a map of aliases to full language names
-    let languageMap = new Map<string, string>();;
-    for (let supportedLanguage of editorLanguages) {
-        // the officially supported languages map to themselves
-        languageMap.set(supportedLanguage, supportedLanguage);
-    }
-
-    // short langauge names
-    languageMap.set('cs', 'csharp');
-    languageMap.set('fs', 'fsharp');
-    languageMap.set('js', 'javascript');
-    languageMap.set('md', 'markdown');
-    languageMap.set('pwsh', 'powershell');
-
     let cells: Array<RawNotebookCell> = [];
     let currentLanguage = 'csharp';
     let lines: Array<string> = [];
@@ -54,7 +55,7 @@ export function parseNotebook(contents: string): NotebookFile {
     for (let line of contents.split('\n')) {
         if (line.startsWith(languageSpecifier)) {
             let rawLanguage = line.substr(languageSpecifier.length).trim();
-            let language = languageMap.get(rawLanguage);
+            let language = editorLanguageAliases.get(rawLanguage);
             if (language) {
                 // recognized language, finalize the current cell
                 if (lines.length > 0) {
