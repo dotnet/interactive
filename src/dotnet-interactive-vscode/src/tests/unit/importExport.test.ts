@@ -157,7 +157,7 @@ describe('File export tests', () => {
         expect(notebook).to.deep.equal(expected);
     });
 
-    it('jupyter import can handle all newline types', () => {
+    it('can read all jupyter newline types', () => {
         let jupyter: JupyterNotebook = {
             cells: [
                 {
@@ -230,6 +230,52 @@ describe('File export tests', () => {
                     contents: [
                         'var e = 5;',
                         'var f = e + 6;'
+                    ]
+                }
+            ]
+        };
+        let notebook = convertFromJupyter(jupyter);
+        expect(notebook).to.deep.equal(expected);
+    });
+
+    it('magic commands are retained on jupyter open', () => {
+        let jupyter: JupyterNotebook = {
+            cells: [
+                {
+                    cell_type: 'code',
+                    execution_count: 1,
+                    metadata: {},
+                    source: [
+                        '#!time\r\n',
+                        'var x = 1;'
+                    ]
+                }
+            ],
+            metadata: {
+                kernelspec: {
+                    display_name: '.NET (C#)',
+                    language: 'C#',
+                    name: '.net-csharp'
+                },
+                language_info: {
+                    file_extension: '.cs',
+                    mimetype: 'text/x-csharp',
+                    name: 'C#',
+                    pygments_lexer: 'csharp',
+                    version: '8.0'
+                }
+            },
+            nbformat: 4,
+            nbformat_minor: 4
+        };
+
+        let expected: NotebookFile = {
+            cells: [
+                {
+                    language: 'csharp',
+                    contents: [
+                        '#!time',
+                        'var x = 1;'
                     ]
                 }
             ]

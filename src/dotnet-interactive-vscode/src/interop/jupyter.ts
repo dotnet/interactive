@@ -1,6 +1,6 @@
 import { CellKind, CellOutput, CellOutputKind, NotebookDocument } from "../interfaces/vscode";
 import { JupyterCell, JupyterMetadata, JupyterNotebook, JupyterOutput } from "../interfaces/jupyter";
-import { NotebookFile } from "../interactiveNotebook";
+import { NotebookFile, editorLanguageAliases } from "../interactiveNotebook";
 import { RawNotebookCell } from "../interfaces";
 import { trimTrailingCarriageReturn } from '../utilities';
 
@@ -67,9 +67,10 @@ export function convertFromJupyter(jupyter: JupyterNotebook): NotebookFile {
     for (let jcell of jupyter.cells) {
         switch (jcell.cell_type) {
             case 'code':
+                const { cellLanguage, cellContents } = getCellLanguageAndContents(jcell.source, expandLanguageName(jupyter.metadata.kernelspec.language));
                 cells.push({
-                    language: getCellLanguage(jcell.source, expandLanguageName(jupyter.metadata.kernelspec.language)),
-                    contents: ensureNoNewlineTerminators(jcell.source)
+                    language: cellLanguage,
+                    contents: cellContents
                 });
                 break;
             case 'markdown':
@@ -85,12 +86,23 @@ export function convertFromJupyter(jupyter: JupyterNotebook): NotebookFile {
     };
 }
 
-function getCellLanguage(contents: Array<string>, defaultLanguage: string): string {
-    if (contents.length > 0 && contents[0].startsWith('#!')) {
-        return contents[0].substr(2).trimRight();
+function getCellLanguageAndContents(lines: Array<string>, defaultLanguage: string): { cellLanguage: string, cellContents: Array<string> } {
+    lines = ensureNoNewlineTerminators(lines);
+    if (lines.length > 0 && lines[0].startsWith('#!')) {
+        let possibleLanguageAlias = lines[0].substr(2).trimRight();
+        let languageName = editorLanguageAliases.get(possibleLanguageAlias);
+        if (languageName) {
+            return {
+                cellLanguage: languageName,
+                cellContents: lines.splice(1)
+            };
+        }
     }
 
-    return defaultLanguage;
+    return {
+        cellLanguage: defaultLanguage,
+        cellContents: lines
+    };
 }
 
 function expandLanguageName(languageName: string): string {
@@ -223,12 +235,6 @@ function ensureNoNewlineTerminators(lines: Array<string>): Array<string> {
         }
 
         result.push(line);
-    }
-
-    // a language-specific cell was handled elsewhere
-    if (result.length > 0 && result[0].startsWith('#!'))
-    {
-        result.shift();
     }
 
     return result;
