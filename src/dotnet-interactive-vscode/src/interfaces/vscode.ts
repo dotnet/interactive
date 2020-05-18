@@ -1,3 +1,6 @@
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 // set to match vscode notebook types
 
 export enum CellKind {
@@ -42,6 +45,7 @@ export interface NotebookDocument {
 }
 
 export interface ReportChannel{
+    getName(): string;
     append(value:string) : void;
     appendLine(value:string) : void;
     clear(): void;

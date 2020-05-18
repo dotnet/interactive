@@ -1,3 +1,6 @@
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 import * as path from 'path';
 import * as Mocha from 'mocha';
 import * as glob from 'glob';

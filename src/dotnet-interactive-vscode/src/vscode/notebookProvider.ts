@@ -1,3 +1,6 @@
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { ClientMapper } from './../clientMapper';
@@ -49,11 +52,12 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 
         client.changeWorkingDirectory(notebookPath).catch((err) => {
             let message = `Unable to set notebook working directory to '${notebookPath}'.`;
+            let detailedMessage = message;
             if (err && err.message) {
-                message += '\n' + err.message.toString();
+                detailedMessage += '\n' + err.message.toString();
             }
-            this.globalChannel.appendLine(message);
-            vscode.window.showInformationMessage(message);
+            this.globalChannel.appendLine(detailedMessage);
+            vscode.window.showInformationMessage(`${message} See output withdow "${this.globalChannel.getName()}"`);
         });
 
         return notebookData;

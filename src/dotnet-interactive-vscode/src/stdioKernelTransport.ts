@@ -1,3 +1,6 @@
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 import * as cp from 'child_process';
 import { DisposableSubscription, KernelCommand, KernelCommandType, KernelEventEnvelope, KernelEventEnvelopeObserver, DiagnosticLogEntryProducedType, DiagnosticLogEntryProduced } from "./contracts";
 import { ProcessStart } from './interfaces';
