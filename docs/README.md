@@ -51,7 +51,7 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
         * PocketView
     * F#
         * F# Interactive ([FSI](https://docs.microsoft.com/en-us/dotnet/fsharp/tutorials/fsharp-interactive/))
-    * JavaScript
+    * HTML and JavaScript
     * PowerShell
         * PowerShell profile support
         * PowerShell host support 
@@ -99,6 +99,6 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 * [Overview](extending-dotnet-interactive.md)
 * [Adding magic commands](extending-dotnet-interactive.md#adding-magic-commands)
 * Building your own extension
-* Publishing your extension 
+* Publishing your extension using NuGet
 
 
