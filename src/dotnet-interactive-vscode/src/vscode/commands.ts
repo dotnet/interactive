@@ -3,12 +3,57 @@ import * as cp from 'child_process';
 import * as jp from '../interop/jupyter';
 import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
+import { serializeNotebook } from '../interactiveNotebook';
 
 export function registerCommands(context: vscode.ExtensionContext, dotnetPath: string) {
 
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
     const minDotNetInteractiveVersion = config.get<string>('minimumInteractiveToolVersion');
     const interactiveToolSource = config.get<string>('interactiveToolSource');
+
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.convertJupyterNotebook', async (jupyterUri?: vscode.Uri | undefined, notebookUri?: vscode.Uri | undefined) => {
+        // ensure we have a jupyter uri
+        if (!jupyterUri) {
+            const uris = await vscode.window.showOpenDialog({
+                filters: {
+                    'Jupyter Notebook Files': ['ipynb']
+                }
+            });
+
+            if (uris && uris.length > 0) {
+                jupyterUri = uris[0];
+            }
+
+            if (!jupyterUri) {
+                // still no appropriate path
+                return;
+            }
+        }
+
+        // ensure we have a notebook uri
+        if (!notebookUri) {
+            notebookUri = await vscode.window.showSaveDialog({
+                filters: {
+                    '.NET Interactive Notebook Files': ['dotnet-interactive']
+                }
+            });
+
+            if (!notebookUri) {
+                // still no appropriate path
+                return;
+            }
+        }
+
+        const fileContents = (Buffer.from(await vscode.workspace.fs.readFile(jupyterUri))).toString('utf-8');
+        const jupyterJson = JSON.parse(fileContents);
+        const notebook = jp.convertFromJupyter(jupyterJson);
+        const notebookContents = serializeNotebook(notebook);
+        const notebookBuffer = Buffer.from(notebookContents);
+        await vscode.workspace.fs.writeFile(notebookUri, notebookBuffer);
+
+        // currently no api to open the just-created notebook, so we'll prompt instead
+        await vscode.window.showInformationMessage(`.NET Interactive notebook saved to '${notebookUri.fsPath}'`);
+    }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.exportAsJupyterNotebook', async () => {
         if (vscode.notebook.activeNotebookEditor) {

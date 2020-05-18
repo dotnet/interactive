@@ -3,8 +3,6 @@ import * as path from 'path';
 import { ClientMapper } from './../clientMapper';
 import { NotebookFile, parseNotebook, serializeNotebook, editorLanguageAliases } from '../interactiveNotebook';
 import { RawNotebookCell } from '../interfaces';
-import { JupyterNotebook } from '../interfaces/jupyter';
-import { convertFromJupyter, convertToJupyter } from '../interop/jupyter';
 import { trimTrailingCarriageReturn } from '../utilities';
 import { DisplayedValueProducedType, ReturnValueProducedType, DisplayEventBase } from '../contracts';
 import { CellOutput } from '../interfaces/vscode';
@@ -24,20 +22,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         } catch {
         }
 
-        let notebook: NotebookFile;
-        let extension = getExtension(uri.path);
-        switch (extension) {
-            case '.ipynb':
-                let json = JSON.parse(contents);
-                let jupyter = <JupyterNotebook>json;
-                notebook = convertFromJupyter(jupyter);
-                break;
-            case '.dotnet-interactive':
-            default:
-                notebook = parseNotebook(contents);
-                break;
-        }
-
+        let notebook = parseNotebook(contents);
         let client = this.clientMapper.getOrAddClient(uri);
         let notebookPath = path.dirname(uri.fsPath);
 
@@ -93,8 +78,8 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         cell.outputs = [];
         let client = this.clientMapper.getOrAddClient(document.uri);
         let source = cell.source.toString();
-        return client.execute(source, cell.language, outputs => {            
-            let cellOutput = outputs;            
+        return client.execute(source, cell.language, outputs => {
+            let cellOutput = outputs;
             if (this.deferredOutput.length) {
                 cellOutput = [...this.deferredOutput, ...outputs];
                 this.deferredOutput = [];
@@ -107,29 +92,17 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     }
 
     private async save(document: vscode.NotebookDocument, targetResource: vscode.Uri): Promise<void> {
-        let buffer: Buffer;
-        let extension = getExtension(targetResource.path);
-        switch (extension) {
-            case '.ipynb':
-                let jupyter = convertToJupyter(document);
-                buffer = Buffer.from(JSON.stringify(jupyter, null, 1));
-                break;
-            case '.dotnet-interactive':
-            default:
-                let notebook: NotebookFile = {
-                    cells: [],
-                };
-                for (let cell of document.cells) {
-                    notebook.cells.push({
-                        language: cell.language,
-                        contents: cell.document.getText().split('\n').map(trimTrailingCarriageReturn),
-                    });
-                }
-
-                buffer = Buffer.from(serializeNotebook(notebook));
-                break;
+        let notebook: NotebookFile = {
+            cells: [],
+        };
+        for (let cell of document.cells) {
+            notebook.cells.push({
+                language: cell.language,
+                contents: cell.document.getText().split('\n').map(trimTrailingCarriageReturn),
+            });
         }
 
+        let buffer = Buffer.from(serializeNotebook(notebook));
         await vscode.workspace.fs.writeFile(targetResource, buffer);
     }
 }
@@ -142,15 +115,6 @@ function toNotebookCellData(cell: RawNotebookCell): vscode.NotebookCellData {
         outputs: [],
         metadata: {}
     };
-}
-
-function getExtension(filename: string): string {
-    let dot = filename.indexOf('.');
-    if (dot < 0) {
-        return '';
-    }
-
-    return filename.substr(dot);
 }
 
 function languageToCellKind(language: string): vscode.CellKind {
