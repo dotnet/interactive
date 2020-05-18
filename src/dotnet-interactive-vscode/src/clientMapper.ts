@@ -46,4 +46,10 @@ export class ClientMapper {
             this.clientMap.delete(key);
         }
     }
+
+    closeAllClients() {
+        for (let path of this.clientMap.keys()) {
+            this.closeClient({ path });
+        }
+    }
 }

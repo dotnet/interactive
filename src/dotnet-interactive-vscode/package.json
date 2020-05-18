@@ -87,7 +87,7 @@
       {
         "command": "dotnet-interactive.acquire",
         "title": "Install .NET Interactive"
-      },     
+      },
       {
         "command": "dotnet-interactive.convertJupyterNotebook",
         "title": ".NET Interactive: Convert Jupyter notebook (.ipynb) to .NET Interactive notebook"
@@ -95,6 +95,18 @@
       {
         "command": "dotnet-interactive.exportAsJupyterNotebook",
         "title": ".NET Interactive: Export as Jupyter Notebook"
+      },
+      {
+        "command": "dotnet-interactive.restartCurrentNotebookKernel",
+        "title": ".NET Interactive: Restart the current notebook's kernel"
+      },
+      {
+        "command": "dotnet-interactive.stopCurrentNotebookKernel",
+        "title": ".NET Interactive: Stop the current notebook's kernel"
+      },
+      {
+        "command": "dotnet-interactive.stopAllNotebookKernels",
+        "title": ".NET Interactive: Stop all notebook kernels"
       }
     ]
   },
