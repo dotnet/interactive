@@ -48,10 +48,10 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 * Language-specific features
     * C#
         * The [C# scripting](https://docs.microsoft.com/en-us/archive/msdn-magazine/2016/january/essential-net-csharp-scripting) dialect
-        * PocketView
+        * [PocketView](pocketview.md)
     * F#
         * F# Interactive ([FSI](https://docs.microsoft.com/en-us/dotnet/fsharp/tutorials/fsharp-interactive/))
-    * HTML and JavaScript
+    * [HTML and JavaScript](javascript-overview.md)
     * PowerShell
         * PowerShell profile support
         * PowerShell host support 
