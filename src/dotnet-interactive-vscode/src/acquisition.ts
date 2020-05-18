@@ -3,6 +3,7 @@ import * as path from 'path';
 import { InstallInteractiveTool, InstallInteractiveArgs, CreateToolManifest, GetCurrentInteractiveVersion, InteractiveLaunchOptions, ReportInstallationStarted, ReportInstallationFinished } from './interfaces';
 
 import compareVersions = require("../node_modules/compare-versions");
+import { ReportChannel } from './interfaces/vscode';
 
 // The acquisition function.  Uses predefined callbacks for external command invocations to make testing easier.
 export async function acquireDotnetInteractive(
@@ -13,7 +14,8 @@ export async function acquireDotnetInteractive(
     createToolManifest: CreateToolManifest,
     reportInstallationStarted: ReportInstallationStarted,
     installInteractive: InstallInteractiveTool,
-    reportInstallationFinished: ReportInstallationFinished
+    reportInstallationFinished: ReportInstallationFinished,
+    reportingChannel: ReportChannel
     ): Promise<InteractiveLaunchOptions | undefined>
 {
     // Ensure `globalStoragePath` exists.  This prevents a bunch of issues with spawned processes and working directories.
@@ -35,12 +37,14 @@ export async function acquireDotnetInteractive(
     const requiredVersion = args.toolVersion ?? minDotNetInteractiveVersion;
     const currentVersion = await getInteractiveVersion(args.dotnetPath, globalStoragePath);
     if (currentVersion && compareVersions.compare(currentVersion, requiredVersion, '>=')) {
+        reportingChannel.appendLine(`Using version ${currentVersion}`);
         // current is acceptable
         return launchOptions;
     }
 
     // no current version installed or it's out of date
     reportInstallationStarted(requiredVersion);
+    reportingChannel.appendLine(`Acquiring `);
     await installInteractive({
             dotnetPath: args.dotnetPath,
             toolVersion: requiredVersion

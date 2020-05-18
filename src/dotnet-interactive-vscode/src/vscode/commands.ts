@@ -4,12 +4,16 @@ import * as jp from '../interop/jupyter';
 import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
 import { serializeNotebook } from '../interactiveNotebook';
+import { OutputChannelAdapter } from '../OutputChannelAdapter';
+
 
 export function registerCommands(context: vscode.ExtensionContext, dotnetPath: string) {
 
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
     const minDotNetInteractiveVersion = config.get<string>('minimumInteractiveToolVersion');
     const interactiveToolSource = config.get<string>('interactiveToolSource');
+    const acquireChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET interactive : tool acquisition'));
+    acquireChannel.show();
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.convertJupyterNotebook', async (jupyterUri?: vscode.Uri | undefined, notebookUri?: vscode.Uri | undefined) => {
         // ensure we have a jupyter uri
@@ -88,7 +92,8 @@ export function registerCommands(context: vscode.ExtensionContext, dotnetPath: s
             createToolManifest,
             (version: string) => { vscode.window.showInformationMessage(`Installing .NET Interactive version ${version}...`); },
             installInteractiveTool,
-            () => { vscode.window.showInformationMessage('.NET Interactive installation complete.'); });
+            () => { vscode.window.showInformationMessage('.NET Interactive installation complete.'); },
+            acquireChannel);
         return launchOptions;
     }));
 
