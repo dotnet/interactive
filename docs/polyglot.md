@@ -12,3 +12,8 @@ You can specify the language for a cell using one of a number of [magic commands
 
 <img src="https://user-images.githubusercontent.com/547415/81730391-4f745d80-9442-11ea-9f17-244471f6af83.png" width="70%">
 
+If you're editing a notebook in Visual Studio Code, you can also choose the language for a submission by clicking the language selector in a cell's lower right corner.
+
+<img src="https://user-images.githubusercontent.com/547415/82159474-276e6b00-9843-11ea-8ec0-f3f5bcee7547.png" width="60%">
+
+The language-selection magic commands will still work in Visual Studio Code as well.

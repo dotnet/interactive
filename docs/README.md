@@ -42,20 +42,20 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 
 * [Support for multiple languages](polyglot.md)
 * Display output ([C#](display-output-csharp.md) | F# | PowerShell)
-* Plotting with [Xplot](https://fslab.org/XPlot/)
-* Import NuGet packages 
+* Create plots with with [Xplot](https://fslab.org/XPlot/)
+* ["Magic commands"](./magic-commands.md)
+* [Import NuGet packages](nuget-overview.md)
 * Language-specific features
     * C#
         * The [C# scripting](https://docs.microsoft.com/en-us/archive/msdn-magazine/2016/january/essential-net-csharp-scripting) dialect
         * PocketView
+    * F#
+        * F# Interactive ([FSI](https://docs.microsoft.com/en-us/dotnet/fsharp/tutorials/fsharp-interactive/))
+    * JavaScript
     * PowerShell
         * PowerShell profile support
         * PowerShell host support 
         * AzShell support
-    * F#
-        * F# Interactive (FSI)
-    * JavaScript
-* ["Magic commands"](./magic-commands.md)
 * Getting input from the user
 * Multi-language notebooks
     * Switching between languages
@@ -66,7 +66,7 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 
 ## Technical details
 
-* Architecture
+* [Architecture](kernels-overview.md)
 * How Jupyter kernel installation works
 
 ## Visualization
