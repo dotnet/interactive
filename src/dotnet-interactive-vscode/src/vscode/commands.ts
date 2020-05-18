@@ -6,7 +6,6 @@ import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces'
 import { serializeNotebook } from '../interactiveNotebook';
 import { OutputChannelAdapter } from '../OutputChannelAdapter';
 
-
 export function registerCommands(context: vscode.ExtensionContext, dotnetPath: string) {
 
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
@@ -90,22 +89,13 @@ export function registerCommands(context: vscode.ExtensionContext, dotnetPath: s
             context.globalStoragePath,
             getInteractiveVersion,
             createToolManifest,
-            (version: string) => { vscode.window.showInformationMessage(`Installing .NET Interactive version ${version}...`); },
+            (version: string) => { acquireChannel.append(`Installing .NET Interactive version ${version}...`); },
             installInteractiveTool,
-            () => { vscode.window.showInformationMessage('.NET Interactive installation complete.'); },
+            () => { acquireChannel.append('.NET Interactive installation complete.'); },
             acquireChannel);
         return launchOptions;
     }));
-
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.reportInteractiveVersion', async (args?: InstallInteractiveArgs | undefined) => {
-        const interactiveVersrion = await getInteractiveVersion(dotnetPath, context.globalStoragePath);
-        if (interactiveVersrion) {
-            vscode.window.showInformationMessage(`.NET Interactive tool version: ${interactiveVersrion}.`);
-        } else {
-            vscode.window.showWarningMessage('Unable to determine .NET Interactive tool version.');
-        }
-    }));
-
+   
     async function installInteractiveTool(args: InstallInteractiveArgs, globalStoragePath: string): Promise<void> {
         // remove previous tool; swallow errors in case it's not already installed
         let uninstallArgs = [

@@ -3,10 +3,10 @@ import { ReportChannel } from "../interfaces/vscode";
 export class RecordingChannel implements ReportChannel{
     channelText: string = "";
     append(value: string): void {
-        this.channelText = `${this.clear}${value}`;
+        this.channelText = `${this.channelText}${value}`;
     }
     appendLine(value: string): void {
-        this.channelText = `${this.clear}${value}\n`;
+        this.channelText = `${this.channelText}${value}\n`;
     }
     clear(): void {
         this.channelText = "";
@@ -15,5 +15,4 @@ export class RecordingChannel implements ReportChannel{
     }
     hide(): void {
     }
-
 }

@@ -78,7 +78,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.126506",
+          "default": "1.0.126804",
           "description": "The minimum required version of the .NET Interactive tool."
         }
       }
@@ -87,11 +87,7 @@
       {
         "command": "dotnet-interactive.acquire",
         "title": "Install .NET Interactive"
-      },
-      {
-        "command": "dotnet-interactive.reportInteractiveVersion",
-        "title": ".NET Interactive: Report installed version of .NET Interactive"
-      },
+      },     
       {
         "command": "dotnet-interactive.convertJupyterNotebook",
         "title": ".NET Interactive: Convert Jupyter notebook (.ipynb) to .NET Interactive notebook"
