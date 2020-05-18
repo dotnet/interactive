@@ -1,13 +1,14 @@
 import * as cp from 'child_process';
-import { DisposableSubscription, KernelCommand, KernelCommandType, KernelEventEnvelope, KernelEventEnvelopeObserver } from "./contracts";
+import { DisposableSubscription, KernelCommand, KernelCommandType, KernelEventEnvelope, KernelEventEnvelopeObserver, DiagnosticLogEntryProducedType, DiagnosticLogEntryProduced } from "./contracts";
 import { ProcessStart } from './interfaces';
+import { ReportChannel } from './interfaces/vscode';
 
 export class StdioKernelTransport {
     private buffer: string = '';
     private childProcess: cp.ChildProcessWithoutNullStreams;
     private subscribers: Array<KernelEventEnvelopeObserver> = [];
 
-    constructor(processStart: ProcessStart) {
+    constructor(processStart: ProcessStart, private diagnosticChannel: ReportChannel) {
         this.childProcess = cp.spawn(processStart.command, processStart.args, { cwd: processStart.workingDirectory });
         this.childProcess.on('exit', (_code: number, _signal: string) => {
             //
@@ -25,6 +26,11 @@ export class StdioKernelTransport {
                 try {
                     let obj = JSON.parse(temp);
                     let envelope = <KernelEventEnvelope>obj;
+                    switch (envelope.eventType){
+                        case DiagnosticLogEntryProducedType:
+                            this.diagnosticChannel.appendLine((<DiagnosticLogEntryProduced>envelope.event).message);
+                            break;
+                    }
                     for (let i = this.subscribers.length - 1; i >= 0; i--) {
                         this.subscribers[i](envelope);
                     }

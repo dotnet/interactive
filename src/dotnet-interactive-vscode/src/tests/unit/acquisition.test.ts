@@ -7,7 +7,6 @@ use(require('chai-fs'));
 
 import { acquireDotnetInteractive } from '../../acquisition';
 import { InstallInteractiveArgs } from '../../interfaces';
-import { ReportChannel } from '../../interfaces/vscode';
 import { RecordingChannel } from '../RecordingOutputChannel';
 
 describe('Acquisition tests', () => {
@@ -297,7 +296,7 @@ describe('Acquisition tests', () => {
                 installInteractiveToolThatAlwaysThrows, // throw if acquisition tries to install
                 report,
                 acquisitionChannel);
-                
+
             expect(globalStoragePath).to.be.a.directory();
             const manifestPath = path.join(globalStoragePath, '.config', 'dotnet-tools.json');
             expect(manifestPath).to.be.file().with.json;

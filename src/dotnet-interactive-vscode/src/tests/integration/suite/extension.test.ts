@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { StdioKernelTransport } from '../../../stdioKernelTransport';
 import { ClientMapper } from '../../../clientMapper';
 import { CellOutput, CellOutputKind } from '../../../interfaces/vscode';
+import { RecordingChannel } from '../../RecordingOutputChannel';
 
 
 suite('Extension Test Suite', () => {
@@ -17,7 +18,7 @@ suite('Extension Test Suite', () => {
             ],
             workingDirectory: __dirname
         };
-        let clientMapper = new ClientMapper(() => new StdioKernelTransport(processStart));
+        let clientMapper = new ClientMapper(() => new StdioKernelTransport(processStart, new RecordingChannel()));
         let client = clientMapper.getOrAddClient({ path: 'some/path' });
         let code = '1+1';
         let result: Array<CellOutput> = [];

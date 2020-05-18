@@ -12,7 +12,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     private deferredOutput: Array<CellOutput> = [];
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
 
-    constructor(readonly clientMapper: ClientMapper, private readonly channel : ReportChannel) {
+    constructor(readonly clientMapper: ClientMapper, private readonly globalChannel : ReportChannel) {
     }
 
     async openNotebook(uri: vscode.Uri): Promise<vscode.NotebookData> {

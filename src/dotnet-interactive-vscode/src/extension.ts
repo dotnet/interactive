@@ -19,6 +19,9 @@ export async function activate(context: vscode.ExtensionContext) {
     const dotnetInteractiveChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET interactive'));
     dotnetInteractiveChannel.show();
 
+    const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET interactive : diagnostics'));
+    diagnosticsChannel.show();
+
     const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion');
     let dotnetPath: string;
     if (await isDotnetUpToDate(minDotNetSdkVersion!)) {
@@ -45,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext) {
     let processStart = processArguments(argsTemplate, dotnetPath, launchOptions!.workingDirectory);
 
     // register with VS Code
-    const clientMapper = new ClientMapper(() => new StdioKernelTransport(processStart));
+    const clientMapper = new ClientMapper(() => new StdioKernelTransport(processStart, diagnosticsChannel));
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', new DotNetInteractiveNotebookContentProvider(clientMapper, dotnetInteractiveChannel)));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(registerLanguageProviders(clientMapper));
