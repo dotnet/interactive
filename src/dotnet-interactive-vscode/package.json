@@ -25,6 +25,7 @@
   "activationEvents": [
     "onNotebookEditor:dotnet-interactive",
     "onCommand:dotnet-interactive.acquire",
+    "onCommand:dotnet-interactive.convertJupyterNotebook",
     "onCommand:dotnet-interactive.reportInteractiveVersion"
   ],
   "main": "./out/extension.js",
@@ -39,9 +40,6 @@
         "selector": [
           {
             "filenamePattern": "*.dotnet-interactive"
-          },
-          {
-            "filenamePattern": "*.ipynb"
           }
         ]
       }
@@ -92,7 +90,11 @@
       },
       {
         "command": "dotnet-interactive.reportInteractiveVersion",
-        "title": "Report installed version for .NET Interactive"
+        "title": ".NET Interactive: Report installed version of .NET Interactive"
+      },
+      {
+        "command": "dotnet-interactive.convertJupyterNotebook",
+        "title": ".NET Interactive: Convert Jupyter notebook (.ipynb) to .NET Interactive notebook"
       },
       {
         "command": "dotnet-interactive.exportAsJupyterNotebook",
