@@ -52,7 +52,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
             if (err && err.message) {
                 message += '\n' + err.message.toString();
             }
-
+            this.globalChannel.appendLine(message);
             vscode.window.showInformationMessage(message);
         });
 
