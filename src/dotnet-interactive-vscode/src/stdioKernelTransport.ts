@@ -13,9 +13,13 @@ export class StdioKernelTransport {
 
     constructor(processStart: ProcessStart, private diagnosticChannel: ReportChannel) {
         this.childProcess = cp.spawn(processStart.command, processStart.args, { cwd: processStart.workingDirectory });
-        this.childProcess.on('exit', (_code: number, _signal: string) => {
-            //
-            let x = 1;
+        this.diagnosticChannel.appendLine(`Kernel started with pid ${this.childProcess.pid}.`);
+        this.childProcess.on('exit', (code: number, _signal: string) => {
+            let message = `Kernel pid ${this.childProcess.pid} ended`;
+            let messageSuffix = (code && code !== 0)
+                ? ` with code ${code}`
+                : '';
+            this.diagnosticChannel.appendLine(message + messageSuffix);
         });
         this.childProcess.stdout.on('data', (data) => {
             let str: string = data.toString();

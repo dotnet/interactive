@@ -7,7 +7,7 @@ import { ClientMapper } from './clientMapper';
 import { DotNetInteractiveNotebookContentProvider } from './vscode/notebookProvider';
 import { StdioKernelTransport } from './stdioKernelTransport';
 import { registerLanguageProviders } from './vscode/languageProvider';
-import { execute, registerCommands } from './vscode/commands';
+import { execute, registerAcquisitionCommands, registerKernelCommands, registerInteropCommands } from './vscode/commands';
 
 import { IDotnetAcquireResult } from './interfaces/dotnet';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
@@ -34,7 +34,7 @@ export async function activate(context: vscode.ExtensionContext) {
         dotnetPath = commandResult!.dotnetPath;
     }
 
-    registerCommands(context, dotnetPath);
+    registerAcquisitionCommands(context, dotnetPath);
 
     // install dotnet-interactive
     const installArgs: InstallInteractiveArgs = {
@@ -52,6 +52,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // register with VS Code
     const clientMapper = new ClientMapper(() => new StdioKernelTransport(processStart, diagnosticsChannel));
+
+    registerKernelCommands(context, clientMapper);
+    registerInteropCommands(context);
+
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', new DotNetInteractiveNotebookContentProvider(clientMapper, dotnetInteractiveChannel)));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(registerLanguageProviders(clientMapper));

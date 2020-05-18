@@ -8,14 +8,102 @@ import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
 import { serializeNotebook } from '../interactiveNotebook';
 import { OutputChannelAdapter } from '../OutputChannelAdapter';
+import { ClientMapper } from '../clientMapper';
 
-export function registerCommands(context: vscode.ExtensionContext, dotnetPath: string) {
-
+export function registerAcquisitionCommands(context: vscode.ExtensionContext, dotnetPath: string) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
     const minDotNetInteractiveVersion = config.get<string>('minimumInteractiveToolVersion');
     const interactiveToolSource = config.get<string>('interactiveToolSource');
     const acquireChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET interactive : tool acquisition'));
     acquireChannel.show();
+
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.acquire', async (args?: InstallInteractiveArgs | undefined): Promise<InteractiveLaunchOptions | undefined> => {
+        if (!args) {
+            args = {
+                dotnetPath: dotnetPath,
+                toolVersion: undefined
+            };
+        }
+
+        const launchOptions = await acquireDotnetInteractive(
+            args,
+            minDotNetInteractiveVersion!,
+            context.globalStoragePath,
+            getInteractiveVersion,
+            createToolManifest,
+            (version: string) => { acquireChannel.append(`Installing .NET Interactive version ${version}...`); },
+            installInteractiveTool,
+            () => { acquireChannel.append('.NET Interactive installation complete.'); },
+            acquireChannel);
+        return launchOptions;
+    }));
+
+    async function installInteractiveTool(args: InstallInteractiveArgs, globalStoragePath: string): Promise<void> {
+        // remove previous tool; swallow errors in case it's not already installed
+        let uninstallArgs = [
+            'tool',
+            'uninstall',
+            'Microsoft.dotnet-interactive'
+        ];
+        await execute(args.dotnetPath, uninstallArgs, globalStoragePath);
+    
+        let toolArgs = [
+            'tool',
+            'install',
+            '--add-source',
+            interactiveToolSource!,
+            'Microsoft.dotnet-interactive'
+        ];
+        if (args.toolVersion) {
+            toolArgs.push('--version', args.toolVersion);
+        }
+    
+        return new Promise(async (resolve, reject) => {
+            const result = await execute(args.dotnetPath, toolArgs, globalStoragePath);
+            if (result.code === 0) {
+                resolve();
+            }
+    
+            reject();
+        });
+    }
+}
+
+export function registerKernelCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
+
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.restartCurrentNotebookKernel', async (document?: vscode.NotebookDocument | undefined) => {
+        if (!document) {
+            if (!vscode.notebook.activeNotebookEditor) {
+                // no notebook to operate on
+                return;
+            }
+
+            document = vscode.notebook.activeNotebookEditor.document;
+        }
+
+        await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', document);
+        clientMapper.getOrAddClient(document.uri);
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopCurrentNotebookKernel', async (document?: vscode.NotebookDocument | undefined) => {
+        if (!document) {
+            if (!vscode.notebook.activeNotebookEditor) {
+                // no notebook to operate on
+                return;
+            }
+
+            document = vscode.notebook.activeNotebookEditor.document;
+        }
+
+        clientMapper.closeClient(document.uri);
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopAllNotebookKernels', async () => {
+        clientMapper.closeAllClients();
+    }));
+}
+
+export function registerInteropCommands(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.convertJupyterNotebook', async (jupyterUri?: vscode.Uri | undefined, notebookUri?: vscode.Uri | undefined) => {
         // ensure we have a jupyter uri
@@ -77,57 +165,6 @@ export function registerCommands(context: vscode.ExtensionContext, dotnetPath: s
             await vscode.workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(jupyter, null, 1)));
         }
     }));
-
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.acquire', async (args?: InstallInteractiveArgs | undefined): Promise<InteractiveLaunchOptions | undefined> => {
-        if (!args) {
-            args = {
-                dotnetPath: dotnetPath,
-                toolVersion: undefined
-            };
-        }
-
-        const launchOptions = await acquireDotnetInteractive(
-            args,
-            minDotNetInteractiveVersion!,
-            context.globalStoragePath,
-            getInteractiveVersion,
-            createToolManifest,
-            (version: string) => { acquireChannel.append(`Installing .NET Interactive version ${version}...`); },
-            installInteractiveTool,
-            () => { acquireChannel.append('.NET Interactive installation complete.'); },
-            acquireChannel);
-        return launchOptions;
-    }));
-   
-    async function installInteractiveTool(args: InstallInteractiveArgs, globalStoragePath: string): Promise<void> {
-        // remove previous tool; swallow errors in case it's not already installed
-        let uninstallArgs = [
-            'tool',
-            'uninstall',
-            'Microsoft.dotnet-interactive'
-        ];
-        await execute(args.dotnetPath, uninstallArgs, globalStoragePath);
-    
-        let toolArgs = [
-            'tool',
-            'install',
-            '--add-source',
-            interactiveToolSource!,
-            'Microsoft.dotnet-interactive'
-        ];
-        if (args.toolVersion) {
-            toolArgs.push('--version', args.toolVersion);
-        }
-    
-        return new Promise(async (resolve, reject) => {
-            const result = await execute(args.dotnetPath, toolArgs, globalStoragePath);
-            if (result.code === 0) {
-                resolve();
-            }
-    
-            reject();
-        });
-    }
 }
 
 // callbacks used to install interactive tool
