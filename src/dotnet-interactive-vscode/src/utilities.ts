@@ -1,3 +1,6 @@
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 import { ProcessStart } from "./interfaces";
 
 export function processArguments(template: { args: Array<string>, workingDirectory: string }, dotnetPath: string, globalStoragePath: string): ProcessStart {
