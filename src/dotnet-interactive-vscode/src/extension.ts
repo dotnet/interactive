@@ -11,10 +11,14 @@ import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
 
 import compareVersions = require("../node_modules/compare-versions");
 import { processArguments } from './utilities';
+import { OutputChannelAdapter } from './OutputChannelAdapter';
 
 export async function activate(context: vscode.ExtensionContext) {
     // install dotnet or use global
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
+    const dotnetInteractiveChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET interactive'));
+    dotnetInteractiveChannel.show();
+
     const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion');
     let dotnetPath: string;
     if (await isDotnetUpToDate(minDotNetSdkVersion!)) {
@@ -42,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // register with VS Code
     const clientMapper = new ClientMapper(() => new StdioKernelTransport(processStart));
-    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', new DotNetInteractiveNotebookContentProvider(clientMapper)));
+    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', new DotNetInteractiveNotebookContentProvider(clientMapper, dotnetInteractiveChannel)));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(registerLanguageProviders(clientMapper));
 }

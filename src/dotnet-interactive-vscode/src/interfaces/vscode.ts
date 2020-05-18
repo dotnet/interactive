@@ -40,3 +40,11 @@ export interface NotebookCell {
 export interface NotebookDocument {
     cells: NotebookCell[];
 }
+
+export interface ReportChannel{
+    append(value:string) : void;
+    appendLine(value:string) : void;
+    clear(): void;
+    show(): void;
+    hide(): void;
+}

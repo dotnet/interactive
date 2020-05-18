@@ -7,9 +7,16 @@ use(require('chai-fs'));
 
 import { acquireDotnetInteractive } from '../../acquisition';
 import { InstallInteractiveArgs } from '../../interfaces';
+import { ReportChannel } from '../../interfaces/vscode';
+import { RecordingChannel } from '../RecordingOutputChannel';
 
 describe('Acquisition tests', () => {
 
+    let acquisitionChannel: RecordingChannel;
+
+    beforeEach(() => {
+        acquisitionChannel = new RecordingChannel();
+    })
     function getInteractiveVersionThatReturnsNoVersionFound(dotnetPath: string, globalStoragePath: string): Promise<string | undefined> {
         return new Promise<string | undefined>((resolve, reject) => {
             resolve(undefined);
@@ -17,7 +24,7 @@ describe('Acquisition tests', () => {
     }
 
     function getInteractiveVersionThatReturnsSpecificValue(version: string): { (dotnetPath: string, globalStoragePath: string): Promise<string | undefined> } {
-        return function(dotnetPath: string, globalStoragePath: string): Promise<string | undefined> {
+        return function (dotnetPath: string, globalStoragePath: string): Promise<string | undefined> {
             return new Promise<string | undefined>((resolve, reject) => {
                 resolve(version);
             });
@@ -90,7 +97,9 @@ describe('Acquisition tests', () => {
                 createEmptyToolManifest, // create manifest when asked
                 report,
                 installInteractiveToolWithSpecificVersion('42.42.42'), // 'install' this version when asked
-                report);
+                report, 
+                acquisitionChannel);
+
             expect(launchOptions).to.deep.equal({
                 workingDirectory: globalStoragePath
             });
@@ -129,7 +138,9 @@ describe('Acquisition tests', () => {
                 createEmptyToolManifest, // create manifest when asked
                 report,
                 installInteractiveToolWithSpecificVersion('42.42.42'), // 'install' this version when asked
-                report);
+                report,
+                acquisitionChannel);
+
             expect(globalStoragePath).to.be.a.directory();
             expect(manifestPath).to.be.file().with.json;
             const jsonContent = JSON.parse(fs.readFileSync(manifestPath).toString());
@@ -165,7 +176,9 @@ describe('Acquisition tests', () => {
                 createToolManifestThatThrows, // throw if acquisition tries to create another manifest
                 report,
                 installInteractiveToolWithSpecificVersion('42.42.42'), // 'install' this version when asked
-                report);
+                report,
+                acquisitionChannel);
+
             expect(globalStoragePath).to.be.a.directory();
             const manifestPath = path.join(globalStoragePath, '.config', 'dotnet-tools.json');
             expect(manifestPath).to.be.file().with.json;
@@ -202,7 +215,9 @@ describe('Acquisition tests', () => {
                 createToolManifestThatThrows, // throw if acquisition tries to create another manifest
                 report,
                 installInteractiveToolWithSpecificVersion('42.42.42'), // 'install' this version when asked
-                report);
+                report,
+                acquisitionChannel);
+
             expect(globalStoragePath).to.be.a.directory();
             const manifestPath = path.join(globalStoragePath, '.config', 'dotnet-tools.json');
             expect(manifestPath).to.be.file().with.json;
@@ -239,7 +254,9 @@ describe('Acquisition tests', () => {
                 createToolManifestThatThrows, // throw if acquisition tries to create another manifest
                 report,
                 installInteractiveToolWithSpecificVersion('42.42.42'), // 'install' this version when asked
-                report);
+                report,
+                acquisitionChannel);
+
             expect(globalStoragePath).to.be.a.directory();
             const manifestPath = path.join(globalStoragePath, '.config', 'dotnet-tools.json');
             expect(manifestPath).to.be.file().with.json;
@@ -278,7 +295,9 @@ describe('Acquisition tests', () => {
                 createToolManifestThatThrows, // throw if acquisition tries to create another manifest
                 report,
                 installInteractiveToolThatAlwaysThrows, // throw if acquisition tries to install
-                report);
+                report,
+                acquisitionChannel);
+                
             expect(globalStoragePath).to.be.a.directory();
             const manifestPath = path.join(globalStoragePath, '.config', 'dotnet-tools.json');
             expect(manifestPath).to.be.file().with.json;
@@ -316,7 +335,7 @@ describe('Acquisition tests', () => {
         });
     });
 
-    function withFakeGlobalStorageLocation(createLocation: boolean, callback: {(globalStoragePath: string): Promise<void> }) {
+    function withFakeGlobalStorageLocation(createLocation: boolean, callback: { (globalStoragePath: string): Promise<void> }) {
         return new Promise<void>((resolve, reject) => {
             tmp.dir({ unsafeCleanup: true }, (err, dir) => {
                 if (err) {

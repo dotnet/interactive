@@ -5,14 +5,14 @@ import { NotebookFile, parseNotebook, serializeNotebook, editorLanguageAliases }
 import { RawNotebookCell } from '../interfaces';
 import { trimTrailingCarriageReturn } from '../utilities';
 import { DisplayedValueProducedType, ReturnValueProducedType, DisplayEventBase } from '../contracts';
-import { CellOutput } from '../interfaces/vscode';
+import { CellOutput, ReportChannel } from '../interfaces/vscode';
 import { displayEventToCellOutput } from '../interactiveClient';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
     private deferredOutput: Array<CellOutput> = [];
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
 
-    constructor(readonly clientMapper: ClientMapper) {
+    constructor(readonly clientMapper: ClientMapper, private readonly channel : ReportChannel) {
     }
 
     async openNotebook(uri: vscode.Uri): Promise<vscode.NotebookData> {
