@@ -53,7 +53,7 @@ export class InteractiveClient {
 
             let disposable = await this.submitCode(source, language, eventEnvelope => {
                 if (this.deferredOutput.length > 0) {
-                    outputs = [...this.deferredOutput, ...outputs];
+                    outputs.push(...this.deferredOutput);
                     this.deferredOutput = [];
                 }
     
