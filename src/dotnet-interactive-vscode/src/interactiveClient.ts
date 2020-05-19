@@ -227,7 +227,7 @@ export class InteractiveClient {
             } else {
                 switch (eventEnvelope.eventType) {
                     case DisplayedValueProducedType:
-                    case DisplayedValueProducedType:
+                    case DisplayedValueUpdatedType:
                     case ReturnValueProducedType:
                         let disp = <DisplayEventBase>eventEnvelope.event;
                         let output = displayEventToCellOutput(disp);
