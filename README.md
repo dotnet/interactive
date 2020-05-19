@@ -33,7 +33,7 @@ Work is underway to add support for the new Visual Studio Code [native notebook 
 
 ## Documentation
 
-
+You can find additional documentation [here](./docs/README.md).
 
 ## Packages
 
