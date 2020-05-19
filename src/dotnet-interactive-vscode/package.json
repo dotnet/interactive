@@ -1,7 +1,8 @@
 {
   "name": "dotnet-interactive-vscode",
   "displayName": ".NET Interactive Notebooks",
-  "description": ".NET Interactive Notebooks for VS Code",
+  "//description": "During build, the description gets the git SHA appended to it.",
+  "description": ".NET Interactive Notebooks for VS Code.",
   "icon": "images/icon.png",
   "publisher": "ms-dotnettools",
   "author": "Microsoft Corporation",
