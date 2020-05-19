@@ -1,6 +1,6 @@
 # .NET Interactive Documentation 
 
-_Our documentation is still a work in progress. There are a number of items listed under [Features](#features) below that don't have links yet, but we've included them to give a better sense of the current feature set. Please open an issue if you'd like to know more about one of the topics we haven't gotten around to documenting yet._
+_Our documentation is still a work in progress. There are a number of topics listed under [Features](#features) below that don't have outgoing links yet, but we've included them to give a better sense of the current feature set. Please open an issue if you'd like to know more about one of the topics we haven't gotten around to documenting yet._
 
 ## Getting started 
 
