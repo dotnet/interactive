@@ -14,13 +14,19 @@ The simplest way to write some HTML to the client in .NET Interactive is to use 
 
 <img src="https://user-images.githubusercontent.com/547415/82240545-7245bc80-98ef-11ea-9686-7e9722ec0754.png" width="60%">
 
-Another way to write out HTML is to display or return a value of type `IHtmlContent`:
+Another way to write out HTML is to display or return a value of type `IHtmlContent`, which is used to signal that a `string` should not be HTML-encoded but rather treated as valid HTML:
 
 <img src="https://user-images.githubusercontent.com/547415/82240791-df595200-98ef-11ea-86ff-830627bb565d.png" width="60%">
 
-A third approach, if you'd like to avoid thinking about string escaping and HTML encoding, and you're writing your code in C#, is to use the [`PocketView`](pocketview.md) API:
+The `HTML` helper method is available for wrapping a string into an `IHtmlContent` instance, which will accomplish the same thing:
+
+<img src="https://user-images.githubusercontent.com/547415/82270446-b655b300-9929-11ea-860f-2cc80a1c20bc.png" width="60%">
+
+A fourth approach, if you'd like to avoid thinking about string escaping and HTML encoding, and you're writing your code in C#, is to use the `PocketView` API:
 
 <img src="https://user-images.githubusercontent.com/547415/82241257-a8377080-98f0-11ea-92e7-c6329db2d707.png" width="60%">
+
+`PocketView` is a C# domain-specific language for writing HTML. You can learn more about it [here](pocketview.md).
 
 ## Emitting JavaScript
 
