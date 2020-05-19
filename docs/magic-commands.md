@@ -56,4 +56,4 @@ The following magic commands are available within an F# language context.
 
 ## Extensibility
 
-Magic commands can be added dynamically to .NET Interactive's kernels, either at the global level or to individual language-specific subkernels. 
+Magic commands can be added dynamically to .NET Interactive's kernels, either at the global level or to individual language-specific subkernels. You can learn more about how to do this [here](extending-dotnet-interactive.md#adding-magic-commands).

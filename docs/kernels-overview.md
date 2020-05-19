@@ -21,7 +21,7 @@ When this splitting occurs, the API still only returns a single terminating `Com
 
 You can see some additional examples of command and event interactions in the following diagram, illustrating different kinds of output as well as the behavior of a middleware component (for the `#!time` magic command) augmenting the behavior of a code submission by emitting an additional `DisplayedValueProduced` event.
 
-<img src="https://user-images.githubusercontent.com/547415/82159797-c09e8100-9845-11ea-9c1d-cc9a193bf6e9.png" width="100%">
+![image](https://user-images.githubusercontent.com/547415/82275655-2703cc00-9938-11ea-8637-ab45c564f831.png)
 
 ## Nested Kernels
 
@@ -42,7 +42,7 @@ Even though this will initially be sent as a single `SubmitCode` command, it wil
 
 The work of routing these commands is done by the `CompositeKernel` class, which wraps a number of subkernels. Here are some examples: 
 
-<img src="https://user-images.githubusercontent.com/547415/82159170-47049400-9841-11ea-9858-42a82c2c5879.png" width="100%">
+![image](https://user-images.githubusercontent.com/547415/82275667-2ec37080-9938-11ea-9950-e53de4406af3.png)
 
 Note that while the composite configuration is the defaut when using the `dotnet-interactive` tool via Visual Studio Code or Jupyter, the .NET Interactive [NuGet packages](../README.md#Packages) let you create other configurations. For example, you might provide a single-language embedded scripting experience using the C# kernel by itself, or you might provide multiple F# kernels each preconfigured to run code on a different processor.
 
