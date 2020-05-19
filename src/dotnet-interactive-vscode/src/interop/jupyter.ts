@@ -5,7 +5,6 @@ import { CellKind, CellOutput, CellOutputKind, NotebookDocument } from "../inter
 import { JupyterCell, JupyterMetadata, JupyterNotebook, JupyterOutput } from "../interfaces/jupyter";
 import { NotebookFile, editorLanguageAliases } from "../interactiveNotebook";
 import { RawNotebookCell } from "../interfaces";
-import { trimTrailingCarriageReturn } from '../utilities';
 
 export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
     // VS Code Notebooks don't have the concept of a global notebook language, so we have to fake it.
@@ -90,8 +89,8 @@ export function convertFromJupyter(jupyter: JupyterNotebook): NotebookFile {
     };
 }
 
-function getCellLanguageAndContents(lines: Array<string>, defaultLanguage: string): { cellLanguage: string, cellContents: Array<string> } {
-    lines = ensureNoNewlineTerminators(lines);
+function getCellLanguageAndContents(contents: string | Array<string>, defaultLanguage: string): { cellLanguage: string, cellContents: Array<string> } {
+    let lines = splitAndCleanLines(contents);
     if (lines.length > 0 && lines[0].startsWith('#!')) {
         let possibleLanguageAlias = lines[0].substr(2).trimRight();
         let languageName = editorLanguageAliases.get(possibleLanguageAlias);
@@ -212,9 +211,15 @@ function versionFromLanguage(language: string): string {
     }
 }
 
-function splitAndCleanLines(source: string): Array<string> {
-    let lines = source.split('\n').map(trimTrailingCarriageReturn);
-    return lines;
+function splitAndCleanLines(source: string | Array<string>): Array<string> {
+    let lines: Array<string>;
+    if (typeof source === 'string') {
+        lines = source.split('\n');
+    } else {
+        lines = source;
+    }
+
+    return lines.map(ensureNoNewlineTerminators);
 }
 
 function splitAndEnsureNewlineTerminators(source: string): Array<string> {
@@ -228,18 +233,13 @@ function splitAndEnsureNewlineTerminators(source: string): Array<string> {
     return lines;
 }
 
-function ensureNoNewlineTerminators(lines: Array<string>): Array<string> {
-    let result = [];
-    for (let line of lines) {
-        if (line.endsWith('\n')) {
-            line = line.substr(0, line.length - 1);
-        }
-        if (line.endsWith('\r')) {
-            line = line.substr(0, line.length - 1);
-        }
-
-        result.push(line);
+function ensureNoNewlineTerminators(line: string): string {
+    if (line.endsWith('\n')) {
+        line = line.substr(0, line.length - 1);
+    }
+    if (line.endsWith('\r')) {
+        line = line.substr(0, line.length - 1);
     }
 
-    return result;
+    return line;
 }

@@ -319,4 +319,94 @@ describe('File export tests', () => {
         let notebook = convertFromJupyter(jupyter);
         expect(notebook).to.deep.equal(expected);
     });
+
+    it('jupyter cell source is valid as both string and array of string', () => {
+        let jupyter: JupyterNotebook = {
+            cells: [
+                {
+                    // code cell with source string
+                    cell_type: 'code',
+                    execution_count: 1,
+                    metadata: {},
+                    source: '1\n2'
+                },
+                {
+                    // code cell with source array
+                    cell_type: 'code',
+                    execution_count: 1,
+                    metadata: {},
+                    source: [
+                        '3\n',
+                        '4'
+                    ]
+                },
+                {
+                    // markdown cell with source string
+                    cell_type: 'markdown',
+                    metadata: {},
+                    source: '5\n6'
+                },
+                {
+                    // markdown cell with source array
+                    cell_type: 'markdown',
+                    metadata: {},
+                    source: [
+                        '7\n',
+                        '8'
+                    ]
+                }
+            ],
+            metadata: {
+                kernelspec: {
+                    display_name: '.NET (C#)',
+                    language: 'C#',
+                    name: '.net-csharp'
+                },
+                language_info: {
+                    file_extension: '.cs',
+                    mimetype: 'text/x-csharp',
+                    name: 'C#',
+                    pygments_lexer: 'csharp',
+                    version: '8.0'
+                }
+            },
+            nbformat: 4,
+            nbformat_minor: 4
+        };
+
+        let expected: NotebookFile = {
+            cells: [
+                {
+                    language: 'csharp',
+                    contents: [
+                        '1',
+                        '2'
+                    ]
+                },
+                {
+                    language: 'csharp',
+                    contents: [
+                        '3',
+                        '4',
+                    ]
+                },
+                {
+                    language: 'markdown',
+                    contents: [
+                        '5',
+                        '6'
+                    ]
+                },
+                {
+                    language: 'markdown',
+                    contents: [
+                        '7',
+                        '8'
+                    ]
+                }
+            ]
+        };
+        let notebook = convertFromJupyter(jupyter);
+        expect(notebook).to.deep.equal(expected);
+    });
 });
