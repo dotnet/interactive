@@ -21,8 +21,8 @@ suite('Extension Test Suite', () => {
             ],
             workingDirectory: __dirname
         };
-        let clientMapper = new ClientMapper(() => new StdioKernelTransport(processStart, new RecordingChannel()));
-        let client = clientMapper.getOrAddClient({ path: 'some/path' });
+        let clientMapper = new ClientMapper(notebookPath => new StdioKernelTransport(processStart, notebookPath, new RecordingChannel()));
+        let client = clientMapper.getOrAddClient({ fsPath: 'some/path' });
         let code = '1+1';
         let result: Array<CellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs);

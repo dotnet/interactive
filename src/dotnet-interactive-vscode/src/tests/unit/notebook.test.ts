@@ -50,7 +50,7 @@ describe('Notebook tests', () => {
                     }
                 ]
             }));
-            let client = clientMapper.getOrAddClient({ path: 'test/path' });
+            let client = clientMapper.getOrAddClient({ fsPath: 'test/path' });
             let result: Array<CellOutput> = [];
             await client.execute(code, language, outputs => result = outputs, token);
             expect(result).to.deep.equal([
@@ -136,7 +136,7 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = clientMapper.getOrAddClient({ path: 'test/path' });
+        let client = clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, token);
         expect(result).to.deep.equal([
@@ -208,7 +208,7 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = clientMapper.getOrAddClient({ path: 'test/path' });
+        let client = clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, token);
         expect(result).to.deep.equal([
@@ -267,7 +267,7 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = clientMapper.getOrAddClient({ path: 'test/path' });
+        let client = clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, token);
         expect(result).to.deep.equal([

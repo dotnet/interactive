@@ -3,15 +3,9 @@
 
 import { expect } from 'chai';
 
-import { ClientMapper } from './../../clientMapper';
 import { parseNotebook, serializeNotebook, NotebookFile } from '../../interactiveNotebook';
 
 describe('Extension Test Suite', () => {
-    it('Parse notebook cell URI', () => {
-        expect(ClientMapper.keyFromUri({path: "/c:/path/to/file"})).to.equal("/c:/path/to/file");
-        expect(ClientMapper.keyFromUri({path: "/c:/path/to/file, cell 1"})).to.equal("/c:/path/to/file");
-    });
-
     it('Parse notebook from valid contents', () => {
         let validContents = `
 #!fsharp

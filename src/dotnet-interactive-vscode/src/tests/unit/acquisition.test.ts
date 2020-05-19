@@ -18,7 +18,7 @@ describe('Acquisition tests', () => {
 
     beforeEach(() => {
         acquisitionChannel = new RecordingChannel();
-    })
+    });
     function getInteractiveVersionThatReturnsNoVersionFound(dotnetPath: string, globalStoragePath: string): Promise<string | undefined> {
         return new Promise<string | undefined>((resolve, reject) => {
             resolve(undefined);

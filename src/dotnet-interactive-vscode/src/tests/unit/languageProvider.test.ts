@@ -37,11 +37,11 @@ describe('LanguageProvider tests', () => {
                 }
             ]
         }));
-        clientMapper.getOrAddClient({ path: 'test/path' });
+        clientMapper.getOrAddClient({ fsPath: 'test/path' });
 
         let code = 'Math.';
         let document = {
-            uri: { path: 'test/path' },
+            uri: { fsPath: 'test/path' },
             getText: () => code
         };
         let position = {
@@ -97,11 +97,11 @@ describe('LanguageProvider tests', () => {
                 }
             ]
         }));
-        clientMapper.getOrAddClient({ path: 'test/path' });
+        clientMapper.getOrAddClient({ fsPath: 'test/path' });
 
         let code = 'var x = 1234;';
         let document = {
-            uri: { path: 'test/path' },
+            uri: { fsPath: 'test/path' },
             getText: () => code,
         };
         let position = {
