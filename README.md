@@ -5,7 +5,7 @@
 .NET Interactive takes the power of .NET and embeds it into *your* interactive experiences. Share code, explore data, write, and learn across your apps in ways you couldn't before.
 
 * [Notebooks](#notebooks-with-net-core): Jupyter, nteract, and Visual Studio Code 
-* Channel Bots
+* Interactive codebots
 * Embeddable script engines
 * REPLs
 
@@ -29,7 +29,11 @@ There are several ways to get started using .NET with Jupyter, including Jupyter
 
 ## Visual Studio Code
 
-Work is underway to add support for the new Visual Studio Code [native notebook feature](https://code.visualstudio.com/updates/v1_45#_github-issue-notebook). While we are still in the early stages of this effort, if you'd like to experiment with it you can find instructions [here](./src/dotnet-interactive-vscode/README.md). 
+Work is underway to add support for the new Visual Studio Code [native notebook feature](https://code.visualstudio.com/updates/v1_45#_github-issue-notebook). While we are still in the early stages of this effort, if you'd like to experiment with it you can find instructions [here](./src/dotnet-interactive-vscode/README.md) and if you'd like to contribute, start [here](./src/dotnet-interactive-vscode/developing.md). 
+
+## Documentation
+
+
 
 ## Packages
 
