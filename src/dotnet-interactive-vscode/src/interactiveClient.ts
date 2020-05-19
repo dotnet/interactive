@@ -49,8 +49,9 @@ export class InteractiveClient {
 
             let reportOutputs = () => {
                 if (this.deferredOutput.length > 0) {
-                    outputs = [...this.deferredOutput, ...outputs];
+                    let deferred = this.deferredOutput;
                     this.deferredOutput = [];
+                    observer(deferred);
                 }
 
                 observer(outputs);
