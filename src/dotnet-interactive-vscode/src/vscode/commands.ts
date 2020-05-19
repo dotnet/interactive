@@ -128,7 +128,7 @@ export function registerInteropCommands(context: vscode.ExtensionContext) {
         if (!notebookUri) {
             notebookUri = await vscode.window.showSaveDialog({
                 filters: {
-                    '.NET Interactive Notebook Files': ['dotnet-interactive']
+                    '.NET Interactive Notebook Files': ['dib', 'dotnet-interactive']
                 }
             });
 

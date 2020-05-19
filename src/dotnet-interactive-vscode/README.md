@@ -12,7 +12,7 @@ This extension adds support for using .NET Interactive in a Visual Studio Code n
 
 2.  Install the .NET Interactive Notebooks extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
 
-3.  To create a new notebook, in Visual Studio Code, create a file with the extension `.dotnet-interactive`
+3.  To create a new notebook, in Visual Studio Code, create a file with the extension `.dib`
 
     _or_
 
