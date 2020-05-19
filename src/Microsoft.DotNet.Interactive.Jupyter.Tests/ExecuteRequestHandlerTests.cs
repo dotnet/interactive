@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Clockwise;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -156,8 +157,8 @@ f();"));
             await context.Done().Timeout(20.Seconds());
 
             JupyterMessageSender.PubSubMessages
-                .Should()
-                .ContainSingle<DisplayData>(r => r.Data["application/json"] is JToken token && token.Type ==JTokenType.Integer);
+                                .Should()
+                                .ContainSingle<DisplayData>(r => r.Data["application/json"] is JToken token && token.Type == JTokenType.Integer);
         }
         
         [Theory]
@@ -237,7 +238,15 @@ f();"));
 
             await context.Done().Timeout(20.Seconds());
 
-            JupyterMessageSender.PubSubMessages.Should().Contain(r => r is ExecuteResult);
+            using var _ = new AssertionScope();
+
+            JupyterMessageSender.PubSubMessages
+                                .Should()
+                                .ContainSingle<ExecuteResult>()
+                                .Which
+                                .Data
+                                .Should()
+                                .ContainSingle(d => d.Key.Equals("text/html") && d.Value.Equals("4"));
         }
 
         [Fact]
@@ -250,7 +259,33 @@ f();"));
 
             await context.Done().Timeout(5.Seconds());
 
-            JupyterMessageSender.ReplyMessages.Should().ContainItemsAssignableTo<ExecuteReplyOk>();
+            JupyterMessageSender.ReplyMessages
+                                .Should()
+                                .ContainSingle<ExecuteReplyOk>();
+        }
+
+        [Fact]
+        public async Task sends_ExecuteReply_message_when_submission_contains_a_language_directive_and_trailing_expression()
+        {
+            var scheduler = CreateScheduler();
+            var request = ZeroMQMessage.Create(new ExecuteRequest("#!fsharp\n123"));
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            await scheduler.Schedule(context);
+
+            await context.Done().Timeout(5.Seconds());
+
+            using var _ = new AssertionScope();
+
+            JupyterMessageSender.ReplyMessages
+                                .Should()
+                                .ContainSingle<ExecuteReplyOk>();
+            JupyterMessageSender.PubSubMessages
+                                .Should()
+                                .ContainSingle<ExecuteResult>()
+                                .Which
+                                .Data
+                                .Should()
+                                .ContainSingle(d => d.Key.Equals("text/html") && d.Value.Equals("123"));
         }
 
         [Theory]
