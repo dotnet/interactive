@@ -12,7 +12,6 @@ namespace Microsoft.DotNet.Interactive.App
         public static string GetHtmlInjection(Uri[] probingUris, string seed)
         {
             var apiCacheBuster = $"{Process.GetCurrentProcess().Id}.{seed}";
-            var apiSeed = apiCacheBuster;
             var template = @"
 <div>
     <div id='dotnet-interactive-this-cell-$SEED$' style='display: none'>
@@ -109,7 +108,7 @@ function loadDotnetInteractiveApi() {
             var code = template;
             code = code.Replace("$ADDRESSES$", jsProbingUris);
             code = code.Replace("$CACHE_BUSTER$", apiCacheBuster);
-            code = code.Replace("$SEED$", apiSeed);
+            code = code.Replace("$SEED$", apiCacheBuster);
             
 
             return code;
