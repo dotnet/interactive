@@ -40,23 +40,25 @@ import { CellOutput, CellErrorOutput, CellOutputKind, CellStreamOutput, CellDisp
 export class InteractiveClient {
     private nextToken: number = 1;
     private tokenEventObservers: Map<string, Array<KernelEventEnvelopeObserver>> = new Map<string, Array<KernelEventEnvelopeObserver>>();
-    private deferredCommandEventListener: KernelEventEnvelopeObserver;
+    private deferredOutput: Array<CellOutput> = [];
 
     constructor(readonly kernelTransport: KernelTransport) {
         kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
-        this.deferredCommandEventListener = (_) => {
-
-        };
-    }
-
-    public setDeferredCommandEventsListener(listener: KernelEventEnvelopeObserver) {
-        this.deferredCommandEventListener = listener;
     }
 
     async execute(source: string, language: string, observer: { (outputs: Array<CellOutput>): void }, token?: string | undefined): Promise<void> {
         return new Promise(async (resolve, reject) => {
             let outputs: Array<CellOutput> = [];
             let valueIdToIndex: Map<string, number> = new Map<string, number>();
+
+            let reportOutputs = () => {
+                if (this.deferredOutput.length > 0) {
+                    outputs = [...this.deferredOutput, ...outputs];
+                    this.deferredOutput = [];
+                }
+
+                observer(outputs);
+            }
 
             let disposable = await this.submitCode(source, language, eventEnvelope => {
                 switch (eventEnvelope.eventType) {
@@ -73,7 +75,7 @@ export class InteractiveClient {
                                 traceback: [],
                             };
                             outputs.push(output);
-                            observer(outputs);
+                            reportOutputs();
                             disposable.dispose(); // is this correct?
                             reject(err);
                         }
@@ -87,7 +89,7 @@ export class InteractiveClient {
                                 text: disp.value.toString(),
                             };
                             outputs.push(output);
-                            observer(outputs);
+                            reportOutputs();
                         }
                         break;
                     case DisplayedValueProducedType:
@@ -112,7 +114,7 @@ export class InteractiveClient {
                                 outputs.push(output);
                             }
 
-                            observer(outputs);
+                            reportOutputs();
                         }
                         break;
                 }
@@ -234,7 +236,15 @@ export class InteractiveClient {
                     listener(eventEnvelope);
                 }
             } else {
-                this.deferredCommandEventListener(eventEnvelope);
+                switch (eventEnvelope.eventType) {
+                    case DisplayedValueProducedType:
+                    case DisplayedValueProducedType:
+                    case ReturnValueProducedType:
+                        let disp = <DisplayEventBase>eventEnvelope.event;
+                        let output = displayEventToCellOutput(disp);
+                        this.deferredOutput.push(output);
+                        break;
+                }
             }
         }
     }
