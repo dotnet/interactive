@@ -105,12 +105,9 @@ function loadDotnetInteractiveApi() {
 </div>";
             
             var jsProbingUris = $"[{ string.Join(", ", probingUris.Select(a => $"\"{a.AbsoluteUri}\"")) }]";
-            var code = template;
-            code = code.Replace("$ADDRESSES$", jsProbingUris);
-            code = code.Replace("$CACHE_BUSTER$", apiCacheBuster);
-            
-
-            return code;
+            return template
+                .Replace("$ADDRESSES$", jsProbingUris)
+                .Replace("$CACHE_BUSTER$", apiCacheBuster);
         }
     }
 }
