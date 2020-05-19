@@ -12,9 +12,8 @@ namespace Microsoft.DotNet.Interactive.Events
             object value,
             IKernelCommand command = null,
             IReadOnlyCollection<FormattedValue> formattedValues = null,
-            string valueId = null) : base(value,command, formattedValues, valueId)
+            string valueId = null) : base(value, command, formattedValues, valueId)
         {
-
         }
     }
 }

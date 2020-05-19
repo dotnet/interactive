@@ -153,9 +153,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 return originalSubmission;
             }
 
+            var parent = submitCode.Parent ?? submitCode;
+
             foreach (var command in commands.OfType<KernelCommandBase>())
             {
-                command.Parent = submitCode.Parent;
+                command.Parent = parent;
             }
 
             return commands;
