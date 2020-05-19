@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
-import * as path from 'path';
 import { ClientMapper } from './../clientMapper';
 import { NotebookFile, parseNotebook, serializeNotebook, editorLanguageAliases } from '../interactiveNotebook';
 import { RawNotebookCell } from '../interfaces';
@@ -23,8 +22,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         }
 
         let notebook = parseNotebook(contents);
-        let client = this.clientMapper.getOrAddClient(uri);
-        let notebookPath = path.dirname(uri.fsPath);
+        this.clientMapper.getOrAddClient(uri);
 
         let notebookData: vscode.NotebookData = {
             languages: Array.from(editorLanguageAliases.keys()),
@@ -33,16 +31,6 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
             },
             cells: notebook.cells.map(toNotebookCellData)
         };
-
-        client.changeWorkingDirectory(notebookPath).catch((err) => {
-            let message = `Unable to set notebook working directory to '${notebookPath}'.`;
-            let detailedMessage = message;
-            if (err && err.message) {
-                detailedMessage += '\n' + err.message.toString();
-            }
-            this.globalChannel.appendLine(detailedMessage);
-            vscode.window.showInformationMessage(`${message} See output withdow "${this.globalChannel.getName()}"`);
-        });
 
         return notebookData;
     }

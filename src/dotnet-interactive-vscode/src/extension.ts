@@ -51,7 +51,7 @@ export async function activate(context: vscode.ExtensionContext) {
     let processStart = processArguments(argsTemplate, dotnetPath, launchOptions!.workingDirectory);
 
     // register with VS Code
-    const clientMapper = new ClientMapper(() => new StdioKernelTransport(processStart, diagnosticsChannel));
+    const clientMapper = new ClientMapper(notebookPath => new StdioKernelTransport(processStart, notebookPath, diagnosticsChannel));
 
     registerKernelCommands(context, clientMapper);
     registerInteropCommands(context);

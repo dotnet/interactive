@@ -2,9 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { ClientMapper } from './../clientMapper';
-import { DocumentLike, HoverResult, PositionLike } from './interfaces';
+import { HoverResult, PositionLike } from './interfaces';
+import { Document } from '../interfaces/vscode';
 
-export async function provideHover(clientMapper: ClientMapper, language: string, document: DocumentLike, position: PositionLike, token?: string | undefined): Promise<HoverResult> {
+export async function provideHover(clientMapper: ClientMapper, language: string, document: Document, position: PositionLike, token?: string | undefined): Promise<HoverResult> {
     let client = clientMapper.getOrAddClient(document.uri);
     let hoverText = await client.hover(language, document.getText(), position.line, position.character, token);
     let content = hoverText.content.sort((a, b) => mimeTypeToPriority(a.mimeType) - mimeTypeToPriority(b.mimeType))[0];

@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import {
-    ChangeWorkingDirectory,
-    ChangeWorkingDirectoryType,
     CommandFailed,
     CommandFailedType,
     CommandHandledType,
@@ -32,8 +30,6 @@ import {
     SubmissionType,
     SubmitCode,
     SubmitCodeType,
-    WorkingDirectoryChanged,
-    WorkingDirectoryChangedType,
 } from './contracts';
 import { CellOutput, CellErrorOutput, CellOutputKind, CellStreamOutput, CellDisplayOutput } from './interfaces/vscode';
 
@@ -58,7 +54,7 @@ export class InteractiveClient {
                 }
 
                 observer(outputs);
-            }
+            };
 
             let disposable = await this.submitCode(source, language, eventEnvelope => {
                 switch (eventEnvelope.eventType) {
@@ -120,13 +116,6 @@ export class InteractiveClient {
                 }
             }, token);
         });
-    }
-
-    changeWorkingDirectory(workingDirectory: string, token?: string | undefined): Promise<WorkingDirectoryChanged> {
-        let command: ChangeWorkingDirectory = {
-            workingDirectory
-        };
-        return this.submitCommandAndGetResult<WorkingDirectoryChanged>(command, ChangeWorkingDirectoryType, WorkingDirectoryChangedType, token);
     }
 
     completion(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionRequestCompleted> {

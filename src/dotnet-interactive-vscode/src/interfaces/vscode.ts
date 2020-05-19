@@ -33,6 +33,15 @@ export interface CellDisplayOutput {
 
 export type CellOutput = CellStreamOutput | CellErrorOutput | CellDisplayOutput;
 
+export interface Uri {
+    fsPath: string;
+}
+
+export interface Document {
+    uri: Uri;
+    getText: { (): string };
+}
+
 export interface NotebookCell {
     cellKind: CellKind;
     source: string;
