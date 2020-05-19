@@ -156,7 +156,6 @@ notebookScope.plot = function (plotTarget) {
                         }
                     };
                   
-
                     var traces = [recovered, deaths, confirmed];
 
                     var layout = {
