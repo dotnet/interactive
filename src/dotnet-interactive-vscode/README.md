@@ -15,7 +15,7 @@ This extension adds support for using .NET Interactive in a Visual Studio Code n
 3.  Launch Visual Studio Code Insiders by opening a terminal in the folder you would like to work in and running the following: 
 
     ```console
-    code-insiders --enable-proposed-api ms-dotnettools.dotnet-interactive-vscode .`
+    code-insiders --enable-proposed-api ms-dotnettools.dotnet-interactive-vscode .
     ```
 
 4.  To create a new notebook, in Visual Studio Code, create a file with the extension `.dotnet-interactive`
