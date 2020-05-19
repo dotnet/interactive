@@ -46,7 +46,7 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, do
             'Microsoft.dotnet-interactive'
         ];
         await execute(args.dotnetPath, uninstallArgs, globalStoragePath);
-    
+
         let toolArgs = [
             'tool',
             'install',
@@ -57,14 +57,14 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, do
         if (args.toolVersion) {
             toolArgs.push('--version', args.toolVersion);
         }
-    
+
         return new Promise(async (resolve, reject) => {
             const result = await execute(args.dotnetPath, toolArgs, globalStoragePath);
             if (result.code === 0) {
                 resolve();
+            } else {
+                reject();
             }
-    
-            reject();
         });
     }
 }
