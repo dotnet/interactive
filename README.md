@@ -5,7 +5,7 @@
 .NET Interactive takes the power of .NET and embeds it into *your* interactive experiences. Share code, explore data, write, and learn across your apps in ways you couldn't before.
 
 * [Notebooks](#notebooks-with-net-core): Jupyter, nteract, and Visual Studio Code 
-* Interactive codebots
+* [Code bots](https://github.com/CodeConversations/CodeConversations)
 * Embeddable script engines
 * REPLs
 
