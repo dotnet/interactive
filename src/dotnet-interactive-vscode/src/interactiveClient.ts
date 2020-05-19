@@ -48,16 +48,15 @@ export class InteractiveClient {
             let valueIdToIndex: Map<string, number> = new Map<string, number>();
 
             let reportOutputs = () => {
-                if (this.deferredOutput.length > 0) {
-                    let deferred = this.deferredOutput;
-                    this.deferredOutput = [];
-                    observer(deferred);
-                }
-
                 observer(outputs);
             };
 
             let disposable = await this.submitCode(source, language, eventEnvelope => {
+                if (this.deferredOutput.length > 0) {
+                    outputs = [...this.deferredOutput, ...outputs];
+                    this.deferredOutput = [];
+                }
+    
                 switch (eventEnvelope.eventType) {
                     case CommandHandledType:
                         resolve();
