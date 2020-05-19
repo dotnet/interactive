@@ -14,14 +14,14 @@ namespace ClockExtension
     {
         public async Task OnLoadAsync(IKernel kernel)
         {
-            Formatter<DateTime>.Register((d, writer) =>
+            Formatter<DateTime>.Register((date, writer) =>
             {
-                writer.Write(d.DrawSvgClock());
+                writer.Write(date.DrawSvgClock());
             }, "text/html");
 
-            Formatter<DateTimeOffset>.Register((d, writer) =>
+            Formatter<DateTimeOffset>.Register((date, writer) =>
             {
-                writer.Write(d.DrawSvgClock());
+                writer.Write(date.DrawSvgClock());
             }, "text/html");
 
             if (kernel is KernelBase kernelBase)

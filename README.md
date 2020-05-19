@@ -35,7 +35,6 @@ Work is underway to add support for the new Visual Studio Code [native notebook 
 
 We provide a number of packages that can be used to write custom extensions for .NET Interactive or to build your own interactive experiences.
 
-
 Package                                    | Version                                                                                                                                                         | Description
 :------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------
 `Microsoft.dotnet-interactive`             | [![Nuget](https://img.shields.io/nuget/v/Microsoft.dotnet-interactive.svg)](https://www.nuget.org/packages/Microsoft.dotnet-interactive)                        | The `dotnet-interactive` global tool

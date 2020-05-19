@@ -2,7 +2,7 @@
 
 All you need is your browser to try out the .NET Jupyter experience.
 
-To get you started, we created a set of samples in C#, F#, and PowerShell. These samples have been designed to provide a **zero-install** experience, allowing you to try the .NET kernel setup free.
+To get you started, we created a set of samples in C#, F#, and PowerShell. These samples have been designed to provide a **zero-install** experience, allowing you to try the .NET kernel setup free. If you clone this repo, you can find these samples [here](../samples/readme.md).
 
 ## Steps
 

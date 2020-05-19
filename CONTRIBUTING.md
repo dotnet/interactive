@@ -3,6 +3,7 @@ Contributing
 
 Please read [.NET Core Guidelines](https://github.com/dotnet/corefx/blob/master/Documentation/project-docs/contributing.md) for more general information about coding styles, source structure, making pull requests, and more.
 While this project is in the early phases of development, some of the guidelines in this document -- such as API reviews -- do not yet apply as strongly.
+
 That said, please use open a GitHub to discuss first any API renames or changes before submitting PRs.
 
 ## Developer guide
@@ -19,7 +20,7 @@ This project depends on .NET Core 3.1. Before working on the project, check that
 
 ### Visual Studio
 
-This project supports [Visual Studio 2017](https://visualstudio.com) and [Visual Studio for Mac](https://www.visualstudio.com/vs/visual-studio-mac/). Any version, including the free Community Edition, should be sufficient so long as you install Visual Studio support for .NET Core development.
+This project supports [Visual Studio 2019](https://visualstudio.com) and [Visual Studio for Mac](https://www.visualstudio.com/vs/visual-studio-mac/). Any version, including the free Community Edition, should be sufficient so long as you install Visual Studio support for .NET Core development.
 
 This project also supports using
 [Visual Studio Code](https://code.visualstudio.com). Install the [C# extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp) and install the [.NET Core CLI](https://get.dot.net/core) to get started.
