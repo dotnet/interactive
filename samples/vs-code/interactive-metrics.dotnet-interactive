@@ -1,0 +1,172 @@
+#!markdown
+
+# .NET interactive report
+
+#!csharp
+
+#r "nuget:NodaTime,2.4.8"
+#r "nuget:Octokit,0.47.0"
+
+using Octokit;
+using NodaTime;
+using NodaTime.Extensions;
+using XPlot.Plotly;
+
+#!csharp
+
+var organization = "dotnet";
+var repositoryName = "interactive";
+var options = new ApiOptions();
+var gitHubClient = new GitHubClient(new ProductHeaderValue("notebook"));
+
+#!markdown
+
+Use api token to remove throttling and other api limitations
+
+#!csharp
+
+var tokenAuth = new Credentials("b83f3e399e7a950d0791ac3f48dada46d82373c2");
+gitHubClient.Credentials = tokenAuth;
+
+#!csharp
+
+var today = SystemClock.Instance.InUtc().GetCurrentDate();
+var startOfTheMonth = today.With(DateAdjusters.StartOfMonth);
+var startOfPreviousMonth = today.With(DateAdjusters.StartOfMonth) - Period.FromMonths(1);
+var startOfTheYear = new LocalDate(today.Year, 1, 1).AtMidnight();
+
+var currentYearIssuesRequest = new RepositoryIssueRequest {
+     State = ItemStateFilter.All,
+     Since = startOfTheYear.ToDateTimeUnspecified()
+};
+
+var pullRequestRequest = new PullRequestRequest {
+    State = ItemStateFilter.All
+};
+
+#!markdown
+
+Perform github queries
+
+#!csharp
+
+#!time
+var branches = await gitHubClient.Repository.Branch.GetAll(organization, repositoryName);
+var pullRequests = await gitHubClient.Repository.PullRequest.GetAllForRepository(organization, repositoryName, pullRequestRequest);
+var forks = await gitHubClient.Repository.Forks.GetAll(organization, repositoryName);
+var currentYearIssues = await gitHubClient.Issue.GetAllForRepository(organization, repositoryName, currentYearIssuesRequest);
+
+#!markdown
+
+Branch data
+
+#!markdown
+
+Pull request data
+
+#!csharp
+
+var pullRequestCreatedThisMonth = pullRequests.Where(pr => pr.CreatedAt > startOfTheMonth.ToDateTimeUnspecified());
+var pullRequestClosedThisMonth =pullRequests.Where(pr => (pr.MergedAt != null && pr.MergedAt > startOfTheMonth.ToDateTimeUnspecified()));
+var contributorsCount = pullRequestClosedThisMonth.GroupBy(pr => pr.User.Login);
+
+var pullRequestLifespan = pullRequests.GroupBy(pr =>
+            {
+                var lifeSpan = (pr.ClosedAt ?? today.ToDateTimeUnspecified()) - pr.CreatedAt;
+                return Math.Max(0, Math.Ceiling(lifeSpan.TotalDays));
+            })
+            .Where(g => g.Key > 0)
+            .OrderBy(g => g.Key)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+#!markdown
+
+Fork data
+
+#!csharp
+
+var forkCreatedThisMonth = forks.Where(fork => fork.CreatedAt >= startOfTheMonth.ToDateTimeUnspecified());
+var forkCreatedPreviousMonth = forks.Where(fork => (fork.CreatedAt >= startOfPreviousMonth.ToDateTimeUnspecified()) && (fork.CreatedAt < startOfTheMonth.ToDateTimeUnspecified()));
+var forkCreatedByMonth = forks.GroupBy(fork => new DateTime(fork.CreatedAt.Year, fork.CreatedAt.Month, 1));
+
+#!markdown
+
+Issues data
+
+#!csharp
+
+var openIssues = currentYearIssues.Where(issue => issue.State == "open");
+var closedIssues = currentYearIssues.Where(issue => issue.State == "closed");
+var oldestIssues = openIssues.OrderBy(issue => today.ToDateTimeUnspecified() - issue.CreatedAt).Take(20);
+var createdCurrentMonth = currentYearIssues.Where(issue => issue.CreatedAt >= startOfTheMonth.ToDateTimeUnspecified());
+var createdPreviousMonth = currentYearIssues.Where(issue => (issue.CreatedAt >= startOfPreviousMonth.ToDateTimeUnspecified()) && (issue.CreatedAt < startOfTheMonth.ToDateTimeUnspecified()));
+var openFromPreviousMonth = openIssues.Where(issue => (issue.CreatedAt > startOfPreviousMonth.ToDateTimeUnspecified()) && (issue.CreatedAt < startOfTheMonth.ToDateTimeUnspecified()));
+var createdByMonth = currentYearIssues.GroupBy(issue => new DateTime(issue.CreatedAt.Year, issue.CreatedAt.Month, 1)).ToDictionary(g => g.Key, g => g.Count());
+var closedByMonth = closedIssues.GroupBy(issue => new DateTime((int) issue.ClosedAt?.Year, (int) issue.ClosedAt?.Month, 1)).ToDictionary(g => g.Key, g => g.Count());
+            
+var openByMonth = new Dictionary<DateTime, int>();
+var minDate = createdByMonth.Min(g => g.Key);
+var maxCreatedAtDate = createdByMonth.Max(g => g.Key);
+var maxClosedAtDate = closedByMonth.Max(g => g.Key);
+var maxDate = maxCreatedAtDate > maxClosedAtDate ?maxCreatedAtDate : maxClosedAtDate;
+var cursor = minDate;
+var runningTotal = 0;
+
+while (cursor <= maxDate )
+{
+    createdByMonth.TryGetValue(cursor, out var openCount);
+    closedByMonth.TryGetValue(cursor, out var closedCount);
+    runningTotal += (openCount - closedCount);
+    openByMonth[cursor] = runningTotal;
+    cursor = cursor.AddMonths(1);
+}
+
+#!csharp
+
+var createdByMonthSeries = new Graph.Scatter{
+    name = "Created",
+    x = createdByMonth.Select(g => g.Key),
+    y = createdByMonth.Select(g => g.Value),
+};
+
+var openByMonthSeries = new Graph.Scatter{
+    name = "Open",
+    x = openByMonth.Select(g => g.Key),    
+    y = openByMonth.Select(g => g.Value),
+};
+
+var closedByMonthSeries = new Graph.Scatter{
+    name = "Closed",
+    x = closedByMonth.Select(g => g.Key),
+    y = closedByMonth.Select(g => g.Value),
+};
+
+var chart = Chart.Plot(new[] {createdByMonthSeries, closedByMonthSeries, openByMonthSeries});
+chart.WithTitle("Issues by month");
+display(chart);
+
+#!csharp
+
+var maxLifeSpan = pullRequestLifespan.Max(pr => pr.Value);
+var colors = pullRequestLifespan.OrderBy(pr => pr.Key).Select(pr => pr.Key < 7 ? "green" : pr.Key < 21 ? "yellow" : "red");
+var prLifespanSeries = new Graph.Bar
+{
+    name = "Days open",
+    y = pullRequestLifespan.OrderBy(pr => pr.Key).Select(pr => pr.Value),
+    x = pullRequestLifespan.OrderBy(pr => pr.Key).Select(pr => pr.Key) ,
+    marker = new Graph.Marker{
+        color = colors
+    }  
+};
+
+var chart = Chart.Plot(new[] {prLifespanSeries});
+chart.WithTitle("Pull Request by life span");
+chart.WithLayout(new Layout.Layout
+            {
+                xaxis = new Graph.Xaxis {
+                    title = "Number of days PR stays open",
+                    showgrid = false,
+                    zeroline = false
+                }
+            });
+display(chart);
