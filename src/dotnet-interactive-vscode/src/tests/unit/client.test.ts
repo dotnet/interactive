@@ -156,4 +156,99 @@ describe('InteractiveClient tests', () => {
             }
         ]);
     });
+
+    it('interleaved deferred events do not interfere with display update events', async () => {
+        let token = 'test-token';
+        let code = '1 + 1';
+        let clientMapper = new ClientMapper(() => new TestKernelTransport({
+            'SubmitCode': [
+                {
+                    // deferred event; unassociated with the original submission; has its own token
+                    eventType: DisplayedValueProducedType,
+                    event: {
+                        value: '',
+                        valueId: null,
+                        formattedValues: [
+                            {
+                                mimeType: 'text/plain',
+                                value: 'deferred output 1'
+                            }
+                        ]
+                    },
+                    token: 'token-for-deferred-command-doesnt-match-any-other-token'
+                },               
+                {
+                    eventType: DisplayedValueProducedType,
+                    event: {
+                        value: 1,
+                        valueId: "displayId",
+                        formattedValues: [
+                            {
+                                mimeType: 'text/html',
+                                value: '1'
+                            }
+                        ]
+                    },
+                    token
+                },
+                {
+                    // deferred event; unassociated with the original submission; has its own token
+                    eventType: DisplayedValueProducedType,
+                    event: {
+                        value: '',
+                        valueId: null,
+                        formattedValues: [
+                            {
+                                mimeType: 'text/plain',
+                                value: 'deferred output 2'
+                            }
+                        ]
+                    },
+                    token: 'token-for-deferred-command-doesnt-match-any-other-token'
+                }, 
+                {
+                    eventType: DisplayedValueUpdatedType,
+                    event: {
+                        value: 2,
+                        valueId: "displayId",
+                        formattedValues: [
+                            {
+                                mimeType: 'text/html',
+                                value: '2'
+                            }
+                        ]
+                    },
+                    token
+                },
+                {
+                    eventType: CommandHandledType,
+                    event: {},
+                    token
+                }
+            ]
+        }));
+        let client = clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let result: Array<CellOutput> = [];
+        await client.execute(code, 'csharp', outputs => result = outputs, token);
+        expect(result).to.deep.equal([
+            {
+                outputKind: CellOutputKind.Rich,
+                data: {
+                    'text/plain': 'deferred output 1'
+                }
+            },            
+            {
+                outputKind: CellOutputKind.Rich,
+                data: {
+                    'text/html': '2'
+                }
+            },
+            {
+                outputKind: CellOutputKind.Rich,
+                data: {
+                    'text/plain': 'deferred output 2'
+                }
+            }
+        ]);
+    });
 });
