@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.App
             var apiCacheBuster = $"{Process.GetCurrentProcess().Id}.{seed}";
             var template = @"
 <div>
-    <div id='dotnet-interactive-this-cell-$SEED$' style='display: none'>
+    <div id='dotnet-interactive-this-cell-$CACHE_BUSTER$' style='display: none'>
         The below script needs to be able to find the current output cell; this is an easy method to get it.
     </div>
     <script type='text/javascript'>
@@ -108,7 +108,6 @@ function loadDotnetInteractiveApi() {
             var code = template;
             code = code.Replace("$ADDRESSES$", jsProbingUris);
             code = code.Replace("$CACHE_BUSTER$", apiCacheBuster);
-            code = code.Replace("$SEED$", apiCacheBuster);
             
 
             return code;
