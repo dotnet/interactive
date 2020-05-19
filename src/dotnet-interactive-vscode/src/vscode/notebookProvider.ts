@@ -7,12 +7,9 @@ import { ClientMapper } from './../clientMapper';
 import { NotebookFile, parseNotebook, serializeNotebook, editorLanguageAliases } from '../interactiveNotebook';
 import { RawNotebookCell } from '../interfaces';
 import { trimTrailingCarriageReturn } from '../utilities';
-import { DisplayedValueProducedType, ReturnValueProducedType, DisplayEventBase } from '../contracts';
-import { CellOutput, ReportChannel } from '../interfaces/vscode';
-import { displayEventToCellOutput } from '../interactiveClient';
+import { ReportChannel } from '../interfaces/vscode';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
-    private deferredOutput: Array<CellOutput> = [];
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
 
     constructor(readonly clientMapper: ClientMapper, private readonly globalChannel : ReportChannel) {
@@ -36,19 +33,6 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
             },
             cells: notebook.cells.map(toNotebookCellData)
         };
-
-        client.setDeferredCommandEventsListener((eventEnvelope) => {
-            switch (eventEnvelope.eventType) {
-                case DisplayedValueProducedType:
-                case DisplayedValueProducedType:
-                case ReturnValueProducedType:
-                    let disp = <DisplayEventBase>eventEnvelope.event;
-                    let output = displayEventToCellOutput(disp);
-                    this.deferredOutput.push(output);
-                    break;
-            }
-
-        });
 
         client.changeWorkingDirectory(notebookPath).catch((err) => {
             let message = `Unable to set notebook working directory to '${notebookPath}'.`;
@@ -83,15 +67,9 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         let client = this.clientMapper.getOrAddClient(document.uri);
         let source = cell.source.toString();
         return client.execute(source, cell.language, outputs => {
-            let cellOutput = outputs;
-            if (this.deferredOutput.length) {
-                cellOutput = [...this.deferredOutput, ...outputs];
-                this.deferredOutput = [];
-            }
-
             // to properly trigger the UI update, `cell.outputs` needs to be uniquely assigned; simply setting it to the local variable has no effect
             cell.outputs = [];
-            cell.outputs = cellOutput;
+            cell.outputs = outputs;
         });
     }
 
