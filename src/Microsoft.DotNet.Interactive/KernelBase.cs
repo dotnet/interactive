@@ -351,10 +351,6 @@ namespace Microsoft.DotNet.Interactive
             SubmitCode command, 
             KernelInvocationContext context);
 
-        protected abstract Task HandleRequestCompletion(
-            RequestCompletion command, 
-            KernelInvocationContext context);
-
         private protected void SetHandler(
             IKernelCommand command,
             KernelInvocationContext context)
@@ -373,16 +369,15 @@ namespace Microsoft.DotNet.Interactive
                             break;
 
                         case RequestCompletion requestCompletion:
-                            requestCompletion.Handler = (_, invocationContext) =>
+                            if (this is IKernelCommandHandler<RequestCompletion> completionHandler)
                             {
-                                return HandleRequestCompletion(requestCompletion, invocationContext);
-                            };
+                                SetHandler(completionHandler, requestCompletion);
+                            }
+
                             break;
 
-                        // process management
-
                         case ChangeWorkingDirectory cwd:
-                            cwd.Handler = (_, _) =>
+                            cwd.Handler = (_, __) =>
                             {
                                 Directory.SetCurrentDirectory(cwd.WorkingDirectory.FullName);
                                 context.Publish(new WorkingDirectoryChanged(cwd.WorkingDirectory, cwd));
@@ -390,26 +385,23 @@ namespace Microsoft.DotNet.Interactive
                             };
                             break;
 
-                        // language services
-
                         case RequestHoverText hoverCommand:
-                            ApplyLanguageServiceHandlerOrDefault<RequestHoverText>(hoverCommand, handlingKernel => (_kernelCommand, context) => handlingKernel.HandleAsync(hoverCommand, context));
+                            if (this is IKernelCommandHandler<RequestHoverText> hoverHandler)
+                            {
+                                SetHandler(hoverHandler, hoverCommand);
+                            }
                             break;
                     }
                 }
             }
         }
 
-        private void ApplyLanguageServiceHandlerOrDefault<THandlerType>(
-            KernelCommandBase command,
-            Func<IKernelCommandHandler<THandlerType>, KernelCommandInvocation> handlerGenerator
-        ) where THandlerType: IKernelCommand
-        {
-            if (this is IKernelCommandHandler<THandlerType> handlingKernel)
-            {
-                command.Handler = handlerGenerator(handlingKernel);
-            }
-        }
+        private static void SetHandler<T>(
+            IKernelCommandHandler<T> completionHandler,
+            T requestCompletion)
+            where T : KernelCommandBase =>
+            requestCompletion.Handler = (command, context) =>
+                completionHandler.HandleAsync(requestCompletion, context);
 
         protected virtual void SetHandlingKernel(
             IKernelCommand command,

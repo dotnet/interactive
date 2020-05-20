@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly ConcurrentQueue<PackageAdded> _packages = new ConcurrentQueue<PackageAdded>();
         private readonly List<IKernel> _childKernels = new List<IKernel>();
-        private Dictionary<string, IKernel> _kernelsByNameOrAlias;
+        private readonly Dictionary<string, IKernel> _kernelsByNameOrAlias;
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
         private string _defaultKernelName;
 
@@ -200,11 +200,6 @@ namespace Microsoft.DotNet.Interactive
         }
 
         protected override Task HandleSubmitCode(SubmitCode command, KernelInvocationContext context)
-        {
-            throw new NotSupportedException();
-        }
-
-        protected override Task HandleRequestCompletion(RequestCompletion command, KernelInvocationContext context)
         {
             throw new NotSupportedException();
         }

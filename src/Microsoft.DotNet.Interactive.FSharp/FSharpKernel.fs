@@ -6,7 +6,6 @@ namespace Microsoft.DotNet.Interactive.FSharp
 open System
 open System.Collections.Generic
 open System.IO
-open System.Linq
 open System.Runtime.InteropServices
 open System.Text
 open System.Threading
@@ -19,7 +18,6 @@ open Microsoft.DotNet.Interactive.Events
 open Microsoft.DotNet.Interactive.Extensions
 open Microsoft.DotNet.Interactive.Utility
 
-open Microsoft.DotNet.DependencyManager;
 open FSharp.Compiler.Interactive.Shell
 open FSharp.Compiler.Scripting
 open FSharp.Compiler.SourceCodeServices
@@ -137,8 +135,6 @@ type FSharpKernel() as this =
     override _.HandleSubmitCode(command: SubmitCode, context: KernelInvocationContext): Task =
         handleSubmitCode command context |> Async.StartAsTask :> Task
         
-    override _.HandleRequestCompletion(command: RequestCompletion, context: KernelInvocationContext): Task =
-        handleRequestCompletion command context |> Async.StartAsTask :> Task
 
     override _.TryGetVariable<'a>(name: string, [<Out>] value: 'a byref) =
         match script.Value.Fsi.TryFindBoundValue(name) with
@@ -159,6 +155,10 @@ type FSharpKernel() as this =
     member _.ResolvedPackageReferences = _packageRestoreContext.Value.ResolvedPackageReferences;
 
     member _.PackageRestoreContext = _packageRestoreContext.Value
+
+    interface IKernelCommandHandler<RequestCompletion> with
+        member _.HandleAsync(command, context): Task =
+            handleRequestCompletion command context |> Async.StartAsTask :> Task
 
     // Integrate nuget package management to the F# Kernel
     interface ISupportNuget with

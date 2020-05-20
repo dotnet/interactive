@@ -32,6 +32,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         DotNetLanguageKernel,
         IExtensibleKernel,
         ISupportNuget,
+        IKernelCommandHandler<RequestCompletion>,
         IKernelCommandHandler<RequestHoverText>
     {
         internal const string DefaultKernelName = "csharp";
@@ -244,7 +245,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
         }
 
-        protected override async Task HandleRequestCompletion(
+        public async Task HandleAsync(
             RequestCompletion requestCompletion,
             KernelInvocationContext context)
         {

@@ -4,7 +4,7 @@
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.LanguageService
+namespace Microsoft.DotNet.Interactive
 {
     public interface IKernelCommandHandler<in TCommand> where TCommand: IKernelCommand
     {

@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.PowerShell.Host;
 using Microsoft.PowerShell;
 using Microsoft.PowerShell.Commands;
@@ -21,7 +22,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
     using Microsoft.DotNet.Interactive.Utility;
 
     public class PowerShellKernel : 
-        DotNetLanguageKernel
+        DotNetLanguageKernel,
+        IKernelCommandHandler<RequestCompletion>
     {
         internal const string DefaultKernelName = "pwsh";
 
@@ -192,7 +194,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
         }
 
-        protected override Task HandleRequestCompletion(
+        public Task HandleAsync(
             RequestCompletion requestCompletion,
             KernelInvocationContext context)
         {
