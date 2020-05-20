@@ -109,6 +109,24 @@
         "command": "dotnet-interactive.stopAllNotebookKernels",
         "title": ".NET Interactive: Stop all notebook kernels"
       }
+    ],
+    "languages": [
+      {
+        "id": "dotnet-interactive",
+        "aliases": [
+          ".NET Interactive Script"
+        ],
+        "filenamePatterns": [
+          "*.{dib,dotnet-interactive}"
+        ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "dotnet-interactive",
+        "scopeName": "source.dotnet-interactive",
+        "path": "./syntaxes/dotnet-interactive.tmGrammar.json"
+      }
     ]
   },
   "scripts": {
