@@ -38,14 +38,14 @@ export type JupyterOutput = JupyterStreamOutput | JupyterDisplayDataOutput | Jup
 export interface JupyterMarkdownCell {
     cell_type: 'markdown';
     metadata: { [key: string]: any };
-    source: string;
+    source: string | Array<string>;
 }
 
 export interface JupyterCodeCell {
     cell_type: 'code';
     execution_count: number;
     metadata: { [key: string]: any };
-    source: Array<string>;
+    source: string | Array<string>;
     outputs?: Array<JupyterOutput>;
 }
 
