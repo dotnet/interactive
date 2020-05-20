@@ -19,10 +19,10 @@ import { OutputChannelAdapter } from './OutputChannelAdapter';
 export async function activate(context: vscode.ExtensionContext) {
     // install dotnet or use global
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
-    const dotnetInteractiveChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET interactive'));
+    const dotnetInteractiveChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive'));
     dotnetInteractiveChannel.show();
 
-    const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET interactive : diagnostics'));
+    const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive : diagnostics'));
     diagnosticsChannel.show();
 
     const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion');

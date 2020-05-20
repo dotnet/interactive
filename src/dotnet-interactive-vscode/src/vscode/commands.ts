@@ -14,7 +14,7 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, do
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
     const minDotNetInteractiveVersion = config.get<string>('minimumInteractiveToolVersion');
     const interactiveToolSource = config.get<string>('interactiveToolSource');
-    const acquireChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET interactive : tool acquisition'));
+    const acquireChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive : tool acquisition'));
     acquireChannel.show();
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.acquire', async (args?: InstallInteractiveArgs | undefined): Promise<InteractiveLaunchOptions | undefined> => {
