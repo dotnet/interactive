@@ -50,13 +50,15 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
                                .ExportedTypes
                                .Where(t => !t.IsAbstract && !t.IsInterface)
                                .Where(t => typeof(IKernelCommand).IsAssignableFrom(t))
-                               .OrderBy(t => t.Name);
+                               .OrderBy(t => t.Name)
+                               .ToList();
             var eventTypes = typeof(IKernelEvent)
                              .Assembly
                              .ExportedTypes
                              .Where(t => !t.IsAbstract && !t.IsInterface)
                              .Where(t => typeof(IKernelEvent).IsAssignableFrom(t))
-                             .OrderBy(t => t.Name);
+                             .OrderBy(t => t.Name)
+                             .ToList();
 
             var emittedTypes = new HashSet<Type>(WellKnownTypes.Keys);
 
@@ -92,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
         }
 
         private static void GenerateTypesAndInterfaces(StringBuilder builder, string collectiveTypeName,
-            IEnumerable<Type> types, HashSet<Type> emittedTypes, List<Type> additionalTypes)
+            ICollection<Type> types, ISet<Type> emittedTypes, ICollection<Type> additionalTypes)
         {
             builder.AppendLine();
             foreach (var type in types)
