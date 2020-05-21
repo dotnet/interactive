@@ -9,8 +9,8 @@ import { CellOutput, CellOutputKind } from '../../../interfaces/vscode';
 import { RecordingChannel } from '../../RecordingOutputChannel';
 
 
-suite('Extension Test Suite', () => {
-    test('Execute against real kernel', async () => {
+describe('Extension Test Suite', () => {
+    it('Execute against real kernel', async () => {
         let processStart = {
             command: 'dotnet',
             args: [
@@ -26,13 +26,13 @@ suite('Extension Test Suite', () => {
         let code = '1+1';
         let result: Array<CellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs);
-        expect(result).to.deep.equal([
+        expect(result).to.deep.include(
             {
                 outputKind: CellOutputKind.Rich,
                 data: {
                     'text/html': '2'
                 }
             }
-        ]);
+        );
     }).timeout(10000);
 });
