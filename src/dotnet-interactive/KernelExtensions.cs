@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.App
                 var encodedImage = string.Empty;
 
                 var assembly = typeof(Program).Assembly;
-                using (var resourceStream = assembly.GetManifestResourceStream($"{typeof(Program).Namespace}.resources.logo-32x32.png"))
+                using (var resourceStream = assembly.GetManifestResourceStream($"{typeof(Program).Namespace}.resources.logo-64x64.png"))
                 {
                     if (resourceStream != null)
                     {
@@ -49,8 +49,7 @@ namespace Microsoft.DotNet.Interactive.App
                     tbody(
                         tr(
                             td(
-                                img[
-                                    src: encodedImage]),
+                                img[src: encodedImage, width:32, height:32]),
                             td[style: "line-height:.8em"](
                                 p[style: "font-size:1.5em"](b(".NET Interactive")),
                                 p("© 2020 Microsoft Corporation"),

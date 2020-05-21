@@ -134,23 +134,23 @@
     <TypescriptInputs Include="$(JsApiRoot)rollup.config.js" />
     <TypescriptInputs Include="$(JsApiRoot)tsconfig.json" />
     <TypescriptInputs Include="$(JsApiRoot)src/**/*.ts" />
+    <None Remove="resources\logo-64x64.png" />
 
     <TypescriptOutputFiles Include="$(JsApiRoot)dist/dotnet-interactive.js" />
     <TypescriptOutputFiles Include="$(JsApiRoot)dist/dotnet-interactive-code-mirror.js" />
 
     <EmbeddedResource Include="@(TypescriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)" />
+
+    <EmbeddedResource Include="resources\logo-64x64.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
   <Target Name="InstallNodeModules">
     <Exec Command="npm i" WorkingDirectory="$(JsApiRoot)" />
   </Target>
 
-  <Target Name="CompileTypescript" 
-          Inputs="@(TypescriptInputs)" 
-          Outputs="@(TypescriptOutputFiles)" 
-          DependsOnTargets="InstallNodeModules" 
-          BeforeTargets="BeforeBuild" 
-          Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'">
+  <Target Name="CompileTypescript" Inputs="@(TypescriptInputs)" Outputs="@(TypescriptOutputFiles)" DependsOnTargets="InstallNodeModules" BeforeTargets="BeforeBuild" Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'">
     <Exec Command="npm run build" WorkingDirectory="$(JsApiRoot)" />
   </Target>
 
