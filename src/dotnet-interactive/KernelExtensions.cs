@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.App
                 var encodedImage = string.Empty;
 
                 var assembly = typeof(Program).Assembly;
-                using (var resourceStream = assembly.GetManifestResourceStream($"{typeof(Program).Namespace}.resources.logo-64x64.png"))
+                using (var resourceStream = assembly.GetManifestResourceStream($"{typeof(Program).Namespace}.resources.logo-456x456.png"))
                 {
                     if (resourceStream != null)
                     {
@@ -48,8 +48,7 @@ namespace Microsoft.DotNet.Interactive.App
                 PocketView html = table(
                     tbody(
                         tr(
-                            td(
-                                img[src: encodedImage, width:32, height:32]),
+                            td(img[src: encodedImage, width:"125em"]),
                             td[style: "line-height:.8em"](
                                 p[style: "font-size:1.5em"](b(".NET Interactive")),
                                 p("© 2020 Microsoft Corporation"),
