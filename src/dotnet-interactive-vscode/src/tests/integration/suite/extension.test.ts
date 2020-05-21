@@ -8,8 +8,8 @@ import { ClientMapper } from '../../../clientMapper';
 import { CellOutput, CellOutputKind } from '../../../interfaces/vscode';
 import { RecordingChannel } from '../../RecordingOutputChannel';
 
-describe('Extension Test Suite', () => {
-    it('Execute against real kernel', async () => {
+suite('Extension Test Suite', () => {
+    test('Execute against real kernel', async () => {
         let processStart = {
             command: 'dotnet',
             args: [
