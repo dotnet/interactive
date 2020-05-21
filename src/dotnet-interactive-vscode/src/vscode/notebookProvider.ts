@@ -16,7 +16,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 
     constructor(readonly clientMapper: ClientMapper, private readonly globalChannel : ReportChannel) {
         this.kernel = this;
-        this.label = ".NET interactive";
+        this.label = ".NET Interactive";
     }
     
     preloads?: vscode.Uri[] | undefined;
