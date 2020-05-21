@@ -8,10 +8,20 @@ import { RawNotebookCell } from '../interfaces';
 import { trimTrailingCarriageReturn } from '../utilities';
 import { ReportChannel } from '../interfaces/vscode';
 
-export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
+export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider, vscode.NotebookKernel {
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
+    
+    kernel: vscode.NotebookKernel;    
+    label: string;
 
     constructor(readonly clientMapper: ClientMapper, private readonly globalChannel : ReportChannel) {
+        this.kernel = this;
+        this.label = ".NET interactive";
+    }
+    
+    preloads?: vscode.Uri[] | undefined;
+    executeAllCells(document: vscode.NotebookDocument, token: vscode.CancellationToken): Promise<void> {
+        throw new Error("Method not implemented.");
     }
 
     async openNotebook(uri: vscode.Uri): Promise<vscode.NotebookData> {

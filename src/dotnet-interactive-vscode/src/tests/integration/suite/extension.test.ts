@@ -8,7 +8,6 @@ import { ClientMapper } from '../../../clientMapper';
 import { CellOutput, CellOutputKind } from '../../../interfaces/vscode';
 import { RecordingChannel } from '../../RecordingOutputChannel';
 
-
 describe('Extension Test Suite', () => {
     it('Execute against real kernel', async () => {
         let processStart = {
@@ -34,5 +33,5 @@ describe('Extension Test Suite', () => {
                 }
             }
         );
-    }).timeout(10000);
+    }).timeout(20000);
 });
