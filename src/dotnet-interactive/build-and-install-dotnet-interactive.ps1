@@ -4,6 +4,10 @@ $ErrorActionPreference = "Stop"
 $thisDir = Split-Path -Parent $PSCommandPath
 $toolLocation = ""
 $toolVersion = ""
+dotnet run -p "$thisDir\..\interface-generator" --out-file "$thisDir\..\dotnet-interactive-vscode\src\contracts.ts"
+
+dotnet run -p "$thisDir\..\interface-generator" --out-file "$thisDir\..\Microsoft.DotNet.Interactive.Js\src\dotnet-interactive\contracts.ts"
+
 if (Test-Path 'env:DisableArcade') {
     dotnet pack "$thisDir\dotnet-interactive.csproj" /p:Version=0.0.0
     $script:toolLocation = "$thisDir\bin\debug"
