@@ -3,12 +3,12 @@
 
 import { CellKind, CellOutput, CellOutputKind, NotebookDocument } from "../interfaces/vscode";
 import { JupyterCell, JupyterMetadata, JupyterNotebook, JupyterOutput } from "../interfaces/jupyter";
-import { NotebookFile, editorLanguageAliases } from "../interactiveNotebook";
+import { NotebookFile, editorLanguageAliases, getNotebookSpecificLanguage, getSimpleLanguage } from "../interactiveNotebook";
 import { RawNotebookCell } from "../interfaces";
 
 export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
     // VS Code Notebooks don't have the concept of a global notebook language, so we have to fake it.
-    let notebookLanguage = 'csharp';
+    let notebookLanguage = 'dotnet-interactive.csharp';
     let cells: Array<JupyterCell> = [];
     for (let cell of document.cells) {
         let jcell: JupyterCell | undefined = undefined;
@@ -23,7 +23,7 @@ export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
             case CellKind.Code:
                 let cellSource = splitAndEnsureNewlineTerminators(cell.source);
                 if (cell.language !== notebookLanguage) {
-                    cellSource.unshift(`#!${cell.language}\r\n`);
+                    cellSource.unshift(`#!${getSimpleLanguage(cell.language)}\r\n`);
                 }
                 jcell = {
                     cell_type: 'code',
@@ -42,18 +42,19 @@ export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
         }
     }
 
+    let metadataLanguage = getSimpleLanguage(notebookLanguage);
     let metadata: JupyterMetadata = {
         kernelspec: {
-            display_name: displayNameFromLanguage(notebookLanguage),
-            language: shortLanguageName(notebookLanguage),
-            name: `.net-${notebookLanguage}`
+            display_name: displayNameFromLanguage(metadataLanguage),
+            language: shortLanguageName(metadataLanguage),
+            name: `.net-${metadataLanguage}`
         },
         language_info: {
-            file_extension: fileExtensionFromLanguage(notebookLanguage),
-            mimetype: `text/x-${notebookLanguage}`,
-            name: shortLanguageName(notebookLanguage),
-            pygments_lexer: notebookLanguage,
-            version: versionFromLanguage(notebookLanguage)
+            file_extension: fileExtensionFromLanguage(metadataLanguage),
+            mimetype: `text/x-${metadataLanguage}`,
+            name: shortLanguageName(metadataLanguage),
+            pygments_lexer: metadataLanguage,
+            version: versionFromLanguage(metadataLanguage)
         }
     };
     let notebook: JupyterNotebook = {
@@ -72,13 +73,13 @@ export function convertFromJupyter(jupyter: JupyterNotebook): NotebookFile {
             case 'code':
                 const { cellLanguage, cellContents } = getCellLanguageAndContents(jcell.source, expandLanguageName(jupyter.metadata.kernelspec.language));
                 cells.push({
-                    language: cellLanguage,
+                    language: getNotebookSpecificLanguage(cellLanguage),
                     contents: cellContents
                 });
                 break;
             case 'markdown':
                 cells.push({
-                    language: 'markdown',
+                    language: 'dotnet-interactive.markdown',
                     contents: splitAndCleanLines(jcell.source)
                 });
                 break;

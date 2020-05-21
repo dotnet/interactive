@@ -16,7 +16,7 @@ describe('File export tests', () => {
                 {
                     cellKind: CellKind.Code,
                     source: '[1;2;3;4]\r\n|> List.sum',
-                    language: 'fsharp',
+                    language: 'dotnet-interactive.fsharp',
                     outputs: [
                         {
                             outputKind: CellOutputKind.Rich,
@@ -29,7 +29,7 @@ describe('File export tests', () => {
                 {
                     cellKind: CellKind.Code,
                     source: '1 + 1',
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     outputs: [
                         {
                             outputKind: CellOutputKind.Rich,
@@ -42,7 +42,7 @@ describe('File export tests', () => {
                 {
                     cellKind: CellKind.Markdown,
                     source: 'This is `markdown`.',
-                    language: 'markdown',
+                    language: 'dotnet-interactive.markdown',
                     outputs: []
                 },
             ]
@@ -168,20 +168,20 @@ describe('File export tests', () => {
         let expected: NotebookFile = {
             cells: [
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: [
                         '1+1'
                     ]
                 },
                 {
-                    language: 'fsharp',
+                    language: 'dotnet-interactive.fsharp',
                     contents: [
                         '[1;2;3;4]',
                         '|> List.sum',
                     ]
                 },
                 {
-                    language: 'markdown',
+                    language: 'dotnet-interactive.markdown',
                     contents: [
                         'This is `markdown`.',
                         'It has 2 lines.'
@@ -248,21 +248,21 @@ describe('File export tests', () => {
         let expected: NotebookFile = {
             cells: [
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: [
                         'var a = 1;',
                         'var b = a + 2;'
                     ]
                 },
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: [
                         'var c = 3;',
                         'var d = c + 4;'
                     ]
                 },
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: [
                         'var e = 5;',
                         'var f = e + 6;'
@@ -308,7 +308,7 @@ describe('File export tests', () => {
         let expected: NotebookFile = {
             cells: [
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: [
                         '#!time',
                         'var x = 1;'
@@ -377,28 +377,28 @@ describe('File export tests', () => {
         let expected: NotebookFile = {
             cells: [
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: [
                         '1',
                         '2'
                     ]
                 },
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: [
                         '3',
                         '4',
                     ]
                 },
                 {
-                    language: 'markdown',
+                    language: 'dotnet-interactive.markdown',
                     contents: [
                         '5',
                         '6'
                     ]
                 },
                 {
-                    language: 'markdown',
+                    language: 'dotnet-interactive.markdown',
                     contents: [
                         '7',
                         '8'

@@ -23,21 +23,21 @@ This is \`markdown\`.
         expect(notebook).to.deep.equal({
             cells: [
                 {
-                    language: 'fsharp',
+                    language: 'dotnet-interactive.fsharp',
                     contents: [
                         'let x = 1',
                         'x + 2'
                     ]
                 },
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: [
                         'var x = 3;',
                         'x + 4'
                     ]
                 },
                 {
-                    language: 'markdown',
+                    language: 'dotnet-interactive.markdown',
                     contents: [
                         'This is `markdown`.'
                     ]
@@ -62,13 +62,13 @@ Get-Item
         expect(notebook).to.deep.equal({
             cells: [
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: [
                         '//'
                     ]
                 },
                 {
-                    language: 'powershell',
+                    language: 'dotnet-interactive.powershell',
                     contents: [
                         'Get-Item'
                     ]
@@ -107,7 +107,7 @@ Get-Item
         expect(notebook).to.deep.equal({
             cells: [
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: [
                         '// first line of C#',
                         '',
@@ -117,7 +117,7 @@ Get-Item
                     ]
                 },
                 {
-                    language: 'fsharp',
+                    language: 'dotnet-interactive.fsharp',
                     contents: [
                         '// first line of F#',
                         '',
@@ -141,13 +141,13 @@ let x = 1
         expect(notebook).to.deep.equal({
             cells: [
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: [
                         'var x = 1234;'
                     ]
                 },
                 {
-                    language: 'fsharp',
+                    language: 'dotnet-interactive.fsharp',
                     contents: [
                         'let x = 1'
                     ]
@@ -166,7 +166,7 @@ var x = 1;
         expect(notebook).to.deep.equal({
             cells: [
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: [
                         '#!probably-a-magic-command',
                         'var x = 1;'
@@ -185,7 +185,7 @@ var x = 1;
         expect(notebook).to.deep.equal({
             cells: [
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: [
                         '#!probably-a-magic-command',
                         'var x = 1;'
@@ -200,7 +200,7 @@ var x = 1;
         expect(notebook).to.deep.equal({
             cells: [
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: []
                 }
             ]
@@ -228,31 +228,31 @@ This is \`markdown\`.
         expect(notebook).to.deep.equal({
             cells: [
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: [
                         '// this is C#'
                     ]
                 },
                 {
-                    language: 'fsharp',
+                    language: 'dotnet-interactive.fsharp',
                     contents: [
                         '// this is F#'
                     ]
                 },
                 {
-                    language: 'javascript',
+                    language: 'dotnet-interactive.javascript',
                     contents: [
                         'alert(\'javascript\');'
                     ]
                 },
                 {
-                    language: 'markdown',
+                    language: 'dotnet-interactive.markdown',
                     contents: [
                         'This is `markdown`.'
                     ]
                 },
                 {
-                    language: 'powershell',
+                    language: 'dotnet-interactive.powershell',
                     contents: [
                         '# this is PowerShell'
                     ]
@@ -276,13 +276,13 @@ This is \`markdown\`.
             expect(notebook).to.deep.equal({
                 cells: [
                     {
-                        language: 'csharp',
+                        language: 'dotnet-interactive.csharp',
                         contents: [
                             '1+1',
                         ]
                     },
                     {
-                        language: 'fsharp',
+                        language: 'dotnet-interactive.fsharp',
                         contents: [
                             '[1;2;3;4]',
                             '|> List.sum'
@@ -297,13 +297,13 @@ This is \`markdown\`.
         let notebook: NotebookFile = {
             cells: [
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: [
                         'var x = 1234;'
                     ]
                 },
                 {
-                    language: 'fsharp',
+                    language: 'dotnet-interactive.fsharp',
                     contents: [
                         '[1;2;3;4]',
                         '|> List.sum'
@@ -320,7 +320,7 @@ This is \`markdown\`.
         let notebook: NotebookFile = {
             cells: [
                 {
-                    language: 'csharp',
+                    language: 'dotnet-interactive.csharp',
                     contents: [
                         '',
                         '',

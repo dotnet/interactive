@@ -1,0 +1,11 @@
+{
+    "scopeName": "source.dotnet-interactive.fsharp",
+    "patterns": [
+        {
+            "include": "source.dotnet-interactive.magic-commands"
+        },
+        {
+            "include": "source.fsharp"
+        }
+    ]
+}

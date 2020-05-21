@@ -1,0 +1,11 @@
+{
+    "scopeName": "source.dotnet-interactive.markdown",
+    "patterns": [
+        {
+            "include": "source.dotnet-interactive.magic-commands"
+        },
+        {
+            "include": "text.html.markdown"
+        }
+    ]
+}
