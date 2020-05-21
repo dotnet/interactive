@@ -18,7 +18,9 @@ try {
     Write-Host "Appending git sha to description in $packageJsonPath"
     $packageJsonContents = (Get-Content $packageJsonPath | Out-String | ConvertFrom-Json)
     $packageJsonContents.description += "  Git SHA $gitSha"
-    $packageJsonContents | ConvertTo-Json -depth 100 | Out-File $packageJsonPath
+    # writing back changes temporarily disabled until internal machines have access to pwsh.exe
+    # see https://github.com/dotnet/core-eng/issues/9913
+    #$packageJsonContents | ConvertTo-Json -depth 100 | Out-File $packageJsonPath
 
     # pack
     Write-Host "Packing extension"
