@@ -1,5 +1,5 @@
 This extension is currently **_in preview_**. [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/)  is required.
-The api is still under design and the extension might not work.
+_The Visual Studio Code notebook support that this extension uses is also in preview and design is ongoing, so the extension might not work._
 ---
 
 # .NET Interactive Notebooks
