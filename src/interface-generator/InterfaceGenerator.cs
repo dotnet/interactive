@@ -57,13 +57,33 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
                              .Where(t => !t.IsAbstract && !t.IsInterface)
                              .Where(t => typeof(IKernelEvent).IsAssignableFrom(t))
                              .OrderBy(t => t.Name);
+
             var emittedTypes = new HashSet<Type>(WellKnownTypes.Keys);
+
             emittedTypes.RemoveWhere(AlwaysEmitTypes.Contains);
 
-            builder.AppendLine("// Generated TypeScript interfaces and types.");
-            GenerateTypesAndInterfaces(builder, "KernelCommandType", commandTypes, emittedTypes);
-            GenerateTypesAndInterfaces(builder, "KernelEventType", eventTypes, emittedTypes);
+            builder.AppendLine(@"// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// Generated TypeScript interfaces and types.");
+
+            var requiredTypes = new List<Type>();
+
+            builder.AppendLine();
+            builder.AppendLine("// --------------------------------------------- Kernel Commands");
+            GenerateTypesAndInterfaces(builder, "KernelCommandType", commandTypes, emittedTypes, requiredTypes);
+
+            builder.AppendLine();
+            builder.AppendLine("// --------------------------------------------- Kernel events");
+            GenerateTypesAndInterfaces(builder, "KernelEventType", eventTypes, emittedTypes, requiredTypes);
+            
+            builder.AppendLine();
+            builder.AppendLine("// --------------------------------------------- Required Types");
+            foreach (var type in requiredTypes.OrderBy(t => t.Name))
+            {
+                GenerateType(builder, type, emittedTypes, null);
+            }
+           
             builder.AppendLine();
             var staticContents = File.ReadAllText(Path.Combine(Path.GetDirectoryName(typeof(InterfaceGenerator).Assembly.Location), "StaticContents.ts"));
             builder.Append(staticContents);
@@ -71,7 +91,8 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             return builder.ToString();
         }
 
-        private static void GenerateTypesAndInterfaces(StringBuilder builder, string collectiveTypeName, IEnumerable<Type> types, HashSet<Type> emittedTypes)
+        private static void GenerateTypesAndInterfaces(StringBuilder builder, string collectiveTypeName,
+            IEnumerable<Type> types, HashSet<Type> emittedTypes, List<Type> additionalTypes)
         {
             builder.AppendLine();
             foreach (var type in types)
@@ -85,11 +106,12 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
             foreach (var type in types)
             {
-                GenerateType(builder, type, emittedTypes);
+                GenerateType(builder, type, emittedTypes, additionalTypes);
             }
         }
 
-        private static void GenerateType(StringBuilder builder, Type type, HashSet<Type> emittedTypes)
+        private static void GenerateType(StringBuilder builder, Type type, HashSet<Type> emittedTypes,
+            List<Type> additionalTypes)
         {
             if (!emittedTypes.Add(type))
             {
@@ -119,12 +141,12 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
             if (baseType != null)
             {
-                GenerateType(builder, baseType, emittedTypes);
+                GenerateType(builder, baseType, emittedTypes, additionalTypes);
             }
 
             foreach (var propertyType in GetProperties(type).Select(p => GetUnderlyingType(p.PropertyType)))
             {
-                GenerateType(builder, propertyType, emittedTypes);
+                additionalTypes?.Add(propertyType);
             }
         }
 

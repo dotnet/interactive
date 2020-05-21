@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var actual = File.ReadAllText(contractFile.FullName);
             var expected = InterfaceGenerator.Generate();
             actual.Should()
-                .Be(expected, $"The contents of the TypeScript contracts file '{interfaceFileSubPath}' needs to be updated.  Please re-run the `src/interface-generator` tool with option --out-file {contractFile.FullName}.");
+                .Be(expected, $"The contents of the TypeScript contracts file '{interfaceFileSubPath}' needs to be updated.  Please run the `dotnet run -p src/interface-generator --  --out-file {contractFile.FullName}`.");
         }
 
         [Fact]
