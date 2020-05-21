@@ -1,4 +1,9 @@
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 // Generated TypeScript interfaces and types.
+
+// --------------------------------------------- Kernel Commands
 
 export const AddPackageType = "AddPackage";
 export const CancelCurrentCommandType = "CancelCurrentCommand";
@@ -31,12 +36,6 @@ export interface KernelCommand {
     targetKernelName?: string;
 }
 
-export interface PackageReference {
-    packageName: string;
-    packageVersion: string;
-    isPackageVersionSpecified: boolean;
-}
-
 export interface CancelCurrentCommand extends KernelCommand {
 }
 
@@ -54,19 +53,9 @@ export interface DisplayValue extends KernelCommand {
     valueId: string;
 }
 
-export interface FormattedValue {
-    mimeType: string;
-    value: string;
-}
-
 export interface RequestCompletion extends KernelCommand {
     code: string;
     position: LinePosition;
-}
-
-export interface LinePosition {
-    line: number;
-    character: number;
 }
 
 export interface RequestDiagnostics extends KernelCommand {
@@ -82,16 +71,13 @@ export interface SubmitCode extends KernelCommand {
     submissionType?: SubmissionType;
 }
 
-export enum SubmissionType {
-    Run = 0,
-    Diagnose = 1,
-}
-
 export interface UpdateDisplayedValue extends KernelCommand {
     value: any;
     formattedValue: FormattedValue;
     valueId: string;
 }
+
+// --------------------------------------------- Kernel events
 
 export const CodeSubmissionReceivedType = "CodeSubmissionReceived";
 export const CommandFailedType = "CommandFailed";
@@ -157,15 +143,6 @@ export interface CompletionRequestCompleted extends KernelEvent {
     completionList: Array<CompletionItem>;
 }
 
-export interface CompletionItem {
-    displayText: string;
-    kind: string;
-    filterText: string;
-    sortText: string;
-    insertText: string;
-    documentation: string;
-}
-
 export interface CompletionRequestReceived extends KernelEvent {
 }
 
@@ -197,11 +174,6 @@ export interface HoverTextProduced extends KernelEvent {
     range?: LinePositionSpan;
 }
 
-export interface LinePositionSpan {
-    start: LinePosition;
-    end: LinePosition;
-}
-
 export interface IncompleteCodeSubmissionReceived extends KernelEvent {
 }
 
@@ -211,12 +183,6 @@ export interface InputRequested extends KernelEvent {
 
 export interface PackageAdded extends KernelEvent {
     packageReference: ResolvedPackageReference;
-}
-
-export interface ResolvedPackageReference extends PackageReference {
-    assemblyPaths: Array<string>;
-    probingPaths: Array<string>;
-    packageRoot: string;
 }
 
 export interface PasswordRequested extends KernelEvent {
@@ -234,6 +200,49 @@ export interface StandardOutputValueProduced extends DisplayEventBase {
 
 export interface WorkingDirectoryChanged extends KernelEvent {
     workingDirectory: string;
+}
+
+// --------------------------------------------- Required Types
+
+export interface CompletionItem {
+    displayText: string;
+    kind: string;
+    filterText: string;
+    sortText: string;
+    insertText: string;
+    documentation: string;
+}
+
+export interface FormattedValue {
+    mimeType: string;
+    value: string;
+}
+
+export interface LinePosition {
+    line: number;
+    character: number;
+}
+
+export interface LinePositionSpan {
+    start: LinePosition;
+    end: LinePosition;
+}
+
+export interface PackageReference {
+    packageName: string;
+    packageVersion: string;
+    isPackageVersionSpecified: boolean;
+}
+
+export interface ResolvedPackageReference extends PackageReference {
+    assemblyPaths: Array<string>;
+    probingPaths: Array<string>;
+    packageRoot: string;
+}
+
+export enum SubmissionType {
+    Run = 0,
+    Diagnose = 1,
 }
 
 export interface KernelEventEnvelope {
