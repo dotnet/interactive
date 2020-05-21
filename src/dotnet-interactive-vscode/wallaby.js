@@ -17,7 +17,7 @@ module.exports = function (wallaby) {
         ],
         tests: [
             "src/tests/unit/**/*.test.ts",
-            "src/tests/integration/**/*.test.ts"
+            "!src/tests/integration/**/*.test.ts"
         ],
         compilers: {
             '**/*.ts?(x)': wallaby.compilers.typeScript({ })
