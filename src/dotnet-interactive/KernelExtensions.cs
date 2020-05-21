@@ -4,6 +4,7 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.IO;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -30,14 +31,26 @@ namespace Microsoft.DotNet.Interactive.App
             Formatter<VersionSensor.BuildInfo>.Register((info, writer) =>
             {
                 var url = "https://github.com/dotnet/interactive";
+                var encodedImage = string.Empty;
+
+                var assembly = typeof(Program).Assembly;
+                using (var resourceStream = assembly.GetManifestResourceStream($"{typeof(Program).Namespace}.resources.logo-32x32.png"))
+                {
+                    if (resourceStream != null)
+                    {
+                        var png = new byte[resourceStream.Length];
+                        resourceStream.Read(png, 0, png.Length);
+                        encodedImage = $"data:image/png;base64, {Convert.ToBase64String(png)}";
+                    }
+
+                }
 
                 PocketView html = table(
                     tbody(
                         tr(
                             td(
                                 img[
-                                    src: "https://raw.githubusercontent.com/dotnet/swag/master/netlogo/small-200x198/pngs/msft.net_small_purple.png",
-                                    width: "125em"]),
+                                    src: encodedImage]),
                             td[style: "line-height:.8em"](
                                 p[style: "font-size:1.5em"](b(".NET Interactive")),
                                 p("© 2020 Microsoft Corporation"),
