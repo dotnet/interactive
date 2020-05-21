@@ -110,8 +110,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             }
         }
 
-        private static void GenerateType(StringBuilder builder, Type type, HashSet<Type> emittedTypes,
-            ICollection<Type> additionalTypes)
+        private static void GenerateType(StringBuilder builder, Type type, ISet<Type> emittedTypes, ICollection<Type> requiredTypes)
         {
             if (!emittedTypes.Add(type))
             {
@@ -141,14 +140,14 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
             if (baseType != null)
             {
-                GenerateType(builder, baseType, emittedTypes, additionalTypes);
+                GenerateType(builder, baseType, emittedTypes, requiredTypes);
             }
 
             foreach (var propertyType in GetProperties(type).Select(p => GetUnderlyingType(p.PropertyType)).OrderBy(t => t.Name))
             {
-                if (additionalTypes != null)
+                if (requiredTypes != null)
                 {
-                    additionalTypes.Add(propertyType);
+                    requiredTypes.Add(propertyType);
                 }
                 else
                 {
