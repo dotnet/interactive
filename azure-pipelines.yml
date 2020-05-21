@@ -130,9 +130,13 @@ stages:
             searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
           condition: always()
 
-        - script: npm version $(StableToolVersionNumber) && npx vsce package --out "$(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\dotnet-interactive-vscode-$(StableToolVersionNumber).vsix"
-          displayName: Build VS Code Extension
-          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode"
+        - task: PowerShell@2
+          displayName: Pack VS Code Extension
+          inputs:
+            filePath: $(Build.SourcesDirectory)/eng/package/PackVSCodeExtension.ps1
+            arguments: -stableToolVersionNumber $(StableToolVersionNumber) -gitSha $(Build.SourceVersion) -outDir "$(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)"
+            workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode"
+            pwsh: true
 
         # Prevent symbols packages from being saved in the following `packages` artifact because they're incomplete.
         # See `eng/AfterSolutionBuild.targets:StripFilesFromSymbolPackages` for details.
