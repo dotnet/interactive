@@ -1,0 +1,11 @@
+{
+    "scopeName": "source.dotnet-interactive.powershell",
+    "patterns": [
+        {
+            "include": "source.dotnet-interactive.magic-commands"
+        },
+        {
+            "include": "source.powershell"
+        }
+    ]
+}

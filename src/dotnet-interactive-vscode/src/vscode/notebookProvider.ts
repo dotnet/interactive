@@ -3,15 +3,15 @@
 
 import * as vscode from 'vscode';
 import { ClientMapper } from './../clientMapper';
-import { NotebookFile, parseNotebook, serializeNotebook, editorLanguageAliases } from '../interactiveNotebook';
+import { NotebookFile, parseNotebook, serializeNotebook, notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage } from '../interactiveNotebook';
 import { RawNotebookCell } from '../interfaces';
 import { trimTrailingCarriageReturn } from '../utilities';
 import { ReportChannel } from '../interfaces/vscode';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider, vscode.NotebookKernel {
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
-    
-    kernel: vscode.NotebookKernel;    
+
+    kernel: vscode.NotebookKernel;
     label: string;
 
     constructor(readonly clientMapper: ClientMapper, private readonly globalChannel : ReportChannel) {
@@ -35,7 +35,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         this.clientMapper.getOrAddClient(uri);
 
         let notebookData: vscode.NotebookData = {
-            languages: Array.from(editorLanguageAliases.keys()),
+            languages: notebookCellLanguages,
             metadata: {
                 hasExecutionOrder: false
             },
@@ -64,7 +64,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         cell.outputs = [];
         let client = this.clientMapper.getOrAddClient(document.uri);
         let source = cell.source.toString();
-        return client.execute(source, cell.language, outputs => {
+        return client.execute(source, getSimpleLanguage(cell.language), outputs => {
             // to properly trigger the UI update, `cell.outputs` needs to be uniquely assigned; simply setting it to the local variable has no effect
             cell.outputs = [];
             cell.outputs = outputs;
@@ -77,7 +77,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         };
         for (let cell of document.cells) {
             notebook.cells.push({
-                language: cell.language,
+                language: getSimpleLanguage(cell.language),
                 contents: cell.document.getText().split('\n').map(trimTrailingCarriageReturn),
             });
         }
@@ -91,7 +91,7 @@ function toNotebookCellData(cell: RawNotebookCell): vscode.NotebookCellData {
     return {
         cellKind: languageToCellKind(cell.language),
         source: cell.contents.join('\n'),
-        language: cell.language,
+        language: getNotebookSpecificLanguage(cell.language),
         outputs: [],
         metadata: {}
     };

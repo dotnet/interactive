@@ -1,0 +1,11 @@
+{
+    "scopeName": "source.dotnet-interactive.javascript",
+    "patterns": [
+        {
+            "include": "source.dotnet-interactive.magic-commands"
+        },
+        {
+            "include": "source.js"
+        }
+    ]
+}

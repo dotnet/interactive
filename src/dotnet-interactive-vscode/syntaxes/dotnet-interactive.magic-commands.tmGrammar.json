@@ -1,0 +1,9 @@
+{
+    "scopeName": "source.dotnet-interactive.magic-commands",
+    "patterns": [
+        {
+            "name": "comment",
+            "match": "^#!(?!([cf](#|s(harp)?)|powershell|pwsh|html|javascript|js|markdown|md)).*$"
+        }
+    ]
+}

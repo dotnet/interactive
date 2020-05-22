@@ -4,22 +4,48 @@
 import { RawNotebookCell } from "./interfaces";
 import { trimTrailingCarriageReturn } from './utilities';
 
+export const notebookCellLanguages: Array<string> = [
+    'dotnet-interactive.csharp',
+    'dotnet-interactive.fsharp',
+    'dotnet-interactive.html',
+    'dotnet-interactive.javavscript',
+    'dotnet-interactive.markdown',
+    'dotnet-interactive.powershell'
+];
+
 let languageAliases = new Map<string, string>();
-// full language names always map to themselves
-languageAliases.set('csharp', 'csharp');
-languageAliases.set('fsharp', 'fsharp');
-languageAliases.set('html', 'html');
-languageAliases.set('javascript', 'javascript');
-languageAliases.set('markdown', 'markdown');
-languageAliases.set('powershell', 'powershell');
+// map common language names to private ones that understand magic commands
+languageAliases.set('csharp', 'dotnet-interactive.csharp');
+languageAliases.set('fsharp', 'dotnet-interactive.fsharp');
+languageAliases.set('html', 'dotnet-interactive.html');
+languageAliases.set('javascript', 'dotnet-interactive.javascript');
+languageAliases.set('markdown', 'dotnet-interactive.markdown');
+languageAliases.set('powershell', 'dotnet-interactive.powershell');
 // short aliases
-languageAliases.set('cs', 'csharp');
-languageAliases.set('fs', 'fsharp');
-languageAliases.set('js', 'javascript');
-languageAliases.set('md', 'markdown');
-languageAliases.set('pwsh', 'powershell');
+languageAliases.set('cs', 'dotnet-interactive.csharp');
+languageAliases.set('fs', 'dotnet-interactive.fsharp');
+languageAliases.set('js', 'dotnet-interactive.javascript');
+languageAliases.set('md', 'dotnet-interactive.markdown');
+languageAliases.set('pwsh', 'dotnet-interactive.powershell');
 
 export const editorLanguageAliases = languageAliases;
+const notebookLanguagePrefix = 'dotnet-interactive.';
+
+export function getSimpleLanguage(language: string): string {
+    if (language.startsWith(notebookLanguagePrefix)) {
+        return language.substr(notebookLanguagePrefix.length);
+    }
+
+    return language;
+}
+
+export function getNotebookSpecificLanguage(language: string): string {
+    if (!language.startsWith(notebookLanguagePrefix)) {
+        return notebookLanguagePrefix + language;
+    }
+
+    return language;
+}
 
 export interface NotebookFile {
     cells: Array<RawNotebookCell>;
@@ -29,7 +55,7 @@ const languageSpecifier = '#!';
 
 export function parseNotebook(contents: string): NotebookFile {
     let cells: Array<RawNotebookCell> = [];
-    let currentLanguage = 'csharp';
+    let currentLanguage = 'dotnet-interactive.csharp';
     let lines: Array<string> = [];
 
     function addCell() {
@@ -84,7 +110,7 @@ export function parseNotebook(contents: string): NotebookFile {
     if (cells.length === 0) {
         // ensure there's at least one cell available
         cells.push({
-            language: 'csharp',
+            language: 'dotnet-interactive.csharp',
             contents: []
         });
     }
@@ -100,7 +126,7 @@ export function serializeNotebook(notebook: NotebookFile): string {
         let firstNonBlank = cell.contents.findIndex(line => line.length > 0);
         let lastNonBlank = findIndexReverse(cell.contents, line => line.length > 0);
         if (firstNonBlank >= 0 && lastNonBlank >= 0) {
-            lines.push(`#!${cell.language}`);
+            lines.push(`#!${getSimpleLanguage(cell.language)}`);
             lines.push('');
             lines.push(...cell.contents.slice(firstNonBlank, lastNonBlank + 1));
             lines.push('');
