@@ -217,6 +217,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     }
                 }
 
+                if (headers == null)
+                {
+                    headers = new List<IHtmlContent>
+                    {
+                        indexHeader,
+                        th("value")
+                    };
+                }
+
                 var view = HtmlFormatter.Table(headers, rows);
 
                 view.WriteTo(writer, HtmlEncoder.Default);
