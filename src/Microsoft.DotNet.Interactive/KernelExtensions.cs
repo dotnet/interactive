@@ -4,7 +4,6 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.CommandLine.Rendering;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -13,7 +12,6 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
-using static System.CommandLine.Rendering.Ansi.Color;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive

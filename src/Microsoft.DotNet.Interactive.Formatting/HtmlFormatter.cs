@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -40,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             table(
                 thead(
                     tr(
-                        headers)),
+                        headers ?? new List<IHtmlContent>())),
                 tbody(
                     rows));
 

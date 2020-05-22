@@ -341,6 +341,30 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
 
             [Fact]
+            public void Empty_sequences_are_indicated()
+            {
+                var list = new List<string>();
+
+                var html = list.ToDisplayString("text/html");
+
+                html.Should()
+                    .Be(
+                        "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody></tbody></table>");
+            }
+
+            [Fact]
+            public void Empty_dictionaries_are_indicated()
+            {
+                var list = new Dictionary<int, int>();
+
+                var html = list.ToDisplayString("text/html");
+
+                html.Should()
+                    .Be(
+                        "<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody></tbody></table>");
+            }
+
+            [Fact]
             public void Formatter_truncates_expansion_of_long_IEnumerable()
             {
                 var list = new List<string>();
@@ -465,8 +489,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                       .Be(
                           "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>True</td></tr><tr><td>1</td><td>99</td></tr><tr><td>2</td><td>Hello, World</td></tr></tbody></table>");
             }
-
-
         }
     }
 }
