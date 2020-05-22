@@ -68,10 +68,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 mimeType);
 
         /// <summary>
-        /// Formats an object and writes it to a writer.
+        /// Formats an object and writes it to the specified writer.
         /// </summary>
-        /// <param name="obj">The obj.</param>
+        /// <param name="obj">The object to be formatted.</param>
         /// <param name="writer">The writer.</param>
+        /// <param name="mimeType">The mime type to format to.</param>
         public static void FormatTo(
             T obj,
             TextWriter writer,
@@ -79,7 +80,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             if (obj == null)
             {
-                writer.Write(Formatter.NullString);
+                var formatter = Create(mimeType);
+                formatter.Format(null, writer);
                 return;
             }
 
