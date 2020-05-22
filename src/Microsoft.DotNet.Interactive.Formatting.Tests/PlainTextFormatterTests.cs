@@ -25,6 +25,14 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         public class Objects : FormatterTestBase
         {
             [Fact]
+            public void Null_references_are_indicated()
+            {
+                string value = null;
+
+                value.ToDisplayString().Should().Be("<null>");
+            }
+
+            [Fact]
             public void Create_creates_a_formatter_that_emits_the_property_names_and_values_for_a_specific_type()
             {
                 var formatter = PlainTextFormatter<Widget>.Create();

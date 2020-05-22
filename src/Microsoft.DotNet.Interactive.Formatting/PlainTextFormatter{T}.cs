@@ -44,9 +44,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public override string MimeType => PlainTextFormatter.MimeType;
 
-        public override void Format(T instance, TextWriter writer)
+        public override void Format(T value, TextWriter writer)
         {
-            _format(instance, writer);
+            if (value is null)
+            {
+                writer.Write(Formatter.NullString);
+                return;
+            }
+
+            _format(value, writer);
         }
 
         private static PlainTextFormatter<T> CreateForAllMembers(bool includeInternals = false)
@@ -72,16 +78,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static PlainTextFormatter<T> Default { get; } = new PlainTextFormatter<T>();
 
         internal virtual void WriteDefault(
-            T obj,
+            T value,
             TextWriter writer)
         {
-            if (obj is string)
+            if (value is string)
             {
-                writer.Write(obj);
+                writer.Write(value);
                 return;
             }
 
-            switch (obj)
+            switch (value)
             {
                 case IEnumerable enumerable:
                     Formatter.Join(
@@ -90,7 +96,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         Formatter<T>.ListExpansionLimit);
                     break;
                 default:
-                    writer.Write(obj.ToString());
+                    writer.Write(value.ToString());
                     break;
             }
         }

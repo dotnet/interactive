@@ -30,7 +30,18 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             {
                 var output = new { a = 123 }.ToDisplayString(HtmlFormatter.MimeType);
 
-                output.Should().StartWith("<table>");
+                output.Should()
+                      .Be("<table><thead><tr><th>a</th></tr></thead><tbody><tr><td>123</td></tr></tbody></table>");
+            }
+
+            [Fact]
+            public void Null_references_are_indicated()
+            {
+                string value = null;
+
+                value.ToDisplayString(HtmlFormatter.MimeType)
+                     .Should()
+                     .Be("&lt;null&gt;");
             }
 
             [Fact]

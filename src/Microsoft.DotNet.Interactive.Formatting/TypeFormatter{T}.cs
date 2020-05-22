@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public abstract class TypeFormatter<T> : ITypeFormatter<T>
     {
-        public abstract void Format(T instance, TextWriter writer);
+        public abstract void Format(T value, TextWriter writer);
 
         public Type Type => typeof(T);
 

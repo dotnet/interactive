@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <value>
         /// The null string.
         /// </value>
-        public static string NullString;
+        public static string NullString { get; set; }
 
         /// <summary>
         /// Gets or sets the limit to how many levels the formatter will recurse into an object graph.

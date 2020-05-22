@@ -21,9 +21,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _format = format;
         }
 
-        public override void Format(T instance, TextWriter writer)
+        public override void Format(T value, TextWriter writer)
         {
-            _format(instance, writer);
+            if (value is null)
+            {
+                writer.Write(Formatter.NullString.HtmlEncode());
+                return;
+            }
+
+            _format(value, writer);
         }
 
         public override string MimeType => HtmlFormatter.MimeType;
@@ -129,7 +135,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 destructurerCache.Add(valueType, Destructurer.Create(valueType));
             }
 
-            return new HtmlFormatter<T>((instance, writer) =>
+            return new HtmlFormatter<T>((value, writer) =>
             {
                 var index = 0;
 
@@ -140,7 +146,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 if (getKeys != null)
                 {
                     var keys = new List<string>();
-                    foreach (var key in getKeys(instance))
+                    foreach (var key in getKeys(value))
                     {
                         keys.Add(key.ToString());
                     }
@@ -157,7 +163,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 var rows = new List<IHtmlContent>();
                 List<IHtmlContent> headers = null;
 
-                var values = getValues(instance);
+                var values = getValues(value);
 
                 foreach (var item in values)
                 {
