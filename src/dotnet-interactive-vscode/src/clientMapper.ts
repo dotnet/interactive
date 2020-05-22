@@ -8,18 +8,19 @@ import { Uri } from "./interfaces/vscode";
 export class ClientMapper {
     private clientMap: Map<string, InteractiveClient> = new Map();
 
-    constructor(readonly kernelTransportCreator: {(notebookPath: string): KernelTransport}) {
+    constructor(readonly kernelTransportCreator: {(notebookPath: string): Promise<KernelTransport>}) {
     }
 
     static keyFromUri(uri: Uri): string {
         return uri.fsPath;
     }
 
-    getOrAddClient(uri: Uri): InteractiveClient {
+    async getOrAddClient(uri: Uri): Promise<InteractiveClient> {
         let key = ClientMapper.keyFromUri(uri);
         let client = this.clientMap.get(key);
         if (client === undefined) {
-            client = new InteractiveClient(this.kernelTransportCreator(uri.fsPath));
+            let kernelTransport = await this.kernelTransportCreator(uri.fsPath);
+            client = new InteractiveClient(kernelTransport);
             this.clientMap.set(key, client);
         }
 

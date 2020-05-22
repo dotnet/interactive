@@ -24,7 +24,7 @@ export class StdioKernelTransport {
     private childProcess: cp.ChildProcessWithoutNullStreams;
     private subscribers: Array<KernelEventEnvelopeObserver> = [];
 
-    constructor(processStart: ProcessStart, notebookPath: string, private diagnosticChannel: ReportChannel) {
+    private constructor(processStart: ProcessStart, notebookPath: string, private diagnosticChannel: ReportChannel) {
         this.childProcess = cp.spawn(processStart.command, processStart.args, { cwd: processStart.workingDirectory });
         this.diagnosticChannel.appendLine(`Kernel started with pid ${this.childProcess.pid}.`);
         this.childProcess.on('exit', (code: number, _signal: string) => {
@@ -58,29 +58,36 @@ export class StdioKernelTransport {
                 }
             }
         });
+    }
 
-        // set the working directory to be next to the notebook; this allows relative file access to work as expected
-        // immediately clean up afterwards because we'll never do this again
-        let token = 'change-working-directory-token';
-        let disposable = this.subscribeToKernelEvents(envelope => {
-            if (envelope.command?.token === token) {
-                switch (envelope.eventType) {
-                    case CommandFailedType:
-                        let failed = <CommandFailed>envelope.event;
-                        let message = `Unable to set notebook working directory to '${notebookPath}'.\n${failed.message}`;
-                        diagnosticChannel.appendLine(message);
-                        disposable.dispose();
-                        break;
-                    case CommandHandledType:
-                        disposable.dispose();
-                        break;
+    static create(processStart: ProcessStart, notebookPath: string, diagnosticChannel: ReportChannel): Promise<StdioKernelTransport> {
+        return new Promise<StdioKernelTransport>((resolve, reject) => {
+            let kernelTransport = new StdioKernelTransport(processStart, notebookPath, diagnosticChannel);
+            // set the working directory to be next to the notebook; this allows relative file access to work as expected
+            // immediately clean up afterwards because we'll never do this again
+            let token = 'change-working-directory-token';
+            let disposable = kernelTransport.subscribeToKernelEvents(envelope => {
+                if (envelope.command?.token === token) {
+                    switch (envelope.eventType) {
+                        case CommandFailedType:
+                            let failed = <CommandFailed>envelope.event;
+                            let message = `Unable to set notebook working directory to '${notebookPath}'.\n${failed.message}`;
+                            diagnosticChannel.appendLine(message);
+                            resolve(kernelTransport);
+                            disposable.dispose();
+                            break;
+                        case CommandHandledType:
+                            resolve(kernelTransport);
+                            disposable.dispose();
+                            break;
+                    }
                 }
-            }
+            });
+            let command: ChangeWorkingDirectory = {
+                workingDirectory: path.dirname(notebookPath)
+            };
+            kernelTransport.submitCommand(command, 'ChangeWorkingDirectory', token);
         });
-        let command: ChangeWorkingDirectory = {
-            workingDirectory: path.dirname(notebookPath)
-        };
-        this.submitCommand(command, 'ChangeWorkingDirectory', token);
     }
 
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
