@@ -32,7 +32,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         }
 
         let notebook = parseNotebook(contents);
-        this.clientMapper.getOrAddClient(uri);
+        await this.clientMapper.getOrAddClient(uri);
 
         let notebookData: vscode.NotebookData = {
             languages: notebookCellLanguages,
@@ -55,14 +55,14 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 
     onDidChangeNotebook: vscode.Event<vscode.NotebookDocumentEditEvent> = this.onDidChangeNotebookEventEmitter.event;
 
-    executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell | undefined, token: vscode.CancellationToken): Promise<void> {
+    async executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell | undefined, token: vscode.CancellationToken): Promise<void> {
         if (!cell) {
             // TODO: run everything
-            return new Promise((resolve, reject) => resolve());
+            return;
         }
 
         cell.outputs = [];
-        let client = this.clientMapper.getOrAddClient(document.uri);
+        let client = await this.clientMapper.getOrAddClient(document.uri);
         let source = cell.source.toString();
         return client.execute(source, getSimpleLanguage(cell.language), outputs => {
             // to properly trigger the UI update, `cell.outputs` needs to be uniquely assigned; simply setting it to the local variable has no effect

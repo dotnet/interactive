@@ -13,7 +13,7 @@ describe('Notebook tests', () => {
         it(`executes and returns expected value: ${language}`, async () => {
             let token = '123';
             let code = '1+1';
-            let clientMapper = new ClientMapper(() => new TestKernelTransport({
+            let clientMapper = new ClientMapper(() => TestKernelTransport.create({
                 'SubmitCode': [
                     {
                         eventType: CodeSubmissionReceivedType,
@@ -50,7 +50,7 @@ describe('Notebook tests', () => {
                     }
                 ]
             }));
-            let client = clientMapper.getOrAddClient({ fsPath: 'test/path' });
+            let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
             let result: Array<CellOutput> = [];
             await client.execute(code, language, outputs => result = outputs, token);
             expect(result).to.deep.equal([
@@ -71,7 +71,7 @@ Console.WriteLine(1);
 Console.WriteLine(1);
 Console.WriteLine(1);
 `;
-        let clientMapper = new ClientMapper(() => new TestKernelTransport({
+        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -136,7 +136,7 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, token);
         expect(result).to.deep.equal([
@@ -158,7 +158,7 @@ Console.WriteLine(1);
     it('updated values are replaced instead of added', async () => {
         let token = '123';
         let code = '#r nuget:Newtonsoft.Json';
-        let clientMapper = new ClientMapper(() => new TestKernelTransport({
+        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -208,7 +208,7 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, token);
         expect(result).to.deep.equal([
@@ -230,7 +230,7 @@ Console.WriteLine(1);
     it('returned json is property parsed', async () => {
         let token = '123';
         let code = 'JObject.FromObject(new { a = 1, b = false })';
-        let clientMapper = new ClientMapper(() => new TestKernelTransport({
+        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -267,7 +267,7 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, token);
         expect(result).to.deep.equal([

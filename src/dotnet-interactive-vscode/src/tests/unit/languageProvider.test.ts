@@ -12,7 +12,7 @@ import { CommandHandledType, CompletionRequestCompletedType } from '../../contra
 describe('LanguageProvider tests', () => {
     it('CompletionProvider', async () => {
         let token = '123';
-        let clientMapper = new ClientMapper(() => new TestKernelTransport({
+        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
             'RequestCompletion': [
                 {
                     eventType: CompletionRequestCompletedType,
@@ -65,7 +65,7 @@ describe('LanguageProvider tests', () => {
 
     it('HoverProvider', async () => {
         let token = '123';
-        let clientMapper = new ClientMapper(() => new TestKernelTransport({
+        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
             'RequestHoverText': [
                 {
                     eventType: 'HoverTextProduced',

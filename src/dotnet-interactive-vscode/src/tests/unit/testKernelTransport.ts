@@ -10,6 +10,13 @@ export class TestKernelTransport {
     constructor(readonly fakedEventEnvelopes: { [key: string]: {eventType: KernelEventType, event: any, token: string}[] }) {
     }
 
+    static create(fakedEventEnvelopes: { [key: string]: {eventType: KernelEventType, event: any, token: string}[] }): Promise<TestKernelTransport> {
+        return new Promise<TestKernelTransport>((resolve, reject) => {
+            let testTransport = new TestKernelTransport(fakedEventEnvelopes);
+            resolve(testTransport);
+        });
+    }
+
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
         this.theObserver = observer;
         return {

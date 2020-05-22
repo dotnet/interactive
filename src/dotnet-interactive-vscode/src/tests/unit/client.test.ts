@@ -12,7 +12,7 @@ describe('InteractiveClient tests', () => {
     it('command execution returns deferred events', async () => {
         let token = 'test-token';
         let code = '1 + 1';
-        let clientMapper = new ClientMapper(() => new TestKernelTransport({
+        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
             'SubmitCode': [
                 {
                     // deferred event; unassociated with the original submission; has its own token
@@ -64,7 +64,7 @@ describe('InteractiveClient tests', () => {
                 }
             ]
         }));
-        let client = clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, token);
         expect(result).to.deep.equal([
@@ -86,7 +86,7 @@ describe('InteractiveClient tests', () => {
     it('deferred events do not interfere with display update events', async () => {
         let token = 'test-token';
         let code = '1 + 1';
-        let clientMapper = new ClientMapper(() => new TestKernelTransport({
+        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
             'SubmitCode': [
                 {
                     // deferred event; unassociated with the original submission; has its own token
@@ -138,7 +138,7 @@ describe('InteractiveClient tests', () => {
                 }
             ]
         }));
-        let client = clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, token);
         expect(result).to.deep.equal([
@@ -160,7 +160,7 @@ describe('InteractiveClient tests', () => {
     it('interleaved deferred events do not interfere with display update events', async () => {
         let token = 'test-token';
         let code = '1 + 1';
-        let clientMapper = new ClientMapper(() => new TestKernelTransport({
+        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
             'SubmitCode': [
                 {
                     // deferred event; unassociated with the original submission; has its own token
@@ -227,7 +227,7 @@ describe('InteractiveClient tests', () => {
                 }
             ]
         }));
-        let client = clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, token);
         expect(result).to.deep.equal([
