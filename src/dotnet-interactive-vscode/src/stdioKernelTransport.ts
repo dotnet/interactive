@@ -73,7 +73,7 @@ export class StdioKernelTransport {
                             let failed = <CommandFailed>envelope.event;
                             let message = `Unable to set notebook working directory to '${notebookPath}'.\n${failed.message}`;
                             diagnosticChannel.appendLine(message);
-                            reject();
+                            resolve(kernelTransport);
                             disposable.dispose();
                             break;
                         case CommandHandledType:
