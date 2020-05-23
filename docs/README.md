@@ -63,7 +63,7 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
     * Switching between languages
         * Per-cell
         * Within a single cell
-    * .NET variable sharing
+    * [.NET variable sharing](variable-sharing.md)
     * Accessing kernel variables from the client with JavaScript 
 
 ## Technical details
