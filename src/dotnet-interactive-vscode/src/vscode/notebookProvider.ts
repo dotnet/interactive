@@ -37,7 +37,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         let notebookData: vscode.NotebookData = {
             languages: notebookCellLanguages,
             metadata: {
-                hasExecutionOrder: false
+                cellHasExecutionOrder: false
             },
             cells: notebook.cells.map(toNotebookCellData)
         };
