@@ -83,7 +83,7 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 ### .NET API Guide
 
 * Commands and events
-* Formatter APIS 
+* Formatter APIs
     * Working with MIME types 
 * PocketView
 * Magic commands
