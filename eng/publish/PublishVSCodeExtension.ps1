@@ -1,0 +1,23 @@
+[CmdletBinding(PositionalBinding=$false)]
+param (
+    [string]$artifactsPath,
+    [string]$publishToken
+)
+
+Set-StrictMode -version 2.0
+$ErrorActionPreference = "Stop"
+
+try {
+    # find extension vsix
+    $extension = Get-ChildItem "$artifactsPath\dotnet-interactive-vscode-*.vsix" | Select-Object -First 1
+
+    # publish
+    npm install -g vsce
+    vsce publish --packagePath $extension --pat $publishToken --noVerify
+}
+catch {
+    Write-Host $_
+    Write-Host $_.Exception
+    Write-Host $_.ScriptStackTrace
+    exit 1
+}
