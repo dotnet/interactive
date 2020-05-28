@@ -18,6 +18,8 @@ A new version of the VS Code extension can be published with [this](https://dev.
 appropriate passing build to publish.  This is a one-step process.  Once submitted, the new extension will
 appear in the VS Code Marketplace in about 10 minutes once their internal validations are complete.
 
+The publish/verification script is located in this repo at [`eng/publish/PublishVSCodeExtension.ps1`](eng/publish/PublishVSCodeExtension.ps1).
+
 ## Internal Code Mirror
 
 The public GitHub code is internally mirrored [here](https://dev.azure.com/dnceng/internal/_git/dotnet-interactive) to enable signed builds.  You'll likely never need to do anything with this.
