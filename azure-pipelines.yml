@@ -134,9 +134,16 @@ stages:
           displayName: Pack VS Code Extension
           inputs:
             filePath: $(Build.SourcesDirectory)/eng/package/PackVSCodeExtension.ps1
-            arguments: -stableToolVersionNumber $(StableToolVersionNumber) -gitSha $(Build.SourceVersion) -outDir "$(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)"
+            arguments: -stableToolVersionNumber $(StableToolVersionNumber) -gitSha $(Build.SourceVersion) -outDir "$(Build.ArtifactStagingDirectory)\vscode"
             workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode"
             #pwsh: true # temporarily turned off due to https://github.com/dotnet/core-eng/issues/9913
+
+        - task: PublishBuildArtifacts@1
+          displayName: Publish VSCode extension artifacts
+          inputs:
+            pathToPublish: $(Build.ArtifactStagingDirectory)\vscode
+            artifactName: vscode
+            artifactType: container
 
         # Prevent symbols packages from being saved in the following `packages` artifact because they're incomplete.
         # See `eng/AfterSolutionBuild.targets:StripFilesFromSymbolPackages` for details.
