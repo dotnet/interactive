@@ -37,6 +37,7 @@ export class InteractiveClient {
     private nextToken: number = 1;
     private tokenEventObservers: Map<string, Array<KernelEventEnvelopeObserver>> = new Map<string, Array<KernelEventEnvelopeObserver>>();
     private deferredOutput: Array<CellOutput> = [];
+    private valueIdMap: Map<string, { idx: number, outputs: Array<CellOutput>, observer: { (outputs: Array<CellOutput>): void }}> = new Map<string, { idx: number, outputs: Array<CellOutput>, observer: { (outputs: Array<CellOutput>): void }}>();
 
     constructor(readonly kernelTransport: KernelTransport) {
         kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
@@ -45,7 +46,6 @@ export class InteractiveClient {
     async execute(source: string, language: string, observer: { (outputs: Array<CellOutput>): void }, token?: string | undefined): Promise<void> {
         return new Promise(async (resolve, reject) => {
             let outputs: Array<CellOutput> = [];
-            let valueIdToIndex: Map<string, number> = new Map<string, number>();
 
             let reportOutputs = () => {
                 observer(outputs);
@@ -96,13 +96,20 @@ export class InteractiveClient {
                             let output = displayEventToCellOutput(disp);
 
                             if (disp.valueId) {
-                                let idx = valueIdToIndex.get(disp.valueId);
-                                if (idx !== undefined) {
-                                    // udpate existing value
-                                    outputs[idx] = output;
+                                let valueId = this.valueIdMap.get(disp.valueId);
+                                if (valueId !== undefined) {
+                                    // update existing value
+                                    valueId.outputs[valueId.idx] = output;
+                                    valueId.observer(valueId.outputs);
+                                    // don't report through regular channels
+                                    break;
                                 } else {
                                     // add new tracked value
-                                    valueIdToIndex.set(disp.valueId, outputs.length);
+                                    this.valueIdMap.set(disp.valueId, {
+                                        idx: outputs.length,
+                                        outputs,
+                                        observer
+                                    });
                                     outputs.push(output);
                                 }
                             } else {

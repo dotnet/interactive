@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Events
@@ -10,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Events
     {
         private readonly string _displayId;
         private readonly string _mimeType;
-        private readonly KernelInvocationContext _context;
+        private KernelInvocationContext _context;
 
         public DisplayedValue(string displayId, string mimeType, KernelInvocationContext context)
         {
@@ -34,6 +35,11 @@ namespace Microsoft.DotNet.Interactive.Events
             var formatted = new FormattedValue(
                 _mimeType,
                 updatedValue.ToDisplayString(_mimeType));
+
+            if (KernelInvocationContext.Current?.Command is SubmitCode)
+            {
+                _context = KernelInvocationContext.Current;
+            }
 
             _context.Publish(new DisplayedValueUpdated(updatedValue, _displayId, _context.Command, new[] { formatted }));
         }

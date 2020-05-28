@@ -142,6 +142,39 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Theory(Timeout = 45000)]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
+        public async Task Displayed_value_can_be_updated_from_later_submissions(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var submissions = language switch
+            {
+                Language.CSharp => new[] { "var d = display(b(\"hello\"));", "d.Update(b(\"world\"));" },
+                Language.FSharp => new[] { "let d = display(b.innerHTML(\"hello\"))", "d.Update(b.innerHTML(\"world\"))" },
+            };
+
+            await kernel.SubmitCodeAsync(submissions[0]);
+            await kernel.SubmitCodeAsync(submissions[1]);
+
+            KernelEvents
+                .OfType<DisplayedValueProduced>()
+                .SelectMany(v => v.FormattedValues)
+                .Should()
+                .ContainSingle(v =>
+                    v.MimeType == "text/html" &&
+                    v.Value.ToString().Contains("<b>hello</b>"));
+
+            KernelEvents
+                .OfType<DisplayedValueUpdated>()
+                .SelectMany(v => v.FormattedValues)
+                .Should()
+                .ContainSingle(v =>
+                    v.MimeType == "text/html" &&
+                    v.Value.ToString().Contains("<b>world</b>"));
+        }
+
+        [Theory(Timeout = 45000)]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
         public async Task Value_display_and_update_are_in_right_order(Language language)
         {
             var kernel = CreateKernel(language);
