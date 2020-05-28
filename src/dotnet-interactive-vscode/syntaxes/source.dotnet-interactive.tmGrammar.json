@@ -1,0 +1,65 @@
+{
+    "scopeName": "source.dotnet-interactive",
+    "patterns": [
+        {
+            "begin": "^#!cs(harp)?\\s+$",
+            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
+            "name": "language.csharp",
+            "patterns": [
+                {
+                    "include": "source.dotnet-interactive.csharp"
+                }
+            ]
+        },
+        {
+            "begin": "^#!fs(harp)?\\s+$",
+            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
+            "name": "language.fsharp",
+            "patterns": [
+                {
+                    "include": "source.dotnet-interactive.fsharp"
+                }
+            ]
+        },
+        {
+            "begin": "^#!html\\s+$",
+            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
+            "name": "language.html",
+            "patterns": [
+                {
+                    "include": "source.dotnet-interactive.html"
+                }
+            ]
+        },
+        {
+            "begin": "^#!(javascript|js)\\s+$",
+            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
+            "name": "language.javascript",
+            "patterns": [
+                {
+                    "include": "source.dotnet-interactive.javascript"
+                }
+            ]
+        },
+        {
+            "begin": "^#!(markdown|md)\\s+$",
+            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
+            "name": "language.markdown",
+            "patterns": [
+                {
+                    "include": "source.dotnet-interactive.markdown"
+                }
+            ]
+        },
+        {
+            "begin": "^#!(powershell|pwsh)\\s+$",
+            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
+            "name": "language.powershell",
+            "patterns": [
+                {
+                    "include": "source.dotnet-interactive.powershell"
+                }
+            ]
+        }
+    ]
+}
