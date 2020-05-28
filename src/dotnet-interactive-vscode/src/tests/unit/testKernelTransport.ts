@@ -6,6 +6,7 @@ import { KernelCommand, KernelCommandType, KernelEventType, KernelEventEnvelopeO
 // Replays all events given to it
 export class TestKernelTransport {
     private theObserver: KernelEventEnvelopeObserver | undefined;
+    private fakedCommandCounter: Map<string, number> = new Map<string, number>();
 
     constructor(readonly fakedEventEnvelopes: { [key: string]: {eventType: KernelEventType, event: any, token: string}[] }) {
     }
@@ -25,7 +26,26 @@ export class TestKernelTransport {
     }
 
     async submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void> {
+        // find bare fake command events
         let eventEnvelopesToReturn = this.fakedEventEnvelopes[commandType];
+        if (!eventEnvelopesToReturn) {
+            // check for numbered variants
+            let counter = this.fakedCommandCounter.get(commandType);
+            if (!counter) {
+                // first encounter
+                counter = 1;
+            }
+
+            // and increment for next time
+            this.fakedCommandCounter.set(commandType, counter + 1);
+
+            eventEnvelopesToReturn = this.fakedEventEnvelopes[`${commandType}#${counter}`];
+            if (!eventEnvelopesToReturn) {
+                // couldn't find numbered event names
+                throw new Error(`Unable to find events for command '${commandType}'.`);
+            }
+        }
+
         if (this.theObserver) {
             for (let envelope of eventEnvelopesToReturn) {
                 this.theObserver({

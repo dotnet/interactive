@@ -102,7 +102,7 @@ describe('InteractiveClient tests', () => {
                         ]
                     },
                     token: 'token-for-deferred-command-doesnt-match-any-other-token'
-                },               
+                },
                 {
                     eventType: DisplayedValueProducedType,
                     event: {
@@ -176,7 +176,7 @@ describe('InteractiveClient tests', () => {
                         ]
                     },
                     token: 'token-for-deferred-command-doesnt-match-any-other-token'
-                },               
+                },
                 {
                     eventType: DisplayedValueProducedType,
                     event: {
@@ -205,7 +205,7 @@ describe('InteractiveClient tests', () => {
                         ]
                     },
                     token: 'token-for-deferred-command-doesnt-match-any-other-token'
-                }, 
+                },
                 {
                     eventType: DisplayedValueUpdatedType,
                     event: {
@@ -236,7 +236,7 @@ describe('InteractiveClient tests', () => {
                 data: {
                     'text/plain': 'deferred output 1'
                 }
-            },            
+            },
             {
                 outputKind: CellOutputKind.Rich,
                 data: {
@@ -247,6 +247,82 @@ describe('InteractiveClient tests', () => {
                 outputKind: CellOutputKind.Rich,
                 data: {
                     'text/plain': 'deferred output 2'
+                }
+            }
+        ]);
+    });
+
+    it('display update events from separate submissions trigger the correct observer', async () => {
+        let code = '1 + 1';
+        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
+            'SubmitCode#1': [
+                {
+                    eventType: DisplayedValueProducedType,
+                    event: {
+                        value: 1,
+                        valueId: "displayId",
+                        formattedValues: [
+                            {
+                                mimeType: 'text/html',
+                                value: '1'
+                            }
+                        ]
+                    },
+                    token: 'token 1'
+                },
+                {
+                    eventType: CommandHandledType,
+                    event: {},
+                    token: 'token 1'
+                }
+            ],
+            'SubmitCode#2': [
+                {
+                    eventType: DisplayedValueProducedType,
+                    event: {
+                        value: 2,
+                        valueId: "displayId",
+                        formattedValues: [
+                            {
+                                mimeType: 'text/html',
+                                value: '2'
+                            }
+                        ]
+                    },
+                    token: 'token 2'
+                },
+                {
+                    eventType: CommandHandledType,
+                    event: {},
+                    token: 'token 2'
+                }
+            ]
+        }));
+        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
+
+        // execute first command
+        let result1: Array<CellOutput> = [];
+        await client.execute(code, 'csharp', outputs => result1 = outputs, 'token 1');
+        expect(result1).to.deep.equal([
+            {
+                outputKind: CellOutputKind.Rich,
+                data: {
+                    'text/html': '1'
+                }
+            }
+        ]);
+
+        // execute second command
+        let result2: Array<CellOutput> = [];
+        await client.execute(code, 'csharp', outputs => result2 = outputs, 'token 2');
+        expect(result2).to.deep.equal([]);
+
+        // ensure first result array was updated
+        expect(result1).to.deep.equal([
+            {
+                outputKind: CellOutputKind.Rich,
+                data: {
+                    'text/html': '2'
                 }
             }
         ]);
