@@ -187,4 +187,39 @@ describe('TextMate grammar tests', async () => {
             ]
         ]);
     });
+
+    const allLanguages = [
+        'csharp',
+        'fsharp',
+        'html',
+        'javascript',
+        'markdown',
+        'powershell'
+    ];
+
+    for (const language of allLanguages) {
+        it(`language ${language} can switch to all other languages`, async () => {
+            let text = [`#!${language}`];
+            let expected = [
+                [
+                    {
+                        tokenText: `#!${language}`,
+                        scopes: ['source.dotnet-interactive', `language.${language}`]
+                    }
+                ]
+            ];
+            for (const otherLanguage of allLanguages) {
+                text.push(`#!${otherLanguage}`);
+                expected.push([
+                    {
+                        tokenText: `#!${otherLanguage}`,
+                        scopes: ['source.dotnet-interactive', `language.${otherLanguage}`]
+                    }
+                ]);
+            }
+
+            const tokens = await getTokens(text);
+            expect(tokens).to.deep.equal(expected);
+        });
+    }
 });
