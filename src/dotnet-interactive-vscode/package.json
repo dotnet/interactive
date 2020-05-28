@@ -112,6 +112,12 @@
     ],
     "languages": [
       {
+        "id": "dotnet-interactive",
+        "aliases": [
+          ".NET Interactive"
+        ]
+      },
+      {
         "id": "dotnet-interactive.csharp",
         "aliases": [
           "C# (.NET Interactive)"
@@ -156,39 +162,44 @@
     ],
     "grammars": [
       {
+        "language": "dotnet-interactive",
+        "scopeName": "source.dotnet-interactive",
+        "path": "./syntaxes/source.dotnet-interactive.tmGrammar.json"
+      },
+      {
         "language": "dotnet-interactive.csharp",
         "scopeName": "source.dotnet-interactive.csharp",
-        "path": "./syntaxes/dotnet-interactive.csharp.tmGrammar.json"
+        "path": "./syntaxes/source.dotnet-interactive.csharp.tmGrammar.json"
       },
       {
         "language": "dotnet-interactive.fsharp",
         "scopeName": "source.dotnet-interactive.fsharp",
-        "path": "./syntaxes/dotnet-interactive.fsharp.tmGrammar.json"
+        "path": "./syntaxes/source.dotnet-interactive.fsharp.tmGrammar.json"
       },
       {
         "language": "dotnet-interactive.html",
         "scopeName": "source.dotnet-interactive.html",
-        "path": "./syntaxes/dotnet-interactive.html.tmGrammar.json"
+        "path": "./syntaxes/source.dotnet-interactive.html.tmGrammar.json"
       },
       {
         "language": "dotnet-interactive.javascript",
         "scopeName": "source.dotnet-interactive.javascript",
-        "path": "./syntaxes/dotnet-interactive.javascript.tmGrammar.json"
+        "path": "./syntaxes/source.dotnet-interactive.javascript.tmGrammar.json"
       },
       {
         "language": "dotnet-interactive.magic-commands",
         "scopeName": "source.dotnet-interactive.magic-commands",
-        "path": "./syntaxes/dotnet-interactive.magic-commands.tmGrammar.json"
+        "path": "./syntaxes/source.dotnet-interactive.magic-commands.tmGrammar.json"
       },
       {
         "language": "dotnet-interactive.markdown",
         "scopeName": "source.dotnet-interactive.markdown",
-        "path": "./syntaxes/dotnet-interactive.markdown.tmGrammar.json"
+        "path": "./syntaxes/source.dotnet-interactive.markdown.tmGrammar.json"
       },
       {
         "language": "dotnet-interactive.powershell",
         "scopeName": "source.dotnet-interactive.powershell",
-        "path": "./syntaxes/dotnet-interactive.powershell.tmGrammar.json"
+        "path": "./syntaxes/source.dotnet-interactive.powershell.tmGrammar.json"
       }
     ]
   },
@@ -224,7 +235,9 @@
     "tmp": "0.2.1",
     "typescript": "3.8.3",
     "vsce": "1.75.0",
-    "vscode-test": "1.3.0"
+    "vscode-oniguruma": "1.3.1",
+    "vscode-test": "1.3.0",
+    "vscode-textmate": "5.1.1"
   },
   "dependencies": {
     "compare-versions": "3.6.0"
