@@ -28,5 +28,7 @@ namespace Microsoft.DotNet.Interactive.Server
         {
             return _clientStream.ConnectAsync();
         }
+
+        public bool IsConnected => _clientStream.IsConnected;
     }
 }

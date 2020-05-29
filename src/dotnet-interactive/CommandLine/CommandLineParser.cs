@@ -105,8 +105,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             rootCommand.AddCommand(Jupyter());
             rootCommand.AddCommand(StdIO());
-            rootCommand.AddCommand(NamedPipeServer());
-            rootCommand.AddCommand(NamedPipeClient());
             rootCommand.AddCommand(HttpServer());
 
             return new CommandLineBuilder(rootCommand)
@@ -316,60 +314,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             startupOptions,
                             CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(), startupOptions, null),
                             console);
-                    });
-
-                return command;
-            }
-
-            Command NamedPipeServer()
-            {
-                var pipeNameArgument = new Argument<string>(
-                    "pipe-name",
-                    description: "Specifies the pipe name for the named pipe server");
-
-                var command = new Command(
-                    "named-pipe-server",
-                    "Starts dotnet-interactive with kernel functionality exposed over a named-pipe server")
-                {
-                    defaultKernelOption,
-                    logPathOption,
-                    pipeNameArgument
-                };
-
-                command.Handler = CommandHandler.Create<StartupOptions, NamedPipeServerOptions, InvocationContext>(
-                    (startupOptions, options, context) =>
-                    {
-                        return StdIOCommand.DoNamedPipeServer(
-                            startupOptions,
-                            CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(), startupOptions, null),
-                            options.PipeName);
-                    });
-
-                return command;
-            }
-
-            Command NamedPipeClient()
-            {
-                var pipeNameArgument = new Argument<string>(
-                    "pipe-name",
-                    description: "Specifies the pipe name to connect to");
-
-                var command = new Command(
-                    "named-pipe-client",
-                    "Starts dotnet-interactive with kernel functionality connected to a named-pipe server")
-                {
-                    defaultKernelOption,
-                    logPathOption,
-                    pipeNameArgument
-                };
-
-                command.Handler = CommandHandler.Create<StartupOptions, NamedPipeClientOptions, InvocationContext>(
-                    (startupOptions, options, context) =>
-                    {
-                        return StdIOCommand.DoNamedPipeClient(
-                            startupOptions,
-                            CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(), startupOptions, null),
-                            options.PipeName);
                     });
 
                 return command;
