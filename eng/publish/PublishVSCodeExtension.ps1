@@ -11,6 +11,9 @@ try {
     # find extension vsix
     $extension = Get-ChildItem "$artifactsPath\dotnet-interactive-vscode-*.vsix" | Select-Object -First 1
 
+    # verify
+    . "$PSScriptRoot\VerifyVSCodeExtension.ps1" -extensionPath $extension
+
     # publish
     npm install -g vsce
     vsce publish --packagePath $extension --pat $publishToken --noVerify
