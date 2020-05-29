@@ -139,7 +139,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                     v.Value.ToString().Contains("<b>world</b>"));
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task Displayed_value_can_be_updated_from_later_submissions(Language language)
@@ -153,19 +153,16 @@ namespace Microsoft.DotNet.Interactive.Tests
             };
 
             await kernel.SubmitCodeAsync(submissions[0]);
-            await kernel.SubmitCodeAsync(submissions[1]);
 
-            KernelEvents
-                .OfType<DisplayedValueProduced>()
-                .SelectMany(v => v.FormattedValues)
+            var updateCommandResult = await kernel.SubmitCodeAsync(submissions[1]);
+
+            updateCommandResult
+                .KernelEvents
+                .ToSubscribedList()
                 .Should()
-                .ContainSingle(v =>
-                    v.MimeType == "text/html" &&
-                    v.Value.ToString().Contains("<b>hello</b>"));
-
-            KernelEvents
-                .OfType<DisplayedValueUpdated>()
-                .SelectMany(v => v.FormattedValues)
+                .ContainSingle<DisplayedValueUpdated>()
+                .Which
+                .FormattedValues
                 .Should()
                 .ContainSingle(v =>
                     v.MimeType == "text/html" &&
