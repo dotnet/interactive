@@ -13,6 +13,9 @@ try {
 
     # verify
     . "$PSScriptRoot\VerifyVSCodeExtension.ps1" -extensionPath $extension
+    if ($LASTEXITCODE -ne 0) {
+        exit $LASTEXITCODE
+    }
 
     # publish
     npm install -g vsce
