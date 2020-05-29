@@ -71,7 +71,8 @@ type FSharpKernel() as this =
         | _, idents -> Array.last idents
 
     let documentation (declarationItem: FSharpDeclarationListItem) =
-        declarationItem.DescriptionText.ToString()
+        let result = declarationItem.DescriptionTextAsync
+        result.ToString()
 
     let completionItem (declarationItem: FSharpDeclarationListItem) =
         let kind = kindString declarationItem.Glyph
