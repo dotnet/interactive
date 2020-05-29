@@ -3,7 +3,8 @@
 
 import { expect } from 'chai';
 
-import { parseNotebook, serializeNotebook, NotebookFile } from '../../interactiveNotebook';
+import { parseNotebook, serializeNotebook, NotebookFile, languageToCellKind } from '../../interactiveNotebook';
+import { CellKind } from '../../interfaces/vscode';
 
 describe('Extension Test Suite', () => {
     it('Parse notebook from valid contents', () => {
@@ -341,5 +342,27 @@ This is \`markdown\`.
         ];
         let expected = expectedLines.join('\r\n');
         expect(str).to.equal(expected);
+    });
+
+    it('code cells are appropriately classified by language', () => {
+        const codeLanguages = [
+            'dotnet-interactive.csharp',
+            'dotnet-interactive.fsharp',
+            'dotnet-interactive.html',
+            'dotnet-interactive.javascript',
+            'dotnet-interactive.powershell'
+        ];
+        for (let language of codeLanguages) {
+            expect(languageToCellKind(language)).to.equal(CellKind.Code);
+        }
+    });
+
+    it('markdown cells are appropriately classified', () => {
+        const markdownLanguages = [
+            'dotnet-interactive.markdown'
+        ];
+        for (let language of markdownLanguages) {
+            expect(languageToCellKind(language)).to.equal(CellKind.Markdown);
+        }
     });
 });

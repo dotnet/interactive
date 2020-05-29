@@ -3,7 +3,7 @@
 
 import * as vscode from 'vscode';
 import { ClientMapper } from './../clientMapper';
-import { NotebookFile, parseNotebook, serializeNotebook, notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage } from '../interactiveNotebook';
+import { NotebookFile, parseNotebook, serializeNotebook, notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind } from '../interactiveNotebook';
 import { RawNotebookCell } from '../interfaces';
 import { trimTrailingCarriageReturn } from '../utilities';
 import { ReportChannel } from '../interfaces/vscode';
@@ -95,14 +95,4 @@ function toNotebookCellData(cell: RawNotebookCell): vscode.NotebookCellData {
         outputs: [],
         metadata: {}
     };
-}
-
-function languageToCellKind(language: string): vscode.CellKind {
-    switch (language) {
-        case 'md':
-        case 'markdown':
-            return vscode.CellKind.Markdown;
-        default:
-            return vscode.CellKind.Code;
-    }
 }
