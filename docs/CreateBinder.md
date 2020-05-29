@@ -50,7 +50,7 @@ When you're happy with the result, expand the section to reveal the badge code, 
 
 <img src = "https://user-images.githubusercontent.com/375556/67016821-bd48e880-f0f0-11e9-8c79-4fc97a06741a.png" width = "70%">
 
-## Start in Jupyter Lab 
+## Start in JupyterLab 
 
 By default, Binder will start with the Jupyter Notebook frontend. If you prefer to use JupyterLab, just add the query parameter `?urlpath=lab` to the URL in your badge.
 
