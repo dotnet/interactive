@@ -77,17 +77,11 @@ new [] {1,2,3}");
             var proxyKernel = NamedPipeKernel.Connect("proxy", pipeName);
             using var kernel = new CompositeKernel
             {
-                cSharpKernel,
                 proxyKernel,
             };
             kernel.DefaultKernelName = proxyKernel.Name;
 
             using var events = kernel.KernelEvents.ToSubscribedList();
-
-            var csharpCommand = new SubmitCode(@"
-#!csharp
-new [] {1,2,3}");
-            await kernel.SendAsync(csharpCommand);
 
             var proxyCommand = new SubmitCode(@"
 #!proxy
@@ -95,8 +89,6 @@ new [] {1,2,3}");
 
             await kernel.SendAsync(proxyCommand);
 
-            events.Should()
-                  .ContainSingle<CommandHandled>(e => e.Command == csharpCommand);
             events.Should()
                   .ContainSingle<CommandHandled>(e => e.Command == proxyCommand);
         }

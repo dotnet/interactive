@@ -28,6 +28,7 @@ namespace Microsoft.DotNet.Interactive
             _clientStream = clientStream;
             _reader = new StreamReader(clientStream);
             _writer = new StreamWriter(clientStream);
+            RegisterForDisposal(clientStream);
         }
 
         private async Task PollEvents()

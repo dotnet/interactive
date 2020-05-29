@@ -15,6 +15,7 @@ namespace Microsoft.DotNet.Interactive.Server
             IKernel kernel, 
             NamedPipeServerStream serverStream) : base(kernel, new StreamReader(serverStream), new StreamWriter(serverStream)) 
         {
+            // TODO: Dispose this.
             _serverStream = serverStream;
         }
 
