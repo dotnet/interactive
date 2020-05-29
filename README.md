@@ -23,7 +23,7 @@
 There are several ways to get started using .NET with Jupyter, including Jupyter Notebook, JupyterLab, and nteract.
 
 - [Try sample .NET notebooks online using Binder](docs/NotebooksOnBinder.md). This also allows you try out our daily builds, which include preview features of F# 5.
-- [Create and run .NET notebooks on your machine](docs/NotebooksLocalExperience.md).
+- [Install .NET Interactive](docs/NotebooksLocalExperience.md) to create and run .NET notebooks on your machine.
 - [Share your own .NET notebooks with others online using Binder](docs/CreateBinder.md).
 - [Use .NET Interactive with nteract](https://nteract.io/kernels/dotnet)
 
