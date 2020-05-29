@@ -18,15 +18,11 @@ namespace Microsoft.DotNet.Interactive.Server
             _serverStream = serverStream;
         }
 
-        public NamedPipeKernelServer(
-            IKernel kernel,
-            string pipeName) : this(kernel, new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1))
+        public static NamedPipeKernelServer WaitForConnection(IKernel kernel, string pipeName)
         {
-        }
-
-        public Task WaitForConnectionAsync()
-        {
-            return _serverStream.WaitForConnectionAsync();
+            var serverStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+            serverStream.WaitForConnection();
+            return new NamedPipeKernelServer(kernel, serverStream);
         }
     }
 }

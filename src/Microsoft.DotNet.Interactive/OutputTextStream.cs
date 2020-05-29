@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Reactive.Subjects;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive
 {

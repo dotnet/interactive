@@ -12,6 +12,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Xunit;
@@ -63,7 +64,43 @@ new [] {1,2,3}");
             events.Should()
                   .ContainSingle<CommandHandled>(e => e.Command == fsharpCommand);
         }
-        
+
+        [Fact]
+        public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_directive_as_a_proxy_named_pipe()
+        {
+            var pipeName = Guid.NewGuid().ToString();
+            var cSharpKernel = new CSharpKernel();
+            Action doWait = () =>
+                Task.Run(() => NamedPipeKernelServer.WaitForConnection(cSharpKernel, pipeName));
+            doWait();
+
+            var proxyKernel = NamedPipeKernel.Connect("proxy", pipeName);
+            using var kernel = new CompositeKernel
+            {
+                cSharpKernel,
+                proxyKernel,
+            };
+            kernel.DefaultKernelName = proxyKernel.Name;
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            var csharpCommand = new SubmitCode(@"
+#!csharp
+new [] {1,2,3}");
+            await kernel.SendAsync(csharpCommand);
+
+            var proxyCommand = new SubmitCode(@"
+#!proxy
+new [] {1,2,3}");
+
+            await kernel.SendAsync(proxyCommand);
+
+            events.Should()
+                  .ContainSingle<CommandHandled>(e => e.Command == csharpCommand);
+            events.Should()
+                  .ContainSingle<CommandHandled>(e => e.Command == proxyCommand);
+        }
+
         [Fact]
         public async Task Handling_kernel_can_be_specified_using_kernel_alias_as_a_directive()
         {

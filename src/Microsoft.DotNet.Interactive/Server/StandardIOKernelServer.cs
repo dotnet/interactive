@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Newtonsoft.Json;
 
@@ -47,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public IObservable<string> Input => _input;
 
-        public Task WriteAsync(string text) => DeserializeAndSendCommand(text); 
+        public Task WriteAsync(string text) => DeserializeAndSendCommand(text);
 
         public IObservable<string> Output => _output.OutputObservable; 
 
