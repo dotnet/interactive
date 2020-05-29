@@ -61,5 +61,3 @@ For example, change this:
 into this:
 
 ```[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab)```
-
-Return to [README.md](/README.md)
