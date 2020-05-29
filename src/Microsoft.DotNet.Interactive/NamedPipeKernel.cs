@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.ComponentModel;
 using System.IO;
 using System.IO.Pipes;
@@ -20,15 +22,19 @@ namespace Microsoft.DotNet.Interactive
         private TextReader _reader;
         private TextWriter _writer;
 
-        private NamedPipeKernel(string name, string pipeName) : base(name)
+        public NamedPipeKernel(string name) : base(name)
         {
-            var clientStream = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
-            clientStream.Connect();
-            clientStream.ReadMode = PipeTransmissionMode.Message;
-            _clientStream = clientStream;
-            _reader = new StreamReader(clientStream);
-            _writer = new StreamWriter(clientStream);
-            RegisterForDisposal(clientStream);
+            var command = new Command("#!named-pipe", "Connect to the specified named-pipe.")
+            {
+                new Argument<string>("pipe-name")
+            };
+
+            command.Handler = CommandHandler.Create<string, KernelInvocationContext>(async (pipeName, context) =>
+            {
+                await ConnectAsync(pipeName);
+            });
+
+            AddDirective(command);
         }
 
         private async Task PollEvents()
@@ -37,7 +43,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 var line = await _reader.ReadLineAsync();
                 var kernelEvent = KernelEventEnvelope.Deserialize(line).Event;
-                AddEvent(kernelEvent);
+                PublishEvent(kernelEvent);
                 if (kernelEvent is CommandHandled || kernelEvent is CommandFailed)
                 {
                     break;
@@ -59,9 +65,20 @@ namespace Microsoft.DotNet.Interactive
             await PollEvents();
         }
 
-        public static NamedPipeKernel Connect(string name, string pipeName)
+        public async Task ConnectAsync(string pipeName)
         {
-            return new NamedPipeKernel(name, pipeName);
+            if (_clientStream != null)
+            {
+                _clientStream.Close();
+            }
+
+            var clientStream = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
+            await clientStream.ConnectAsync();
+            clientStream.ReadMode = PipeTransmissionMode.Message;
+            _clientStream = clientStream;
+            _reader = new StreamReader(clientStream);
+            _writer = new StreamWriter(clientStream);
+            RegisterForDisposal(clientStream);
         }
     }
 }

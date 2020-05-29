@@ -10,10 +10,5 @@ namespace Microsoft.DotNet.Interactive
         public ProxyKernel(string name) : base(name)
         {
         }
-
-        internal void AddEvent(IKernelEvent kernelEvent)
-        {
-            PublishEvent(kernelEvent);
-        }
     }
 }

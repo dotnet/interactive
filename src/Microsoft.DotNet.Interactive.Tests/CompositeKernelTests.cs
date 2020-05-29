@@ -68,24 +68,24 @@ new [] {1,2,3}");
         [Fact]
         public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_directive_as_a_proxy_named_pipe()
         {
-            var pipeName = Guid.NewGuid().ToString();
-            var cSharpKernel = new CSharpKernel();
-            Action doWait = () =>
-                Task.Run(() => NamedPipeKernelServer.WaitForConnection(cSharpKernel, pipeName));
-            doWait();
-
-            var proxyKernel = NamedPipeKernel.Connect("proxy", pipeName);
+            var proxyKernel = new NamedPipeKernel("proxy");
             using var kernel = new CompositeKernel
             {
                 proxyKernel,
             };
             kernel.DefaultKernelName = proxyKernel.Name;
 
+            var pipeName = Guid.NewGuid().ToString();
+            var cSharpKernel = new CSharpKernel();
+            Action doWait = () =>
+                Task.Run(() => NamedPipeKernelServer.WaitForConnection(cSharpKernel, pipeName));
+            doWait();
+
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            var proxyCommand = new SubmitCode(@"
-#!proxy
-new [] {1,2,3}");
+            var proxyCommand = new SubmitCode($@"
+#!named-pipe {pipeName}
+1 + 1");
 
             await kernel.SendAsync(proxyCommand);
 
