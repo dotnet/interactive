@@ -3,6 +3,7 @@
 
 import { RawNotebookCell } from "./interfaces";
 import { trimTrailingCarriageReturn } from './utilities';
+import { CellKind } from "./interfaces/vscode";
 
 export const notebookCellLanguages: Array<string> = [
     'dotnet-interactive.csharp',
@@ -134,6 +135,15 @@ export function serializeNotebook(notebook: NotebookFile): string {
     }
 
     return lines.join('\r\n');
+}
+
+export function languageToCellKind(language: string): CellKind {
+    switch (language) {
+        case 'dotnet-interactive.markdown':
+            return CellKind.Markdown;
+        default:
+            return CellKind.Code;
+    }
 }
 
 function findIndexReverse<T>(arr: Array<T>, predicate: { (val: T): boolean }): number {
