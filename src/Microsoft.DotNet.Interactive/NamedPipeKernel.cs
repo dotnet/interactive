@@ -18,23 +18,13 @@ namespace Microsoft.DotNet.Interactive
 {
     public class NamedPipeKernel : ProxyKernel
     {
+        private string _pipeName;
         private NamedPipeClientStream _clientStream;
         private TextReader _reader;
         private TextWriter _writer;
 
         public NamedPipeKernel(string name) : base(name)
         {
-            var command = new Command("#!named-pipe", "Connect to the specified named-pipe.")
-            {
-                new Argument<string>("pipe-name")
-            };
-
-            command.Handler = CommandHandler.Create<string, KernelInvocationContext>(async (pipeName, context) =>
-            {
-                await ConnectAsync(pipeName);
-            });
-
-            AddDirective(command);
         }
 
         private async Task PollEvents()
@@ -65,6 +55,8 @@ namespace Microsoft.DotNet.Interactive
             await PollEvents();
         }
 
+        public string PipeName => _pipeName;
+
         public async Task ConnectAsync(string pipeName)
         {
             if (_clientStream != null)
@@ -72,7 +64,9 @@ namespace Microsoft.DotNet.Interactive
                 _clientStream.Close();
             }
 
-            var clientStream = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
+            _pipeName = pipeName;
+
+            var clientStream = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
             await clientStream.ConnectAsync();
             clientStream.ReadMode = PipeTransmissionMode.Message;
             _clientStream = clientStream;

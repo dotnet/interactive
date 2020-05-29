@@ -144,6 +144,40 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
+        public static T UseNamedPipe<T>(this T kernel)
+            where T : CompositeKernel
+        {
+            var command = new Command("#!named-pipe", "Connect to the specified named-pipe.")
+            {
+                new Argument<string>("pipe-name")
+            };
+
+            command.Handler = CommandHandler.Create<string, KernelInvocationContext>(async (pipeName, context) =>
+            {
+                var proxyName = $"named-pipe({pipeName})";
+                var existingProxyKernel = kernel.FindKernel(proxyName);
+                if (existingProxyKernel == null)
+                {
+                    var proxyKernel = new NamedPipeKernel(proxyName);
+                    try
+                    {
+                        await proxyKernel.ConnectAsync(pipeName);
+                        kernel.Add(proxyKernel);
+                    }
+                    catch
+                    {
+                        proxyKernel.Dispose();
+                        throw;
+                    }
+                }
+                await kernel.SubmitCodeAsync($@"#!{proxyName}");
+            });
+
+            kernel.AddDirective(command);
+
+            return kernel;
+        }
+
         [DebuggerStepThrough]
         public static T LogEventsToPocketLogger<T>(this T kernel)
             where T : IKernel
