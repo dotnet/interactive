@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         [Theory]
         [InlineData(Language.FSharp)]
         [InlineData(Language.CSharp)]
-        public async Task Completions_are_available_for_symbols_declared_in_a_previous_submission_ending_in_a_trailing_expression(Language language)
+        public async Task Completions_are_available_for_symbols_declared_in_the_previous_submission_ending_in_a_trailing_expression(Language language)
         {
             var variableName = "aaaaaaa";
 
@@ -102,6 +102,37 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             var kernel = CreateKernel(language);
 
             await kernel.SubmitCodeAsync(submission);
+
+            await kernel.SendAsync(new RequestCompletion("aaa", new LinePosition(0, 3)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionRequestCompleted>()
+                .Which
+                .CompletionList
+                .Should()
+                .Contain(item => item.DisplayText == variableName);
+        }
+
+        [Theory]
+        [InlineData(Language.FSharp)]
+        [InlineData(Language.CSharp)]
+        public async Task Completions_are_available_for_symbols_declared_in_a_submission_before_the_previous_one_ending_in_a_trailing_expression(Language language)
+        {
+            var variableName = "aaaaaaa";
+
+            var submissions = language switch
+            {
+                Language.CSharp => new[] { $"var {variableName} = 123;\n{variableName}", "1 + 2" },
+                Language.FSharp => new[] { $"let {variableName} = 123\n{variableName}", "1 + 2" }
+            };
+
+            var kernel = CreateKernel(language);
+
+            foreach (var submission in submissions)
+            {
+                await kernel.SubmitCodeAsync(submission);
+            }
 
             await kernel.SendAsync(new RequestCompletion("aaa", new LinePosition(0, 3)));
 
