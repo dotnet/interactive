@@ -8,7 +8,7 @@ To get you started, we created a set of samples in C#, F#, and PowerShell. These
 
 - Click on the **launch binder** badge: 
 
-   [![Binder](https://mybinder.org/badge_logo.svg](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab)
+   [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dotnet/interactive/master?urlpath=lab)
 
 
 - This launches the binder service. It might take a minute or two to start.
