@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             _lockReleaser.Dispose();
         }
 
-        protected CompositeKernel CreateKernel(Language language)
+        protected CompositeKernel CreateKernel(Language language = Language.CSharp)
         {
             var kernelBase = language switch
             {
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                                    .UseKernelHelpers()
                                    .UseWho(),
                 Language.PowerShell => new PowerShellKernel(),
-                _ => throw new InvalidOperationException("Unknown language specified")
+                _ => throw new InvalidOperationException($"Unknown language specified: {language}")
             };
             
             kernelBase = kernelBase
@@ -110,52 +110,18 @@ namespace Microsoft.DotNet.Interactive.Tests
             return kernel;
         }
 
-        protected KernelBase CreateBaseKernel(Language language)
+        public async Task SubmitCode(KernelBase kernel, string[] submissions, SubmissionType submissionType = SubmissionType.Run)
         {
-            var kernelBase = language switch
+            foreach (var submission in submissions)
             {
-                Language.FSharp => new FSharpKernel()
-                                   .UseDefaultFormatting()
-                                   .UseNugetDirective()
-                                   .UseKernelHelpers()
-                                   .UseWho()
-                                   .UseDefaultNamespaces() as KernelBase,
-                Language.CSharp => new CSharpKernel()
-                                   .UseDefaultFormatting()
-                                   .UseNugetDirective()
-                                   .UseKernelHelpers()
-                                   .UseWho(),
-                Language.PowerShell => new PowerShellKernel(),
-                _ => throw new InvalidOperationException("Unknown language specified")
-            };
-
-            kernelBase = kernelBase.LogEventsToPocketLogger();
-
-            KernelEvents = kernelBase.KernelEvents.ToSubscribedList();
-
-            DisposeAfterTest(KernelEvents);
-            DisposeAfterTest(kernelBase);
-
-            return kernelBase;
-        }
-
-        protected KernelBase CreateKernel()
-        {
-            return CreateKernel(Language.CSharp);
-        }
-
-        public async Task SubmitCode(KernelBase kernel, string[] codeFragments, SubmissionType submissionType = SubmissionType.Run)
-        {
-            foreach (var codeFragment in codeFragments)
-            {
-                var cmd = new SubmitCode(codeFragment, submissionType: submissionType);
+                var cmd = new SubmitCode(submission, submissionType: submissionType);
                 await kernel.SendAsync(cmd);
             }
         }
 
-        public async Task SubmitCode(KernelBase kernel, string codeFragment, SubmissionType submissionType = SubmissionType.Run)
+        public async Task SubmitCode(KernelBase kernel, string submission, SubmissionType submissionType = SubmissionType.Run)
         {
-            var command = new SubmitCode(codeFragment, submissionType: submissionType);
+            var command = new SubmitCode(submission, submissionType: submissionType);
             await kernel.SendAsync(command);
         }
 

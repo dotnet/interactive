@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -24,7 +23,6 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Utility;
 using XPlot.Plotly;
-using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
@@ -41,13 +39,15 @@ namespace Microsoft.DotNet.Interactive.CSharp
             .GetMethod("HasReturnValue", BindingFlags.Instance | BindingFlags.NonPublic);
 
         protected CSharpParseOptions _csharpParseOptions =
-            new CSharpParseOptions(LanguageVersion.Default, kind: SourceCodeKind.Script);
+            new CSharpParseOptions(LanguageVersion.Latest, kind: SourceCodeKind.Script);
 
-        private WorkspaceFixture _fixture;
-        private Lazy<PackageRestoreContext> _packageRestoreContext;
+        private readonly InteractiveWorkspace _workspace;
+
+        private readonly Lazy<PackageRestoreContext> _packageRestoreContext;
 
         internal ScriptOptions ScriptOptions =
             ScriptOptions.Default
+                         .WithLanguageVersion(LanguageVersion.Latest)
                          .AddImports(
                              "System",
                              "System.Text",
@@ -68,11 +68,20 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public CSharpKernel() : base(DefaultKernelName)
         {
-            _packageRestoreContext = new Lazy<PackageRestoreContext>(() => new PackageRestoreContext());
+            _workspace = new InteractiveWorkspace();
+
+            _packageRestoreContext = new Lazy<PackageRestoreContext>(() =>
+            {
+                var packageRestoreContext = new PackageRestoreContext();
+
+                RegisterForDisposal(packageRestoreContext);
+
+                return packageRestoreContext;
+            });
+
             RegisterForDisposal(() =>
             {
-                _packageRestoreContext?.Value?.Dispose();
-                _packageRestoreContext = null;
+                _workspace.Dispose();
                 ScriptState = null;
             });
         }
@@ -92,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             if (ScriptState?.Variables
                            .LastOrDefault(v => v.Name == name) is { } variable)
             {
-                value = (T)variable.Value;
+                value = (T) variable.Value;
                 return true;
             }
 
@@ -115,18 +124,18 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
-            var (document, offset) = GetDocumentWithOffsetFromCode(command.Code);
+            var document = await _workspace.ForkDocumentAsync(command.Code);
             var text = await document.GetTextAsync();
             var cursorPosition = text.Lines.GetPosition(new LinePosition(command.Position.Line, command.Position.Character));
-            var absolutePosition = cursorPosition + offset;
             var service = QuickInfoService.GetService(document);
-            var info = await service.GetQuickInfoAsync(document, absolutePosition);
+            var info = await service.GetQuickInfoAsync(document, cursorPosition);
+
             if (info == null)
             {
                 return;
             }
 
-            var scriptSpanStart = text.Lines.GetLinePosition(offset);
+            var scriptSpanStart = text.Lines.GetLinePosition(0);
             var linePosSpan = text.Lines.GetLinePositionSpan(info.Span);
             var correctedLinePosSpan = linePosSpan.SubtractLineOffset(scriptSpanStart);
 
@@ -193,7 +202,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                     {
                         message =
                             string.Join(Environment.NewLine,
-                                (compilationError.InnerException as CompilationErrorException)?.Diagnostics.Select(d => d.ToString()) ?? Enumerable.Empty<string>());
+                                        (compilationError.InnerException as CompilationErrorException)?.Diagnostics.Select(d => d.ToString()) ?? Enumerable.Empty<string>());
                     }
 
                     context.Fail(exception, message);
@@ -243,6 +252,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
                                                    cancellationToken: cancellationToken)
                                                .UntilCancelled(cancellationToken);
             }
+
+            if (ScriptState.Exception is null)
+            {
+                _workspace.AddSubmission(ScriptState);
+            }
         }
 
         public async Task HandleAsync(
@@ -265,12 +279,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
             string code,
             int cursorPosition)
         {
-            var (document, offset) = GetDocumentWithOffsetFromCode(code);
-            var absolutePosition = cursorPosition + offset;
+            var document = await _workspace.ForkDocumentAsync(code);
 
             var service = CompletionService.GetService(document);
-
-            var completionList = await service.GetCompletionsAsync(document, absolutePosition);
+            
+            var completionList = await service.GetCompletionsAsync(document, cursorPosition);
 
             if (completionList is null)
             {
@@ -278,17 +291,21 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
 
             var semanticModel = await document.GetSemanticModelAsync();
-            var symbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(semanticModel, absolutePosition, document.Project.Solution.Workspace);
+            var symbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(
+                              semanticModel, 
+                              cursorPosition, 
+                              document.Project.Solution.Workspace);
 
             var symbolToSymbolKey = new Dictionary<(string, int), ISymbol>();
             foreach (var symbol in symbols)
             {
-                var key = (symbol.Name, (int)symbol.Kind);
+                var key = (symbol.Name, (int) symbol.Kind);
                 if (!symbolToSymbolKey.ContainsKey(key))
                 {
                     symbolToSymbolKey[key] = symbol;
                 }
             }
+
             var items = completionList.Items.Select(item => item.ToModel(symbolToSymbolKey, document)).ToArray();
 
             return items;
@@ -304,7 +321,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 context);
         }
 
-
         void ISupportNuget.RegisterResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
         {
             var references = resolvedReferences
@@ -316,44 +332,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public PackageRestoreContext PackageRestoreContext => _packageRestoreContext.Value;
 
-
-        private (Document document, int offset) GetDocumentWithOffsetFromCode(string code)
-        {
-            var compilation = ScriptState.Script.GetCompilation();
-            var originalCode = ScriptState.Script.Code ?? string.Empty;
-
-            var buffer = new StringBuilder(originalCode);
-            if (!string.IsNullOrWhiteSpace(originalCode) && !originalCode.EndsWith(Environment.NewLine))
-            {
-                buffer.AppendLine();
-            }
-
-            var offset = buffer.Length;
-            buffer.AppendLine(code);
-            var fullScriptCode = buffer.ToString();
-
-            if (_fixture == null || ShouldRebuild())
-            {
-                _fixture = new WorkspaceFixture(compilation.Options, compilation.References);
-            }
-
-            var document = _fixture.ForkDocument(fullScriptCode);
-            return (document, offset);
-
-            bool ShouldRebuild()
-            {
-                return compilation.References.Count() != _fixture.MetadataReferences.Count();
-            }
-        }
-
         private bool HasReturnValue =>
             ScriptState != null &&
-            (bool)_hasReturnValueMethod.Invoke(ScriptState.Script, null);
+            (bool) _hasReturnValueMethod.Invoke(ScriptState.Script, null);
 
         public IEnumerable<string> RestoreSources => ((ISupportNuget) this).PackageRestoreContext.RestoreSources;
 
-        public IEnumerable<PackageReference> RequestedPackageReferences => ((ISupportNuget)this).PackageRestoreContext.RequestedPackageReferences;
+        public IEnumerable<PackageReference> RequestedPackageReferences => ((ISupportNuget) this).PackageRestoreContext.RequestedPackageReferences;
 
-        public IEnumerable<ResolvedPackageReference> ResolvedPackageReferences => ((ISupportNuget)this).PackageRestoreContext.ResolvedPackageReferences;
+        public IEnumerable<ResolvedPackageReference> ResolvedPackageReferences => ((ISupportNuget) this).PackageRestoreContext.ResolvedPackageReferences;
     }
 }

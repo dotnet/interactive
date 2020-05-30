@@ -11,11 +11,11 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.Tests
+namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 {
-    public class LanguageServiceTests : LanguageKernelTestBase
+    public class HoverTextTests : LanguageKernelTestBase
     {
-        public LanguageServiceTests(ITestOutputHelper output) : base(output)
+        public HoverTextTests(ITestOutputHelper output) : base(output)
         {
         }
 
@@ -30,13 +30,12 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             using var kernel = new FakeKernel();
 
-            var commandResult = await SendHoverRequest(kernel, "code", 0, 0);
+            var result = await SendHoverRequest(kernel, "code", 0, 0);
 
-            commandResult
-                .KernelEvents
-                .ToSubscribedList()
-                .Should()
-                .NotContain(kv => kv.GetType().IsSubclassOf(typeof(HoverTextProduced)));
+            result.KernelEvents
+                  .ToSubscribedList()
+                  .Should()
+                  .NotContain(kv => kv is HoverTextProduced);
         }
 
         [Theory]
