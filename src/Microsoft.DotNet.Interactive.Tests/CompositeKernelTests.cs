@@ -74,7 +74,7 @@ new [] {1,2,3}");
             {
                 proxyKernel,
                 fSharpKernel
-            }.UseNamedPipe();
+            }.UseProxyKernel();
             kernel.DefaultKernelName = fSharpKernel.Name;
 
             var pipeName = Guid.NewGuid().ToString();
@@ -85,16 +85,47 @@ new [] {1,2,3}");
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            var proxyCommand = new SubmitCode($@"
-#!named-pipe {pipeName}
-var x = 1 + 1;
-x");
+            var proxyCommand = new SubmitCode($"#!connect test {pipeName}");
 
             await kernel.SendAsync(proxyCommand);
 
-            var proxyCommand2 = new SubmitCode($@"
-#!named-pipe {pipeName}
-var x = 2 + 2;
+            var proxyCommand2 = new SubmitCode(@"
+var x = 1 + 1;
+x", targetKernelName: "test");
+
+            await kernel.SendAsync(proxyCommand2);
+
+            events.Should()
+                  .ContainSingle<CommandHandled>(e => e.Command == proxyCommand);
+        }
+
+        [Fact]
+        public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_directive_as_a_proxy_named_pipe2()
+        {
+            var proxyKernel = new NamedPipeKernel("proxy");
+            var fSharpKernel = new FSharpKernel();
+            using var kernel = new CompositeKernel
+            {
+                proxyKernel,
+                fSharpKernel
+            }.UseProxyKernel();
+            kernel.DefaultKernelName = fSharpKernel.Name;
+
+            var pipeName = Guid.NewGuid().ToString();
+            var cSharpKernel = new CSharpKernel();
+            Action doWait = () =>
+                Task.Run(() => NamedPipeKernelServer.WaitForConnection(cSharpKernel, pipeName));
+            doWait();
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            var proxyCommand = new SubmitCode($"#!connect test {pipeName}");
+
+            await kernel.SendAsync(proxyCommand);
+
+            var proxyCommand2 = new SubmitCode(@"
+#!test
+var x = 1 + 1;
 x");
 
             await kernel.SendAsync(proxyCommand2);

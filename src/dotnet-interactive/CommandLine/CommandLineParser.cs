@@ -424,7 +424,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             var kernel = compositeKernel
                          .UseDefaultMagicCommands()
                          .UseLog()
-                         .UseAbout();
+                         .UseAbout()
+                         .UseProxyKernel();
 
 
             SetUpFormatters(frontendEnvironment, startupOptions);

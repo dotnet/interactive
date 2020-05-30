@@ -144,21 +144,21 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        public static T UseNamedPipe<T>(this T kernel)
+        public static T UseProxyKernel<T>(this T kernel)
             where T : CompositeKernel
         {
-            var command = new Command("#!named-pipe", "Connect to the specified named-pipe.")
+            var command = new Command("#!connect", "Connect to the specified named-pipe.")
             {
+                new Argument<string>("kernel-name"),
                 new Argument<string>("pipe-name")
             };
 
-            command.Handler = CommandHandler.Create<string, KernelInvocationContext>(async (pipeName, context) =>
+            command.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (kernelName, pipeName, context) =>
             {
-                var proxyName = $"named-pipe({pipeName})";
-                var existingProxyKernel = kernel.FindKernel(proxyName);
+                var existingProxyKernel = kernel.FindKernel(kernelName);
                 if (existingProxyKernel == null)
                 {
-                    var proxyKernel = new NamedPipeKernel(proxyName);
+                    var proxyKernel = new NamedPipeKernel(kernelName);
                     try
                     {
                         await proxyKernel.ConnectAsync(pipeName);
@@ -170,7 +170,6 @@ namespace Microsoft.DotNet.Interactive
                         throw;
                     }
                 }
-                await kernel.SubmitCodeAsync($@"#!{proxyName}");
             });
 
             kernel.AddDirective(command);
