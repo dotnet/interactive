@@ -6,7 +6,6 @@ using System.CommandLine;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Server;
-using Pocket;
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine
 {

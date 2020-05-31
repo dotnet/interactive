@@ -16,12 +16,10 @@ using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class NamedPipeKernel : ProxyKernel
+    internal class NamedPipeKernel : ProxyKernel
     {
         private string _pipeName;
         private NamedPipeClientStream _clientStream;
-        private TextReader _reader;
-        private TextWriter _writer;
 
         public NamedPipeKernel(string name) : base(name)
         {
@@ -31,8 +29,8 @@ namespace Microsoft.DotNet.Interactive
         {
             do
             {
-                var line = await _reader.ReadLineAsync();
-                var kernelEvent = KernelEventEnvelope.Deserialize(line).Event;
+                var message = await _clientStream.ReadMessageAsync();
+                var kernelEvent = KernelEventEnvelope.Deserialize(message).Event;
                 PublishEvent(kernelEvent);
                 if (kernelEvent is CommandHandled || kernelEvent is CommandFailed)
                 {
@@ -43,15 +41,15 @@ namespace Microsoft.DotNet.Interactive
 
         protected async override Task HandleRequestCompletion(RequestCompletion command, KernelInvocationContext context)
         {
-            await _writer.WriteLineAsync(KernelCommandEnvelope.Serialize(command));
-            await _writer.FlushAsync();
+            _clientStream.WriteMessage(KernelCommandEnvelope.Serialize(command));
+            await _clientStream.FlushAsync();
             await PollEvents();
         }
 
         protected async override Task HandleSubmitCode(SubmitCode command, KernelInvocationContext context)
         {
-            _writer.WriteLine(KernelCommandEnvelope.Serialize(command));
-            await _writer.FlushAsync();
+            _clientStream.WriteMessage(KernelCommandEnvelope.Serialize(command));
+            await _clientStream.FlushAsync();
             await PollEvents();
         }
 
@@ -70,8 +68,6 @@ namespace Microsoft.DotNet.Interactive
             await clientStream.ConnectAsync();
             clientStream.ReadMode = PipeTransmissionMode.Message;
             _clientStream = clientStream;
-            _reader = new StreamReader(clientStream);
-            _writer = new StreamWriter(clientStream);
             RegisterForDisposal(clientStream);
         }
     }

@@ -68,17 +68,15 @@ new [] {1,2,3}");
         [Fact]
         public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_directive_as_a_proxy_named_pipe()
         {
-            var proxyKernel = new NamedPipeKernel("proxy");
             var fSharpKernel = new FSharpKernel();
             using var kernel = new CompositeKernel
             {
-                proxyKernel,
                 fSharpKernel
             }.UseProxyKernel();
             kernel.DefaultKernelName = fSharpKernel.Name;
 
             var pipeName = Guid.NewGuid().ToString();
-            var cSharpKernel = new CSharpKernel();
+            using var cSharpKernel = new CSharpKernel();
             Action doWait = () =>
                 Task.Run(() => NamedPipeKernelServer.WaitForConnection(cSharpKernel, pipeName));
             doWait();
@@ -102,17 +100,15 @@ x", targetKernelName: "test");
         [Fact]
         public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_directive_as_a_proxy_named_pipe2()
         {
-            var proxyKernel = new NamedPipeKernel("proxy");
             var fSharpKernel = new FSharpKernel();
             using var kernel = new CompositeKernel
             {
-                proxyKernel,
                 fSharpKernel
             }.UseProxyKernel();
             kernel.DefaultKernelName = fSharpKernel.Name;
 
             var pipeName = Guid.NewGuid().ToString();
-            var cSharpKernel = new CSharpKernel();
+            using var cSharpKernel = new CSharpKernel();
             Action doWait = () =>
                 Task.Run(() => NamedPipeKernelServer.WaitForConnection(cSharpKernel, pipeName));
             doWait();
@@ -131,7 +127,7 @@ x");
             await kernel.SendAsync(proxyCommand2);
 
             events.Should()
-                  .ContainSingle<CommandHandled>(e => e.Command == proxyCommand);
+                  .ContainSingle<CommandHandled>(e => e.Command == proxyCommand2);
         }
 
         [Fact]

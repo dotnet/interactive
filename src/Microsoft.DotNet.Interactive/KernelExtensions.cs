@@ -147,13 +147,13 @@ namespace Microsoft.DotNet.Interactive
         public static T UseProxyKernel<T>(this T kernel)
             where T : CompositeKernel
         {
-            var command = new Command("#!connect", "Connect to the specified named-pipe.")
+            var command = new Command("#!connect", "Connect to the specified remote kernel.")
             {
                 new Argument<string>("kernel-name"),
-                new Argument<string>("pipe-name")
+                new Argument<string>("remote-name")
             };
 
-            command.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (kernelName, pipeName, context) =>
+            command.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (kernelName, remoteName, context) =>
             {
                 var existingProxyKernel = kernel.FindKernel(kernelName);
                 if (existingProxyKernel == null)
@@ -161,7 +161,7 @@ namespace Microsoft.DotNet.Interactive
                     var proxyKernel = new NamedPipeKernel(kernelName);
                     try
                     {
-                        await proxyKernel.ConnectAsync(pipeName);
+                        await proxyKernel.ConnectAsync(remoteName);
                         kernel.Add(proxyKernel);
                     }
                     catch

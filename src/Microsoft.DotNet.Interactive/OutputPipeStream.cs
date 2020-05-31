@@ -2,17 +2,17 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
+using System.IO.Pipes;
 using System.Reactive.Subjects;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal class OutputTextStream
+    internal class OutputPipeStream
     {
         private readonly Subject<string> _subject = new Subject<string>();
-        private readonly TextWriter _output;
+        private readonly PipeStream _output;
 
-        public OutputTextStream(TextWriter output)
+        public OutputPipeStream(PipeStream output)
         {
             _output = output ?? throw new ArgumentNullException(nameof(output));
         }
@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void Write(string text)
         {
-            _output.WriteLine(text);
+            _output.WriteMessage(text);
             _output.Flush();
             _subject.OnNext(text);
         }
