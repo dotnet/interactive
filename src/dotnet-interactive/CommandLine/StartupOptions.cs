@@ -41,8 +41,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
         public HttpPortRange HttpPortRange { get; internal set; }
 
-        public string NamedPipe { get; }
-
         public bool EnableHttpApi => HttpPort != null || HttpPortRange != null;
     }
 }
