@@ -110,7 +110,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         {
             Directory.CreateDirectory(_kernelSpecInstallPath.FullName);
             
-            var result = _parser.InvokeAsync($"jupyter install --path {_kernelSpecInstallPath}");
+            _parser.InvokeAsync($"jupyter install --path {_kernelSpecInstallPath}");
 
             var installedKernels = _kernelSpecInstallPath.GetDirectories();
 

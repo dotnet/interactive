@@ -44,9 +44,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         private static void OnCompletionRequestCompleted(CompletionRequestCompleted completionRequestCompleted, IJupyterMessageSender jupyterMessageSender)
         {
+            var startPosition = 0; 
+            var endPosition = 0;
+
             if (completionRequestCompleted.Command is RequestCompletion command)
             {
-                int startPosition, endPosition;
                 if (completionRequestCompleted.Range != null)
                 {
                     startPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionRequestCompleted.Range.GetValueOrDefault().Start);
@@ -58,11 +60,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                     startPosition = SourceUtilities.ComputeReplacementStartPosition(command.Code, cursorOffset);
                     endPosition = cursorOffset;
                 }
-
-                var reply = new CompleteReply(startPosition, endPosition, matches: completionRequestCompleted.CompletionList.Select(e => e.InsertText ?? e.DisplayText).ToList());
-
-                jupyterMessageSender.Send(reply);
             }
+
+            var reply = new CompleteReply(startPosition, endPosition, matches: completionRequestCompleted.CompletionList.Select(e => e.InsertText ?? e.DisplayText).ToList());
+
+            jupyterMessageSender.Send(reply);
         }
     }
 }
