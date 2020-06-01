@@ -141,16 +141,22 @@ Console.WriteLine(1);
         await client.execute(code, 'csharp', outputs => result = outputs, token);
         expect(result).to.deep.equal([
             {
-                outputKind: CellOutputKind.Text,
-                text: '1\r\n'
+                outputKind: CellOutputKind.Rich,
+                data: {
+                    'text/plain': '1\r\n'
+                }
             },
             {
-                outputKind: CellOutputKind.Text,
-                text: '2\r\n'
+                outputKind: CellOutputKind.Rich,
+                data: {
+                    'text/plain': '2\r\n'
+                }
             },
             {
-                outputKind: CellOutputKind.Text,
-                text: '3\r\n'
+                outputKind: CellOutputKind.Rich,
+                data: {
+                    'text/plain': '3\r\n'
+                }
             }
         ]);
     });
