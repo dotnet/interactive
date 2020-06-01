@@ -38,8 +38,11 @@ namespace Microsoft.DotNet.Interactive
 
         public static void WriteMessage(this PipeStream stream, string message)
         {
-            using var writer = new StreamWriter(stream, leaveOpen: true);
+            using var ms = new MemoryStream();
+            using var writer = new StreamWriter(ms);
             writer.Write(message);
+            writer.Flush();
+            stream.Write(ms.ToArray());
         }
     }
 }

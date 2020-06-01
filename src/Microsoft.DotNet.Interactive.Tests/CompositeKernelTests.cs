@@ -135,6 +135,9 @@ y");
 
             events.Should()
                   .ContainSingle<CommandHandled>(e => e.Command == proxyCommand2);
+
+            events.Should()
+                  .ContainSingle<CommandHandled>(e => e.Command == proxyCommand3);
         }
 
         [Fact]
