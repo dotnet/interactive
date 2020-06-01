@@ -80,10 +80,7 @@ export class InteractiveClient {
                     case StandardOutputValueProducedType:
                         {
                             let disp = <DisplayEventBase>eventEnvelope.event;
-                            let output: CellStreamOutput = {
-                                outputKind: CellOutputKind.Text,
-                                text: disp.value.toString(),
-                            };
+                            let output = displayEventToCellOutput(disp);
                             outputs.push(output);
                             reportOutputs();
                         }
