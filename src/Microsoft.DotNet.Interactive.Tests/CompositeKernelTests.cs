@@ -126,6 +126,13 @@ x");
 
             await kernel.SendAsync(proxyCommand2);
 
+            var proxyCommand3 = new SubmitCode(@"
+#!test
+var y = x + x;
+y");
+
+            await kernel.SendAsync(proxyCommand3);
+
             events.Should()
                   .ContainSingle<CommandHandled>(e => e.Command == proxyCommand2);
         }

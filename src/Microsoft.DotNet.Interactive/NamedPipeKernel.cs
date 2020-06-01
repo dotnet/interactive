@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive
         {
         }
 
-        private async Task PollEvents()
+        private async Task PollEvents(string commandToken)
         {
             do
             {
@@ -34,23 +34,28 @@ namespace Microsoft.DotNet.Interactive
                 PublishEvent(kernelEvent);
                 if (kernelEvent is CommandHandled || kernelEvent is CommandFailed)
                 {
-                    break;
+                    if (kernelEvent.Command.GetToken() == commandToken)
+                    {
+                        break;
+                    }
                 }
             } while (true);
         }
 
-        protected async override Task HandleRequestCompletion(RequestCompletion command, KernelInvocationContext context)
+        protected override Task HandleRequestCompletion(RequestCompletion command, KernelInvocationContext context)
         {
-            _clientStream.WriteMessage(KernelCommandEnvelope.Serialize(command));
-            await _clientStream.FlushAsync();
-            await PollEvents();
+            return Task.CompletedTask;
+            //_clientStream.WriteMessage(KernelCommandEnvelope.Serialize(command));
+            //await _clientStream.FlushAsync();
+            //await PollEvents();
         }
 
         protected async override Task HandleSubmitCode(SubmitCode command, KernelInvocationContext context)
         {
-            _clientStream.WriteMessage(KernelCommandEnvelope.Serialize(command));
+            var envelope = KernelCommandEnvelope.Create(command);
+            _clientStream.WriteMessage(KernelCommandEnvelope.Serialize(envelope));
             await _clientStream.FlushAsync();
-            await PollEvents();
+            await PollEvents(envelope.Token);
         }
 
         public string PipeName => _pipeName;
