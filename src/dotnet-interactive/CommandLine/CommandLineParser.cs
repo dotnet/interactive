@@ -137,8 +137,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     Description = "Interactive programming for .NET."
                 };
 
-                command.AddGlobalOption(logPathOption);
-                command.AddGlobalOption(verboseOption);
+                command.AddOption(logPathOption);
+                command.AddOption(verboseOption);
 
                 return command;
             }
@@ -167,9 +167,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
                 {
+                    httpPortRangeOption,
                     logPathOption,
                     verboseOption,
-                    httpPortRangeOption,
                     pathOption
                 };
 
@@ -284,7 +284,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
                 {
                     defaultKernelOption,
-                    logPathOption,
                     httpPortRangeOption
                 };
 

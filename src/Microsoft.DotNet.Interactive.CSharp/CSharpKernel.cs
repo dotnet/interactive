@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         protected CSharpParseOptions _csharpParseOptions =
             new CSharpParseOptions(LanguageVersion.Latest, kind: SourceCodeKind.Script);
 
-        private readonly InteractiveWorkspace _workspace;
+        private InteractiveWorkspace _workspace;
 
         private Lazy<PackageRestoreContext> _packageRestoreContext;
 
@@ -82,6 +82,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
             RegisterForDisposal(() =>
             {
                 _workspace.Dispose();
+                _workspace = null;
+
                 _packageRestoreContext = null;
                 ScriptState = null;
             });

@@ -4,6 +4,7 @@
 using System;
 using System.Threading.Tasks;
 using JetBrains.Profiler.Api;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.App;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -14,58 +15,84 @@ namespace Microsoft.DotNet.Interactive.Profiler
 {
     class Program
     {
-        static async Task Main(string[] args)
+        static async Task Main(
+            Operation operation,
+            int iterationCount = 20,
+            string kernelName = "csharp")
         {
             MemoryProfiler.CollectAllocations(true);
             MemoryProfiler.ForceGc();
 
-            const int iterationCount = 20;
-            foreach (var kernelName in new []{"csharp", "fsharp"})
+            for (var i = 0; i < iterationCount; i++)
             {
-                for (int i = 0; i < iterationCount; i++)
-                {
-                    MemoryProfiler.GetSnapshot($"Before {kernelName} Kernel creation at Iteration {i}");
-                    MemoryProfiler.ForceGc();
-                    var kernel = CreateKernel(kernelName);
-                    MemoryProfiler.ForceGc();
-                    MemoryProfiler.GetSnapshot($"Before {kernelName} Iteration {i}");
+                MemoryProfiler.GetSnapshot($"Before {kernelName} Kernel creation at Iteration {i}");
+                MemoryProfiler.ForceGc();
 
-                    var submitCode = CreateSubmitCode(kernelName);
+                using var kernel = await CreateKernel(
+                                       operation,
+                                       kernelName);
 
-                    await kernel.SendAsync(submitCode);
-                    MemoryProfiler.GetSnapshot($"After {kernelName} Iteration {i}");
-                    kernel.Dispose();
-                    kernel = null;
-                    MemoryProfiler.ForceGc();
-                }
+                MemoryProfiler.ForceGc();
+                MemoryProfiler.GetSnapshot($"Before {kernelName} Iteration {i}");
+
+                await RunProfiledOperation(operation, kernel);
+
+                MemoryProfiler.GetSnapshot($"After {kernelName} Iteration {i}");
+                kernel.Dispose();
+                MemoryProfiler.ForceGc();
             }
-           
         }
 
-        private static SubmitCode CreateSubmitCode(string kernelName)
+        private static async Task RunProfiledOperation(
+            Operation operation,
+            CompositeKernel kernel)
         {
-            switch (kernelName)
+            switch (operation)
+            {
+                case Operation.SubmitCode:
+                    var submitCode = CreateSubmitCode(kernel);
+                    await kernel.SendAsync(submitCode);
+                    break;
+
+                case Operation.RequestCompletion:
+                    var requestCompletion = CreateRequestCompletion(kernel);
+                    await kernel.SendAsync(requestCompletion);
+                    break;
+            }
+        }
+
+        private static RequestCompletion CreateRequestCompletion(IKernel kernel)
+        {
+            return new RequestCompletion(
+                "aaa",
+                new LinePosition(0, 3),
+                kernel.Name);
+        }
+
+        private static SubmitCode CreateSubmitCode(CompositeKernel kernel)
+        {
+            switch (kernel.DefaultKernelName)
             {
                 case "csharp":
-                    return  new SubmitCode(@"
+                    return new SubmitCode(@"
 Console.Write(""value one"");
 Console.Write(""value two"");
-Console.Write(""value three"");"
-                        , targetKernelName: kernelName);
+Console.Write(""value three"");", "csharp");
+
                 case "fsharp":
                     return new SubmitCode(@"open System
 Console.Write(""value one"")
 Console.Write(""value two"")
-Console.Write(""value three"")"
-                        , targetKernelName: kernelName);
+Console.Write(""value three"")", "fsharp");
+
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(kernelName), $"kernel {kernelName} not supported");
+                    throw new ArgumentOutOfRangeException($"kernel {kernel.DefaultKernelName} not supported");
             }
-
-
         }
 
-        private static IKernel CreateKernel(string kernelName)
+        private static async Task<CompositeKernel> CreateKernel(
+            Operation operation,
+            string kernelName)
         {
             var kernel = new CompositeKernel
                 {
@@ -90,6 +117,23 @@ Console.Write(""value three"")"
 
             kernel.DefaultKernelName = kernelName;
             kernel.Name = ".NET";
+
+            switch (operation)
+            {
+                case Operation.RequestCompletion:
+
+                    var code = kernelName switch
+                    {
+                        "csharp" => "var aaaaaa = 123;",
+                        "fsharp" => "let aaaaaa = 123",
+                        _ => throw new ArgumentOutOfRangeException(nameof(kernelName))
+                    };
+
+                    await kernel.SendAsync(
+                        new SubmitCode(code, targetKernelName: kernelName));
+                    break;
+            }
+
             return kernel;
         }
     }

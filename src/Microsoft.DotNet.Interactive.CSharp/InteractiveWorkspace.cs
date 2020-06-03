@@ -35,6 +35,12 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 SourceCodeKind.Script);
 
             _disposables.Add(workspace);
+
+            _disposables.Add(Disposable.Create(() =>
+            {
+                _currentCompilation = null;
+                _solution = null;
+            }));
         }
 
         public void AddSubmission(ScriptState scriptState)

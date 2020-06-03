@@ -160,7 +160,6 @@ type FSharpKernel() as this =
         member _.HandleAsync(command, context): Task =
             handleRequestCompletion command context |> Async.StartAsTask :> Task
 
-    // Integrate nuget package management to the F# Kernel
     interface ISupportNuget with
         member _.AddRestoreSource(source: string) =
             this.PackageRestoreContext.AddRestoreSource source
