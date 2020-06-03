@@ -40,6 +40,8 @@ try {
         Write-Host "Package version $expectedVersion not found on feed $toolFeed"
         exit 1
     }
+
+    exit 0
 }
 catch {
     Write-Host $_
