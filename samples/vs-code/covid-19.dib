@@ -58,7 +58,6 @@ var displayedValue = display("Processing data");
 var offset = 4;
 var series = new List<object>();
 for(var i = offset; i <  deaths.Columns.Count; i++){
-    await Task.Delay(100);
     var date = deaths.Columns[i].Name;
     var deathFiltered = deaths[deaths.Columns[i].ElementwiseNotEquals(0)];
     var confirmedFiltered = confirmed[confirmed.Columns[i].ElementwiseNotEquals(0)];
