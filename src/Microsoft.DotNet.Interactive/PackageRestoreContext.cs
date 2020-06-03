@@ -6,16 +6,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.Loader;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using static Pocket.Logger;
 using Microsoft.DotNet.DependencyManager;
-using System.Runtime.InteropServices.ComTypes;
-using System.Collections.ObjectModel;
 using System.Globalization;
 
 namespace Microsoft.DotNet.Interactive
@@ -23,7 +18,6 @@ namespace Microsoft.DotNet.Interactive
     public class PackageRestoreContext : IDisposable
     {
         private const string restoreTfm = "netcoreapp3.1";
-        private const string packageKey = "nuget";
         private readonly ConcurrentDictionary<string, PackageReference> _requestedPackageReferences = new ConcurrentDictionary<string, PackageReference>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, ResolvedPackageReference> _resolvedPackageReferences = new Dictionary<string, ResolvedPackageReference>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _restoreSources = new HashSet<string>();
@@ -40,7 +34,9 @@ namespace Microsoft.DotNet.Interactive
             foreach (var package in _resolvedPackageReferences.Values)
             {
                 foreach (var fi in package.AssemblyPaths)
+                {
                     yield return fi.FullName;
+                }
             }
         }
 
@@ -121,41 +117,49 @@ namespace Microsoft.DotNet.Interactive
 
         private bool TryGetPackageAndVersionFromPackageRoot(DirectoryInfo packageRoot, out PackageReference packageReference)
         {
-            try
+            // packageRoot looks similar to:
+            //    C:/Users/userid/.nuget/packages/fsharp.data/3.3.3/
+            //    3.3.3 is the package version
+            // fsharp.data is the package name
+            var packageName = packageRoot?.Parent?.Name;
+            var packageVersion = packageRoot?.Name;
+
+            if (!string.IsNullOrWhiteSpace(packageName) && 
+                !string.IsNullOrWhiteSpace(packageVersion))
             {
-                // packageRoot looks similar to:
-                //    C:/Users/userid/.nuget/packages/fsharp.data/3.3.3/
-                //    3.3.3 is the package version
-                // fsharp.data is the package name
-                var packageName = packageRoot.Parent.Name;
-                var packageVersion = packageRoot.Name;
-                if (_requestedPackageReferences.TryGetValue(packageName.ToLower(CultureInfo.InvariantCulture), out var requested))
+                try
                 {
-                    packageName = requested.PackageName;
+                    if (_requestedPackageReferences.TryGetValue(packageName.ToLower(CultureInfo.InvariantCulture), out var requested))
+                    {
+                        packageName = requested.PackageName;
+                    }
+
+                    packageReference = new PackageReference(packageName, packageVersion);
+                    return true;
                 }
-                packageReference = new PackageReference(packageName, packageVersion);
-                return true;
+                catch (Exception)
+                {
+                }
             }
-            catch(Exception)
-            {
-                packageReference = default(PackageReference);
-                return false;
-            }
+
+            packageReference = default;
+            return false;
         }
 
         private IEnumerable<FileInfo> GetAssemblyPathsForPackage(DirectoryInfo root, IEnumerable<FileInfo> resolutions)
         {
-            foreach(var resolution in resolutions)
+            foreach (var resolution in resolutions)
             {
                 // Is the resolution within the package
-                if(resolution.DirectoryName.StartsWith(root.FullName))
+                if (resolution.DirectoryName.StartsWith(root.FullName))
+                {
                     yield return resolution;
+                }
             }
         }
 
         private IEnumerable<ResolvedPackageReference> GetResolvedPackageReferences(
             IEnumerable<FileInfo> resolutions,
-            IEnumerable<FileInfo> files,
             IEnumerable<DirectoryInfo> packageRoots)
         {
             foreach (var root in packageRoots)
@@ -178,6 +182,7 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
         }
+
         private void OnAssemblyLoad(object sender, AssemblyLoadEventArgs args)
         {
             if (args.LoadedAssembly.IsDynamic ||
@@ -185,6 +190,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 return;
             }
+
             Log.Info("OnAssemblyLoad: {location}", args.LoadedAssembly.Location);
         }
 
@@ -201,30 +207,27 @@ namespace Microsoft.DotNet.Interactive
             return _dependencies.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm);
         }
 
-
         public async Task<PackageRestoreResult> RestoreAsync()
         {
             var newlyRequested = _requestedPackageReferences
-                                        .Select(r => r.Value)
-                                        .Where(r => !_resolvedPackageReferences.ContainsKey(r.PackageName.ToLower(CultureInfo.InvariantCulture)))
-                                        .ToArray();
+                                 .Select(r => r.Value)
+                                 .Where(r => !_resolvedPackageReferences.ContainsKey(r.PackageName.ToLower(CultureInfo.InvariantCulture)))
+                                 .ToArray();
 
             var errors = new List<string>();
 
-            ResolvingErrorReport ReportError = (ErrorReportType errorType, int code, string message) =>
-            {
-                errors.Add($"PackageManagement {(errorType.IsError ? "Error" : "Warning")} {code} {message}");
-            };
-
             var result =
-                await Task.Run(() => {
-                    return Resolve(GetPackageManagerLines(), restoreTfm, ReportError);
-                });
+                await Task.Run(() => 
+                     Resolve(GetPackageManagerLines(), restoreTfm, ReportError)
+                );
+
+
+            PackageRestoreResult packageRestoreResult;
 
             if (!result.Success)
             {
                 errors.AddRange(result.StdOut);
-                return new PackageRestoreResult(
+                packageRestoreResult = new PackageRestoreResult(
                     succeeded: false,
                     requestedPackages: newlyRequested,
                     errors: errors);
@@ -234,7 +237,6 @@ namespace Microsoft.DotNet.Interactive
                 var previouslyResolved = _resolvedPackageReferences.Values.ToArray();
 
                 var resolved = GetResolvedPackageReferences(result.Resolutions.Select(r => new FileInfo(r)),
-                                                            result.SourceFiles.Select(s => new FileInfo(s)),
                                                             result.Roots.Select(r => new DirectoryInfo(r)));
 
                 foreach (var reference in resolved)
@@ -243,16 +245,25 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 var resolvedReferences = _resolvedPackageReferences
-                                        .Values
-                                        .Except(previouslyResolved)
-                                        .ToList();
-                return new PackageRestoreResult(
-                    succeeded: true,
-                    requestedPackages: newlyRequested,
-                    resolvedReferences: _resolvedPackageReferences
-                                        .Values
-                                        .Except(previouslyResolved)
-                                        .ToList());
+                                         .Values
+                                         .Except(previouslyResolved)
+                                         .ToList();
+
+                packageRestoreResult =
+                    new PackageRestoreResult(
+                        succeeded: true,
+                        requestedPackages: newlyRequested,
+                        resolvedReferences: _resolvedPackageReferences
+                                            .Values
+                                            .Except(previouslyResolved)
+                                            .ToList());
+            }
+
+            return packageRestoreResult;
+
+            void ReportError(ErrorReportType errorType, int code, string message)
+            {
+                errors.Add($"PackageManagement {(errorType.IsError ? "Error" : "Warning")} {code} {message}");
             }
         }
 

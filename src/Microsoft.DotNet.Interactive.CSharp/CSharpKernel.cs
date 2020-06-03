@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         private readonly InteractiveWorkspace _workspace;
 
-        private readonly Lazy<PackageRestoreContext> _packageRestoreContext;
+        private Lazy<PackageRestoreContext> _packageRestoreContext;
 
         internal ScriptOptions ScriptOptions =
             ScriptOptions.Default
@@ -82,6 +82,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             RegisterForDisposal(() =>
             {
                 _workspace.Dispose();
+                _packageRestoreContext = null;
                 ScriptState = null;
             });
         }
@@ -321,6 +322,19 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 context);
         }
 
+        public PackageRestoreContext PackageRestoreContext => _packageRestoreContext.Value;
+
+        private bool HasReturnValue =>
+            ScriptState != null &&
+            (bool) _hasReturnValueMethod.Invoke(ScriptState.Script, null);
+
+        void ISupportNuget.AddRestoreSource(string source) => _packageRestoreContext.Value.AddRestoreSource(source);
+
+        PackageReference ISupportNuget.GetOrAddPackageReference(string packageName, string packageVersion) =>
+            _packageRestoreContext.Value.GetOrAddPackageReference(
+                packageName,
+                packageVersion);
+
         void ISupportNuget.RegisterResolvedPackageReferences(IReadOnlyList<ResolvedPackageReference> resolvedReferences)
         {
             var references = resolvedReferences
@@ -330,16 +344,15 @@ namespace Microsoft.DotNet.Interactive.CSharp
             ScriptOptions = ScriptOptions.AddReferences(references);
         }
 
-        public PackageRestoreContext PackageRestoreContext => _packageRestoreContext.Value;
+        Task<PackageRestoreResult> ISupportNuget.RestoreAsync() => _packageRestoreContext.Value.RestoreAsync();
 
-        private bool HasReturnValue =>
-            ScriptState != null &&
-            (bool) _hasReturnValueMethod.Invoke(ScriptState.Script, null);
+        public IEnumerable<PackageReference> RequestedPackageReferences => 
+            PackageRestoreContext.RequestedPackageReferences;
 
-        public IEnumerable<string> RestoreSources => ((ISupportNuget) this).PackageRestoreContext.RestoreSources;
+        public IEnumerable<ResolvedPackageReference> ResolvedPackageReferences => 
+            PackageRestoreContext.ResolvedPackageReferences;
 
-        public IEnumerable<PackageReference> RequestedPackageReferences => ((ISupportNuget) this).PackageRestoreContext.RequestedPackageReferences;
-
-        public IEnumerable<ResolvedPackageReference> ResolvedPackageReferences => ((ISupportNuget) this).PackageRestoreContext.ResolvedPackageReferences;
+        public IEnumerable<string> RestoreSources => 
+            PackageRestoreContext.RestoreSources;
     }
 }

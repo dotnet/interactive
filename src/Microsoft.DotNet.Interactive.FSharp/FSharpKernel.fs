@@ -162,6 +162,24 @@ type FSharpKernel() as this =
 
     // Integrate nuget package management to the F# Kernel
     interface ISupportNuget with
+        member _.AddRestoreSource(source: string) =
+            this.PackageRestoreContext.AddRestoreSource source
+
+        member _.GetOrAddPackageReference(packageName: string, packageVersion: string) =
+            this.PackageRestoreContext.GetOrAddPackageReference (packageName, packageVersion)
+
+        member _.RestoreAsync() = 
+            this.PackageRestoreContext.RestoreAsync()
+
+        member _.RestoreSources = 
+            this.PackageRestoreContext.RestoreSources
+
+        member _.RequestedPackageReferences = 
+            this.PackageRestoreContext.RequestedPackageReferences
+
+        member _.ResolvedPackageReferences =
+            this.PackageRestoreContext.ResolvedPackageReferences
+
         member _.RegisterResolvedPackageReferences (packageReferences: IReadOnlyList<ResolvedPackageReference>) =
             // Generate #r and #I from packageReferences
             let sb = StringBuilder()
@@ -183,8 +201,6 @@ type FSharpKernel() as this =
                             sb.Append(Environment.NewLine) |> ignore
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command)
-
-        member _.PackageRestoreContext = this.PackageRestoreContext
 
     interface IExtensibleKernel with
         member this.LoadExtensionsFromDirectoryAsync(directory:DirectoryInfo, context:KernelInvocationContext) =

@@ -17,17 +17,15 @@ namespace Microsoft.DotNet.Interactive
 {
     public static class KernelSupportsNugetExtensions
     {
-        public static T UseNugetDirective<T>(this T kernel) where T: KernelBase, ISupportNuget
+        public static T UseNugetDirective<T>(this T kernel) 
+            where T: KernelBase, ISupportNuget
         {
-            var iSupportNuget = kernel as ISupportNuget;
-            var restoreContext = iSupportNuget.PackageRestoreContext;
-
-            kernel.AddDirective(i(restoreContext));
-            kernel.AddDirective(r(restoreContext));
+            kernel.AddDirective(i(kernel));
+            kernel.AddDirective(r(kernel));
 
             var restore = new Command("#!nuget-restore")
             {
-                Handler = CommandHandler.Create(DoNugetRestore(kernel, restoreContext)),
+                Handler = CommandHandler.Create(DoNugetRestore(kernel, kernel)),
                 IsHidden = true
             };
 
@@ -36,7 +34,7 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        private static Command i(PackageRestoreContext restoreContext)
+        private static Command i(ISupportNuget nugetKernel)
         {
             var iDirective = new Command("#i")
             {
@@ -44,11 +42,11 @@ namespace Microsoft.DotNet.Interactive
             };
             iDirective.Handler = CommandHandler.Create<string, KernelInvocationContext>((source, context) =>
             {
-                restoreContext.AddRestoreSource(source.Replace("nuget:", ""));
+                nugetKernel.AddRestoreSource(source.Replace("nuget:", ""));
 
                 IHtmlContent content = div(
                     strong("Restore sources"),
-                    ul(restoreContext.RestoreSources
+                    ul(nugetKernel.RestoreSources
                                     .Select(s => li(span(s)))));
 
                 context.DisplayAsync(content);
@@ -56,7 +54,7 @@ namespace Microsoft.DotNet.Interactive
             return iDirective;
         }
 
-        private static Command r(PackageRestoreContext restoreContext)
+        private static Command r(ISupportNuget nugetKernel)
         {
             var rDirective = new Command("#r")
             {
@@ -98,8 +96,8 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (package?.Value is PackageReference pkg)
                 {
-                    var alreadyGotten = restoreContext.ResolvedPackageReferences
-                                                      .Concat(restoreContext.RequestedPackageReferences)
+                    var alreadyGotten = nugetKernel.ResolvedPackageReferences
+                                                      .Concat(nugetKernel.RequestedPackageReferences)
                                                       .FirstOrDefault(r => r.PackageName.Equals(pkg.PackageName, StringComparison.OrdinalIgnoreCase));
 
                     if (alreadyGotten is { } && !string.IsNullOrWhiteSpace(pkg.PackageVersion) && pkg.PackageVersion != alreadyGotten.PackageVersion)
@@ -109,7 +107,7 @@ namespace Microsoft.DotNet.Interactive
                     }
                     else
                     {
-                        var added = restoreContext.GetOrAddPackageReference(pkg.PackageName, pkg.PackageVersion);
+                        var added = nugetKernel.GetOrAddPackageReference(pkg.PackageName, pkg.PackageVersion);
 
                         if (added is null)
                         {
@@ -163,7 +161,7 @@ namespace Microsoft.DotNet.Interactive
 
         internal static KernelCommandInvocation DoNugetRestore(
             KernelBase kernel,
-            PackageRestoreContext restoreContext)
+            ISupportNuget restoreContext)
         {
             return async (command, invocationContext) =>
             {
@@ -188,8 +186,8 @@ namespace Microsoft.DotNet.Interactive
                         requestedPackageIds.Add(id, package);
                     }
 
-                    // Restore packages
                     var restorePackagesTask = restoreContext.RestoreAsync();
+
                     while (await Task.WhenAny(Task.Delay(500), restorePackagesTask) != restorePackagesTask)
                     {
                         foreach (var package in messages.Keys.ToArray())
@@ -224,7 +222,7 @@ namespace Microsoft.DotNet.Interactive
                             context.Publish(new PackageAdded(resolvedReference));
                         }
 
-                        foreach (var (id, package) in requestedPackageIds)
+                        foreach (var package in requestedPackageIds.Values)
                         {
                             if (displayedValues.TryGetValue(
                                 PackageReferenceComparer.GetDisplayValueId(package), out var displayedValue))
