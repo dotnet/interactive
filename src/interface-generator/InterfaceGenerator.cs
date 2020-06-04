@@ -45,6 +45,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
         public static string Generate()
         {
             var builder = new StringBuilder();
+
             var commandTypes = typeof(IKernelCommand)
                                .Assembly
                                .ExportedTypes

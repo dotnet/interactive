@@ -22,10 +22,5 @@ namespace Microsoft.DotNet.Interactive
                 command.Code,
                 HtmlFormatter.MimeType);
         }
-
-        protected override Task HandleRequestCompletion(RequestCompletion command, KernelInvocationContext context)
-        {
-            throw new NotSupportedException();
-        }
     }
 }

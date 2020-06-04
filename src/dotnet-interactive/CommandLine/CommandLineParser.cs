@@ -148,7 +148,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 var httpPortRangeOption = new Option<HttpPortRange>(
                     "--http-port-range",
                     parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
-                    description: "Specifies the range of port to use to enable HTTP services",
+                    description: "Specifies the range of ports to use to enable HTTP services",
                     isDefault: true );
 
                 var command = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel")
@@ -167,9 +167,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
                 {
+                    httpPortRangeOption,
                     logPathOption,
                     verboseOption,
-                    httpPortRangeOption,
                     pathOption
                 };
 
@@ -218,32 +218,31 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             Command HttpServer()
             {
                 var httpPortOption = new Option<HttpPort>(
-               "--http-port",
-               description: "Specifies the port on which to enable HTTP services",
-               parseArgument: result =>
-               {
-                   if (result.Tokens.Count == 0)
-                   {
-                       return HttpPort.Auto;
-                   }
+                    "--http-port",
+                    description: "Specifies the port on which to enable HTTP services",
+                    parseArgument: result =>
+                    {
+                        if (result.Tokens.Count == 0)
+                        {
+                            return HttpPort.Auto;
+                        }
 
-                   var source = result.Tokens[0].Value;
+                        var source = result.Tokens[0].Value;
 
-                   if (source == "*")
-                   {
-                       return HttpPort.Auto;
-                   }
+                        if (source == "*")
+                        {
+                            return HttpPort.Auto;
+                        }
 
-                   if (!int.TryParse(source, out var portNumber))
-                   {
-                       result.ErrorMessage = "Must specify a port number or *.";
-                       return null;
-                   }
+                        if (!int.TryParse(source, out var portNumber))
+                        {
+                            result.ErrorMessage = "Must specify a port number or *.";
+                            return null;
+                        }
 
-                   return new HttpPort(portNumber);
-               },
-               isDefault: true);
-
+                        return new HttpPort(portNumber);
+                    },
+                    isDefault: true);
 
                 var command = new Command("http", "Starts dotnet-interactive with kernel functionality exposed over http")
                 {
@@ -259,14 +258,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             services,
                             startupOptions,
                             options.DefaultKernel, serviceCollection =>
-                        {
-                            serviceCollection.AddSingleton(_ =>
                             {
-                                var frontendEnvironment = new BrowserFrontendEnvironment();
-                                return frontendEnvironment;
+                                serviceCollection.AddSingleton(_ =>
+                                {
+                                    var frontendEnvironment = new BrowserFrontendEnvironment();
+                                    return frontendEnvironment;
+                                });
+                                serviceCollection.AddSingleton<FrontendEnvironment>(c => c.GetRequiredService<BrowserFrontendEnvironment>());
                             });
-                            serviceCollection.AddSingleton<FrontendEnvironment>(c => c.GetRequiredService<BrowserFrontendEnvironment>());
-                        });
                         return startHttp(startupOptions, console, startServer, context);
                     });
 
@@ -278,14 +277,13 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 var httpPortRangeOption = new Option<HttpPortRange>(
                     "--http-port-range",
                     parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
-                    description: "Specifies the range of port to use to enable HTTP services");
+                    description: "Specifies the range of ports to use to enable HTTP services");
 
                 var command = new Command(
                     "stdio",
                     "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
                 {
                     defaultKernelOption,
-                    logPathOption,
                     httpPortRangeOption
                 };
 
@@ -310,9 +308,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                             return startHttp(startupOptions, console, startServer, context);
                         }
+
                         return startStdIO(
                             startupOptions,
-                            CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(), startupOptions, null),
+                            CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(), startupOptions),
                             console);
                     });
 
@@ -425,7 +424,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                          .UseDefaultMagicCommands()
                          .UseLog()
                          .UseAbout();
-
 
             SetUpFormatters(frontendEnvironment, startupOptions);
 

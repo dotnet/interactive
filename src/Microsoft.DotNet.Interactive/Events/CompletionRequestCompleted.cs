@@ -10,16 +10,6 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public class CompletionRequestCompleted : KernelEventBase
     {
-        /// <summary>
-        /// The range of where to replace in a completion request.
-        /// </summary>
-        public LinePositionSpan? Range;
-
-        /// <summary>
-        /// The list of completion options.
-        /// </summary>
-        public IEnumerable<CompletionItem> CompletionList { get; }
-
         public CompletionRequestCompleted(
             IEnumerable<CompletionItem> completionList,
             IKernelCommand command,
@@ -28,5 +18,15 @@ namespace Microsoft.DotNet.Interactive.Events
             CompletionList = completionList ?? throw new ArgumentNullException(nameof(completionList));
             Range = range;
         }
+
+        /// <summary>
+        /// The range of where to replace in a completion request.
+        /// </summary>
+        public LinePositionSpan? Range { get; set; }
+
+        /// <summary>
+        /// The list of completion options.
+        /// </summary>
+        public IEnumerable<CompletionItem> CompletionList { get; }
     }
 }

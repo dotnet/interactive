@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (!succeeded && errors?.Count == 0)
             {
-                throw new ArgumentException("Must provide errors when succeeded is false.");                //TBD: Localize
+                throw new ArgumentException("Must provide errors when succeeded is false.");
             }
 
             Succeeded = succeeded;

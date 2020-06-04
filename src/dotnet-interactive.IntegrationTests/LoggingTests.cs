@@ -10,19 +10,32 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.App.IntegrationTests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
+using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.App.IntegrationTests
 {
     public class LoggingTests
     {
-        [IntegrationFact]
+        private readonly ITestOutputHelper _output;
+
+        public LoggingTests(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
+        [IntegrationFact(Skip = "https://github.com/dotnet/interactive/issues/502")]
         public async Task kernel_server_honors_log_path()
         {
             using var logPath = DisposableDirectory.Create();
+
+            _output.WriteLine($"Created log file: {logPath.Directory.FullName}");
+
             using var outputReceived = new ManualResetEvent(false);
             var outputLock = new object();
             var receivedOutput = false;
             var errorLines = new List<string>();
+            var waitTime = TimeSpan.FromSeconds(10);
 
             // start as external process
             var kernelServerProcess = ProcessHelper.Start(
@@ -44,10 +57,10 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
 
             // wait for log file to be created
             var logFile = await logPath.Directory.WaitForFile(
-                timeout: TimeSpan.FromSeconds(2),
-                predicate: _file => true); // any matching file is the one we want
-            errorLines.Should().BeEmpty();
-            logFile.Should().NotBeNull("unable to find created log file");
+                              timeout: waitTime,
+                              predicate: _file => true); // any matching file is the one we want
+            errorLines.Should().BeEmpty("there should not be any errors");
+            logFile.Should().NotBeNull($"a log file should have been created at {logFile.FullName}");
 
             // submit code
             var submissionJson = @"{""token"":""abc"",""commandType"":""SubmitCode"",""command"":{""code"":""1+1"",""submissionType"":0,""targetKernelName"":null}}";
@@ -55,21 +68,21 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
             await kernelServerProcess.StandardInput.FlushAsync();
 
             // wait for output to proceed
-            var gotOutput = outputReceived.WaitOne(timeout: TimeSpan.FromSeconds(2));
+            var gotOutput = outputReceived.WaitOne(timeout: TimeSpan.FromSeconds(4));
             gotOutput.Should().BeTrue("expected to receive on stdout");
 
             // kill
-            kernelServerProcess.StandardInput.Close(); // simulate Ctrl+C
-            await Task.Delay(TimeSpan.FromSeconds(2)); // allow logs to be flushed
+            await Task.Delay(TimeSpan.FromSeconds(4)); // allow logs to be flushed
             kernelServerProcess.Kill();
-            kernelServerProcess.WaitForExit(2000).Should().BeTrue();
+            kernelServerProcess.WaitForExit(2000).Should().BeTrue("process should exit quickly");
             errorLines.Should().BeEmpty();
 
             // check log file for expected contents
             (await logFile.WaitForFileCondition(
-                timeout: TimeSpan.FromSeconds(2),
-                predicate: file => file.Length > 0))
-                .Should().BeTrue("expected non-empty log file");
+                 timeout: waitTime,
+                 predicate: file => file.Length > 0))
+                .Should()
+                .BeTrue($"expected non-empty log file within {waitTime.TotalSeconds}s");
             var logFileContents = File.ReadAllText(logFile.FullName);
             logFileContents.Should().Contain("ℹ OnAssemblyLoad: ");
         }

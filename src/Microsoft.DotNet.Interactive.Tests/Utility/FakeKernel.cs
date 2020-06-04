@@ -21,11 +21,5 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             Handle(command, context);
             return Task.CompletedTask;
         }
-
-        protected override Task HandleRequestCompletion(RequestCompletion command, KernelInvocationContext context)
-        {
-            Handle(command, context);
-            return Task.CompletedTask;
-        }
     }
 }
