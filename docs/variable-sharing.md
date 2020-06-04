@@ -4,7 +4,7 @@ Because .NET Interactive enables you to write code in multiple languages within 
 
 <img src="https://user-images.githubusercontent.com/547415/82468160-55d48c00-9a77-11ea-89f6-6b167d4cf8a2.png" width="40%">
 
-_Note_: When sharing a variable with a kernel where its compilation requirements aren't met, for example due to a missing `using` (C#) or `open` (F#) declaration or a missing assembly reference, this operation will fail. This limitation may be lifted in the future but for now, if you want to share variables of types that aren't imported by default, you will have to explicitly run the necessary import code in the destination kernel.
+_Note: When sharing a variable with a kernel where its compilation requirements aren't met, for example due to a missing `using` (C#) or `open` (F#) declaration or a missing assembly reference, this operation will fail. This limitation may be lifted in the future but for now, if you want to share variables of types that aren't imported by default, you will have to explicitly run the necessary import code in the destination kernel._
 
 Variables are shared by reference for reference types. A consequence of this is that if you share a mutable object, changes to its state will be visible across kernels:
 
