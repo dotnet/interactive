@@ -16,7 +16,15 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             var disposable = Program.StartToolLogging(startupOptions);
             var server = CreateServer(kernel, console);
             kernel.RegisterForDisposal(disposable);
-            await server.Input.LastAsync();
+            try
+            {
+                await server.Input.LastAsync();
+            }
+            catch
+            {
+                var a = 12;
+            }
+
             return 0;
         }
 

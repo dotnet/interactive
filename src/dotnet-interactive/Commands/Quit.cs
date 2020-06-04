@@ -10,12 +10,13 @@ namespace Microsoft.DotNet.Interactive.App.Commands
 {
     public class Quit : KernelCommandBase
     {
+
         public Quit(Action processTermination = null, string targetKernelName = null): base(targetKernelName)
         {
-            processTermination ??= () =>
+            processTermination ??= DefaultTermination ??(() =>
             {
                 Environment.Exit(0);
-            };
+            });
 
             Handler = (command, context) =>
             {
@@ -24,5 +25,7 @@ namespace Microsoft.DotNet.Interactive.App.Commands
                 return Task.CompletedTask;
             };
         }
+
+        internal static Action DefaultTermination { get; set; }
     }
 }

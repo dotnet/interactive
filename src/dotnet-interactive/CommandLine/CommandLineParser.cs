@@ -9,8 +9,11 @@ using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Text.Encodings.Web;
+using System.Threading;
 using System.Threading.Tasks;
+
 using Clockwise;
+
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.App.Commands;
@@ -25,7 +28,9 @@ using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using Recipes;
+
 using CommandHandler = System.CommandLine.Invocation.CommandHandler;
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine
@@ -151,7 +156,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     "--http-port-range",
                     parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
                     description: "Specifies the range of ports to use to enable HTTP services",
-                    isDefault: true );
+                    isDefault: true);
 
                 var command = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel")
                 {
@@ -165,7 +170,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     }.ExistingOnly()
                 };
 
-                command.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext>(JupyterHandler);
+                command.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext, CancellationToken>(JupyterHandler);
 
                 var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
                 {
@@ -181,7 +186,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 return command;
 
-                Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context)
+                Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context, CancellationToken cancellationToken)
                 {
                     services = RegisterKernelInServiceCollection(
                         services,
@@ -192,6 +197,13 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             serviceCollection.AddSingleton(_ => new HtmlNotebookFrontedEnvironment());
                             serviceCollection.AddSingleton<FrontendEnvironment>(c =>
                                 c.GetService<HtmlNotebookFrontedEnvironment>());
+                        },
+                        kernel =>
+                        {
+                            cancellationToken.Register(async () =>
+                            {
+                                await kernel.SendAsync(new Quit());
+                            });
                         });
 
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
@@ -253,14 +265,15 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     logPathOption
                 };
 
-                command.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
-                    (startupOptions, options, console, context) =>
+                command.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext, CancellationToken>(
+                    (startupOptions, options, console, context, cancellationToken) =>
                     {
                         ExtendProtocol();
                         RegisterKernelInServiceCollection(
                             services,
                             startupOptions,
-                            options.DefaultKernel, serviceCollection =>
+                            options.DefaultKernel,
+                            serviceCollection =>
                             {
                                 serviceCollection.AddSingleton(_ =>
                                 {
@@ -268,7 +281,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                     return frontendEnvironment;
                                 });
                                 serviceCollection.AddSingleton<FrontendEnvironment>(c => c.GetRequiredService<BrowserFrontendEnvironment>());
+                            },
+                        kernel =>
+                        {
+                            cancellationToken.Register(async () =>
+                            {
+                                await kernel.SendAsync(new Quit());
                             });
+                        });
                         return startHttp(startupOptions, console, startServer, context);
                     });
 
@@ -290,8 +310,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     httpPortRangeOption
                 };
 
-                command.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
-                    (startupOptions, options, console, context) =>
+                command.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext, CancellationToken>(
+                    (startupOptions, options, console, context, cancellationToken) =>
                     {
                         ExtendProtocol();
                         if (startupOptions.EnableHttpApi)
@@ -308,15 +328,36 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                 }, kernel =>
                                 {
                                     StdIOCommand.CreateServer(kernel, console);
+
+                                    cancellationToken.Register(async () =>
+                                    {
+                                        await kernel.SendAsync(new Quit());
+                                    });
                                 });
 
                             return startHttp(startupOptions, console, startServer, context);
                         }
 
-                        return startStdIO(
-                            startupOptions,
-                            CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(), startupOptions),
-                            console);
+                        {
+                            var kernel = CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(),
+                                startupOptions);
+                            
+                            Quit.DefaultTermination = () =>
+                            {
+                                kernel.Dispose();
+                                Environment.Exit(0);
+                            };
+
+                            cancellationToken.Register(async () =>
+                            {
+                                await kernel.SendAsync(new Quit());
+                            });
+
+                            return startStdIO(
+                                startupOptions,
+                                kernel,
+                                console);
+                        }
                     });
 
                 return command;

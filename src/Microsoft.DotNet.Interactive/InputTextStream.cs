@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive
@@ -15,10 +16,14 @@ namespace Microsoft.DotNet.Interactive
         private readonly TextReader _input;
         private readonly Subject<string> _channel = new Subject<string>();
         private bool _complete;
+        private readonly CancellationTokenSource _cancellationSource;
+
 
         public InputTextStream(TextReader input)
         {
             _input = input ?? throw new ArgumentNullException(nameof(input));
+            _cancellationSource = new CancellationTokenSource();
+            
         }
 
         public IDisposable Subscribe(IObserver<string> observer)
@@ -46,7 +51,7 @@ namespace Microsoft.DotNet.Interactive
 
             Task.Run(async () =>
             {
-                while (!_complete)
+                while (!_complete && !_cancellationSource.IsCancellationRequested)
                 {
                     var line = await _input.ReadLineAsync();
                     if (line == null)
@@ -58,13 +63,15 @@ namespace Microsoft.DotNet.Interactive
                         _channel.OnNext(line);
                     }
                 }
-            });
+            }, _cancellationSource.Token);
         }
 
         public void Dispose()
         {
+            _channel.OnNext(string.Empty);
             _channel.OnCompleted();
             _complete = true;
+            _cancellationSource.Cancel(false);
         }
 
         public bool IsStarted { get; private set; }
