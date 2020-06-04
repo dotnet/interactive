@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Clockwise;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.App.Commands;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -20,6 +21,7 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Microsoft.DotNet.Interactive.PowerShell;
+using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -254,6 +256,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 command.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
                     (startupOptions, options, console, context) =>
                     {
+                        ExtendProtocol();
                         RegisterKernelInServiceCollection(
                             services,
                             startupOptions,
@@ -290,6 +293,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 command.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
                     (startupOptions, options, console, context) =>
                     {
+                        ExtendProtocol();
                         if (startupOptions.EnableHttpApi)
                         {
                             RegisterKernelInServiceCollection(
@@ -351,6 +355,11 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 var pr = new HttpPortRange(start, end);
                 return pr;
             }
+        }
+
+        private static void ExtendProtocol()
+        {
+            KernelCommandEnvelope.RegisterCommandType<Quit>(nameof(Quit));
         }
 
         private static IServiceCollection RegisterKernelInServiceCollection(IServiceCollection services, StartupOptions startupOptions, string defaultKernel, Action<IServiceCollection> configureFrontedEnvironment, Action<KernelBase> afterKernelCreation = null)

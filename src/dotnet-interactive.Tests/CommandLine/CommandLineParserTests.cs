@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App.CommandLine;
+using Microsoft.DotNet.Interactive.App.Commands;
+using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -123,7 +125,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         [Fact]
         public void jupyter_install_command_does_not_parse_http_port_option()
         {
-            var result = _parser.Parse($"jupyter install --http-port 8000");
+            var result = _parser.Parse("jupyter install --http-port 8000");
 
             result.Errors
                 .Select(e => e.Message)
@@ -149,7 +151,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         [Fact]
         public async Task http_command_enables_http_api_by_default()
         {
-            await _parser.InvokeAsync($"http");
+            await _parser.InvokeAsync("http");
 
             _startOptions.EnableHttpApi.Should().BeTrue();
         }
@@ -167,7 +169,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         [Fact]
         public async Task http_command_registers_BrowserFrontedEnvironment()
         {
-            await _parser.InvokeAsync($"http");
+            await _parser.InvokeAsync("http");
 
             _serviceCollection
                 .FirstOrDefault(s => s.ServiceType == typeof(BrowserFrontendEnvironment))
@@ -179,7 +181,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         [Fact]
         public async Task http_command_does_not_register_JupyterFrontedEnvironment()
         {
-            await _parser.InvokeAsync($"http");
+            await _parser.InvokeAsync("http");
 
             _serviceCollection
                 .FirstOrDefault(s => s.ServiceType == typeof(HtmlNotebookFrontedEnvironment))
@@ -196,6 +198,18 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 .Select(e => e.Message)
                  .Should()
                  .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port-range'");
+        }
+
+        [Fact]
+        public async Task http_command_extends_the_protocol_with_quit_command()
+        {
+            await _parser.InvokeAsync("http");
+
+            var envelope = KernelCommandEnvelope.Deserialize(@"{ token: ""commandToken"", commandType: ""Quit"", command : { } }");
+            envelope.Command.Should()
+                .NotBeNull()
+                .And
+                .BeOfType<Quit>();
         }
 
         [Fact]
@@ -373,6 +387,17 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             options.DefaultKernel.Should().Be("bsharp");
         }
 
-       
+        [Fact]
+        public async Task stdio_command_extends_the_protocol_with_quit_command()
+        {
+            await _parser.InvokeAsync("stdio");
+
+            var envelope = KernelCommandEnvelope.Deserialize(@"{ commandType: ""Quit"", command : { } }");
+            
+            envelope.Command.Should()
+                .NotBeNull()
+                .And
+                .BeOfType<Quit>();
+        }
     }
 }
