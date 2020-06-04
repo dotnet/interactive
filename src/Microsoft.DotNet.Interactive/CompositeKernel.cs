@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -135,10 +134,8 @@ namespace Microsoft.DotNet.Interactive
         protected override void SetHandlingKernel(IKernelCommand command, KernelInvocationContext context)
         {
             var kernel = GetHandlingKernel(command, context);
-            if (context.HandlingKernel == null)
-            {
-                context.HandlingKernel = kernel;
-            }
+
+            context.HandlingKernel ??= kernel;
         }
 
         private IKernel GetHandlingKernel(

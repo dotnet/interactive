@@ -7,6 +7,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 
@@ -127,7 +128,7 @@ namespace Microsoft.DotNet.Interactive
 
         public ValueTask DisposeAsync()
         {
-            if (_current.Value is {} active)
+            if (_current.Value is { } active)
             {
                 _current.Value = null;
 
@@ -144,7 +145,7 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 active.Complete(Command);
-                
+
                 _disposables.Dispose();
             }
 

@@ -21,6 +21,14 @@ namespace Microsoft.DotNet.Interactive.Server
 
         private static readonly Dictionary<string, Type> _commandTypesByCommandTypeName;
 
+        public static void RegisterCommandType<T>(string commandTypeName) where T : class, IKernelCommand
+        {
+            var commandEnvelopeType = typeof(KernelCommandEnvelope<T>);
+            var commandType = typeof(T);
+
+            _envelopeTypesByCommandTypeName[commandTypeName] = commandEnvelopeType;
+            _commandTypesByCommandTypeName[commandTypeName] = commandType;
+        }
         static KernelCommandEnvelope()
         {
             _envelopeTypesByCommandTypeName = new Dictionary<string, Type>
@@ -111,9 +119,9 @@ namespace Microsoft.DotNet.Interactive.Server
 
             var commandType = CommandTypeByName(commandTypeJson.Value<string>());
             var commandJson = json["command"];
-            var command = (IKernelCommand) commandJson.ToObject(commandType, Serializer.JsonSerializer);
+            var command = (IKernelCommand) commandJson?.ToObject(commandType, Serializer.JsonSerializer);
 
-            var token = json["token"].Value<string>();
+            var token = json["token"]?.Value<string>();
 
             if (token != null)
             {
