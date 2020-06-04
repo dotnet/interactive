@@ -5,7 +5,6 @@ using System;
 using System.IO;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Newtonsoft.Json;
 
@@ -40,7 +39,8 @@ namespace Microsoft.DotNet.Interactive.Server
                 {
                     await DeserializeAndSendCommand(line);
                 }),
-                _kernel.KernelEvents.Subscribe(WriteEventToOutput)
+                _kernel.KernelEvents.Subscribe(WriteEventToOutput),
+                _input
             };
         }
 
