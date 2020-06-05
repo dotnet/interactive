@@ -28,10 +28,11 @@ using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
+using Pocket;
 using Recipes;
 
 using CommandHandler = System.CommandLine.Invocation.CommandHandler;
+using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine
 {
@@ -67,13 +68,19 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             ITelemetry telemetry = null,
             IFirstTimeUseNoticeSentinel firstTimeUseNoticeSentinel = null)
         {
+          
             if (services == null)
             {
                 throw new ArgumentNullException(nameof(services));
             }
-
+            var disposeOnQuit = new CompositeDisposable();
+            
             startServer ??= (startupOptions, invocationContext) =>
-                Program.ConstructWebHost(startupOptions).Run();
+            {
+                var webHost = Program.ConstructWebHost(startupOptions);
+                disposeOnQuit.Add(webHost);
+                webHost.Run();
+            };
 
             jupyter ??= JupyterCommand.Do;
 
@@ -305,7 +312,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 command.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext, CancellationToken>(
                     (startupOptions, options, console, context, cancellationToken) =>
                     {
-                        UseQuitCommand();
+                        UseQuitCommand(disposeOnQuit);
                         if (startupOptions.EnableHttpApi)
                         {
                             RegisterKernelInServiceCollection(
@@ -333,7 +340,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         {
                             var kernel = CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(),
                                 startupOptions);
-                            Quit.DisposeOnQuit = kernel;
+                            disposeOnQuit.Add(kernel);
 
                             cancellationToken.Register(async () =>
                             {
@@ -385,8 +392,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             }
         }
 
-        private static void UseQuitCommand()
+        private static void UseQuitCommand(IDisposable disposeOnQuit)
         {
+            Quit.DisposeOnQuit = disposeOnQuit;
             KernelCommandEnvelope.RegisterCommandType<Quit>(nameof(Quit));
         }
 

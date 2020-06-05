@@ -151,7 +151,7 @@ namespace Microsoft.DotNet.Interactive.App
         {
             var webHost = ConstructWebHostBuilder(options,_serviceCollection)
                           .Build();
-            Quit.DisposeOnQuit = webHost;
+           
             return webHost;
         }
     }
