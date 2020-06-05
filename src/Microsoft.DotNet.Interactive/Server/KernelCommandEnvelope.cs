@@ -47,8 +47,8 @@ namespace Microsoft.DotNet.Interactive.Server
             var commandEnvelopeType = typeof(KernelCommandEnvelope<T>);
             var commandType = typeof(T);
 
-            _envelopeTypesByCommandTypeName[commandTypeName] = commandEnvelopeType;
-            _commandTypesByCommandTypeName[commandTypeName] = commandType;
+            _envelopeTypesByCommandTypeName.Add(commandTypeName, commandEnvelopeType);
+            _commandTypesByCommandTypeName.Add(commandTypeName, commandType);
         }
         public static void ResetToDefaults()
         {

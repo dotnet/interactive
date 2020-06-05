@@ -5,9 +5,12 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
+using System.Threading;
 using Microsoft.DotNet.Interactive.App.CommandLine;
+using Microsoft.DotNet.Interactive.App.Commands;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Server;
 using Recipes;
 using XPlot.DotNet.Interactive.KernelExtensions;
 using XPlot.Plotly;
@@ -17,6 +20,17 @@ namespace Microsoft.DotNet.Interactive.App
 {
     public static class KernelExtensions
     {
+        public static T UseQuiCommand<T>(this T kernel, IDisposable disposeOnQuit, CancellationToken cancellationToken) where T : KernelBase
+        {
+            Quit.DisposeOnQuit = disposeOnQuit;
+            KernelCommandEnvelope.RegisterCommandType<Quit>(nameof(Quit));
+            cancellationToken.Register(async () =>
+            {
+                await kernel.SendAsync(new Quit());
+            });
+            return kernel;
+        }
+
         public static T UseAbout<T>(this T kernel)
             where T : KernelBase
         {

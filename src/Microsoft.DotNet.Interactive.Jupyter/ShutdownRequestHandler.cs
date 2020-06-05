@@ -22,17 +22,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter
            
         }
 
-        public async Task Handle(JupyterRequestContext context)
+        public Task Handle(JupyterRequestContext context)
         {
-            // reply 
             var shutdownReplyPayload = new ShutdownReply();
-
-            // send to server
             context.JupyterMessageSender.Send(shutdownReplyPayload);
-            
-            // pause and then exit
-            await Task.Delay(500);
             Environment.Exit(0);
+            return Task.CompletedTask;
         }
     }
 }
