@@ -10,30 +10,22 @@ namespace Microsoft.DotNet.Interactive.App.Commands
 {
     public class Quit : KernelCommandBase
     {
+        internal static IDisposable DisposeOnQuit { get; set; }
+       
         private static Action _defaultOnQuit = () =>
         {
             Environment.Exit(0);
         };
 
-        public Quit(Action onQuit = null, string targetKernelName = null): base(targetKernelName)
+        public Quit(string targetKernelName = null): base(targetKernelName)
         {
-            onQuit ??= DefaultOnQuit;
-
             Handler = (command, context) =>
             {
                 context.Complete(context.Command);
-                onQuit();
+                DisposeOnQuit?.Dispose();
+                Environment.Exit(0);
                 return Task.CompletedTask;
             };
-        }
-
-        internal static Action DefaultOnQuit
-        {
-            get => _defaultOnQuit;
-            set
-            {
-                if (value != null) _defaultOnQuit = value;
-            }
         }
     }
 }

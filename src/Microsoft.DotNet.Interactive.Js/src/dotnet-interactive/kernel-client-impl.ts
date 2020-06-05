@@ -4,7 +4,7 @@
 import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch } from "./dotnet-interactive-interfaces";
 import { TokenGenerator } from "./tokenGenerator";
 import { signalTransportFactory } from "./signalr-client";
-import { KernelTransport, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType } from "./contracts";
+import { KernelTransport, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType, KernelCommand } from "./contracts";
 import { createDefaultClientFetch } from "./clientFetch";
 
 export interface KernelClientImplParameteres {
@@ -86,6 +86,10 @@ export class KernelClientImpl implements DotnetInteractiveClient {
 
                     submitCode: (code: string): Promise<string> => {
                         return this.submitCode(code, kernelName);
+                    },
+
+                    submitCommand: (commandType: string, command?: any): Promise<string> =>{
+                        return this.submitCommand(commandType, command, kernelName);
                     }
                 };
 
@@ -100,7 +104,23 @@ export class KernelClientImpl implements DotnetInteractiveClient {
             code: code,
             targetKernelName: targetKernelName
         }
+
         await this._kernelTransport.submitCommand(command, SubmitCodeType, token);
+        return token;
+    }
+
+    public async submitCommand(commandType: string,command?: any ,targetKernelName?: string ): Promise<string>{
+        let token: string = this._tokenGenerator.GetNewToken();
+               
+        if (!command) {
+            command = {};
+        }
+
+        if (targetKernelName){
+            command.targetKernelName = targetKernelName;
+        }
+
+        await this._kernelTransport.submitCommand(command, <any>commandType, token);
         return token;
     }
 }

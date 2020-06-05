@@ -17,9 +17,30 @@ namespace Microsoft.DotNet.Interactive.Server
         private static readonly ConcurrentDictionary<Type, Func<IKernelCommand, IKernelCommandEnvelope>> _envelopeFactories =
             new ConcurrentDictionary<Type, Func<IKernelCommand, IKernelCommandEnvelope>>();
 
-        private static readonly Dictionary<string, Type> _envelopeTypesByCommandTypeName;
+        private static Dictionary<string, Type> _envelopeTypesByCommandTypeName;
 
-        private static readonly Dictionary<string, Type> _commandTypesByCommandTypeName;
+        private static Dictionary<string, Type> _commandTypesByCommandTypeName;
+
+      
+        static KernelCommandEnvelope()
+        {
+            ResetToDefaults();
+        }
+
+        internal static Type CommandTypeByName(string name) => _commandTypesByCommandTypeName[name];
+
+        private readonly IKernelCommand _command;
+
+        protected KernelCommandEnvelope(IKernelCommand command)
+        {
+            _command = command ?? throw new ArgumentNullException(nameof(command));
+        }
+
+        public abstract string CommandType { get; }
+
+        public string Token => _command.GetToken();
+
+        IKernelCommand IKernelCommandEnvelope.Command => _command;
 
         public static void RegisterCommandType<T>(string commandTypeName) where T : class, IKernelCommand
         {
@@ -29,7 +50,7 @@ namespace Microsoft.DotNet.Interactive.Server
             _envelopeTypesByCommandTypeName[commandTypeName] = commandEnvelopeType;
             _commandTypesByCommandTypeName[commandTypeName] = commandType;
         }
-        static KernelCommandEnvelope()
+        public static void ResetToDefaults()
         {
             _envelopeTypesByCommandTypeName = new Dictionary<string, Type>
             {
@@ -50,21 +71,6 @@ namespace Microsoft.DotNet.Interactive.Server
                     pair => pair.Key,
                     pair => pair.Value.GetGenericArguments()[0]);
         }
-
-        internal static Type CommandTypeByName(string name) => _commandTypesByCommandTypeName[name];
-
-        private readonly IKernelCommand _command;
-
-        protected KernelCommandEnvelope(IKernelCommand command)
-        {
-            _command = command ?? throw new ArgumentNullException(nameof(command));
-        }
-
-        public abstract string CommandType { get; }
-
-        public string Token => _command.GetToken();
-
-        IKernelCommand IKernelCommandEnvelope.Command => _command;
 
         public static IKernelCommandEnvelope Create(IKernelCommand command)
         {

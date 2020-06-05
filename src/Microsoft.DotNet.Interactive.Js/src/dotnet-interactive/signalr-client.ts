@@ -55,7 +55,7 @@ export async function signalTransportFactory(rootUrl: string): Promise<KernelTra
 
         submitCommand: (command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void> => {
             let envelope: KernelCommandEnvelope = {
-                commandType: SubmitCodeType,
+                commandType: commandType,
                 command: command,
                 token: token,
             };
