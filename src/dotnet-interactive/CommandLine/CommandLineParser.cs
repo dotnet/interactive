@@ -342,7 +342,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             var kernel = CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(),
                                 startupOptions);
                             
-                            Quit.DefaultTermination = () =>
+                            Quit.DefaultOnQuit = () =>
                             {
                                 kernel.Dispose();
                                 Environment.Exit(0);
