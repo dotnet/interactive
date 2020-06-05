@@ -10,13 +10,14 @@ namespace Microsoft.DotNet.Interactive.App.Commands
 {
     public class Quit : KernelCommandBase
     {
+        private static Action _defaultOnQuit = () =>
+        {
+            Environment.Exit(0);
+        };
 
         public Quit(Action onQuit = null, string targetKernelName = null): base(targetKernelName)
         {
-            onQuit ??= DefaultOnQuit ??(() =>
-            {
-                Environment.Exit(0);
-            });
+            onQuit ??= DefaultOnQuit;
 
             Handler = (command, context) =>
             {
@@ -26,6 +27,13 @@ namespace Microsoft.DotNet.Interactive.App.Commands
             };
         }
 
-        internal static Action DefaultOnQuit { get; set; }
+        internal static Action DefaultOnQuit
+        {
+            get => _defaultOnQuit;
+            set
+            {
+                if (value != null) _defaultOnQuit = value;
+            }
+        }
     }
 }

@@ -207,8 +207,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
 
             var envelope = KernelCommandEnvelope.Deserialize(@"{ token: ""commandToken"", commandType: ""Quit"", command : { } }");
             envelope.Command.Should()
-                .NotBeNull()
-                .And
                 .BeOfType<Quit>();
         }
 
@@ -395,8 +393,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             var envelope = KernelCommandEnvelope.Deserialize(@"{ commandType: ""Quit"", command : { } }");
             
             envelope.Command.Should()
-                .NotBeNull()
-                .And
                 .BeOfType<Quit>();
         }
     }
