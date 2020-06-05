@@ -11,9 +11,9 @@ namespace Microsoft.DotNet.Interactive.App.Commands
     public class Quit : KernelCommandBase
     {
 
-        public Quit(Action processTermination = null, string targetKernelName = null): base(targetKernelName)
+        public Quit(Action onQuit = null, string targetKernelName = null): base(targetKernelName)
         {
-            processTermination ??= DefaultTermination ??(() =>
+            onQuit ??= DefaultOnQuit ??(() =>
             {
                 Environment.Exit(0);
             });
@@ -21,11 +21,11 @@ namespace Microsoft.DotNet.Interactive.App.Commands
             Handler = (command, context) =>
             {
                 context.Complete(context.Command);
-                processTermination();
+                onQuit();
                 return Task.CompletedTask;
             };
         }
 
-        internal static Action DefaultTermination { get; set; }
+        internal static Action DefaultOnQuit { get; set; }
     }
 }
