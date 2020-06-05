@@ -48,7 +48,9 @@ namespace Microsoft.DotNet.Interactive
 
             AddDirectiveMiddlewareAndCommonCommandHandlers();
 
-            _disposables.Add(_kernelEvents);
+            _disposables.Add(Disposable.Create( 
+                ()  => _kernelEvents.OnCompleted()
+                ));
         }
 
         internal KernelCommandPipeline Pipeline { get; }

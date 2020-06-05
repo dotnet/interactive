@@ -265,10 +265,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     logPathOption
                 };
 
-                command.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext, CancellationToken>(
-                    (startupOptions, options, console, context, cancellationToken) =>
+                command.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
+                    (startupOptions, options, console, context) =>
                     {
-                        UseQuitCommand();
                         RegisterKernelInServiceCollection(
                             services,
                             startupOptions,
@@ -281,14 +280,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                     return frontendEnvironment;
                                 });
                                 serviceCollection.AddSingleton<FrontendEnvironment>(c => c.GetRequiredService<BrowserFrontendEnvironment>());
-                            },
-                        kernel =>
-                        {
-                            cancellationToken.Register(async () =>
-                            {
-                                await kernel.SendAsync(new Quit());
                             });
-                        });
                         return startHttp(startupOptions, console, startServer, context);
                     });
 
@@ -341,12 +333,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         {
                             var kernel = CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(),
                                 startupOptions);
-                            
-                            Quit.DefaultOnQuit = () =>
-                            {
-                                kernel.Dispose();
-                                Environment.Exit(0);
-                            };
+                            Quit.DisposeOnQuit = kernel;
 
                             cancellationToken.Register(async () =>
                             {
@@ -474,7 +461,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                          .UseDefaultMagicCommands()
                          .UseLog()
                          .UseAbout();
-
+            
             SetUpFormatters(frontendEnvironment, startupOptions);
 
             kernel.DefaultKernelName = defaultKernelName;

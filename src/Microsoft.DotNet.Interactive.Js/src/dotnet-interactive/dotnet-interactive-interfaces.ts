@@ -17,6 +17,7 @@ export interface VariableResponse {
 export interface KernelClient {
     getVariable(variableName: string): Promise<any>;
     submitCode(code: string): Promise<string>;
+    submitCommand(commandType: string, command?: any): Promise<string>;
 }
 
 export interface DotnetInteractiveClient {
@@ -27,6 +28,7 @@ export interface DotnetInteractiveClient {
     getResourceUrl(resource: string): string;
     loadKernels(): Promise<void>;
     submitCode(code: string, targetKernelName?: string): Promise<string>;
+    submitCommand(commandType: string, command?: any, targetKernelName?: string): Promise<string>;
 }
 
 export interface KernelClientContainer {

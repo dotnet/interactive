@@ -32,6 +32,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
 
         public CommandLineParserTests(ITestOutputHelper output)
         {
+            KernelCommandEnvelope.ResetToDefaults();
+            KernelEventEnvelope.ResetToDefaults();
+
             _output = output;
             _serviceCollection = new ServiceCollection();
             _parser = CommandLineParser.Create(
@@ -198,16 +201,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 .Select(e => e.Message)
                  .Should()
                  .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port-range'");
-        }
-
-        [Fact]
-        public async Task http_command_extends_the_protocol_with_quit_command()
-        {
-            await _parser.InvokeAsync("http");
-
-            var envelope = KernelCommandEnvelope.Deserialize(@"{ token: ""commandToken"", commandType: ""Quit"", command : { } }");
-            envelope.Command.Should()
-                .BeOfType<Quit>();
         }
 
         [Fact]
