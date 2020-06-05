@@ -69,28 +69,30 @@ export class StdioKernelTransport {
         let command: ChangeWorkingDirectory = {
             workingDirectory: path.dirname(notebookPath)
         };
-        const result = {
-            transport: kernelTransport,
-            initialize: () => {
-                return kernelTransport.submitCommand(command, 'ChangeWorkingDirectory', token);
-            }
-        }
-        let disposable = kernelTransport.subscribeToKernelEvents(envelope => {
-            if (envelope.command?.token === token) {
-                switch (envelope.eventType) {
-                    case CommandFailedType:
-                        let failed = <CommandFailed>envelope.event;
-                        let message = `Unable to set notebook working directory to '${notebookPath}'.\n${failed.message}`;
-                        diagnosticChannel.appendLine(message);
-                        disposable.dispose();
-                        break;
-                    case CommandHandledType:
-                        disposable.dispose();
-                        break;
+        const initialize = new Promise<void>(async (resolve, reject) => {
+            await kernelTransport.submitCommand(command, 'ChangeWorkingDirectory', token);
+            let disposable = kernelTransport.subscribeToKernelEvents(envelope => {
+                if (envelope.command?.token === token) {
+                    switch (envelope.eventType) {
+                        case CommandFailedType:
+                            let failed = <CommandFailed>envelope.event;
+                            let message = `Unable to set notebook working directory to '${notebookPath}'.\n${failed.message}`;
+                            diagnosticChannel.appendLine(message);
+                            disposable.dispose();
+                            resolve();
+                            break;
+                        case CommandHandledType:
+                            disposable.dispose();
+                            resolve();
+                            break;
+                    }
                 }
-            }
+            });
         });
-        return result;
+        return {
+            transport: kernelTransport,
+            initialize
+        };
     }
 
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {

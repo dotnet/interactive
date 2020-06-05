@@ -22,7 +22,7 @@ export class ClientMapper {
             const { transport, initialize } = this.kernelTransportCreator(uri.fsPath);
             client = new InteractiveClient(transport);
             this.clientMap.set(key, client);
-            await initialize();
+            await initialize;
         }
 
         return client;
