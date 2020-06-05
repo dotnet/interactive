@@ -11,12 +11,6 @@ namespace Microsoft.DotNet.Interactive.App.Commands
     public class Quit : KernelCommandBase
     {
         internal static IDisposable DisposeOnQuit { get; set; }
-       
-        private static Action _defaultOnQuit = () =>
-        {
-            Environment.Exit(0);
-        };
-
         public Quit(string targetKernelName = null): base(targetKernelName)
         {
             Handler = (command, context) =>
