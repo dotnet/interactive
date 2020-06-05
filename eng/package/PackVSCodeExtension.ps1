@@ -22,6 +22,12 @@ try {
     # see https://github.com/dotnet/core-eng/issues/9913
     #$packageJsonContents | ConvertTo-Json -depth 100 | Out-File $packageJsonPath
 
+    # create destination
+    New-Item -Path $outDir -ItemType Directory
+
+    # copy publish scripts
+    Copy-Item -Path $PSScriptRoot\..\publish\* -Destination $outDir -Recurse
+
     # pack
     Write-Host "Packing extension"
     npx vsce package --out "$outDir\dotnet-interactive-vscode-$stableToolVersionNumber.vsix"

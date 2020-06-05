@@ -1,12 +1,15 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using FluentAssertions;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
+using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -77,7 +80,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             {
                 Handle = (command, context) =>
                 {
-                    receivedCommands.Add(((SubmitCode) command).Code);
+                    receivedCommands.Add(((SubmitCode)command).Code);
                     return Task.CompletedTask;
                 }
             };
@@ -153,6 +156,18 @@ namespace Microsoft.DotNet.Interactive.Tests
             middeware1Count.Should().Be(1);
             middeware2Count.Should().Be(1);
             middeware3Count.Should().Be(1);
+        }
+
+        [Fact]
+        public async Task kernelEvents_sequence_completes_when_kernel_is_disposed ()
+        {
+            var kernel = new FakeKernel();
+            var events = kernel.KernelEvents.Timeout(5.Seconds()).LastOrDefaultAsync();
+
+            kernel.Dispose();
+
+            var lastEvent = await events;
+            lastEvent.Should().BeNull();
         }
     }
 }

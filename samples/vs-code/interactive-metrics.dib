@@ -1,6 +1,13 @@
 #!markdown
 
-# .NET interactive report
+# .NET interactive report 
+
+project report for [.NET interactive repo]()
+
+#!markdown
+
+## Setup
+Importing pacakges and setting up connection
 
 #!csharp
 
@@ -21,11 +28,11 @@ var gitHubClient = new GitHubClient(new ProductHeaderValue("notebook"));
 
 #!markdown
 
-Use api token to remove throttling and other api limitations
+[Generate a user token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line) to get rid of public [api](https://github.com/octokit/octokit.net/blob/master/docs/getting-started.md) throttling policies for anonymous users 
 
 #!csharp
 
-var tokenAuth = new Credentials("b83f3e399e7a950d0791ac3f48dada46d82373c2");
+var tokenAuth = new Credentials("your token");
 gitHubClient.Credentials = tokenAuth;
 
 #!csharp
@@ -88,6 +95,9 @@ Fork data
 var forkCreatedThisMonth = forks.Where(fork => fork.CreatedAt >= startOfTheMonth.ToDateTimeUnspecified());
 var forkCreatedPreviousMonth = forks.Where(fork => (fork.CreatedAt >= startOfPreviousMonth.ToDateTimeUnspecified()) && (fork.CreatedAt < startOfTheMonth.ToDateTimeUnspecified()));
 var forkCreatedByMonth = forks.GroupBy(fork => new DateTime(fork.CreatedAt.Year, fork.CreatedAt.Month, 1));
+var forkUpdateByMonth = forks.GroupBy(f => new DateTime(f.UpdatedAt.Year, f.UpdatedAt.Month,  1) ).Select(g => new {Date = g.Key, Count = g.Count()}).OrderBy(g => g.Date).ToArray();
+var total = 0;
+var forkCountByMonth = forkCreatedByMonth.OrderBy(g => g.Key).Select(g => new {Date = g.Key, Count = total += g.Count()}).ToArray();
 
 #!markdown
 
@@ -103,7 +113,7 @@ var createdPreviousMonth = currentYearIssues.Where(issue => (issue.CreatedAt >= 
 var openFromPreviousMonth = openIssues.Where(issue => (issue.CreatedAt > startOfPreviousMonth.ToDateTimeUnspecified()) && (issue.CreatedAt < startOfTheMonth.ToDateTimeUnspecified()));
 var createdByMonth = currentYearIssues.GroupBy(issue => new DateTime(issue.CreatedAt.Year, issue.CreatedAt.Month, 1)).ToDictionary(g => g.Key, g => g.Count());
 var closedByMonth = closedIssues.GroupBy(issue => new DateTime((int) issue.ClosedAt?.Year, (int) issue.ClosedAt?.Month, 1)).ToDictionary(g => g.Key, g => g.Count());
-            
+var openIssueAge = openIssues.GroupBy(issue => new DateTime(issue.CreatedAt.Year, issue.CreatedAt.Month, issue.CreatedAt.Day)).ToDictionary(g => g.Key, g => g.Max(issue =>Math.Max(0, Math.Ceiling( (today.ToDateTimeUnspecified() - issue.CreatedAt).TotalDays))));
 var openByMonth = new Dictionary<DateTime, int>();
 var minDate = createdByMonth.Min(g => g.Key);
 var maxCreatedAtDate = createdByMonth.Max(g => g.Key);
@@ -121,52 +131,214 @@ while (cursor <= maxDate )
     cursor = cursor.AddMonths(1);
 }
 
+var issueLifespan = currentYearIssues.GroupBy(issue =>
+            {
+                var lifeSpan = (issue.ClosedAt ?? today.ToDateTimeUnspecified()) - issue.CreatedAt;
+                return Math.Max(0, Math.Round(Math.Ceiling(lifeSpan.TotalDays),0));
+            })
+            .Where(g => g.Key > 0)
+            .OrderBy(g => g.Key)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+display(new { 
+    less_then_one_sprint = issueLifespan.Where(i=> i.Key < 21).Select(i => i.Value).Sum(),
+    less_then_two_sprint = issueLifespan.Where(i=> i.Key >= 21 && i.Key < 42).Select(i => i.Value).Sum(),
+    more_then_two_sprint = issueLifespan.Where(i=> i.Key >= 42).Select(i => i.Value).Sum()   
+    });
+
+#!markdown
+
+# Activity dashboard
+
 #!csharp
 
-var createdByMonthSeries = new Graph.Scatter{
+var createdByMonthSeries = new Graph.Scattergl{
     name = "Created",
     x = createdByMonth.Select(g => g.Key),
     y = createdByMonth.Select(g => g.Value),
 };
 
-var openByMonthSeries = new Graph.Scatter{
+var openByMonthSeries = new Graph.Scattergl{
     name = "Open",
     x = openByMonth.Select(g => g.Key),    
     y = openByMonth.Select(g => g.Value),
 };
 
-var closedByMonthSeries = new Graph.Scatter{
+var closedByMonthSeries = new Graph.Scattergl{
     name = "Closed",
     x = closedByMonth.Select(g => g.Key),
     y = closedByMonth.Select(g => g.Value),
 };
 
-var chart = Chart.Plot(new[] {createdByMonthSeries, closedByMonthSeries, openByMonthSeries});
-chart.WithTitle("Issues by month");
-display(chart);
+var issueChart = Chart.Plot(new[] {createdByMonthSeries, closedByMonthSeries, openByMonthSeries});
+issueChart.WithTitle("Issues by month");
+display(issueChart);
 
-#!csharp
-
-var maxLifeSpan = pullRequestLifespan.Max(pr => pr.Value);
-var colors = pullRequestLifespan.OrderBy(pr => pr.Key).Select(pr => pr.Key < 7 ? "green" : pr.Key < 21 ? "yellow" : "red");
-var prLifespanSeries = new Graph.Bar
+var issueLifespanOnWeekSeries = new Graph.Bar
 {
-    name = "Days open",
-    y = pullRequestLifespan.OrderBy(pr => pr.Key).Select(pr => pr.Value),
-    x = pullRequestLifespan.OrderBy(pr => pr.Key).Select(pr => pr.Key) ,
+    name = "One week old",
+    y = issueLifespan.Where(issue => issue.Key < 7).OrderBy(issue => issue.Key).Select(issue => issue.Value),
+    x = issueLifespan.Where(issue => issue.Key < 7).OrderBy(issue => issue.Key).Select(issue => issue.Key) ,
     marker = new Graph.Marker{
-        color = colors
+        color = "green"
     }  
 };
 
-var chart = Chart.Plot(new[] {prLifespanSeries});
-chart.WithTitle("Pull Request by life span");
-chart.WithLayout(new Layout.Layout
+var issueLifespanOneSprintSeries = new Graph.Bar
+{
+    name = "One Sprint old",
+    y = issueLifespan.Where(issue => issue.Key >= 7 && issue.Key < 21).OrderBy(issue => issue.Key).Select(issue => issue.Value),
+    x = issueLifespan.Where(issue => issue.Key >= 7 && issue.Key < 21).OrderBy(issue => issue.Key).Select(issue => issue.Key) ,
+    marker = new Graph.Marker{
+        color = "yellow"
+    }  
+};
+
+var issueLifespanOldSeries = new Graph.Bar
+{
+    name = "More then a Sprint",
+    y = issueLifespan.Where(issue => issue.Key >= 21).OrderBy(issue => issue.Key).Select(issue => issue.Value),
+    x = issueLifespan.Where(issue => issue.Key >= 21).OrderBy(issue => issue.Key).Select(issue => issue.Key) ,
+    marker = new Graph.Marker{
+        color = "red"
+    }  
+};
+
+var issueLifespanChart = Chart.Plot(new[] {issueLifespanOnWeekSeries, issueLifespanOneSprintSeries, issueLifespanOldSeries});
+
+issueLifespanChart.WithLayout(new Layout.Layout
             {
+                title = "Issues by life span",
                 xaxis = new Graph.Xaxis {
-                    title = "Number of days PR stays open",
+                    title = "Number of days an issue stays open",
                     showgrid = false,
+                    zeroline = false
+                },
+                yaxis = new Graph.Yaxis {                
+                    showgrid = true,
                     zeroline = false
                 }
             });
+
+display(issueLifespanChart);
+
+var openIssuesAgeSeriesWeek = new Graph.Bar
+{
+    name = "Closed in a week",
+    y = openIssueAge.Where(issue => issue.Value < 7).OrderBy(issue => issue.Key).Select(issue => issue.Value),
+    x = openIssueAge.Where(issue => issue.Value < 7).OrderBy(issue => issue.Key).Select(issue => issue.Key) ,
+    marker = new Graph.Marker{
+        color = "green"
+    }  
+};
+
+var openIssuesAgeSeriesSprint = new Graph.Bar
+{
+    name = "Closed within a sprint",
+    y = openIssueAge.Where(issue => issue.Value >= 7 && issue.Value < 21).OrderBy(issue => issue.Key).Select(issue => issue.Value),
+    x = openIssueAge.Where(issue => issue.Value >= 7 && issue.Value < 21).OrderBy(issue => issue.Key).Select(issue => issue.Key) ,
+    marker = new Graph.Marker{
+        color = "yellow"
+    }  
+};
+
+var openIssuesAgeSeriesLong = new Graph.Bar
+{
+    name = "Long standing",
+    y = openIssueAge.Where(issue => issue.Value >= 21).OrderBy(issue => issue.Key).Select(issue => issue.Value),
+    x = openIssueAge.Where(issue => issue.Value >= 21).OrderBy(issue => issue.Key).Select(issue => issue.Key) ,
+    marker = new Graph.Marker{
+        color = "red"
+    }  
+};
+
+var openIssuesAgeChart = Chart.Plot(new[] {openIssuesAgeSeriesWeek, openIssuesAgeSeriesSprint, openIssuesAgeSeriesLong});
+openIssuesAgeChart.WithLayout(new Layout.Layout
+            {
+                title = "Open issues age",
+                yaxis = new Graph.Yaxis {
+                    title = "Number of days an issue stays open",
+                    showgrid = true,
+                    zeroline = false
+                }
+            });
+display(openIssuesAgeChart);
+
+#!csharp
+
+var prColors = pullRequestLifespan.OrderBy(pr => pr.Key).Select(pr => pr.Key < 7 ? "green" : pr.Key < 21 ? "yellow" : "red");
+var prLifespanOneWeekSeries = new Graph.Bar
+{
+    name = "One week",
+    y = pullRequestLifespan.Where(issue => issue.Key < 7).OrderBy(pr => pr.Key).Select(pr => pr.Value),
+    x = pullRequestLifespan.Where(issue => issue.Key < 7).OrderBy(pr => pr.Key).Select(pr => pr.Key) ,
+    marker = new Graph.Marker{
+        color = "green"
+    }  
+};
+
+var prLifespanOneSprintSeries = new Graph.Bar
+{
+    name = "One Sprint",
+    y = pullRequestLifespan.Where(issue => issue.Key >= 7 && issue.Key < 21).OrderBy(pr => pr.Key).Select(pr => pr.Value),
+    x = pullRequestLifespan.Where(issue => issue.Key >= 7 && issue.Key < 21).OrderBy(pr => pr.Key).Select(pr => pr.Key) ,
+    marker = new Graph.Marker{
+        color = "yellow"
+    }  
+};
+
+var prLifespanMoreThanASprintSeries = new Graph.Bar
+{
+    name = "More than a Sprint",
+    y = pullRequestLifespan.Where(issue => issue.Key >= 21).OrderBy(pr => pr.Key).Select(pr => pr.Value),
+    x = pullRequestLifespan.Where(issue => issue.Key >= 21).OrderBy(pr => pr.Key).Select(pr => pr.Key) ,
+    marker = new Graph.Marker{
+        color = "red"
+    }  
+};
+
+var prLifespanChart = Chart.Plot(new[] {prLifespanOneWeekSeries, prLifespanOneSprintSeries, prLifespanMoreThanASprintSeries});
+prLifespanChart.WithLayout(new Layout.Layout
+            {
+                title = "Pull Request by life span",
+                xaxis = new Graph.Xaxis {
+                    title = "Number of days a PR stays open",
+                    showgrid = false,
+                    zeroline = false
+                },
+                yaxis = new Graph.Yaxis {
+                    title = "Number of PR",
+                    showgrid = true,
+                    zeroline = false
+                }
+            });
+display(prLifespanChart);
+
+#!csharp
+
+var forkCreationSeries = new Graph.Scattergl
+{
+    name = "created by month",
+    y = forkCreatedByMonth.Select(g => g.Count() ).ToArray(),
+    x = forkCreatedByMonth.Select(g => g.Key ).ToArray()
+};
+
+var forkTotalSeries = new Graph.Scattergl
+{
+    name = "running total",
+    y = forkCountByMonth.Select(g => g.Count ).ToArray(),
+    x = forkCountByMonth.Select(g => g.Date ).ToArray()
+};
+
+var forkUpdateSeries = new Graph.Scattergl
+{
+    name = "last update by month",
+    y = forkUpdateByMonth.Select(g => g.Count ).ToArray(),
+    x = forkUpdateByMonth.Select(g => g.Date ).ToArray()
+};
+
+
+
+var chart = Chart.Plot(new[] {forkCreationSeries,forkTotalSeries,forkUpdateSeries});
+chart.WithTitle("Fork activity");
 display(chart);

@@ -39,7 +39,8 @@ namespace Microsoft.DotNet.Interactive.Server
                 {
                     await DeserializeAndSendCommand(line);
                 }),
-                _kernel.KernelEvents.Subscribe(WriteEventToOutput)
+                _kernel.KernelEvents.Subscribe(WriteEventToOutput),
+                _input
             };
         }
 
@@ -66,7 +67,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 
                 return;
             }
-
+            
             await _kernel.SendAsync(streamKernelCommand.Command);
         }
 

@@ -16,6 +16,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         private readonly CompleteRequestHandler _completeHandler;
         private readonly InterruptRequestHandler _interruptHandler;
         private readonly IsCompleteRequestHandler _isCompleteHandler;
+        private readonly ShutdownRequestHandler _shutdownHandler;
 
         public JupyterRequestContextHandler(IKernel kernel)
         {
@@ -29,6 +30,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             _completeHandler = new CompleteRequestHandler(kernel, scheduler);
             _interruptHandler = new InterruptRequestHandler(kernel, scheduler);
             _isCompleteHandler = new IsCompleteRequestHandler(kernel, scheduler);
+            _shutdownHandler = new ShutdownRequestHandler(kernel, scheduler);
         }
 
         public async Task<ICommandDeliveryResult> Handle(
@@ -48,7 +50,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 case IsCompleteRequest _:
                     await _isCompleteHandler.Handle(delivery.Command);
                     break;
-                default:
+                case ShutdownRequest _:
+                    await _shutdownHandler.Handle(delivery.Command);
                     break;
             }
 

@@ -17,11 +17,32 @@ namespace Microsoft.DotNet.Interactive.Server
         private static readonly ConcurrentDictionary<Type, Func<IKernelEvent, IKernelEventEnvelope>> _envelopeFactories =
             new ConcurrentDictionary<Type, Func<IKernelEvent, IKernelEventEnvelope>>();
 
-        private static readonly Dictionary<string, Type> _envelopeTypesByEventTypeName;
+        private static Dictionary<string, Type> _envelopeTypesByEventTypeName;
 
-        private static readonly Dictionary<string, Type> _eventTypesByEventTypeName;
+        private static Dictionary<string, Type> _eventTypesByEventTypeName;
 
         static KernelEventEnvelope()
+        {
+            ResetToDefaults();
+        }
+
+        internal static Type EventTypeByName(string name) => _eventTypesByEventTypeName[name];
+
+        private readonly IKernelEvent _event;
+
+        protected KernelEventEnvelope(IKernelEvent @event)
+        {
+            _event = @event ?? throw new ArgumentNullException(nameof(@event));
+            CommandType = @event.Command?.GetType().Name;
+        }
+
+        public string CommandType { get; }
+
+        public abstract string EventType { get; }
+
+        IKernelEvent IKernelEventEnvelope.Event => _event;
+
+        public static void ResetToDefaults()
         {
             _envelopeTypesByEventTypeName = new Dictionary<string, Type>
             {
@@ -51,22 +72,6 @@ namespace Microsoft.DotNet.Interactive.Server
                     pair => pair.Key,
                     pair => pair.Value.GetGenericArguments()[0]);
         }
-
-        internal static Type EventTypeByName(string name) => _eventTypesByEventTypeName[name];
-
-        private readonly IKernelEvent _event;
-
-        protected KernelEventEnvelope(IKernelEvent @event)
-        {
-            _event = @event ?? throw new ArgumentNullException(nameof(@event));
-            CommandType = @event.Command?.GetType().Name;
-        }
-
-        public string CommandType { get; }
-
-        public abstract string EventType { get; }
-
-        IKernelEvent IKernelEventEnvelope.Event => _event;
 
         public static IKernelEventEnvelope Create(IKernelEvent @event)
         {

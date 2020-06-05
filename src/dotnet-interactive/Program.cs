@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.Interactive.App.CommandLine;
+using Microsoft.DotNet.Interactive.App.Commands;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.Extensions.DependencyInjection;
 using Pocket;
@@ -150,7 +151,7 @@ namespace Microsoft.DotNet.Interactive.App
         {
             var webHost = ConstructWebHostBuilder(options,_serviceCollection)
                           .Build();
-
+           
             return webHost;
         }
     }

@@ -7,12 +7,6 @@ namespace Microsoft.DotNet.Interactive
 {
     public class CompletionItem
     {
-        public string DisplayText { get; }
-        public string Kind { get; }
-        public string FilterText { get; }
-        public string SortText { get; }
-        public string InsertText { get; }
-        public string Documentation { get; set; }
         public CompletionItem(string displayText, string kind, string filterText = null, string sortText = null, string insertText = null, string documentation = null)
         {
             DisplayText = displayText ?? throw new ArgumentNullException(nameof(displayText));
@@ -22,6 +16,18 @@ namespace Microsoft.DotNet.Interactive
             InsertText = insertText;
             Documentation = documentation;
         }
+
+        public string DisplayText { get; }
+
+        public string Kind { get; }
+
+        public string FilterText { get; }
+
+        public string SortText { get; }
+
+        public string InsertText { get; }
+
+        public string Documentation { get; set; }
 
         public override string ToString() => DisplayText;
     }

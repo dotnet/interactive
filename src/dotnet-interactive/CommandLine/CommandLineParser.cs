@@ -9,10 +9,14 @@ using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Text.Encodings.Web;
+using System.Threading;
 using System.Threading.Tasks;
+
 using Clockwise;
+
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.App.Commands;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -20,11 +24,15 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Microsoft.DotNet.Interactive.PowerShell;
+using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Pocket;
 using Recipes;
+
 using CommandHandler = System.CommandLine.Invocation.CommandHandler;
+using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive.App.CommandLine
 {
@@ -60,13 +68,19 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             ITelemetry telemetry = null,
             IFirstTimeUseNoticeSentinel firstTimeUseNoticeSentinel = null)
         {
+          
             if (services == null)
             {
                 throw new ArgumentNullException(nameof(services));
             }
-
+            var disposeOnQuit = new CompositeDisposable();
+            
             startServer ??= (startupOptions, invocationContext) =>
-                Program.ConstructWebHost(startupOptions).Run();
+            {
+                var webHost = Program.ConstructWebHost(startupOptions);
+                disposeOnQuit.Add(webHost);
+                webHost.Run();
+            };
 
             jupyter ??= JupyterCommand.Do;
 
@@ -148,8 +162,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 var httpPortRangeOption = new Option<HttpPortRange>(
                     "--http-port-range",
                     parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
-                    description: "Specifies the range of port to use to enable HTTP services",
-                    isDefault: true );
+                    description: "Specifies the range of ports to use to enable HTTP services",
+                    isDefault: true);
 
                 var command = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel")
                 {
@@ -163,13 +177,13 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     }.ExistingOnly()
                 };
 
-                command.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext>(JupyterHandler);
+                command.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext, CancellationToken>(JupyterHandler);
 
                 var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
                 {
+                    httpPortRangeOption,
                     logPathOption,
                     verboseOption,
-                    httpPortRangeOption,
                     pathOption
                 };
 
@@ -179,7 +193,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 return command;
 
-                Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context)
+                Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context, CancellationToken cancellationToken)
                 {
                     services = RegisterKernelInServiceCollection(
                         services,
@@ -218,32 +232,31 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             Command HttpServer()
             {
                 var httpPortOption = new Option<HttpPort>(
-               "--http-port",
-               description: "Specifies the port on which to enable HTTP services",
-               parseArgument: result =>
-               {
-                   if (result.Tokens.Count == 0)
-                   {
-                       return HttpPort.Auto;
-                   }
+                    "--http-port",
+                    description: "Specifies the port on which to enable HTTP services",
+                    parseArgument: result =>
+                    {
+                        if (result.Tokens.Count == 0)
+                        {
+                            return HttpPort.Auto;
+                        }
 
-                   var source = result.Tokens[0].Value;
+                        var source = result.Tokens[0].Value;
 
-                   if (source == "*")
-                   {
-                       return HttpPort.Auto;
-                   }
+                        if (source == "*")
+                        {
+                            return HttpPort.Auto;
+                        }
 
-                   if (!int.TryParse(source, out var portNumber))
-                   {
-                       result.ErrorMessage = "Must specify a port number or *.";
-                       return null;
-                   }
+                        if (!int.TryParse(source, out var portNumber))
+                        {
+                            result.ErrorMessage = "Must specify a port number or *.";
+                            return null;
+                        }
 
-                   return new HttpPort(portNumber);
-               },
-               isDefault: true);
-
+                        return new HttpPort(portNumber);
+                    },
+                    isDefault: true);
 
                 var command = new Command("http", "Starts dotnet-interactive with kernel functionality exposed over http")
                 {
@@ -258,15 +271,16 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         RegisterKernelInServiceCollection(
                             services,
                             startupOptions,
-                            options.DefaultKernel, serviceCollection =>
-                        {
-                            serviceCollection.AddSingleton(_ =>
+                            options.DefaultKernel,
+                            serviceCollection =>
                             {
-                                var frontendEnvironment = new BrowserFrontendEnvironment();
-                                return frontendEnvironment;
+                                serviceCollection.AddSingleton(_ =>
+                                {
+                                    var frontendEnvironment = new BrowserFrontendEnvironment();
+                                    return frontendEnvironment;
+                                });
+                                serviceCollection.AddSingleton<FrontendEnvironment>(c => c.GetRequiredService<BrowserFrontendEnvironment>());
                             });
-                            serviceCollection.AddSingleton<FrontendEnvironment>(c => c.GetRequiredService<BrowserFrontendEnvironment>());
-                        });
                         return startHttp(startupOptions, console, startServer, context);
                     });
 
@@ -278,19 +292,18 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 var httpPortRangeOption = new Option<HttpPortRange>(
                     "--http-port-range",
                     parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
-                    description: "Specifies the range of port to use to enable HTTP services");
+                    description: "Specifies the range of ports to use to enable HTTP services");
 
                 var command = new Command(
                     "stdio",
                     "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
                 {
                     defaultKernelOption,
-                    logPathOption,
                     httpPortRangeOption
                 };
 
-                command.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
-                    (startupOptions, options, console, context) =>
+                command.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext, CancellationToken>(
+                    (startupOptions, options, console, context, cancellationToken) =>
                     {
                         if (startupOptions.EnableHttpApi)
                         {
@@ -306,14 +319,25 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                 }, kernel =>
                                 {
                                     StdIOCommand.CreateServer(kernel, console);
+
+                                    kernel.UseQuiCommand(disposeOnQuit, cancellationToken);
                                 });
 
                             return startHttp(startupOptions, console, startServer, context);
                         }
-                        return startStdIO(
-                            startupOptions,
-                            CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(), startupOptions, null),
-                            console);
+
+                        {
+                            var kernel = CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(),
+                                startupOptions);
+                            disposeOnQuit.Add(kernel);
+                            kernel.UseQuiCommand(disposeOnQuit, cancellationToken);
+                           
+
+                            return startStdIO(
+                                startupOptions,
+                                kernel,
+                                console);
+                        }
                     });
 
                 return command;
@@ -426,7 +450,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                          .UseLog()
                          .UseAbout()
                          .UseProxyKernel();
-
 
             SetUpFormatters(frontendEnvironment, startupOptions);
 

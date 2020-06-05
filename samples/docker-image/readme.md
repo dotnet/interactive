@@ -15,7 +15,7 @@ The container exposes port 8888 and the port range 1100-1200. A different port r
 Port 8888 is used by Jupyter and it is where the web applciation runs, the range is used by dotnet interactive to expose functionalities to the frontend directly.
 
 ```powershell
-> docker build . --tag dotnet-interactive:1.0 --build-args HTTP_PORT_RANGE=1000-1100
+> docker build . --tag dotnet-interactive:1.0 --build-arg HTTP_PORT_RANGE=1000-1100
 ```
 
 ## Run the container

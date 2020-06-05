@@ -30,13 +30,13 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             { typeof(IKernelCommand), "KernelCommand" },
         };
 
-        private static readonly HashSet<Type> AlwaysEmitTypes = new HashSet<Type>()
+        private static readonly HashSet<Type> AlwaysEmitTypes = new HashSet<Type>
         {
             typeof(KernelCommandBase),
             typeof(KernelEventBase)
         };
 
-        private static readonly HashSet<string> OptionalFields = new HashSet<string>()
+        private static readonly HashSet<string> OptionalFields = new HashSet<string>
         {
             $"{nameof(KernelCommandBase)}.{nameof(KernelCommandBase.TargetKernelName)}",
             $"{nameof(SubmitCode)}.{nameof(SubmitCode.SubmissionType)}"
@@ -45,6 +45,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
         public static string Generate()
         {
             var builder = new StringBuilder();
+
             var commandTypes = typeof(IKernelCommand)
                                .Assembly
                                .ExportedTypes

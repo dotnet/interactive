@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -22,7 +21,7 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly ConcurrentQueue<PackageAdded> _packages = new ConcurrentQueue<PackageAdded>();
         private readonly List<IKernel> _childKernels = new List<IKernel>();
-        private Dictionary<string, IKernel> _kernelsByNameOrAlias;
+        private readonly Dictionary<string, IKernel> _kernelsByNameOrAlias;
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
         private string _defaultKernelName;
 
@@ -135,10 +134,8 @@ namespace Microsoft.DotNet.Interactive
         protected override void SetHandlingKernel(IKernelCommand command, KernelInvocationContext context)
         {
             var kernel = GetHandlingKernel(command, context);
-            if (context.HandlingKernel == null)
-            {
-                context.HandlingKernel = kernel;
-            }
+
+            context.HandlingKernel ??= kernel;
         }
 
         private IKernel GetHandlingKernel(
@@ -200,11 +197,6 @@ namespace Microsoft.DotNet.Interactive
         }
 
         protected override Task HandleSubmitCode(SubmitCode command, KernelInvocationContext context)
-        {
-            throw new NotSupportedException();
-        }
-
-        protected override Task HandleRequestCompletion(RequestCompletion command, KernelInvocationContext context)
         {
             throw new NotSupportedException();
         }

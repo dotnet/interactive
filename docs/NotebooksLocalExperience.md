@@ -5,7 +5,7 @@
 First, make sure you have the following installed:
 
 - The [.NET 3.1 SDK](https://dotnet.microsoft.com/download).
-- **Jupyter**. Jupyter can be installed using [Anaconda](https://www.anaconda.com/distribution).
+- **Jupyter**. An easy way to install Jupyter is through [Anaconda](https://www.anaconda.com/distribution).
 
 - Open the Anaconda Prompt (Windows) or Terminal (macOS) and verify that Jupyter is installed and present on the path:
 
@@ -17,7 +17,7 @@ First, make sure you have the following installed:
 - Next, in an ordinary console, install the `dotnet interactive` global tool:
 
 ```console
-> dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
+> dotnet tool install -g --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json" Microsoft.dotnet-interactive
 ```
 
 - Install the .NET kernel by running the following within your Anaconda Prompt:

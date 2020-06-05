@@ -42,21 +42,24 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             }
         }
 
-        private static void OnCompletionRequestCompleted(CompletionRequestCompleted completionRequestCompleted,IJupyterMessageSender jupyterMessageSender)
+        private static void OnCompletionRequestCompleted(CompletionRequestCompleted completionRequestCompleted, IJupyterMessageSender jupyterMessageSender)
         {
-            var command = completionRequestCompleted.Command as RequestCompletion;
+            var startPosition = 0; 
+            var endPosition = 0;
 
-            int startPosition, endPosition;
-            if (completionRequestCompleted.Range != null)
+            if (completionRequestCompleted.Command is RequestCompletion command)
             {
-                startPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionRequestCompleted.Range.GetValueOrDefault().Start);
-                endPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionRequestCompleted.Range.GetValueOrDefault().End);
-            }
-            else
-            {
-                var cursorOffset = SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.Position);
-                startPosition = SourceUtilities.ComputeReplacementStartPosition(command.Code, cursorOffset);
-                endPosition = cursorOffset;
+                if (completionRequestCompleted.Range != null)
+                {
+                    startPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionRequestCompleted.Range.GetValueOrDefault().Start);
+                    endPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionRequestCompleted.Range.GetValueOrDefault().End);
+                }
+                else
+                {
+                    var cursorOffset = SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.Position);
+                    startPosition = SourceUtilities.ComputeReplacementStartPosition(command.Code, cursorOffset);
+                    endPosition = cursorOffset;
+                }
             }
 
             var reply = new CompleteReply(startPosition, endPosition, matches: completionRequestCompleted.CompletionList.Select(e => e.InsertText ?? e.DisplayText).ToList());

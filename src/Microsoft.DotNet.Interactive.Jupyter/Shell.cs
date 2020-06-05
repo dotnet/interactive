@@ -8,8 +8,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Clockwise;
-using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 using Microsoft.Extensions.Hosting;
@@ -17,7 +15,6 @@ using NetMQ.Sockets;
 using Pocket;
 using Recipes;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Jupyter.Shell>;
-using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
