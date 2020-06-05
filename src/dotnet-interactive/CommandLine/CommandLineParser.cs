@@ -204,13 +204,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             serviceCollection.AddSingleton(_ => new HtmlNotebookFrontedEnvironment());
                             serviceCollection.AddSingleton<FrontendEnvironment>(c =>
                                 c.GetService<HtmlNotebookFrontedEnvironment>());
-                        },
-                        kernel =>
-                        {
-                            cancellationToken.Register(async () =>
-                            {
-                                await kernel.SendAsync(new Quit());
-                            });
                         });
 
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
@@ -312,7 +305,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 command.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext, CancellationToken>(
                     (startupOptions, options, console, context, cancellationToken) =>
                     {
-                        UseQuitCommand(disposeOnQuit);
                         if (startupOptions.EnableHttpApi)
                         {
                             RegisterKernelInServiceCollection(
@@ -328,10 +320,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                 {
                                     StdIOCommand.CreateServer(kernel, console);
 
-                                    cancellationToken.Register(async () =>
-                                    {
-                                        await kernel.SendAsync(new Quit());
-                                    });
+                                    kernel.UseQuiCommand(disposeOnQuit, cancellationToken);
                                 });
 
                             return startHttp(startupOptions, console, startServer, context);
@@ -341,11 +330,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             var kernel = CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(),
                                 startupOptions);
                             disposeOnQuit.Add(kernel);
-
-                            cancellationToken.Register(async () =>
-                            {
-                                await kernel.SendAsync(new Quit());
-                            });
+                            kernel.UseQuiCommand(disposeOnQuit, cancellationToken);
+                           
 
                             return startStdIO(
                                 startupOptions,
@@ -390,12 +376,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 var pr = new HttpPortRange(start, end);
                 return pr;
             }
-        }
-
-        private static void UseQuitCommand(IDisposable disposeOnQuit)
-        {
-            Quit.DisposeOnQuit = disposeOnQuit;
-            KernelCommandEnvelope.RegisterCommandType<Quit>(nameof(Quit));
         }
 
         private static IServiceCollection RegisterKernelInServiceCollection(IServiceCollection services, StartupOptions startupOptions, string defaultKernel, Action<IServiceCollection> configureFrontedEnvironment, Action<KernelBase> afterKernelCreation = null)
