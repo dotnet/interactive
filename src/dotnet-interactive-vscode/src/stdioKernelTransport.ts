@@ -69,7 +69,7 @@ export class StdioKernelTransport {
         let command: ChangeWorkingDirectory = {
             workingDirectory: path.dirname(notebookPath)
         };
-        const initialize = new Promise<void>(async (resolve, reject) => {
+        const initialization = new Promise<void>(async (resolve, reject) => {
             await kernelTransport.submitCommand(command, 'ChangeWorkingDirectory', token);
             let disposable = kernelTransport.subscribeToKernelEvents(envelope => {
                 if (envelope.command?.token === token) {
@@ -91,7 +91,7 @@ export class StdioKernelTransport {
         });
         return {
             transport: kernelTransport,
-            initialize
+            initialization
         };
     }
 

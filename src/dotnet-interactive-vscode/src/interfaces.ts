@@ -57,5 +57,5 @@ export interface ReportInstallationFinished {
 
 export interface KernelTransportCreationResult {
     transport: KernelTransport;
-    initialize: Promise<void>;
+    initialization: Promise<void>;
 }

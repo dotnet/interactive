@@ -19,10 +19,10 @@ export class ClientMapper {
         let key = ClientMapper.keyFromUri(uri);
         let client = this.clientMap.get(key);
         if (client === undefined) {
-            const { transport, initialize } = this.kernelTransportCreator(uri.fsPath);
-            client = new InteractiveClient(transport);
+            const creationResult = this.kernelTransportCreator(uri.fsPath);
+            client = new InteractiveClient(creationResult.transport);
             this.clientMap.set(key, client);
-            await initialize;
+            await creationResult.initialization;
         }
 
         return client;

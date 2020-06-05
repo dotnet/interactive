@@ -16,7 +16,7 @@ export class TestKernelTransport {
         let transport = new TestKernelTransport(fakedEventEnvelopes);
         return {
             transport,
-            initialize: Promise.resolve()
+            initialization: Promise.resolve()
         };
     }
 
