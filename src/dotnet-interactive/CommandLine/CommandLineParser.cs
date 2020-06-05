@@ -268,7 +268,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 command.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext, CancellationToken>(
                     (startupOptions, options, console, context, cancellationToken) =>
                     {
-                        ExtendProtocol();
+                        UseQuitCommand();
                         RegisterKernelInServiceCollection(
                             services,
                             startupOptions,
@@ -313,7 +313,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 command.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext, CancellationToken>(
                     (startupOptions, options, console, context, cancellationToken) =>
                     {
-                        ExtendProtocol();
+                        UseQuitCommand();
                         if (startupOptions.EnableHttpApi)
                         {
                             RegisterKernelInServiceCollection(
@@ -398,7 +398,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             }
         }
 
-        private static void ExtendProtocol()
+        private static void UseQuitCommand()
         {
             KernelCommandEnvelope.RegisterCommandType<Quit>(nameof(Quit));
         }
