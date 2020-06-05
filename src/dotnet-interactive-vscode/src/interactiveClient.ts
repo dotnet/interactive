@@ -31,7 +31,7 @@ import {
     SubmitCode,
     SubmitCodeType,
 } from './contracts';
-import { CellOutput, CellErrorOutput, CellOutputKind, CellStreamOutput, CellDisplayOutput } from './interfaces/vscode';
+import { CellOutput, CellErrorOutput, CellOutputKind, CellDisplayOutput } from './interfaces/vscode';
 
 export class InteractiveClient {
     private nextToken: number = 1;

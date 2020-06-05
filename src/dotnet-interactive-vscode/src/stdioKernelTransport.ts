@@ -14,9 +14,10 @@ import {
     KernelEventEnvelopeObserver,
     DiagnosticLogEntryProducedType,
     DiagnosticLogEntryProduced,
-    ChangeWorkingDirectory
+    ChangeWorkingDirectory,
+    KernelTransport
 } from "./contracts";
-import { ProcessStart } from './interfaces';
+import { ProcessStart, KernelTransportCreationResult } from './interfaces';
 import { ReportChannel } from './interfaces/vscode';
 
 export class StdioKernelTransport {
@@ -60,12 +61,15 @@ export class StdioKernelTransport {
         });
     }
 
-    static create(processStart: ProcessStart, notebookPath: string, diagnosticChannel: ReportChannel): Promise<StdioKernelTransport> {
-        return new Promise<StdioKernelTransport>((resolve, reject) => {
-            let kernelTransport = new StdioKernelTransport(processStart, notebookPath, diagnosticChannel);
-            // set the working directory to be next to the notebook; this allows relative file access to work as expected
-            // immediately clean up afterwards because we'll never do this again
-            let token = 'change-working-directory-token';
+    static create(processStart: ProcessStart, notebookPath: string, diagnosticChannel: ReportChannel): KernelTransportCreationResult {
+        let kernelTransport = new StdioKernelTransport(processStart, notebookPath, diagnosticChannel);
+        // set the working directory to be next to the notebook; this allows relative file access to work as expected
+        // immediately clean up afterwards because we'll never do this again
+        let token = 'change-working-directory-token';
+        let command: ChangeWorkingDirectory = {
+            workingDirectory: path.dirname(notebookPath)
+        };
+        const initialization = new Promise<void>((resolve, reject) => {
             let disposable = kernelTransport.subscribeToKernelEvents(envelope => {
                 if (envelope.command?.token === token) {
                     switch (envelope.eventType) {
@@ -73,21 +77,22 @@ export class StdioKernelTransport {
                             let failed = <CommandFailed>envelope.event;
                             let message = `Unable to set notebook working directory to '${notebookPath}'.\n${failed.message}`;
                             diagnosticChannel.appendLine(message);
-                            resolve(kernelTransport);
                             disposable.dispose();
+                            resolve();
                             break;
                         case CommandHandledType:
-                            resolve(kernelTransport);
                             disposable.dispose();
+                            resolve();
                             break;
                     }
                 }
             });
-            let command: ChangeWorkingDirectory = {
-                workingDirectory: path.dirname(notebookPath)
-            };
             kernelTransport.submitCommand(command, 'ChangeWorkingDirectory', token);
         });
+        return {
+            transport: kernelTransport,
+            initialization
+        };
     }
 
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
