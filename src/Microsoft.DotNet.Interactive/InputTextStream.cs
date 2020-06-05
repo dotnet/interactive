@@ -51,12 +51,12 @@ namespace Microsoft.DotNet.Interactive
 
             Task.Run(async () =>
             {
-                while (!_complete && !_cancellationSource.IsCancellationRequested)
+                while (!_complete)
                 {
                     var line = await _input.ReadLineAsync();
                     if (line == null)
                     {
-                        await Task.Delay(100);
+                        await Task.Delay(100, _cancellationSource.Token);
                     }
                     else
                     {
