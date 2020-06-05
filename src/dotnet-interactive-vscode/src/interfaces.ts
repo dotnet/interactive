@@ -1,6 +1,8 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import { KernelTransport } from "./contracts";
+
 export interface IsValidToolVersion {
     (actualVersion: string, minSupportedVersion: string): boolean;
 }
@@ -51,4 +53,9 @@ export interface InstallInteractiveTool {
 
 export interface ReportInstallationFinished {
     (): void;
+}
+
+export interface KernelTransportCreationResult {
+    transport: KernelTransport;
+    initialize: () => Promise<void>;
 }

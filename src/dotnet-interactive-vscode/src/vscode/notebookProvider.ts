@@ -61,6 +61,8 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
             return;
         }
 
+        cell.metadata.runStartTime = Date.now();
+        cell.metadata.runState = vscode.NotebookCellRunState.Running;
         cell.outputs = [];
         let client = await this.clientMapper.getOrAddClient(document.uri);
         let source = cell.source.toString();
@@ -68,6 +70,10 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
             // to properly trigger the UI update, `cell.outputs` needs to be uniquely assigned; simply setting it to the local variable has no effect
             cell.outputs = [];
             cell.outputs = outputs;
+        }).then(() => {
+            cell.metadata.runState = vscode.NotebookCellRunState.Success;
+        }).catch(() => {
+            cell.metadata.runState = vscode.NotebookCellRunState.Error;
         });
     }
 
