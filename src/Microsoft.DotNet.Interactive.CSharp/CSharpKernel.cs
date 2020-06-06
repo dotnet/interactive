@@ -65,6 +65,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              typeof(PlotlyChart).Assembly);
 
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
+        private string _currentDirectory;
 
         public CSharpKernel() : base(DefaultKernelName)
         {
@@ -235,9 +236,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
             CancellationToken cancellationToken = default,
             Func<Exception, bool> catchException = default)
         {
-            ScriptOptions = ScriptOptions.WithMetadataResolver(
-                ScriptMetadataResolver.Default.WithBaseDirectory(
-                    Directory.GetCurrentDirectory()));
+            var currentDirectory = Directory.GetCurrentDirectory();
+            if (_currentDirectory != currentDirectory)
+            {
+                _currentDirectory = currentDirectory;
+                ScriptOptions = ScriptOptions.WithMetadataResolver(
+                    ScriptMetadataResolver.Default.WithBaseDirectory(
+                        _currentDirectory));
+            }
 
             if (ScriptState == null)
             {
