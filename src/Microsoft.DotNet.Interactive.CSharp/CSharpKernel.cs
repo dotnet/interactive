@@ -83,9 +83,10 @@ namespace Microsoft.DotNet.Interactive.CSharp
             {
                 _workspace.Dispose();
                 _workspace = null;
-
+                
                 _packageRestoreContext = null;
                 ScriptState = null;
+                ScriptOptions = null;
             });
         }
 
