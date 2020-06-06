@@ -22,12 +22,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
         private readonly CSharpParseOptions _parseOptions;
         private Compilation _currentCompilation;
         private Solution _solution;
+        private Solution _uncommittedSolution;
 
         public InteractiveWorkspace()
         {
             var workspace = new AdhocWorkspace(MefHostServices.DefaultHost, WorkspaceKind.Interactive);
             
             _solution = workspace.CurrentSolution;
+            _uncommittedSolution = _solution;
 
             _parseOptions = new CSharpParseOptions(
                 LanguageVersion.Latest,
@@ -40,10 +42,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
             {
                 _currentCompilation = null;
                 _solution = null;
+                _uncommittedSolution = null;
             }));
         }
 
-        public void AddSubmission(ScriptState scriptState)
+        public async Task AddSubmissionAsync(ScriptState scriptState)
         {
             _currentCompilation = scriptState.Script.GetCompilation();
 
@@ -74,10 +77,12 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 _currentSubmissionProjectId,
                 debugName: debugName);
 
+            var submissionSourceText = SourceText.From(scriptState.Script.Code);
+
             _solution = _solution.AddDocument(
                 documentId,
                 debugName,
-                SourceText.From(scriptState.Script.Code));
+                submissionSourceText);
 
             if (_previousSubmissionProjectId != null)
             {
@@ -85,36 +90,35 @@ namespace Microsoft.DotNet.Interactive.CSharp
                     _currentSubmissionProjectId,
                     new ProjectReference(_previousSubmissionProjectId));
             }
+           
+            var rollupName = $"Rollup through #{_submissionCount - 1}";
+
+            var rollupDocId = DocumentId.CreateNewId(
+                _currentSubmissionProjectId,
+                rollupName);
+
+            _uncommittedSolution = _solution.AddDocument(
+                rollupDocId,
+                rollupName,
+                await CollateSubmissionsAsync());
         }
 
-        public async Task<Document> ForkDocumentAsync(string code)
+        public Document ForkDocument(string code)
         {
             var completionDocName = $"Fork from #{_submissionCount - 1}: {code}";
             var completionDocId = DocumentId.CreateNewId(
                 _currentSubmissionProjectId,
                 completionDocName);
 
-            var rollupName = $"Rollup through #{_submissionCount - 1}";
-            var rollupOfPreviousCode = await CollateTextAsync();
-
-            var rollupDocId = DocumentId.CreateNewId(
-                _currentSubmissionProjectId,
-                rollupName);
-
-            var solution = _solution
-                           .AddDocument(
-                               completionDocId,
-                               completionDocName,
-                               SourceText.From(code))
-                           .AddDocument(
-                               rollupDocId,
-                               rollupName,
-                             SourceText.From(rollupOfPreviousCode));
+            var solution = _uncommittedSolution.AddDocument(
+                    completionDocId,
+                    completionDocName,
+                    SourceText.From(code));
 
             return solution.GetDocument(completionDocId);
         }
 
-        private async Task<string> CollateTextAsync()
+        private async Task<string> CollateSubmissionsAsync()
         {
             var sb = new StringBuilder();
 
@@ -122,7 +126,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             {
                 foreach (var document in project.Documents)
                 {
-                    var text =await document.GetTextAsync();
+                    var text = await document.GetTextAsync();
 
                     if (text != null)
                     {

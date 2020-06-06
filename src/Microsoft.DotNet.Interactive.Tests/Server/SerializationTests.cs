@@ -106,8 +106,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             {
                 yield return new AddPackage(new PackageReference("MyAwesomePackage", "1.2.3"));
 
-                yield return new CancelCurrentCommand();
-
                 yield return new ChangeWorkingDirectory(new DirectoryInfo("some/different/directory"));
 
                 yield return new DisplayError("oops!");

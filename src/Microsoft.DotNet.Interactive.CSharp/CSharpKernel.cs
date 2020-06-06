@@ -65,6 +65,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              typeof(PlotlyChart).Assembly);
 
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
+        private string _currentDirectory;
 
         public CSharpKernel() : base(DefaultKernelName)
         {
@@ -83,9 +84,10 @@ namespace Microsoft.DotNet.Interactive.CSharp
             {
                 _workspace.Dispose();
                 _workspace = null;
-
+                
                 _packageRestoreContext = null;
                 ScriptState = null;
+                ScriptOptions = null;
             });
         }
 
@@ -127,7 +129,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
-            var document = await _workspace.ForkDocumentAsync(command.Code);
+            var document = _workspace.ForkDocument(command.Code);
             var text = await document.GetTextAsync();
             var cursorPosition = text.Lines.GetPosition(new LinePosition(command.Position.Line, command.Position.Character));
             var service = QuickInfoService.GetService(document);
@@ -234,9 +236,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
             CancellationToken cancellationToken = default,
             Func<Exception, bool> catchException = default)
         {
-            ScriptOptions = ScriptOptions.WithMetadataResolver(
-                ScriptMetadataResolver.Default.WithBaseDirectory(
-                    Directory.GetCurrentDirectory()));
+            var currentDirectory = Directory.GetCurrentDirectory();
+            if (_currentDirectory != currentDirectory)
+            {
+                _currentDirectory = currentDirectory;
+                ScriptOptions = ScriptOptions.WithMetadataResolver(
+                    ScriptMetadataResolver.Default.WithBaseDirectory(
+                        _currentDirectory));
+            }
 
             if (ScriptState == null)
             {
@@ -258,7 +265,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             if (ScriptState.Exception is null)
             {
-                _workspace.AddSubmission(ScriptState);
+                await _workspace.AddSubmissionAsync(ScriptState);
             }
         }
 
@@ -282,7 +289,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             string code,
             int cursorPosition)
         {
-            var document = await _workspace.ForkDocumentAsync(code);
+            var document = _workspace.ForkDocument(code);
 
             var service = CompletionService.GetService(document);
             

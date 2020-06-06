@@ -55,7 +55,6 @@ namespace Microsoft.DotNet.Interactive.Server
             _envelopeTypesByCommandTypeName = new Dictionary<string, Type>
             {
                 [nameof(AddPackage)] = typeof(KernelCommandEnvelope<AddPackage>),
-                [nameof(CancelCurrentCommand)] = typeof(KernelCommandEnvelope<CancelCurrentCommand>),
                 [nameof(ChangeWorkingDirectory)] = typeof(KernelCommandEnvelope<ChangeWorkingDirectory>),
                 [nameof(DisplayError)] = typeof(KernelCommandEnvelope<DisplayError>),
                 [nameof(DisplayValue)] = typeof(KernelCommandEnvelope<DisplayValue>),
