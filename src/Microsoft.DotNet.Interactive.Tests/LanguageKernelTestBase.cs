@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         protected CompositeKernel CreateKernel(Language language = Language.CSharp)
         {
-            var kernelBase = language switch
+            var languageKernel = language switch
             {
                 Language.FSharp => new FSharpKernel()
                                    .UseDefaultFormatting()
@@ -93,14 +93,14 @@ namespace Microsoft.DotNet.Interactive.Tests
                 _ => throw new InvalidOperationException($"Unknown language specified: {language}")
             };
             
-            kernelBase = kernelBase
+            languageKernel = languageKernel
                 .LogEventsToPocketLogger();
 
             var kernel =
-                new CompositeKernel { kernelBase }
+                new CompositeKernel { languageKernel }
                     .UseDefaultMagicCommands(); 
 
-            kernel.DefaultKernelName = kernelBase.Name;
+            kernel.DefaultKernelName = languageKernel.Name;
 
             KernelEvents = kernel.KernelEvents.ToSubscribedList();
 

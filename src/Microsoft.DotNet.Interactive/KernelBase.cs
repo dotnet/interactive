@@ -398,11 +398,11 @@ namespace Microsoft.DotNet.Interactive
         }
 
         private static void SetHandler<T>(
-            IKernelCommandHandler<T> completionHandler,
-            T requestCompletion)
+            IKernelCommandHandler<T> handler,
+            T command)
             where T : KernelCommandBase =>
-            requestCompletion.Handler = (command, context) =>
-                completionHandler.HandleAsync(requestCompletion, context);
+            command.Handler = (_, context) =>
+                handler.HandleAsync(command, context);
 
         protected virtual void SetHandlingKernel(
             IKernelCommand command,

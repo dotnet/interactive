@@ -128,7 +128,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
-            var document = await _workspace.ForkDocumentAsync(command.Code);
+            var document = _workspace.ForkDocument(command.Code);
             var text = await document.GetTextAsync();
             var cursorPosition = text.Lines.GetPosition(new LinePosition(command.Position.Line, command.Position.Character));
             var service = QuickInfoService.GetService(document);
@@ -259,7 +259,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             if (ScriptState.Exception is null)
             {
-                _workspace.AddSubmission(ScriptState);
+                await _workspace.AddSubmissionAsync(ScriptState);
             }
         }
 
@@ -283,7 +283,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             string code,
             int cursorPosition)
         {
-            var document = await _workspace.ForkDocumentAsync(code);
+            var document = _workspace.ForkDocument(code);
 
             var service = CompletionService.GetService(document);
             
