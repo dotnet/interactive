@@ -42,14 +42,6 @@ namespace Microsoft.DotNet.Interactive
             } while (true);
         }
 
-        protected override Task HandleRequestCompletion(RequestCompletion command, KernelInvocationContext context)
-        {
-            var envelope = KernelCommandEnvelope.Create(command);
-            _clientStream.WriteMessage(KernelCommandEnvelope.Serialize(envelope));
-            await _clientStream.FlushAsync();
-            await PollEvents(envelope.Token);
-        }
-
         protected async override Task HandleSubmitCode(SubmitCode command, KernelInvocationContext context)
         {
             var envelope = KernelCommandEnvelope.Create(command);
