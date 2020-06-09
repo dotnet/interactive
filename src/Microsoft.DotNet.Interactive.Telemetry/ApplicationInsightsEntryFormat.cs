@@ -23,9 +23,10 @@ namespace Microsoft.DotNet.Interactive.Telemetry
         public IDictionary<string, string> Properties { get; }
         public IDictionary<string, double> Measurements { get; }
 
-        public ApplicationInsightsEntryFormat WithAppliedToPropertiesValue(Func<string, string> func)
+        public ApplicationInsightsEntryFormat WithAppliedToPropertiesValue(Func<string, string> func, Func<string, bool> filter)
         {
-            var appliedProperties = Properties.ToDictionary(p => p.Key, p => func(p.Value));
+            var appliedProperties = Properties
+                .ToDictionary(p => p.Key, p => filter(p.Key)? func(p.Value) : p.Value);
             return new ApplicationInsightsEntryFormat(EventName, appliedProperties, Measurements);
         }
     }
