@@ -276,12 +276,12 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 parser.Configuration.RootCommand.Name);
 
             return new CompletionItem(
-                name,
-                kind,
-                name,
-                name,
-                name,
-                helpBuilder.GetHelpForSymbol(symbol));
+                displayText: name,
+                kind: kind,
+                filterText: name,
+                sortText: name,
+                insertText: name,
+                documentation: helpBuilder.GetHelpForSymbol(symbol));
         }
 
         private void EnsureRootCommandIsInitialized()
