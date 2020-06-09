@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -209,27 +210,42 @@ i");
                 .Contain("Unrecognized command or argument '#!oops'");
         }
 
-        [Fact]
-        public async Task Directives_can_display_help()
+        [Theory]
+        [InlineData("csharp")]
+        [InlineData(".NET")]
+        public async Task Directives_can_display_help(string kernelName)
         {
-            using var kernel = new CompositeKernel();
-            using var events = kernel.KernelEvents.ToSubscribedList();
+            var cSharpKernel = new CSharpKernel().UseDefaultMagicCommands();
+            using var compositeKernel = new CompositeKernel
+            {
+                cSharpKernel
+            };
 
             var command = new Command("#!hello")
             {
                 new Option<bool>("--loudness")
             };
 
-            kernel.AddDirective(command);
+            var findKernel = compositeKernel.FindKernel(kernelName);
 
-            await kernel.SubmitCodeAsync("#!hello -h");
+            var kernelWithDirective = findKernel switch
+            {
+                KernelBase k => k,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            kernelWithDirective.AddDirective(command);
+
+            using var events = compositeKernel.KernelEvents.ToSubscribedList();
+
+            await compositeKernel.SubmitCodeAsync("#!hello -h");
 
             var stdOut = string.Join(
                 "",
                 events
                     .OfType<StandardOutputValueProduced>()
                     .Select(e => e.Value.As<string>()));
-            
+
             var stdErr = string.Join(
                 "",
                 events
@@ -242,7 +258,8 @@ i");
 
             stdOut
                 .Should()
-                .NotContain(new RootCommand().Name, "RootCommand.Name is generally intended to reflect the command line tool's name but in this case it's just an implementation detail and it looks weird in the output.");
+                .NotContain(new RootCommand().Name,
+                            "RootCommand.Name is generally intended to reflect the command line tool's name but in this case it's just an implementation detail and it looks weird in the output.");
 
             stdErr.Should().BeEmpty();
         }

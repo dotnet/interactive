@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
 
             var node = _root.FindNode(position);
-
+            
             switch (node)
             {
                 case LanguageNode languageNode:
@@ -61,6 +61,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 default:
                     return null;
             }
+        }
+
+        public int GetAbsolutePosition(LinePosition linePosition)
+        {
+            return _sourceText.Lines.GetPosition(linePosition);
         }
     }
 }

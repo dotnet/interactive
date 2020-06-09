@@ -121,9 +121,17 @@ namespace Microsoft.DotNet.Interactive.Parsing
             {
                 var next = position + 1;
 
-                return _sourceText[position] == value &&
-                       _sourceText.Length > next &&
-                       !char.IsWhiteSpace(_sourceText[next]);
+                if (_sourceText[position] != value)
+                {
+                    return false;
+                }
+
+                if (_sourceText.Length <= next)
+                {
+                    return true;
+                }
+
+                return !char.IsWhiteSpace(_sourceText[next]);
             }
             
             bool IsCharacterThenWhitespace(char value)

@@ -27,6 +27,7 @@ namespace Microsoft.DotNet.Interactive
 
         public CompositeKernel() : base(".NET")
         {
+            // FIX: (CompositeKernel) this can be more efficient
             RegisterForDisposal(KernelEvents
                                 .OfType<PackageAdded>()
                                 .Where(pa => pa?.PackageReference.PackageRoot != null)
@@ -131,6 +132,8 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+        public IReadOnlyCollection<IKernel> ChildKernels => _childKernels;
+
         protected override void SetHandlingKernel(IKernelCommand command, KernelInvocationContext context)
         {
             var kernel = GetHandlingKernel(command, context);
@@ -142,15 +145,12 @@ namespace Microsoft.DotNet.Interactive
             IKernelCommand command,
             KernelInvocationContext context)
         {
-            var commandBase = command as KernelCommandBase;
-
-            var targetKernelName = commandBase?.TargetKernelName
-                                   ?? DefaultKernelName;
-
-            if (!(commandBase is null))
+            var targetKernelName = command switch
             {
-                commandBase.TargetKernelName = targetKernelName;
-            }
+                // FIX: (GetHandlingKernel)  RequestCompletion _ => Name,
+                KernelCommandBase kcb => kcb.TargetKernelName ?? DefaultKernelName,
+                _ => DefaultKernelName
+            };
 
             IKernel kernel;
 
@@ -196,12 +196,12 @@ namespace Microsoft.DotNet.Interactive
             throw new NoSuitableKernelException(command);
         }
 
-        protected override Task HandleSubmitCode(SubmitCode command, KernelInvocationContext context)
+        protected override Task HandleSubmitCode(
+            SubmitCode command, 
+            KernelInvocationContext context)
         {
             throw new NotSupportedException();
         }
-
-        public IReadOnlyCollection<IKernel> ChildKernels => _childKernels;
 
         public IEnumerator<IKernel> GetEnumerator() => _childKernels.GetEnumerator();
 

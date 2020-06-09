@@ -146,9 +146,11 @@ namespace Microsoft.DotNet.Interactive.Tests
             return new CompositeKernel
             {
                 new CSharpKernel()
+                    .UseNugetDirective()
                     .UseKernelHelpers()
                     .UseDotNetVariableSharing(),
                 new FSharpKernel()
+                    .UseNugetDirective()
                     .UseKernelHelpers()
                     .UseDefaultNamespaces() 
                     .UseDotNetVariableSharing(),

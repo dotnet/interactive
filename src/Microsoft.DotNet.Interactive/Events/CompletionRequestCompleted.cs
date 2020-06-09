@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Events
     {
         public CompletionRequestCompleted(
             IEnumerable<CompletionItem> completionList,
-            IKernelCommand command,
+            RequestCompletion command,
             LinePositionSpan? range = null) : base(command)
         {
             CompletionList = completionList ?? throw new ArgumentNullException(nameof(completionList));

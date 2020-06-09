@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -13,6 +14,7 @@ using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Parsing;
@@ -26,6 +28,9 @@ namespace Microsoft.DotNet.Interactive
         private readonly CompositeDisposable _disposables;
         private readonly ConcurrentQueue<IKernelCommand> _deferredCommands = new ConcurrentQueue<IKernelCommand>();
         private readonly ConcurrentDictionary<Type, object> _properties = new ConcurrentDictionary<Type, object>();
+        private readonly ConcurrentQueue<KernelOperation> _commandQueue =
+            new ConcurrentQueue<KernelOperation>();
+        private FrontendEnvironment _frontendEnvironment;
 
         protected KernelBase(string name)
         {
@@ -252,11 +257,6 @@ namespace Microsoft.DotNet.Interactive
             await command.InvokeAsync(context);
         }
 
-        private readonly ConcurrentQueue<KernelOperation> _commandQueue =
-            new ConcurrentQueue<KernelOperation>();
-
-        private FrontendEnvironment _frontendEnvironment;
-
         public Task<IKernelCommandResult> SendAsync(
             IKernelCommand command,
             CancellationToken cancellationToken)
@@ -372,7 +372,7 @@ namespace Microsoft.DotNet.Interactive
                         case RequestCompletion requestCompletion:
                             if (this is IKernelCommandHandler<RequestCompletion> completionHandler)
                             {
-                                SetHandler(completionHandler, requestCompletion);
+                                SetCompletionHandler(requestCompletion, completionHandler);
                             }
 
                             break;
@@ -394,6 +394,57 @@ namespace Microsoft.DotNet.Interactive
                             break;
                     }
                 }
+            }
+        }
+
+        private void SetCompletionHandler(RequestCompletion requestCompletion, IKernelCommandHandler<RequestCompletion> completionHandler)
+        {
+            var tree = SubmissionParser.Parse(requestCompletion.Code);
+
+            var linePosition = requestCompletion.Position;
+
+            var rootNode = tree.GetRoot();
+
+            var absolutePosition = tree.GetAbsolutePosition(linePosition);
+            if (absolutePosition >= tree.Length)
+            {
+                absolutePosition--;
+            }
+            else if (char.IsWhiteSpace(tree.GetRoot().Text[absolutePosition]))
+            {
+                absolutePosition--;
+            }
+
+            var nodeToComplete =
+                rootNode.FindNode(absolutePosition);
+
+            var charPosition = linePosition.Character;
+
+            if (nodeToComplete is DirectiveNode directiveNode)
+            {
+                requestCompletion.Handler = (_, c) =>
+                {
+                    var directiveParseResult = directiveNode
+                        .GetDirectiveParseResult();
+
+                    var completions = directiveParseResult
+                                      .GetSuggestions(charPosition)
+                                      .Select(s => SubmissionParser.CompletionItemFor(s, directiveNode.DirectiveParser))
+                                      .ToArray();
+
+                    var lps = new LinePositionSpan(
+                        new LinePosition(linePosition.Line, 0),
+                        linePosition);
+
+                    c.Publish(new CompletionRequestCompleted(
+                                  completions, requestCompletion, lps));
+
+                    return Task.CompletedTask;
+                };
+            }
+            else
+            {
+                SetHandler(completionHandler, requestCompletion);
             }
         }
 
