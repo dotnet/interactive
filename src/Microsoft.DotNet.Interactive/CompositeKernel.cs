@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Interactive
             set
             {
                 _defaultKernelName = value;
-                SubmissionParser.DefaultLanguage = value;
+                SubmissionParser.KernelLanguage = value;
             }
         }
 
@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var kernel = GetHandlingKernel(command, context);
 
-            context.HandlingKernel ??= kernel;
+            context.HandlingKernel = kernel;
         }
 
         private IKernel GetHandlingKernel(

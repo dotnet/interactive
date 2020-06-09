@@ -8,7 +8,6 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
-using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
@@ -16,6 +15,8 @@ using Recipes;
 using Xunit.Abstractions;
 using Serilog.Sinks.RollingFileAlternate;
 using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
+using System.Collections.Generic;
+using Microsoft.DotNet.Interactive.Jupyter;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -74,33 +75,40 @@ namespace Microsoft.DotNet.Interactive.Tests
             _lockReleaser.Dispose();
         }
 
+        protected CompositeKernel CreateCompositeKernel(Language defaultKernelLanguage = Language.CSharp)
+        {
+            return CreateCompositeKernel(
+                new[]
+                {
+                    CreateFSharpKernel(),
+                    CreateCSharpKernel(),
+                    CreatePowerShellKernel()
+                },
+                defaultKernelLanguage);
+        }
+
         protected CompositeKernel CreateKernel(Language language = Language.CSharp)
         {
             var languageKernel = language switch
             {
-                Language.FSharp => new FSharpKernel()
-                                   .UseDefaultFormatting()
-                                   .UseNugetDirective()
-                                   .UseKernelHelpers()
-                                   .UseWho()
-                                   .UseDefaultNamespaces() as KernelBase,
-                Language.CSharp => new CSharpKernel()
-                                   .UseDefaultFormatting()
-                                   .UseNugetDirective()
-                                   .UseKernelHelpers()
-                                   .UseWho(),
-                Language.PowerShell => new PowerShellKernel(),
+                Language.FSharp => CreateFSharpKernel(),
+                Language.CSharp => CreateCSharpKernel(),
+                Language.PowerShell => CreatePowerShellKernel(),
                 _ => throw new InvalidOperationException($"Unknown language specified: {language}")
             };
-            
-            languageKernel = languageKernel
-                .LogEventsToPocketLogger();
 
-            var kernel =
-                new CompositeKernel { languageKernel }
-                    .UseDefaultMagicCommands(); 
+            return CreateCompositeKernel(new[] { languageKernel }, language);
+        }
 
-            kernel.DefaultKernelName = languageKernel.Name;
+        private CompositeKernel CreateCompositeKernel(IEnumerable<KernelBase> subkernels, Language defaultKernelLanguage)
+        {
+            var kernel = new CompositeKernel().UseDefaultMagicCommands();
+            foreach (var sub in subkernels)
+            {
+                kernel.Add(sub.LogEventsToPocketLogger());
+            }
+
+            kernel.DefaultKernelName = defaultKernelLanguage.LanguageName();
 
             KernelEvents = kernel.KernelEvents.ToSubscribedList();
 
@@ -108,6 +116,30 @@ namespace Microsoft.DotNet.Interactive.Tests
             DisposeAfterTest(kernel);
 
             return kernel;
+        }
+
+        private KernelBase CreateFSharpKernel()
+        {
+            return new FSharpKernel()
+                .UseDefaultFormatting()
+                .UseNugetDirective()
+                .UseKernelHelpers()
+                .UseWho()
+                .UseDefaultNamespaces();
+        }
+
+        private KernelBase CreateCSharpKernel()
+        {
+            return new CSharpKernel()
+                .UseDefaultFormatting()
+                .UseNugetDirective()
+                .UseKernelHelpers()
+                .UseWho();
+        }
+
+        private KernelBase CreatePowerShellKernel()
+        {
+            return new PowerShellKernel();
         }
 
         public async Task SubmitCode(KernelBase kernel, string[] submissions, SubmissionType submissionType = SubmissionType.Run)

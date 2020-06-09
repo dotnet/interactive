@@ -5,24 +5,27 @@ using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Extensions;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
     public class CompletionRequestCompleted : KernelEventBase
     {
+        private LinePositionSpan? _range;
+
         public CompletionRequestCompleted(
             IEnumerable<CompletionItem> completionList,
             RequestCompletion command,
             LinePositionSpan? range = null) : base(command)
         {
             CompletionList = completionList ?? throw new ArgumentNullException(nameof(completionList));
-            Range = range;
+            _range = range;
         }
 
         /// <summary>
         /// The range of where to replace in a completion request.
         /// </summary>
-        public LinePositionSpan? Range { get; set; }
+        public LinePositionSpan? Range => this.CalculateLineOffsetFromParentCommand(_range);
 
         /// <summary>
         /// The list of completion options.

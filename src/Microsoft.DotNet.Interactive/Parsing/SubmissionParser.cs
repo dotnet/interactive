@@ -22,48 +22,46 @@ namespace Microsoft.DotNet.Interactive.Parsing
         private RootCommand _rootCommand;
 
         public IReadOnlyList<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
+        public string KernelLanguage { get; internal set; }
 
         public SubmissionParser(KernelBase kernel)
         {
             _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
-
-            DefaultLanguage = kernel switch
+            KernelLanguage = kernel switch
             {
                 CompositeKernel c => c.DefaultKernelName,
                 _ => kernel.Name
             };
         }
 
-        public string DefaultLanguage { get; internal set; }
-
-        public PolyglotSyntaxTree Parse(string code)
+        public PolyglotSyntaxTree Parse(string code, string language = null)
         {
             var sourceText = SourceText.From(code);
 
             var parser = new PolyglotSyntaxParser(
-                sourceText, 
-                DefaultLanguage, 
+                sourceText,
+                language ?? KernelLanguage,
                 GetDirectiveParser(),
                 GetSubkernelDirectiveParsers());
 
             return parser.Parse();
         }
 
-        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode) 
+        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode)
         {
             var commands = new List<IKernelCommand>();
             var nugetRestoreOnKernels = new HashSet<string>();
             var hoistedCommandsIndex = 0;
 
-            var tree = Parse(submitCode.Code);
+            var tree = Parse(submitCode.Code, submitCode.TargetKernelName);
             var nodes = tree.GetRoot().ChildNodes.ToArray();
+            var targetKernelName = submitCode.TargetKernelName ?? KernelLanguage;
 
             foreach (var node in nodes)
             {
                 switch (node)
                 {
                     case DirectiveNode directiveNode:
-
                         var parseResult = directiveNode.GetDirectiveParseResult();
 
                         if (parseResult.Errors.Any())
@@ -88,7 +86,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             submitCode.Parent,
                             directiveNode);
 
-                        var targetKernelName = DefaultLanguage;
+                        if (directiveNode is KernelNameDirectiveNode kernelNameNode)
+                        {
+                            targetKernelName = kernelNameNode.KernelName;
+                        }
 
                         if (parseResult.CommandResult.Command.Name == "#r")
                         {
@@ -98,7 +99,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             {
                                 AddHoistedCommand(
                                     new SubmitCode(
-                                        directiveNode, 
+                                        directiveNode,
                                         submitCode.SubmissionType,
                                         submitCode.Parent));
                             }

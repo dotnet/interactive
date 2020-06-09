@@ -65,7 +65,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         cell.metadata.runState = vscode.NotebookCellRunState.Running;
         cell.outputs = [];
         let client = await this.clientMapper.getOrAddClient(document.uri);
-        let source = cell.source.toString();
+        let source = cell.document.getText();
         return client.execute(source, getSimpleLanguage(cell.language), outputs => {
             // to properly trigger the UI update, `cell.outputs` needs to be uniquely assigned; simply setting it to the local variable has no effect
             cell.outputs = [];
