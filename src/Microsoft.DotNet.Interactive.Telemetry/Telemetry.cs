@@ -121,7 +121,10 @@ The .NET Core tools collect usage data in order to help us improve your experien
         {
             try
             {
+                //todo: update this to use dependency injection
+#pragma warning disable CS0618 // Type or member is obsolete
                 _client = new TelemetryClient();
+#pragma warning restore CS0618 // Type or member is obsolete
                 _client.InstrumentationKey = InstrumentationKey;
                 _client.Context.Session.Id = CurrentSessionId;
                 _client.Context.Device.OperatingSystem = RuntimeEnvironment.OperatingSystem;
