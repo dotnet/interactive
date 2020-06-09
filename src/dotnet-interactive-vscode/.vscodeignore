@@ -3,6 +3,7 @@
 out/tests/**
 src/**
 .gitignore
+DEVGUIDE.md
 mocha.opts
 testConfig.json
 tsconfig.json
