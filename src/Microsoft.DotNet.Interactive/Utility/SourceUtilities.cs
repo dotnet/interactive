@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             return new LinePosition(line, character);
         }
 
-        public static LinePositionSpan GetRangeFromStartAndEndIndices(string code, int startIndex, int endIndex)
+        public static LinePositionSpan GetLinePositionSpanFromStartAndEndIndices(string code, int startIndex, int endIndex)
         {
             var start = GetPositionFromCursorOffset(code, startIndex);
             var end = GetPositionFromCursorOffset(code, endIndex);

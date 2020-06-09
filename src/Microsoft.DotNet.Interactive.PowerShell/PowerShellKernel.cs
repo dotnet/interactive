@@ -225,7 +225,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 completion = new CompletionRequestCompleted(
                     completionItems,
                     requestCompletion,
-                    SourceUtilities.GetRangeFromStartAndEndIndices(requestCompletion.Code, results.ReplacementIndex, endIndex));
+                    SourceUtilities.GetLinePositionSpanFromStartAndEndIndices(requestCompletion.Code, results.ReplacementIndex, endIndex));
             }
 
             context.Publish(completion);

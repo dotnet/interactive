@@ -67,14 +67,15 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                         if (IsLanguageDirective(directiveToken))
                         {
-                            directiveNode = new KernelDirectiveNode(directiveToken, _sourceText, rootNode.SyntaxTree);
+                            directiveNode = new KernelNameDirectiveNode(directiveToken, _sourceText, rootNode.SyntaxTree);
                             currentLanguage = directiveToken.DirectiveName;
                         }
                         else
                         {
-                            directiveNode = new DirectiveNode(
+                            directiveNode = new ActionDirectiveNode(
                                 directiveToken,
                                 _sourceText,
+                                currentLanguage,
                                 rootNode.SyntaxTree);
                         }
 
@@ -96,11 +97,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                         var directiveName = directiveNode.First().Text;
 
-                        if (_rootKernelDirectiveParser
-                            .Configuration
-                            .RootCommand
-                            .Children
-                            .Any(c => c.HasAlias(directiveName)))
+                        if (IsDefinedInRootKernel(directiveName))
                         {
                             directiveNode.DirectiveParser = _rootKernelDirectiveParser;
                         }
@@ -109,32 +106,27 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         {
                             directiveNode.DirectiveParser = getParser();
                         }
-
-                        if (directiveNode.DirectiveParser != null)
-                        {
-                            if (directiveToken.Text == "#r")
-                            {
-                                var parseResult = directiveNode.GetDirectiveParseResult();
-
-                                if (parseResult.Errors.Count == 0)
-                                {
-                                    var value = parseResult.CommandResult.GetArgumentValueOrDefault<PackageReferenceOrFileInfo>("package");
-
-                                    if (value.Value is FileInfo)
-                                    {
-                                        // #r <file> is treated as a LanguageNode to be handled by the compiler
-
-                                        AddAsLanguageNode(directiveNode);
-
-                                        break;
-                                    }
-                                }
-                            }
-                        }
                         else
                         {
-                            AddAsLanguageNode(directiveNode);
-                            break;
+                            directiveNode.DirectiveParser = _rootKernelDirectiveParser;
+                        }
+
+                        if (directiveToken.Text == "#r")
+                        {
+                            var parseResult = directiveNode.GetDirectiveParseResult();
+
+                            if (parseResult.Errors.Count == 0)
+                            {
+                                var value = parseResult.CommandResult.GetArgumentValueOrDefault<PackageReferenceOrFileInfo>("package");
+
+                                if (value?.Value is FileInfo)
+                                {
+                                    // #r <file> is treated as a LanguageNode to be handled by the compiler
+                                    AddAsLanguageNode(directiveNode);
+
+                                    break;
+                                }
+                            }
                         }
 
                         rootNode.Add(directiveNode);
@@ -173,6 +165,15 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                 rootNode.Add(languageNode);
             }
+        }
+
+        private bool IsDefinedInRootKernel(string directiveName)
+        {
+            return _rootKernelDirectiveParser
+                   .Configuration
+                   .RootCommand
+                   .Children
+                   .Any(c => c.HasAlias(directiveName));
         }
 
         private bool IsLanguageDirective(DirectiveToken directiveToken)

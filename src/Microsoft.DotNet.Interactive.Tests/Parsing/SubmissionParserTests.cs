@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
@@ -60,7 +61,6 @@ x
                 .Trim()
                 .Should()
                 .Be("#r \"nuget:SomePackage\"");
-
         }
 
         [Fact]
@@ -100,22 +100,6 @@ x
         }
 
         [Fact]
-        public void Submission_with_terminating_shebang_includes_it_in_language_node()
-        {
-            var parser = CreateSubmissionParser("csharp");
-
-            var tree = parser.Parse("var x = 1;\n#!");
-
-            tree.GetRoot()
-                .Should()
-                .ContainSingle<LanguageNode>()
-                .Which
-                .Text
-                .Should()
-                .EndWith("#!");
-        }
-
-        [Fact]
         public void Directive_parsing_errors_are_available_as_diagnostics()
         {
             var parser = CreateSubmissionParser("csharp");
@@ -142,8 +126,8 @@ x
         [InlineData("var x = 123$$;", typeof(LanguageNode))]
         [InlineData("#!csharp\nvar x = 123$$;", typeof(LanguageNode))]
         [InlineData("#!csharp\nvar x = 123$$;\n", typeof(LanguageNode))]
-        [InlineData("#!csh$$arp\nvar x = 123;", typeof(KernelDirectiveNode))]
-        [InlineData("#!csharp\n#!time a b$$ c", typeof(DirectiveNode))]
+        [InlineData("#!csh$$arp\nvar x = 123;", typeof(KernelNameDirectiveNode))]
+        [InlineData("#!csharp\n#!time a b$$ c", typeof(ActionDirectiveNode))]
         public void Node_type_is_correctly_identified(
             string markupCode,
             Type expectedNodeType)
@@ -222,6 +206,78 @@ x
                     language
                         .Should()
                         .Be(expectedLanguage, because: $"position {position} should be {expectedLanguage}");
+                }
+            }
+        }
+
+        [Theory]
+        [InlineData(@"
+{|none:#!fsharp |}
+let x = 
+{|fsharp:#!time |}
+{|none:#!csharp|}
+{|csharp:#!who |}", "fsharp")]
+        public void Directive_node_indicates_parent_language(
+            string markupCode,
+            string defaultLanguage)
+        {
+            MarkupTestFile.GetNamedSpans(markupCode, out var code, out var spansByName);
+
+            var parser = CreateSubmissionParser(defaultLanguage);
+
+            var tree = parser.Parse(code);
+
+            using var _ = new AssertionScope();
+
+            foreach (var pair in spansByName)
+            {
+                var expectedParentLanguage = pair.Key;
+                var spans = pair.Value;
+
+                foreach (var position in spans.SelectMany(s => Enumerable.Range(s.Start, s.Length)))
+                {
+                    var node = tree.GetRoot().FindNode(position);
+
+                    switch (node)
+                    {
+                        case KernelNameDirectiveNode _:
+                            expectedParentLanguage.Should().Be("none");
+                            break;
+
+                        case ActionDirectiveNode adn:
+                            adn.ParentLanguage.Should().Be(expectedParentLanguage);
+                            break;
+
+                        default:
+                            throw new AssertionFailedException($"Expected a {nameof(DirectiveNode)}  but found: {node}");
+                    }
+                }
+            }
+        }
+
+        [Theory]
+        [InlineData(@"
+[|#!|]", "fsharp")]
+        [InlineData(@"
+let x = 123
+[|#!abc|]", "fsharp")]
+        public void Incomplete_or_unknown_directive_node_is_recognized_as_a_directive_node(
+            string markupCode,
+            string defaultLanguage)
+        {
+            MarkupTestFile.GetSpans(markupCode, out var code, out var spans);
+
+            var parser = CreateSubmissionParser(defaultLanguage);
+
+            var tree = parser.Parse(code);
+
+            using var _ = new AssertionScope();
+            {
+                foreach (var position in spans.SelectMany(s => Enumerable.Range(s.Start, s.Length)))
+                {
+                    var node = tree.GetRoot().FindNode(position);
+
+                    node.Should().BeAssignableTo<DirectiveNode>();
                 }
             }
         }

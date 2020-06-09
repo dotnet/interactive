@@ -1,8 +1,12 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -15,8 +19,11 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 {
     public class CompletionTests : LanguageKernelTestBase
     {
+        private readonly ITestOutputHelper _output;
+
         public CompletionTests(ITestOutputHelper output) : base(output)
         {
+            _output = output;
         }
 
         [Theory]
@@ -143,6 +150,45 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .CompletionList
                 .Should()
                 .Contain(item => item.DisplayText == variableName);
+        }
+
+        [Theory]
+        [InlineData("[|#!c|]", "#!csharp", Skip = "Composite kernel magic command completions not working yet")]
+        [InlineData("[|#!w|]", "#!who,#!whos")]
+        [InlineData("[|#!w|]\n", "#!who,#!whos")]
+        [InlineData("[|#!w|] \n", "#!who,#!whos")]
+        public async Task Completions_are_available_for_magic_commands(
+            string markupCode,
+            string expected)
+        {
+            MarkupTestFile.GetSpan(markupCode, out var code, out var span);
+
+            var sourceText = SourceText.From(code);
+
+            var kernel = CreateKernel();
+
+            using var _ = new AssertionScope();
+
+            _output.WriteLine($"Checking positions from {span.Start} to {span.End}");
+
+            foreach (var position in Enumerable.Range(span.Start, span.Length + 1))
+            {
+                var linePosition = sourceText.Lines.GetLinePosition(position);
+
+                var result = await kernel.SendAsync(new RequestCompletion(code, linePosition));
+
+                var events = result.KernelEvents.ToSubscribedList();
+
+                events
+                    .Should()
+                    .ContainSingle<CompletionRequestCompleted>()
+                    .Which
+                    .CompletionList
+                    .Select(i => i.DisplayText)
+                    .Should()
+                    .Contain(expected.Split(","),
+                             because: $"position {position} should provide completions");
+            }
         }
     }
 }

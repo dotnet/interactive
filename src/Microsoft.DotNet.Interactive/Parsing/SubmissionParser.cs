@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
-using System.CommandLine.Help;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
@@ -20,7 +19,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
     {
         private readonly KernelBase _kernel;
         private Parser _directiveParser;
-
         private RootCommand _rootCommand;
 
         public IReadOnlyList<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
@@ -217,7 +215,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     new CommandLineBuilder(_rootCommand)
                         .ParseResponseFileAs(ResponseFileHandling.Disabled)
                         .UseTypoCorrections()
-                        .UseHelpBuilder(bc => new HelpBuilderThatOmitsRootCommandName(bc.Console, _rootCommand.Name))
+                        .UseHelpBuilder(bc => new DirectiveHelpBuilder(bc.Console, _rootCommand.Name))
                         .UseHelp()
                         .UseMiddleware(
                             context =>
@@ -258,31 +256,39 @@ namespace Microsoft.DotNet.Interactive.Parsing
             _directiveParser = null;
         }
 
+        public static CompletionItem CompletionItemFor(string name, Parser parser)
+        {
+            var symbol = parser.Configuration
+                               .RootCommand
+                               .Children
+                               .GetByAlias(name);
+
+            var kind = symbol switch
+            {
+                IArgument _ => "Value",
+                IOption _ => "Property",
+                ICommand _ => "Method",
+                _ => throw new ArgumentOutOfRangeException(nameof(symbol))
+            };
+
+            var helpBuilder = new DirectiveHelpBuilder(
+                new TestConsole(),
+                parser.Configuration.RootCommand.Name);
+
+            return new CompletionItem(
+                name,
+                kind,
+                name,
+                name,
+                name,
+                helpBuilder.GetHelpForSymbol(symbol));
+        }
+
         private void EnsureRootCommandIsInitialized()
         {
             if (_rootCommand == null)
             {
                 _rootCommand = new RootCommand();
-            }
-        }
-
-        private class HelpBuilderThatOmitsRootCommandName : HelpBuilder
-        {
-            private readonly string _rootCommandName;
-
-            public HelpBuilderThatOmitsRootCommandName(IConsole console, string rootCommandName) : base(console)
-            {
-                _rootCommandName = rootCommandName;
-            }
-
-            public override void Write(ICommand command)
-            {
-                var capturingConsole = new TestConsole();
-                new HelpBuilder(capturingConsole).Write(command);
-                Console.Out.Write(
-                    capturingConsole.Out
-                                    .ToString()
-                                    .Replace(_rootCommandName + " ", ""));
             }
         }
     }

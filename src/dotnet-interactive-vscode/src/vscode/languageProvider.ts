@@ -34,7 +34,14 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
             provideCompletion(this.clientMapper, getSimpleLanguage(document.languageId), document, position).then(result => {
                 let completionItems: Array<vscode.CompletionItem> = [];
                 for (let item of result) {
-                    let vscodeItem = new vscode.CompletionItem(item.displayText, this.mapCompletionItem(item.kind));
+                    let vscodeItem : vscode.CompletionItem = {
+                        label: item.displayText,
+                        documentation: item.documentation,
+                        filterText: item.filterText,
+                        insertText: item.insertText,
+                        sortText: item.sortText,
+                        kind: this.mapCompletionItem(item.kind)
+                    };
                     completionItems.push(vscodeItem);
                 }
                 let completionList = new vscode.CompletionList(completionItems, false);
@@ -86,8 +93,9 @@ export class HoverProvider implements vscode.HoverProvider {
 export function registerLanguageProviders(clientMapper: ClientMapper): vscode.Disposable {
     const disposables: Array<vscode.Disposable> = [];
 
-    disposables.push(vscode.languages.registerCompletionItemProvider(notebookCellLanguages, new CompletionItemProvider(clientMapper), ...CompletionItemProvider.triggerCharacters));
-    disposables.push(vscode.languages.registerHoverProvider(notebookCellLanguages, new HoverProvider(clientMapper)));
+    let languages = [ ... notebookCellLanguages, "dotnet-interactive.magic-commands" ];
+    disposables.push(vscode.languages.registerCompletionItemProvider(languages, new CompletionItemProvider(clientMapper), ...CompletionItemProvider.triggerCharacters));
+    disposables.push(vscode.languages.registerHoverProvider(languages, new HoverProvider(clientMapper)));
 
     return vscode.Disposable.from(...disposables);
 }

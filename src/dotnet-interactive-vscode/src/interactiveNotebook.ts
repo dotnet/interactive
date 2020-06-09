@@ -9,7 +9,7 @@ export const notebookCellLanguages: Array<string> = [
     'dotnet-interactive.csharp',
     'dotnet-interactive.fsharp',
     'dotnet-interactive.html',
-    'dotnet-interactive.javavscript',
+    'dotnet-interactive.javascript',
     'dotnet-interactive.markdown',
     'dotnet-interactive.powershell'
 ];

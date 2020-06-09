@@ -9,16 +9,17 @@ using Microsoft.CodeAnalysis.Text;
 namespace Microsoft.DotNet.Interactive.Parsing
 {
     [DebuggerStepThrough]
-    public class KernelDirectiveNode : DirectiveNode
+    public class ActionDirectiveNode : DirectiveNode
     {
-        internal KernelDirectiveNode(
+        internal ActionDirectiveNode(
             DirectiveToken directiveToken, 
             SourceText sourceText,
+            string parentLanguage,
             PolyglotSyntaxTree? syntaxTree) : base(directiveToken, sourceText, syntaxTree)
         {
-            KernelName = directiveToken.DirectiveName;
+            ParentLanguage = parentLanguage;
         }
 
-        public string KernelName { get; set; }
+        public string ParentLanguage { get; }
     }
 }
