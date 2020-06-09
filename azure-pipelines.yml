@@ -136,7 +136,7 @@ stages:
             filePath: $(Build.SourcesDirectory)/eng/package/PackVSCodeExtension.ps1
             arguments: -stableToolVersionNumber $(StableToolVersionNumber) -gitSha $(Build.SourceVersion) -outDir "$(Build.ArtifactStagingDirectory)\vscode"
             workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode"
-            #pwsh: true # temporarily turned off due to https://github.com/dotnet/core-eng/issues/9913
+            pwsh: true
 
         - task: PublishBuildArtifacts@1
           displayName: Publish VSCode extension artifacts
