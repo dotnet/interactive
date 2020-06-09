@@ -54,8 +54,9 @@
             "{dotnet_path}",
             "tool",
             "run",
-            "dotnet-interactive",
+            "dotnet-interactive",            
             "--",
+            "[vscode]",
             "stdio",
             "--http-port-range",
             "1000-3000"
