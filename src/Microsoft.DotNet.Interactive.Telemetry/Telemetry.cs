@@ -5,7 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.DotNet.PlatformAbstractions;
 
 namespace Microsoft.DotNet.Interactive.Telemetry
@@ -30,8 +32,8 @@ The .NET Core tools collect usage data in order to help us improve your experien
 
         public Telemetry(
             string productVersion,
-            IFirstTimeUseNoticeSentinel sentinel, 
-            string sessionId = null, 
+            IFirstTimeUseNoticeSentinel sentinel,
+            string sessionId = null,
             bool blockThreadInitialization = false)
         {
             Enabled = !GetEnvironmentVariableAsBool(TelemetryOptout) && PermissionExists(sentinel);
@@ -56,12 +58,12 @@ The .NET Core tools collect usage data in order to help us improve your experien
         }
 
         public bool Enabled { get; }
-        
+
         public static bool SkipFirstTimeExperience => GetEnvironmentVariableAsBool(FirstTimeUseNoticeSentinel.SkipFirstTimeExperienceEnvironmentVariableName, false);
 
         public static bool IsRunningInDockerContainer => GetEnvironmentVariableAsBool("DOTNET_RUNNING_IN_CONTAINER", false);
 
-        private static bool GetEnvironmentVariableAsBool(string name, bool defaultValue=false)
+        private static bool GetEnvironmentVariableAsBool(string name, bool defaultValue = false)
         {
             var str = Environment.GetEnvironmentVariable(name);
             if (string.IsNullOrEmpty(str))
@@ -121,11 +123,8 @@ The .NET Core tools collect usage data in order to help us improve your experien
         {
             try
             {
-                //todo: update this to use dependency injection
-#pragma warning disable CS0618 // Type or member is obsolete
-                _client = new TelemetryClient();
-#pragma warning restore CS0618 // Type or member is obsolete
-                _client.InstrumentationKey = InstrumentationKey;
+                var config = new TelemetryConfiguration(InstrumentationKey);
+                _client = new TelemetryClient(config);
                 _client.Context.Session.Id = CurrentSessionId;
                 _client.Context.Device.OperatingSystem = RuntimeEnvironment.OperatingSystem;
 
@@ -135,7 +134,7 @@ The .NET Core tools collect usage data in order to help us improve your experien
             catch (Exception e)
             {
                 _client = null;
-                // we dont want to fail the tool if telemetry fails.
+                // we don't want to fail the tool if telemetry fails.
                 Debug.Fail(e.ToString());
             }
         }
