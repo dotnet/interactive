@@ -20,12 +20,12 @@ namespace Microsoft.DotNet.Interactive
         public static T UseNugetDirective<T>(this T kernel) 
             where T: KernelBase, ISupportNuget
         {
-            kernel.AddDirective(i(kernel));
-            kernel.AddDirective(r(kernel));
+            kernel.AddDirective(i());
+            kernel.AddDirective(r());
 
             var restore = new Command("#!nuget-restore")
             {
-                Handler = CommandHandler.Create(DoNugetRestore(kernel, kernel)),
+                Handler = CommandHandler.Create(DoNugetRestore()),
                 IsHidden = true
             };
 
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        private static Command i(ISupportNuget nugetKernel)
+        private static Command i()
         {
             var iDirective = new Command("#i")
             {
@@ -42,19 +42,20 @@ namespace Microsoft.DotNet.Interactive
             };
             iDirective.Handler = CommandHandler.Create<string, KernelInvocationContext>((source, context) =>
             {
-                nugetKernel.AddRestoreSource(source.Replace("nuget:", ""));
+                var kernel = context.HandlingKernel as ISupportNuget;
+                kernel.AddRestoreSource(source.Replace("nuget:", ""));
 
                 IHtmlContent content = div(
                     strong("Restore sources"),
-                    ul(nugetKernel.RestoreSources
-                                    .Select(s => li(span(s)))));
+                    ul(kernel.RestoreSources
+                             .Select(s => li(span(s)))));
 
                 context.DisplayAsync(content);
             });
             return iDirective;
         }
 
-        private static Command r(ISupportNuget nugetKernel)
+        private static Command r()
         {
             var rDirective = new Command("#r")
             {
@@ -96,8 +97,9 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (package?.Value is PackageReference pkg)
                 {
-                    var alreadyGotten = nugetKernel.ResolvedPackageReferences
-                                                      .Concat(nugetKernel.RequestedPackageReferences)
+                    var kernel = context.HandlingKernel as ISupportNuget;
+                    var alreadyGotten = kernel.ResolvedPackageReferences
+                                                      .Concat(kernel.RequestedPackageReferences)
                                                       .FirstOrDefault(r => r.PackageName.Equals(pkg.PackageName, StringComparison.OrdinalIgnoreCase));
 
                     if (alreadyGotten is { } && !string.IsNullOrWhiteSpace(pkg.PackageVersion) && pkg.PackageVersion != alreadyGotten.PackageVersion)
@@ -107,7 +109,7 @@ namespace Microsoft.DotNet.Interactive
                     }
                     else
                     {
-                        var added = nugetKernel.GetOrAddPackageReference(pkg.PackageName, pkg.PackageVersion);
+                        var added = kernel.GetOrAddPackageReference(pkg.PackageName, pkg.PackageVersion);
 
                         if (added is null)
                         {
@@ -159,20 +161,19 @@ namespace Microsoft.DotNet.Interactive
             public static IEqualityComparer<PackageReference> Instance { get; } = new PackageReferenceComparer();
         }
 
-        internal static KernelCommandInvocation DoNugetRestore(
-            KernelBase kernel,
-            ISupportNuget restoreContext)
+        internal static KernelCommandInvocation DoNugetRestore()
         {
             return async (command, invocationContext) =>
             {
                 KernelCommandInvocation restore = async (_, context) =>
                 {
+                    var kernel = context.HandlingKernel as ISupportNuget;
                     var messages = new Dictionary<PackageReference, string>(new PackageReferenceComparer());
                     var displayedValues = new Dictionary<string, DisplayedValue>();
 
                     var newlyRequestedPackages =
-                            restoreContext.RequestedPackageReferences
-                                          .Except(restoreContext.ResolvedPackageReferences, PackageReferenceComparer.Instance);
+                            kernel.RequestedPackageReferences
+                                          .Except(kernel.ResolvedPackageReferences, PackageReferenceComparer.Instance);
 
                     var requestedPackageIds = new Dictionary<string, PackageReference>();
 
@@ -186,7 +187,7 @@ namespace Microsoft.DotNet.Interactive
                         requestedPackageIds.Add(id, package);
                     }
 
-                    var restorePackagesTask = restoreContext.RestoreAsync();
+                    var restorePackagesTask = kernel.RestoreAsync();
 
                     while (await Task.WhenAny(Task.Delay(500), restorePackagesTask) != restorePackagesTask)
                     {
@@ -208,7 +209,7 @@ namespace Microsoft.DotNet.Interactive
 
                     if (result.Succeeded)
                     {
-                        (kernel as ISupportNuget)?.RegisterResolvedPackageReferences(result.ResolvedReferences);
+                        kernel?.RegisterResolvedPackageReferences(result.ResolvedReferences);
 
                         foreach (var resolvedReference in result.ResolvedReferences)
                         {
@@ -241,6 +242,7 @@ namespace Microsoft.DotNet.Interactive
                 };
 
                 await invocationContext.QueueAction(restore);
+                var kernel = invocationContext.HandlingKernel as KernelBase;
                 await kernel.RunDeferredCommandsAsync();
             };
 
