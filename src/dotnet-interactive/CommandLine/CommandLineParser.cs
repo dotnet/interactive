@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
@@ -89,13 +91,45 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             // Setup first time use notice sentinel.
             firstTimeUseNoticeSentinel ??= new FirstTimeUseNoticeSentinel(VersionSensor.Version().AssemblyInformationalVersion);
 
+            var clearTextProperties = new[]
+            {
+                "frontend"
+            };
+
             // Setup telemetry.
             telemetry ??= new Telemetry.Telemetry(
                 VersionSensor.Version().AssemblyInformationalVersion,
                 firstTimeUseNoticeSentinel,
                 "dotnet/interactive/cli");
 
-            var filter = new TelemetryFilter(Sha256Hasher.HashWithNormalizedCasing);
+            var filter = new TelemetryFilter(
+                Sha256Hasher.HashWithNormalizedCasing,
+                clearTextProperties,
+                (commandResult, directives, entryItems) =>
+                {
+                    // add frontend
+                    var frontendTelemetryAdded = false;
+                    foreach (var directive in directives)
+                    {
+                        switch (directive.Key)
+                        {
+                            case "vscode":
+                            case "jupyter":
+                            case "synapse":
+                                frontendTelemetryAdded = true;
+                                entryItems.Add(new KeyValuePair<string, string>("frontend", directive.Key));
+                                break;
+                        }
+                    }
+
+                    if (!frontendTelemetryAdded)
+                    {
+                        if (commandResult.Command.Name == "jupyter")
+                        {
+                            entryItems.Add(new KeyValuePair<string, string>("frontend", "jupyter"));
+                        }
+                    }
+                });
 
             var verboseOption = new Option<bool>(
                 "--verbose",
