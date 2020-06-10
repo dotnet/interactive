@@ -196,13 +196,6 @@ namespace Microsoft.DotNet.Interactive
             throw new NoSuitableKernelException(command);
         }
 
-        protected override Task HandleSubmitCode(
-            SubmitCode command, 
-            KernelInvocationContext context)
-        {
-            throw new NotSupportedException();
-        }
-
         public IEnumerator<IKernel> GetEnumerator() => _childKernels.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
