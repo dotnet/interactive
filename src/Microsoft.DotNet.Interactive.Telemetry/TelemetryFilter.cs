@@ -13,19 +13,19 @@ namespace Microsoft.DotNet.Interactive.Telemetry
     public sealed class TelemetryFilter : ITelemetryFilter
     {
         private readonly Func<string, string> _hash;
+        private readonly Action<CommandResult, IDirectiveCollection, ImmutableArray<KeyValuePair<string, string>>.Builder> _directiveProcessor;
+        private readonly HashSet<string> _clearTextProperties;
 
-        public TelemetryFilter(Func<string, string> hash)
+        public TelemetryFilter(Func<string, string> hash, IEnumerable<string> clearTextProperties = null, Action<CommandResult , IDirectiveCollection , ImmutableArray<KeyValuePair<string, string>>.Builder > directiveProcessor = null)
         {
             _hash = hash ?? throw new ArgumentNullException(nameof(hash));
+            _directiveProcessor = directiveProcessor;
+            _clearTextProperties = new HashSet<string>(clearTextProperties ?? Enumerable.Empty<string>());
         }
 
         public IEnumerable<ApplicationInsightsEntryFormat> Filter(object objectToFilter)
         {
-            var plainTextProperties = new HashSet<string>
-            {
-                "frontend"
-            };
-
+         
             if (objectToFilter == null)
             {
                 return new List<ApplicationInsightsEntryFormat>();
@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 
             }
 
-            return result.Select(r => r.WithAppliedToPropertiesValue(_hash, name => !plainTextProperties.Contains(name))).ToList();
+            return result.Select(r => r.WithAppliedToPropertiesValue(_hash, name => !_clearTextProperties.Contains(name))).ToList();
         }
 
         private ImmutableArray<KeyValuePair<string, string>>? 
@@ -96,28 +96,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
             // We have a valid rule so far.
             var passed = true;
 
-            // add frontend
-            var frontendTelemetryAdded = false;
-            foreach (var directive in directives)
-            {
-                switch (directive.Key)
-                {
-                    case "vscode":
-                    case "jupyter":
-                    case "synapse":
-                        frontendTelemetryAdded = true;
-                        entryItems.Add(new KeyValuePair<string, string>("frontend", directive.Key));
-                        break;
-                }
-            }
-
-            if (!frontendTelemetryAdded)
-            {
-                if (commandResult.Command.Name == "jupyter")
-                {
-                    entryItems.Add(new KeyValuePair<string, string>("frontend", "jupyter"));
-                }
-            }
+            _directiveProcessor?.Invoke(commandResult, directives, entryItems);
 
             foreach (var item in rule.Items)
             {
@@ -191,6 +170,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                 return null;
             }
         }
+
 
         private ApplicationInsightsEntryFormat CreateEntry(IEnumerable<KeyValuePair<string, string>> entryItems)
         {
