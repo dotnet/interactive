@@ -41,13 +41,14 @@ Developer Instructions
       -  "dotnet-interactive",
       -  "--",
       +  "E:/dotnet/interactive/artifacts/bin/dotnet-interactive/Debug/netcoreapp3.1/Microsoft.DotNet.Interactive.App.dll",
+         "[vscode]",
          "stdio",
          "--http-port-range",
          "1000-3000"
        ]
       ```
 
-3. Save `settings.json` and close and re-open VS Code Insiders.
+3. Save `settings.json`.
 
 4. Any subsequently opened notebooks will use your local changes.
 

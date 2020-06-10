@@ -42,16 +42,18 @@ export async function activate(context: vscode.ExtensionContext) {
     };
     const launchOptions = await vscode.commands.executeCommand<InteractiveLaunchOptions>('dotnet-interactive.acquire', installArgs);
 
-    // prepare kernel transport launch arguments and working directory
-    let kernelTransportArgs = config.get<Array<string>>('kernelTransportArgs')!;
-    let argsTemplate = {
-        args: kernelTransportArgs,
-        workingDirectory: config.get<string>('kernelTransportWorkingDirectory')!
-    };
-    let processStart = processArguments(argsTemplate, dotnetPath, launchOptions!.workingDirectory);
-
     // register with VS Code
-    const clientMapper = new ClientMapper(notebookPath => StdioKernelTransport.create(processStart, notebookPath, diagnosticsChannel));
+    const clientMapper = new ClientMapper(notebookPath => {
+        // prepare kernel transport launch arguments and working directory using a fresh config item so we don't get cached values
+        const config = vscode.workspace.getConfiguration('dotnet-interactive');
+        const kernelTransportArgs = config.get<Array<string>>('kernelTransportArgs')!;
+        const argsTemplate = {
+            args: kernelTransportArgs,
+            workingDirectory: config.get<string>('kernelTransportWorkingDirectory')!
+        };
+        const processStart = processArguments(argsTemplate, dotnetPath, launchOptions!.workingDirectory);
+        return StdioKernelTransport.create(processStart, notebookPath, diagnosticsChannel);
+    });
 
     registerKernelCommands(context, clientMapper);
     registerInteropCommands(context);

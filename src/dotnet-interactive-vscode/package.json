@@ -54,7 +54,7 @@
             "{dotnet_path}",
             "tool",
             "run",
-            "dotnet-interactive",            
+            "dotnet-interactive",
             "--",
             "[vscode]",
             "stdio",
