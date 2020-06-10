@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 {
     public sealed class Telemetry : ITelemetry
     {
+        private readonly string _eventsNamespace;
         internal static string CurrentSessionId = null;
         private TelemetryClient _client = null;
         private Dictionary<string, string> _commonProperties = null;
@@ -33,9 +34,15 @@ The .NET Core tools collect usage data in order to help us improve your experien
         public Telemetry(
             string productVersion,
             IFirstTimeUseNoticeSentinel sentinel,
+            string eventsNamespace,
             string sessionId = null,
             bool blockThreadInitialization = false)
         {
+            if (string.IsNullOrWhiteSpace(eventsNamespace))
+            {
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(eventsNamespace));
+            }
+            _eventsNamespace = eventsNamespace;
             Enabled = !GetEnvironmentVariableAsBool(TelemetryOptout) && PermissionExists(sentinel);
 
             if (!Enabled)
@@ -163,9 +170,9 @@ The .NET Core tools collect usage data in order to help us improve your experien
             }
         }
 
-        private static string PrependProducerNamespace(string eventName)
+        private  string PrependProducerNamespace(string eventName)
         {
-            return "dotnet/try/cli/" + eventName;
+            return $"{_eventsNamespace}/{eventName}";
         }
 
         private Dictionary<string, double> GetEventMeasures(IDictionary<string, double> measurements)
