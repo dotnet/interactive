@@ -96,6 +96,8 @@ namespace Microsoft.DotNet.Interactive.Telemetry
             // We have a valid rule so far.
             var passed = true;
 
+            // add frontend
+            var frontendTelemetryAdded = false;
             foreach (var directive in directives)
             {
                 switch (directive.Key)
@@ -103,8 +105,17 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                     case "vscode":
                     case "jupyter":
                     case "synapse":
+                        frontendTelemetryAdded = true;
                         entryItems.Add(new KeyValuePair<string, string>("frontend", directive.Key));
                         break;
+                }
+            }
+
+            if (!frontendTelemetryAdded)
+            {
+                if (commandResult.Command.Name == "jupyter")
+                {
+                    entryItems.Add(new KeyValuePair<string, string>("frontend", "jupyter"));
                 }
             }
 

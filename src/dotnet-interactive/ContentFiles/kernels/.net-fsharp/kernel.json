@@ -2,7 +2,6 @@
   "argv": [
     "dotnet",
     "interactive",
-    "[jupyter]",
     "jupyter",
     "--default-kernel",
     "fsharp",
