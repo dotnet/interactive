@@ -161,18 +161,13 @@ The .NET Core tools collect usage data in order to help us improve your experien
                 Dictionary<string, string> eventProperties = GetEventProperties(properties);
                 Dictionary<string, double> eventMeasurements = GetEventMeasures(measurements);
 
-                _client.TrackEvent(PrependProducerNamespace(eventName), eventProperties, eventMeasurements);
+                _client.TrackEvent($"{_eventsNamespace}/{eventName}", eventProperties, eventMeasurements);
                 _client.Flush();
             }
             catch (Exception e)
             {
                 Debug.Fail(e.ToString());
             }
-        }
-
-        private  string PrependProducerNamespace(string eventName)
-        {
-            return $"{_eventsNamespace}/{eventName}";
         }
 
         private Dictionary<string, double> GetEventMeasures(IDictionary<string, double> measurements)
