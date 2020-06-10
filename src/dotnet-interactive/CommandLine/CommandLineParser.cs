@@ -92,7 +92,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             // Setup telemetry.
             telemetry ??= new Telemetry.Telemetry(
                 VersionSensor.Version().AssemblyInformationalVersion,
-                firstTimeUseNoticeSentinel);
+                firstTimeUseNoticeSentinel,
+                "dotnet/interactive/cli");
+
             var filter = new TelemetryFilter(Sha256Hasher.HashWithNormalizedCasing);
 
             var verboseOption = new Option<bool>(
