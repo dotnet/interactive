@@ -31,7 +31,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
         IExtensibleKernel,
         ISupportNuget,
         IKernelCommandHandler<RequestCompletion>,
-        IKernelCommandHandler<RequestHoverText>
+        IKernelCommandHandler<RequestHoverText>,
+        IKernelCommandHandler<SubmitCode>
     {
         internal const string DefaultKernelName = "csharp";
 
@@ -147,9 +148,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             context.PublishHoverTextMarkdownResponse(command, info.ToMarkdownString(), correctedLinePosSpan);
         }
 
-        protected override async Task HandleSubmitCode(
-            SubmitCode submitCode,
-            KernelInvocationContext context)
+        public async Task HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
         {
             var codeSubmissionReceived = new CodeSubmissionReceived(submitCode);
 

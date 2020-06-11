@@ -5,7 +5,6 @@ using System;
 using System.Linq;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;

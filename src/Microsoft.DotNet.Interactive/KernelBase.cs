@@ -348,10 +348,6 @@ namespace Microsoft.DotNet.Interactive
             _disposables.Add(disposable);
         }
 
-        protected abstract Task HandleSubmitCode(
-            SubmitCode command, 
-            KernelInvocationContext context);
-
         private protected void SetHandler(
             IKernelCommand command,
             KernelInvocationContext context)
@@ -363,10 +359,10 @@ namespace Microsoft.DotNet.Interactive
                     switch (command)
                     {
                         case SubmitCode submitCode:
-                            submitCode.Handler = (_, invocationContext) =>
+                            if (this is IKernelCommandHandler<SubmitCode> submitHandler)
                             {
-                                return HandleSubmitCode(submitCode, context);
-                            };
+                                SetHandler(submitHandler, submitCode);
+                            }
                             break;
 
                         case RequestCompletion requestCompletion:

@@ -23,7 +23,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
     public class PowerShellKernel : 
         DotNetLanguageKernel,
-        IKernelCommandHandler<RequestCompletion>
+        IKernelCommandHandler<RequestCompletion>,
+        IKernelCommandHandler<SubmitCode>
     {
         internal const string DefaultKernelName = "pwsh";
 
@@ -145,7 +146,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return Task.CompletedTask;
         }
 
-        protected override async Task HandleSubmitCode(
+        public async Task HandleAsync(
             SubmitCode submitCode,
             KernelInvocationContext context)
         {

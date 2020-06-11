@@ -27,7 +27,7 @@ using {typeof(LaTeXString).Namespace};
             return kernel;
         }
 
-        public static FSharpKernel UseMathAndLaTeX(this FSharpKernel kernel)
+        public static FSharpKernelBase UseMathAndLaTeX(this FSharpKernelBase kernel)
         {
             if (kernel == null)
             {

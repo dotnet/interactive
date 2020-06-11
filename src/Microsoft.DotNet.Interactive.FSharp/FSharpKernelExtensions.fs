@@ -21,7 +21,7 @@ type FSharpKernelExtensions private () =
     static let openNamespaceOrType = fun (whatToOpen: String) -> sprintf "open %s" whatToOpen
 
     [<Extension>]
-    static member UseDefaultFormatting(kernel: FSharpKernel) = 
+    static member UseDefaultFormatting(kernel: FSharpKernelBase) =
         let code = 
             [
                 referenceFromType typeof<IHtmlContent>
@@ -36,32 +36,32 @@ type FSharpKernelExtensions private () =
                 openNamespaceOrType typeof<Formatter>.Namespace
             ] |> List.reduce(fun x y -> x + Environment.NewLine + y)
 
-        kernel.DeferCommand(SubmitCode code) 
+        kernel.DeferCommand(SubmitCode code)
         kernel
 
     [<Extension>]
-    static member UseDefaultNamespaces(kernel: FSharpKernel) =
+    static member UseDefaultNamespaces(kernel: FSharpKernelBase) =
         let code = @"
 open System
 open System.Text
 open System.Threading.Tasks
 open System.Linq"
-        kernel.DeferCommand(SubmitCode code) 
+        kernel.DeferCommand(SubmitCode code)
         kernel
 
     [<Extension>]
-    static member UseKernelHelpers(kernel: FSharpKernel) =
+    static member UseKernelHelpers(kernel: FSharpKernelBase) =
         let code = 
             [
                 referenceFromType typeof<FSharpKernelHelpers.IMarker>
                 openNamespaceOrType (typeof<FSharpKernelHelpers.IMarker>.DeclaringType.Namespace + "." + nameof(FSharpKernelHelpers))
             ] |> List.reduce(fun x y -> x + Environment.NewLine + y)
 
-        kernel.DeferCommand(SubmitCode code) 
+        kernel.DeferCommand(SubmitCode code)
         kernel
 
     [<Extension>]
-    static member UseWho(kernel: FSharpKernel) =
+    static member UseWho(kernel: FSharpKernelBase) =
         let detailedName = "#!whos"
         let command = Command(detailedName, "Display the names of the current top-level variables and their values.")
         command.Handler <- CommandHandler.Create(
@@ -70,7 +70,7 @@ open System.Linq"
                 match context.Command with
                 | :? SubmitCode ->
                     match context.HandlingKernel with
-                    | :? FSharpKernel as kernel ->
+                    | :? FSharpKernelBase as kernel ->
                         let kernelVariables = kernel.GetCurrentVariables()
                         let currentVariables = CurrentVariables(kernelVariables, detailed)
                         let html = currentVariables.ToDisplayString(HtmlFormatter.MimeType)
