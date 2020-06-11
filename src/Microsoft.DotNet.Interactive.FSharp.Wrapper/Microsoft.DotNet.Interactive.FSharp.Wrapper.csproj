@@ -9,7 +9,8 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <PackageDescription>Microsoft.DotNet.Interactive.IKernel implementation for F# (Wrapper)</PackageDescription>
+    <PackageId>Microsoft.DotNet.Interactive.FSharp</PackageId>
+    <PackageDescription>Microsoft.DotNet.Interactive.IKernel implementation for F#</PackageDescription>
     <PackageTags>interactive fsharp</PackageTags>
   </PropertyGroup>
 
