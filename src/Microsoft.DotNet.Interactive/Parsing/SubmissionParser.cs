@@ -38,11 +38,16 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         public PolyglotSyntaxTree Parse(string code)
         {
+           return Parse(code, DefaultLanguage);
+        }
+
+        public PolyglotSyntaxTree Parse(string code, string language)
+        {
             var sourceText = SourceText.From(code);
 
             var parser = new PolyglotSyntaxParser(
-                sourceText, 
-                DefaultLanguage, 
+                sourceText,
+                language,
                 GetDirectiveParser(),
                 GetSubkernelDirectiveParsers());
 
@@ -55,7 +60,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             var nugetRestoreOnKernels = new HashSet<string>();
             var hoistedCommandsIndex = 0;
 
-            var tree = Parse(submitCode.Code);
+            var tree = Parse(submitCode.Code, submitCode.TargetKernelName);
             var nodes = tree.GetRoot().ChildNodes.ToArray();
 
             foreach (var node in nodes)
@@ -88,7 +93,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             submitCode.Parent,
                             directiveNode);
 
-                        var targetKernelName = DefaultLanguage;
+                        var targetKernelName = submitCode.TargetKernelName;
 
                         if (parseResult.CommandResult.Command.Name == "#r")
                         {
