@@ -33,6 +33,7 @@ namespace ClockExtension
                         _.radialGradient[id: "grad1", cx: "50%", cy: "50%", r: "50%", fx: "50%", fy: "50%"](
                             _.stop[offset: "0%", style: "stop-color:#512bd4;stop-opacity:0"],
                             _.stop[offset: "100%", style: "stop-color:#512bd4;stop-opacity:.5"])),
+                    circle[cx: "20", cy: "20", r: "19", fill: "#dedede"],
                     circle[cx: "20", cy: "20", r: "19", fill: "url(#grad1)"],
                     g[@class: "marks"](
                         line[x1: 15, y1: 0, x2: 16, y2: 0],
@@ -61,9 +62,6 @@ let svg = document.querySelector('svg');
 
             IHtmlContent Css() =>
                 new HtmlString($@"
-html {{
-  background: #dedede !important;
-}}
 #{id} svg {{
   width: 400px;
   fill: white;
