@@ -356,25 +356,18 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (kb.Handler == null)
                 {
-                    switch (command)
+                    switch (command, this)
                     {
-                        case SubmitCode submitCode:
-                            if (this is IKernelCommandHandler<SubmitCode> submitHandler)
-                            {
-                                SetHandler(submitHandler, submitCode);
-                            }
+                        case (SubmitCode submitCode, IKernelCommandHandler<SubmitCode> submitHandler):
+                            SetHandler(submitHandler, submitCode);
                             break;
 
-                        case RequestCompletion requestCompletion:
-                            if (this is IKernelCommandHandler<RequestCompletion> completionHandler)
-                            {
-                                SetCompletionHandler(requestCompletion, completionHandler);
-                            }
-
+                        case (RequestCompletion requestCompletion, IKernelCommandHandler<RequestCompletion> completionHandler):
+                            SetCompletionHandler(requestCompletion, completionHandler);
                             break;
 
-                        case ChangeWorkingDirectory cwd:
-                            cwd.Handler = (_, __) =>
+                        case (ChangeWorkingDirectory cwd, _):
+                            cwd.Handler = (__, ___) =>
                             {
                                 Directory.SetCurrentDirectory(cwd.WorkingDirectory.FullName);
                                 context.Publish(new WorkingDirectoryChanged(cwd.WorkingDirectory, cwd));
@@ -382,11 +375,8 @@ namespace Microsoft.DotNet.Interactive
                             };
                             break;
 
-                        case RequestHoverText hoverCommand:
-                            if (this is IKernelCommandHandler<RequestHoverText> hoverHandler)
-                            {
-                                SetHandler(hoverHandler, hoverCommand);
-                            }
+                        case (RequestHoverText hoverCommand, IKernelCommandHandler<RequestHoverText> hoverHandler):
+                            SetHandler(hoverHandler, hoverCommand);
                             break;
                     }
                 }
