@@ -17,6 +17,7 @@ describe('LanguageProvider tests', () => {
                 {
                     eventType: CompletionRequestCompletedType,
                     event: {
+                        range: null,
                         completionList: [
                             {
                                 displayText: 'Sqrt',
@@ -51,16 +52,19 @@ describe('LanguageProvider tests', () => {
 
         // perform the completion request
         let completion = await provideCompletion(clientMapper, 'csharp', document, position, token);
-        expect(completion).to.deep.equal([
-            {
-                displayText: 'Sqrt',
-                kind: 'Method',
-                filterText: 'Sqrt',
-                sortText: 'Sqrt',
-                insertText: 'Sqrt',
-                documentation: null
-            }
-        ]);
+        expect(completion).to.deep.equal({
+            range: null,
+            completionList: [
+                {
+                    displayText: 'Sqrt',
+                    kind: 'Method',
+                    filterText: 'Sqrt',
+                    sortText: 'Sqrt',
+                    insertText: 'Sqrt',
+                    documentation: null
+                }
+            ]
+        });
     });
 
     it('HoverProvider', async () => {
