@@ -155,7 +155,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         }
 
         [Theory]
-        [InlineData("[|#!c|]", "#!csharp", Skip = "Composite kernel magic command completions not working yet")]
+        [InlineData("[|#!c|]", "#!csharp")]
         [InlineData("[|#!w|]", "#!who,#!whos")]
         [InlineData("[|#!w|]\n", "#!who,#!whos")]
         [InlineData("[|#!w|] \n", "#!who,#!whos")]
@@ -194,8 +194,8 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         }
 
         [Theory]
-        [InlineData("[|#!t|]", "#!two,#!twilight", null, Skip = "Composite kernel magic command completions not working yet")]
-        [InlineData("[|#!tw|]\n", "#!two,#!twilight", null, Skip = "Composite kernel magic command completions not working yet")]
+        [InlineData("[|#!t|]", "#!two,#!twilight", null)]
+        [InlineData("[|#!tw|]\n", "#!two,#!twilight", null)]
         [InlineData("[|#!t|]", "#!two,#!twilight", Language.CSharp)]
         [InlineData("[|#!tw|]\n", "#!two,#!twilight", Language.CSharp)]
         [InlineData("[|#!t|]", "#!two,#!twilight", Language.FSharp)]
@@ -211,7 +211,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 
             var sourceText = SourceText.From(code);
 
-            var kernel = CreateKernel();
+            var kernel = CreateKernel(language?? Language.CSharp);
 
             using var _ = new AssertionScope();
 
@@ -220,7 +220,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             KernelBase kernelToExtend = kernel;
             if (language != null)
             {
-                kernelToExtend = kernel.FindKernel(language.Value) as KernelBase;
+                kernelToExtend = kernel.FindKernel(language.Value.LanguageName()) as KernelBase;
             }
 
             kernelToExtend.AddDirective(new Command("#!two")
