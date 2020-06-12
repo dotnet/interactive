@@ -32,14 +32,21 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
     provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
         return new Promise<vscode.CompletionList>((resolve, reject) => {
             provideCompletion(this.clientMapper, getSimpleLanguage(document.languageId), document, position).then(result => {
+                let range: vscode.Range | undefined = undefined;
+                if (result.range) {
+                    range = new vscode.Range(
+                        new vscode.Position(result.range.start.line, result.range.start.character),
+                        new vscode.Position(result.range.end.line, result.range.end.character));
+                }
                 let completionItems: Array<vscode.CompletionItem> = [];
-                for (let item of result) {
+                for (let item of result.completionList) {
                     let vscodeItem : vscode.CompletionItem = {
                         label: item.displayText,
                         documentation: item.documentation,
                         filterText: item.filterText,
                         insertText: item.insertText,
                         sortText: item.sortText,
+                        range: range,
                         kind: this.mapCompletionItem(item.kind)
                     };
                     completionItems.push(vscodeItem);
