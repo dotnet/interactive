@@ -161,7 +161,7 @@ describe('TextMate grammar tests', async () => {
         ]);
     });
 
-    it('magic command doesnt invalidate language', async () => {
+    it("magic command doesn't invalidate language", async () => {
         const text = [
             '#!fsharp',
             '// this is fsharp',
@@ -185,11 +185,11 @@ describe('TextMate grammar tests', async () => {
             [
                 {
                     tokenText: '#!',
-                    scopes: ['source.dotnet-interactive', 'language.switch.fsharp', 'comment.line.magic-commands']
+                    scopes: ['source.dotnet-interactive', 'language.switch.fsharp', 'comment.line.magic-commands', 'comment.line.magic-commands.hash-bang']
                 },
                 {
                     tokenText: 'some-magic-command',
-                    scopes: ['source.dotnet-interactive', 'language.switch.fsharp', 'keyword.control.magic-commands']
+                    scopes: ['source.dotnet-interactive', 'language.switch.fsharp', 'comment.line.magic-commands', 'keyword.control.magic-commands']
                 }
             ],
             [
@@ -237,57 +237,73 @@ describe('TextMate grammar tests', async () => {
     }
 
     it('sub-parsing within magic commands', async () => {
-        const text = ['#!share --from csharp x "some string"'];
+        const text = ['#!share --from csharp x "some string" /a b'];
         const tokens = await getTokens(text, 'source.dotnet-interactive.magic-commands');
         expect(tokens).to.deep.equal([
             [
                 {
                     tokenText: '#!',
-                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands']
+                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands', 'comment.line.magic-commands.hash-bang']
                 },
                 {
                     tokenText: 'share',
-                    scopes: ['source.dotnet-interactive.magic-commands', 'keyword.control.magic-commands']
+                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands', 'keyword.control.magic-commands']
                 },
                 {
                     tokenText: ' ',
-                    scopes: ['source.dotnet-interactive.magic-commands']
+                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands']
                 },
                 {
                     tokenText: '--from',
-                    scopes: ['source.dotnet-interactive.magic-commands', 'constant.language.magic-commands']
+                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands', 'constant.language.magic-commands']
                 },
                 {
                     tokenText: ' ',
-                    scopes: ['source.dotnet-interactive.magic-commands']
+                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands']
                 },
                 {
                     tokenText: 'csharp',
-                    scopes: ['source.dotnet-interactive.magic-commands', 'variable.parameter.magic-commands']
+                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands', 'variable.parameter.magic-commands']
                 },
                 {
                     tokenText: ' ',
-                    scopes: ['source.dotnet-interactive.magic-commands']
+                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands']
                 },
                 {
                     tokenText: 'x',
-                    scopes: ['source.dotnet-interactive.magic-commands', 'variable.parameter.magic-commands']
+                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands', 'variable.parameter.magic-commands']
                 },
                 {
                     tokenText: ' ',
-                    scopes: ['source.dotnet-interactive.magic-commands']
+                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands']
                 },
                 {
                     tokenText: '"',
-                    scopes: ['source.dotnet-interactive.magic-commands', 'string.quoted.double.magic-commands']
+                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands', 'string.quoted.double.magic-commands']
                 },
                 {
                     tokenText: 'some string',
-                    scopes: ['source.dotnet-interactive.magic-commands', 'string.quoted.double.magic-commands']
+                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands', 'string.quoted.double.magic-commands']
                 },
                 {
                     tokenText: '"',
-                    scopes: ['source.dotnet-interactive.magic-commands', 'string.quoted.double.magic-commands']
+                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands', 'string.quoted.double.magic-commands']
+                },
+                {
+                    tokenText: ' ',
+                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands']
+                },
+                {
+                    tokenText: '/a',
+                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands', 'constant.language.magic-commands']
+                },
+                {
+                    tokenText: ' ',
+                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands']
+                },
+                {
+                    tokenText: 'b',
+                    scopes: ['source.dotnet-interactive.magic-commands', 'comment.line.magic-commands', 'variable.parameter.magic-commands']
                 }
             ]
         ]);

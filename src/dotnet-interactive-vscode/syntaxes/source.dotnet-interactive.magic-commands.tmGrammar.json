@@ -4,19 +4,27 @@
     "patterns": [
         {
             "name": "comment.line.magic-commands",
-            "match": "^#!(?!([cf](#|s(harp)?)|powershell|pwsh|html|javascript|js|markdown|md).*$)"
-        },
-        {
-            "include": "#magic-command-name"
-        },
-        {
-            "include": "#flag-argument"
-        },
-        {
-            "include": "#parameter"
-        },
-        {
-            "include": "#strings"
+            "begin": "^(#!)(?!([cf](#|s(harp)?)|powershell|pwsh|html|javascript|js|markdown|md))",
+            "end": "(?<=$)",
+            "beginCaptures": {
+                "1": {
+                    "name": "comment.line.magic-commands.hash-bang"
+                }
+            },
+            "patterns": [
+                {
+                    "include": "#magic-command-name"
+                },
+                {
+                    "include": "#strings"
+                },
+                {
+                    "include": "#option"
+                },
+                {
+                    "include": "#argument"
+                }
+            ]
         }
     ],
     "repository": {
@@ -28,19 +36,19 @@
                 }
             ]
         },
-        "flag-argument": {
+        "option": {
             "patterns": [
                 {
                     "name": "constant.language.magic-commands",
-                    "match": "--?[^\\s-]+"
+                    "match": "(--?|/)[^\\s\\\"]+"
                 }
             ]
         },
-        "parameter": {
+        "argument": {
             "patterns": [
                 {
                     "name": "variable.parameter.magic-commands",
-                    "match": "[_a-zA-Z0-9]+"
+                    "match": "[^\\s\\\"]+"
                 }
             ]
         },
