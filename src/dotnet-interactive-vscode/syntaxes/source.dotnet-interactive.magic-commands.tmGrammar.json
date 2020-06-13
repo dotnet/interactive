@@ -1,9 +1,63 @@
 {
+    "name": ".NET Interactive Magic Commands",
     "scopeName": "source.dotnet-interactive.magic-commands",
     "patterns": [
         {
-            "name": "comment.magic-command",
-            "match": "^#!(?!([cf](#|s(harp)?)|powershell|pwsh|html|javascript|js|markdown|md)).*$"
+            "name": "comment.line.magic-commands",
+            "match": "^#!(?!([cf](#|s(harp)?)|powershell|pwsh|html|javascript|js|markdown|md).*$)"
+        },
+        {
+            "include": "#magic-command-name"
+        },
+        {
+            "include": "#flag-argument"
+        },
+        {
+            "include": "#parameter"
+        },
+        {
+            "include": "#strings"
         }
-    ]
+    ],
+    "repository": {
+        "magic-command-name": {
+            "patterns": [
+                {
+                    "name": "keyword.control.magic-commands",
+                    "match": "(?<=^#!)[a-zA-Z0-9_-]+"
+                }
+            ]
+        },
+        "flag-argument": {
+            "patterns": [
+                {
+                    "name": "constant.language.magic-commands",
+                    "match": "--?[^\\s-]+"
+                }
+            ]
+        },
+        "parameter": {
+            "patterns": [
+                {
+                    "name": "variable.parameter.magic-commands",
+                    "match": "[_a-zA-Z0-9]+"
+                }
+            ]
+        },
+        "strings": {
+            "patterns": [
+                {
+                    "name": "string.quoted.double.magic-commands",
+                    "begin": "\"",
+                    "end": "\"",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.magic-commands",
+                            "match": "\\."
+                        }
+                    ]
+                }
+            ]
+        }
+    }
 }

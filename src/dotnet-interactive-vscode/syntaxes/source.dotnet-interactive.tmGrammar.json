@@ -4,7 +4,7 @@
         {
             "begin": "^#!cs(harp)?\\s+$",
             "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
-            "name": "language.csharp",
+            "name": "language.switch.csharp",
             "patterns": [
                 {
                     "include": "source.dotnet-interactive.csharp"
@@ -14,7 +14,7 @@
         {
             "begin": "^#!fs(harp)?\\s+$",
             "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
-            "name": "language.fsharp",
+            "name": "language.switch.fsharp",
             "patterns": [
                 {
                     "include": "source.dotnet-interactive.fsharp"
@@ -24,7 +24,7 @@
         {
             "begin": "^#!html\\s+$",
             "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
-            "name": "language.html",
+            "name": "language.switch.html",
             "patterns": [
                 {
                     "include": "source.dotnet-interactive.html"
@@ -34,7 +34,7 @@
         {
             "begin": "^#!(javascript|js)\\s+$",
             "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
-            "name": "language.javascript",
+            "name": "language.switch.javascript",
             "patterns": [
                 {
                     "include": "source.dotnet-interactive.javascript"
@@ -44,7 +44,7 @@
         {
             "begin": "^#!(markdown|md)\\s+$",
             "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
-            "name": "language.markdown",
+            "name": "language.switch.markdown",
             "patterns": [
                 {
                     "include": "source.dotnet-interactive.markdown"
@@ -54,7 +54,7 @@
         {
             "begin": "^#!(powershell|pwsh)\\s+$",
             "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
-            "name": "language.powershell",
+            "name": "language.switch.powershell",
             "patterns": [
                 {
                     "include": "source.dotnet-interactive.powershell"
