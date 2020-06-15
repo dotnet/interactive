@@ -5,15 +5,18 @@ using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Extensions;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
     public class HoverTextProduced : KernelEventBase
     {
-        public IReadOnlyCollection<FormattedValue> Content { get; }
-        public LinePositionSpan? Range { get; set; }
+        private LinePositionSpan? _range;
 
-        public HoverTextProduced(IKernelCommand command, IReadOnlyCollection<FormattedValue> content, LinePositionSpan? range = null)
+        public IReadOnlyCollection<FormattedValue> Content { get; }
+        public LinePositionSpan? Range => this.CalculateLineOffsetFromParentCommand(_range);
+
+        public HoverTextProduced(RequestHoverText command, IReadOnlyCollection<FormattedValue> content, LinePositionSpan? range = null)
             : base(command)
         {
             if (content.Count == 0)
@@ -22,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Events
             }
 
             Content = content;
-            Range = range;
+            _range = range;
         }
     }
 }

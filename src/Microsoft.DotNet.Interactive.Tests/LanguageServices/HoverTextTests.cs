@@ -112,5 +112,85 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .Should()
                 .ContainEquivalentOf(new FormattedValue(expectedMimeType, expectedContent));
         }
+
+        [Theory]
+        [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 17 overloads)")]
+        public async Task hover_text_commands_have_offsets_normalized_after_magic_commands(Language language, string markupCode, string expectedMimeType, string expectedContent)
+        {
+            using var kernel = CreateKernel(language);
+
+            var fullMarkupCode = string.Join("\r\n", new[]
+            {
+                "", // blank like to force offsets to be wrong
+                "#!time", // prepend with magic commands to make line offsets wrong
+                markupCode
+            });
+
+            MarkupTestFile.GetLineAndColumn(fullMarkupCode, out var code, out var line, out var character);
+            var commandResult = await SendHoverRequest(kernel, code, line, character);
+
+            commandResult
+                .KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .ContainSingle<HoverTextProduced>()
+                .Which
+                .Content
+                .Should()
+                .ContainEquivalentOf(new FormattedValue(expectedMimeType, expectedContent));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 17 overloads)")]
+        public async Task hover_text_commands_have_offsets_normalized_after_switching_to_the_same_language(Language language, string markupCode, string expectedMimeType, string expectedContent)
+        {
+            using var kernel = CreateKernel(language);
+
+            var fullMarkupCode = string.Join("\r\n", new[]
+            {
+                "", // blank line to force offsets to be wrong
+                $"#!{language.LanguageName()}", // 'switch' to the same language
+                markupCode
+            });
+
+            MarkupTestFile.GetLineAndColumn(fullMarkupCode, out var code, out var line, out var character);
+            var commandResult = await SendHoverRequest(kernel, code, line, character);
+
+            commandResult
+                .KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .ContainSingle<HoverTextProduced>()
+                .Which
+                .Content
+                .Should()
+                .ContainEquivalentOf(new FormattedValue(expectedMimeType, expectedContent));
+        }
+
+        [Fact]
+        public async Task hover_text_commands_and_events_have_offsets_normalized_when_switching_languages()
+        {
+            // switch to C# from an F# kernel/cell
+            using var kernel = CreateCompositeKernel(Language.FSharp);
+            var fullMarkupCode = string.Join("\r\n", new[]
+            {
+                "let x = 1",
+                "#!csharp",
+                "Console.Write$$Line()"
+            });
+
+            MarkupTestFile.GetLineAndColumn(fullMarkupCode, out var code, out var line, out var character);
+            var commandResult = await SendHoverRequest(kernel, code, line, character);
+
+            commandResult
+                .KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .ContainSingle<HoverTextProduced>()
+                .Which
+                .Range
+                .Should()
+                .Be(new LinePositionSpan(new LinePosition(line, 8), new LinePosition(line, 17)));
+        }
     }
 }

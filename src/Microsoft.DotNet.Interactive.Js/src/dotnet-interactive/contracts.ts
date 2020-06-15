@@ -48,7 +48,10 @@ export interface DisplayValue extends KernelCommand {
     valueId: string;
 }
 
-export interface RequestCompletion extends KernelCommand {
+export interface RequestCompletion extends LanguageServiceCommandBase {
+}
+
+export interface LanguageServiceCommandBase extends KernelCommand {
     code: string;
     position: LinePosition;
 }
@@ -56,9 +59,7 @@ export interface RequestCompletion extends KernelCommand {
 export interface RequestDiagnostics extends KernelCommand {
 }
 
-export interface RequestHoverText extends KernelCommand {
-    code: string;
-    position: LinePosition;
+export interface RequestHoverText extends LanguageServiceCommandBase {
 }
 
 export interface SubmitCode extends KernelCommand {
