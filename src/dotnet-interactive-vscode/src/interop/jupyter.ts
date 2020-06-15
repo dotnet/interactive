@@ -17,11 +17,11 @@ export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
                 jcell = {
                     cell_type: 'markdown',
                     metadata: {},
-                    source: cell.source
+                    source: cell.document.getText()
                 };
                 break;
             case CellKind.Code:
-                let cellSource = splitAndEnsureNewlineTerminators(cell.source);
+                let cellSource = splitAndEnsureNewlineTerminators(cell.document.getText());
                 if (cell.language !== notebookLanguage) {
                     cellSource.unshift(`#!${getSimpleLanguage(cell.language)}\r\n`);
                 }

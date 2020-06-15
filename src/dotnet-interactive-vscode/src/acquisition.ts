@@ -47,7 +47,7 @@ export async function acquireDotnetInteractive(
 
     // no current version installed or it's out of date
     reportInstallationStarted(requiredVersion);
-    reportingChannel.appendLine(`Acquiring `);
+    reportingChannel.appendLine(`Acquiring`);
     await installInteractive({
             dotnetPath: args.dotnetPath,
             toolVersion: requiredVersion

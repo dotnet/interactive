@@ -44,7 +44,7 @@ export interface Document {
 
 export interface NotebookCell {
     cellKind: CellKind;
-    source: string;
+    document: Document;
     language: string;
     outputs: CellOutput[];
 }
