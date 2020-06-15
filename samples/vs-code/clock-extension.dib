@@ -1,0 +1,15 @@
+#!csharp
+
+#i "nuget:C:\Users\dicolomb\source\repos\Public\interactive\samples\extensions\ClockExtension\bin\Debug"
+
+#!csharp
+
+#r "nuget:ClockExtension"
+
+#!csharp
+
+#!lsmagic
+
+#!csharp
+
+DateTime.Now

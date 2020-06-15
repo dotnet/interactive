@@ -12,6 +12,7 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
@@ -404,6 +405,7 @@ namespace Microsoft.DotNet.Interactive
             var nodeToComplete =
                 rootNode.FindNode(absolutePosition);
 
+
             var charPosition = linePosition.Character;
 
             if (nodeToComplete is DirectiveNode directiveNode)
@@ -418,6 +420,11 @@ namespace Microsoft.DotNet.Interactive
                                       .Select(s => SubmissionParser.CompletionItemFor(s, directiveNode.DirectiveParser))
                                       .ToArray();
 
+                    if (ParentKernel != null)
+                    {
+                        completions = GetDirectiveCompletionItemsFromParentKernel(requestCompletion, absolutePosition, completions, charPosition);
+                    }
+                  
                     var lps = new LinePositionSpan(
                         new LinePosition(linePosition.Line, 0),
                         linePosition);
@@ -432,6 +439,33 @@ namespace Microsoft.DotNet.Interactive
             {
                 SetHandler(completionHandler, requestCompletion);
             }
+        }
+
+        private CompletionItem[] GetDirectiveCompletionItemsFromParentKernel(RequestCompletion requestCompletion,
+            int absolutePosition, CompletionItem[] completions, int charPosition)
+        {
+            var tree = ParentKernel.SubmissionParser.Parse(requestCompletion.Code);
+
+
+            var rootNode = tree.GetRoot();
+            var directiveParser = ParentKernel.SubmissionParser.GetDirectiveParser();
+            var nodeToComplete = rootNode?.FindNode(absolutePosition);
+            if (nodeToComplete is DirectiveNode directiveNode)
+            { 
+                var directiveParseResult = directiveNode.GetDirectiveParseResult();
+
+                var filter = new HashSet<string>(completions.Select(c => c.DisplayText));
+
+                var parentCompletions = directiveParseResult
+                    .GetSuggestions(charPosition)
+                    .Select(s => SubmissionParser.CompletionItemFor(s, directiveParser))
+                    .Where(c => !filter.Contains(c.DisplayText))
+                    .ToArray();
+
+                completions = completions.Concat(parentCompletions).ToArray();
+            }
+
+            return completions;
         }
 
         private static void SetHandler<T>(

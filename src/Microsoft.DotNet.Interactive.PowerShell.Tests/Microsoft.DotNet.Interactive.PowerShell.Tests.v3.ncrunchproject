@@ -1,0 +1,15 @@
+﻿<ProjectConfiguration>
+  <Settings>
+    <IgnoredTests>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.PowerShell_progress_sends_updated_display_values</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.PowerShell_token_variables_work</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.TryGetVariable_unwraps_PowerShell_object("$x = New-Object -TypeName System.IO.FileInfo -ArgumentList c:\\temp\\some.txt", "System.IO.FileInfo")</TestName>
+      </NamedTestSelector>
+    </IgnoredTests>
+  </Settings>
+</ProjectConfiguration>
