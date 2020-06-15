@@ -15,7 +15,10 @@ describe('File export tests', () => {
             cells: [
                 {
                     cellKind: CellKind.Code,
-                    source: '[1;2;3;4]\r\n|> List.sum',
+                    document: {
+                        uri: { fsPath: 'test-notebook' },
+                        getText: () => '[1;2;3;4]\r\n|> List.sum'
+                    },
                     language: 'dotnet-interactive.fsharp',
                     outputs: [
                         {
@@ -28,7 +31,10 @@ describe('File export tests', () => {
                 },
                 {
                     cellKind: CellKind.Code,
-                    source: '1 + 1',
+                    document: {
+                        uri: { fsPath: 'test-notebook' },
+                        getText: () => '1 + 1'
+                    },
                     language: 'dotnet-interactive.csharp',
                     outputs: [
                         {
@@ -41,7 +47,10 @@ describe('File export tests', () => {
                 },
                 {
                     cellKind: CellKind.Markdown,
-                    source: 'This is `markdown`.',
+                    document: {
+                        uri: { fsPath: 'test-notebook' },
+                        getText: () => 'This is `markdown`.'
+                    },
                     language: 'dotnet-interactive.markdown',
                     outputs: []
                 },

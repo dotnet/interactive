@@ -18,10 +18,13 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         this.kernel = this;
         this.label = ".NET Interactive";
     }
-    
+
     preloads?: vscode.Uri[] | undefined;
-    executeAllCells(document: vscode.NotebookDocument, token: vscode.CancellationToken): Promise<void> {
-        throw new Error("Method not implemented.");
+
+    async executeAllCells(document: vscode.NotebookDocument, token: vscode.CancellationToken): Promise<void> {
+        for (let cell of document.cells) {
+            await this.executeCell(document, cell, token);
+        }
     }
 
     async openNotebook(uri: vscode.Uri): Promise<vscode.NotebookData> {
@@ -55,25 +58,23 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 
     onDidChangeNotebook: vscode.Event<vscode.NotebookDocumentEditEvent> = this.onDidChangeNotebookEventEmitter.event;
 
-    async executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell | undefined, token: vscode.CancellationToken): Promise<void> {
-        if (!cell) {
-            // TODO: run everything
-            return;
-        }
-
-        cell.metadata.runStartTime = Date.now();
+    async executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell, token: vscode.CancellationToken): Promise<void> {
+        const startTime = Date.now();
+        cell.metadata.runStartTime = startTime;
         cell.metadata.runState = vscode.NotebookCellRunState.Running;
         cell.outputs = [];
         let client = await this.clientMapper.getOrAddClient(document.uri);
-        let source = cell.source.toString();
+        let source = cell.document.getText();
         return client.execute(source, getSimpleLanguage(cell.language), outputs => {
             // to properly trigger the UI update, `cell.outputs` needs to be uniquely assigned; simply setting it to the local variable has no effect
             cell.outputs = [];
             cell.outputs = outputs;
         }).then(() => {
             cell.metadata.runState = vscode.NotebookCellRunState.Success;
+            cell.metadata.lastRunDuration = Date.now() - startTime;
         }).catch(() => {
             cell.metadata.runState = vscode.NotebookCellRunState.Error;
+            cell.metadata.lastRunDuration = Date.now() - startTime;
         });
     }
 
