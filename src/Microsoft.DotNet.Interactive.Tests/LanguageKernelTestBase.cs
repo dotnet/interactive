@@ -124,6 +124,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .UseDefaultFormatting()
                 .UseNugetDirective()
                 .UseKernelHelpers()
+                .UseDotNetVariableSharing()
                 .UseWho()
                 .UseDefaultNamespaces();
         }
@@ -134,6 +135,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .UseDefaultFormatting()
                 .UseNugetDirective()
                 .UseKernelHelpers()
+                .UseDotNetVariableSharing()
                 .UseWho();
         }
 

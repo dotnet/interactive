@@ -208,7 +208,7 @@ namespace Microsoft.DotNet.Interactive
                 case RequestCompletion requestCompletion:
                     var completions = directiveParseResult
                         .GetSuggestions(requestPosition)
-                        .Select(s => SubmissionParser.CompletionItemFor(s, directiveNode.DirectiveParser))
+                        .Select(s => SubmissionParser.CompletionItemFor(s, directiveNode.GetDirectiveParseResult()))
                         .ToArray();
 
                     context.Publish(new CompletionRequestCompleted(
@@ -439,6 +439,56 @@ namespace Microsoft.DotNet.Interactive
                             break;
                     }
                 }
+            }
+        }
+
+        private void SetCompletionHandler(RequestCompletion requestCompletion, IKernelCommandHandler<RequestCompletion> completionHandler)
+        {
+            var tree = SubmissionParser.Parse(requestCompletion.Code);
+
+            var linePosition = requestCompletion.Position;
+
+            var rootNode = tree.GetRoot();
+
+            var absolutePosition = tree.GetAbsolutePosition(linePosition);
+            if (absolutePosition >= tree.Length)
+            {
+                absolutePosition--;
+            }
+            else if (char.IsWhiteSpace(tree.GetRoot().Text[absolutePosition]))
+            {
+                absolutePosition--;
+            }
+
+            var nodeToComplete =
+                rootNode.FindNode(absolutePosition);
+
+            var charPosition = linePosition.Character;
+
+            if (nodeToComplete is DirectiveNode directiveNode)
+            {
+                requestCompletion.Handler = (_, c) =>
+                {
+                    var directiveParseResult = directiveNode.GetDirectiveParseResult();
+
+                    var completions = directiveParseResult
+                                      .GetSuggestions(charPosition)
+                                      .Select(s => SubmissionParser.CompletionItemFor(s, directiveParseResult))
+                                      .ToArray();
+
+                    var lps = new LinePositionSpan(
+                        new LinePosition(linePosition.Line, 0),
+                        linePosition);
+
+                    c.Publish(new CompletionRequestCompleted(
+                                  completions, requestCompletion, lps));
+
+                    return Task.CompletedTask;
+                };
+            }
+            else
+            {
+                SetHandler(completionHandler, requestCompletion);
             }
         }
 

@@ -2,11 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.CommandLine;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -153,10 +153,14 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         }
 
         [Theory]
-        [InlineData("[|#!c|]", "#!csharp", Skip = "Composite kernel magic command completions not working yet")]
+        // commands
+        [InlineData("[|#!c|]", "#!csharp")]
+        [InlineData("[|#!|]", "#!csharp,#!fsharp,#!pwsh,#!who,#!whos")]
         [InlineData("[|#!w|]", "#!who,#!whos")]
         [InlineData("[|#!w|]\n", "#!who,#!whos")]
         [InlineData("[|#!w|] \n", "#!who,#!whos")]
+        // options
+        [InlineData("#!share [||]", "--from")]
         public async Task Completions_are_available_for_magic_commands(
             string markupCode,
             string expected)
@@ -305,6 +309,25 @@ var y = x + 2;
                 .Range
                 .Should()
                 .Be(new LinePositionSpan(new LinePosition(line, 0), new LinePosition(line, 3)));
+        [Fact]
+        public async Task Magic_command_completion_documentation_does_not_include_root_command_name()
+        {
+            var exeName = RootCommand.ExecutableName;
+
+            var kernel = CreateKernel();
+
+            var result = await kernel.SendAsync(new RequestCompletion("#!", new LinePosition(0, 2)));
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events
+                .Should()
+                .ContainSingle<CompletionRequestCompleted>()
+                .Which
+                .CompletionList
+                .Select(i => i.Documentation)
+                .Should()
+                .NotContain(i => i.Contains(exeName));
         }
     }
 }

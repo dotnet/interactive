@@ -23,9 +23,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             var capturingConsole = new TestConsole();
             new HelpBuilder(capturingConsole).Write(command);
             Console.Out.Write(
-                capturingConsole.Out
-                                .ToString()
-                                .Replace(_rootCommandName + " ", ""));
+                CleanUp(capturingConsole));
         }
 
         public string GetHelpForSymbol(ISymbol symbol)
@@ -35,20 +33,29 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 return help;
             }
 
-            if (symbol is ICommand command)
+            var console = new TestConsole();
+            var helpBuilder = new HelpBuilder(console);
+
+            switch (symbol)
             {
-                var console = new TestConsole();
-
-                var helpBuilder = new HelpBuilder(console);
-
-                helpBuilder.Write(command);
-
-                help = console.Out.ToString();
-
-                _directiveHelp[symbol] = help;
+                case ICommand command:
+                    helpBuilder.Write(command);
+                    break;
+                case IOption option:
+                    helpBuilder.Write(option);
+                    break;
             }
+
+            help = CleanUp(console);
+
+            _directiveHelp[symbol] = help;
 
             return help;
         }
+
+        private string CleanUp(TestConsole capturingConsole) =>
+            capturingConsole.Out
+                            .ToString()
+                            .Replace(_rootCommandName + " ", "");
     }
 }

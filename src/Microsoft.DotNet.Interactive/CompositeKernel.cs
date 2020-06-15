@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive
         IExtensibleKernel,
         IEnumerable<IKernel>
     {
-        private readonly ConcurrentQueue<PackageAdded> _packages = new ConcurrentQueue<PackageAdded>();
+        private readonly ConcurrentQueue<PackageAdded> _packagesToCheckForExtensions = new ConcurrentQueue<PackageAdded>();
         private readonly List<IKernel> _childKernels = new List<IKernel>();
         private readonly Dictionary<string, IKernel> _kernelsByNameOrAlias;
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
@@ -27,16 +27,18 @@ namespace Microsoft.DotNet.Interactive
 
         public CompositeKernel() : base(".NET")
         {
-            // FIX: (CompositeKernel) this can be more efficient
-            RegisterForDisposal(KernelEvents
-                                .OfType<PackageAdded>()
-                                .Where(pa => pa?.PackageReference.PackageRoot != null)
-                                .Distinct(pa => pa.PackageReference.PackageRoot)
-                                .Subscribe(_packages.Enqueue));
+            ListenForPackagesToScanForExtensions();
 
             _kernelsByNameOrAlias = new Dictionary<string, IKernel>();
             _kernelsByNameOrAlias.Add(Name, this);
         }
+
+        private void ListenForPackagesToScanForExtensions() =>
+            RegisterForDisposal(KernelEvents
+                                .OfType<PackageAdded>()
+                                .Where(pa => pa?.PackageReference.PackageRoot != null)
+                                .Distinct(pa => pa.PackageReference.PackageRoot)
+                                .Subscribe(added => _packagesToCheckForExtensions.Enqueue(added)));
 
         public string DefaultKernelName
         {
@@ -112,7 +114,7 @@ namespace Microsoft.DotNet.Interactive
         {
             await next(command, context);
 
-            while (_packages.TryDequeue(out var packageAdded))
+            while (_packagesToCheckForExtensions.TryDequeue(out var packageAdded))
             {
                 var packageRootDir = packageAdded.PackageReference.PackageRoot;
 

@@ -46,8 +46,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             return parser.Parse();
         }
-
-        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode)
+        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode) 
         {
             var commands = new List<IKernelCommand>();
             var nugetRestoreOnKernels = new HashSet<string>();
@@ -257,24 +256,24 @@ namespace Microsoft.DotNet.Interactive.Parsing
             _directiveParser = null;
         }
 
-        public static CompletionItem CompletionItemFor(string name, Parser parser)
+        public static CompletionItem CompletionItemFor(string name, ParseResult parseResult)
         {
-            var symbol = parser.Configuration
-                               .RootCommand
-                               .Children
-                               .GetByAlias(name);
+            var symbol = parseResult.CommandResult
+                                    .Command
+                                    .Children
+                                    .GetByAlias(name);
 
             var kind = symbol switch
             {
                 IArgument _ => "Value",
                 IOption _ => "Property",
                 ICommand _ => "Method",
-                _ => throw new ArgumentOutOfRangeException(nameof(symbol))
+                _ => null
             };
 
             var helpBuilder = new DirectiveHelpBuilder(
                 new TestConsole(),
-                parser.Configuration.RootCommand.Name);
+                parseResult.Parser.Configuration.RootCommand.Name);
 
             return new CompletionItem(
                 displayText: name,

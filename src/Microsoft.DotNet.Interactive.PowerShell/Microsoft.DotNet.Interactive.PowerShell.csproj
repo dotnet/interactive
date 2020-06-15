@@ -34,41 +34,6 @@
             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="$(PkgPackageManagement)\**"
-             Exclude="$(PkgPackageManagement)\**\*.nupkg;$(PkgPackageManagement)\**\*.nuspec;$(PkgPackageManagement)\**\*.sha512;$(PkgPackageManagement)\**\fullclr\**"
-             Link="Modules\PackageManagement\%(RecursiveDir)%(FileName)%(Extension)"
-             PackagePath="contentFiles/any/any/Modules/PackageManagement"
-             PackageCopyToOutput="true"
-             CopyToOutputDirectory="PreserveNewest" 
-             Condition="'$(PkgPackageManagement)' != ''" />
-
-    <Content Include="$(PkgPowerShellGet)\**"
-             Exclude="$(PkgPowerShellGet)\**\*.nupkg;$(PkgPowerShellGet)\**\*.nuspec;$(PkgPowerShellGet)\**\*.sha512"
-             Link="Modules\PowerShellGet\%(RecursiveDir)%(FileName)%(Extension)"
-             PackagePath="contentFiles/any/any/Modules/PowerShellGet"
-             PackageCopyToOutput="true"
-             CopyToOutputDirectory="PreserveNewest" 
-             Condition="'$(PkgPowerShellGet)' != ''" />
-
-    <Content Include="$(PkgMicrosoft_PowerShell_Archive)\**"
-             Exclude="$(PkgMicrosoft_PowerShell_Archive)\**\*.nupkg;$(PkgMicrosoft_PowerShell_Archive)\**\*.nuspec;$(PkgMicrosoft_PowerShell_Archive)\**\*.sha512"
-             Link="Modules\Microsoft.PowerShell.Archive\%(RecursiveDir)%(FileName)%(Extension)"
-             PackagePath="contentFiles/any/any/Modules/Microsoft.PowerShell.Archive"
-             PackageCopyToOutput="true"
-             CopyToOutputDirectory="PreserveNewest" 
-             Condition="'$(PkgMicrosoft_PowerShell_Archive)' != ''" />
-
-    <Content Include="$(PkgThreadJob)\**"
-             Exclude="$(PkgThreadJob)\**\*.nupkg;$(PkgThreadJob)\**\*.nuspec;$(PkgThreadJob)\**\*.sha512"
-             Link="Modules\ThreadJob\%(RecursiveDir)%(FileName)%(Extension)"
-             PackagePath="contentFiles/any/any/Modules/ThreadJob"
-             PackageCopyToOutput="true"
-             CopyToOutputDirectory="PreserveNewest" 
-             Condition="'$(PkgThreadJob)' != ''" />
-
-  </ItemGroup>
-
   <!-- The dependencies for this project -->
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
