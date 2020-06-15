@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <NoWarn>$(NoWarn);2003;CS8002;NU1608;</NoWarn> <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
+    <NoWarn>$(NoWarn);NU5100</NoWarn><!-- dll outside of lib/ folder; expected since it's under contentFiles/any/any/Modules/ -->
+    <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageDescription>Microsoft.DotNet.Interactive.IKernel implementation for Sql</PackageDescription>
+    <PackageTags>interactive Sql</PackageTags>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>;NU5104;NU5100;2003;8002</NoWarn>
+  </PropertyGroup>
+
+  <!-- The dependencies for this project -->
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
+  </ItemGroup>
+
+</Project>
