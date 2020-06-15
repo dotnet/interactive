@@ -52,6 +52,7 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, do
             'install',
             '--add-source',
             interactiveToolSource!,
+            '--ignore-failed-sources',
             'Microsoft.dotnet-interactive'
         ];
         if (args.toolVersion) {
