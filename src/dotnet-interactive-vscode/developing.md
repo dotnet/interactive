@@ -11,11 +11,18 @@ This extension adds support for using .NET Interactive in a Visual Studio Code n
 ## Getting Started
 
 1. Install the [.NET SDK 3.1](https://dotnet.microsoft.com/download/visual-studio-sdks).
-2. Install the latest [.NET Interactive Global Tool](https://www.nuget.org/packages/Microsoft.dotnet-interactive/).
-3. Install the latest [VS Code Insiders](https://code.visualstudio.com/insiders/).
-4. In your terminal, run `npm i` in this directory.
-5. Open this directory with `code-insiders` and press `F5`.
-6. Open a file with a `.dotnet-interactive` or `.ipynb` extension.
+2. Install the latest [VS Code Insiders](https://code.visualstudio.com/insiders/).
+3. In your terminal, run `npm i` in this directory.
+4. Open this directory with `code-insiders` and press `F5`.
+5. Open or create a file with a `.dib` extension
+
+    OR 
+
+   Open a Jupyter notebook using the VS Code command *Convert Jupyter notebook (.ipynb) to .NET Interactive notebook*.
+
+
+    ![image](https://user-images.githubusercontent.com/547415/84576252-147a8800-ad68-11ea-8315-07757291710f.png)
+
 
 Periodically the notebook APIs will change; the latest API can be obtained by running the `.\update-proposed-api.ps1` script.
 
