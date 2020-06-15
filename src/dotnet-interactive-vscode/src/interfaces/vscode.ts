@@ -42,15 +42,18 @@ export interface Document {
     getText: { (): string };
 }
 
+export interface TextDocument {
+    getText(range?: Range): string;
+}
+
 export interface NotebookCell {
-    cellKind: CellKind;
-    document: Document;
-    language: string;
+    readonly cellKind: CellKind;
+    readonly document: TextDocument;
     outputs: CellOutput[];
 }
 
 export interface NotebookDocument {
-    cells: NotebookCell[];
+    readonly cells: NotebookCell[];
 }
 
 export interface ReportChannel{

@@ -228,7 +228,8 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 Handler = CommandHandler.Create(() => { })
             });
 
-                kernelToExtend.AddDirective(new Command("#!twilight")
+
+            kernel.AddDirective(new Command("#!twilight")
             {
                 Handler = CommandHandler.Create(() => { })
             });
