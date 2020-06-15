@@ -61,7 +61,8 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
             return;
         }
 
-        cell.metadata.runStartTime = Date.now();
+        const startTime = Date.now();
+        cell.metadata.runStartTime = startTime;
         cell.metadata.runState = vscode.NotebookCellRunState.Running;
         cell.outputs = [];
         let client = await this.clientMapper.getOrAddClient(document.uri);
@@ -72,8 +73,10 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
             cell.outputs = outputs;
         }).then(() => {
             cell.metadata.runState = vscode.NotebookCellRunState.Success;
+            cell.metadata.lastRunDuration = Date.now() - startTime;
         }).catch(() => {
             cell.metadata.runState = vscode.NotebookCellRunState.Error;
+            cell.metadata.lastRunDuration = Date.now() - startTime;
         });
     }
 
