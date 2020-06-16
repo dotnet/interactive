@@ -65,7 +65,7 @@ new [] {1,2,3}");
                   .ContainSingle<CommandHandled>(e => e.Command == fsharpCommand);
         }
 
-        [Fact]
+        [FactSkipLinux]
         public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_directive_as_a_proxy_named_pipe()
         {
             var fSharpKernel = new FSharpKernel();
@@ -97,7 +97,7 @@ x", targetKernelName: "test");
                   .ContainSingle<CommandHandled>(e => e.Command == proxyCommand);
         }
 
-        [Fact]
+        [FactSkipLinux]
         public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_directive_as_a_proxy_named_pipe2()
         {
             var fSharpKernel = new FSharpKernel();
