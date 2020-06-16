@@ -16,7 +16,7 @@ using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal class NamedPipeKernel : ProxyKernel
+    internal class NamedPipeKernel : ProxyKernel, IKernelCommandHandler<SubmitCode>
     {
         private string _pipeName;
         private NamedPipeClientStream _clientStream;
@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Interactive
             } while (true);
         }
 
-        protected async override Task HandleSubmitCode(SubmitCode command, KernelInvocationContext context)
+        public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
             var envelope = KernelCommandEnvelope.Create(command);
             _clientStream.WriteMessage(KernelCommandEnvelope.Serialize(envelope));
