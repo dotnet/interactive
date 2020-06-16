@@ -144,6 +144,39 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
+        public static T UseProxyKernel<T>(this T kernel)
+            where T : CompositeKernel
+        {
+            var command = new Command("#!connect", "Connect to the specified remote kernel.")
+            {
+                new Argument<string>("kernel-name"),
+                new Argument<string>("remote-name")
+            };
+
+            command.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (kernelName, remoteName, context) =>
+            {
+                var existingProxyKernel = kernel.FindKernel(kernelName);
+                if (existingProxyKernel == null)
+                {
+                    var proxyKernel = new NamedPipeKernel(kernelName);
+                    try
+                    {
+                        await proxyKernel.ConnectAsync(remoteName);
+                        kernel.Add(proxyKernel);
+                    }
+                    catch
+                    {
+                        proxyKernel.Dispose();
+                        throw;
+                    }
+                }
+            });
+
+            kernel.AddDirective(command);
+
+            return kernel;
+        }
+
         [DebuggerStepThrough]
         public static T LogEventsToPocketLogger<T>(this T kernel)
             where T : IKernel

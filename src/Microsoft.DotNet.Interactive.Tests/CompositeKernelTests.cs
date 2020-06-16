@@ -12,6 +12,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Xunit;
@@ -63,7 +64,7 @@ new [] {1,2,3}");
             events.Should()
                   .ContainSingle<CommandHandled>(e => e.Command == fsharpCommand);
         }
-        
+
         [Fact]
         public async Task Handling_kernel_can_be_specified_using_kernel_alias_as_a_directive()
         {
