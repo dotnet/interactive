@@ -53,6 +53,11 @@ export interface NotebookDocument {
     cells: NotebookCell[];
 }
 
+export interface NotebookDocumentBackup {
+    readonly id: string;
+    delete(): void;
+}
+
 export interface ReportChannel{
     getName(): string;
     append(value:string) : void;

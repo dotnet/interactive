@@ -4,13 +4,13 @@
 import { expect, use } from 'chai';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as tmp from 'tmp';
 
 use(require('chai-fs'));
 
 import { acquireDotnetInteractive } from '../../acquisition';
 import { InstallInteractiveArgs } from '../../interfaces';
 import { RecordingChannel } from '../RecordingOutputChannel';
+import { withFakeGlobalStorageLocation } from './utilities';
 
 describe('Acquisition tests', () => {
 
@@ -19,6 +19,7 @@ describe('Acquisition tests', () => {
     beforeEach(() => {
         acquisitionChannel = new RecordingChannel();
     });
+
     function getInteractiveVersionThatReturnsNoVersionFound(dotnetPath: string, globalStoragePath: string): Promise<string | undefined> {
         return new Promise<string | undefined>((resolve, reject) => {
             resolve(undefined);
@@ -336,25 +337,4 @@ describe('Acquisition tests', () => {
             });
         });
     });
-
-    function withFakeGlobalStorageLocation(createLocation: boolean, callback: { (globalStoragePath: string): Promise<void> }) {
-        return new Promise<void>((resolve, reject) => {
-            tmp.dir({ unsafeCleanup: true }, (err, dir) => {
-                if (err) {
-                    reject();
-                    throw err;
-                }
-
-                // VS Code doesn't guarantee that the global storage path is present, so we have to go one directory deeper
-                let globalStoragePath = path.join(dir, 'globalStoragePath');
-                if (createLocation) {
-                    fs.mkdirSync(globalStoragePath);
-                }
-
-                callback(globalStoragePath).then(() => {
-                    resolve();
-                });
-            });
-        });
-    };
 });

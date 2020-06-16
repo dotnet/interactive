@@ -1,12 +1,18 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { expect } from 'chai';
+import { expect, use } from 'chai';
+import * as fs from 'fs';
+import * as path from 'path';
+
+use(require('chai-fs'));
 
 import { ClientMapper } from './../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
-import { CellOutput, CellOutputKind } from '../../interfaces/vscode';
+import { CellOutput, CellOutputKind, NotebookDocument, CellKind } from '../../interfaces/vscode';
 import { CodeSubmissionReceivedType, CommandSucceededType, CompleteCodeSubmissionReceivedType, DisplayedValueProducedType, DisplayedValueUpdatedType, ReturnValueProducedType, StandardOutputValueProducedType } from '../../contracts';
+import { withFakeGlobalStorageLocation } from './utilities';
+import { backupNotebook } from '../../interactiveNotebook';
 
 describe('Notebook tests', () => {
     for (let language of ['csharp', 'fsharp']) {
@@ -289,5 +295,80 @@ Console.WriteLine(1);
                 }
             }
         ]);
+    });
+
+    it('notebook backup creates file: global storage exists', async () => {
+        await withFakeGlobalStorageLocation(true, async globalStoragePath => {
+            const notebook: NotebookDocument = {
+                cells: [
+                    {
+                        cellKind: CellKind.Code,
+                        document: {
+                            getText: () => '1 + 1',
+                            uri: {
+                                fsPath: 'test-path'
+                            }
+                        },
+                        language: 'dotnet-interactive.csharp',
+                        outputs: []
+                    }
+                ]
+            };
+            const backupLocation = path.join(globalStoragePath, Date.now().toString());
+            const notebookBackup = await backupNotebook(notebook, backupLocation);
+            const expected = [
+                '#!csharp',
+                '',
+                '1 + 1',
+                ''
+            ].join('\r\n');
+            const actualBuffer = fs.readFileSync(notebookBackup.id);
+            const actualText = actualBuffer.toString('utf-8');
+            expect(actualText).to.equal(expected);
+        });
+    });
+
+    it("notebook backup creates file: global storage doesn't exist", async () => {
+        await withFakeGlobalStorageLocation(false, async globalStoragePath => {
+            const notebook: NotebookDocument = {
+                cells: [
+                    {
+                        cellKind: CellKind.Code,
+                        document: {
+                            getText: () => '1 + 1',
+                            uri: {
+                                fsPath: 'test-path'
+                            }
+                        },
+                        language: 'dotnet-interactive.csharp',
+                        outputs: []
+                    }
+                ]
+            };
+            const backupLocation = path.join(globalStoragePath, Date.now().toString());
+            const notebookBackup = await backupNotebook(notebook, backupLocation);
+            const expected = [
+                '#!csharp',
+                '',
+                '1 + 1',
+                ''
+            ].join('\r\n');
+            const actualBuffer = fs.readFileSync(notebookBackup.id);
+            const actualText = actualBuffer.toString('utf-8');
+            expect(actualText).to.equal(expected);
+        });
+    });
+
+    it('notebook backup cleans up after itself', async () => {
+        await withFakeGlobalStorageLocation(true, async globalStoragePath => {
+            const notebook: NotebookDocument = {
+                cells: []
+            };
+            const backupLocation = path.join(globalStoragePath, Date.now().toString());
+            const notebookBackup = await backupNotebook(notebook, backupLocation);
+            expect(notebookBackup.id).to.be.file();
+            notebookBackup.delete();
+            expect(notebookBackup.id).to.not.be.a.path();
+        });
     });
 });
