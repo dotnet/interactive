@@ -46,7 +46,6 @@ namespace Microsoft.DotNet.Interactive.App.Http
                     context.Handler = async httpContext =>
                     {
                         await httpContext.Response.CompleteAsync(); 
-
                     };
                 }
             }

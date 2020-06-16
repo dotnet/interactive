@@ -5,13 +5,16 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.DotNet.PlatformAbstractions;
 
 namespace Microsoft.DotNet.Interactive.Telemetry
 {
     public sealed class Telemetry : ITelemetry
     {
+        private readonly string _eventsNamespace;
         internal static string CurrentSessionId = null;
         private TelemetryClient _client = null;
         private Dictionary<string, string> _commonProperties = null;
@@ -30,10 +33,16 @@ The .NET Core tools collect usage data in order to help us improve your experien
 
         public Telemetry(
             string productVersion,
-            IFirstTimeUseNoticeSentinel sentinel, 
-            string sessionId = null, 
+            IFirstTimeUseNoticeSentinel sentinel,
+            string eventsNamespace,
+            string sessionId = null,
             bool blockThreadInitialization = false)
         {
+            if (string.IsNullOrWhiteSpace(eventsNamespace))
+            {
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(eventsNamespace));
+            }
+            _eventsNamespace = eventsNamespace;
             Enabled = !GetEnvironmentVariableAsBool(TelemetryOptout) && PermissionExists(sentinel);
 
             if (!Enabled)
@@ -56,12 +65,12 @@ The .NET Core tools collect usage data in order to help us improve your experien
         }
 
         public bool Enabled { get; }
-        
+
         public static bool SkipFirstTimeExperience => GetEnvironmentVariableAsBool(FirstTimeUseNoticeSentinel.SkipFirstTimeExperienceEnvironmentVariableName, false);
 
         public static bool IsRunningInDockerContainer => GetEnvironmentVariableAsBool("DOTNET_RUNNING_IN_CONTAINER", false);
 
-        private static bool GetEnvironmentVariableAsBool(string name, bool defaultValue=false)
+        private static bool GetEnvironmentVariableAsBool(string name, bool defaultValue = false)
         {
             var str = Environment.GetEnvironmentVariable(name);
             if (string.IsNullOrEmpty(str))
@@ -121,8 +130,8 @@ The .NET Core tools collect usage data in order to help us improve your experien
         {
             try
             {
-                _client = new TelemetryClient();
-                _client.InstrumentationKey = InstrumentationKey;
+                var config = new TelemetryConfiguration(InstrumentationKey);
+                _client = new TelemetryClient(config);
                 _client.Context.Session.Id = CurrentSessionId;
                 _client.Context.Device.OperatingSystem = RuntimeEnvironment.OperatingSystem;
 
@@ -132,7 +141,7 @@ The .NET Core tools collect usage data in order to help us improve your experien
             catch (Exception e)
             {
                 _client = null;
-                // we dont want to fail the tool if telemetry fails.
+                // we don't want to fail the tool if telemetry fails.
                 Debug.Fail(e.ToString());
             }
         }
@@ -152,18 +161,13 @@ The .NET Core tools collect usage data in order to help us improve your experien
                 Dictionary<string, string> eventProperties = GetEventProperties(properties);
                 Dictionary<string, double> eventMeasurements = GetEventMeasures(measurements);
 
-                _client.TrackEvent(PrependProducerNamespace(eventName), eventProperties, eventMeasurements);
+                _client.TrackEvent($"{_eventsNamespace}/{eventName}", eventProperties, eventMeasurements);
                 _client.Flush();
             }
             catch (Exception e)
             {
                 Debug.Fail(e.ToString());
             }
-        }
-
-        private static string PrependProducerNamespace(string eventName)
-        {
-            return "dotnet/try/cli/" + eventName;
         }
 
         private Dictionary<string, double> GetEventMeasures(IDictionary<string, double> measurements)

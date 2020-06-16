@@ -1,21 +1,20 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class RequestCompletion : KernelCommandBase
+    public class RequestCompletion : LanguageServiceCommandBase
     {
-        public RequestCompletion(string code, LinePosition position, string targetKernelName = null):base(targetKernelName)
+        public RequestCompletion(string code, LinePosition position, string targetKernelName = null)
+            : base(code, position, targetKernelName)
         {
-            Code = code ?? throw new ArgumentNullException(nameof(code));
-            Position = position;
         }
 
-        public string Code { get;  }
-
-        public LinePosition Position { get; }
+        internal override LanguageServiceCommandBase WithCodeAndPosition(string code, LinePosition position)
+        {
+            return new RequestCompletion(code, position);
+        }
     }
 }

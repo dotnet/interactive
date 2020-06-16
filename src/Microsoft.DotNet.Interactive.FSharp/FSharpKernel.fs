@@ -22,7 +22,9 @@ open FSharp.Compiler.Interactive.Shell
 open FSharp.Compiler.Scripting
 open FSharp.Compiler.SourceCodeServices
 
-type FSharpKernel() as this =
+[<AbstractClass>]
+type FSharpKernelBase () as this =
+
     inherit DotNetLanguageKernel("fsharp")
 
     static let lockObj = Object();
@@ -132,10 +134,6 @@ type FSharpKernel() as this =
         |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
         |> List.map (fun x -> CurrentVariable(x.Name, x.Value.ReflectionType, x.Value.ReflectionValue))
 
-    override _.HandleSubmitCode(command: SubmitCode, context: KernelInvocationContext): Task =
-        handleSubmitCode command context |> Async.StartAsTask :> Task
-        
-
     override _.TryGetVariable<'a>(name: string, [<Out>] value: 'a byref) =
         match script.Value.Fsi.TryFindBoundValue(name) with
         | Some cv ->
@@ -156,9 +154,11 @@ type FSharpKernel() as this =
 
     member _.PackageRestoreContext = _packageRestoreContext.Value
 
-    interface IKernelCommandHandler<RequestCompletion> with
-        member _.HandleAsync(command, context): Task =
-            handleRequestCompletion command context |> Async.StartAsTask :> Task
+    // ideally via IKernelCommandHandler<RequestCompletion>, but requires https://github.com/dotnet/fsharp/pull/2867
+    member _.HandleRequestCompletionAsync(command: RequestCompletion, context: KernelInvocationContext) = handleRequestCompletion command context |> Async.StartAsTask :> Task
+
+    // ideally via IKernelCommandHandler<SubmitCode, but requires https://github.com/dotnet/fsharp/pull/2867
+    member _.HandleSubmitCodeAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context |> Async.StartAsTask :> Task
 
     interface ISupportNuget with
         member _.AddRestoreSource(source: string) =

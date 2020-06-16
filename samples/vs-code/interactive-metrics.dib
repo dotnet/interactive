@@ -105,14 +105,26 @@ Issues data
 
 #!csharp
 
-var openIssues = currentYearIssues.Where(issue => issue.State == "open");
-var closedIssues = currentYearIssues.Where(issue => issue.State == "closed");
+bool IsBug(Issue issue){
+    return issue.Labels.FirstOrDefault(l => l.Name == "bug")!= null;
+}
+
+bool TargetsArea(Issue issue){
+    return issue.Labels.FirstOrDefault(l => l.Name.StartsWith("Area-"))!= null;
+}
+
+string GetArea(Issue issue){
+    return issue.Labels.FirstOrDefault(l => l.Name.StartsWith("Area-"))?.Name;
+}
+
+var openIssues = currentYearIssues.Where(IsBug).Where(issue => issue.State == "open");
+var closedIssues = currentYearIssues.Where(IsBug).Where(issue => issue.State == "closed");
 var oldestIssues = openIssues.OrderBy(issue => today.ToDateTimeUnspecified() - issue.CreatedAt).Take(20);
-var createdCurrentMonth = currentYearIssues.Where(issue => issue.CreatedAt >= startOfTheMonth.ToDateTimeUnspecified());
-var createdPreviousMonth = currentYearIssues.Where(issue => (issue.CreatedAt >= startOfPreviousMonth.ToDateTimeUnspecified()) && (issue.CreatedAt < startOfTheMonth.ToDateTimeUnspecified()));
+var createdCurrentMonth = currentYearIssues.Where(IsBug).Where(issue => issue.CreatedAt >= startOfTheMonth.ToDateTimeUnspecified());
+var createdPreviousMonth = currentYearIssues.Where(IsBug).Where(issue => (issue.CreatedAt >= startOfPreviousMonth.ToDateTimeUnspecified()) && (issue.CreatedAt < startOfTheMonth.ToDateTimeUnspecified()));
 var openFromPreviousMonth = openIssues.Where(issue => (issue.CreatedAt > startOfPreviousMonth.ToDateTimeUnspecified()) && (issue.CreatedAt < startOfTheMonth.ToDateTimeUnspecified()));
-var createdByMonth = currentYearIssues.GroupBy(issue => new DateTime(issue.CreatedAt.Year, issue.CreatedAt.Month, 1)).ToDictionary(g => g.Key, g => g.Count());
-var closedByMonth = closedIssues.GroupBy(issue => new DateTime((int) issue.ClosedAt?.Year, (int) issue.ClosedAt?.Month, 1)).ToDictionary(g => g.Key, g => g.Count());
+var createdByMonth = currentYearIssues.Where(IsBug).GroupBy(issue => new DateTime(issue.CreatedAt.Year, issue.CreatedAt.Month, 1)).OrderBy(g=>g.Key).ToDictionary(g => g.Key, g => g.Count());
+var closedByMonth = closedIssues.GroupBy(issue => new DateTime((int) issue.ClosedAt?.Year, (int) issue.ClosedAt?.Month, 1)).OrderBy(g=>g.Key).ToDictionary(g => g.Key, g => g.Count());
 var openIssueAge = openIssues.GroupBy(issue => new DateTime(issue.CreatedAt.Year, issue.CreatedAt.Month, issue.CreatedAt.Day)).ToDictionary(g => g.Key, g => g.Max(issue =>Math.Max(0, Math.Ceiling( (today.ToDateTimeUnspecified() - issue.CreatedAt).TotalDays))));
 var openByMonth = new Dictionary<DateTime, int>();
 var minDate = createdByMonth.Min(g => g.Key);
@@ -121,6 +133,8 @@ var maxClosedAtDate = closedByMonth.Max(g => g.Key);
 var maxDate = maxCreatedAtDate > maxClosedAtDate ?maxCreatedAtDate : maxClosedAtDate;
 var cursor = minDate;
 var runningTotal = 0;
+var issuesCreatedThisMonthByArea = currentYearIssues.Where(issue => issue.CreatedAt >= startOfTheMonth.ToDateTimeUnspecified()).Where(issue => IsBug(issue) && TargetsArea(issue)).GroupBy(issue => GetArea(issue)).ToDictionary(g => g.Key, g => g.Count());
+var openIssueByArea = currentYearIssues.Where(issue => issue.State == "open").Where(issue => IsBug(issue) && TargetsArea(issue)).GroupBy(issue => GetArea(issue)).ToDictionary(g => g.Key, g => g.Count());
 
 while (cursor <= maxDate )
 {
@@ -131,7 +145,7 @@ while (cursor <= maxDate )
     cursor = cursor.AddMonths(1);
 }
 
-var issueLifespan = currentYearIssues.GroupBy(issue =>
+var issueLifespan = currentYearIssues.Where(IsBug).GroupBy(issue =>
             {
                 var lifeSpan = (issue.ClosedAt ?? today.ToDateTimeUnspecified()) - issue.CreatedAt;
                 return Math.Max(0, Math.Round(Math.Ceiling(lifeSpan.TotalDays),0));
@@ -171,7 +185,7 @@ var closedByMonthSeries = new Graph.Scattergl{
 };
 
 var issueChart = Chart.Plot(new[] {createdByMonthSeries, closedByMonthSeries, openByMonthSeries});
-issueChart.WithTitle("Issues by month");
+issueChart.WithTitle("Bugs by month");
 display(issueChart);
 
 var issueLifespanOnWeekSeries = new Graph.Bar
@@ -208,9 +222,9 @@ var issueLifespanChart = Chart.Plot(new[] {issueLifespanOnWeekSeries, issueLifes
 
 issueLifespanChart.WithLayout(new Layout.Layout
             {
-                title = "Issues by life span",
+                title = "Bugs by life span",
                 xaxis = new Graph.Xaxis {
-                    title = "Number of days an issue stays open",
+                    title = "Number of days a bug stays open",
                     showgrid = false,
                     zeroline = false
                 },
@@ -255,14 +269,42 @@ var openIssuesAgeSeriesLong = new Graph.Bar
 var openIssuesAgeChart = Chart.Plot(new[] {openIssuesAgeSeriesWeek, openIssuesAgeSeriesSprint, openIssuesAgeSeriesLong});
 openIssuesAgeChart.WithLayout(new Layout.Layout
             {
-                title = "Open issues age",
+                title = "Open bugs age",
                 yaxis = new Graph.Yaxis {
-                    title = "Number of days an issue stays open",
+                    title = "Number of days a bug stays open",
                     showgrid = true,
                     zeroline = false
                 }
             });
 display(openIssuesAgeChart);
+
+var createdThisMonthAreaSeries = new Graph.Pie {
+    values = issuesCreatedThisMonthByArea.Select(e => e.Value),
+    labels = issuesCreatedThisMonthByArea.Select(e => e.Key),
+};
+
+var createdArea = Chart.Plot(new[] {createdThisMonthAreaSeries});
+
+createdArea.WithLayout(new Layout.Layout
+            {
+                title = "Bugs created this month by Area",                
+            });
+
+display(createdArea);
+
+var openAreaSeries = new Graph.Pie {
+    values = openIssueByArea.Select(e => e.Value),
+    labels = openIssueByArea.Select(e => e.Key),
+};
+
+var openArea = Chart.Plot(new[] {openAreaSeries});
+
+openArea.WithLayout(new Layout.Layout
+            {
+                title = "Open bugs by Area",                
+            });
+
+display(openArea);
 
 #!csharp
 

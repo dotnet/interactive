@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Linq;
 
@@ -12,14 +13,19 @@ namespace Microsoft.DotNet.Interactive.Telemetry
     public sealed class TelemetryFilter : ITelemetryFilter
     {
         private readonly Func<string, string> _hash;
+        private readonly Action<CommandResult, IDirectiveCollection, ImmutableArray<KeyValuePair<string, string>>.Builder> _directiveProcessor;
+        private readonly HashSet<string> _clearTextProperties;
 
-        public TelemetryFilter(Func<string, string> hash)
+        public TelemetryFilter(Func<string, string> hash, IEnumerable<string> clearTextProperties = null, Action<CommandResult , IDirectiveCollection , ImmutableArray<KeyValuePair<string, string>>.Builder > directiveProcessor = null)
         {
             _hash = hash ?? throw new ArgumentNullException(nameof(hash));
+            _directiveProcessor = directiveProcessor;
+            _clearTextProperties = new HashSet<string>(clearTextProperties ?? Enumerable.Empty<string>());
         }
 
         public IEnumerable<ApplicationInsightsEntryFormat> Filter(object objectToFilter)
         {
+         
             if (objectToFilter == null)
             {
                 return new List<ApplicationInsightsEntryFormat>();
@@ -42,43 +48,38 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                                // We skip one to not include the main command as part of the collection we want to filter.
                                .Skip(1);
 
-                var entryItems = FilterCommand(mainCommandName, tokens, parseResult.CommandResult);
+                var entryItems = FilterCommand(mainCommandName, tokens, parseResult.CommandResult, parseResult.Directives);
 
                 if (entryItems != null)
                 {
                     result.Add(CreateEntry(entryItems));
                 }
+
             }
 
-            return result.Select(r => r.WithAppliedToPropertiesValue(_hash)).ToList();
+            return result.Select(r => r.WithAppliedToPropertiesValue(_hash, name => !_clearTextProperties.Contains(name))).ToList();
         }
 
-        private Nullable<ImmutableArray<KeyValuePair<string, string>>> 
-            FilterCommand(string commandName, IEnumerable<Token> tokens, CommandResult commandResult)
+        private ImmutableArray<KeyValuePair<string, string>>? 
+            FilterCommand(string commandName, IEnumerable<Token> tokens, CommandResult commandResult, IDirectiveCollection directives)
         {
             if (commandName == null || tokens == null)
             {
                 return null;
             }
 
-            return Rules.Select(rule =>
-            {
-                if (rule.CommandName == commandName)
-                {
-                    return TryMatchRule(rule, tokens, commandResult);
-                }
-                else
-                {
-                    return null;
-                }
-            }).FirstOrDefault(x => x != null);
+            return Rules
+                .Select(rule => rule.CommandName == commandName 
+                    ? TryMatchRule(rule, tokens, commandResult, directives) 
+                    : null)
+                .FirstOrDefault(x => x != null);
         }
 
         /// <summary>
         /// Tries to see if the tokens follow or match the specified command rule.
         /// </summary>
         ImmutableArray<KeyValuePair<string, string>>? 
-            TryMatchRule(CommandRule rule, IEnumerable<Token> tokens, CommandResult commandResult)
+            TryMatchRule(CommandRule rule, IEnumerable<Token> tokens, CommandResult commandResult, IDirectiveCollection directives)
         {
             var entryItems = ImmutableArray.CreateBuilder<KeyValuePair<string, string>>();
             entryItems.Add(new KeyValuePair<string, string>("verb", rule.CommandName));
@@ -87,20 +88,15 @@ namespace Microsoft.DotNet.Interactive.Telemetry
             var tokenQueue = new Queue<Token>(tokens.Where(x => x.Type != TokenType.Option));
             Token NextToken()
             {
-                if (tokenQueue.TryDequeue(out var firstToken))
-                {
-                    return firstToken;
-                }
-                else
-                {
-                    return null;
-                }
+                return tokenQueue.TryDequeue(out var firstToken) ? firstToken : null;
             }
 
             var currentToken = NextToken();
 
             // We have a valid rule so far.
             var passed = true;
+
+            _directiveProcessor?.Invoke(commandResult, directives, entryItems);
 
             foreach (var item in rule.Items)
             {
@@ -174,6 +170,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                 return null;
             }
         }
+
 
         private ApplicationInsightsEntryFormat CreateEntry(IEnumerable<KeyValuePair<string, string>> entryItems)
         {

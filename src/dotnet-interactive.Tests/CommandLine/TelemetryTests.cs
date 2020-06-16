@@ -51,7 +51,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             await _parser.InvokeAsync($"jupyter {_connectionFile}", _console);
             _fakeTelemetry.LogEntries.Should().Contain(
                 x => x.EventName == "command" &&
-                     x.Properties.Count == 2 &&
                      x.Properties["verb"] == Sha256Hasher.Hash("JUPYTER") &&
                      x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
         }
@@ -69,7 +68,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             await _parser.InvokeAsync($"jupyter --default-kernel csharp {_connectionFile}", _console);
             _fakeTelemetry.LogEntries.Should().Contain(
                 x => x.EventName == "command" &&
-                     x.Properties.Count == 2 &&
                      x.Properties["verb"] == Sha256Hasher.Hash("JUPYTER") &&
                      x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
         }
@@ -87,7 +85,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             await _parser.InvokeAsync($"jupyter --default-kernel fsharp {_connectionFile}", _console);
             _fakeTelemetry.LogEntries.Should().Contain(
                 x => x.EventName == "command" &&
-                     x.Properties.Count == 2 &&
                      x.Properties["verb"] == Sha256Hasher.Hash("JUPYTER") &&
                      x.Properties["default-kernel"] == Sha256Hasher.Hash("FSHARP"));
         }
@@ -105,7 +102,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             await _parser.InvokeAsync("jupyter install", _console);
             _fakeTelemetry.LogEntries.Should().Contain(
                 x => x.EventName == "command" &&
-                     x.Properties.Count == 2 &&
                      x.Properties["verb"] == Sha256Hasher.Hash("JUPYTER") &&
                      x.Properties["subcommand"] == Sha256Hasher.Hash("INSTALL"));
         }
@@ -124,7 +120,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             await _parser.InvokeAsync($"jupyter --default-kernel csharp {_connectionFile}", _console);
             _fakeTelemetry.LogEntries.Should().Contain(
                 x => x.EventName == "command" &&
-                     x.Properties.Count == 2 &&
                      x.Properties["verb"] == Sha256Hasher.Hash("JUPYTER") &&
                      x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
 
@@ -144,7 +139,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             await _parser.InvokeAsync($"jupyter  {_connectionFile}", _console);
             _fakeTelemetry.LogEntries.Should().Contain(
                 x => x.EventName == "command" &&
-                     x.Properties.Count == 2 &&
                      x.Properties["verb"] == Sha256Hasher.Hash("JUPYTER") &&
                      x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
         }
@@ -162,7 +156,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             await _parser.InvokeAsync($"--verbose jupyter  {_connectionFile}", _console);
             _fakeTelemetry.LogEntries.Should().Contain(
                 x => x.EventName == "command" &&
-                     x.Properties.Count == 2 &&
                      x.Properties["verb"] == Sha256Hasher.Hash("JUPYTER") &&
                      x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
         }
@@ -190,6 +183,28 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
+        public async Task Jupyter_command_sends_frontend_telemetry()
+        {
+            await _parser.InvokeAsync($"jupyter {_connectionFile}", _console);
+            _fakeTelemetry.LogEntries.Should().Contain(
+                x => x.EventName == "command" &&
+                     x.Properties.Count == 3 &&
+                     x.Properties["verb"] == Sha256Hasher.Hash("JUPYTER") && 
+                     x.Properties["frontend"] == "jupyter" &&
+                     x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
+        }
+
+        [Fact]
+        public async Task Jupyter_install_command_does_not_send_frontend_telemetry()
+        {
+            await _parser.InvokeAsync($"jupyter install", _console);
+            _fakeTelemetry.LogEntries.Should().Contain(
+                x => x.EventName == "command" &&
+                     x.Properties["verb"] == Sha256Hasher.Hash("JUPYTER") &&
+                     x.Properties["subcommand"] == Sha256Hasher.Hash("INSTALL"));
+        }
+
+        [Fact]
         public async Task Invalid_command_is_does_not_send_any_telemetry()
         {
             await _parser.InvokeAsync("invalidcommand", _console);
@@ -197,7 +212,19 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public async Task Kernel_server_standalone_command_sends_telemetry()
+        public async Task stdio_command_sends_fronted_telemetry()
+        {
+            await _parser.InvokeAsync("[synapse] stdio", _console);
+            _fakeTelemetry.LogEntries.Should().Contain(
+                x => x.EventName == "command" &&
+                     x.Properties.Count == 3 &&
+                     x.Properties["verb"] == Sha256Hasher.Hash("STDIO") &&
+                     x.Properties["frontend"] == "synapse" &&
+                     x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
+        }
+
+        [Fact]
+        public async Task stdio_standalone_command_sends_telemetry()
         {
             await _parser.InvokeAsync("stdio", _console);
             _fakeTelemetry.LogEntries.Should().Contain(
@@ -215,7 +242,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public async Task Kernel_server_default_kernel_csharp_sends_telemetry()
+        public async Task stdio_default_kernel_csharp_sends_telemetry()
         {
             await _parser.InvokeAsync("stdio --default-kernel csharp", _console);
             _fakeTelemetry.LogEntries.Should().Contain(
@@ -226,14 +253,14 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public async Task Kernel_server_default_kernel_csharp_has_one_entry()
+        public async Task stdio_default_kernel_csharp_has_one_entry()
         {
             await _parser.InvokeAsync("stdio --default-kernel csharp", _console);
             _fakeTelemetry.LogEntries.Should().HaveCount(1);
         }
 
         [Fact]
-        public async Task Kernel_server_default_kernel_fsharp_sends_telemetry()
+        public async Task stdio_default_kernel_fsharp_sends_telemetry()
         {
             await _parser.InvokeAsync("stdio --default-kernel fsharp", _console);
             _fakeTelemetry.LogEntries.Should().Contain(
@@ -244,7 +271,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public async Task Kernel_server_default_kernel_fsharp_has_one_entry()
+        public async Task stdio_default_kernel_fsharp_has_one_entry()
         {
             await _parser.InvokeAsync("stdio --default-kernel fsharp", _console);
             _fakeTelemetry.LogEntries.Should().HaveCount(1);

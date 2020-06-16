@@ -11,15 +11,15 @@ namespace Microsoft.DotNet.Interactive.Parsing
     [DebuggerStepThrough]
     public abstract class SyntaxNodeOrToken
     {
-        private readonly SourceText _sourceText;
-
         private protected SyntaxNodeOrToken(
             SourceText sourceText, 
             PolyglotSyntaxTree? syntaxTree)
         {
             SyntaxTree = syntaxTree;
-            _sourceText = sourceText;
+            SourceText = sourceText;
         }
+
+        protected SourceText SourceText { get; }
 
         public SyntaxNode? Parent { get; internal set; }
 
@@ -27,6 +27,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         public PolyglotSyntaxTree? SyntaxTree { get; }
 
-        public string Text => _sourceText.GetSubText(Span).ToString();
+        public string Text => SourceText.GetSubText(Span).ToString();
     }
 }

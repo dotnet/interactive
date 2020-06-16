@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 {
     public class InterfaceGenerator
     {
-        private static readonly Dictionary<Type, string> WellKnownTypes = new Dictionary<Type, string>()
+        private static readonly Dictionary<Type, string> WellKnownTypes = new Dictionary<Type, string>
         {
             { typeof(bool), "boolean" },
             { typeof(int), "number" },

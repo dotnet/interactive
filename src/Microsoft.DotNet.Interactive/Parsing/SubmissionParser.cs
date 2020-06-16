@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
-using System.CommandLine.Help;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
@@ -20,52 +19,49 @@ namespace Microsoft.DotNet.Interactive.Parsing
     {
         private readonly KernelBase _kernel;
         private Parser _directiveParser;
-
         private RootCommand _rootCommand;
 
         public IReadOnlyList<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
+        public string KernelLanguage { get; internal set; }
 
         public SubmissionParser(KernelBase kernel)
         {
             _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
-
-            DefaultLanguage = kernel switch
+            KernelLanguage = kernel switch
             {
                 CompositeKernel c => c.DefaultKernelName,
                 _ => kernel.Name
             };
         }
 
-        public string DefaultLanguage { get; internal set; }
-
-        public PolyglotSyntaxTree Parse(string code)
+        public PolyglotSyntaxTree Parse(string code, string language = null)
         {
             var sourceText = SourceText.From(code);
 
             var parser = new PolyglotSyntaxParser(
-                sourceText, 
-                DefaultLanguage, 
+                sourceText,
+                language ?? KernelLanguage,
                 GetDirectiveParser(),
                 GetSubkernelDirectiveParsers());
 
             return parser.Parse();
         }
 
-        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode) 
+        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode)
         {
             var commands = new List<IKernelCommand>();
             var nugetRestoreOnKernels = new HashSet<string>();
             var hoistedCommandsIndex = 0;
 
-            var tree = Parse(submitCode.Code);
+            var tree = Parse(submitCode.Code, submitCode.TargetKernelName);
             var nodes = tree.GetRoot().ChildNodes.ToArray();
+            var targetKernelName = submitCode.TargetKernelName ?? KernelLanguage;
 
             foreach (var node in nodes)
             {
                 switch (node)
                 {
                     case DirectiveNode directiveNode:
-
                         var parseResult = directiveNode.GetDirectiveParseResult();
 
                         if (parseResult.Errors.Any())
@@ -90,7 +86,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             submitCode.Parent,
                             directiveNode);
 
-                        var targetKernelName = DefaultLanguage;
+                        if (directiveNode is KernelNameDirectiveNode kernelNameNode)
+                        {
+                            targetKernelName = kernelNameNode.KernelName;
+                        }
 
                         if (parseResult.CommandResult.Command.Name == "#r")
                         {
@@ -100,7 +99,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             {
                                 AddHoistedCommand(
                                     new SubmitCode(
-                                        directiveNode, 
+                                        directiveNode,
                                         submitCode.SubmissionType,
                                         submitCode.Parent));
                             }
@@ -217,7 +216,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     new CommandLineBuilder(_rootCommand)
                         .ParseResponseFileAs(ResponseFileHandling.Disabled)
                         .UseTypoCorrections()
-                        .UseHelpBuilder(bc => new HelpBuilderThatOmitsRootCommandName(bc.Console, _rootCommand.Name))
+                        .UseHelpBuilder(bc => new DirectiveHelpBuilder(bc.Console, _rootCommand.Name))
                         .UseHelp()
                         .UseMiddleware(
                             context =>
@@ -258,31 +257,39 @@ namespace Microsoft.DotNet.Interactive.Parsing
             _directiveParser = null;
         }
 
+        public static CompletionItem CompletionItemFor(string name, Parser parser)
+        {
+            var symbol = parser.Configuration
+                               .RootCommand
+                               .Children
+                               .GetByAlias(name);
+
+            var kind = symbol switch
+            {
+                IArgument _ => "Value",
+                IOption _ => "Property",
+                ICommand _ => "Method",
+                _ => throw new ArgumentOutOfRangeException(nameof(symbol))
+            };
+
+            var helpBuilder = new DirectiveHelpBuilder(
+                new TestConsole(),
+                parser.Configuration.RootCommand.Name);
+
+            return new CompletionItem(
+                displayText: name,
+                kind: kind,
+                filterText: name,
+                sortText: name,
+                insertText: name,
+                documentation: helpBuilder.GetHelpForSymbol(symbol));
+        }
+
         private void EnsureRootCommandIsInitialized()
         {
             if (_rootCommand == null)
             {
                 _rootCommand = new RootCommand();
-            }
-        }
-
-        private class HelpBuilderThatOmitsRootCommandName : HelpBuilder
-        {
-            private readonly string _rootCommandName;
-
-            public HelpBuilderThatOmitsRootCommandName(IConsole console, string rootCommandName) : base(console)
-            {
-                _rootCommandName = rootCommandName;
-            }
-
-            public override void Write(ICommand command)
-            {
-                var capturingConsole = new TestConsole();
-                new HelpBuilder(capturingConsole).Write(command);
-                Console.Out.Write(
-                    capturingConsole.Out
-                                    .ToString()
-                                    .Replace(_rootCommandName + " ", ""));
             }
         }
     }

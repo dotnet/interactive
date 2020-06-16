@@ -23,7 +23,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
     public class PowerShellKernel : 
         DotNetLanguageKernel,
-        IKernelCommandHandler<RequestCompletion>
+        IKernelCommandHandler<RequestCompletion>,
+        IKernelCommandHandler<SubmitCode>
     {
         internal const string DefaultKernelName = "pwsh";
 
@@ -145,7 +146,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return Task.CompletedTask;
         }
 
-        protected override async Task HandleSubmitCode(
+        public async Task HandleAsync(
             SubmitCode submitCode,
             KernelInvocationContext context)
         {
@@ -225,7 +226,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 completion = new CompletionRequestCompleted(
                     completionItems,
                     requestCompletion,
-                    SourceUtilities.GetRangeFromStartAndEndIndices(requestCompletion.Code, results.ReplacementIndex, endIndex));
+                    SourceUtilities.GetLinePositionSpanFromStartAndEndIndices(requestCompletion.Code, results.ReplacementIndex, endIndex));
             }
 
             context.Publish(completion);

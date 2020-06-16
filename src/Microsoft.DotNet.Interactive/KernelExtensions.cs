@@ -30,9 +30,9 @@ namespace Microsoft.DotNet.Interactive
 
             return root switch
             {
+                _ when kernel.Name == name => kernel,
                 CompositeKernel c => c.ChildKernels
                                       .SingleOrDefault(k => k.Name == name),
-                _ when kernel.Name == name => kernel,
                 _ => null
             };
         }
@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.Interactive
         public static T UseDotNetVariableSharing<T>(this T kernel)
             where T : DotNetLanguageKernel
         {
-            var share = new Command("#!share", "Share a .NET object between subkernels")
+            var share = new Command("#!share", "Share a .NET variable between subkernels")
             {
                 new Option<string>("--from"),
                 new Argument<string>("name")

@@ -60,23 +60,15 @@ namespace Microsoft.DotNet.Interactive.Telemetry
             return _userLevelCacheWriter.RunWithCache(MachineIdCacheKey, () =>
             {
                 var macAddress = _getMACAddress();
-                if (macAddress != null)
-                {
-                    return _hasher(macAddress);
-                }
-                else
-                {
-                    return Guid.NewGuid().ToString();
-                }
+                return macAddress != null 
+                    ? _hasher(macAddress) 
+                    : Guid.NewGuid().ToString();
             });
         }
 
         private string IsDockerContainer()
         {
-            return _userLevelCacheWriter.RunWithCache(IsDockerContainerCacheKey, () =>
-            {
-                return _dockerContainerDetector.IsDockerContainer().ToString("G");
-            });
+            return _userLevelCacheWriter.RunWithCache(IsDockerContainerCacheKey, () => _dockerContainerDetector.IsDockerContainer().ToString("G"));
         }
 
         /// <summary>

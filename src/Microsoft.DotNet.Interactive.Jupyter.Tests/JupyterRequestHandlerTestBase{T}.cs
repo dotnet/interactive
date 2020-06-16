@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
     {
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly CSharpKernel _cSharpKernel;
-        private readonly FSharpKernel _fSharpKernel;
+        private readonly FSharpKernelBase _fSharpKernel;
         private readonly PowerShellKernel _psKernel;
         private readonly CompositeKernel _compositeKernel;
 
@@ -29,12 +29,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             _disposables.Add(output.SubscribeToPocketLogger());
             _cSharpKernel = new CSharpKernel()
+                .UseNugetDirective()
                 .UseDefaultFormatting()
                 .UseKernelHelpers()
                 .UseJupyterHelpers()
                 .UseMathAndLaTeX();
 
             _fSharpKernel = new FSharpKernel()
+                .UseNugetDirective()
                 .UseDefaultFormatting()
                 .UseKernelHelpers()
                 .UseDefaultNamespaces()

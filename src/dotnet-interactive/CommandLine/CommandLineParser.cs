@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
@@ -16,7 +17,6 @@ using Clockwise;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
-using Microsoft.DotNet.Interactive.App.Commands;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -24,7 +24,6 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Microsoft.DotNet.Interactive.PowerShell;
-using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -91,11 +90,45 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             // Setup first time use notice sentinel.
             firstTimeUseNoticeSentinel ??= new FirstTimeUseNoticeSentinel(VersionSensor.Version().AssemblyInformationalVersion);
 
+            var clearTextProperties = new[]
+            {
+                "frontend"
+            };
+
             // Setup telemetry.
             telemetry ??= new Telemetry.Telemetry(
                 VersionSensor.Version().AssemblyInformationalVersion,
-                firstTimeUseNoticeSentinel);
-            var filter = new TelemetryFilter(Sha256Hasher.HashWithNormalizedCasing);
+                firstTimeUseNoticeSentinel,
+                "dotnet/interactive/cli");
+
+            var filter = new TelemetryFilter(
+                Sha256Hasher.HashWithNormalizedCasing,
+                clearTextProperties,
+                (commandResult, directives, entryItems) =>
+                {
+                    // add frontend
+                    var frontendTelemetryAdded = false;
+                    foreach (var directive in directives)
+                    {
+                        switch (directive.Key)
+                        {
+                            case "vscode":
+                            case "jupyter":
+                            case "synapse":
+                                frontendTelemetryAdded = true;
+                                entryItems.Add(new KeyValuePair<string, string>("frontend", directive.Key));
+                                break;
+                        }
+                    }
+
+                    if (!frontendTelemetryAdded)
+                    {
+                        if (commandResult.Command.Name == "jupyter")
+                        {
+                            entryItems.Add(new KeyValuePair<string, string>("frontend", "jupyter"));
+                        }
+                    }
+                });
 
             var verboseOption = new Option<bool>(
                 "--verbose",
@@ -151,8 +184,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     Description = "Interactive programming for .NET."
                 };
 
-                command.AddOption(logPathOption);
-                command.AddOption(verboseOption);
+                command.AddGlobalOption(logPathOption);
+                command.AddGlobalOption(verboseOption);
 
                 return command;
             }
@@ -168,8 +201,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 var command = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel")
                 {
                     defaultKernelOption,
-                    logPathOption,
-                    verboseOption,
                     httpPortRangeOption,
                     new Argument<FileInfo>
                     {
@@ -182,8 +213,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
                 {
                     httpPortRangeOption,
-                    logPathOption,
-                    verboseOption,
                     pathOption
                 };
 
@@ -261,8 +290,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 var command = new Command("http", "Starts dotnet-interactive with kernel functionality exposed over http")
                 {
                     defaultKernelOption,
-                    httpPortOption,
-                    logPathOption
+                    httpPortOption
                 };
 
                 command.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(

@@ -6,14 +6,16 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class JavaScriptKernel : KernelBase
+    public class JavaScriptKernel :
+        KernelBase,
+        IKernelCommandHandler<SubmitCode>
     {
         public const string DefaultKernelName = "javascript";
 
         public JavaScriptKernel() : base(DefaultKernelName)
         {
         }
-        protected override async Task HandleSubmitCode(
+        public async Task HandleAsync(
             SubmitCode command,
             KernelInvocationContext context)
         {

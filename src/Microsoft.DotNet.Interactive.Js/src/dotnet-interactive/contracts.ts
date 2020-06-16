@@ -6,7 +6,6 @@
 // --------------------------------------------- Kernel Commands
 
 export const AddPackageType = "AddPackage";
-export const CancelCurrentCommandType = "CancelCurrentCommand";
 export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
@@ -18,7 +17,6 @@ export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 
 export type KernelCommandType =
       typeof AddPackageType
-    | typeof CancelCurrentCommandType
     | typeof ChangeWorkingDirectoryType
     | typeof DisplayErrorType
     | typeof DisplayValueType
@@ -36,9 +34,6 @@ export interface KernelCommand {
     targetKernelName?: string;
 }
 
-export interface CancelCurrentCommand extends KernelCommand {
-}
-
 export interface ChangeWorkingDirectory extends KernelCommand {
     workingDirectory: string;
 }
@@ -53,7 +48,10 @@ export interface DisplayValue extends KernelCommand {
     valueId: string;
 }
 
-export interface RequestCompletion extends KernelCommand {
+export interface RequestCompletion extends LanguageServiceCommandBase {
+}
+
+export interface LanguageServiceCommandBase extends KernelCommand {
     code: string;
     position: LinePosition;
 }
@@ -61,9 +59,7 @@ export interface RequestCompletion extends KernelCommand {
 export interface RequestDiagnostics extends KernelCommand {
 }
 
-export interface RequestHoverText extends KernelCommand {
-    code: string;
-    position: LinePosition;
+export interface RequestHoverText extends LanguageServiceCommandBase {
 }
 
 export interface SubmitCode extends KernelCommand {

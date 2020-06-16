@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 .FirstOrDefault(n => n.Span.Contains(span));
 
         public SyntaxNode? FindNode(int position) =>
-           FindToken(position)?.Parent;
+            FindToken(position)?.Parent;
 
         public SyntaxToken? FindToken(int position)
         {

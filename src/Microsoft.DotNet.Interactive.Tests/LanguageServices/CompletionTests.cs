@@ -1,8 +1,12 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -15,8 +19,11 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 {
     public class CompletionTests : LanguageKernelTestBase
     {
+        private readonly ITestOutputHelper _output;
+
         public CompletionTests(ITestOutputHelper output) : base(output)
         {
+            _output = output;
         }
 
         [Theory]
@@ -143,6 +150,161 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .CompletionList
                 .Should()
                 .Contain(item => item.DisplayText == variableName);
+        }
+
+        [Theory]
+        [InlineData("[|#!c|]", "#!csharp", Skip = "Composite kernel magic command completions not working yet")]
+        [InlineData("[|#!w|]", "#!who,#!whos")]
+        [InlineData("[|#!w|]\n", "#!who,#!whos")]
+        [InlineData("[|#!w|] \n", "#!who,#!whos")]
+        public async Task Completions_are_available_for_magic_commands(
+            string markupCode,
+            string expected)
+        {
+            MarkupTestFile.GetSpan(markupCode, out var code, out var span);
+
+            var sourceText = SourceText.From(code);
+
+            var kernel = CreateKernel();
+
+            using var _ = new AssertionScope();
+
+            _output.WriteLine($"Checking positions from {span.Start} to {span.End}");
+
+            foreach (var position in Enumerable.Range(span.Start, span.Length + 1))
+            {
+                var linePosition = sourceText.Lines.GetLinePosition(position);
+
+                var result = await kernel.SendAsync(new RequestCompletion(code, linePosition));
+
+                var events = result.KernelEvents.ToSubscribedList();
+
+                events
+                    .Should()
+                    .ContainSingle<CompletionRequestCompleted>()
+                    .Which
+                    .CompletionList
+                    .Select(i => i.DisplayText)
+                    .Should()
+                    .Contain(expected.Split(","),
+                             because: $"position {position} should provide completions");
+            }
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task completion_commands_produce_values_after_normalizing_the_request(Language language)
+        {
+            var variableName = "aaaaaaa";
+
+            var declarationSubmission = language switch
+            {
+                Language.CSharp => $"var {variableName} = 123;",
+                Language.FSharp => $"let {variableName} = 123"
+            };
+
+            var kernel = CreateKernel(language);
+
+            await kernel.SubmitCodeAsync(declarationSubmission);
+
+            var completionCode = string.Join("\r\n", new[]
+            {
+                "", // blank line to force offsets to be wrong
+                "#!time",
+                "aaa$$"
+            });
+            MarkupTestFile.GetLineAndColumn(completionCode, out var output, out var line, out var column);
+            await kernel.SendAsync(new RequestCompletion(output, new LinePosition(line, column)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionRequestCompleted>()
+                .Which
+                .CompletionList
+                .Should()
+                .Contain(item => item.DisplayText == variableName);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task completion_commands_have_offsets_normalized_after_switching_to_the_same_language(Language language)
+        {
+            var variableName = "aaaaaaa";
+
+            var declarationSubmission = language switch
+            {
+                Language.CSharp => $"var {variableName} = 123;",
+                Language.FSharp => $"let {variableName} = 123"
+            };
+
+            var kernel = CreateKernel(language);
+
+            await kernel.SubmitCodeAsync(declarationSubmission);
+
+            var completionCode = string.Join("\r\n", new[]
+            {
+                "", // blank line to force offsets to be wrong
+                $"#!{language.LanguageName()}",
+                "aaa$$"
+            });
+            MarkupTestFile.GetLineAndColumn(completionCode, out var output, out var line, out var column);
+            await kernel.SendAsync(new RequestCompletion(output, new LinePosition(line, column)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionRequestCompleted>()
+                .Which
+                .CompletionList
+                .Should()
+                .Contain(item => item.DisplayText == variableName);
+        }
+
+        [Fact]
+        public async Task completion_commands_and_events_have_offsets_normalized_when_switching_languages()
+        {
+            // switch to PowerShell from an F# kernel/cell
+            using var kernel = CreateCompositeKernel(Language.FSharp);
+            var fullMarkupCode = string.Join("\r\n", new[]
+            {
+                "let x = 1",
+                "#!pwsh",
+                "Get-$$"
+            });
+
+            MarkupTestFile.GetLineAndColumn(fullMarkupCode, out var code, out var line, out var character);
+            await kernel.SendAsync(new RequestCompletion(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionRequestCompleted>()
+                .Which
+                .Range
+                .Should()
+                .Be(new LinePositionSpan(new LinePosition(line, 0), new LinePosition(line, 4)));
+        }
+
+        [Fact]
+        public async Task magic_command_completion_commands_and_events_have_offsets_normalized_when_the_submission_was_parsed_and_split()
+        {
+            using var kernel = CreateKernel(Language.CSharp);
+            var fullMarkupCode = @"
+var x = 1;
+var y = x + 2;
+#!w$$
+";
+
+            MarkupTestFile.GetLineAndColumn(fullMarkupCode, out var code, out var line, out var character);
+            await kernel.SendAsync(new RequestCompletion(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionRequestCompleted>()
+                .Which
+                .Range
+                .Should()
+                .Be(new LinePositionSpan(new LinePosition(line, 0), new LinePosition(line, 3)));
         }
     }
 }
