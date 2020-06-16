@@ -1,17 +1,11 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.ComponentModel;
-using System.IO;
 using System.IO.Pipes;
 using System.Security.Principal;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive
