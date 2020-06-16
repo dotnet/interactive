@@ -309,6 +309,8 @@ var y = x + 2;
                 .Range
                 .Should()
                 .Be(new LinePositionSpan(new LinePosition(line, 0), new LinePosition(line, 3)));
+        }
+
         [Fact]
         public async Task Magic_command_completion_documentation_does_not_include_root_command_name()
         {
