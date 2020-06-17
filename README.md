@@ -29,7 +29,7 @@ There are several ways to get started using .NET with Jupyter, including Jupyter
 
 ## Visual Studio Code
 
-Work is underway to add support for the new Visual Studio Code [native notebook feature](https://code.visualstudio.com/updates/v1_45#_github-issue-notebook). While we are still in the early stages of this effort, if you'd like to experiment with it you can find instructions [here](./src/dotnet-interactive-vscode/README.md) and if you'd like to contribute, start [here](./src/dotnet-interactive-vscode/developing.md). 
+Work is underway to add support for the new Visual Studio Code [native notebook feature](https://code.visualstudio.com/updates/v1_45#_github-issue-notebook). While we are still in the early stages of this effort, if you'd like to experiment with it you can find instructions [here](./src/dotnet-interactive-vscode/README.md). If you'd like to contribute, start [here](CONTRIBUTING.md). 
 
 ## Documentation
 
@@ -49,12 +49,12 @@ Package                                    | Version                            
 
 ## Contribution Guidelines
 
-You can contribute to .NET Interactive with issues and PRs. Simply filing issues for problems you encounter is a great way to contribute. Contributing code improvements is greatly appreciated. You can read more about our contribution guidelines [here](https://github.com/dotnet/runtime/blob/master/CONTRIBUTING.md).
+You can contribute to .NET Interactive with issues and pull requests. Simply filing issues for problems you encounter is a great way to contribute. Contributing code improvements is greatly appreciated. You can read more about our contribution guidelines [here](CONTRIBUTING.md).
 
 ## Customers & Partners
 
 |    [Azure Synapse Analytics ](https://azure.microsoft.com/en-us/services/synapse-analytics/)   |Azure HDInsight (HDI)  |
 |:-------------:|:-------------:|
-| Azure Synapse Analytics uses the .NET kernel to write and run quick ad-hoc queries in addition to developing complete, end-to-end big data scenarios, such as reading in data, transforming it, and visualizing it|You can launch Jupyter notebooks from your HDInsight cluster to run big data queries against the compute resources in that cluster. |
+| Azure Synapse Analytics uses the .NET kernel to write and run quick ad-hoc queries in addition to developing complete, end-to-end big data scenarios, such as reading in data, transforming it, and visualizing it|You can launch Jupyter notebooks from your HDInsight cluster to run big data queries against the compute resources in that cluster. 
 
 
