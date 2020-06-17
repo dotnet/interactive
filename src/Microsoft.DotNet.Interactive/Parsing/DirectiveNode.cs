@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine.Parsing;
+
 using Microsoft.CodeAnalysis.Text;
 
 #nullable enable
@@ -13,6 +14,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
     public abstract class DirectiveNode : LanguageNode
     {
         private ParseResult? _parseResult;
+        private Parser? _directiveParser;
 
         internal DirectiveNode(
             DirectiveToken directiveToken,
@@ -22,7 +24,14 @@ namespace Microsoft.DotNet.Interactive.Parsing
             Add(directiveToken);
         }
 
-        internal Parser? DirectiveParser { get; set; }
+        internal Parser? DirectiveParser
+        {
+            get => _directiveParser;
+            set { 
+                _directiveParser = value;
+                _parseResult = null;
+            }
+        }
 
         public ParseResult GetDirectiveParseResult()
         {
@@ -31,12 +40,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 throw new InvalidOperationException($"{nameof(DirectiveParser)} was not set.");
             }
 
-            if (_parseResult == null)
-            {
-                _parseResult = DirectiveParser.Parse(Text);
-            }
-
-            return _parseResult;
+            return _parseResult ??= DirectiveParser.Parse(Text);
         }
 
         public override IEnumerable<Diagnostic> GetDiagnostics()

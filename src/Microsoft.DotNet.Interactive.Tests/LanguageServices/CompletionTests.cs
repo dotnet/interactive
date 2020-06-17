@@ -1,12 +1,12 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -153,7 +153,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         }
 
         [Theory]
-        [InlineData("[|#!c|]", "#!csharp", Skip = "Composite kernel magic command completions not working yet")]
+        [InlineData("[|#!c|]", "#!csharp")]
         [InlineData("[|#!w|]", "#!who,#!whos")]
         [InlineData("[|#!w|]\n", "#!who,#!whos")]
         [InlineData("[|#!w|] \n", "#!who,#!whos")]
@@ -192,6 +192,69 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         }
 
         [Theory]
+        [InlineData("[|#!t|]", "#!two,#!twilight", null)]
+        [InlineData("[|#!tw|]\n", "#!two,#!twilight", null)]
+        [InlineData("[|#!t|]", "#!two,#!twilight", Language.CSharp)]
+        [InlineData("[|#!tw|]\n", "#!two,#!twilight", Language.CSharp)]
+        [InlineData("[|#!t|]", "#!two,#!twilight", Language.FSharp)]
+        [InlineData("[|#!tw|]\n", "#!two,#!twilight", Language.FSharp)]
+        [InlineData("[|#!t|]", "#!two,#!twilight", Language.PowerShell)]
+        [InlineData("[|#!tw|]\n", "#!two,#!twilight", Language.PowerShell)]
+        public async Task Completions_are_available_for_magic_commands_added_at_runtime(
+            string markupCode,
+            string expected,
+            Language? language)
+        {
+            MarkupTestFile.GetSpan(markupCode, out var code, out var span);
+
+            var sourceText = SourceText.From(code);
+
+            var kernel = CreateKernel(language ?? Language.CSharp);
+
+            using var _ = new AssertionScope();
+
+            _output.WriteLine($"Checking positions from {span.Start} to {span.End}");
+
+            KernelBase kernelToExtend = kernel;
+            if (language != null)
+            {
+                kernelToExtend = kernel.FindKernel(language.Value.LanguageName()) as KernelBase;
+            }
+
+            kernelToExtend.AddDirective(new Command("#!two")
+            {
+                Handler = CommandHandler.Create(() => { })
+            });
+
+
+            kernel.AddDirective(new Command("#!twilight")
+            {
+                Handler = CommandHandler.Create(() => { })
+            });
+
+
+            foreach (var position in Enumerable.Range(span.Start, span.Length + 1))
+            {
+                var linePosition = sourceText.Lines.GetLinePosition(position);
+
+                var result = await kernel.SendAsync(new RequestCompletion(code, linePosition));
+
+                var events = result.KernelEvents.ToSubscribedList();
+
+                events
+                    .Should()
+                    .ContainSingle<CompletionRequestCompleted>()
+                    .Which
+                    .CompletionList
+                    .Select(i => i.DisplayText)
+                    .Should()
+                    .Contain(expected.Split(","),
+                        because: $"position {position} should provide completions");
+            }
+        }
+    
+
+    [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task completion_commands_produce_values_after_normalizing_the_request(Language language)

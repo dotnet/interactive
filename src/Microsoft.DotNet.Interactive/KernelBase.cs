@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.IO;
+using System.IO.Enumeration;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -211,6 +212,8 @@ namespace Microsoft.DotNet.Interactive
                         .Select(s => SubmissionParser.CompletionItemFor(s, directiveNode.DirectiveParser))
                         .ToArray();
 
+                    completions = AugmentWithParentCompletionItems(directiveNode, requestPosition, completions);
+
                     context.Publish(new CompletionRequestCompleted(
                         completions, requestCompletion, resultRange));
                     break;
@@ -218,6 +221,32 @@ namespace Microsoft.DotNet.Interactive
                     // NYI
                     break;
             }
+        }
+
+        private CompletionItem[] AugmentWithParentCompletionItems(DirectiveNode directiveNode, int requestPosition,
+            CompletionItem[] completions)
+        {
+            if (directiveNode is ActionDirectiveNode actionDirectiveNode &&
+                this.FindKernel(actionDirectiveNode.ParentLanguage) is KernelBase languageKernel
+                && languageKernel.ParentKernel is KernelBase parentKernel)
+            {
+                var directiveParser = parentKernel.SubmissionParser.GetDirectiveParser();
+
+                var parentDirectiveParseResult = directiveParser.Parse(directiveNode.Text);
+                var parentCompletions = parentDirectiveParseResult
+                    .GetSuggestions(requestPosition)
+                    .Select(s => SubmissionParser.CompletionItemFor(s, directiveParser))
+                    .ToArray();
+
+                if (parentCompletions.Length > 0)
+                {
+                    var filter = new HashSet<string>(completions.Select(c => c.DisplayText));
+                    completions = completions
+                        .Concat(parentCompletions.Where(pc => !filter.Contains(pc.DisplayText))).ToArray();
+                }
+            }
+
+            return completions;
         }
 
         private async Task SetKernel(IKernelCommand command, KernelInvocationContext context, KernelPipelineContinuation next)
