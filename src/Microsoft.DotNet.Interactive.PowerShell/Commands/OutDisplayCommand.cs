@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
             object obj = InputObject is PSObject psObject ? psObject.BaseObject : InputObject;
 
             // If object is PSCustomObject, find convert to PSObject to find the properties to display
-            if(((PSObject)InputObject).BaseObject is PSCustomObject)
+            if (((PSObject)InputObject).BaseObject is PSCustomObject)
             {
                 Dictionary<string, object> table = new Dictionary<string, object>();
                 var props = ((PSObject)InputObject).Properties;
