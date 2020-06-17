@@ -204,6 +204,7 @@ namespace Microsoft.DotNet.Interactive
             var resultRange = new LinePositionSpan(
                 new LinePosition(languageServiceCommand.Position.Line, 0),
                 languageServiceCommand.Position);
+            
             switch (languageServiceCommand)
             {
                 case RequestCompletion requestCompletion:
@@ -226,9 +227,14 @@ namespace Microsoft.DotNet.Interactive
         private CompletionItem[] AugmentWithParentCompletionItems(DirectiveNode directiveNode, int requestPosition,
             CompletionItem[] completions)
         {
-            if (directiveNode is ActionDirectiveNode actionDirectiveNode &&
-                this.FindKernel(actionDirectiveNode.ParentLanguage) is KernelBase languageKernel
-                && languageKernel.ParentKernel is KernelBase parentKernel)
+            var kernelLanguage = directiveNode.Language;
+            
+            if (directiveNode is ActionDirectiveNode actionDirectiveNode)
+            {
+                kernelLanguage = actionDirectiveNode.ParentLanguage;
+            }
+
+            if (this.FindKernel(kernelLanguage) is KernelBase languageKernel && languageKernel.ParentKernel is KernelBase parentKernel)
             {
                 var directiveParser = parentKernel.SubmissionParser.GetDirectiveParser();
 
