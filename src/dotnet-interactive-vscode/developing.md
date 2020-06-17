@@ -12,8 +12,8 @@ This extension adds support for using .NET Interactive in a Visual Studio Code n
 
 1. Install the [.NET SDK 3.1](https://dotnet.microsoft.com/download/visual-studio-sdks).
 2. Install the latest [VS Code Insiders](https://code.visualstudio.com/insiders/).
-3. In your terminal, run `npm i` in this directory.
-4. Open this directory with `code-insiders` and press `F5`.
+3. In your terminal, run `npm i` in the `src\dotnet-interactive-vscode` directory.
+4. Open the `src\dotnet-interactive-vscode` directory with `code-insiders` and press `F5`.
 5. Open or create a file with a `.dib` extension
 
     OR 
@@ -25,6 +25,10 @@ This extension adds support for using .NET Interactive in a Visual Studio Code n
 
 
 Periodically the notebook APIs will change; the latest API can be obtained by running the `.\update-proposed-api.ps1` script.
+
+## Working with a dev build of `dotnet-interactive`
+
+You can build the Visual Studio Code extension separately from the `dotnet-interactive` tool. For details on how to work on the `dotnet-interactive` tool, please read [here](../../CONTRIBUTING.md#developer-guide). 
 
 ## Deployment
 

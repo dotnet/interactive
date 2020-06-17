@@ -1,6 +1,10 @@
 Developer Instructions
 =====================
 
+# Developing the `dotnet-interactive` tool
+
+# Visual Studio Code extension
+
 ## Preparing for local builds
 
 1. Install [VS Code Insiders](https://code.visualstudio.com/insiders/).
@@ -23,7 +27,7 @@ Developer Instructions
 
 2. In an instance of VS Code Insiders that has the extension installed (either via the marketplace or through the steps above), change the launch settings for the interactive tool:
 
-   1. Open the settings via `File` -> `Preferences` -> `Settings`, or `Ctrl + ,`.
+   1. Open the settings via `File` -> `Preferences` -> `Settings`, or by pressing `Ctrl + ,`.
 
    2. Filter the list by typing `dotnet-interactive`
 
@@ -40,13 +44,15 @@ Developer Instructions
       -  "run",
       -  "dotnet-interactive",
       -  "--",
-      +  "E:/dotnet/interactive/artifacts/bin/dotnet-interactive/Debug/netcoreapp3.1/Microsoft.DotNet.Interactive.App.dll",
+      +  "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/netcoreapp3.1/Microsoft.DotNet.Interactive.App.dll",
          "[vscode]",
          "stdio",
          "--http-port-range",
          "1000-3000"
        ]
       ```
+
+   
 
 3. Save `settings.json`.
 
