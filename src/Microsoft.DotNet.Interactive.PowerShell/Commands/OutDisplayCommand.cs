@@ -4,6 +4,7 @@ using static Microsoft.DotNet.Interactive.Kernel;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Commands
 {
+    using System.Collections.Generic;
     using System.Management.Automation;
     using Microsoft.DotNet.Interactive.Events;
 
@@ -54,7 +55,21 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
         /// </summary>
         protected override void ProcessRecord()
         {
+            
             object obj = InputObject is PSObject psObject ? psObject.BaseObject : InputObject;
+
+            // If object is PSCustomObject, find convert to PSObject to find the properties to display
+            if(((PSObject)InputObject).BaseObject is PSCustomObject)
+            {
+                Dictionary<string, object> table = new Dictionary<string, object>();
+                var props = ((PSObject)InputObject).Properties;
+                foreach (var p in props)
+                {
+                    table.Add(p.Name, p.Value);
+                }
+                obj = table;
+            }
+
             DisplayedValue displayedValue = display(obj, MimeType);
             
             if (PassThru.IsPresent)
