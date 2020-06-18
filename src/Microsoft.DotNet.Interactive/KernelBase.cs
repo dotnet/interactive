@@ -105,7 +105,8 @@ namespace Microsoft.DotNet.Interactive
             AddMiddleware(
                 async (originalCommand, context, next) =>
                 {
-                    var commands = PreprocessCommands(originalCommand, context).ToList();
+                    var commands = PreprocessCommands(originalCommand, context);
+
                     if (!commands.Contains(originalCommand) && commands.Any())
                     {
                         context.CommandToSignalCompletion = commands.Last();
@@ -151,7 +152,7 @@ namespace Microsoft.DotNet.Interactive
                 });
         }
 
-        private IEnumerable<IKernelCommand> PreprocessCommands(IKernelCommand command, KernelInvocationContext context)
+        private IReadOnlyList<IKernelCommand> PreprocessCommands(IKernelCommand command, KernelInvocationContext context)
         {
             return command switch
             {
@@ -161,40 +162,96 @@ namespace Microsoft.DotNet.Interactive
             };
         }
 
-        private IEnumerable<IKernelCommand> PreprocessLanguageServiceCommand(LanguageServiceCommandBase languageServiceCommand, KernelInvocationContext context)
+        private IReadOnlyList<IKernelCommand> PreprocessLanguageServiceCommand(LanguageServiceCommandBase command, KernelInvocationContext context)
         {
             var commands = new List<IKernelCommand>();
-            var tree = SubmissionParser.Parse(languageServiceCommand.Code, languageServiceCommand.TargetKernelName);
-            var nodes = tree.GetRoot().ChildNodes.ToArray();
-            var sourceText = SourceText.From(languageServiceCommand.Code);
-            var requestPosition = sourceText.Lines.GetPosition(languageServiceCommand.Position);
+            var tree = SubmissionParser.Parse(command.Code, command.TargetKernelName);
+            var rootNode = tree.GetRoot();
+            var sourceText = SourceText.From(command.Code);
+            var requestPosition = sourceText.Lines.GetPosition(command.Position);
 
-            foreach (var node in nodes)
+            // TextSpan.Contains only checks `[start, end)`, but we need to allow for `[start, end]`
+            var absolutePosition = tree.GetAbsolutePosition(command.Position);
+            if (absolutePosition >= tree.Length)
             {
-                // TextSpan.Contains only checks `[start, end)`, but we need to allow for `[start, end]`
-                if (node.Span.Contains(requestPosition) || node.Span.End == requestPosition)
-                {
-                    switch (node)
-                    {
-                        case DirectiveNode directiveNode:
-                            HandleDirectiveNodeLanguageServiceRequest(directiveNode, requestPosition, languageServiceCommand, context);
-                            break;
-                        case LanguageNode languageNode:
-                            // calculate new position
-                            var nodeStartLine = sourceText.Lines.GetLinePosition(node.Span.Start).Line;
-                            var offsetNodeLine = languageServiceCommand.Position.Line - nodeStartLine;
-                            var position = new LinePosition(offsetNodeLine, languageServiceCommand.Position.Character);
+                absolutePosition--;
+            }
+            else if (char.IsWhiteSpace(rootNode.Text[absolutePosition]))
+            {
+                absolutePosition--;
+            }
 
-                            // create new command
-                            var offsetLanguageServiceCommand = languageServiceCommand.WithCodeAndPosition(node.Text, position);
-                            offsetLanguageServiceCommand.TargetKernelName = languageNode.Language;
-                            commands.Add(offsetLanguageServiceCommand);
-                            break;
-                    }
-                }
+            var node = rootNode.FindNode(absolutePosition);
+
+            switch (node)
+            {
+                case DirectiveNode directiveNode:
+                    HandleDirectiveNodeLanguageServiceRequest(directiveNode, requestPosition, command, context);
+                    break;
+                case LanguageNode languageNode:
+                    // calculate new position
+                    var nodeStartLine = sourceText.Lines.GetLinePosition(node.Span.Start).Line;
+                    var offsetNodeLine = command.Position.Line - nodeStartLine;
+                    var position = new LinePosition(offsetNodeLine, command.Position.Character);
+
+                    // create new command
+                    var offsetLanguageServiceCommand = command.WithCodeAndPosition(node.Text, position);
+                    offsetLanguageServiceCommand.TargetKernelName = languageNode.Language;
+                    commands.Add(offsetLanguageServiceCommand);
+                    break;
             }
 
             return commands;
+        }
+
+        private void SetCompletionHandler(RequestCompletion requestCompletion, IKernelCommandHandler<RequestCompletion> completionHandler)
+        {
+            var tree = SubmissionParser.Parse(requestCompletion.Code);
+
+            var linePosition = requestCompletion.Position;
+
+            var rootNode = tree.GetRoot();
+
+            var absolutePosition = tree.GetAbsolutePosition(linePosition);
+            if (absolutePosition >= tree.Length)
+            {
+                absolutePosition--;
+            }
+            else if (char.IsWhiteSpace(tree.GetRoot().Text[absolutePosition]))
+            {
+                absolutePosition--;
+            }
+
+            var nodeToComplete =
+                rootNode.FindNode(absolutePosition);
+
+            var charPosition = linePosition.Character;
+
+            if (nodeToComplete is DirectiveNode directiveNode)
+            {
+                requestCompletion.Handler = (_, c) =>
+                {
+                    var directiveParseResult = directiveNode.GetDirectiveParseResult();
+
+                    var completions = directiveParseResult
+                                      .GetSuggestions(charPosition)
+                                      .Select(s => SubmissionParser.CompletionItemFor(s, directiveParseResult))
+                                      .ToArray();
+
+                    var lps = new LinePositionSpan(
+                        new LinePosition(linePosition.Line, 0),
+                        linePosition);
+
+                    c.Publish(new CompletionRequestCompleted(
+                                  completions, requestCompletion, lps));
+
+                    return Task.CompletedTask;
+                };
+            }
+            else
+            {
+                SetHandler(completionHandler, requestCompletion);
+            }
         }
 
         private void HandleDirectiveNodeLanguageServiceRequest(DirectiveNode directiveNode, int requestPosition, LanguageServiceCommandBase languageServiceCommand, KernelInvocationContext context)
@@ -439,56 +496,6 @@ namespace Microsoft.DotNet.Interactive
                             break;
                     }
                 }
-            }
-        }
-
-        private void SetCompletionHandler(RequestCompletion requestCompletion, IKernelCommandHandler<RequestCompletion> completionHandler)
-        {
-            var tree = SubmissionParser.Parse(requestCompletion.Code);
-
-            var linePosition = requestCompletion.Position;
-
-            var rootNode = tree.GetRoot();
-
-            var absolutePosition = tree.GetAbsolutePosition(linePosition);
-            if (absolutePosition >= tree.Length)
-            {
-                absolutePosition--;
-            }
-            else if (char.IsWhiteSpace(tree.GetRoot().Text[absolutePosition]))
-            {
-                absolutePosition--;
-            }
-
-            var nodeToComplete =
-                rootNode.FindNode(absolutePosition);
-
-            var charPosition = linePosition.Character;
-
-            if (nodeToComplete is DirectiveNode directiveNode)
-            {
-                requestCompletion.Handler = (_, c) =>
-                {
-                    var directiveParseResult = directiveNode.GetDirectiveParseResult();
-
-                    var completions = directiveParseResult
-                                      .GetSuggestions(charPosition)
-                                      .Select(s => SubmissionParser.CompletionItemFor(s, directiveParseResult))
-                                      .ToArray();
-
-                    var lps = new LinePositionSpan(
-                        new LinePosition(linePosition.Line, 0),
-                        linePosition);
-
-                    c.Publish(new CompletionRequestCompleted(
-                                  completions, requestCompletion, lps));
-
-                    return Task.CompletedTask;
-                };
-            }
-            else
-            {
-                SetHandler(completionHandler, requestCompletion);
             }
         }
 

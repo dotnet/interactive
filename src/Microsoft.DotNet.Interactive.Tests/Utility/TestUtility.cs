@@ -20,11 +20,24 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
     public static class AssertionExtensions
     {
+        public static GenericCollectionAssertions<T> AllSatisfy<T>(
+            this GenericCollectionAssertions<T> assertions,
+            Action<T> assert)
+        {
+            using var _ = new AssertionScope();
+
+            foreach (var item in assertions.Subject)
+            {
+                assert(item);
+            }
+
+            return assertions;
+        }
+
         public static void BeJsonEquivalentTo<T>(this StringAssertions assertion, T expected)
         {
             var obj = JsonConvert.DeserializeObject(assertion.Subject, expected.GetType());
             obj.Should().BeEquivalentTo(expected);
-            
         }
 
         public static AndConstraint<GenericCollectionAssertions<T>> BeEquivalentSequenceTo<T>(
