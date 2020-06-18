@@ -106,7 +106,7 @@ namespace Microsoft.DotNet.Interactive
             AddMiddleware(
                 async (originalCommand, context, next) =>
                 {
-                    var commands = PreprocessCommands(originalCommand, context).ToList();
+                    var commands = PreprocessCommands(originalCommand, context);
                     if (!commands.Contains(originalCommand) && commands.Any())
                     {
                         context.CommandToSignalCompletion = commands.Last();
@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.Interactive
                 });
         }
 
-        private IEnumerable<IKernelCommand> PreprocessCommands(IKernelCommand command, KernelInvocationContext context)
+        private IReadOnlyList<IKernelCommand> PreprocessCommands(IKernelCommand command, KernelInvocationContext context)
         {
             return command switch
             {
@@ -162,7 +162,7 @@ namespace Microsoft.DotNet.Interactive
             };
         }
 
-        private IEnumerable<IKernelCommand> PreprocessLanguageServiceCommand(LanguageServiceCommandBase languageServiceCommand, KernelInvocationContext context)
+        private IReadOnlyList<IKernelCommand> PreprocessLanguageServiceCommand(LanguageServiceCommandBase languageServiceCommand, KernelInvocationContext context)
         {
             var commands = new List<IKernelCommand>();
             var tree = SubmissionParser.Parse(languageServiceCommand.Code, languageServiceCommand.TargetKernelName);
