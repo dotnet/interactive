@@ -55,7 +55,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
         /// </summary>
         protected override void ProcessRecord()
         {
-            
             object obj = InputObject is PSObject psObject ? psObject.BaseObject : InputObject;
 
             // If object is PSCustomObject, convert to PSObject to find the properties to display
