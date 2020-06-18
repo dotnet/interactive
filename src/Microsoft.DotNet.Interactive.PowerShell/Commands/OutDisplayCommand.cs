@@ -59,15 +59,26 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
             object obj = InputObject is PSObject psObject ? psObject.BaseObject : InputObject;
 
             // If object is PSCustomObject, convert to PSObject to find the properties to display
-            if (InputObject is PSObject && ((PSObject)InputObject).BaseObject is PSCustomObject)
+            if (InputObject is PSObject psObj)
             {
-                Dictionary<string, object> table = new Dictionary<string, object>();
-                var props = ((PSObject)InputObject).Properties;
-                foreach (var p in props)
+                if (psObj.BaseObject is PSCustomObject)
                 {
-                    table.Add(p.Name, p.Value);
+                    Dictionary<string, object> table = new Dictionary<string, object>();
+                    var props = psObj.Properties;
+                    foreach (var p in props)
+                    {
+                        table.Add(p.Name, p.Value);
+                    }
+                    obj = table;
                 }
-                obj = table;
+                else
+                {
+                    obj = psObj.BaseObject;
+                }
+            }
+            else
+            {
+                obj = InputObject;
             }
 
             DisplayedValue displayedValue = display(obj, MimeType);
