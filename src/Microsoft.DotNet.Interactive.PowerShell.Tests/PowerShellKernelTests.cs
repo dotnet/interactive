@@ -245,10 +245,10 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             var result = await kernel.SendAsync(new SubmitCode("[pscustomobject]@{ prop1 = 'value1'; prop2 = 'value2'; prop3 = 'value3' } | Out-Display"));
             var outputs = result.KernelEvents.ToSubscribedList();
 
-            Assert.Collection(outputs,
+            outputs.Should().SatisfyRespectively(
                               e => e.Should().BeOfType<CodeSubmissionReceived>(),
                               e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-                              e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues.Should().Equals(props),
+                              e => e.Should().BeOfType<DisplayedValueProduced>().Which.Value.Should().BeEquivalentTo(props),
                               e => e.Should().BeOfType<CommandHandled>()
                              );
         }
