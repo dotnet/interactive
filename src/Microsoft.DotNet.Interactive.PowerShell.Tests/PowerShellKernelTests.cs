@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Management.Automation;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using System.Linq;
@@ -54,6 +55,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
 
             var events = result.KernelEvents.ToSubscribedList();
 
+            var formattedValues = ((DisplayEventBase)(result.KernelEvents.ToSubscribedList()[2])).FormattedValues;
             Assert.Collection(events,
                                        e => e.Should().BeOfType<CodeSubmissionReceived>(),
                                        e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
@@ -228,6 +230,28 @@ for ($j = 0; $j -le 4; $j += 4 ) {
 
                 File.Delete(_allUsersCurrentHostProfilePath);
             }
+        }
+
+        [Fact]
+        public async Task PowerShell_Custom_Object_OutDisplay_Passed()
+        {
+            var props = (new Dictionary<string, object>
+                {
+                    { "prop1", "value1" },
+                    { "prop2", "value2" },
+                    { "prop3", "value3" }
+                });
+
+            var kernel = CreateKernel(Language.PowerShell);
+            var result = await kernel.SendAsync(new SubmitCode("[pscustomobject]@{ prop1 = 'value1'; prop2 = 'value2'; prop3 = 'value3' } | Out-Display"));
+            var outputs = result.KernelEvents.ToSubscribedList();
+
+            Assert.Collection(outputs,
+                              e => e.Should().BeOfType<CodeSubmissionReceived>(),
+                              e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                              e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues.Should().Equals(props),
+                              e => e.Should().BeOfType<CommandHandled>()
+                             );
         }
     }
 }
