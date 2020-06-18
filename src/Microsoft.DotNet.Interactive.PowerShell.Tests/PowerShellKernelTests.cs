@@ -55,7 +55,6 @@ for ($j = 0; $j -le 4; $j += 4 ) {
 
             var events = result.KernelEvents.ToSubscribedList();
 
-            var formattedValues = ((DisplayEventBase)(result.KernelEvents.ToSubscribedList()[2])).FormattedValues;
             Assert.Collection(events,
                                        e => e.Should().BeOfType<CodeSubmissionReceived>(),
                                        e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
