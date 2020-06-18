@@ -9,7 +9,7 @@ If you want to share notebooks you have made using the .NET Jupyter kernel, one 
 * **Dockerfile** to create the Binder image
 * A **Nuget.Config** file to provide package sources needed by your notebooks
 
-You can use the Dockerfile and Nuget.Config files from the folder `Binder Dependencies` to get started.
+You can use the Dockerfile and Nuget.Config files from the folder `samples/my binder` to get started.
 
 ### Setup instructions
 
