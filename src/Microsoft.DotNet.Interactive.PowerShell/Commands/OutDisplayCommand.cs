@@ -1,10 +1,10 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 using static Microsoft.DotNet.Interactive.Kernel;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Commands
 {
-    using System.Collections.Generic;
     using System.Management.Automation;
     using Microsoft.DotNet.Interactive.Events;
 
