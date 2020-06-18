@@ -36,6 +36,8 @@ namespace Microsoft.DotNet.Interactive.Server
                 _kernel.KernelEvents.Subscribe(WriteEventToOutput),
                 _input
             };
+
+            WriteEventToOutput(new KernelReady());
         }
 
         public bool IsStarted => _input.IsStarted;
