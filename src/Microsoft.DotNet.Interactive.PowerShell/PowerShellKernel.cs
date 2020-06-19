@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Management.Automation.Language;
@@ -10,6 +11,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.PowerShell.Host;
 using Microsoft.PowerShell;
@@ -114,6 +116,32 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 $"{psJupyterModulePath}{Path.PathSeparator}{psModulePath}");
 
             RegisterForDisposal(pwsh);
+
+            //TODO: Is this declared anywhere else?
+            string[] mimeTypes = new string[] {HtmlFormatter.MimeType, JsonFormatter.MimeType, PlainTextFormatter.MimeType};
+
+            foreach (string mt in mimeTypes)
+            {
+                Formatter<PSObject>.Register((psObj, writer) => 
+                {
+                    object obj;
+                    if (psObj.BaseObject is PSCustomObject)
+                    {
+                        Dictionary<string, object> table = new Dictionary<string, object>();
+                        var props = psObj.Properties;
+                        foreach (var p in props)
+                        {
+                            table.Add(p.Name, p.Value);
+                        }
+                        obj = table;
+                    }
+                    else
+                    {
+                        obj = psObj.BaseObject;
+                    }
+                    obj.FormatTo(writer, mt);
+                }, mimeType: mt);
+            }
             return pwsh;
         }
 

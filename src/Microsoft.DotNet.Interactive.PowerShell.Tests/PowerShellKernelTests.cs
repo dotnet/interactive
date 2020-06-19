@@ -219,24 +219,25 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         }
 
         [Fact]
-        public async Task PowerShell_Custom_Object_OutDisplay_Passed()
+        public async Task Powershell_customobject_is_formatted_for_outdisplay()
         {
-            var props = (new Dictionary<string, object>
-                {
-                    { "prop1", "value1" },
-                    { "prop2", "value2" },
-                    { "prop3", "value3" }
-                });
+            var obj = new PSObject();
+            obj.Properties.Add(new PSNoteProperty("prop1", "value1"));
+            obj.Properties.Add(new PSNoteProperty("prop2", "value2"));
+            obj.Properties.Add(new PSNoteProperty("prop3", "value3"));
+            var propDict = obj.Properties.ToDictionary(x => x.Name, x => x.Value);
 
             var kernel = CreateKernel(Language.PowerShell);
             var result = await kernel.SendAsync(new SubmitCode("[pscustomobject]@{ prop1 = 'value1'; prop2 = 'value2'; prop3 = 'value3' } | Out-Display"));
             var outputs = result.KernelEvents.ToSubscribedList();
 
             outputs.Should().SatisfyRespectively(
-                              e => e.Should().BeOfType<CodeSubmissionReceived>(),
-                              e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-                              e => e.Should().BeOfType<DisplayedValueProduced>().Which.Value.Should().BeEquivalentTo(props),
-                              e => e.Should().BeOfType<CommandHandled>()
+                                  e => e.Should().BeOfType<CodeSubmissionReceived>(),
+                                  e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                                  e => e.Should().BeOfType<DisplayedValueProduced>().
+                                        Which.Value.Should().BeOfType<PSObject>().
+                                        Which.Properties.ToDictionary(x => x.Name, x => x.Value).Should().BeEquivalentTo(propDict),
+                                  e => e.Should().BeOfType<CommandHandled>()
                              );
         }
     }
