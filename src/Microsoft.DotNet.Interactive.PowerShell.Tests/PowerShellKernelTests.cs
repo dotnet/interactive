@@ -233,11 +233,11 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             var outputs = result.KernelEvents.ToSubscribedList();
 
             outputs.Should().SatisfyRespectively(
-                              e => e.Should().BeOfType<CodeSubmissionReceived>(),
-                              e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-                              e => e.Should().BeOfType<DisplayedValueProduced>().Which.Value.Should().BeEquivalentTo(props),
-                              e => e.Should().BeOfType<CommandHandled>()
-                             );
+                e => e.Should().BeOfType<CodeSubmissionReceived>(),
+                e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which.Value.Should().BeEquivalentTo(props),
+                e => e.Should().BeOfType<CommandHandled>()
+            );
         }
     }
 }
