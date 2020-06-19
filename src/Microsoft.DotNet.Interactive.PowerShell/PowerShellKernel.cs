@@ -71,6 +71,32 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             // Add accelerators that exist in other namespaces.
             addAccelerator.Invoke(null, new object[] { "Layout", typeof(Layout.Layout) });
             addAccelerator.Invoke(null, new object[] { "Chart", typeof(Chart) });
+
+            //TODO: Is this declared anywhere else?
+            string[] mimeTypes = new string[] { HtmlFormatter.MimeType, JsonFormatter.MimeType, PlainTextFormatter.MimeType };
+
+            foreach (string mt in mimeTypes)
+            {
+                Formatter<PSObject>.Register((psObj, writer) =>
+                {
+                    object obj;
+                    if (psObj.BaseObject is PSCustomObject)
+                    {
+                        Dictionary<string, object> table = new Dictionary<string, object>();
+                        var props = psObj.Properties;
+                        foreach (var p in props)
+                        {
+                            table.Add(p.Name, p.Value);
+                        }
+                        obj = table;
+                    }
+                    else
+                    {
+                        obj = psObj.BaseObject;
+                    }
+                    obj.FormatTo(writer, mt);
+                }, mimeType: mt);
+            }
         }
 
         public PowerShellKernel() : base(DefaultKernelName)
@@ -115,32 +141,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 $"{psJupyterModulePath}{Path.PathSeparator}{psModulePath}");
 
             RegisterForDisposal(pwsh);
-
-            //TODO: Is this declared anywhere else?
-            string[] mimeTypes = new string[] {HtmlFormatter.MimeType, JsonFormatter.MimeType, PlainTextFormatter.MimeType};
-
-            foreach (string mt in mimeTypes)
-            {
-                Formatter<PSObject>.Register((psObj, writer) => 
-                {
-                    object obj;
-                    if (psObj.BaseObject is PSCustomObject)
-                    {
-                        Dictionary<string, object> table = new Dictionary<string, object>();
-                        var props = psObj.Properties;
-                        foreach (var p in props)
-                        {
-                            table.Add(p.Name, p.Value);
-                        }
-                        obj = table;
-                    }
-                    else
-                    {
-                        obj = psObj.BaseObject;
-                    }
-                    obj.FormatTo(writer, mt);
-                }, mimeType: mt);
-            }
             return pwsh;
         }
 
