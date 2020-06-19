@@ -12,7 +12,11 @@ using FluentAssertions.Collections;
 using FluentAssertions.Execution;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.Jupyter;
+using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
@@ -158,7 +162,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         [Theory]
         // commands
         [InlineData("[|#!c|]", "#!csharp")]
-        [InlineData("[|#!|]", "#!csharp,#!fsharp,#!pwsh,#!who,#!whos")]
+        [InlineData("[|#!|]", "#!csharp,#!who,#!whos")]
         [InlineData("[|#!w|]", "#!who,#!whos")]
         [InlineData("[|#!w|]\n", "#!who,#!whos")]
         [InlineData("[|#!w|] \n", "#!who,#!whos")]
@@ -184,6 +188,36 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                             .Select(i => i.DisplayText)
                             .Should()
                             .Contain(expected.Split(","),
+                                     because: $"position {requestCompleted.Range} should provide completions"));
+        }
+
+        [Fact]
+        public void Magic_command_completions_include_magic_commands_from_all_kernels()
+        {
+            var markupCode = "[|#!|]";
+            var expected = new[] { "#!csharp", "#!fsharp", "#!pwsh", "#!who" };
+
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel().UseWho(),
+                new FSharpKernel().UseWho(),
+                new PowerShellKernel()
+            };
+
+            markupCode
+                .ParseMarkupCode()
+                .PositionsInMarkedSpans()
+                .Should()
+                .ProvideCompletions(kernel)
+                .Which
+                .Should()
+                .AllSatisfy(
+                    requestCompleted =>
+                        requestCompleted
+                            .CompletionList
+                            .Select(i => i.DisplayText)
+                            .Should()
+                            .Contain(expected,
                                      because: $"position {requestCompleted.Range} should provide completions"));
         }
 

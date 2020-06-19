@@ -386,32 +386,42 @@ namespace Microsoft.DotNet.Interactive
             _disposables.Add(disposable);
         }
 
-        public async Task HandleRequestCompletionAsync(
+        private Task HandleRequestCompletionAsync(
             RequestCompletion command,
             KernelInvocationContext context)
         {
-            if (!(command.LanguageNode is DirectiveNode directiveNode))
+            if (command.LanguageNode is DirectiveNode directiveNode)
             {
-                return;
+                var requestPosition = SourceText.From(command.Code)
+                                                .Lines
+                                                .GetPosition(command.Position);
+
+                var resultRange = new LinePositionSpan(
+                    new LinePosition(command.Position.Line, 0),
+                    command.Position);
+
+                var completions = GetDirectiveCompletionItems(directiveNode, requestPosition);
+
+                context.Publish(
+                    new CompletionRequestCompleted(
+                        completions, command, resultRange));
             }
 
-            var requestPosition = SourceText.From(command.Code)
-                                            .Lines
-                                            .GetPosition(command.Position);
+            return Task.CompletedTask;
+        }
 
-            var directiveParseResult = directiveNode.GetDirectiveParseResult();
-            var resultRange = new LinePositionSpan(
-                new LinePosition(command.Position.Line, 0),
-                command.Position);
+        private protected virtual IReadOnlyList<CompletionItem> GetDirectiveCompletionItems(
+            DirectiveNode directiveNode, 
+            int requestPosition)
+        {
+            var parseResult = directiveNode.GetDirectiveParseResult();
 
-            var completions = directiveParseResult
+            var completions = parseResult
                               .GetSuggestions(requestPosition)
-                              .Select(s => SubmissionParser.CompletionItemFor(s, directiveNode.GetDirectiveParseResult()))
+                              .Select(s => SubmissionParser.CompletionItemFor(s, parseResult))
                               .ToArray();
 
-            context.Publish(
-                new CompletionRequestCompleted(
-                    completions, command, resultRange));
+            return completions;
         }
 
         private protected void TrySetHandler(

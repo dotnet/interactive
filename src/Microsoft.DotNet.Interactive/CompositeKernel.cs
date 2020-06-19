@@ -5,12 +5,15 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.CommandLine.Parsing;
 using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -134,7 +137,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public IReadOnlyCollection<IKernel> ChildKernels => _childKernels;
+        public IReadOnlyList<IKernel> ChildKernels => _childKernels;
 
         protected override void SetHandlingKernel(IKernelCommand command, KernelInvocationContext context)
         {
@@ -149,7 +152,6 @@ namespace Microsoft.DotNet.Interactive
         {
             var targetKernelName = command switch
             {
-                // FIX: (GetHandlingKernel)  RequestCompletion _ => Name,
                 KernelCommandBase kcb => kcb.TargetKernelName ?? DefaultKernelName,
                 _ => DefaultKernelName
             };
@@ -198,6 +200,42 @@ namespace Microsoft.DotNet.Interactive
             }
 
             throw new NoSuitableKernelException(command);
+        }
+
+        private protected override IReadOnlyList<CompletionItem> GetDirectiveCompletionItems(
+            DirectiveNode directiveNode,
+            int requestPosition)
+        {
+            var directiveParsers = new List<Parser>
+            {
+                SubmissionParser.GetDirectiveParser()
+            };
+
+            for (var i = 0; i < ChildKernels.Count; i++)
+            {
+                var kernel = ChildKernels[i];
+
+                if (kernel is KernelBase kb)
+                {
+                    directiveParsers.Add(kb.SubmissionParser.GetDirectiveParser());
+                }
+            }
+
+            var allCompletions = new List<CompletionItem>();
+
+            foreach (var parser in directiveParsers)
+            {
+                var parseResult = parser.Parse(directiveNode.Text);
+
+                var completions = parseResult
+                                  .GetSuggestions(requestPosition)
+                                  .Select(s => SubmissionParser.CompletionItemFor(s, parseResult))
+                                  .ToArray();
+
+                allCompletions.AddRange(completions);
+            }
+
+            return allCompletions;
         }
 
         public IEnumerator<IKernel> GetEnumerator() => _childKernels.GetEnumerator();
