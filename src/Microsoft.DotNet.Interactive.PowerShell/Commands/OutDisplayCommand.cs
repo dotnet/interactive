@@ -55,7 +55,32 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
         /// </summary>
         protected override void ProcessRecord()
         {
-            DisplayedValue displayedValue = display(InputObject, MimeType);
+            object obj = InputObject is PSObject psObject ? psObject.BaseObject : InputObject;
+
+            // If object is PSCustomObject, convert to PSObject to find the properties to display
+            if (InputObject is PSObject psObj)
+            {
+                if (psObj.BaseObject is PSCustomObject)
+                {
+                    Dictionary<string, object> table = new Dictionary<string, object>();
+                    var props = psObj.Properties;
+                    foreach (var p in props)
+                    {
+                        table.Add(p.Name, p.Value);
+                    }
+                    obj = table;
+                }
+                else
+                {
+                    obj = psObj.BaseObject;
+                }
+            }
+            else
+            {
+                obj = InputObject;
+            }
+
+            DisplayedValue displayedValue = display(obj, MimeType);
             
             if (PassThru.IsPresent)
             {
