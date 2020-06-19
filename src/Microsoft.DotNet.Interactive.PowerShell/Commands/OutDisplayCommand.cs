@@ -1,12 +1,12 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-using static Microsoft.DotNet.Interactive.Kernel;
+using Microsoft.DotNet.Interactive.Events;
+using System.Management.Automation;
 using System.Collections.Generic;
+using static Microsoft.DotNet.Interactive.Kernel;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Commands
 {
-    using System.Management.Automation;
-    using Microsoft.DotNet.Interactive.Events;
 
     /// <summary>
     /// Takes the the input and displays it on the client using .NET Interactive's formatters.
