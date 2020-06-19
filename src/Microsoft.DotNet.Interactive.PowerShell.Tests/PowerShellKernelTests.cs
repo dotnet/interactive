@@ -222,11 +222,11 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         public async Task Powershell_customobject_is_parsed_for_outdisplay()
         {
             var props = (new Dictionary<string, object>
-                {
-                    { "prop1", "value1" },
-                    { "prop2", "value2" },
-                    { "prop3", "value3" }
-                });
+            {
+                { "prop1", "value1" },
+                { "prop2", "value2" },
+                { "prop3", "value3" }
+            });
 
             var kernel = CreateKernel(Language.PowerShell);
             var result = await kernel.SendAsync(new SubmitCode("[pscustomobject]@{ prop1 = 'value1'; prop2 = 'value2'; prop3 = 'value3' } | Out-Display"));
