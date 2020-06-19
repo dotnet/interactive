@@ -219,7 +219,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         }
 
         [Fact]
-        public async Task PowerShell_Custom_Object_OutDisplay_Passed()
+        public async Task Powershell_customobject_is_parsed_for_outdisplay()
         {
             var props = (new Dictionary<string, object>
                 {
