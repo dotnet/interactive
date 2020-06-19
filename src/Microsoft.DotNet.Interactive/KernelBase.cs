@@ -22,7 +22,9 @@ using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public abstract class KernelBase : IKernel
+    public abstract class KernelBase : 
+        IKernel,
+        IKernelCommandHandler<RequestCompletion>
     {
         private readonly Subject<IKernelEvent> _kernelEvents = new Subject<IKernelEvent>();
         private readonly CompositeDisposable _disposables;
@@ -156,8 +158,12 @@ namespace Microsoft.DotNet.Interactive
         {
             return command switch
             {
-                SubmitCode submitCode => SubmissionParser.SplitSubmission(submitCode),
-                LanguageServiceCommandBase languageServiceCommand => PreprocessLanguageServiceCommand(languageServiceCommand, context),
+                SubmitCode submitCode
+                when submitCode.LanguageNode is null => SubmissionParser.SplitSubmission(submitCode),
+
+                LanguageServiceCommandBase languageServiceCommand
+                when languageServiceCommand.LanguageNode is null => PreprocessLanguageServiceCommand(languageServiceCommand, context),
+
                 _ => new[] { command }
             };
         }
@@ -181,100 +187,27 @@ namespace Microsoft.DotNet.Interactive
                 absolutePosition--;
             }
 
-            var node = rootNode.FindNode(absolutePosition);
-
-            switch (node)
+            if (rootNode.FindNode(absolutePosition) is LanguageNode node)
             {
-                case DirectiveNode directiveNode:
-                    HandleDirectiveNodeLanguageServiceRequest(directiveNode, requestPosition, command, context);
-                    break;
-                case LanguageNode languageNode:
-                    // calculate new position
-                    var nodeStartLine = sourceText.Lines.GetLinePosition(node.Span.Start).Line;
-                    var offsetNodeLine = command.Position.Line - nodeStartLine;
-                    var position = new LinePosition(offsetNodeLine, command.Position.Character);
+                var nodeStartLine = sourceText.Lines.GetLinePosition(node.Span.Start).Line;
+                var offsetNodeLine = command.Position.Line - nodeStartLine;
+                var position = new LinePosition(offsetNodeLine, command.Position.Character);
 
-                    // create new command
-                    var offsetLanguageServiceCommand = command.WithCodeAndPosition(node.Text, position);
-                    offsetLanguageServiceCommand.TargetKernelName = languageNode.Language;
-                    commands.Add(offsetLanguageServiceCommand);
-                    break;
+                // create new command
+                var offsetLanguageServiceCommand = command.With(
+                    node,
+                    position);
+
+                offsetLanguageServiceCommand.TargetKernelName = node switch
+                {
+                    DirectiveNode _ => Name,
+                    _ => node.Language,
+                };
+
+                commands.Add(offsetLanguageServiceCommand);
             }
 
             return commands;
-        }
-
-        private void SetCompletionHandler(RequestCompletion requestCompletion, IKernelCommandHandler<RequestCompletion> completionHandler)
-        {
-            var tree = SubmissionParser.Parse(requestCompletion.Code);
-
-            var linePosition = requestCompletion.Position;
-
-            var rootNode = tree.GetRoot();
-
-            var absolutePosition = tree.GetAbsolutePosition(linePosition);
-            if (absolutePosition >= tree.Length)
-            {
-                absolutePosition--;
-            }
-            else if (char.IsWhiteSpace(tree.GetRoot().Text[absolutePosition]))
-            {
-                absolutePosition--;
-            }
-
-            var nodeToComplete =
-                rootNode.FindNode(absolutePosition);
-
-            var charPosition = linePosition.Character;
-
-            if (nodeToComplete is DirectiveNode directiveNode)
-            {
-                requestCompletion.Handler = (_, c) =>
-                {
-                    var directiveParseResult = directiveNode.GetDirectiveParseResult();
-
-                    var completions = directiveParseResult
-                                      .GetSuggestions(charPosition)
-                                      .Select(s => SubmissionParser.CompletionItemFor(s, directiveParseResult))
-                                      .ToArray();
-
-                    var lps = new LinePositionSpan(
-                        new LinePosition(linePosition.Line, 0),
-                        linePosition);
-
-                    c.Publish(new CompletionRequestCompleted(
-                                  completions, requestCompletion, lps));
-
-                    return Task.CompletedTask;
-                };
-            }
-            else
-            {
-                SetHandler(completionHandler, requestCompletion);
-            }
-        }
-
-        private void HandleDirectiveNodeLanguageServiceRequest(DirectiveNode directiveNode, int requestPosition, LanguageServiceCommandBase languageServiceCommand, KernelInvocationContext context)
-        {
-            var directiveParseResult = directiveNode.GetDirectiveParseResult();
-            var resultRange = new LinePositionSpan(
-                new LinePosition(languageServiceCommand.Position.Line, 0),
-                languageServiceCommand.Position);
-            switch (languageServiceCommand)
-            {
-                case RequestCompletion requestCompletion:
-                    var completions = directiveParseResult
-                        .GetSuggestions(requestPosition)
-                        .Select(s => SubmissionParser.CompletionItemFor(s, directiveNode.GetDirectiveParseResult()))
-                        .ToArray();
-
-                    context.Publish(new CompletionRequestCompleted(
-                        completions, requestCompletion, resultRange));
-                    break;
-                case RequestHoverText _requestHover:
-                    // NYI
-                    break;
-            }
         }
 
         private async Task SetKernel(IKernelCommand command, KernelInvocationContext context, KernelPipelineContinuation next)
@@ -359,7 +292,7 @@ namespace Microsoft.DotNet.Interactive
             IKernelCommand command,
             KernelInvocationContext context)
         {
-            SetHandler(command, context);
+            TrySetHandler(command, context);
             await command.InvokeAsync(context);
         }
 
@@ -454,7 +387,44 @@ namespace Microsoft.DotNet.Interactive
             _disposables.Add(disposable);
         }
 
-        private protected void SetHandler(
+        public async Task HandleAsync(
+            RequestCompletion command, 
+            KernelInvocationContext context)
+        {
+            // FIX: (HandleAsync) 
+            //var requestPosition = sourceText.Lines.GetPosition(command.Position);
+            // case DirectiveNode directiveNode:
+            //     var directiveParseResult = directiveNode.GetDirectiveParseResult();
+            //     var resultRange = new LinePositionSpan(
+            //         new LinePosition(command.Position.Line, 0),
+            //         command.Position);
+
+            //
+            // var directiveParseResult = directiveNode.GetDirectiveParseResult();
+            //
+            // var resultRange = new LinePositionSpan(
+            //     new LinePosition(command.Position.Line, 0),
+            //     command.Position);
+            //
+            // switch (command)
+            // {
+            //     case RequestCompletion requestCompletion:
+            //         var completions = directiveParseResult
+            //                           .GetSuggestions(requestPosition)
+            //                           .Select(s => SubmissionParser.CompletionItemFor(s, directiveNode.GetDirectiveParseResult()))
+            //                           .ToArray();
+            //
+            //         context.Publish(new CompletionRequestCompleted(
+            //                             completions, requestCompletion, resultRange));
+            //         break;
+            //     case RequestHoverText _:
+            //         // NYI
+            //         break;
+            // }
+
+        }
+
+        private protected void TrySetHandler(
             IKernelCommand command,
             KernelInvocationContext context)
         {
@@ -462,25 +432,18 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (kb.Handler == null)
                 {
-                    switch (command)
+                    switch (command, this)
                     {
-                        case SubmitCode submitCode:
-                            if (this is IKernelCommandHandler<SubmitCode> submitHandler)
-                            {
-                                SetHandler(submitHandler, submitCode);
-                            }
+                        case (SubmitCode submitCode, IKernelCommandHandler<SubmitCode> submitCodeHandler):
+                            SetHandler(submitCodeHandler, submitCode);
                             break;
 
-                        case RequestCompletion requestCompletion:
-                            if (this is IKernelCommandHandler<RequestCompletion> completionHandler)
-                            {
-                                SetHandler(completionHandler, requestCompletion);
-                            }
-
+                        case (RequestCompletion requestCompletion, IKernelCommandHandler<RequestCompletion> requestCompletionHandler):
+                            SetHandler(requestCompletionHandler, requestCompletion);
                             break;
 
-                        case ChangeWorkingDirectory cwd:
-                            cwd.Handler = (_, __) =>
+                        case (ChangeWorkingDirectory cwd, _):
+                            cwd.Handler = (__, ___) =>
                             {
                                 Directory.SetCurrentDirectory(cwd.WorkingDirectory.FullName);
                                 context.Publish(new WorkingDirectoryChanged(cwd.WorkingDirectory, cwd));
@@ -488,11 +451,8 @@ namespace Microsoft.DotNet.Interactive
                             };
                             break;
 
-                        case RequestHoverText hoverCommand:
-                            if (this is IKernelCommandHandler<RequestHoverText> hoverHandler)
-                            {
-                                SetHandler(hoverHandler, hoverCommand);
-                            }
+                        case (RequestHoverText hoverCommand, IKernelCommandHandler<RequestHoverText> requestHoverTextHandler):
+                            SetHandler(requestHoverTextHandler, hoverCommand);
                             break;
                     }
                 }

@@ -177,6 +177,7 @@ namespace Microsoft.DotNet.Interactive
             IKernelCommand command,
             KernelInvocationContext context)
         {
+
             var kernel = context.HandlingKernel;
 
             if (kernel is KernelBase kernelBase)
@@ -185,11 +186,12 @@ namespace Microsoft.DotNet.Interactive
 
                 if (kernelBase != this)
                 {
+                    // route to a subkernel
                     await kernelBase.Pipeline.SendAsync(command, context);
                 }
                 else
                 {
-                    await command.InvokeAsync(context);
+                    await base.HandleAsync(command, context);
                 }
 
                 return;

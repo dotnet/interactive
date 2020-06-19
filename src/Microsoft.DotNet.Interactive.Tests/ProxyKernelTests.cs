@@ -11,7 +11,6 @@ using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using FluentAssertions;
 using Pocket;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
@@ -29,6 +28,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             _disposables.Dispose();
         } 
+
         [FactSkipLinux]
         public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_directive_as_a_proxy_named_pipe()
         {
@@ -37,6 +37,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             {
                 fSharpKernel
             }.UseProxyKernel();
+
             kernel.DefaultKernelName = fSharpKernel.Name;
 
             var pipeName = Guid.NewGuid().ToString();
