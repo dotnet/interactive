@@ -1,0 +1,50 @@
+#!powershell
+
+$clockExtensionDir = Join-Path -Path (Read-Host -Prompt "What is the path to your dotnet/interactive repo?") -ChildPath "\samples\extensions\ClockExtension"
+cd $clockExtensionDir
+Get-ChildItem #| ConvertTo-Json | Out-Display -MimeType "application/json"
+
+#!powershell
+
+#!time
+cd C:\dev\interactive\samples\extensions\ClockExtension
+dotnet build
+dotnet pack /p:PackageVersion=1.2.8
+Get-ChildItem -Recurse *.nupkg
+
+#!csharp
+
+#i nuget:C:\dev\interactive\samples\extensions\ClockExtension\bin\Debug\
+#r nuget:clockextension,1.3.0
+
+#!csharp
+
+DateTime.Now
+
+#!csharp
+
+#!clock -h
+
+#!csharp
+
+#!clock --hour 1 -m 2 -s 3
+
+#!csharp
+
+#r nuget:trexlib
+
+#!csharp
+
+#!t-rex -h
+
+#!csharp
+
+#!t-rex run c:\dev\t-rex
+
+#!csharp
+
+DateTime.Now
+
+#!csharp
+
+Formatter<DateTime>.Register((s,writer) => writer.Write(s.ToString() + "!"), "text/html");

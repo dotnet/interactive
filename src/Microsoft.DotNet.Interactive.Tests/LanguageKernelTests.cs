@@ -692,7 +692,7 @@ Console.Write(2);
                     "let func () = 1",
                     "func()",
                     "func"
-                },
+                }
             };
 
             await SubmitCode(kernel, source);
@@ -704,7 +704,6 @@ Console.Write(2);
                 .And
                 .Contain(e => ((SubmitCode)e.Command).Code == source[2]);
         }
-
 
         [Theory(Timeout = 45000)]
         [InlineData(Language.CSharp, "System.", "IO")]

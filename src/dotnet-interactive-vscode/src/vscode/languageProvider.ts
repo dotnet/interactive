@@ -41,6 +41,7 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
                 let completionItems: Array<vscode.CompletionItem> = [];
                 for (let item of result.completionList) {
                     let vscodeItem : vscode.CompletionItem = {
+                        // range: new vscode.Range(position, position),
                         label: item.displayText,
                         documentation: item.documentation,
                         filterText: item.filterText,

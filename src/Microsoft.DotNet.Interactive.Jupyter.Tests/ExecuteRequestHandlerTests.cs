@@ -199,7 +199,7 @@ f();"));
             JupyterMessageSender.PubSubMessages
                 .OfType<DisplayData>()
                 .Should()
-                .Contain(dp => dp.Data["text/html"] as string == "<p>hello!</p>");
+                .Contain(dp => dp.Data["text/html"] .ToString().Trim() == "<p>hello!</p>");
         }
 
         [Fact]

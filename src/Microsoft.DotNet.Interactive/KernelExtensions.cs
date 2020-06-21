@@ -124,8 +124,8 @@ namespace Microsoft.DotNet.Interactive
         {
             var share = new Command("#!share", "Share a .NET variable between subkernels")
             {
-                new Option<string>("--from"),
-                new Argument<string>("name")
+                new Option<string>("--from", "The name of the kernel where the variable has been previously declared"),
+                new Argument<string>("name", "The name of the variable to create in the destination kernel")
             };
 
             share.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (from, name, context) =>

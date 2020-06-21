@@ -5,12 +5,15 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.CommandLine.Parsing;
 using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -19,7 +22,7 @@ namespace Microsoft.DotNet.Interactive
         IExtensibleKernel,
         IEnumerable<IKernel>
     {
-        private readonly ConcurrentQueue<PackageAdded> _packages = new ConcurrentQueue<PackageAdded>();
+        private readonly ConcurrentQueue<PackageAdded> _packagesToCheckForExtensions = new ConcurrentQueue<PackageAdded>();
         private readonly List<IKernel> _childKernels = new List<IKernel>();
         private readonly Dictionary<string, IKernel> _kernelsByNameOrAlias;
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
@@ -27,16 +30,18 @@ namespace Microsoft.DotNet.Interactive
 
         public CompositeKernel() : base(".NET")
         {
-            // FIX: (CompositeKernel) this can be more efficient
-            RegisterForDisposal(KernelEvents
-                                .OfType<PackageAdded>()
-                                .Where(pa => pa?.PackageReference.PackageRoot != null)
-                                .Distinct(pa => pa.PackageReference.PackageRoot)
-                                .Subscribe(_packages.Enqueue));
+            ListenForPackagesToScanForExtensions();
 
             _kernelsByNameOrAlias = new Dictionary<string, IKernel>();
             _kernelsByNameOrAlias.Add(Name, this);
         }
+
+        private void ListenForPackagesToScanForExtensions() =>
+            RegisterForDisposal(KernelEvents
+                                .OfType<PackageAdded>()
+                                .Where(pa => pa?.PackageReference.PackageRoot != null)
+                                .Distinct(pa => pa.PackageReference.PackageRoot)
+                                .Subscribe(added => _packagesToCheckForExtensions.Enqueue(added)));
 
         public string DefaultKernelName
         {
@@ -112,7 +117,7 @@ namespace Microsoft.DotNet.Interactive
         {
             await next(command, context);
 
-            while (_packages.TryDequeue(out var packageAdded))
+            while (_packagesToCheckForExtensions.TryDequeue(out var packageAdded))
             {
                 var packageRootDir = packageAdded.PackageReference.PackageRoot;
 
@@ -132,7 +137,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public IReadOnlyCollection<IKernel> ChildKernels => _childKernels;
+        public IReadOnlyList<IKernel> ChildKernels => _childKernels;
 
         protected override void SetHandlingKernel(IKernelCommand command, KernelInvocationContext context)
         {
@@ -147,7 +152,6 @@ namespace Microsoft.DotNet.Interactive
         {
             var targetKernelName = command switch
             {
-                // FIX: (GetHandlingKernel)  RequestCompletion _ => Name,
                 KernelCommandBase kcb => kcb.TargetKernelName ?? DefaultKernelName,
                 _ => DefaultKernelName
             };
@@ -175,6 +179,7 @@ namespace Microsoft.DotNet.Interactive
             IKernelCommand command,
             KernelInvocationContext context)
         {
+
             var kernel = context.HandlingKernel;
 
             if (kernel is KernelBase kernelBase)
@@ -183,17 +188,54 @@ namespace Microsoft.DotNet.Interactive
 
                 if (kernelBase != this)
                 {
+                    // route to a subkernel
                     await kernelBase.Pipeline.SendAsync(command, context);
                 }
                 else
                 {
-                    await command.InvokeAsync(context);
+                    await base.HandleAsync(command, context);
                 }
 
                 return;
             }
 
             throw new NoSuitableKernelException(command);
+        }
+
+        private protected override IReadOnlyList<CompletionItem> GetDirectiveCompletionItems(
+            DirectiveNode directiveNode,
+            int requestPosition)
+        {
+            var directiveParsers = new List<Parser>
+            {
+                SubmissionParser.GetDirectiveParser()
+            };
+
+            for (var i = 0; i < ChildKernels.Count; i++)
+            {
+                var kernel = ChildKernels[i];
+
+                if (kernel is KernelBase kb)
+                {
+                    directiveParsers.Add(kb.SubmissionParser.GetDirectiveParser());
+                }
+            }
+
+            var allCompletions = new List<CompletionItem>();
+
+            foreach (var parser in directiveParsers)
+            {
+                var parseResult = parser.Parse(directiveNode.Text);
+
+                var completions = parseResult
+                                  .GetSuggestions(requestPosition)
+                                  .Select(s => SubmissionParser.CompletionItemFor(s, parseResult))
+                                  .ToArray();
+
+                allCompletions.AddRange(completions);
+            }
+
+            return allCompletions;
         }
 
         public IEnumerator<IKernel> GetEnumerator() => _childKernels.GetEnumerator();

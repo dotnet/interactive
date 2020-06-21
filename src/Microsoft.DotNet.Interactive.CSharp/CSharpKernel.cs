@@ -15,7 +15,6 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.QuickInfo;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Scripting;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
@@ -269,19 +268,19 @@ namespace Microsoft.DotNet.Interactive.CSharp
         }
 
         public async Task HandleAsync(
-            RequestCompletion requestCompletion,
+            RequestCompletion command,
             KernelInvocationContext context)
         {
-            var completionRequestReceived = new CompletionRequestReceived(requestCompletion);
+            var completionRequestReceived = new CompletionRequestReceived(command);
 
             context.Publish(completionRequestReceived);
 
             var completionList =
                 await GetCompletionList(
-                    requestCompletion.Code,
-                    SourceUtilities.GetCursorOffsetFromPosition(requestCompletion.Code, requestCompletion.Position));
+                    command.Code,
+                    SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.Position));
 
-            context.Publish(new CompletionRequestCompleted(completionList, requestCompletion));
+            context.Publish(new CompletionRequestCompleted(completionList, command));
         }
 
         private async Task<IEnumerable<CompletionItem>> GetCompletionList(

@@ -2,24 +2,33 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
     public class RequestHoverText : LanguageServiceCommandBase
     {
-        public RequestHoverText(string code, LinePosition position)
-            : base(code, position)
+        public RequestHoverText(
+            string code,
+            LinePosition position,
+            string targetKernelName = null)
+            : base(code, position, targetKernelName)
         {
         }
 
-        internal RequestHoverText(string code, LinePosition position, IKernelCommand parent)
-            : base(code, position, targetKernelName: null, parent: parent)
+        internal RequestHoverText(
+            LanguageNode languageNode,
+            LinePosition position,
+            IKernelCommand parent = null)
+            : base(languageNode, position, parent)
         {
         }
 
-        internal override LanguageServiceCommandBase WithCodeAndPosition(string code, LinePosition position)
+        internal override LanguageServiceCommandBase With(
+            LanguageNode languageNode,
+            LinePosition position)
         {
-            return new RequestHoverText(code, position);
+            return new RequestHoverText(languageNode, position, Parent);
         }
     }
 }

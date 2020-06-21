@@ -87,17 +87,17 @@ namespace Microsoft.DotNet.Interactive.Tests
                 defaultKernelLanguage);
         }
 
-        protected CompositeKernel CreateKernel(Language language = Language.CSharp)
+        protected CompositeKernel CreateKernel(Language defaultLanguage = Language.CSharp)
         {
-            var languageKernel = language switch
+            var languageKernel = defaultLanguage switch
             {
                 Language.FSharp => CreateFSharpKernel(),
                 Language.CSharp => CreateCSharpKernel(),
                 Language.PowerShell => CreatePowerShellKernel(),
-                _ => throw new InvalidOperationException($"Unknown language specified: {language}")
+                _ => throw new InvalidOperationException($"Unknown language specified: {defaultLanguage}")
             };
 
-            return CreateCompositeKernel(new[] { languageKernel }, language);
+            return CreateCompositeKernel(new[] { languageKernel }, defaultLanguage);
         }
 
         private CompositeKernel CreateCompositeKernel(IEnumerable<KernelBase> subkernels, Language defaultKernelLanguage)
@@ -124,6 +124,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .UseDefaultFormatting()
                 .UseNugetDirective()
                 .UseKernelHelpers()
+                .UseDotNetVariableSharing()
                 .UseWho()
                 .UseDefaultNamespaces();
         }
@@ -134,6 +135,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .UseDefaultFormatting()
                 .UseNugetDirective()
                 .UseKernelHelpers()
+                .UseDotNetVariableSharing()
                 .UseWho();
         }
 
