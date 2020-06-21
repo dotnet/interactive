@@ -161,19 +161,18 @@ namespace Microsoft.DotNet.Interactive
                 when submitCode.LanguageNode is null => SubmissionParser.SplitSubmission(submitCode),
 
                 LanguageServiceCommandBase languageServiceCommand
-                when languageServiceCommand.LanguageNode is null => PreprocessLanguageServiceCommand(languageServiceCommand, context),
+                when languageServiceCommand.LanguageNode is null => PreprocessLanguageServiceCommand(languageServiceCommand),
 
                 _ => new[] { command }
             };
         }
 
-        private IReadOnlyList<IKernelCommand> PreprocessLanguageServiceCommand(LanguageServiceCommandBase command, KernelInvocationContext context)
+        private IReadOnlyList<IKernelCommand> PreprocessLanguageServiceCommand(LanguageServiceCommandBase command)
         {
             var commands = new List<IKernelCommand>();
             var tree = SubmissionParser.Parse(command.Code, command.TargetKernelName);
             var rootNode = tree.GetRoot();
             var sourceText = SourceText.From(command.Code);
-            var requestPosition = sourceText.Lines.GetPosition(command.Position);
 
             // TextSpan.Contains only checks `[start, end)`, but we need to allow for `[start, end]`
             var absolutePosition = tree.GetAbsolutePosition(command.Position);

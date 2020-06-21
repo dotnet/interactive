@@ -46,6 +46,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             return parser.Parse();
         }
+
         public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode) 
         {
             var commands = new List<IKernelCommand>();
