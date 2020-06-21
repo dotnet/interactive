@@ -2,6 +2,12 @@
 
 The kernel concept in .NET Interactive is a component that accepts commands and produces outputs. The commands are  typically blocks of arbitrary code, and the outputs are events that describe the results and effects of that code. The `IKernel` interface represents this core abstraction.
 
+A kernel doesn't have to run in its own process. The default `dotnet-interactive` configuration runs several kernels in one process, enabling scenarios such as language-switching and .NET variable sharing. But one or more kernels can also run out-of-process, which will be transparent from the point of view of someone using it.
+
+The `dotnet-interactive` tool also provides a number of protocols, including the [Jupyter message protocol](https://jupyter-client.readthedocs.io/en/stable/messaging.html) and a JSON protocol that can be accessed over either standard I/O or HTTP. These multiple protocols allow the core set of capabilities to be fairly portable.
+
+![image](https://user-images.githubusercontent.com/547415/84963747-16717d80-b0bf-11ea-87ca-dd1fb11fd000.png)
+
 ## Commands and events
 
 All communication with a kernel takes place through a sequence of commands and events. The typical sequence starts with a command being sent to the kernel, which will reply with one or more events. The terminating event will always be either `CommandHandled` (if everything completed successfully) or `CommandFailed` (if there was a compilation error or runtime exception), but this will usually be preceded by one or more other events describing the results of the command. 
