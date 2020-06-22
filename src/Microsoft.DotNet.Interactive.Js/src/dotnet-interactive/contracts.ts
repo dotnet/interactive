@@ -77,7 +77,7 @@ export interface UpdateDisplayedValue extends KernelCommand {
 
 export const CodeSubmissionReceivedType = "CodeSubmissionReceived";
 export const CommandFailedType = "CommandFailed";
-export const CommandHandledType = "CommandHandled";
+export const CommandSucceededType = "CommandSucceeded";
 export const CompleteCodeSubmissionReceivedType = "CompleteCodeSubmissionReceived";
 export const CompletionRequestCompletedType = "CompletionRequestCompleted";
 export const CompletionRequestReceivedType = "CompletionRequestReceived";
@@ -98,7 +98,7 @@ export const WorkingDirectoryChangedType = "WorkingDirectoryChanged";
 export type KernelEventType =
       typeof CodeSubmissionReceivedType
     | typeof CommandFailedType
-    | typeof CommandHandledType
+    | typeof CommandSucceededType
     | typeof CompleteCodeSubmissionReceivedType
     | typeof CompletionRequestCompletedType
     | typeof CompletionRequestReceivedType
@@ -127,7 +127,7 @@ export interface CommandFailed extends KernelEvent {
     message: string;
 }
 
-export interface CommandHandled extends KernelEvent {
+export interface CommandSucceeded extends KernelEvent {
 }
 
 export interface CompleteCodeSubmissionReceived extends KernelEvent {

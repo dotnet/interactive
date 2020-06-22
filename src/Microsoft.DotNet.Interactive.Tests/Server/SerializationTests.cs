@@ -154,7 +154,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                    submitCode,
                    "oops");
 
-                yield return new CommandHandled(submitCode);
+                yield return new CommandSucceeded(submitCode);
 
                 yield return new CompleteCodeSubmissionReceived(submitCode);
 

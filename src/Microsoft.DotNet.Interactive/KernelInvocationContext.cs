@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Interactive
         {
             if (command == Command)
             {
-                Publish(new CommandHandled(Command));
+                Publish(new CommandSucceeded(Command));
                 if (!_events.IsDisposed)
                 {
                     _events.OnCompleted();

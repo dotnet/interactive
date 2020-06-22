@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             context.Fail(message: "oops!");
 
             events.Should()
-                  .NotContain(e => e is CommandHandled);
+                  .NotContain(e => e is CommandSucceeded);
         }
 
         [Fact]
@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             context.Complete(command);
 
             events.Should()
-                  .ContainSingle<CommandHandled>();
+                  .ContainSingle<CommandSucceeded>();
         }
 
         [Fact]
@@ -187,7 +187,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             inner.Complete(innerSubmitCode);
 
-            events.Should().NotContain(e => e is CommandHandled);
+            events.Should().NotContain(e => e is CommandSucceeded);
         }
 
         [Fact]

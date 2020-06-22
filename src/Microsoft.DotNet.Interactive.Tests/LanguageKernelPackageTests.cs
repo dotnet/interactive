@@ -153,7 +153,7 @@ json"
             await kernel.SendAsync(command);
 
             KernelEvents.Should()
-                        .ContainSingle<CommandHandled>(c => c.Command == command);
+                        .ContainSingle<CommandSucceeded>(c => c.Command == command);
         }
 
         [Theory]
@@ -628,78 +628,6 @@ Formatter<DataFrame>.Register((df, writer) =>
                 .Be("Microsoft.ML.AutoML version 0.16.1-preview cannot be added because version 0.16.0-preview was added previously.");
         }
 
-        /*
-        [Theory]
-        [InlineData(Language.CSharp, Language.FSharp)]
-        [InlineData(Language.FSharp, Language.CSharp)]
-        public async Task cell_with_nuget_and_code_continues_executions_on_right_kernel(Language first, Language second)
-        {
-            Kernel CreateKernel(Language language)
-            {
-                return language switch
-                {
-                    Language.CSharp =>
-                        new CSharpKernel().UseDefaultFormatting()
-                                            .UseNugetDirective()
-                                            .UseKernelHelpers()
-                                            .UseWho()
-                                            .LogEventsToPocketLogger(),
-                    Language.FSharp =>
-                        new FSharpKernel().UseDefaultFormatting()
-                                            .UseKernelHelpers()
-                                            .UseWho()
-                                            .UseDefaultNamespaces()
-                                            .LogEventsToPocketLogger()
-                };
-            }
-
-            var kernel =
-                new CompositeKernel
-                    {
-                        CreateKernel(first),
-                        CreateKernel(second)
-                    }
-                    .UseDefaultMagicCommands();
-
-            kernel.DefaultKernelName = first switch
-            {
-                Language.CSharp => "csharp",
-                Language.FSharp => "fsharp"
-            };
-
-            var events = kernel.KernelEvents.ToSubscribedList();
-
-            DisposeAfterTest(events);
-            DisposeAfterTest(kernel);
-
-            var code = first switch
-            {
-                Language.CSharp => @"
-#r ""nuget:NodaTime, 2.4.6""
-using Octokit;
-using NodaTime;
-using NodaTime.Extensions;
-using XPlot.Plotly; ",
-
-                Language.FSharp => @"
-#r ""nuget:NodaTime, 2.4.6""
-open Octokit
-open NodaTime
-open NodaTime.Extensions
-open XPlot.Plotly ",
-            };
-
-            var command = new SubmitCode(code);
-
-            await kernel.SendAsync(command, CancellationToken.None);
-
-            events.Should().NotContainErrors();
-
-            events
-                .Should()
-                .ContainSingle<CommandHandled>(ch => ch.Command == command);
-        }
-*/
         [Theory]
         [InlineData(Language.CSharp, Language.FSharp)]
         [InlineData(Language.FSharp, Language.CSharp)]
@@ -745,7 +673,7 @@ using XPlot.Plotly;");
 
             events
                 .Should()
-                .ContainSingle<CommandHandled>(ch => ch.Command == command);
+                .ContainSingle<CommandSucceeded>(ch => ch.Command == command);
         }
 
         [Theory]

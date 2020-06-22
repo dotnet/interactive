@@ -6,7 +6,7 @@ import * as path from 'path';
 import {
     CommandFailed,
     CommandFailedType,
-    CommandHandledType,
+    CommandSucceededType,
     DisposableSubscription,
     KernelCommand,
     KernelCommandType,
@@ -73,7 +73,7 @@ export class StdioKernelTransport {
                             disposable.dispose();
                             resolve();
                             break;
-                        case CommandHandledType:
+                        case CommandSucceededType:
                             disposable.dispose();
                             resolve();
                             break;

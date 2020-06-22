@@ -770,7 +770,7 @@ Console.Write(2);
 
             KernelEvents
                 .Should()
-                .ContainSingle<CommandHandled>(c => c.Command == command)
+                .ContainSingle<CommandSucceeded>(c => c.Command == command)
                 .Which
                 .Command
                 .Should()

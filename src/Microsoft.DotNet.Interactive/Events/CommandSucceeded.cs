@@ -7,14 +7,14 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class CommandHandled : KernelEvent
+    public class CommandSucceeded : KernelEvent
     {
         [JsonConstructor]
-        internal CommandHandled()
+        internal CommandSucceeded()
         {
         }
 
-        public CommandHandled(KernelCommand command) : base(command)
+        public CommandSucceeded(KernelCommand command) : base(command)
         {
             if (command == null)
             {
@@ -22,6 +22,6 @@ namespace Microsoft.DotNet.Interactive.Events
             }
         }
 
-        public override string ToString() => $"{nameof(CommandHandled)}: {Command}";
+        public override string ToString() => $"{nameof(CommandSucceeded)}: {Command}";
     }
 }

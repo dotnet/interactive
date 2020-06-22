@@ -59,9 +59,9 @@ new [] {1,2,3}");
             await kernel.SendAsync(fsharpCommand);
 
             events.Should()
-                  .ContainSingle<CommandHandled>(e => e.Command == csharpCommand);
+                  .ContainSingle<CommandSucceeded>(e => e.Command == csharpCommand);
             events.Should()
-                  .ContainSingle<CommandHandled>(e => e.Command == fsharpCommand);
+                  .ContainSingle<CommandSucceeded>(e => e.Command == fsharpCommand);
         }
 
         [Fact]
@@ -88,9 +88,9 @@ new [] {1,2,3}");
             await kernel.SendAsync(fsharpCommand);
 
             events.Should()
-                  .ContainSingle<CommandHandled>(e => e.Command == csharpCommand);
+                  .ContainSingle<CommandSucceeded>(e => e.Command == csharpCommand);
             events.Should()
-                  .ContainSingle<CommandHandled>(e => e.Command == fsharpCommand);
+                  .ContainSingle<CommandSucceeded>(e => e.Command == fsharpCommand);
         }
 
         [Theory(Timeout = 45000)]
@@ -152,7 +152,7 @@ new [] {1,2,3}");
             await kernel.SendAsync(submitCode);
 
             events.Should()
-                .ContainSingle<CommandHandled>()
+                .ContainSingle<CommandSucceeded>()
                 .Which
                 .Command
                 .Should()
@@ -343,7 +343,7 @@ new [] {1,2,3}");
                 .ContainInOrder(
                     typeof(CodeSubmissionReceived),
                     typeof(CompleteCodeSubmissionReceived),
-                    typeof(CommandHandled));
+                    typeof(CommandSucceeded));
         }
 
         [Fact]
@@ -382,7 +382,7 @@ new [] {1,2,3}");
                 .ContainInOrder(
                     typeof(CodeSubmissionReceived),
                     typeof(CompleteCodeSubmissionReceived),
-                    typeof(CommandHandled));
+                    typeof(CommandSucceeded));
         }
 
         [Fact]
@@ -420,7 +420,7 @@ new [] {1,2,3}");
                 .ContainInOrder(
                     typeof(CodeSubmissionReceived),
                     typeof(CompleteCodeSubmissionReceived),
-                    typeof(CommandHandled));
+                    typeof(CommandSucceeded));
         }
 
         [Fact]

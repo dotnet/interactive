@@ -4,7 +4,7 @@
 import {
     CommandFailed,
     CommandFailedType,
-    CommandHandledType,
+    CommandSucceededType,
     CompletionRequestCompleted,
     CompletionRequestCompletedType,
     DisplayEvent,
@@ -58,7 +58,7 @@ export class InteractiveClient {
                 }
     
                 switch (eventEnvelope.eventType) {
-                    case CommandHandledType:
+                    case CommandSucceededType:
                         resolve();
                         break;
                     case CommandFailedType:
@@ -176,7 +176,7 @@ export class InteractiveClient {
                             reject(err);
                         }
                         break;
-                    case CommandHandledType:
+                    case CommandSucceededType:
                         if (!handled) {
                             handled = true;
                             disposable.dispose();

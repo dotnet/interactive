@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 case DiagnosticLogEntryProduced logEvent:
                     OnLogEvent(logEvent, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
                     break;
-                case CommandHandled _:
+                case CommandSucceeded _:
                     OnCommandHandled(context.JupyterMessageSender);
                     break;
                 case CommandFailed commandFailed:

@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive
                 var message = await _clientStream.ReadMessageAsync();
                 var kernelEvent = KernelEventEnvelope.Deserialize(message).Event;
                 PublishEvent(kernelEvent);
-                if (kernelEvent is CommandHandled || kernelEvent is CommandFailed)
+                if (kernelEvent is CommandSucceeded || kernelEvent is CommandFailed)
                 {
                     if (kernelEvent.Command.GetToken() == commandToken)
                     {

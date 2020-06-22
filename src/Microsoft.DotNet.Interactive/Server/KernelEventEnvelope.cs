@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.Server
             {
                 [nameof(CodeSubmissionReceived)] = typeof(KernelEventEnvelope<CodeSubmissionReceived>),
                 [nameof(CommandFailed)] = typeof(KernelEventEnvelope<CommandFailed>),
-                [nameof(CommandHandled)] = typeof(KernelEventEnvelope<CommandHandled>),
+                [nameof(CommandSucceeded)] = typeof(KernelEventEnvelope<CommandSucceeded>),
                 [nameof(CompleteCodeSubmissionReceived)] = typeof(KernelEventEnvelope<CompleteCodeSubmissionReceived>),
                 [nameof(CompletionRequestCompleted)] = typeof(KernelEventEnvelope<CompletionRequestCompleted>),
                 [nameof(CompletionRequestReceived)] = typeof(KernelEventEnvelope<CompletionRequestReceived>),

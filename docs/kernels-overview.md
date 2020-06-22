@@ -10,7 +10,7 @@ The `dotnet-interactive` tool also provides a number of protocols, including the
 
 ## Commands and events
 
-All communication with a kernel takes place through a sequence of commands and events. The typical sequence starts with a command being sent to the kernel, which will reply with one or more events. The terminating event will always be either `CommandHandled` (if everything completed successfully) or `CommandFailed` (if there was a compilation error or runtime exception), but this will usually be preceded by one or more other events describing the results of the command. 
+All communication with a kernel takes place through a sequence of commands and events. The typical sequence starts with a command being sent to the kernel, which will reply with one or more events. The terminating event will always be either `CommandSucceeded` (if everything completed successfully) or `CommandFailed` (if there was a compilation error or runtime exception), but this will usually be preceded by one or more other events describing the results of the command. 
 
 The most common command is `SubmitCode`, which is used when a block of code is sent to the kernel for execution. A code submission is created each time you run a notebook cell. But a single submission may in fact generate multiple commands.
 
@@ -23,11 +23,11 @@ Console.WriteLine("Hi!");
 
 This submission will actually be broken into two commands, a `SubmitCode` for the `Console.WriteLine` call as well as an internal `DirectiveCommand` for the `#!time` magic command. 
 
-When this splitting occurs, the API still only returns a single terminating `CommandHandled` or `CommandFailed` event. Programmtically, you don't need to be concerned with whether a submission is going be split, but understanding this mechanism can be helpful, for example when implementing your own middleware behaviors.
+When this splitting occurs, the API still only returns a single terminating `CommandSucceeded` or `CommandFailed` event. Programmtically, you don't need to be concerned with whether a submission is going be split, but understanding this mechanism can be helpful, for example when implementing your own middleware behaviors.
 
 You can see some additional examples of command and event interactions in the following diagram, illustrating different kinds of output as well as the behavior of a middleware component (for the `#!time` magic command) augmenting the behavior of a code submission by emitting an additional `DisplayedValueProduced` event.
 
-![image](https://user-images.githubusercontent.com/547415/82275655-2703cc00-9938-11ea-8637-ab45c564f831.png)
+![image](https://user-images.githubusercontent.com/547415/85328679-ff97a600-b485-11ea-839c-ebc65b0f6472.png)
 
 ## Nested Kernels
 

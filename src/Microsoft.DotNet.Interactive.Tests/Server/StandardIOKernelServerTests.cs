@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
             _kernelEvents
                 .Should()
-                .ContainSingle<KernelEventEnvelope<CommandHandled>>()
+                .ContainSingle<KernelEventEnvelope<CommandSucceeded>>()
                 .Which
                 .Event
                 .Command

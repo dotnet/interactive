@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public class CompletionRequestCompleted : KernelEvent
     {
-        private LinePositionSpan? _range;
+        private readonly LinePositionSpan? _range;
 
         public CompletionRequestCompleted(
             IEnumerable<CompletionItem> completionList,

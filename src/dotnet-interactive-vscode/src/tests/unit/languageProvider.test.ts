@@ -7,7 +7,7 @@ import { ClientMapper } from '../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
 import { provideCompletion } from './../../languageServices/completion';
 import { provideHover } from './../../languageServices/hover';
-import { CommandHandledType, CompletionRequestCompletedType } from '../../contracts';
+import { CommandSucceededType, CompletionRequestCompletedType } from '../../contracts';
 
 describe('LanguageProvider tests', () => {
     it('CompletionProvider', async () => {
@@ -32,7 +32,7 @@ describe('LanguageProvider tests', () => {
                     token
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token
                 }
@@ -95,7 +95,7 @@ describe('LanguageProvider tests', () => {
                     token
                 },
                 {
-                    eventType: 'CommandHandled',
+                    eventType: 'CommandSucceeded',
                     event: {},
                     token
                 }
