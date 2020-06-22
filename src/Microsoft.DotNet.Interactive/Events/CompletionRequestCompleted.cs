@@ -11,21 +11,21 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public class CompletionRequestCompleted : KernelEvent
     {
-        private readonly LinePositionSpan? _range;
+        private readonly LinePositionSpan? _linePositionSpan;
 
         public CompletionRequestCompleted(
             IEnumerable<CompletionItem> completionList,
             RequestCompletion command,
-            LinePositionSpan? range = null) : base(command)
+            LinePositionSpan? linePositionSpan = null) : base(command)
         {
             CompletionList = completionList ?? throw new ArgumentNullException(nameof(completionList));
-            _range = range;
+            _linePositionSpan = linePositionSpan;
         }
 
         /// <summary>
         /// The range of where to replace in a completion request.
         /// </summary>
-        public LinePositionSpan? Range => this.CalculateLineOffsetFromParentCommand(_range);
+        public LinePositionSpan? LinePositionSpan => this.CalculateLineOffsetFromParentCommand(_linePositionSpan);
 
         /// <summary>
         /// The list of completion options.

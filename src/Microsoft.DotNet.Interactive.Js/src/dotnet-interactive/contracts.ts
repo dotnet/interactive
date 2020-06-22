@@ -135,7 +135,7 @@ export interface CompleteCodeSubmissionReceived extends KernelEvent {
 }
 
 export interface CompletionRequestCompleted extends KernelEvent {
-    range?: LinePositionSpan;
+    linePositionSpan?: LinePositionSpan;
     completionList: Array<CompletionItem>;
 }
 

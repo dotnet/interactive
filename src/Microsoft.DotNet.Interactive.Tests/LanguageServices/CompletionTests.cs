@@ -188,7 +188,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                             .Select(i => i.DisplayText)
                             .Should()
                             .Contain(expected.Split(","),
-                                     because: $"position {requestCompleted.Range} should provide completions"));
+                                     because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
         }
 
         [Fact]
@@ -218,7 +218,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                             .Select(i => i.DisplayText)
                             .Should()
                             .Contain(expected,
-                                     because: $"position {requestCompleted.Range} should provide completions"));
+                                     because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
         }
 
         [Theory]
@@ -261,7 +261,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                             .Select(i => i.DisplayText)
                             .Should()
                             .Contain(expected.Split(","),
-                                     because: $"position {requestCompleted.Range} should provide completions"));
+                                     because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
         }
 
         [Theory]
@@ -353,7 +353,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .Should()
                 .ContainSingle<CompletionRequestCompleted>()
                 .Which
-                .Range
+                .LinePositionSpan
                 .Should()
                 .Be(new LinePositionSpan(new LinePosition(line, 0), new LinePosition(line, 4)));
         }
@@ -375,7 +375,7 @@ var y = x + 2;
                 .Should()
                 .ContainSingle<CompletionRequestCompleted>()
                 .Which
-                .Range
+                .LinePositionSpan
                 .Should()
                 .Be(new LinePositionSpan(new LinePosition(line, 0), new LinePosition(line, 3)));
         }

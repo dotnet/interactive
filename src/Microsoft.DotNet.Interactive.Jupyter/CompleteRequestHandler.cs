@@ -49,10 +49,10 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             if (completionRequestCompleted.Command is RequestCompletion command)
             {
-                if (completionRequestCompleted.Range != null)
+                if (completionRequestCompleted.LinePositionSpan != null)
                 {
-                    startPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionRequestCompleted.Range.GetValueOrDefault().Start);
-                    endPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionRequestCompleted.Range.GetValueOrDefault().End);
+                    startPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionRequestCompleted.LinePositionSpan.GetValueOrDefault().Start);
+                    endPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionRequestCompleted.LinePositionSpan.GetValueOrDefault().End);
                 }
                 else
                 {
