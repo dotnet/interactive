@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive.Events
     public abstract class DiagnosticEventBase : KernelEventBase
     {
         protected DiagnosticEventBase(
-            IKernelCommand command = null) : base(command)
+            KernelCommand command = null) : base(command)
         {
         }
     }

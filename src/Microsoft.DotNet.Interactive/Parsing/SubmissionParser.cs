@@ -47,9 +47,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
             return parser.Parse();
         }
 
-        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode) 
+        public IReadOnlyList<KernelCommand> SplitSubmission(SubmitCode submitCode) 
         {
-            var commands = new List<IKernelCommand>();
+            var commands = new List<KernelCommand>();
             var nugetRestoreOnKernels = new HashSet<string>();
             var hoistedCommandsIndex = 0;
 
@@ -154,19 +154,19 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             var parent = submitCode.Parent ?? submitCode;
 
-            foreach (var command in commands.OfType<KernelCommandBase>())
+            foreach (var command in commands.OfType<KernelCommand>())
             {
                 command.Parent = parent;
             }
 
             return commands;
 
-            void AddHoistedCommand(IKernelCommand command)
+            void AddHoistedCommand(KernelCommand command)
             {
                 commands.Insert(hoistedCommandsIndex++, command);
             }
 
-            bool NoSplitWasNeeded(out IReadOnlyList<IKernelCommand> splitSubmission)
+            bool NoSplitWasNeeded(out IReadOnlyList<KernelCommand> splitSubmission)
             {
                 if (commands.Count == 0)
                 {

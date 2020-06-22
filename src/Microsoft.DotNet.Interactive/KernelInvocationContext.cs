@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly ReplaySubject<IKernelEvent> _events = new ReplaySubject<IKernelEvent>();
 
-        private readonly HashSet<IKernelCommand> _childCommands = new HashSet<IKernelCommand>();
+        private readonly HashSet<KernelCommand> _childCommands = new HashSet<KernelCommand>();
 
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly CancellationTokenSource _cancellationTokenSource;
 
-        private KernelInvocationContext(IKernelCommand command)
+        private KernelInvocationContext(KernelCommand command)
         {
             _cancellationTokenSource = new CancellationTokenSource();
             Command = command;
@@ -35,15 +35,15 @@ namespace Microsoft.DotNet.Interactive
             Result = new KernelCommandResult(_events);
         }
 
-        public IKernelCommand Command { get; }
+        public KernelCommand Command { get; }
 
         public bool IsComplete { get; private set; }
 
         public CancellationToken CancellationToken => _cancellationTokenSource.Token;
 
-        internal IKernelCommand CommandToSignalCompletion { get; set; }
+        internal KernelCommand CommandToSignalCompletion { get; set; }
 
-        public void Complete(IKernelCommand command)
+        public void Complete(KernelCommand command)
         {
             if (command == Command)
             {
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Interactive
                 return;
             }
 
-            var command = @event.Command as KernelCommandBase;
+            var command = @event.Command as KernelCommand;
 
             if (command == null ||
                 Command == command ||
@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.Interactive
 
         public IKernelCommandResult Result { get; }
 
-        public static KernelInvocationContext Establish(IKernelCommand command)
+        public static KernelInvocationContext Establish(KernelCommand command)
         {
             if (_current.Value == null || _current.Value.IsComplete)
             {

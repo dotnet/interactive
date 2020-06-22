@@ -74,9 +74,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         }
 
         public static AndWhichConstraint<ObjectAssertions, T> ContainSingle<T>(
-            this GenericCollectionAssertions<IKernelCommand> should,
+            this GenericCollectionAssertions<KernelCommand> should,
             Func<T, bool> where = null)
-            where T : IKernelCommand
+            where T : KernelCommand
         {
             T subject;
 

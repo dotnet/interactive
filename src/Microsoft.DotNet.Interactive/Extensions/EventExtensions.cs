@@ -17,8 +17,8 @@ namespace Microsoft.DotNet.Interactive.Extensions
             }
 
             var range = initialRange.GetValueOrDefault();
-            var requestCommand = @event.Command as LanguageServiceCommandBase;
-            if (requestCommand?.Parent is LanguageServiceCommandBase parentRequest)
+            var requestCommand = @event.Command as LanguageServiceCommand;
+            if (requestCommand?.Parent is LanguageServiceCommand parentRequest)
             {
                 var requestPosition = requestCommand.Position;
                 var lineOffset = parentRequest.Position.Line - requestPosition.Line;

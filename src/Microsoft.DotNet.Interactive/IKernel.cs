@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive
         IObservable<IKernelEvent> KernelEvents { get; }
 
         Task<IKernelCommandResult> SendAsync(
-            IKernelCommand command, 
+            KernelCommand command, 
             CancellationToken cancellationToken);
 
         IReadOnlyCollection<ICommand> Directives { get; }

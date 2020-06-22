@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Events
         public DisplayedValueUpdated(
             object value,
             string valueId,
-            IKernelCommand command = null,
+            KernelCommand command = null,
             IReadOnlyCollection<FormattedValue> formattedValues = null) : base(value, command, formattedValues, valueId)
         {
             if (string.IsNullOrWhiteSpace(valueId))

@@ -6,23 +6,23 @@ using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public abstract class LanguageServiceCommandBase : KernelCommandBase
+    public abstract class LanguageServiceCommand : KernelCommand
     {
-        protected LanguageServiceCommandBase(
+        protected LanguageServiceCommand(
             string code,
             LinePosition position,
             string targetKernelName = null,
-            IKernelCommand parent = null)
+            KernelCommand parent = null)
             : base(targetKernelName, parent)
         {
             Code = code;
             Position = position;
         }
         
-        protected LanguageServiceCommandBase(
+        protected LanguageServiceCommand(
             LanguageNode languageNode,
             LinePosition position,
-            IKernelCommand parent = null)
+            KernelCommand parent = null)
             : base(languageNode.Language, parent)
         {
             Code = languageNode.Text;
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         public LinePosition Position { get; protected set; }
 
-        internal abstract LanguageServiceCommandBase With(
+        internal abstract LanguageServiceCommand With(
             LanguageNode languageNode, 
             LinePosition position);
 

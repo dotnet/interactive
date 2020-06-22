@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         private async Task LoadExtensions(
-            IKernelCommand command,
+            KernelCommand command,
             KernelInvocationContext context,
             KernelPipelineContinuation next)
         {
@@ -139,7 +139,7 @@ namespace Microsoft.DotNet.Interactive
 
         public IReadOnlyList<IKernel> ChildKernels => _childKernels;
 
-        protected override void SetHandlingKernel(IKernelCommand command, KernelInvocationContext context)
+        protected override void SetHandlingKernel(KernelCommand command, KernelInvocationContext context)
         {
             var kernel = GetHandlingKernel(command, context);
 
@@ -147,12 +147,12 @@ namespace Microsoft.DotNet.Interactive
         }
 
         private IKernel GetHandlingKernel(
-            IKernelCommand command,
+            KernelCommand command,
             KernelInvocationContext context)
         {
             var targetKernelName = command switch
             {
-                KernelCommandBase kcb => kcb.TargetKernelName ?? DefaultKernelName,
+                KernelCommand kcb => kcb.TargetKernelName ?? DefaultKernelName,
                 _ => DefaultKernelName
             };
 
@@ -176,7 +176,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         internal override async Task HandleAsync(
-            IKernelCommand command,
+            KernelCommand command,
             KernelInvocationContext context)
         {
 

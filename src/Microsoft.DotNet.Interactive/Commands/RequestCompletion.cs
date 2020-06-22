@@ -6,7 +6,7 @@ using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class RequestCompletion : LanguageServiceCommandBase
+    public class RequestCompletion : LanguageServiceCommand
     {
         public RequestCompletion(
             string code, 
@@ -19,12 +19,12 @@ namespace Microsoft.DotNet.Interactive.Commands
         internal RequestCompletion(
             LanguageNode languageNode, 
             LinePosition position, 
-            IKernelCommand parent = null) 
+            KernelCommand parent = null) 
             : base(languageNode, position, parent)
         {
         }
 
-        internal override LanguageServiceCommandBase With(
+        internal override LanguageServiceCommand With(
             LanguageNode languageNode, 
             LinePosition position)
         {

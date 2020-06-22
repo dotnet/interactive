@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive
         internal const string TokenKey = "token";
 
         public static void SetToken(
-            this IKernelCommand command,
+            this KernelCommand command,
             string token)
         {
             if (!command.Properties.TryGetValue(TokenKey, out var existing))
@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public static string GetToken(this IKernelCommand command)
+        public static string GetToken(this KernelCommand command)
         {
             if (command == null)
             {
@@ -39,10 +39,9 @@ namespace Microsoft.DotNet.Interactive
                 return tokenSequence.Current;
             }
 
-            if (command is KernelCommandBase commandBase &&
-                commandBase.Parent != null)
+            if (command.Parent != null)
             {
-                var token = commandBase.Parent.GetToken();
+                var token = command.Parent.GetToken();
                 command.SetToken(token);
                 return token;
             }
@@ -50,7 +49,7 @@ namespace Microsoft.DotNet.Interactive
             return command.GenerateToken();
         }
 
-        private static string GetNextToken(this IKernelCommand command)
+        private static string GetNextToken(this KernelCommand command)
         {
             if (command.Properties.TryGetValue(TokenKey, out var value) &&
                 value is TokenSequence tokenSequence)
@@ -61,11 +60,9 @@ namespace Microsoft.DotNet.Interactive
             return command.GenerateToken();
         }
 
-        private static string GenerateToken(this IKernelCommand command)
+        private static string GenerateToken(this KernelCommand command)
         {
-            var seed = command is KernelCommandBase b
-                           ? b?.Parent?.GetNextToken()
-                           : null;
+            var seed = command.Parent?.GetNextToken();
 
             var sequence = new TokenSequence(seed);
 

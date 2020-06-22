@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly Subject<IKernelEvent> _kernelEvents = new Subject<IKernelEvent>();
         private readonly CompositeDisposable _disposables;
-        private readonly ConcurrentQueue<IKernelCommand> _deferredCommands = new ConcurrentQueue<IKernelCommand>();
+        private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new ConcurrentQueue<KernelCommand>();
         private readonly ConcurrentDictionary<Type, object> _properties = new ConcurrentDictionary<Type, object>();
         private readonly ConcurrentQueue<KernelOperation> _commandQueue =
             new ConcurrentQueue<KernelOperation>();
@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.Interactive
             KernelCommandPipelineMiddleware middleware,
             [CallerMemberName] string caller = null) => Pipeline.AddMiddleware(middleware, caller);
 
-        public void DeferCommand(IKernelCommand command)
+        public void DeferCommand(KernelCommand command)
         {
             if (command == null)
             {
@@ -153,23 +153,23 @@ namespace Microsoft.DotNet.Interactive
                 });
         }
 
-        private IReadOnlyList<IKernelCommand> PreprocessCommands(IKernelCommand command, KernelInvocationContext context)
+        private IReadOnlyList<KernelCommand> PreprocessCommands(KernelCommand command, KernelInvocationContext context)
         {
             return command switch
             {
                 SubmitCode submitCode
                 when submitCode.LanguageNode is null => SubmissionParser.SplitSubmission(submitCode),
 
-                LanguageServiceCommandBase languageServiceCommand
+                LanguageServiceCommand languageServiceCommand
                 when languageServiceCommand.LanguageNode is null => PreprocessLanguageServiceCommand(languageServiceCommand),
 
                 _ => new[] { command }
             };
         }
 
-        private IReadOnlyList<IKernelCommand> PreprocessLanguageServiceCommand(LanguageServiceCommandBase command)
+        private IReadOnlyList<KernelCommand> PreprocessLanguageServiceCommand(LanguageServiceCommand command)
         {
-            var commands = new List<IKernelCommand>();
+            var commands = new List<KernelCommand>();
             var tree = SubmissionParser.Parse(command.Code, command.TargetKernelName);
             var rootNode = tree.GetRoot();
             var sourceText = SourceText.From(command.Code);
@@ -208,7 +208,7 @@ namespace Microsoft.DotNet.Interactive
             return commands;
         }
 
-        private async Task SetKernel(IKernelCommand command, KernelInvocationContext context, KernelPipelineContinuation next)
+        private async Task SetKernel(KernelCommand command, KernelInvocationContext context, KernelPipelineContinuation next)
         {
             SetHandlingKernel(command, context);
 
@@ -239,13 +239,13 @@ namespace Microsoft.DotNet.Interactive
         
         private class KernelOperation
         {
-            public KernelOperation(IKernelCommand command, TaskCompletionSource<IKernelCommandResult> taskCompletionSource)
+            public KernelOperation(KernelCommand command, TaskCompletionSource<IKernelCommandResult> taskCompletionSource)
             {
                 Command = command;
                 TaskCompletionSource = taskCompletionSource;
             }
 
-            public IKernelCommand Command { get; }
+            public KernelCommand Command { get; }
 
             public TaskCompletionSource<IKernelCommandResult> TaskCompletionSource { get; }
         }
@@ -287,7 +287,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         internal virtual async Task HandleAsync(
-            IKernelCommand command,
+            KernelCommand command,
             KernelInvocationContext context)
         {
             TrySetHandler(command, context);
@@ -295,14 +295,14 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public Task<IKernelCommandResult> SendAsync(
-            IKernelCommand command,
+            KernelCommand command,
             CancellationToken cancellationToken)
         {
             return SendAsync(command, cancellationToken, null);
         }
 
         internal Task<IKernelCommandResult> SendAsync(
-            IKernelCommand command,
+            KernelCommand command,
             CancellationToken cancellationToken, 
             Action onDone)
         {
@@ -424,10 +424,10 @@ namespace Microsoft.DotNet.Interactive
         }
 
         private protected void TrySetHandler(
-            IKernelCommand command,
+            KernelCommand command,
             KernelInvocationContext context)
         {
-            if (command is KernelCommandBase kb)
+            if (command is KernelCommand kb)
             {
                 if (kb.Handler == null)
                 {
@@ -467,12 +467,12 @@ namespace Microsoft.DotNet.Interactive
         private static void SetHandler<T>(
             IKernelCommandHandler<T> handler,
             T command)
-            where T : KernelCommandBase =>
+            where T : KernelCommand =>
             command.Handler = (_, context) =>
                 handler.HandleAsync(command, context);
 
         protected virtual void SetHandlingKernel(
-            IKernelCommand command,
+            KernelCommand command,
             KernelInvocationContext context) => context.HandlingKernel = this;
 
         public void Dispose() => _disposables.Dispose();

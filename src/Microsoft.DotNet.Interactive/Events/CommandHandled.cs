@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.Events
         {
         }
 
-        public CommandHandled(IKernelCommand command) : base(command)
+        public CommandHandled(KernelCommand command) : base(command)
         {
             if (command == null)
             {

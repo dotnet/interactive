@@ -22,9 +22,9 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             var barrier = new Barrier(2);
 
-            IKernelCommand commandInTask1 = null;
+            KernelCommand commandInTask1 = null;
 
-            IKernelCommand commandInTask2 = null;
+            KernelCommand commandInTask2 = null;
 
             await Task.Run(async () =>
             {

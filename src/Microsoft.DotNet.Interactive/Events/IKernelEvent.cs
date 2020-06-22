@@ -10,6 +10,6 @@ namespace Microsoft.DotNet.Interactive.Events
     {
         [JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
-        IKernelCommand Command { get; }
+        KernelCommand Command { get; }
     }
 }

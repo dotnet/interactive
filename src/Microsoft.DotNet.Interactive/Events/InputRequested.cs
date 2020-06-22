@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Events
 
         public InputRequested(
             string prompt,
-            IKernelCommand command) : base(command)
+            KernelCommand command) : base(command)
         {
             if (command == null)
             {

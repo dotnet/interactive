@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.Interactive.Server
 {
     public interface IKernelCommandEnvelope
     {
-        IKernelCommand Command { get; }
+        KernelCommand Command { get; }
 
         string CommandType { get; }
 

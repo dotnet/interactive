@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         protected async Task SendAsync(
             JupyterRequestContext context,
-            IKernelCommand command)
+            KernelCommand command)
         {
             command.SetToken(context.Token);
 

@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
         [Theory(Timeout = 45000)]
         [MemberData(nameof(Commands))]
-        public void All_command_types_are_round_trip_serializable(IKernelCommand command)
+        public void All_command_types_are_round_trip_serializable(KernelCommand command)
         {
             var originalEnvelope = KernelCommandEnvelope.Create(command);
 
@@ -42,7 +42,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             deserializedEnvelope
                 .Should()
                 .BeEquivalentTo(originalEnvelope,
-                                o => o.Excluding(e => e.Command.Properties));
+                                o => o.Excluding(e => e.Command.Properties)
+                                      .Excluding(e => e.Command.Handler));
         }
 
         [Theory(Timeout = 45000)]
@@ -66,11 +67,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [Fact(Timeout = 45000)]
         public void All_command_types_are_tested_for_round_trip_serialization()
         {
-            var commandTypes = typeof(IKernelCommand)
+            var commandTypes = typeof(KernelCommand)
                                .Assembly
                                .ExportedTypes
                                .Concrete()
-                               .DerivedFrom(typeof(IKernelCommand));
+                               .DerivedFrom(typeof(KernelCommand));
 
             Commands()
                 .Select(e => e[0].GetType())
@@ -102,7 +103,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 yield return new object[] { command };
             }
 
-            IEnumerable<IKernelCommand> commands()
+            IEnumerable<KernelCommand> commands()
             {
                 yield return new AddPackage(new PackageReference("MyAwesomePackage", "1.2.3"));
 

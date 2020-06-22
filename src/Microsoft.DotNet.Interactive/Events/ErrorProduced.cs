@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Events
     {
         public ErrorProduced(
             string message,
-            IKernelCommand command = null,
+            KernelCommand command = null,
             IReadOnlyCollection<FormattedValue> formattedValues = null) : base(message, command, formattedValues)
         {
             Message = message;

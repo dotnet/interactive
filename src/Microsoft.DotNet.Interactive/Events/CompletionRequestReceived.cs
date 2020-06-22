@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public class CompletionRequestReceived : KernelEventBase
     {
-        public CompletionRequestReceived(IKernelCommand command) : base(command)
+        public CompletionRequestReceived(KernelCommand command) : base(command)
         {
         }
     }

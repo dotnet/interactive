@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         internal async Task SendAsync(
-            IKernelCommand command,
+            KernelCommand command,
             KernelInvocationContext context)
         {
             EnsureMiddlewarePipelineIsInitialized();
@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Interactive
                         {
                             return (Combine, first.name + "->" + second.name);
 
-                            async Task Combine(IKernelCommand cmd1, KernelInvocationContext ctx1, KernelPipelineContinuation next)
+                            async Task Combine(KernelCommand cmd1, KernelInvocationContext ctx1, KernelPipelineContinuation next)
                             {
                                 await first.func(cmd1, ctx1, async (cmd2, ctx2) =>
                                 {

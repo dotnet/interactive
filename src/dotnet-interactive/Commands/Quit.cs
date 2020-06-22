@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.App.Commands
 {
-    public class Quit : KernelCommandBase
+    public class Quit : KernelCommand
     {
         internal static IDisposable DisposeOnQuit { get; set; }
         public Quit(string targetKernelName = null): base(targetKernelName)

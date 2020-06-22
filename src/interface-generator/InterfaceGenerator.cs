@@ -22,23 +22,21 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             { typeof(object), "any" },
             { typeof(string), "string" },
 
-            { typeof(KernelCommandBase), "KernelCommand" },
             { typeof(KernelEventBase), "KernelEvent" },
 
             { typeof(DirectoryInfo), "string" },
             { typeof(FileInfo), "string" },
-            { typeof(IKernelCommand), "KernelCommand" },
         };
 
         private static readonly HashSet<Type> AlwaysEmitTypes = new HashSet<Type>
         {
-            typeof(KernelCommandBase),
+            typeof(KernelCommand),
             typeof(KernelEventBase)
         };
 
         private static readonly HashSet<string> OptionalFields = new HashSet<string>
         {
-            $"{nameof(KernelCommandBase)}.{nameof(KernelCommandBase.TargetKernelName)}",
+            $"{nameof(KernelCommand)}.{nameof(KernelCommand.TargetKernelName)}",
             $"{nameof(SubmitCode)}.{nameof(SubmitCode.SubmissionType)}"
         };
 
@@ -46,11 +44,11 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
         {
             var builder = new StringBuilder();
 
-            var commandTypes = typeof(IKernelCommand)
+            var commandTypes = typeof(KernelCommand)
                                .Assembly
                                .ExportedTypes
                                .Where(t => !t.IsAbstract && !t.IsInterface)
-                               .Where(t => typeof(IKernelCommand).IsAssignableFrom(t))
+                               .Where(t => typeof(KernelCommand).IsAssignableFrom(t))
                                .OrderBy(t => t.Name)
                                .ToList();
             var eventTypes = typeof(IKernelEvent)

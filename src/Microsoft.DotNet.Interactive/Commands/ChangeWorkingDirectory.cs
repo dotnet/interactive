@@ -5,7 +5,7 @@ using System.IO;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class ChangeWorkingDirectory : KernelCommandBase
+    public class ChangeWorkingDirectory : KernelCommand
     {
         public DirectoryInfo WorkingDirectory { get; }
 

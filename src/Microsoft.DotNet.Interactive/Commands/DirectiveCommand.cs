@@ -9,19 +9,11 @@ using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    internal class DirectiveCommand : KernelCommandBase
+    internal class DirectiveCommand : KernelCommand
     {
-        public DirectiveCommand(
-            ParseResult parseResult,
-            DirectiveNode directiveNode = null)
-        {
-            ParseResult = parseResult;
-            DirectiveNode = directiveNode;
-        }
-
         internal DirectiveCommand(
             ParseResult parseResult,
-            IKernelCommand parent,
+            KernelCommand parent,
             DirectiveNode directiveNode = null) : base(null, parent)
         {
             ParseResult = parseResult;

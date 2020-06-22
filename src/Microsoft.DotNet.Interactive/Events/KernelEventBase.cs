@@ -7,12 +7,12 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public abstract class KernelEventBase : IKernelEvent
     {
-        protected KernelEventBase(IKernelCommand command = null)
+        protected KernelEventBase(KernelCommand command = null)
         {
             Command = command ?? KernelInvocationContext.Current?.Command;
         }
 
-        public IKernelCommand Command { get; internal set; }
+        public KernelCommand Command { get; internal set; }
 
         public override string ToString()
         {

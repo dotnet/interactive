@@ -162,7 +162,7 @@ new [] {1,2,3}");
         [Fact]
         public async Task commands_targeting_compositeKernel_are_not_routed_to_childKernels()
         {
-            var receivedOnFakeKernel = new List<IKernelCommand>();
+            var receivedOnFakeKernel = new List<KernelCommand>();
             using var kernel = new CompositeKernel
             {
                 new FakeKernel("fake")
@@ -185,7 +185,7 @@ new [] {1,2,3}");
         [Fact]
         public async Task Handling_kernel_can_be_specified_by_setting_the_kernel_name_in_the_command()
         {
-            var receivedOnFakeKernel = new List<IKernelCommand>();
+            var receivedOnFakeKernel = new List<KernelCommand>();
 
             using var kernel = new CompositeKernel
             {
@@ -226,7 +226,7 @@ new [] {1,2,3}");
         [Fact]
         public async Task Handling_kernel_can_be_specified_as_a_default()
         {
-            var receivedOnFakeKernel = new List<IKernelCommand>();
+            var receivedOnFakeKernel = new List<KernelCommand>();
 
             using var kernel = new CompositeKernel
             {
@@ -260,7 +260,7 @@ new [] {1,2,3}");
         [Fact]
         public async Task Handling_kernel_can_be_specified_as_a_default_via_an_alias()
         {
-            var receivedOnFakeKernel = new List<IKernelCommand>();
+            var receivedOnFakeKernel = new List<KernelCommand>();
 
             var fakeKernel = new FakeKernel("fake")
             {

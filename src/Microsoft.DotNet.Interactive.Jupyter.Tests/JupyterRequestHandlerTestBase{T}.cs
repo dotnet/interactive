@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             }
         }
 
-        protected void DeferCommand(IKernelCommand command)
+        protected void DeferCommand(KernelCommand command)
         { 
             _compositeKernel.DeferCommand(command);
         }

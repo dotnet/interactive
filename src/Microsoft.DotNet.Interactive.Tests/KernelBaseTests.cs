@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public void Deferred_initialization_command_is_not_executed_prior_to_first_submission()
         {
-            var receivedCommands = new List<IKernelCommand>();
+            var receivedCommands = new List<KernelCommand>();
 
             using var kernel = new FakeKernel
             {
@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task Deferred_initialization_command_is_executed_on_first_submission()
         {
-            var receivedCommands = new List<IKernelCommand>();
+            var receivedCommands = new List<KernelCommand>();
 
             using var kernel = new FakeKernel
             {

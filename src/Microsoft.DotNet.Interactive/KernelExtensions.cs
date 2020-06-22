@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Interactive
 
         public static Task<IKernelCommandResult> SendAsync(
             this IKernel kernel,
-            IKernelCommand command)
+            KernelCommand command)
         {
             if (kernel == null)
             {
