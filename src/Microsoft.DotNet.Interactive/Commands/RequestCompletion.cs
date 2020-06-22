@@ -10,17 +10,17 @@ namespace Microsoft.DotNet.Interactive.Commands
     {
         public RequestCompletion(
             string code, 
-            LinePosition position, 
+            LinePosition linePosition, 
             string targetKernelName = null)
-            : base(code, position, targetKernelName)
+            : base(code, linePosition, targetKernelName)
         {
         }
 
         internal RequestCompletion(
             LanguageNode languageNode, 
-            LinePosition position, 
+            LinePosition linePosition, 
             KernelCommand parent = null) 
-            : base(languageNode, position, parent)
+            : base(languageNode, linePosition, parent)
         {
         }
 

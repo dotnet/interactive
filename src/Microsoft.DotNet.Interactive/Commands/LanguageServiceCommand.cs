@@ -10,29 +10,29 @@ namespace Microsoft.DotNet.Interactive.Commands
     {
         protected LanguageServiceCommand(
             string code,
-            LinePosition position,
+            LinePosition linePosition,
             string targetKernelName = null,
             KernelCommand parent = null)
             : base(targetKernelName, parent)
         {
             Code = code;
-            Position = position;
+            LinePosition = linePosition;
         }
         
         protected LanguageServiceCommand(
             LanguageNode languageNode,
-            LinePosition position,
+            LinePosition linePosition,
             KernelCommand parent = null)
             : base(languageNode.Language, parent)
         {
             Code = languageNode.Text;
             LanguageNode = languageNode;
-            Position = position;
+            LinePosition = linePosition;
         }
 
         public string Code { get; protected set; }
 
-        public LinePosition Position { get; protected set; }
+        public LinePosition LinePosition { get; protected set; }
 
         internal abstract LanguageServiceCommand With(
             LanguageNode languageNode, 

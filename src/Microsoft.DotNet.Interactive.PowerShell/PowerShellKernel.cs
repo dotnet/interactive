@@ -211,7 +211,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             {
                 CommandCompletion results = CommandCompletion.CompleteInput(
                     requestCompletion.Code,
-                    SourceUtilities.GetCursorOffsetFromPosition(requestCompletion.Code, requestCompletion.Position),
+                    SourceUtilities.GetCursorOffsetFromPosition(requestCompletion.Code, requestCompletion.LinePosition),
                     options: null,
                     pwsh);
 

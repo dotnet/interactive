@@ -53,7 +53,7 @@ export interface RequestCompletion extends LanguageServiceCommand {
 
 export interface LanguageServiceCommand extends KernelCommand {
     code: string;
-    position: LinePosition;
+    linePosition: LinePosition;
 }
 
 export interface RequestDiagnostics extends KernelCommand {

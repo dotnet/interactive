@@ -20,8 +20,8 @@ namespace Microsoft.DotNet.Interactive.Extensions
             var requestCommand = @event.Command as LanguageServiceCommand;
             if (requestCommand?.Parent is LanguageServiceCommand parentRequest)
             {
-                var requestPosition = requestCommand.Position;
-                var lineOffset = parentRequest.Position.Line - requestPosition.Line;
+                var requestPosition = requestCommand.LinePosition;
+                var lineOffset = parentRequest.LinePosition.Line - requestPosition.Line;
                 return new LinePositionSpan(
                     new LinePosition(range.Start.Line + lineOffset, range.Start.Character),
                     new LinePosition(range.End.Line + lineOffset, range.End.Character));

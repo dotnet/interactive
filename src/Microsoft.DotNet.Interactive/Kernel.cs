@@ -174,7 +174,7 @@ namespace Microsoft.DotNet.Interactive
             var sourceText = SourceText.From(command.Code);
 
             // TextSpan.Contains only checks `[start, end)`, but we need to allow for `[start, end]`
-            var absolutePosition = tree.GetAbsolutePosition(command.Position);
+            var absolutePosition = tree.GetAbsolutePosition(command.LinePosition);
             if (absolutePosition >= tree.Length)
             {
                 absolutePosition--;
@@ -187,8 +187,8 @@ namespace Microsoft.DotNet.Interactive
             if (rootNode.FindNode(absolutePosition) is LanguageNode node)
             {
                 var nodeStartLine = sourceText.Lines.GetLinePosition(node.Span.Start).Line;
-                var offsetNodeLine = command.Position.Line - nodeStartLine;
-                var position = new LinePosition(offsetNodeLine, command.Position.Character);
+                var offsetNodeLine = command.LinePosition.Line - nodeStartLine;
+                var position = new LinePosition(offsetNodeLine, command.LinePosition.Character);
 
                 // create new command
                 var offsetLanguageServiceCommand = command.With(
@@ -392,11 +392,11 @@ namespace Microsoft.DotNet.Interactive
             {
                 var requestPosition = SourceText.From(command.Code)
                                                 .Lines
-                                                .GetPosition(command.Position);
+                                                .GetPosition(command.LinePosition);
 
                 var resultRange = new LinePositionSpan(
-                    new LinePosition(command.Position.Line, 0),
-                    command.Position);
+                    new LinePosition(command.LinePosition.Line, 0),
+                    command.LinePosition);
 
                 var completions = GetDirectiveCompletionItems(directiveNode, requestPosition);
 

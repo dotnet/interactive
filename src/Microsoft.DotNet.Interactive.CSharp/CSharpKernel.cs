@@ -131,7 +131,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
             var document = _workspace.ForkDocument(command.Code);
             var text = await document.GetTextAsync();
-            var cursorPosition = text.Lines.GetPosition(command.Position);
+            var cursorPosition = text.Lines.GetPosition(command.LinePosition);
             var service = QuickInfoService.GetService(document);
             var info = await service.GetQuickInfoAsync(document, cursorPosition);
 
@@ -278,7 +278,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var completionList =
                 await GetCompletionList(
                     command.Code,
-                    SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.Position));
+                    SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.LinePosition));
 
             context.Publish(new CompletionRequestCompleted(completionList, command));
         }

@@ -10,17 +10,17 @@ namespace Microsoft.DotNet.Interactive.Commands
     {
         public RequestHoverText(
             string code,
-            LinePosition position,
+            LinePosition linePosition,
             string targetKernelName = null)
-            : base(code, position, targetKernelName)
+            : base(code, linePosition, targetKernelName)
         {
         }
 
         internal RequestHoverText(
             LanguageNode languageNode,
-            LinePosition position,
+            LinePosition linePosition,
             KernelCommand parent = null)
-            : base(languageNode, position, parent)
+            : base(languageNode, linePosition, parent)
         {
         }
 

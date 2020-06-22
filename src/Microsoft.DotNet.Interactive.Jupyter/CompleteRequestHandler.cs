@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 }
                 else
                 {
-                    var cursorOffset = SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.Position);
+                    var cursorOffset = SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.LinePosition);
                     startPosition = SourceUtilities.ComputeReplacementStartPosition(command.Code, cursorOffset);
                     endPosition = cursorOffset;
                 }

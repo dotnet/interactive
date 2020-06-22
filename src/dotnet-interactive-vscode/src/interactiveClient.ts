@@ -125,7 +125,7 @@ export class InteractiveClient {
     completion(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionRequestCompleted> {
         let command: RequestCompletion = {
             code: code,
-            position: {
+            linePosition: {
                 line,
                 character
             },
@@ -137,7 +137,7 @@ export class InteractiveClient {
     hover(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<HoverTextProduced> {
         let command: RequestHoverText = {
             code: code,
-            position: {
+            linePosition: {
                 line: line,
                 character: character,
             },
