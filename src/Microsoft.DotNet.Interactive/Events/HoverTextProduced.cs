@@ -11,10 +11,10 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public class HoverTextProduced : KernelEvent
     {
-        private LinePositionSpan? _range;
+        private LinePositionSpan? _linePositionSpan;
 
         public IReadOnlyCollection<FormattedValue> Content { get; }
-        public LinePositionSpan? Range => this.CalculateLineOffsetFromParentCommand(_range);
+        public LinePositionSpan? LinePositionSpan => this.CalculateLineOffsetFromParentCommand(_linePositionSpan);
 
         public HoverTextProduced(RequestHoverText command, IReadOnlyCollection<FormattedValue> content, LinePositionSpan? range = null)
             : base(command)
@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Events
             }
 
             Content = content;
-            _range = range;
+            _linePositionSpan = range;
         }
     }
 }

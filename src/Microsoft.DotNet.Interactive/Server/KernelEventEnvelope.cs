@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(CommandFailed)] = typeof(KernelEventEnvelope<CommandFailed>),
                 [nameof(CommandSucceeded)] = typeof(KernelEventEnvelope<CommandSucceeded>),
                 [nameof(CompleteCodeSubmissionReceived)] = typeof(KernelEventEnvelope<CompleteCodeSubmissionReceived>),
-                [nameof(CompletionRequestCompleted)] = typeof(KernelEventEnvelope<CompletionRequestCompleted>),
+                [nameof(CompletionsProduced)] = typeof(KernelEventEnvelope<CompletionsProduced>),
                 [nameof(CompletionRequestReceived)] = typeof(KernelEventEnvelope<CompletionRequestReceived>),
                 [nameof(DiagnosticLogEntryProduced)] = typeof(KernelEventEnvelope<DiagnosticLogEntryProduced>),
                 [nameof(DisplayedValueProduced)] = typeof(KernelEventEnvelope<DisplayedValueProduced>),

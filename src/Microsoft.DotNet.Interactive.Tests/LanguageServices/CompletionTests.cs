@@ -50,13 +50,13 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 
             await kernel.SubmitCodeAsync(declarationSubmission);
 
-            await kernel.SendAsync(new RequestCompletion("aaa", new LinePosition(0, 3)));
+            await kernel.SendAsync(new RequestCompletions("aaa", new LinePosition(0, 3)));
 
             KernelEvents
                 .Should()
-                .ContainSingle<CompletionRequestCompleted>()
+                .ContainSingle<CompletionsProduced>()
                 .Which
-                .CompletionList
+                .Completions
                 .Should()
                 .Contain(item => item.DisplayText == variableName);
         }
@@ -89,13 +89,13 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 await kernel.SubmitCodeAsync(submission);
             }
 
-            await kernel.SendAsync(new RequestCompletion("aaa", new LinePosition(0, 2)));
+            await kernel.SendAsync(new RequestCompletions("aaa", new LinePosition(0, 2)));
 
             KernelEvents
                 .Should()
-                .ContainSingle<CompletionRequestCompleted>()
+                .ContainSingle<CompletionsProduced>()
                 .Which
-                .CompletionList
+                .Completions
                 .Should()
                 .Contain(item => item.DisplayText == variableName);
         }
@@ -117,13 +117,13 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 
             await kernel.SubmitCodeAsync(submission);
 
-            await kernel.SendAsync(new RequestCompletion("aaa", new LinePosition(0, 3)));
+            await kernel.SendAsync(new RequestCompletions("aaa", new LinePosition(0, 3)));
 
             KernelEvents
                 .Should()
-                .ContainSingle<CompletionRequestCompleted>()
+                .ContainSingle<CompletionsProduced>()
                 .Which
-                .CompletionList
+                .Completions
                 .Should()
                 .Contain(item => item.DisplayText == variableName);
         }
@@ -148,13 +148,13 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 await kernel.SubmitCodeAsync(submission);
             }
 
-            await kernel.SendAsync(new RequestCompletion("aaa", new LinePosition(0, 3)));
+            await kernel.SendAsync(new RequestCompletions("aaa", new LinePosition(0, 3)));
 
             KernelEvents
                 .Should()
-                .ContainSingle<CompletionRequestCompleted>()
+                .ContainSingle<CompletionsProduced>()
                 .Which
-                .CompletionList
+                .Completions
                 .Should()
                 .Contain(item => item.DisplayText == variableName);
         }
@@ -184,7 +184,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .AllSatisfy(
                     requestCompleted =>
                         requestCompleted
-                            .CompletionList
+                            .Completions
                             .Select(i => i.DisplayText)
                             .Should()
                             .Contain(expected.Split(","),
@@ -214,7 +214,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .AllSatisfy(
                     requestCompleted =>
                         requestCompleted
-                            .CompletionList
+                            .Completions
                             .Select(i => i.DisplayText)
                             .Should()
                             .Contain(expected,
@@ -257,7 +257,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .AllSatisfy(
                     requestCompleted =>
                         requestCompleted
-                            .CompletionList
+                            .Completions
                             .Select(i => i.DisplayText)
                             .Should()
                             .Contain(expected.Split(","),
@@ -288,13 +288,13 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 "aaa$$"
             });
             MarkupTestFile.GetLineAndColumn(completionCode, out var output, out var line, out var column);
-            await kernel.SendAsync(new RequestCompletion(output, new LinePosition(line, column)));
+            await kernel.SendAsync(new RequestCompletions(output, new LinePosition(line, column)));
 
             KernelEvents
                 .Should()
-                .ContainSingle<CompletionRequestCompleted>()
+                .ContainSingle<CompletionsProduced>()
                 .Which
-                .CompletionList
+                .Completions
                 .Should()
                 .Contain(item => item.DisplayText == variableName);
         }
@@ -323,13 +323,13 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 "aaa$$"
             });
             MarkupTestFile.GetLineAndColumn(completionCode, out var output, out var line, out var column);
-            await kernel.SendAsync(new RequestCompletion(output, new LinePosition(line, column)));
+            await kernel.SendAsync(new RequestCompletions(output, new LinePosition(line, column)));
 
             KernelEvents
                 .Should()
-                .ContainSingle<CompletionRequestCompleted>()
+                .ContainSingle<CompletionsProduced>()
                 .Which
-                .CompletionList
+                .Completions
                 .Should()
                 .Contain(item => item.DisplayText == variableName);
         }
@@ -347,11 +347,11 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             });
 
             MarkupTestFile.GetLineAndColumn(fullMarkupCode, out var code, out var line, out var character);
-            await kernel.SendAsync(new RequestCompletion(code, new LinePosition(line, character)));
+            await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
 
             KernelEvents
                 .Should()
-                .ContainSingle<CompletionRequestCompleted>()
+                .ContainSingle<CompletionsProduced>()
                 .Which
                 .LinePositionSpan
                 .Should()
@@ -369,11 +369,11 @@ var y = x + 2;
 ";
 
             MarkupTestFile.GetLineAndColumn(fullMarkupCode, out var code, out var line, out var character);
-            await kernel.SendAsync(new RequestCompletion(code, new LinePosition(line, character)));
+            await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
 
             KernelEvents
                 .Should()
-                .ContainSingle<CompletionRequestCompleted>()
+                .ContainSingle<CompletionsProduced>()
                 .Which
                 .LinePositionSpan
                 .Should()
@@ -387,15 +387,15 @@ var y = x + 2;
 
             var kernel = CreateKernel();
 
-            var result = await kernel.SendAsync(new RequestCompletion("#!", new LinePosition(0, 2)));
+            var result = await kernel.SendAsync(new RequestCompletions("#!", new LinePosition(0, 2)));
 
             var events = result.KernelEvents.ToSubscribedList();
 
             events
                 .Should()
-                .ContainSingle<CompletionRequestCompleted>()
+                .ContainSingle<CompletionsProduced>()
                 .Which
-                .CompletionList
+                .Completions
                 .Select(i => i.Documentation)
                 .Should()
                 .NotContain(i => i.Contains(exeName));

@@ -7,6 +7,7 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public class CompletionRequestReceived : KernelEvent
     {
+        // FIX: (CompletionRequestReceived) delete
         public CompletionRequestReceived(KernelCommand command) : base(command)
         {
         }

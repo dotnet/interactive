@@ -61,9 +61,9 @@ namespace Microsoft.DotNet.Interactive.Profiler
             }
         }
 
-        private static RequestCompletion CreateRequestCompletion(Kernel kernel)
+        private static RequestCompletions CreateRequestCompletion(Kernel kernel)
         {
-            return new RequestCompletion(
+            return new RequestCompletions(
                 "aaa",
                 new LinePosition(0, 3),
                 kernel.Name);

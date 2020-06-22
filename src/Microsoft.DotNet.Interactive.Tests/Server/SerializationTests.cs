@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new FormattedValue("text/html", "<b>hi!</b>")
                 );
 
-                yield return new RequestCompletion("Cons", new LinePosition(0, 4), "csharp");
+                yield return new RequestCompletions("Cons", new LinePosition(0, 4), "csharp");
 
                 yield return new RequestDiagnostics();
 
@@ -158,9 +158,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new CompleteCodeSubmissionReceived(submitCode);
 
-                var requestCompletion = new RequestCompletion("Console.Wri", new LinePosition(0, 11));
+                var requestCompletion = new RequestCompletions("Console.Wri", new LinePosition(0, 11));
 
-                yield return new CompletionRequestCompleted(
+                yield return new CompletionsProduced(
                     new[]
                     {
                         new CompletionItem(

@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         DotNetLanguageKernel,
         IExtensibleKernel,
         ISupportNuget,
-        IKernelCommandHandler<RequestCompletion>,
+        IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestHoverText>,
         IKernelCommandHandler<SubmitCode>
     {
@@ -268,7 +268,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         }
 
         public async Task HandleAsync(
-            RequestCompletion command,
+            RequestCompletions command,
             KernelInvocationContext context)
         {
             var completionRequestReceived = new CompletionRequestReceived(command);
@@ -280,7 +280,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                     command.Code,
                     SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.LinePosition));
 
-            context.Publish(new CompletionRequestCompleted(completionList, command));
+            context.Publish(new CompletionsProduced(completionList, command));
         }
 
         private async Task<IEnumerable<CompletionItem>> GetCompletionList(

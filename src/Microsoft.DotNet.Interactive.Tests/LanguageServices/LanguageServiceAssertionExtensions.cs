@@ -33,12 +33,12 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         }
 
         public static AndWhichConstraint<
-            GenericCollectionAssertions<CompletionRequestCompleted>,
-            IEnumerable<CompletionRequestCompleted>> ProvideCompletions(
+            GenericCollectionAssertions<CompletionsProduced>,
+            IEnumerable<CompletionsProduced>> ProvideCompletions(
             this GenericCollectionAssertions<MarkedUpCodeLinePosition> assertions,
             Kernel kernel)
         {
-            var items = new List<CompletionRequestCompleted>();
+            var items = new List<CompletionsProduced>();
 
             using var _ = new AssertionScope();
 
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             {
                 var result = Task.Run(() =>
                                           kernel.SendAsync(
-                                              new RequestCompletion(
+                                              new RequestCompletions(
                                                   position.MarkedUpCode.Code,
                                                   position.LinePosition))).Result;
 
@@ -54,15 +54,15 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 
                 var requestCompleted = events
                                        .Should()
-                                       .ContainSingle<CompletionRequestCompleted>()
+                                       .ContainSingle<CompletionsProduced>()
                                        .Which;
 
                 items.Add(requestCompleted);
             }
 
             return new AndWhichConstraint<
-                GenericCollectionAssertions<CompletionRequestCompleted>, 
-                IEnumerable<CompletionRequestCompleted>>(
+                GenericCollectionAssertions<CompletionsProduced>, 
+                IEnumerable<CompletionsProduced>>(
                 items.Should(), 
                 items);
         }

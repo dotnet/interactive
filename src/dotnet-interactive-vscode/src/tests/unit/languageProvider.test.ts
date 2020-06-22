@@ -7,18 +7,18 @@ import { ClientMapper } from '../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
 import { provideCompletion } from './../../languageServices/completion';
 import { provideHover } from './../../languageServices/hover';
-import { CommandSucceededType, CompletionRequestCompletedType } from '../../contracts';
+import { CommandSucceededType, CompletionsProducedType } from '../../contracts';
 
 describe('LanguageProvider tests', () => {
     it('CompletionProvider', async () => {
         let token = '123';
         let clientMapper = new ClientMapper(() => TestKernelTransport.create({
-            'RequestCompletion': [
+            'RequestCompletions': [
                 {
-                    eventType: CompletionRequestCompletedType,
+                    eventType: CompletionsProducedType,
                     event: {
                         range: null,
-                        completionList: [
+                        completions: [
                             {
                                 displayText: 'Sqrt',
                                 kind: 'Method',
@@ -54,7 +54,7 @@ describe('LanguageProvider tests', () => {
         let completion = await provideCompletion(clientMapper, 'csharp', document, position, token);
         expect(completion).to.deep.equal({
             range: null,
-            completionList: [
+            completions: [
                 {
                     displayText: 'Sqrt',
                     kind: 'Method',

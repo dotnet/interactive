@@ -173,14 +173,14 @@ json"
 
             await kernel.SendAsync(new SubmitCode(code));
 
-            await kernel.SendAsync(new RequestCompletion("Newtonsoft.Json.JsonConvert.", new LinePosition(0, 28)));
+            await kernel.SendAsync(new RequestCompletions("Newtonsoft.Json.JsonConvert.", new LinePosition(0, 28)));
 
             KernelEvents.Should()
                         .ContainSingle(e => e is CompletionRequestReceived);
 
-            KernelEvents.Single(e => e is CompletionRequestCompleted)
-                        .As<CompletionRequestCompleted>()
-                        .CompletionList
+            KernelEvents.Single(e => e is CompletionsProduced)
+                        .As<CompletionsProduced>()
+                        .Completions
                         .Should()
                         .Contain(i => i.DisplayText == "SerializeObject");
         }

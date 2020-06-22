@@ -384,8 +384,8 @@ namespace Microsoft.DotNet.Interactive
             _disposables.Add(disposable);
         }
 
-        private Task HandleRequestCompletionAsync(
-            RequestCompletion command,
+        private Task HandleRequestCompletionsAsync(
+            RequestCompletions command,
             KernelInvocationContext context)
         {
             if (command.LanguageNode is DirectiveNode directiveNode)
@@ -401,7 +401,7 @@ namespace Microsoft.DotNet.Interactive
                 var completions = GetDirectiveCompletionItems(directiveNode, requestPosition);
 
                 context.Publish(
-                    new CompletionRequestCompleted(
+                    new CompletionsProduced(
                         completions, command, resultRange));
             }
 
@@ -426,39 +426,26 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             KernelInvocationContext context)
         {
-            if (command is KernelCommand kb)
+            if (command.Handler == null)
             {
-                if (kb.Handler == null)
+                switch (command, this)
                 {
-                    switch (command, this)
-                    {
-                        case (SubmitCode submitCode, IKernelCommandHandler<SubmitCode> submitCodeHandler):
-                            SetHandler(submitCodeHandler, submitCode);
-                            break;
+                    case (SubmitCode submitCode, IKernelCommandHandler<SubmitCode> submitCodeHandler):
+                        SetHandler(submitCodeHandler, submitCode);
+                        break;
 
-                        case (RequestCompletion rq, _)
-                            when rq.LanguageNode is DirectiveNode:
-                            rq.Handler = (__, ___) => HandleRequestCompletionAsync(rq, context);
-                            break;
+                    case (RequestCompletions rq, _)
+                        when rq.LanguageNode is DirectiveNode:
+                        rq.Handler = (__, ___) => HandleRequestCompletionsAsync(rq, context);
+                        break;
 
-                        case (RequestCompletion requestCompletion, IKernelCommandHandler<RequestCompletion> requestCompletionHandler):
-                            SetHandler(requestCompletionHandler, requestCompletion);
-                            break;
+                    case (RequestCompletions requestCompletion, IKernelCommandHandler<RequestCompletions> requestCompletionHandler):
+                        SetHandler(requestCompletionHandler, requestCompletion);
+                        break;
 
-                        case (RequestHoverText hoverCommand, IKernelCommandHandler<RequestHoverText> requestHoverTextHandler):
-                            SetHandler(requestHoverTextHandler, hoverCommand);
-                            break;
-
-                        case (ChangeWorkingDirectory cwd, _):
-                            cwd.Handler = (__, ___) =>
-                            {
-                                // FIX: (TrySetHandler) move this to the command class
-                                Directory.SetCurrentDirectory(cwd.WorkingDirectory.FullName);
-                                context.Publish(new WorkingDirectoryChanged(cwd.WorkingDirectory, cwd));
-                                return Task.CompletedTask;
-                            };
-                            break;
-                    }
+                    case (RequestHoverText hoverCommand, IKernelCommandHandler<RequestHoverText> requestHoverTextHandler):
+                        SetHandler(requestHoverTextHandler, hoverCommand);
+                        break;
                 }
             }
         }

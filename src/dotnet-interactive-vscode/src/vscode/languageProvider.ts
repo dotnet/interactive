@@ -39,7 +39,7 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
                         new vscode.Position(result.linePositionSpan.end.line, result.linePositionSpan.end.character));
                 }
                 let completionItems: Array<vscode.CompletionItem> = [];
-                for (let item of result.completionList) {
+                for (let item of result.completions) {
                     let vscodeItem : vscode.CompletionItem = {
                         // range: new vscode.Range(position, position),
                         label: item.displayText,

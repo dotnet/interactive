@@ -6,9 +6,9 @@ using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class RequestCompletion : LanguageServiceCommand
+    public class RequestCompletions : LanguageServiceCommand
     {
-        public RequestCompletion(
+        public RequestCompletions(
             string code, 
             LinePosition linePosition, 
             string targetKernelName = null)
@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         {
         }
 
-        internal RequestCompletion(
+        internal RequestCompletions(
             LanguageNode languageNode, 
             LinePosition linePosition, 
             KernelCommand parent = null) 
@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.Commands
             LanguageNode languageNode, 
             LinePosition position)
         {
-            return new RequestCompletion(languageNode, position, Parent);
+            return new RequestCompletions(languageNode, position, Parent);
         }
     }
 }

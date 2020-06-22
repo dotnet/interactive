@@ -5,8 +5,8 @@ import {
     CommandFailed,
     CommandFailedType,
     CommandSucceededType,
-    CompletionRequestCompleted,
-    CompletionRequestCompletedType,
+    CompletionsProduced,
+    CompletionsProducedType,
     DisplayEvent,
     DisplayedValueProducedType,
     DisplayedValueUpdatedType,
@@ -20,8 +20,8 @@ import {
     KernelEventEnvelopeObserver,
     KernelEventType,
     KernelTransport,
-    RequestCompletion,
-    RequestCompletionType,
+    RequestCompletions,
+    RequestCompletionsType,
     RequestHoverText,
     RequestHoverTextType,
     ReturnValueProducedType,
@@ -122,8 +122,8 @@ export class InteractiveClient {
         });
     }
 
-    completion(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionRequestCompleted> {
-        let command: RequestCompletion = {
+    completion(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionsProduced> {
+        let command: RequestCompletions = {
             code: code,
             linePosition: {
                 line,
@@ -131,7 +131,7 @@ export class InteractiveClient {
             },
             targetKernelName: language
         };
-        return this.submitCommandAndGetResult<CompletionRequestCompleted>(command, RequestCompletionType, CompletionRequestCompletedType, token);
+        return this.submitCommandAndGetResult<CompletionsProduced>(command, RequestCompletionsType, CompletionsProducedType, token);
     }
 
     hover(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<HoverTextProduced> {

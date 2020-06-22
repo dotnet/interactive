@@ -7,12 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\..\Microsoft.DotNet.Interactive.Tests\TestUtility.cs" Link="TestUtility.cs" />
+    <Compile Include="..\..\..\src\Microsoft.DotNet.Interactive.Tests\Utility\TestUtility.cs" Link="TestUtility.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.20111.6" />
-    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.20111.6" />
+    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.20321.3" />
+    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.20321.3" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
     <PackageReference Include="coverlet.collector" Version="1.0.1" />

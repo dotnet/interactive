@@ -9,7 +9,7 @@ export const AddPackageType = "AddPackage";
 export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
-export const RequestCompletionType = "RequestCompletion";
+export const RequestCompletionsType = "RequestCompletions";
 export const RequestDiagnosticsType = "RequestDiagnostics";
 export const RequestHoverTextType = "RequestHoverText";
 export const SubmitCodeType = "SubmitCode";
@@ -20,7 +20,7 @@ export type KernelCommandType =
     | typeof ChangeWorkingDirectoryType
     | typeof DisplayErrorType
     | typeof DisplayValueType
-    | typeof RequestCompletionType
+    | typeof RequestCompletionsType
     | typeof RequestDiagnosticsType
     | typeof RequestHoverTextType
     | typeof SubmitCodeType
@@ -48,7 +48,7 @@ export interface DisplayValue extends KernelCommand {
     valueId: string;
 }
 
-export interface RequestCompletion extends LanguageServiceCommand {
+export interface RequestCompletions extends LanguageServiceCommand {
 }
 
 export interface LanguageServiceCommand extends KernelCommand {
@@ -79,8 +79,8 @@ export const CodeSubmissionReceivedType = "CodeSubmissionReceived";
 export const CommandFailedType = "CommandFailed";
 export const CommandSucceededType = "CommandSucceeded";
 export const CompleteCodeSubmissionReceivedType = "CompleteCodeSubmissionReceived";
-export const CompletionRequestCompletedType = "CompletionRequestCompleted";
 export const CompletionRequestReceivedType = "CompletionRequestReceived";
+export const CompletionsProducedType = "CompletionsProduced";
 export const DiagnosticLogEntryProducedType = "DiagnosticLogEntryProduced";
 export const DisplayedValueProducedType = "DisplayedValueProduced";
 export const DisplayedValueUpdatedType = "DisplayedValueUpdated";
@@ -100,8 +100,8 @@ export type KernelEventType =
     | typeof CommandFailedType
     | typeof CommandSucceededType
     | typeof CompleteCodeSubmissionReceivedType
-    | typeof CompletionRequestCompletedType
     | typeof CompletionRequestReceivedType
+    | typeof CompletionsProducedType
     | typeof DiagnosticLogEntryProducedType
     | typeof DisplayedValueProducedType
     | typeof DisplayedValueUpdatedType
@@ -134,12 +134,12 @@ export interface CompleteCodeSubmissionReceived extends KernelEvent {
     code: string;
 }
 
-export interface CompletionRequestCompleted extends KernelEvent {
-    linePositionSpan?: LinePositionSpan;
-    completionList: Array<CompletionItem>;
+export interface CompletionRequestReceived extends KernelEvent {
 }
 
-export interface CompletionRequestReceived extends KernelEvent {
+export interface CompletionsProduced extends KernelEvent {
+    linePositionSpan?: LinePositionSpan;
+    completions: Array<CompletionItem>;
 }
 
 export interface DiagnosticLogEntryProduced extends DiagnosticEvent {

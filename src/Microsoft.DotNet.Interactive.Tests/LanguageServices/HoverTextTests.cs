@@ -188,7 +188,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .Should()
                 .ContainSingle<HoverTextProduced>()
                 .Which
-                .Range
+                .LinePositionSpan
                 .Should()
                 .Be(new LinePositionSpan(new LinePosition(line, 8), new LinePosition(line, 17)));
         }

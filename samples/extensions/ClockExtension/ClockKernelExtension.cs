@@ -12,7 +12,7 @@ namespace ClockExtension
 {
     public class ClockKernelExtension : IKernelExtension
     {
-        public async Task OnLoadAsync(Kernel kernel)
+        public async Task OnLoadAsync(IKernel kernel)
         {
             Formatter<DateTime>.Register((date, writer) =>
             {
@@ -24,7 +24,7 @@ namespace ClockExtension
                 writer.Write(date.DrawSvgClock());
             }, "text/html");
 
-            if (kernel is Kernel kernelBase)
+            if (kernel is KernelBase kernelBase)
             {
                 var clockCommand = new Command("#!clock", "Displays a clock showing the current or specified time.")
                 {

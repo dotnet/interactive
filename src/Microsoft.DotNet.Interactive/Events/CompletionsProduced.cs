@@ -9,16 +9,16 @@ using Microsoft.DotNet.Interactive.Extensions;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class CompletionRequestCompleted : KernelEvent
+    public class CompletionsProduced : KernelEvent
     {
         private readonly LinePositionSpan? _linePositionSpan;
 
-        public CompletionRequestCompleted(
+        public CompletionsProduced(
             IEnumerable<CompletionItem> completionList,
-            RequestCompletion command,
+            RequestCompletions command,
             LinePositionSpan? linePositionSpan = null) : base(command)
         {
-            CompletionList = completionList ?? throw new ArgumentNullException(nameof(completionList));
+            Completions = completionList ?? throw new ArgumentNullException(nameof(completionList));
             _linePositionSpan = linePositionSpan;
         }
 
@@ -28,8 +28,8 @@ namespace Microsoft.DotNet.Interactive.Events
         public LinePositionSpan? LinePositionSpan => this.CalculateLineOffsetFromParentCommand(_linePositionSpan);
 
         /// <summary>
-        /// The list of completion options.
+        /// The list of completions.
         /// </summary>
-        public IEnumerable<CompletionItem> CompletionList { get; }
+        public IEnumerable<CompletionItem> Completions { get; }
     }
 }
