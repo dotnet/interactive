@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
         [Theory(Timeout = 45000)]
         [MemberData(nameof(Events))]
-        public void All_event_types_are_round_trip_serializable(IKernelEvent @event)
+        public void All_event_types_are_round_trip_serializable(KernelEvent @event)
         {
             var originalEnvelope = KernelEventEnvelope.Create(@event);
 
@@ -83,11 +83,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [Fact(Timeout = 45000)]
         public void All_event_types_are_tested_for_round_trip_serialization()
         {
-            var eventTypes = typeof(IKernelEvent)
+            var eventTypes = typeof(KernelEvent)
                              .Assembly
                              .ExportedTypes
                              .Concrete()
-                             .DerivedFrom(typeof(IKernelEvent));
+                             .DerivedFrom(typeof(KernelEvent));
 
             Events()
                 .Select(e => e[0].GetType())
@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 yield return new object[] { @event };
             }
 
-            IEnumerable<IKernelEvent> events()
+            IEnumerable<KernelEvent> events()
             {
                 var submitCode = new SubmitCode("123");
 

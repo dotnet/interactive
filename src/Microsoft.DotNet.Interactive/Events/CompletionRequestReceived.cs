@@ -5,7 +5,7 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class CompletionRequestReceived : KernelEventBase
+    public class CompletionRequestReceived : KernelEvent
     {
         public CompletionRequestReceived(KernelCommand command) : base(command)
         {

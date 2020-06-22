@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.App.Http
             }
         }
 
-        private async Task PublishEventToContext(IKernelEvent kernelEvent, IHubContext<KernelHub> hubContext)
+        private async Task PublishEventToContext(KernelEvent kernelEvent, IHubContext<KernelHub> hubContext)
         {
             var eventEnvelope = KernelEventEnvelope.Create(kernelEvent);
 

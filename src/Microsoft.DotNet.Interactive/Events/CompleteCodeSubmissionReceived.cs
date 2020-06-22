@@ -5,7 +5,7 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class CompleteCodeSubmissionReceived : KernelEventBase
+    public class CompleteCodeSubmissionReceived : KernelEvent
     {
         public CompleteCodeSubmissionReceived(SubmitCode submitCode) : base(submitCode)
         {

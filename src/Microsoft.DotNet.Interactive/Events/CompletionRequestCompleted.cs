@@ -9,7 +9,7 @@ using Microsoft.DotNet.Interactive.Extensions;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class CompletionRequestCompleted : KernelEventBase
+    public class CompletionRequestCompleted : KernelEvent
     {
         private LinePositionSpan? _range;
 

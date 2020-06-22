@@ -14,8 +14,8 @@ namespace Microsoft.DotNet.Interactive.Server
 {
     public abstract class KernelEventEnvelope : IKernelEventEnvelope
     {
-        private static readonly ConcurrentDictionary<Type, Func<IKernelEvent, IKernelEventEnvelope>> _envelopeFactories =
-            new ConcurrentDictionary<Type, Func<IKernelEvent, IKernelEventEnvelope>>();
+        private static readonly ConcurrentDictionary<Type, Func<KernelEvent, IKernelEventEnvelope>> _envelopeFactories =
+            new ConcurrentDictionary<Type, Func<KernelEvent, IKernelEventEnvelope>>();
 
         private static Dictionary<string, Type> _envelopeTypesByEventTypeName;
 
@@ -28,9 +28,9 @@ namespace Microsoft.DotNet.Interactive.Server
 
         internal static Type EventTypeByName(string name) => _eventTypesByEventTypeName[name];
 
-        private readonly IKernelEvent _event;
+        private readonly KernelEvent _event;
 
-        protected KernelEventEnvelope(IKernelEvent @event)
+        protected KernelEventEnvelope(KernelEvent @event)
         {
             _event = @event ?? throw new ArgumentNullException(nameof(@event));
             CommandType = @event.Command?.GetType().Name;
@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public abstract string EventType { get; }
 
-        IKernelEvent IKernelEventEnvelope.Event => _event;
+        KernelEvent IKernelEventEnvelope.Event => _event;
 
         public static void ResetToDefaults()
         {
@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Interactive.Server
                     pair => pair.Value.GetGenericArguments()[0]);
         }
 
-        public static IKernelEventEnvelope Create(IKernelEvent @event)
+        public static IKernelEventEnvelope Create(KernelEvent @event)
         {
             var factory = _envelopeFactories.GetOrAdd(
                 @event.GetType(),
@@ -84,14 +84,14 @@ namespace Microsoft.DotNet.Interactive.Server
                     var constructor = genericType.GetConstructors().Single();
 
                     var eventParameter = Expression.Parameter(
-                        typeof(IKernelEvent),
+                        typeof(KernelEvent),
                         "e");
 
                     var newExpression = Expression.New(
                         constructor,
                         Expression.Convert(eventParameter, eventType));
 
-                    var expression = Expression.Lambda<Func<IKernelEvent, IKernelEventEnvelope>>(
+                    var expression = Expression.Lambda<Func<KernelEvent, IKernelEventEnvelope>>(
                         newExpression,
                         eventParameter);
 
@@ -117,18 +117,18 @@ namespace Microsoft.DotNet.Interactive.Server
 
             var eventType = EventTypeByName(eventTypeName);
 
-            var @event = (IKernelEvent) eventJson.ToObject(eventType, Serializer.JsonSerializer);
+            var @event = (KernelEvent) eventJson.ToObject(eventType, Serializer.JsonSerializer);
 
-            if (@event is KernelEventBase eventBase &&
+            if (@event is {} &&
                 commandEnvelope is {})
             {
-                eventBase.Command = commandEnvelope.Command;
+                @event.Command = commandEnvelope.Command;
             }
 
             return Create(@event);
         }
 
-        public static string Serialize(IKernelEvent @event) => Serialize(Create(@event));
+        public static string Serialize(KernelEvent @event) => Serialize(Create(@event));
 
         public static string Serialize(IKernelEventEnvelope eventEnvelope)
         {

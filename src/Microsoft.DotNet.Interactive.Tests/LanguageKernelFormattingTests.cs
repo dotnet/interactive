@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var valueProduced = await result
                                       .KernelEvents
-                                      .OfType<DisplayEventBase>()
+                                      .OfType<DisplayEvent>()
                                       .Timeout(5.Seconds())
                                       .FirstAsync();
 

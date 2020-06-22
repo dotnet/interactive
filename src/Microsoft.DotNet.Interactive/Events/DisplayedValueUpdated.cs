@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class DisplayedValueUpdated : DisplayEventBase
+    public class DisplayedValueUpdated : DisplayEvent
     {
         public DisplayedValueUpdated(
             object value,

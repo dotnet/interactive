@@ -5,7 +5,7 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class DiagnosticLogEntryProduced : DiagnosticEventBase
+    public class DiagnosticLogEntryProduced : DiagnosticEvent
     {
         public DiagnosticLogEntryProduced(
             string message,

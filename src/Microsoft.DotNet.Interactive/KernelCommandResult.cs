@@ -8,11 +8,11 @@ namespace Microsoft.DotNet.Interactive
 {
     internal class KernelCommandResult : IKernelCommandResult
     {
-        public KernelCommandResult(IObservable<IKernelEvent> events)
+        public KernelCommandResult(IObservable<KernelEvent> events)
         {
             KernelEvents = events ?? throw new ArgumentNullException(nameof(events));
         }
 
-        public IObservable<IKernelEvent> KernelEvents { get; }
+        public IObservable<KernelEvent> KernelEvents { get; }
     }
 }

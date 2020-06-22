@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive
     {
         private static readonly AsyncLocal<KernelInvocationContext> _current = new AsyncLocal<KernelInvocationContext>();
 
-        private readonly ReplaySubject<IKernelEvent> _events = new ReplaySubject<IKernelEvent>();
+        private readonly ReplaySubject<KernelEvent> _events = new ReplaySubject<KernelEvent>();
 
         private readonly HashSet<KernelCommand> _childCommands = new HashSet<KernelCommand>();
 
@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.Interactive
             _onCompleteActions.Add(onComplete);
         }
 
-        public void Publish(IKernelEvent @event)
+        public void Publish(KernelEvent @event)
         {
             if (IsComplete)
             {
@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public IObservable<IKernelEvent> KernelEvents => _events;
+        public IObservable<KernelEvent> KernelEvents => _events;
 
         public IKernelCommandResult Result { get; }
 

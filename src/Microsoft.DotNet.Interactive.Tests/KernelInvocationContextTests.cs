@@ -70,11 +70,11 @@ namespace Microsoft.DotNet.Interactive.Tests
             });
 
             var result = await kernel.SendAsync(new SubmitCode("2"));
-            var events = new List<IKernelEvent>();
+            var events = new List<KernelEvent>();
 
             result.KernelEvents.Subscribe(e => events.Add(e));
 
-            var values = events.OfType<DisplayEventBase>()
+            var values = events.OfType<DisplayEvent>()
                                .Select(v => v.Value);
 
             values

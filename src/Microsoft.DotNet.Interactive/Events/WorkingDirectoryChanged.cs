@@ -6,7 +6,7 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class WorkingDirectoryChanged : KernelEventBase
+    public class WorkingDirectoryChanged : KernelEvent
     {
         public DirectoryInfo WorkingDirectory { get; }
 

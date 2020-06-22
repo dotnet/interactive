@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         }
 
 
-        protected override void OnKernelEventReceived(IKernelEvent @event, JupyterRequestContext context)
+        protected override void OnKernelEventReceived(KernelEvent @event, JupyterRequestContext context)
         {
            
         }

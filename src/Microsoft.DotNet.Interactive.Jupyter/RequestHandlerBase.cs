@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             KernelEvents = Kernel.KernelEvents.ObserveOn(scheduler ?? throw new ArgumentNullException(nameof(scheduler)));
         }
 
-        protected IObservable<IKernelEvent> KernelEvents { get; }
+        protected IObservable<KernelEvent> KernelEvents { get; }
 
         protected FrontendEnvironment FrontendEnvironment => (Kernel as KernelBase)?.FrontendEnvironment;
 
@@ -43,14 +43,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 command,
                 CancellationToken.None);
 
-            bool ShouldForward(IKernelEvent e)
+            bool ShouldForward(KernelEvent e)
             {
                 return (e.Command?.GetToken() == context.Token) || e.Command.ShouldPublishInternalEvents();
             }
         }
 
         protected abstract void OnKernelEventReceived(
-            IKernelEvent @event,
+            KernelEvent @event,
             JupyterRequestContext context);
 
         protected static T GetJupyterRequest(JupyterRequestContext context)

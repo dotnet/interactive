@@ -8,6 +8,6 @@ namespace Microsoft.DotNet.Interactive
 {
     public interface IKernelCommandResult
     {
-        IObservable<IKernelEvent> KernelEvents { get; }
+        IObservable<KernelEvent> KernelEvents { get; }
     }
 }

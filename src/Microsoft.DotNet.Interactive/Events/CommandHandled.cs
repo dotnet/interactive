@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class CommandHandled : KernelEventBase
+    public class CommandHandled : KernelEvent
     {
         [JsonConstructor]
         internal CommandHandled()

@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive
                     {
                         if (KernelInvocationContext.Current is {} currentContext)
                         {
-                            if (e is DiagnosticEventBase || e is DisplayEventBase)
+                            if (e is DiagnosticEvent || e is DisplayEvent)
                             {
                                 return;
                             }

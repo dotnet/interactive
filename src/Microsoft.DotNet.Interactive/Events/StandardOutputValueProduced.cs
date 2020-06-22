@@ -6,7 +6,7 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class StandardOutputValueProduced : DisplayEventBase
+    public class StandardOutputValueProduced : DisplayEvent
     {
         public StandardOutputValueProduced(
             object value,

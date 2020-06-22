@@ -9,7 +9,7 @@ using Microsoft.DotNet.Interactive.Extensions;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class HoverTextProduced : KernelEventBase
+    public class HoverTextProduced : KernelEvent
     {
         private LinePositionSpan? _range;
 

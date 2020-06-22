@@ -121,7 +121,6 @@ export interface CodeSubmissionReceived extends KernelEvent {
 }
 
 export interface KernelEvent {
-    command: KernelCommand;
 }
 
 export interface CommandFailed extends KernelEvent {
@@ -143,26 +142,26 @@ export interface CompletionRequestCompleted extends KernelEvent {
 export interface CompletionRequestReceived extends KernelEvent {
 }
 
-export interface DiagnosticLogEntryProduced extends DiagnosticEventBase {
+export interface DiagnosticLogEntryProduced extends DiagnosticEvent {
     message: string;
 }
 
-export interface DiagnosticEventBase extends KernelEvent {
+export interface DiagnosticEvent extends KernelEvent {
 }
 
-export interface DisplayedValueProduced extends DisplayEventBase {
+export interface DisplayedValueProduced extends DisplayEvent {
 }
 
-export interface DisplayEventBase extends KernelEvent {
+export interface DisplayEvent extends KernelEvent {
     value: any;
     formattedValues: Array<FormattedValue>;
     valueId: string;
 }
 
-export interface DisplayedValueUpdated extends DisplayEventBase {
+export interface DisplayedValueUpdated extends DisplayEvent {
 }
 
-export interface ErrorProduced extends DisplayEventBase {
+export interface ErrorProduced extends DisplayEvent {
     message: string;
 }
 
@@ -186,13 +185,13 @@ export interface PasswordRequested extends KernelEvent {
     prompt: string;
 }
 
-export interface ReturnValueProduced extends DisplayEventBase {
+export interface ReturnValueProduced extends DisplayEvent {
 }
 
-export interface StandardErrorValueProduced extends DisplayEventBase {
+export interface StandardErrorValueProduced extends DisplayEvent {
 }
 
-export interface StandardOutputValueProduced extends DisplayEventBase {
+export interface StandardOutputValueProduced extends DisplayEvent {
 }
 
 export interface WorkingDirectoryChanged extends KernelEvent {

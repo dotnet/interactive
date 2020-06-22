@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class CommandFailed : KernelEventBase
+    public class CommandFailed : KernelEvent
     {
         public CommandFailed(
             Exception exception,

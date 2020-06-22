@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.Server
             await _kernel.SendAsync(streamKernelCommand.Command);
         }
 
-        private void WriteEventToOutput(IKernelEvent kernelEvent)
+        private void WriteEventToOutput(KernelEvent kernelEvent)
         {
             if (kernelEvent is ReturnValueProduced rvp && rvp.Value is DisplayedValue)
             {

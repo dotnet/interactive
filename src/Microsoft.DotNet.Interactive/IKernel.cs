@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive
     {
         string Name { get; }
 
-        IObservable<IKernelEvent> KernelEvents { get; }
+        IObservable<KernelEvent> KernelEvents { get; }
 
         Task<IKernelCommandResult> SendAsync(
             KernelCommand command, 

@@ -159,7 +159,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             await kernel.SendAsync(command);
         }
 
-        protected SubscribedList<IKernelEvent> KernelEvents { get; private set; }
+        protected SubscribedList<KernelEvent> KernelEvents { get; private set; }
 
         protected void DisposeAfterTest(IDisposable disposable)
         {

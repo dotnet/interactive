@@ -6,7 +6,7 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class StandardErrorValueProduced : DisplayEventBase
+    public class StandardErrorValueProduced : DisplayEvent
     {
         public StandardErrorValueProduced(
             object value,

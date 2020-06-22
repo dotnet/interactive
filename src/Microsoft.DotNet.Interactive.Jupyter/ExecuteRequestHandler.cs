@@ -51,12 +51,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         }
 
         protected override void OnKernelEventReceived(
-            IKernelEvent @event, 
+            KernelEvent @event, 
             JupyterRequestContext context)
         {
             switch (@event)
             {
-                case DisplayEventBase displayEvent:
+                case DisplayEvent displayEvent:
                     OnDisplayEvent(displayEvent, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
                     break;
                 case DiagnosticLogEntryProduced logEvent:
@@ -140,7 +140,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             jupyterMessageSender.Send(executeReplyPayload);
         }
 
-        private void OnDisplayEvent(DisplayEventBase displayEvent,
+        private void OnDisplayEvent(DisplayEvent displayEvent,
             ZeroMQMessage request,
             IJupyterMessageSender jupyterMessageSender)
         {

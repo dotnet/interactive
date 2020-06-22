@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive
     public abstract class KernelBase : 
         IKernel
     {
-        private readonly Subject<IKernelEvent> _kernelEvents = new Subject<IKernelEvent>();
+        private readonly Subject<KernelEvent> _kernelEvents = new Subject<KernelEvent>();
         private readonly CompositeDisposable _disposables;
         private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new ConcurrentQueue<KernelCommand>();
         private readonly ConcurrentDictionary<Type, object> _properties = new ConcurrentDictionary<Type, object>();
@@ -229,7 +229,7 @@ namespace Microsoft.DotNet.Interactive
             set => _frontendEnvironment = value;
         }
 
-        public IObservable<IKernelEvent> KernelEvents => _kernelEvents;
+        public IObservable<KernelEvent> KernelEvents => _kernelEvents;
 
         public string Name { get; set; }
 
@@ -363,7 +363,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        protected void PublishEvent(IKernelEvent kernelEvent)
+        protected void PublishEvent(KernelEvent kernelEvent)
         {
             if (kernelEvent == null)
             {

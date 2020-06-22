@@ -6,7 +6,7 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class ErrorProduced : DisplayEventBase
+    public class ErrorProduced : DisplayEvent
     {
         public ErrorProduced(
             string message,

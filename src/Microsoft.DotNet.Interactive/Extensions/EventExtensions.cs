@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.Extensions
 {
     internal static class EventExtensions
     {
-        public static LinePositionSpan? CalculateLineOffsetFromParentCommand(this KernelEventBase @event, LinePositionSpan? initialRange)
+        public static LinePositionSpan? CalculateLineOffsetFromParentCommand(this KernelEvent @event, LinePositionSpan? initialRange)
         {
             if (!initialRange.HasValue)
             {

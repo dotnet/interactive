@@ -26,15 +26,15 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         }
 
         protected override void OnKernelEventReceived(
-            IKernelEvent @event,
+            KernelEvent @event,
             JupyterRequestContext context)
         {
             switch (@event)
             {
-                case CompleteCodeSubmissionReceived completeCodeSubmissionReceived:
+                case CompleteCodeSubmissionReceived _:
                     Reply( true, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
                     break;
-                case IncompleteCodeSubmissionReceived incompleteCodeSubmissionReceived:
+                case IncompleteCodeSubmissionReceived _:
                     Reply( false, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
                     break;
             }

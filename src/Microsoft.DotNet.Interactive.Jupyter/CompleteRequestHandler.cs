@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         }
 
         protected override void OnKernelEventReceived(
-            IKernelEvent @event, 
+            KernelEvent @event, 
             JupyterRequestContext context)
         {
             switch (@event)

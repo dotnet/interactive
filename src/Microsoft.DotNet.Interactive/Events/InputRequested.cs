@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class InputRequested : KernelEventBase
+    public class InputRequested : KernelEvent
     {
         [JsonConstructor]
         internal InputRequested(string prompt)
