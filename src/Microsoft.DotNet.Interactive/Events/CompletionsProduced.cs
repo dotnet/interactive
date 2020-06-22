@@ -14,11 +14,11 @@ namespace Microsoft.DotNet.Interactive.Events
         private readonly LinePositionSpan? _linePositionSpan;
 
         public CompletionsProduced(
-            IEnumerable<CompletionItem> completionList,
+            IEnumerable<CompletionItem> completions,
             RequestCompletions command,
             LinePositionSpan? linePositionSpan = null) : base(command)
         {
-            Completions = completionList ?? throw new ArgumentNullException(nameof(completionList));
+            Completions = completions ?? throw new ArgumentNullException(nameof(completions));
             _linePositionSpan = linePositionSpan;
         }
 

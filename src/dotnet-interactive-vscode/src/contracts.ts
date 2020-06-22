@@ -167,7 +167,7 @@ export interface ErrorProduced extends DisplayEvent {
 
 export interface HoverTextProduced extends KernelEvent {
     content: Array<FormattedValue>;
-    range?: LinePositionSpan;
+    linePositionSpan?: LinePositionSpan;
 }
 
 export interface IncompleteCodeSubmissionReceived extends KernelEvent {
