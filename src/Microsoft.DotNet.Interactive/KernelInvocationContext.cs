@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Interactive
 
         public IObservable<KernelEvent> KernelEvents => _events;
 
-        public IKernelCommandResult Result { get; }
+        public KernelCommandResult Result { get; }
 
         public static KernelInvocationContext Establish(KernelCommand command)
         {

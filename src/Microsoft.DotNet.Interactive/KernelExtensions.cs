@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive
             };
         }
 
-        public static Task<IKernelCommandResult> SendAsync(
+        public static Task<KernelCommandResult> SendAsync(
             this IKernel kernel,
             KernelCommand command)
         {
@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive
             return kernel.SendAsync(command, CancellationToken.None);
         }
 
-        public static Task<IKernelCommandResult> SubmitCodeAsync(
+        public static Task<KernelCommandResult> SubmitCodeAsync(
             this IKernel kernel,
             string code)
         {

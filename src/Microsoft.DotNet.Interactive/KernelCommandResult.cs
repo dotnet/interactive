@@ -6,9 +6,9 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal class KernelCommandResult : IKernelCommandResult
+    public class KernelCommandResult
     {
-        public KernelCommandResult(IObservable<KernelEvent> events)
+        internal KernelCommandResult(IObservable<KernelEvent> events)
         {
             KernelEvents = events ?? throw new ArgumentNullException(nameof(events));
         }

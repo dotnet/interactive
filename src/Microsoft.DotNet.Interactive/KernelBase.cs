@@ -239,7 +239,7 @@ namespace Microsoft.DotNet.Interactive
         
         private class KernelOperation
         {
-            public KernelOperation(KernelCommand command, TaskCompletionSource<IKernelCommandResult> taskCompletionSource)
+            public KernelOperation(KernelCommand command, TaskCompletionSource<KernelCommandResult> taskCompletionSource)
             {
                 Command = command;
                 TaskCompletionSource = taskCompletionSource;
@@ -247,7 +247,7 @@ namespace Microsoft.DotNet.Interactive
 
             public KernelCommand Command { get; }
 
-            public TaskCompletionSource<IKernelCommandResult> TaskCompletionSource { get; }
+            public TaskCompletionSource<KernelCommandResult> TaskCompletionSource { get; }
         }
 
         private async Task ExecuteCommand(KernelOperation operation)
@@ -294,14 +294,14 @@ namespace Microsoft.DotNet.Interactive
             await command.InvokeAsync(context);
         }
 
-        public Task<IKernelCommandResult> SendAsync(
+        public Task<KernelCommandResult> SendAsync(
             KernelCommand command,
             CancellationToken cancellationToken)
         {
             return SendAsync(command, cancellationToken, null);
         }
 
-        internal Task<IKernelCommandResult> SendAsync(
+        internal Task<KernelCommandResult> SendAsync(
             KernelCommand command,
             CancellationToken cancellationToken, 
             Action onDone)
@@ -313,7 +313,7 @@ namespace Microsoft.DotNet.Interactive
 
             UndeferCommands();
 
-            var tcs = new TaskCompletionSource<IKernelCommandResult>();
+            var tcs = new TaskCompletionSource<KernelCommandResult>();
 
             var operation = new KernelOperation(command, tcs);
            
@@ -359,7 +359,7 @@ namespace Microsoft.DotNet.Interactive
         {
             while (_deferredCommands.TryDequeue(out var initCommand))
             {
-                _commandQueue.Enqueue(new KernelOperation(initCommand, new TaskCompletionSource<IKernelCommandResult>()));
+                _commandQueue.Enqueue(new KernelOperation(initCommand, new TaskCompletionSource<KernelCommandResult>()));
             }
         }
 

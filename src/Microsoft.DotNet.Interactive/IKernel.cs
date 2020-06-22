@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive
 
         IObservable<KernelEvent> KernelEvents { get; }
 
-        Task<IKernelCommandResult> SendAsync(
+        Task<KernelCommandResult> SendAsync(
             KernelCommand command, 
             CancellationToken cancellationToken);
 
