@@ -17,14 +17,14 @@ namespace Microsoft.DotNet.Interactive.Parsing
 {
     public class SubmissionParser
     {
-        private readonly KernelBase _kernel;
+        private readonly Kernel _kernel;
         private Parser _directiveParser;
         private RootCommand _rootCommand;
 
         public IReadOnlyList<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
         public string KernelLanguage { get; internal set; }
 
-        public SubmissionParser(KernelBase kernel)
+        public SubmissionParser(Kernel kernel)
         {
             _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
             KernelLanguage = kernel switch
@@ -135,10 +135,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             foreach (var kernelName in nugetRestoreOnKernels)
             {
-                var findKernel = _kernel.FindKernel(kernelName);
+                var kernel = _kernel.FindKernel(kernelName);
 
-                if (findKernel is KernelBase kernelBase &&
-                    kernelBase.SubmissionParser.GetDirectiveParser() is {} parser)
+                if (kernel?.SubmissionParser.GetDirectiveParser() is {} parser)
                 {
                     var restore = new DirectiveCommand(
                         parser.Parse("#!nuget-restore"),
@@ -154,7 +153,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             var parent = submitCode.Parent ?? submitCode;
 
-            foreach (var command in commands.OfType<KernelCommand>())
+            foreach (var command in commands)
             {
                 command.Parent = parent;
             }
@@ -200,7 +199,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             return compositeKernel
                    .ChildKernels
-                   .OfType<KernelBase>()
                    .ToDictionary(
                        child => child.Name,
                        child => new Func<Parser>(() => child.SubmissionParser.GetDirectiveParser()));

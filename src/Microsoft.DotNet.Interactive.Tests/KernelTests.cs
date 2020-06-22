@@ -13,19 +13,11 @@ using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    public class KernelBaseTests
+    public class KernelTests
     {
-        private ITestOutputHelper _output;
-
-        public KernelBaseTests(ITestOutputHelper output)
-        {
-            _output = output;
-        }
-
         [Fact]
         public void Deferred_initialization_command_is_not_executed_prior_to_first_submission()
         {

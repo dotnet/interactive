@@ -18,13 +18,13 @@ using Microsoft.DotNet.Interactive.Parsing;
 namespace Microsoft.DotNet.Interactive
 {
     public class CompositeKernel : 
-        KernelBase,
+        Kernel,
         IExtensibleKernel,
-        IEnumerable<IKernel>
+        IEnumerable<Kernel>
     {
         private readonly ConcurrentQueue<PackageAdded> _packagesToCheckForExtensions = new ConcurrentQueue<PackageAdded>();
-        private readonly List<IKernel> _childKernels = new List<IKernel>();
-        private readonly Dictionary<string, IKernel> _kernelsByNameOrAlias;
+        private readonly List<Kernel> _childKernels = new List<Kernel>();
+        private readonly Dictionary<string, Kernel> _kernelsByNameOrAlias;
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
         private string _defaultKernelName;
 
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive
         {
             ListenForPackagesToScanForExtensions();
 
-            _kernelsByNameOrAlias = new Dictionary<string, IKernel>();
+            _kernelsByNameOrAlias = new Dictionary<string, Kernel>();
             _kernelsByNameOrAlias.Add(Name, this);
         }
 
@@ -53,23 +53,20 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public void Add(IKernel kernel, IReadOnlyCollection<string> aliases = null)
+        public void Add(Kernel kernel, IReadOnlyCollection<string> aliases = null)
         {
             if (kernel == null)
             {
                 throw new ArgumentNullException(nameof(kernel));
             }
 
-            if (kernel is KernelBase kernelBase)
+            if (kernel.ParentKernel != null)
             {
-                if (kernelBase.ParentKernel != null)
-                {
-                    throw new InvalidOperationException($"Kernel \"{kernelBase.Name}\" already has a parent: \"{kernelBase.ParentKernel.Name}\".");
-                }
-
-                kernelBase.ParentKernel = this;
-                kernelBase.AddMiddleware(LoadExtensions);
+                throw new InvalidOperationException($"Kernel \"{kernel.Name}\" already has a parent: \"{kernel.ParentKernel.Name}\".");
             }
+
+            kernel.ParentKernel = this;
+            kernel.AddMiddleware(LoadExtensions);
 
             AddChooseKernelDirective(kernel, aliases);
 
@@ -94,7 +91,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         private void AddChooseKernelDirective(
-            IKernel kernel, 
+            Kernel kernel, 
             IEnumerable<string> aliases)
         {
             var chooseKernelCommand = new ChooseKernelDirective(kernel);
@@ -137,7 +134,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public IReadOnlyList<IKernel> ChildKernels => _childKernels;
+        public IReadOnlyList<Kernel> ChildKernels => _childKernels;
 
         protected override void SetHandlingKernel(KernelCommand command, KernelInvocationContext context)
         {
@@ -146,17 +143,17 @@ namespace Microsoft.DotNet.Interactive
             context.HandlingKernel = kernel;
         }
 
-        private IKernel GetHandlingKernel(
+        private Kernel GetHandlingKernel(
             KernelCommand command,
             KernelInvocationContext context)
         {
             var targetKernelName = command switch
             {
-                KernelCommand kcb => kcb.TargetKernelName ?? DefaultKernelName,
+                { } kcb => kcb.TargetKernelName ?? DefaultKernelName,
                 _ => DefaultKernelName
             };
 
-            IKernel kernel;
+            Kernel kernel;
 
             if (targetKernelName != null)
             {
@@ -179,27 +176,24 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             KernelInvocationContext context)
         {
-
             var kernel = context.HandlingKernel;
 
-            if (kernel is KernelBase kernelBase)
+            if (kernel is null)
             {
-                await kernelBase.RunDeferredCommandsAsync();
-
-                if (kernelBase != this)
-                {
-                    // route to a subkernel
-                    await kernelBase.Pipeline.SendAsync(command, context);
-                }
-                else
-                {
-                    await base.HandleAsync(command, context);
-                }
-
-                return;
+                throw new NoSuitableKernelException(command);
             }
 
-            throw new NoSuitableKernelException(command);
+            await kernel.RunDeferredCommandsAsync();
+
+            if (kernel != this)
+            {
+                // route to a subkernel
+                await kernel.Pipeline.SendAsync(command, context);
+            }
+            else
+            {
+                await base.HandleAsync(command, context);
+            }
         }
 
         private protected override IReadOnlyList<CompletionItem> GetDirectiveCompletionItems(
@@ -215,7 +209,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 var kernel = ChildKernels[i];
 
-                if (kernel is KernelBase kb)
+                if (kernel is Kernel kb)
                 {
                     directiveParsers.Add(kb.SubmissionParser.GetDirectiveParser());
                 }
@@ -238,7 +232,7 @@ namespace Microsoft.DotNet.Interactive
             return allCompletions;
         }
 
-        public IEnumerator<IKernel> GetEnumerator() => _childKernels.GetEnumerator();
+        public IEnumerator<Kernel> GetEnumerator() => _childKernels.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 

@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             _textSpanFormatter = new TextSpanFormatter();
         }
 
-        public ExecuteRequestHandler(IKernel kernel, IScheduler scheduler = null)
+        public ExecuteRequestHandler(Kernel kernel, IScheduler scheduler = null)
             : base(kernel, scheduler ?? CurrentThreadScheduler.Instance)
         {
         }

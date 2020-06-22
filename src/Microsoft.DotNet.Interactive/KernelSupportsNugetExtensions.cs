@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive
     public static class KernelSupportsNugetExtensions
     {
         public static T UseNugetDirective<T>(this T kernel) 
-            where T: KernelBase, ISupportNuget
+            where T: Kernel, ISupportNuget
         {
             kernel.AddDirective(i());
             kernel.AddDirective(r());
@@ -242,7 +242,7 @@ namespace Microsoft.DotNet.Interactive
                 };
 
                 await invocationContext.QueueAction(restore);
-                var kernel = invocationContext.HandlingKernel as KernelBase;
+                var kernel = invocationContext.HandlingKernel as Kernel;
                 await kernel.RunDeferredCommandsAsync();
             };
 

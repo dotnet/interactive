@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public abstract class DotNetLanguageKernel : KernelBase
+    public abstract class DotNetLanguageKernel : Kernel
     {
         protected DotNetLanguageKernel(string name) : base(name)
         {

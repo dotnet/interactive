@@ -13,14 +13,14 @@ namespace Microsoft.DotNet.Interactive.Server
 {
     public class NamedPipeKernelServer : IDisposable
     {
-        private readonly IKernel _kernel;
+        private readonly Kernel _kernel;
         private readonly NamedPipeServerStream _serverStream;
         private readonly InputPipeStream _input;
         private readonly OutputPipeStream _output;
         private readonly CompositeDisposable _disposables;
 
         private NamedPipeKernelServer(
-            IKernel kernel,
+            Kernel kernel,
             NamedPipeServerStream serverStream)
         {
             _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.Interactive.Server
             _disposables.Dispose();
         }
 
-        public static NamedPipeKernelServer WaitForConnection(IKernel kernel, string pipeName)
+        public static NamedPipeKernelServer WaitForConnection(Kernel kernel, string pipeName)
         {
             var serverStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
             serverStream.WaitForConnection();

@@ -6,14 +6,14 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
-    public static class Kernel
+    public static class TopLevelMethods
     {
         public static string input(string prompt = "")
         {
             var context = KernelInvocationContext.Current;
 
-            if (context?.HandlingKernel is KernelBase kernelBase &&
-                kernelBase.FrontendEnvironment.AllowStandardInput)
+            if (context?.HandlingKernel is { } kernel &&
+                kernel.FrontendEnvironment.AllowStandardInput)
             {
                 var inputReqEvent = new InputRequested(prompt, context.Command);
                 context.Publish(inputReqEvent);
@@ -27,8 +27,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         {
             var context = KernelInvocationContext.Current;
 
-            if (context?.HandlingKernel is KernelBase kernelBase &&
-                kernelBase.FrontendEnvironment.AllowStandardInput)
+            if (context?.HandlingKernel is { } kernel &&
+                kernel.FrontendEnvironment.AllowStandardInput)
             {
                 var passwordReqEvent = new PasswordRequested(prompt, context.Command);
                 context.Publish(passwordReqEvent);

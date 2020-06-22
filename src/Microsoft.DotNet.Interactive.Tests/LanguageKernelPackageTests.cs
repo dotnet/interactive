@@ -207,7 +207,7 @@ json"
         [InlineData(Language.FSharp, "let logger: Microsoft.Extensions.Logging.ILogger = null")]
         public async Task When_SubmitCode_command_adds_packages_to_kernel_then_PackageAdded_event_is_raised(Language language, string expression)
         {
-            using IKernel kernel = language switch
+            using Kernel kernel = language switch
             {
                 Language.CSharp => new CompositeKernel { new CSharpKernel().UseNugetDirective() },
                 Language.FSharp => new CompositeKernel { new FSharpKernel().UseNugetDirective() }
@@ -634,7 +634,7 @@ Formatter<DataFrame>.Register((df, writer) =>
         [InlineData(Language.FSharp, Language.CSharp)]
         public async Task cell_with_nuget_and_code_continues_executions_on_right_kernel(Language first, Language second)
         {
-            KernelBase CreateKernel(Language language)
+            Kernel CreateKernel(Language language)
             {
                 return language switch
                 {

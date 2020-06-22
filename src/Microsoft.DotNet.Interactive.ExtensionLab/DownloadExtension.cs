@@ -15,24 +15,21 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
     public class DownloadExtension : IKernelExtension
     {
-        public Task OnLoadAsync(IKernel kernel)
+        public Task OnLoadAsync(Kernel kernel)
         {
-            if (kernel is KernelBase kernelBase)
+            var download = new Command("#!download")
             {
-                var download = new Command("#!download")
-                {
-                    new Option<Uri>("--uri"),
-                    new Option<FileInfo>(
-                        new [] {"-o", "--output"},
-                        parseArgument: ParsePath,
-                        isDefault: true)
-                };
+                new Option<Uri>("--uri"),
+                new Option<FileInfo>(
+                    new[] { "-o", "--output" },
+                    parseArgument: ParsePath,
+                    isDefault: true)
+            };
 
-                download.Handler = CommandHandler.Create(
-                    (Uri uri, FileInfo output, KernelInvocationContext context) => Download(uri, output, context));
+            download.Handler = CommandHandler.Create(
+                (Uri uri, FileInfo output, KernelInvocationContext context) => Download(uri, output, context));
 
-                kernelBase.AddDirective(download);
-            }
+            kernel.AddDirective(download);
 
             return Task.CompletedTask;
 

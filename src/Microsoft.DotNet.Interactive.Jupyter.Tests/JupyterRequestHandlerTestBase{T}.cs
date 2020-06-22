@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
         protected RecordingJupyterMessageSender JupyterMessageSender { get; }
 
-        protected IKernel Kernel { get; }
+        protected Kernel Kernel { get; }
 
         protected JupyterRequestHandlerTestBase(ITestOutputHelper output)
         {

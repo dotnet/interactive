@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive
 {
     internal class ChooseKernelDirective : Command
     {
-        public ChooseKernelDirective(IKernel kernel) : 
+        public ChooseKernelDirective(Kernel kernel) : 
             base($"#!{kernel.Name}", 
                  $"Run the code that follows using the {kernel.Name} kernel.")
         {
@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive
             Handler = CommandHandler.Create<KernelInvocationContext>(Handle);
         }
 
-        public IKernel Kernel { get; }
+        public Kernel Kernel { get; }
 
         private void Handle(KernelInvocationContext context)
         {

@@ -230,7 +230,7 @@ i");
 
             var kernelWithDirective = findKernel switch
             {
-                KernelBase k => k,
+                Kernel k => k,
                 _ => throw new ArgumentOutOfRangeException()
             };
 

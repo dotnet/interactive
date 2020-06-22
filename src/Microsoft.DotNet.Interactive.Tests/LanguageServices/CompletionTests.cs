@@ -235,7 +235,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         {
             var kernel = CreateKernel(defaultLanguage);
 
-            var kernelToExtend = (KernelBase) kernel.FindKernel(defaultLanguage.LanguageName());
+            var kernelToExtend = (Kernel) kernel.FindKernel(defaultLanguage.LanguageName());
 
             kernelToExtend.AddDirective(new Command("#!directiveOnChild")
             {

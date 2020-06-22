@@ -12,13 +12,13 @@ namespace Microsoft.DotNet.Interactive
 {
     internal class KernelCommandPipeline
     {
-        private readonly KernelBase _kernel;
+        private readonly Kernel _kernel;
 
         private readonly List<(KernelCommandPipelineMiddleware func, string name)> _middlewares = new List<(KernelCommandPipelineMiddleware func, string name)>();
 
         private KernelCommandPipelineMiddleware _pipeline;
 
-        public KernelCommandPipeline(KernelBase kernel)
+        public KernelCommandPipeline(Kernel kernel)
         {
             _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         }

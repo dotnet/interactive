@@ -458,7 +458,7 @@ new [] {1,2,3}");
 
             compositeKernel
                 .ChildKernels
-                .OfType<KernelBase>()
+                .OfType<Kernel>()
                 .Single()
                 .FrontendEnvironment
                 .Should()
@@ -476,7 +476,7 @@ new [] {1,2,3}");
 
             compositeKernel
                 .ChildKernels
-                .OfType<KernelBase>()
+                .OfType<Kernel>()
                 .Single()
                 .FrontendEnvironment
                 .Should()

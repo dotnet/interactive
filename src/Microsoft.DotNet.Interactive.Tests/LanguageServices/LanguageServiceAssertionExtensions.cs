@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             GenericCollectionAssertions<CompletionRequestCompleted>,
             IEnumerable<CompletionRequestCompleted>> ProvideCompletions(
             this GenericCollectionAssertions<MarkedUpCodeLinePosition> assertions,
-            KernelBase kernel)
+            Kernel kernel)
         {
             var items = new List<CompletionRequestCompleted>();
 

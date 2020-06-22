@@ -7,7 +7,7 @@ import {
     CommandHandledType,
     CompletionRequestCompleted,
     CompletionRequestCompletedType,
-    DisplayEventBase,
+    DisplayEvent,
     DisplayedValueProducedType,
     DisplayedValueUpdatedType,
     DisposableSubscription,
@@ -79,7 +79,7 @@ export class InteractiveClient {
                     case StandardErrorValueProducedType:
                     case StandardOutputValueProducedType:
                         {
-                            let disp = <DisplayEventBase>eventEnvelope.event;
+                            let disp = <DisplayEvent>eventEnvelope.event;
                             let output = displayEventToCellOutput(disp);
                             outputs.push(output);
                             reportOutputs();
@@ -89,7 +89,7 @@ export class InteractiveClient {
                     case DisplayedValueUpdatedType:
                     case ReturnValueProducedType:
                         {
-                            let disp = <DisplayEventBase>eventEnvelope.event;
+                            let disp = <DisplayEvent>eventEnvelope.event;
                             let output = displayEventToCellOutput(disp);
 
                             if (disp.valueId) {
@@ -233,7 +233,7 @@ export class InteractiveClient {
                     case DisplayedValueProducedType:
                     case DisplayedValueUpdatedType:
                     case ReturnValueProducedType:
-                        let disp = <DisplayEventBase>eventEnvelope.event;
+                        let disp = <DisplayEvent>eventEnvelope.event;
                         let output = displayEventToCellOutput(disp);
                         this.deferredOutput.push(output);
                         break;
@@ -247,7 +247,7 @@ export class InteractiveClient {
     }
 }
 
-export function displayEventToCellOutput(disp: DisplayEventBase): CellDisplayOutput {
+export function displayEventToCellOutput(disp: DisplayEvent): CellDisplayOutput {
     let data: { [key: string]: any; } = {};
     if (disp.formattedValues && disp.formattedValues.length > 0) {
         for (let formatted of disp.formattedValues) {

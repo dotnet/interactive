@@ -10,9 +10,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
     public class RecordTranscriptExtension : IKernelExtension
     {
-        public Task OnLoadAsync(IKernel kernel)
+        public Task OnLoadAsync(Kernel kernel)
         {
-            if (kernel is CompositeKernel kernelBase)
+            if (kernel is CompositeKernel compositeKernel)
             {
                 var record = new Command(
                     "#!record",
@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
                 record.Handler = CommandHandler.Create<FileInfo>(output =>
                 {
-                    kernelBase.AddMiddleware(async (command, context, next) =>
+                    compositeKernel.AddMiddleware(async (command, context, next) =>
                     {
                         var json = KernelCommandEnvelope.Serialize(command);
 
@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     return Task.CompletedTask;
                 });
 
-                kernelBase.AddDirective(record);
+                compositeKernel.AddDirective(record);
             }
 
             return Task.CompletedTask;

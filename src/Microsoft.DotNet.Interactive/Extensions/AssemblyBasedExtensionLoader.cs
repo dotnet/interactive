@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Extensions
 
         public async Task LoadFromDirectoryAsync(
             DirectoryInfo directory,
-            IExtensibleKernel kernel,
+            Kernel kernel,
             KernelInvocationContext context)
         {
             if (directory == null)
@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.Extensions
 
         public async Task LoadFromAssembliesInDirectory(
             DirectoryInfo directory,
-            IKernel kernel,
+            Kernel kernel,
             KernelInvocationContext context)
         {
             if (directory.Exists)
@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.Interactive.Extensions
 
         private async Task LoadFromAssembly(
             FileInfo assemblyFile,
-            IKernel kernel,
+            Kernel kernel,
             KernelInvocationContext context)
         {
             if (assemblyFile == null)

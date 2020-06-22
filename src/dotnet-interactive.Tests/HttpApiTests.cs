@@ -23,7 +23,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 {
     public class HttpApiTests : IDisposable
     {
-
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
         public void Dispose()

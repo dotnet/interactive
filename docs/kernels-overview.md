@@ -1,6 +1,6 @@
 # .NET Interactive Architectural Overview 
 
-The kernel concept in .NET Interactive is a component that accepts commands and produces outputs. The commands are  typically blocks of arbitrary code, and the outputs are events that describe the results and effects of that code. The `IKernel` interface represents this core abstraction.
+The kernel concept in .NET Interactive is a component that accepts commands and produces outputs. The commands are  typically blocks of arbitrary code, and the outputs are events that describe the results and effects of that code. The `Kernel` class represents this core abstraction.
 
 A kernel doesn't have to run in its own process. The default `dotnet-interactive` configuration runs several kernels in one process, enabling scenarios such as language-switching and .NET variable sharing. But one or more kernels can also run out-of-process, which will be transparent from the point of view of someone using it.
 

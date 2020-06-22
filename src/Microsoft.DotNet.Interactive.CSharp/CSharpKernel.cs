@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              typeof(Enumerable).Assembly,
                              typeof(IEnumerable<>).Assembly,
                              typeof(Task<>).Assembly,
-                             typeof(IKernel).Assembly,
+                             typeof(Kernel).Assembly,
                              typeof(CSharpKernel).Assembly,
                              typeof(PocketView).Assembly,
                              typeof(PlotlyChart).Assembly);

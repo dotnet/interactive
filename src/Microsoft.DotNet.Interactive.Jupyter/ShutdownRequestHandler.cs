@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public class ShutdownRequestHandler : RequestHandlerBase<ShutdownRequest>
     {
-        public ShutdownRequestHandler(IKernel kernel, IScheduler scheduler) : base(kernel, scheduler)
+        public ShutdownRequestHandler(Kernel kernel, IScheduler scheduler) : base(kernel, scheduler)
         {
 
         }

@@ -9,7 +9,7 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <PackageDescription>Microsoft.DotNet.Interactive.IKernel implementation for C#</PackageDescription>
+    <PackageDescription>Microsoft.DotNet.Interactive.Kernel implementation for C#</PackageDescription>
     <PackageTags>interactive csharp</PackageTags>
   </PropertyGroup>
 

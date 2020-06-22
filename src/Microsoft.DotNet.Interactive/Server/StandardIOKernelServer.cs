@@ -12,20 +12,20 @@ namespace Microsoft.DotNet.Interactive.Server
 {
     public class StandardIOKernelServer : IDisposable
     {
-        private readonly IKernel _kernel;
+        private readonly Kernel _kernel;
         private readonly InputTextStream _input;
         private readonly OutputTextStream _output;
         private readonly CompositeDisposable _disposables;
 
         public StandardIOKernelServer(
-            IKernel kernel, 
+            Kernel kernel, 
             TextReader input, 
             TextWriter output) : this(kernel, new InputTextStream(input), new OutputTextStream(output))
         {
         }
 
         private StandardIOKernelServer(
-            IKernel kernel, 
+            Kernel kernel, 
             InputTextStream input,
             OutputTextStream output)
         {

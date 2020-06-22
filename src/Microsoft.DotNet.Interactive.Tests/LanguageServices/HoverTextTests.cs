@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         {
         }
 
-        private Task<KernelCommandResult> SendHoverRequest(KernelBase kernel, string code, int line, int character)
+        private Task<KernelCommandResult> SendHoverRequest(Kernel kernel, string code, int line, int character)
         {
             var command = new RequestHoverText(code, new LinePosition(line, character));
             return kernel.SendAsync(command);
