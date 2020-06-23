@@ -19,9 +19,9 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Utility;
 using XPlot.Plotly;
+using CompletionItem = Microsoft.DotNet.Interactive.Events.CompletionItem;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
@@ -144,7 +144,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var linePosSpan = text.Lines.GetLinePositionSpan(info.Span);
             var correctedLinePosSpan = linePosSpan.SubtractLineOffset(scriptSpanStart);
 
-            context.PublishHoverTextMarkdownResponse(command, info.ToMarkdownString(), correctedLinePosSpan);
+            context.Publish(
+                new HoverTextProduced(
+                    command,
+                    new[]
+                    {
+                        new FormattedValue("text/markdown", info.ToMarkdownString())
+                    },
+                    correctedLinePosSpan));
         }
 
         public async Task HandleAsync(SubmitCode submitCode, KernelInvocationContext context)

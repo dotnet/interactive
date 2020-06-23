@@ -10,7 +10,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.PowerShell.Host;
 using Microsoft.PowerShell;
 using Microsoft.PowerShell.Commands;
