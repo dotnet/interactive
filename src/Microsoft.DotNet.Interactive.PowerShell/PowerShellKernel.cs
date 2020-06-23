@@ -123,6 +123,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             if (variable != null)
             {
+                object outVal;
                 switch (variable.Value)
                 {
                     case PSObject psobject:
@@ -133,19 +134,23 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                             {
                                 table.Add(p.Name, p.Value);
                             }
-                            value = (T) ((Object)table);
+                            outVal = table;
                         }
                         else
                         {
-                            value = (T) psobject.BaseObject;
+                            outVal = psobject.BaseObject;
                         }
                         break;
                     default:
-                        value = (T) variable.Value;
+                        outVal = variable.Value;
                         break;
                 }
 
-                return true;
+                if(outVal is T tObj)
+                {
+                    value = tObj;
+                    return true;
+                }
             }
 
             value = default;
