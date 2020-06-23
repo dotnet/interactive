@@ -149,10 +149,7 @@ using static {typeof(TopLevelMethods).FullName};
 
             kernel.VisitSubkernels(k =>
             {
-                if (k is Kernel kb)
-                {
-                    kb.AddDirective(lsmagic());
-                }
+                k.AddDirective(lsmagic());
             });
 
             Formatter<SupportedDirectives>.Register((directives, writer) =>

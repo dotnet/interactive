@@ -209,9 +209,9 @@ namespace Microsoft.DotNet.Interactive
             {
                 var kernel = ChildKernels[i];
 
-                if (kernel is Kernel kb)
+                if (kernel is { })
                 {
-                    directiveParsers.Add(kb.SubmissionParser.GetDirectiveParser());
+                    directiveParsers.Add(kernel.SubmissionParser.GetDirectiveParser());
                 }
             }
 
