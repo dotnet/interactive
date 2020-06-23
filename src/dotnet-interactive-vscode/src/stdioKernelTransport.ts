@@ -6,7 +6,7 @@ import * as path from 'path';
 import {
     CommandFailed,
     CommandFailedType,
-    CommandHandledType,
+    CommandSucceededType,
     DisposableSubscription,
     KernelCommand,
     KernelCommandType,
@@ -14,15 +14,15 @@ import {
     KernelEventEnvelopeObserver,
     DiagnosticLogEntryProducedType,
     DiagnosticLogEntryProduced,
-    ChangeWorkingDirectory,
-    KernelTransport
+    ChangeWorkingDirectory
 } from "./contracts";
 import { ProcessStart, KernelTransportCreationResult } from './interfaces';
 import { ReportChannel } from './interfaces/vscode';
+import { LineReader } from './lineReader';
 
 export class StdioKernelTransport {
-    private buffer: string = '';
     private childProcess: cp.ChildProcessWithoutNullStreams;
+    private lineReader: LineReader;
     private subscribers: Array<KernelEventEnvelopeObserver> = [];
 
     private constructor(processStart: ProcessStart, notebookPath: string, private diagnosticChannel: ReportChannel) {
@@ -35,30 +35,23 @@ export class StdioKernelTransport {
                 : '';
             this.diagnosticChannel.appendLine(message + messageSuffix);
         });
-        this.childProcess.stdout.on('data', (data) => {
-            let str: string = data.toString();
-            this.buffer += str;
+        this.lineReader = new LineReader();
+        this.lineReader.subscribe(line => this.handleLine(line));
+        this.childProcess.stdout.on('data', data => this.lineReader.onData(data));
+    }
 
-            let i = this.buffer.indexOf('\n');
-            while (i >= 0) {
-                let temp = this.buffer.substr(0, i + 1);
-                this.buffer = this.buffer.substr(i + 1);
-                i = this.buffer.indexOf('\n');
-                try {
-                    let obj = JSON.parse(temp);
-                    let envelope = <KernelEventEnvelope>obj;
-                    switch (envelope.eventType){
-                        case DiagnosticLogEntryProducedType:
-                            this.diagnosticChannel.appendLine((<DiagnosticLogEntryProduced>envelope.event).message);
-                            break;
-                    }
-                    for (let i = this.subscribers.length - 1; i >= 0; i--) {
-                        this.subscribers[i](envelope);
-                    }
-                } catch {
-                }
-            }
-        });
+    private handleLine(line: string) {
+        let obj = JSON.parse(line);
+        let envelope = <KernelEventEnvelope>obj;
+        switch (envelope.eventType) {
+            case DiagnosticLogEntryProducedType:
+                this.diagnosticChannel.appendLine((<DiagnosticLogEntryProduced>envelope.event).message);
+                break;
+        }
+
+        for (let i = this.subscribers.length - 1; i >= 0; i--) {
+            this.subscribers[i](envelope);
+        }
     }
 
     static create(processStart: ProcessStart, notebookPath: string, diagnosticChannel: ReportChannel): KernelTransportCreationResult {
@@ -80,7 +73,7 @@ export class StdioKernelTransport {
                             disposable.dispose();
                             resolve();
                             break;
-                        case CommandHandledType:
+                        case CommandSucceededType:
                             disposable.dispose();
                             resolve();
                             break;

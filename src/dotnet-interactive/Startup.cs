@@ -76,8 +76,8 @@ namespace Microsoft.DotNet.Interactive.App
                         r.Routes.Add(new DiscoveryRouter(frontendEnvironment));
                     }
 
-                    r.Routes.Add(new VariableRouter(serviceProvider.GetRequiredService<IKernel>()));
-                    r.Routes.Add(new KernelsRouter(serviceProvider.GetRequiredService<IKernel>()));
+                    r.Routes.Add(new VariableRouter(serviceProvider.GetRequiredService<Kernel>()));
+                    r.Routes.Add(new KernelsRouter(serviceProvider.GetRequiredService<Kernel>()));
                 });
                 app.UseEndpoints(endpoints =>
                 {

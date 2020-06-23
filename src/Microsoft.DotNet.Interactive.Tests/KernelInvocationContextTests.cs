@@ -22,9 +22,9 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             var barrier = new Barrier(2);
 
-            IKernelCommand commandInTask1 = null;
+            KernelCommand commandInTask1 = null;
 
-            IKernelCommand commandInTask2 = null;
+            KernelCommand commandInTask2 = null;
 
             await Task.Run(async () =>
             {
@@ -70,11 +70,11 @@ namespace Microsoft.DotNet.Interactive.Tests
             });
 
             var result = await kernel.SendAsync(new SubmitCode("2"));
-            var events = new List<IKernelEvent>();
+            var events = new List<KernelEvent>();
 
             result.KernelEvents.Subscribe(e => events.Add(e));
 
-            var values = events.OfType<DisplayEventBase>()
+            var values = events.OfType<DisplayEvent>()
                                .Select(v => v.Value);
 
             values
@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             context.Fail(message: "oops!");
 
             events.Should()
-                  .NotContain(e => e is CommandHandled);
+                  .NotContain(e => e is CommandSucceeded);
         }
 
         [Fact]
@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             context.Complete(command);
 
             events.Should()
-                  .ContainSingle<CommandHandled>();
+                  .ContainSingle<CommandSucceeded>();
         }
 
         [Fact]
@@ -187,7 +187,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             inner.Complete(innerSubmitCode);
 
-            events.Should().NotContain(e => e is CommandHandled);
+            events.Should().NotContain(e => e is CommandSucceeded);
         }
 
         [Fact]

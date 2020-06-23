@@ -13,7 +13,7 @@ The `IKernelExtension` interface is simple:
 ```csharp
 public interface IKernelExtension
 {
-    Task OnLoadAsync(IKernel kernel);
+    Task OnLoadAsync(Kernel kernel);
 }
 ```
 
@@ -26,29 +26,30 @@ You can add to the set of magic commands available in your notebooks. Here's an 
 ```csharp
 public class ClockKernelExtension : IKernelExtension
 {
-    public async Task OnLoadAsync(IKernel kernel)
+    public async Task OnLoadAsync(Kernel kernel)
     {
         // ...
-        if (kernel is KernelBase kernelBase)
+        
+        var clockCommand = new Command("#!clock", "Displays a clock showing the current or specified time.")
         {
-            var clockCommand = new Command("#!clock", "Displays a clock showing the current or specified time.")
-            {
-                new Option<int>(new[]{"-o","--hour"},
-                                "The position of the hour hand"),
-                new Option<int>(new[]{"-m","--minute"},
-                                "The position of the minute hand"),
-                new Option<int>(new[]{"-s","--second"},
-                                "The position of the second hand")
-            };
+            new Option<int>(new[]{"-o","--hour"},
+                            "The position of the hour hand"),
+            new Option<int>(new[]{"-m","--minute"},
+                            "The position of the minute hand"),
+            new Option<int>(new[]{"-s","--second"},
+                            "The position of the second hand")
+        };
+        
         //...
-            kernelBase.AddDirective(clockCommand);
-        }
+        
+        kernel.AddDirective(clockCommand);
+        
         // ...
     }
 }
 ```
 
-The first thing the code does is determine whether the `kernel` that was passed is of type `KernelBase`, which provides the `AddDirective` method. Once the `Command` has been added, it's available in the kernel and ready to be used.
+Once the `Command` has been added using `Kernel.AddDirective`, it's available in the kernel and ready to be used.
 
 The magic command syntax is a command line syntax. It's implemented using the `System.CommandLine` command line [library](https://nuget.org/packages/System.CommandLine). You can get help for a magic command in the same way you can typically get help from a command line tool. Here's the help for the `#!clock` magic command that the previous code produces: 
 

@@ -7,11 +7,11 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public abstract class DisplayEventBase : KernelEventBase
+    public abstract class DisplayEvent : KernelEvent
     {
-        protected DisplayEventBase(
+        protected DisplayEvent(
             object value,
-            IKernelCommand command = null,
+            KernelCommand command = null,
             IReadOnlyCollection<FormattedValue> formattedValues = null,
             string valueId = null) : base(command)
         {

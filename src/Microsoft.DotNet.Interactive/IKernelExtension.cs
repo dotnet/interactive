@@ -7,6 +7,6 @@ namespace Microsoft.DotNet.Interactive
 {
     public interface IKernelExtension
     {
-        Task OnLoadAsync(IKernel kernel);
+        Task OnLoadAsync(Kernel kernel);
     }
 }

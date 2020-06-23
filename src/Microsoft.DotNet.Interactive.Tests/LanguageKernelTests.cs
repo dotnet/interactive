@@ -692,7 +692,7 @@ Console.Write(2);
                     "let func () = 1",
                     "func()",
                     "func"
-                },
+                }
             };
 
             await SubmitCode(kernel, source);
@@ -705,7 +705,6 @@ Console.Write(2);
                 .Contain(e => ((SubmitCode)e.Command).Code == source[2]);
         }
 
-
         [Theory(Timeout = 45000)]
         [InlineData(Language.CSharp, "System.", "IO")]
         [InlineData(Language.FSharp, "System.", "IO")]
@@ -715,16 +714,16 @@ Console.Write(2);
         public async Task it_returns_completion_list_for_types(Language language, string codeToComplete, string expectedCompletion)
         {
             var kernel = CreateKernel(language);
-            await kernel.SendAsync(new RequestCompletion(codeToComplete, new LinePosition(0, codeToComplete.Length)));
+            await kernel.SendAsync(new RequestCompletions(codeToComplete, new LinePosition(0, codeToComplete.Length)));
 
             KernelEvents
                 .Should()
                 .ContainSingle(e => e is CompletionRequestReceived);
 
             KernelEvents
-                .OfType<CompletionRequestCompleted>()
+                .OfType<CompletionsProduced>()
                 .Single()
-                .CompletionList
+                .Completions
                 .Should()
                 .Contain(i => i.DisplayText == expectedCompletion);
         }
@@ -746,16 +745,16 @@ Console.Write(2);
 
             await SubmitCode(kernel, source);
 
-            await kernel.SendAsync(new RequestCompletion("al", new LinePosition(0, 2)));
+            await kernel.SendAsync(new RequestCompletions("al", new LinePosition(0, 2)));
 
             KernelEvents
                         .Should()
                         .ContainSingle(e => e is CompletionRequestReceived);
 
             KernelEvents
-                        .OfType<CompletionRequestCompleted>()
+                        .OfType<CompletionsProduced>()
                         .Single()
-                        .CompletionList
+                        .Completions
                         .Should()
                         .Contain(i => i.DisplayText == "alpha");
         }
@@ -771,7 +770,7 @@ Console.Write(2);
 
             KernelEvents
                 .Should()
-                .ContainSingle<CommandHandled>(c => c.Command == command)
+                .ContainSingle<CommandSucceeded>(c => c.Command == command)
                 .Which
                 .Command
                 .Should()

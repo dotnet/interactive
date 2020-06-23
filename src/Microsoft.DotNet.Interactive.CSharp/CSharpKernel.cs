@@ -15,14 +15,13 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.QuickInfo;
 using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Scripting;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Utility;
 using XPlot.Plotly;
+using CompletionItem = Microsoft.DotNet.Interactive.Events.CompletionItem;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
@@ -30,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         DotNetLanguageKernel,
         IExtensibleKernel,
         ISupportNuget,
-        IKernelCommandHandler<RequestCompletion>,
+        IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestHoverText>,
         IKernelCommandHandler<SubmitCode>
     {
@@ -60,7 +59,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              typeof(Enumerable).Assembly,
                              typeof(IEnumerable<>).Assembly,
                              typeof(Task<>).Assembly,
-                             typeof(IKernel).Assembly,
+                             typeof(Kernel).Assembly,
                              typeof(CSharpKernel).Assembly,
                              typeof(PocketView).Assembly,
                              typeof(PlotlyChart).Assembly);
@@ -132,7 +131,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
             var document = _workspace.ForkDocument(command.Code);
             var text = await document.GetTextAsync();
-            var cursorPosition = text.Lines.GetPosition(command.Position);
+            var cursorPosition = text.Lines.GetPosition(command.LinePosition);
             var service = QuickInfoService.GetService(document);
             var info = await service.GetQuickInfoAsync(document, cursorPosition);
 
@@ -145,7 +144,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var linePosSpan = text.Lines.GetLinePositionSpan(info.Span);
             var correctedLinePosSpan = linePosSpan.SubtractLineOffset(scriptSpanStart);
 
-            context.PublishHoverTextMarkdownResponse(command, info.ToMarkdownString(), correctedLinePosSpan);
+            context.Publish(
+                new HoverTextProduced(
+                    command,
+                    new[]
+                    {
+                        new FormattedValue("text/markdown", info.ToMarkdownString())
+                    },
+                    correctedLinePosSpan));
         }
 
         public async Task HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
@@ -269,19 +275,19 @@ namespace Microsoft.DotNet.Interactive.CSharp
         }
 
         public async Task HandleAsync(
-            RequestCompletion requestCompletion,
+            RequestCompletions command,
             KernelInvocationContext context)
         {
-            var completionRequestReceived = new CompletionRequestReceived(requestCompletion);
+            var completionRequestReceived = new CompletionRequestReceived(command);
 
             context.Publish(completionRequestReceived);
 
             var completionList =
                 await GetCompletionList(
-                    requestCompletion.Code,
-                    SourceUtilities.GetCursorOffsetFromPosition(requestCompletion.Code, requestCompletion.Position));
+                    command.Code,
+                    SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.LinePosition));
 
-            context.Publish(new CompletionRequestCompleted(completionList, requestCompletion));
+            context.Publish(new CompletionsProduced(completionList, command));
         }
 
         private async Task<IEnumerable<CompletionItem>> GetCompletionList(

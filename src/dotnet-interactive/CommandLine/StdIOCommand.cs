@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 {
     public static class StdIOCommand
     {
-        public static async Task<int> Do(StartupOptions startupOptions, KernelBase kernel, IConsole console)
+        public static async Task<int> Do(StartupOptions startupOptions, Kernel kernel, IConsole console)
         {
             var disposable = Program.StartToolLogging(startupOptions);
             var server = CreateServer(kernel, console);
@@ -20,17 +20,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             return 0;
         }
 
-        internal static StandardIOKernelServer CreateServer(KernelBase kernel, IConsole console)
+        internal static StandardIOKernelServer CreateServer(Kernel kernel, IConsole console)
         {
             var server = new StandardIOKernelServer(
                 kernel,
                 Console.In,
                 Console.Out);
 
-            if (kernel is KernelBase kernelBase)
-            {
-                kernelBase.RegisterForDisposal(server);
-            }
+            kernel.RegisterForDisposal(server);
 
             return server;
         }

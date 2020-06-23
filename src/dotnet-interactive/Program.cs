@@ -11,7 +11,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.Interactive.App.CommandLine;
-using Microsoft.DotNet.Interactive.App.Commands;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.Extensions.DependencyInjection;
 using Pocket;
@@ -35,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.App
         private static readonly Assembly[] _assembliesEmittingPocketLoggerLogs =
         {
             typeof(Startup).Assembly, // dotnet-interactive.dll
-            typeof(KernelBase).Assembly, // Microsoft.DotNet.Interactive.dll
+            typeof(Kernel).Assembly, // Microsoft.DotNet.Interactive.dll
             typeof(Shell).Assembly, // Microsoft.DotNet.Interactive.Jupyter.dll
         };
 

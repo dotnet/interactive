@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import { ClientMapper } from '../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
 import { CellOutput, CellOutputKind } from '../../interfaces/vscode';
-import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandHandledType, DisplayedValueProducedType, ReturnValueProducedType, UpdateDisplayedValueType, DisplayedValueUpdatedType } from '../../contracts';
+import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandSucceededType, DisplayedValueProducedType, ReturnValueProducedType, UpdateDisplayedValueType, DisplayedValueUpdatedType } from '../../contracts';
 
 describe('InteractiveClient tests', () => {
     it('command execution returns deferred events', async () => {
@@ -58,7 +58,7 @@ describe('InteractiveClient tests', () => {
                     token
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token
                 }
@@ -132,7 +132,7 @@ describe('InteractiveClient tests', () => {
                     token
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token
                 }
@@ -221,7 +221,7 @@ describe('InteractiveClient tests', () => {
                     token
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token
                 }
@@ -271,7 +271,7 @@ describe('InteractiveClient tests', () => {
                     token: 'token 1'
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token: 'token 1'
                 }
@@ -292,7 +292,7 @@ describe('InteractiveClient tests', () => {
                     token: 'token 2'
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token: 'token 2'
                 }

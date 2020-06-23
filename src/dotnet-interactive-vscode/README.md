@@ -17,3 +17,5 @@ This extension adds support for using .NET Interactive in a Visual Studio Code n
     _or_
 
     To convert an existing Jupyter notebook, invoke the VS Code command `.NET Interactive: Convert Jupyter notebook (.ipynb) to .NET Interactive notebook`, then open the resulting file.
+
+**_A note on the `.dib` file format:_** _Direct support for reading and writing Jupyter notebooks (`.ipynb`) is coming soon. For more information, please see https://github.com/dotnet/interactive/issues/467_.

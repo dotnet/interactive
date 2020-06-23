@@ -57,7 +57,6 @@ x
                 .ContainSingle<DirectiveNode>()
                 .Which
                 .Text
-                .Trim()
                 .Should()
                 .Be("#r \"nuget:SomePackage\"");
         }
@@ -75,7 +74,6 @@ x
                 .ContainSingle<DirectiveNode>()
                 .Which
                 .Text
-                .Trim()
                 .Should()
                 .Be("#r \"nuget:SomePackage\"");
         }
@@ -93,7 +91,6 @@ x
                 .ContainSingle<DirectiveNode>()
                 .Which
                 .Text
-                .Trim()
                 .Should()
                 .Be("#i \"nuget:/some/path\"");
         }

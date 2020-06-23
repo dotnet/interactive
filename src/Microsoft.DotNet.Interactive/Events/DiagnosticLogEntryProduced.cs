@@ -5,11 +5,11 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class DiagnosticLogEntryProduced : DiagnosticEventBase
+    public class DiagnosticLogEntryProduced : DiagnosticEvent
     {
         public DiagnosticLogEntryProduced(
             string message,
-            IKernelCommand command = null) : base(command)
+            KernelCommand command = null) : base(command)
         {
             Message = message;
         }

@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
         public delegate Task StartStdIO(
             StartupOptions options,
-            KernelBase kernel,
+            Kernel kernel,
             IConsole console);
 
         public delegate Task StartHttp(
@@ -243,7 +243,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                 .Handle(delivery));
                         })
                         .AddSingleton(c => new JupyterRequestContextHandler(
-                                c.GetRequiredService<IKernel>())
+                                c.GetRequiredService<Kernel>())
                             .Trace())
                         .AddSingleton<IHostedService, Shell>()
                         .AddSingleton<IHostedService, Heartbeat>();
@@ -406,7 +406,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             }
         }
 
-        private static IServiceCollection RegisterKernelInServiceCollection(IServiceCollection services, StartupOptions startupOptions, string defaultKernel, Action<IServiceCollection> configureFrontedEnvironment, Action<KernelBase> afterKernelCreation = null)
+        private static IServiceCollection RegisterKernelInServiceCollection(IServiceCollection services, StartupOptions startupOptions, string defaultKernel, Action<IServiceCollection> configureFrontedEnvironment, Action<Kernel> afterKernelCreation = null)
         {
             configureFrontedEnvironment(services);
             services
@@ -419,8 +419,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     afterKernelCreation?.Invoke(kernel);
                     return kernel;
                 })
-                .AddSingleton<KernelBase>(c => c.GetRequiredService<CompositeKernel>())
-                .AddSingleton<IKernel>(c => c.GetRequiredService<KernelBase>());
+                .AddSingleton<Kernel>(c => c.GetRequiredService<CompositeKernel>());
 
             return services;
         }
@@ -476,8 +475,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             var kernel = compositeKernel
                          .UseDefaultMagicCommands()
                          .UseLog()
-                         .UseAbout();
-            
+                         .UseAbout()
+                         .UseProxyKernel();
+
             SetUpFormatters(frontendEnvironment, startupOptions);
 
             kernel.DefaultKernelName = defaultKernelName;

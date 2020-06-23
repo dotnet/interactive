@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.Commands;
 namespace Microsoft.DotNet.Interactive
 {
     public delegate Task KernelCommandPipelineMiddleware(
-        IKernelCommand command,
+        KernelCommand command,
         KernelInvocationContext context,
         KernelPipelineContinuation next);
 }

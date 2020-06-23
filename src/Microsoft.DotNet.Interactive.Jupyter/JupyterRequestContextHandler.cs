@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         private readonly IsCompleteRequestHandler _isCompleteHandler;
         private readonly ShutdownRequestHandler _shutdownHandler;
 
-        public JupyterRequestContextHandler(IKernel kernel)
+        public JupyterRequestContextHandler(Kernel kernel)
         {
             var scheduler = new EventLoopScheduler(t =>
             {

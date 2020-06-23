@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.CSharp.Tests
         [Fact]
         public async Task pound_r_is_split_into_separate_command_from_csharp_code()
         {
-            var receivedCommands = new List<IKernelCommand>();
+            var receivedCommands = new List<KernelCommand>();
 
             using var kernel = new CSharpKernel();
 

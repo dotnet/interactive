@@ -15,7 +15,7 @@ namespace SampleExtensions.Tests
 {
     public class ClockExtensionTests : IDisposable
     {
-        private readonly IKernel _kernel;
+        private readonly KernelBase _kernel;
 
         public ClockExtensionTests()
         {

@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import { ClientMapper } from './../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
 import { CellOutput, CellOutputKind } from '../../interfaces/vscode';
-import { CodeSubmissionReceivedType, CommandHandledType, CompleteCodeSubmissionReceivedType, DisplayedValueProducedType, DisplayedValueUpdatedType, ReturnValueProducedType, StandardOutputValueProducedType } from '../../contracts';
+import { CodeSubmissionReceivedType, CommandSucceededType, CompleteCodeSubmissionReceivedType, DisplayedValueProducedType, DisplayedValueUpdatedType, ReturnValueProducedType, StandardOutputValueProducedType } from '../../contracts';
 
 describe('Notebook tests', () => {
     for (let language of ['csharp', 'fsharp']) {
@@ -44,7 +44,7 @@ describe('Notebook tests', () => {
                         token
                     },
                     {
-                        eventType: CommandHandledType,
+                        eventType: CommandSucceededType,
                         event: {},
                         token
                     }
@@ -130,7 +130,7 @@ Console.WriteLine(1);
                     token
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token
                 }
@@ -208,7 +208,7 @@ Console.WriteLine(1);
                     token
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token
                 }
@@ -267,7 +267,7 @@ Console.WriteLine(1);
                     token
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token
                 }

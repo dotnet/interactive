@@ -12,19 +12,20 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Parsing
 {
     public class SubmissionParser
     {
-        private readonly KernelBase _kernel;
+        private readonly Kernel _kernel;
         private Parser _directiveParser;
         private RootCommand _rootCommand;
 
         public IReadOnlyList<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
         public string KernelLanguage { get; internal set; }
 
-        public SubmissionParser(KernelBase kernel)
+        public SubmissionParser(Kernel kernel)
         {
             _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
             KernelLanguage = kernel switch
@@ -47,9 +48,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
             return parser.Parse();
         }
 
-        public IReadOnlyList<IKernelCommand> SplitSubmission(SubmitCode submitCode)
+        public IReadOnlyList<KernelCommand> SplitSubmission(SubmitCode submitCode) 
         {
-            var commands = new List<IKernelCommand>();
+            var commands = new List<KernelCommand>();
             var nugetRestoreOnKernels = new HashSet<string>();
             var hoistedCommandsIndex = 0;
 
@@ -135,10 +136,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             foreach (var kernelName in nugetRestoreOnKernels)
             {
-                var findKernel = _kernel.FindKernel(kernelName);
+                var kernel = _kernel.FindKernel(kernelName);
 
-                if (findKernel is KernelBase kernelBase &&
-                    kernelBase.SubmissionParser.GetDirectiveParser() is {} parser)
+                if (kernel?.SubmissionParser.GetDirectiveParser() is {} parser)
                 {
                     var restore = new DirectiveCommand(
                         parser.Parse("#!nuget-restore"),
@@ -154,19 +154,19 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             var parent = submitCode.Parent ?? submitCode;
 
-            foreach (var command in commands.OfType<KernelCommandBase>())
+            foreach (var command in commands)
             {
                 command.Parent = parent;
             }
 
             return commands;
 
-            void AddHoistedCommand(IKernelCommand command)
+            void AddHoistedCommand(KernelCommand command)
             {
                 commands.Insert(hoistedCommandsIndex++, command);
             }
 
-            bool NoSplitWasNeeded(out IReadOnlyList<IKernelCommand> splitSubmission)
+            bool NoSplitWasNeeded(out IReadOnlyList<KernelCommand> splitSubmission)
             {
                 if (commands.Count == 0)
                 {
@@ -200,7 +200,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             return compositeKernel
                    .ChildKernels
-                   .OfType<KernelBase>()
                    .ToDictionary(
                        child => child.Name,
                        child => new Func<Parser>(() => child.SubmissionParser.GetDirectiveParser()));
@@ -257,24 +256,24 @@ namespace Microsoft.DotNet.Interactive.Parsing
             _directiveParser = null;
         }
 
-        public static CompletionItem CompletionItemFor(string name, Parser parser)
+        public static CompletionItem CompletionItemFor(string name, ParseResult parseResult)
         {
-            var symbol = parser.Configuration
-                               .RootCommand
-                               .Children
-                               .GetByAlias(name);
+            var symbol = parseResult.CommandResult
+                                    .Command
+                                    .Children
+                                    .GetByAlias(name);
 
             var kind = symbol switch
             {
                 IArgument _ => "Value",
                 IOption _ => "Property",
                 ICommand _ => "Method",
-                _ => throw new ArgumentOutOfRangeException(nameof(symbol))
+                _ => null
             };
 
             var helpBuilder = new DirectiveHelpBuilder(
                 new TestConsole(),
-                parser.Configuration.RootCommand.Name);
+                parseResult.Parser.Configuration.RootCommand.Name);
 
             return new CompletionItem(
                 displayText: name,

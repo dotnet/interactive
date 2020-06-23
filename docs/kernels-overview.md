@@ -1,10 +1,16 @@
 # .NET Interactive Architectural Overview 
 
-The kernel concept in .NET Interactive is a component that accepts commands and produces outputs. The commands are  typically blocks of arbitrary code, and the outputs are events that describe the results and effects of that code. The `IKernel` interface represents this core abstraction.
+The kernel concept in .NET Interactive is a component that accepts commands and produces outputs. The commands are  typically blocks of arbitrary code, and the outputs are events that describe the results and effects of that code. The `Kernel` class represents this core abstraction.
+
+A kernel doesn't have to run in its own process. The default `dotnet-interactive` configuration runs several kernels in one process, enabling scenarios such as language-switching and .NET variable sharing. But one or more kernels can also run out-of-process, which will be transparent from the point of view of someone using it.
+
+The `dotnet-interactive` tool also provides a number of protocols, including the [Jupyter message protocol](https://jupyter-client.readthedocs.io/en/stable/messaging.html) and a JSON protocol that can be accessed over either standard I/O or HTTP. These multiple protocols allow the core set of capabilities to be fairly portable.
+
+![image](https://user-images.githubusercontent.com/547415/84963747-16717d80-b0bf-11ea-87ca-dd1fb11fd000.png)
 
 ## Commands and events
 
-All communication with a kernel takes place through a sequence of commands and events. The typical sequence starts with a command being sent to the kernel, which will reply with one or more events. The terminating event will always be either `CommandHandled` (if everything completed successfully) or `CommandFailed` (if there was a compilation error or runtime exception), but this will usually be preceded by one or more other events describing the results of the command. 
+All communication with a kernel takes place through a sequence of commands and events. The typical sequence starts with a command being sent to the kernel, which will reply with one or more events. The terminating event will always be either `CommandSucceeded` (if everything completed successfully) or `CommandFailed` (if there was a compilation error or runtime exception), but this will usually be preceded by one or more other events describing the results of the command. 
 
 The most common command is `SubmitCode`, which is used when a block of code is sent to the kernel for execution. A code submission is created each time you run a notebook cell. But a single submission may in fact generate multiple commands.
 
@@ -17,11 +23,11 @@ Console.WriteLine("Hi!");
 
 This submission will actually be broken into two commands, a `SubmitCode` for the `Console.WriteLine` call as well as an internal `DirectiveCommand` for the `#!time` magic command. 
 
-When this splitting occurs, the API still only returns a single terminating `CommandHandled` or `CommandFailed` event. Programmtically, you don't need to be concerned with whether a submission is going be split, but understanding this mechanism can be helpful, for example when implementing your own middleware behaviors.
+When this splitting occurs, the API still only returns a single terminating `CommandSucceeded` or `CommandFailed` event. Programmtically, you don't need to be concerned with whether a submission is going be split, but understanding this mechanism can be helpful, for example when implementing your own middleware behaviors.
 
 You can see some additional examples of command and event interactions in the following diagram, illustrating different kinds of output as well as the behavior of a middleware component (for the `#!time` magic command) augmenting the behavior of a code submission by emitting an additional `DisplayedValueProduced` event.
 
-![image](https://user-images.githubusercontent.com/547415/82275655-2703cc00-9938-11ea-8637-ab45c564f831.png)
+![image](https://user-images.githubusercontent.com/547415/85328568-ce1eda80-b485-11ea-8d6e-a821dfe5db62.png)
 
 ## Nested Kernels
 
@@ -42,7 +48,7 @@ Even though this will initially be sent as a single `SubmitCode` command, it wil
 
 The work of routing these commands is done by the `CompositeKernel` class, which wraps a number of subkernels. Here are some examples: 
 
-![image](https://user-images.githubusercontent.com/547415/82275667-2ec37080-9938-11ea-9950-e53de4406af3.png)
+![image](https://user-images.githubusercontent.com/547415/85328679-ff97a600-b485-11ea-839c-ebc65b0f6472.png)
 
 Note that while the composite configuration is the defaut when using the `dotnet-interactive` tool via Visual Studio Code or Jupyter, the .NET Interactive [NuGet packages](../README.md#Packages) let you create other configurations. For example, you might provide a single-language embedded scripting experience using the C# kernel by itself, or you might provide multiple F# kernels each preconfigured to run code on a different processor.
 

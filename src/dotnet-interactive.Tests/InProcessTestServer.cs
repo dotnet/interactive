@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
         public HttpClient HttpClient => _host.CreateClient();
 
-        public IKernel Kernel => _host.Services.GetService<IKernel>();
+        public Kernel Kernel => _host.Services.GetService<Kernel>();
 
         public void Dispose()
         {

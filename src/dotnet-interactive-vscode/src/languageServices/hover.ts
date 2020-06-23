@@ -12,7 +12,7 @@ export async function provideHover(clientMapper: ClientMapper, language: string,
     let hoverResult = {
         contents: content.value,
         isMarkdown: content.mimeType === 'text/markdown' || content.mimeType === 'text/x-markdown',
-        range: hoverText.range
+        range: hoverText.linePositionSpan
     };
     return hoverResult;
 }

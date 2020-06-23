@@ -138,7 +138,7 @@ using Microsoft.DotNet.Interactive.Commands;
 
 public class TestKernelExtension : IKernelExtension
 {{
-    public async Task OnLoadAsync(IKernel kernel)
+    public async Task OnLoadAsync(Kernel kernel)
     {{
         {code}
     }}

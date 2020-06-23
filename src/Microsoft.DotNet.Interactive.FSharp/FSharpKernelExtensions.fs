@@ -25,7 +25,7 @@ type FSharpKernelExtensions private () =
         let code = 
             [
                 referenceFromType typeof<IHtmlContent>
-                referenceFromType typeof<IKernel>
+                referenceFromType typeof<Kernel>
                 referenceFromType typeof<FSharpPocketViewTags>
                 referenceFromType typeof<PlotlyChart>
                 referenceFromType typeof<Formatter>

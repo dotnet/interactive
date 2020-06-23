@@ -10,10 +10,10 @@ namespace Microsoft.DotNet.Interactive.FSharp
     // once https://github.com/dotnet/fsharp/pull/2867 is complete.
     public class FSharpKernel :
         FSharpKernelBase,
-        IKernelCommandHandler<RequestCompletion>,
+        IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<SubmitCode>
     {
-        public Task HandleAsync(RequestCompletion command, KernelInvocationContext context) => HandleRequestCompletionAsync(command, context);
+        public Task HandleAsync(RequestCompletions command, KernelInvocationContext context) => HandleRequestCompletionAsync(command, context);
 
         public Task HandleAsync(SubmitCode command, KernelInvocationContext context) => HandleSubmitCodeAsync(command, context);
     }

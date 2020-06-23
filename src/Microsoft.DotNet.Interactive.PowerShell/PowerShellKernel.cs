@@ -11,7 +11,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.PowerShell.Host;
 using Microsoft.PowerShell;
 using Microsoft.PowerShell.Commands;
@@ -24,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
     public class PowerShellKernel : 
         DotNetLanguageKernel,
-        IKernelCommandHandler<RequestCompletion>,
+        IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<SubmitCode>
     {
         internal const string DefaultKernelName = "pwsh";
@@ -209,22 +208,22 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         }
 
         public Task HandleAsync(
-            RequestCompletion requestCompletion,
+            RequestCompletions requestCompletions,
             KernelInvocationContext context)
         {
-            CompletionRequestCompleted completion;
-            context.Publish(new CompletionRequestReceived(requestCompletion));
+            CompletionsProduced completion;
+            context.Publish(new CompletionRequestReceived(requestCompletions));
 
             if (AzShell != null)
             {
                 // Currently no tab completion when interacting with AzShell.
-                completion = new CompletionRequestCompleted(Array.Empty<CompletionItem>(), requestCompletion);
+                completion = new CompletionsProduced(Array.Empty<CompletionItem>(), requestCompletions);
             }
             else
             {
                 CommandCompletion results = CommandCompletion.CompleteInput(
-                    requestCompletion.Code,
-                    SourceUtilities.GetCursorOffsetFromPosition(requestCompletion.Code, requestCompletion.Position),
+                    requestCompletions.Code,
+                    SourceUtilities.GetCursorOffsetFromPosition(requestCompletions.Code, requestCompletions.LinePosition),
                     options: null,
                     pwsh);
 
@@ -236,10 +235,10 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
                 // The end index is the start index plus the length of the replacement.
                 var endIndex = results.ReplacementIndex + results.ReplacementLength;
-                completion = new CompletionRequestCompleted(
+                completion = new CompletionsProduced(
                     completionItems,
-                    requestCompletion,
-                    SourceUtilities.GetLinePositionSpanFromStartAndEndIndices(requestCompletion.Code, results.ReplacementIndex, endIndex));
+                    requestCompletions,
+                    SourceUtilities.GetLinePositionSpanFromStartAndEndIndices(requestCompletions.Code, results.ReplacementIndex, endIndex));
             }
 
             context.Publish(completion);

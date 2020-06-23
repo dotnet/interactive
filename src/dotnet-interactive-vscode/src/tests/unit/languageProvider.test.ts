@@ -7,18 +7,18 @@ import { ClientMapper } from '../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
 import { provideCompletion } from './../../languageServices/completion';
 import { provideHover } from './../../languageServices/hover';
-import { CommandHandledType, CompletionRequestCompletedType } from '../../contracts';
+import { CommandSucceededType, CompletionsProducedType } from '../../contracts';
 
 describe('LanguageProvider tests', () => {
     it('CompletionProvider', async () => {
         let token = '123';
         let clientMapper = new ClientMapper(() => TestKernelTransport.create({
-            'RequestCompletion': [
+            'RequestCompletions': [
                 {
-                    eventType: CompletionRequestCompletedType,
+                    eventType: CompletionsProducedType,
                     event: {
-                        range: null,
-                        completionList: [
+                        linePositionSpan: null,
+                        completions: [
                             {
                                 displayText: 'Sqrt',
                                 kind: 'Method',
@@ -32,7 +32,7 @@ describe('LanguageProvider tests', () => {
                     token
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token
                 }
@@ -53,8 +53,8 @@ describe('LanguageProvider tests', () => {
         // perform the completion request
         let completion = await provideCompletion(clientMapper, 'csharp', document, position, token);
         expect(completion).to.deep.equal({
-            range: null,
-            completionList: [
+            linePositionSpan: null,
+            completions: [
                 {
                     displayText: 'Sqrt',
                     kind: 'Method',
@@ -81,7 +81,7 @@ describe('LanguageProvider tests', () => {
                             }
                         ],
                         isMarkdown: true,
-                        range: {
+                        linePositionSpan: {
                             start: {
                                 line: 0,
                                 character: 8
@@ -95,7 +95,7 @@ describe('LanguageProvider tests', () => {
                     token
                 },
                 {
-                    eventType: 'CommandHandled',
+                    eventType: 'CommandSucceeded',
                     event: {},
                     token
                 }

@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
     {
         public static Task WriteAsync(
             this StandardIOKernelServer server,
-            IKernelCommand command)
+            KernelCommand command)
         {
             var json = KernelCommandEnvelope.Serialize(
                 KernelCommandEnvelope.Create(command));

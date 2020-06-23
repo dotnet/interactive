@@ -20,11 +20,24 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
     public static class AssertionExtensions
     {
+        public static GenericCollectionAssertions<T> AllSatisfy<T>(
+            this GenericCollectionAssertions<T> assertions,
+            Action<T> assert)
+        {
+            using var _ = new AssertionScope();
+
+            foreach (var item in assertions.Subject)
+            {
+                assert(item);
+            }
+
+            return assertions;
+        }
+
         public static void BeJsonEquivalentTo<T>(this StringAssertions assertion, T expected)
         {
             var obj = JsonConvert.DeserializeObject(assertion.Subject, expected.GetType());
             obj.Should().BeEquivalentTo(expected);
-            
         }
 
         public static AndConstraint<GenericCollectionAssertions<T>> BeEquivalentSequenceTo<T>(
@@ -61,9 +74,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         }
 
         public static AndWhichConstraint<ObjectAssertions, T> ContainSingle<T>(
-            this GenericCollectionAssertions<IKernelCommand> should,
+            this GenericCollectionAssertions<KernelCommand> should,
             Func<T, bool> where = null)
-            where T : IKernelCommand
+            where T : KernelCommand
         {
             T subject;
 
@@ -117,9 +130,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         }
 
         public static AndWhichConstraint<ObjectAssertions, T> ContainSingle<T>(
-            this GenericCollectionAssertions<IKernelEvent> should,
+            this GenericCollectionAssertions<KernelEvent> should,
             Func<T, bool> where = null)
-            where T : IKernelEvent
+            where T : KernelEvent
         {
             T subject;
 
@@ -172,8 +185,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             return new AndWhichConstraint<ObjectAssertions, T>(subject.Should(), subject);
         }
 
-        public static AndConstraint<GenericCollectionAssertions<IKernelEvent>> NotContainErrors(
-            this GenericCollectionAssertions<IKernelEvent> should) =>
+        public static AndConstraint<GenericCollectionAssertions<KernelEvent>> NotContainErrors(
+            this GenericCollectionAssertions<KernelEvent> should) =>
             should
                 .NotContain(e => e is ErrorProduced)
                 .And

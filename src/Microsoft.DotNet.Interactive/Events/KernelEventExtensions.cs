@@ -5,10 +5,10 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public abstract class DiagnosticEventBase : KernelEventBase
+    public abstract class DiagnosticEvent : KernelEvent
     {
-        protected DiagnosticEventBase(
-            IKernelCommand command = null) : base(command)
+        protected DiagnosticEvent(
+            KernelCommand command = null) : base(command)
         {
         }
     }

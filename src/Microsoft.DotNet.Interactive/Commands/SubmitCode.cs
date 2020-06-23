@@ -6,7 +6,7 @@ using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class SubmitCode : KernelCommandBase
+    public class SubmitCode : KernelCommand
     {
         public SubmitCode(
             string code,
@@ -20,20 +20,21 @@ namespace Microsoft.DotNet.Interactive.Commands
         internal SubmitCode(
             LanguageNode languageNode,
             SubmissionType submissionType = SubmissionType.Run,
-            IKernelCommand parent = null) :
-            base(languageNode.Language, parent)
+            KernelCommand parent = null)
+            : base(languageNode.Language, parent)
         {
             Code = languageNode.Text;
+            LanguageNode = languageNode;
             SubmissionType = submissionType;
-            SuppressSplit = true;
         }
 
         public string Code { get; }
 
+        // FIX: (SubmitCode) remove SubmissionType
         public SubmissionType SubmissionType { get; }
 
         public override string ToString() => $"{nameof(SubmitCode)}: {Code.TruncateForDisplay()}";
 
-        internal bool SuppressSplit { get; set; }
+        internal LanguageNode LanguageNode { get; }
     }
 }

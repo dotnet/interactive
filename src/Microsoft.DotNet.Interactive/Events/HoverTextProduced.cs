@@ -9,23 +9,29 @@ using Microsoft.DotNet.Interactive.Extensions;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class HoverTextProduced : KernelEventBase
+    public class HoverTextProduced : KernelEvent
     {
-        private LinePositionSpan? _range;
+        private readonly LinePositionSpan? _linePositionSpan;
 
-        public IReadOnlyCollection<FormattedValue> Content { get; }
-        public LinePositionSpan? Range => this.CalculateLineOffsetFromParentCommand(_range);
-
-        public HoverTextProduced(RequestHoverText command, IReadOnlyCollection<FormattedValue> content, LinePositionSpan? range = null)
+        public HoverTextProduced(RequestHoverText command, IReadOnlyCollection<FormattedValue> content, LinePositionSpan? linePositionSpan = null)
             : base(command)
         {
+            if (content == null)
+            {
+                throw new ArgumentNullException(nameof(content));
+            }
+
             if (content.Count == 0)
             {
-                throw new ArgumentException(nameof(content), "At least one content required.");
+                throw new ArgumentException("At least one content required.", nameof(content));
             }
 
             Content = content;
-            _range = range;
+            _linePositionSpan = linePositionSpan;
         }
+
+        public IReadOnlyCollection<FormattedValue> Content { get; }
+
+        public LinePositionSpan? LinePositionSpan => this.CalculateLineOffsetFromParentCommand(_linePositionSpan);
     }
 }

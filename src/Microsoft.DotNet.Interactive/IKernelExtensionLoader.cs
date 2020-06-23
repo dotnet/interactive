@@ -3,7 +3,6 @@
 
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Extensions;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -11,7 +10,7 @@ namespace Microsoft.DotNet.Interactive
     {
         Task LoadFromDirectoryAsync(
             DirectoryInfo directory,
-            IExtensibleKernel kernel,
+            Kernel kernel,
             KernelInvocationContext context);
     }
 }

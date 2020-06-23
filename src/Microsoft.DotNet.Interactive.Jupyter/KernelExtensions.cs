@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     public static class KernelExtensions
     {
         public static T UseDefaultMagicCommands<T>(this T kernel)
-            where T : KernelBase
+            where T : Kernel
         {
             kernel.UseLsMagic()
                   .UseMarkdown()
@@ -37,8 +37,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             this CSharpKernel kernel)
         {
             var command = new SubmitCode($@"
-#r ""{typeof(Kernel).Assembly.Location.Replace("\\", "/")}""
-using static {typeof(Kernel).FullName};
+#r ""{typeof(TopLevelMethods).Assembly.Location.Replace("\\", "/")}""
+using static {typeof(TopLevelMethods).FullName};
 ");
 
             kernel.DeferCommand(command);
@@ -48,13 +48,13 @@ using static {typeof(Kernel).FullName};
         public static PowerShellKernel UseJupyterHelpers(
             this PowerShellKernel kernel)
         {
-            kernel.ReadInput = Kernel.input;
-            kernel.ReadPassword = Kernel.password;
+            kernel.ReadInput = TopLevelMethods.input;
+            kernel.ReadPassword = TopLevelMethods.password;
             return kernel;
         }
 
         private static T UseMarkdown<T>(this T kernel)
-            where T : KernelBase
+            where T : Kernel
         {
             var pipeline = new MarkdownPipelineBuilder()
                    .UseMathematics()
@@ -103,7 +103,7 @@ using static {typeof(Kernel).FullName};
         }
 
         private static T UseTime<T>(this T kernel)
-            where T : KernelBase
+            where T : Kernel
         {
             kernel.AddDirective(time());
 
@@ -143,16 +143,13 @@ using static {typeof(Kernel).FullName};
         }
 
         private static T UseLsMagic<T>(this T kernel)
-            where T : KernelBase
+            where T : Kernel
         {
             kernel.AddDirective(lsmagic());
 
             kernel.VisitSubkernels(k =>
             {
-                if (k is KernelBase kb)
-                {
-                    kb.AddDirective(lsmagic());
-                }
+                k.AddDirective(lsmagic());
             });
 
             Formatter<SupportedDirectives>.Register((directives, writer) =>

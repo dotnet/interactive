@@ -14,8 +14,8 @@ namespace Microsoft.DotNet.Interactive.Server
 {
     public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
     {
-        private static readonly ConcurrentDictionary<Type, Func<IKernelCommand, IKernelCommandEnvelope>> _envelopeFactories =
-            new ConcurrentDictionary<Type, Func<IKernelCommand, IKernelCommandEnvelope>>();
+        private static readonly ConcurrentDictionary<Type, Func<KernelCommand, IKernelCommandEnvelope>> _envelopeFactories =
+            new ConcurrentDictionary<Type, Func<KernelCommand, IKernelCommandEnvelope>>();
 
         private static Dictionary<string, Type> _envelopeTypesByCommandTypeName;
 
@@ -29,9 +29,9 @@ namespace Microsoft.DotNet.Interactive.Server
 
         internal static Type CommandTypeByName(string name) => _commandTypesByCommandTypeName[name];
 
-        private readonly IKernelCommand _command;
+        private readonly KernelCommand _command;
 
-        protected KernelCommandEnvelope(IKernelCommand command)
+        protected KernelCommandEnvelope(KernelCommand command)
         {
             _command = command ?? throw new ArgumentNullException(nameof(command));
         }
@@ -40,9 +40,9 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public string Token => _command.GetToken();
 
-        IKernelCommand IKernelCommandEnvelope.Command => _command;
+        KernelCommand IKernelCommandEnvelope.Command => _command;
 
-        public static void RegisterCommandType<T>(string commandTypeName) where T : class, IKernelCommand
+        public static void RegisterCommandType<T>(string commandTypeName) where T : KernelCommand
         {
             var commandEnvelopeType = typeof(KernelCommandEnvelope<T>);
             var commandType = typeof(T);
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(ChangeWorkingDirectory)] = typeof(KernelCommandEnvelope<ChangeWorkingDirectory>),
                 [nameof(DisplayError)] = typeof(KernelCommandEnvelope<DisplayError>),
                 [nameof(DisplayValue)] = typeof(KernelCommandEnvelope<DisplayValue>),
-                [nameof(RequestCompletion)] = typeof(KernelCommandEnvelope<RequestCompletion>),
+                [nameof(RequestCompletions)] = typeof(KernelCommandEnvelope<RequestCompletions>),
                 [nameof(RequestDiagnostics)] = typeof(KernelCommandEnvelope<RequestDiagnostics>),
                 [nameof(RequestHoverText)] = typeof(KernelCommandEnvelope<RequestHoverText>),
                 [nameof(SubmitCode)] = typeof(KernelCommandEnvelope<SubmitCode>),
@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Interactive.Server
                     pair => pair.Value.GetGenericArguments()[0]);
         }
 
-        public static IKernelCommandEnvelope Create(IKernelCommand command)
+        public static IKernelCommandEnvelope Create(KernelCommand command)
         {
             var factory = _envelopeFactories.GetOrAdd(
                 command.GetType(),
@@ -82,14 +82,14 @@ namespace Microsoft.DotNet.Interactive.Server
                     var constructor = genericType.GetConstructors().Single();
 
                     var commandParameter = Expression.Parameter(
-                        typeof(IKernelCommand),
+                        typeof(KernelCommand),
                         "c");
 
                     var newExpression = Expression.New(
                         constructor,
                         Expression.Convert(commandParameter, commandType));
 
-                    var expression = Expression.Lambda<Func<IKernelCommand, IKernelCommandEnvelope>>(
+                    var expression = Expression.Lambda<Func<KernelCommand, IKernelCommandEnvelope>>(
                         newExpression,
                         commandParameter);
 
@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
             var commandType = CommandTypeByName(commandTypeJson.Value<string>());
             var commandJson = json["command"];
-            var command = (IKernelCommand) commandJson?.ToObject(commandType, Serializer.JsonSerializer);
+            var command = (KernelCommand) commandJson?.ToObject(commandType, Serializer.JsonSerializer);
 
             var token = json["token"]?.Value<string>();
 
@@ -136,7 +136,7 @@ namespace Microsoft.DotNet.Interactive.Server
             return Create(command);
         }
 
-        public static string Serialize(IKernelCommand command) => Serialize(Create(command));
+        public static string Serialize(KernelCommand command) => Serialize(Create(command));
 
         public static string Serialize(IKernelCommandEnvelope envelope)
         {

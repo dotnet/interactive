@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
         [Theory(Timeout = 45000)]
         [MemberData(nameof(Commands))]
-        public void All_command_types_are_round_trip_serializable(IKernelCommand command)
+        public void All_command_types_are_round_trip_serializable(KernelCommand command)
         {
             var originalEnvelope = KernelCommandEnvelope.Create(command);
 
@@ -42,12 +42,13 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             deserializedEnvelope
                 .Should()
                 .BeEquivalentTo(originalEnvelope,
-                                o => o.Excluding(e => e.Command.Properties));
+                                o => o.Excluding(e => e.Command.Properties)
+                                      .Excluding(e => e.Command.Handler));
         }
 
         [Theory(Timeout = 45000)]
         [MemberData(nameof(Events))]
-        public void All_event_types_are_round_trip_serializable(IKernelEvent @event)
+        public void All_event_types_are_round_trip_serializable(KernelEvent @event)
         {
             var originalEnvelope = KernelEventEnvelope.Create(@event);
 
@@ -66,11 +67,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [Fact(Timeout = 45000)]
         public void All_command_types_are_tested_for_round_trip_serialization()
         {
-            var commandTypes = typeof(IKernelCommand)
+            var commandTypes = typeof(KernelCommand)
                                .Assembly
                                .ExportedTypes
                                .Concrete()
-                               .DerivedFrom(typeof(IKernelCommand));
+                               .DerivedFrom(typeof(KernelCommand));
 
             Commands()
                 .Select(e => e[0].GetType())
@@ -82,11 +83,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [Fact(Timeout = 45000)]
         public void All_event_types_are_tested_for_round_trip_serialization()
         {
-            var eventTypes = typeof(IKernelEvent)
+            var eventTypes = typeof(KernelEvent)
                              .Assembly
                              .ExportedTypes
                              .Concrete()
-                             .DerivedFrom(typeof(IKernelEvent));
+                             .DerivedFrom(typeof(KernelEvent));
 
             Events()
                 .Select(e => e[0].GetType())
@@ -102,7 +103,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 yield return new object[] { command };
             }
 
-            IEnumerable<IKernelCommand> commands()
+            IEnumerable<KernelCommand> commands()
             {
                 yield return new AddPackage(new PackageReference("MyAwesomePackage", "1.2.3"));
 
@@ -115,7 +116,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new FormattedValue("text/html", "<b>hi!</b>")
                 );
 
-                yield return new RequestCompletion("Cons", new LinePosition(0, 4), "csharp");
+                yield return new RequestCompletions("Cons", new LinePosition(0, 4), "csharp");
 
                 yield return new RequestDiagnostics();
 
@@ -137,7 +138,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 yield return new object[] { @event };
             }
 
-            IEnumerable<IKernelEvent> events()
+            IEnumerable<KernelEvent> events()
             {
                 var submitCode = new SubmitCode("123");
 
@@ -153,13 +154,13 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                    submitCode,
                    "oops");
 
-                yield return new CommandHandled(submitCode);
+                yield return new CommandSucceeded(submitCode);
 
                 yield return new CompleteCodeSubmissionReceived(submitCode);
 
-                var requestCompletion = new RequestCompletion("Console.Wri", new LinePosition(0, 11));
+                var requestCompletion = new RequestCompletions("Console.Wri", new LinePosition(0, 11));
 
-                yield return new CompletionRequestCompleted(
+                yield return new CompletionsProduced(
                     new[]
                     {
                         new CompletionItem(

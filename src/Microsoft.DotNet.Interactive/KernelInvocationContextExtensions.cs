@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Interactive
         public static void DisplayStandardOut(
             this KernelInvocationContext context,
             string output,
-            IKernelCommand command = null)
+            KernelCommand command = null)
         {
             var formattedValues = new List<FormattedValue>
             {
@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive
         public static void DisplayStandardError(
             this KernelInvocationContext context,
             string error,
-            IKernelCommand command = null)
+            KernelCommand command = null)
         {
             var formattedValues = new List<FormattedValue>
             {

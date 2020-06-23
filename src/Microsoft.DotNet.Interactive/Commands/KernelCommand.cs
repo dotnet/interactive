@@ -8,9 +8,9 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public abstract class KernelCommandBase : IKernelCommand
+    public abstract class KernelCommand
     {
-        protected KernelCommandBase(string targetKernelName = null, IKernelCommand parent = null)
+        protected KernelCommand(string targetKernelName = null, KernelCommand parent = null)
         {
             if (parent is null)
             {
@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         public KernelCommandInvocation Handler { get; set; }
 
         [JsonIgnore]   
-        public IKernelCommand Parent { get; internal set; }
+        public KernelCommand Parent { get; internal set; }
 
         [JsonIgnore]
         public IDictionary<string, object> Properties { get; }
