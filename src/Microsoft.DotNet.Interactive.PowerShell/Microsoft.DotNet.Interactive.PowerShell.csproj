@@ -10,7 +10,7 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <PackageDescription>Microsoft.DotNet.Interactive.IKernel implementation for PowerShell</PackageDescription>
+    <PackageDescription>Microsoft.DotNet.Interactive.Kernel implementation for PowerShell</PackageDescription>
     <PackageTags>interactive PowerShell</PackageTags>
   </PropertyGroup>
 
