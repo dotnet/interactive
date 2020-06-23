@@ -6,29 +6,29 @@ using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class RequestCompletion : LanguageServiceCommandBase
+    public class RequestCompletions : LanguageServiceCommand
     {
-        public RequestCompletion(
+        public RequestCompletions(
             string code, 
-            LinePosition position, 
+            LinePosition linePosition, 
             string targetKernelName = null)
-            : base(code, position, targetKernelName)
+            : base(code, linePosition, targetKernelName)
         {
         }
 
-        internal RequestCompletion(
+        internal RequestCompletions(
             LanguageNode languageNode, 
-            LinePosition position, 
-            IKernelCommand parent = null) 
-            : base(languageNode, position, parent)
+            LinePosition linePosition, 
+            KernelCommand parent = null) 
+            : base(languageNode, linePosition, parent)
         {
         }
 
-        internal override LanguageServiceCommandBase With(
+        internal override LanguageServiceCommand With(
             LanguageNode languageNode, 
             LinePosition position)
         {
-            return new RequestCompletion(languageNode, position, Parent);
+            return new RequestCompletions(languageNode, position, Parent);
         }
     }
 }

@@ -18,12 +18,12 @@ namespace Microsoft.DotNet.Interactive
 {
     public static class KernelExtensions
     {
-        public static IKernel FindKernel(this IKernel kernel, string name)
+        public static Kernel FindKernel(this Kernel kernel, string name)
         {
             var root = kernel
                        .RecurseWhileNotNull(k => k switch
                        {
-                           KernelBase kb => kb.ParentKernel,
+                           Kernel kb => kb.ParentKernel,
                            _ => null
                        })
                        .LastOrDefault();
@@ -37,9 +37,9 @@ namespace Microsoft.DotNet.Interactive
             };
         }
 
-        public static Task<IKernelCommandResult> SendAsync(
-            this IKernel kernel,
-            IKernelCommand command)
+        public static Task<KernelCommandResult> SendAsync(
+            this Kernel kernel,
+            KernelCommand command)
         {
             if (kernel == null)
             {
@@ -49,8 +49,8 @@ namespace Microsoft.DotNet.Interactive
             return kernel.SendAsync(command, CancellationToken.None);
         }
 
-        public static Task<IKernelCommandResult> SubmitCodeAsync(
-            this IKernel kernel,
+        public static Task<KernelCommandResult> SubmitCodeAsync(
+            this Kernel kernel,
             string code)
         {
             if (kernel == null)
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public static T UseLog<T>(this T kernel)
-            where T : KernelBase
+            where T : Kernel
         {
             var command = new Command("#!log", "Enables session logging.");
 
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive
                     {
                         if (KernelInvocationContext.Current is {} currentContext)
                         {
-                            if (e is DiagnosticEventBase || e is DisplayEventBase)
+                            if (e is DiagnosticEvent || e is DisplayEvent)
                             {
                                 return;
                             }
@@ -179,7 +179,7 @@ namespace Microsoft.DotNet.Interactive
 
         [DebuggerStepThrough]
         public static T LogEventsToPocketLogger<T>(this T kernel)
-            where T : IKernel
+            where T : Kernel
         {
             var disposables = new CompositeDisposable();
 
@@ -205,17 +205,14 @@ namespace Microsoft.DotNet.Interactive
                         }));
             });
 
-            if (kernel is KernelBase kernelBase)
-            {
-                kernelBase.RegisterForDisposal(disposables);
-            }
+            kernel.RegisterForDisposal(disposables);
 
             return kernel;
         }
 
         public static void VisitSubkernels(
-            this IKernel kernel,
-            Action<IKernel> onVisit,
+            this Kernel kernel,
+            Action<Kernel> onVisit,
             bool recursive = false)
         {
             if (kernel == null)
@@ -243,8 +240,8 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public static async Task VisitSubkernelsAsync(
-            this IKernel kernel,
-            Func<IKernel, Task> onVisit,
+            this Kernel kernel,
+            Func<Kernel, Task> onVisit,
             bool recursive = false)
         {
             if (kernel == null)

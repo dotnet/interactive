@@ -6,35 +6,35 @@ using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public abstract class LanguageServiceCommandBase : KernelCommandBase
+    public abstract class LanguageServiceCommand : KernelCommand
     {
-        protected LanguageServiceCommandBase(
+        protected LanguageServiceCommand(
             string code,
-            LinePosition position,
+            LinePosition linePosition,
             string targetKernelName = null,
-            IKernelCommand parent = null)
+            KernelCommand parent = null)
             : base(targetKernelName, parent)
         {
             Code = code;
-            Position = position;
+            LinePosition = linePosition;
         }
         
-        protected LanguageServiceCommandBase(
+        protected LanguageServiceCommand(
             LanguageNode languageNode,
-            LinePosition position,
-            IKernelCommand parent = null)
+            LinePosition linePosition,
+            KernelCommand parent = null)
             : base(languageNode.Language, parent)
         {
             Code = languageNode.Text;
             LanguageNode = languageNode;
-            Position = position;
+            LinePosition = linePosition;
         }
 
         public string Code { get; protected set; }
 
-        public LinePosition Position { get; protected set; }
+        public LinePosition LinePosition { get; protected set; }
 
-        internal abstract LanguageServiceCommandBase With(
+        internal abstract LanguageServiceCommand With(
             LanguageNode languageNode, 
             LinePosition position);
 

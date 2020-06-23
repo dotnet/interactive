@@ -112,14 +112,14 @@ type FSharpKernelBase () as this =
                     context.Fail(null, "Command cancelled")
         }
 
-    let handleRequestCompletion (requestCompletion: RequestCompletion) (context: KernelInvocationContext) =
+    let handleRequestCompletions (requestCompletions: RequestCompletions) (context: KernelInvocationContext) =
         async {
-            context.Publish(CompletionRequestReceived(requestCompletion))
-            let! declarationItems = script.Value.GetCompletionItems(requestCompletion.Code, requestCompletion.Position.Line + 1, requestCompletion.Position.Character)
+            context.Publish(CompletionRequestReceived(requestCompletions))
+            let! declarationItems = script.Value.GetCompletionItems(requestCompletions.Code, requestCompletions.LinePosition.Line + 1, requestCompletions.LinePosition.Character)
             let completionItems =
                 declarationItems
                 |> Array.map completionItem
-            context.Publish(CompletionRequestCompleted(completionItems, requestCompletion))
+            context.Publish(CompletionsProduced(completionItems, requestCompletions))
         }
 
     let createPackageRestoreContext registerForDisposal =
@@ -155,7 +155,7 @@ type FSharpKernelBase () as this =
     member _.PackageRestoreContext = _packageRestoreContext.Value
 
     // ideally via IKernelCommandHandler<RequestCompletion>, but requires https://github.com/dotnet/fsharp/pull/2867
-    member _.HandleRequestCompletionAsync(command: RequestCompletion, context: KernelInvocationContext) = handleRequestCompletion command context |> Async.StartAsTask :> Task
+    member _.HandleRequestCompletionAsync(command: RequestCompletions, context: KernelInvocationContext) = handleRequestCompletions command context |> Async.StartAsTask :> Task
 
     // ideally via IKernelCommandHandler<SubmitCode, but requires https://github.com/dotnet/fsharp/pull/2867
     member _.HandleSubmitCodeAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context |> Async.StartAsTask :> Task

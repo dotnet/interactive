@@ -6,13 +6,13 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal class KernelCommandResult : IKernelCommandResult
+    public class KernelCommandResult
     {
-        public KernelCommandResult(IObservable<IKernelEvent> events)
+        internal KernelCommandResult(IObservable<KernelEvent> events)
         {
             KernelEvents = events ?? throw new ArgumentNullException(nameof(events));
         }
 
-        public IObservable<IKernelEvent> KernelEvents { get; }
+        public IObservable<KernelEvent> KernelEvents { get; }
     }
 }

@@ -3,7 +3,7 @@
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class RequestDiagnostics : KernelCommandBase
+    public class RequestDiagnostics : KernelCommand
     {
     }
 }

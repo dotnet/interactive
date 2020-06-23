@@ -6,11 +6,11 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class ErrorProduced : DisplayEventBase
+    public class ErrorProduced : DisplayEvent
     {
         public ErrorProduced(
             string message,
-            IKernelCommand command = null,
+            KernelCommand command = null,
             IReadOnlyCollection<FormattedValue> formattedValues = null) : base(message, command, formattedValues)
         {
             Message = message;

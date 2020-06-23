@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             {
                 using var baseKernel = language switch
                 {
-                    Language.CSharp => new CSharpKernel().UseWho() as KernelBase,
+                    Language.CSharp => new CSharpKernel().UseWho() as Kernel,
                     Language.FSharp => new FSharpKernel().UseWho(),
                 };
                 using var kernel = new CompositeKernel
@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             {
                 using var baseKernel = language switch
                 {
-                    Language.CSharp => new CSharpKernel().UseWho() as KernelBase,
+                    Language.CSharp => new CSharpKernel().UseWho() as Kernel,
                     Language.FSharp => new FSharpKernel().UseWho(),
                 };
                 using var kernel = new CompositeKernel

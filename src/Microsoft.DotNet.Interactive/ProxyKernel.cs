@@ -3,7 +3,7 @@
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal abstract class ProxyKernel : KernelBase
+    internal abstract class ProxyKernel : Kernel
     {
         public ProxyKernel(string name) : base(name)
         {

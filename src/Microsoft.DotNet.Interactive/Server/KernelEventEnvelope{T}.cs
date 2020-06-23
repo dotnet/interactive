@@ -6,7 +6,7 @@ using Microsoft.DotNet.Interactive.Events;
 namespace Microsoft.DotNet.Interactive.Server
 {
     public class KernelEventEnvelope<T> : KernelEventEnvelope
-        where T : class, IKernelEvent
+        where T : KernelEvent
     {
         public KernelEventEnvelope(T @event) : base(@event)
         {

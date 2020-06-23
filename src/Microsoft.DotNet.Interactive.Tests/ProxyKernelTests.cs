@@ -59,7 +59,7 @@ x", targetKernelName: "test");
             await kernel.SendAsync(proxyCommand2);
 
             events.Should()
-                  .ContainSingle<CommandHandled>(e => e.Command == proxyCommand);
+                  .ContainSingle<CommandSucceeded>(e => e.Command == proxyCommand);
         }
 
         [FactSkipLinux]
@@ -99,10 +99,10 @@ y");
             await kernel.SendAsync(proxyCommand3);
 
             events.Should()
-                  .ContainSingle<CommandHandled>(e => e.Command == proxyCommand2);
+                  .ContainSingle<CommandSucceeded>(e => e.Command == proxyCommand2);
 
             events.Should()
-                  .ContainSingle<CommandHandled>(e => e.Command == proxyCommand3);
+                  .ContainSingle<CommandSucceeded>(e => e.Command == proxyCommand3);
         }
     }
 }

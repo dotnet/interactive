@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class DisplayError : KernelCommandBase
+    public class DisplayError : KernelCommand
     {
         public DisplayError(string message)
         {

@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 namespace Microsoft.DotNet.Interactive
 {
     public class HtmlKernel :
-        KernelBase,
+        Kernel,
         IKernelCommandHandler<SubmitCode>
     {
         public const string DefaultKernelName = "html";

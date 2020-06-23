@@ -11,12 +11,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public class InterruptRequestHandler : RequestHandlerBase<InterruptRequest>
     {
-        public InterruptRequestHandler(IKernel kernel, IScheduler scheduler = null)
+        public InterruptRequestHandler(Kernel kernel, IScheduler scheduler = null)
             : base(kernel, scheduler ?? CurrentThreadScheduler.Instance)
         {
         }
 
-        protected override void OnKernelEventReceived(IKernelEvent @event, JupyterRequestContext context)
+        protected override void OnKernelEventReceived(KernelEvent @event, JupyterRequestContext context)
         {
         }
 

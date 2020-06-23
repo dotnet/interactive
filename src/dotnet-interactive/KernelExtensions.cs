@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.App
 {
     public static class KernelExtensions
     {
-        public static T UseQuiCommand<T>(this T kernel, IDisposable disposeOnQuit, CancellationToken cancellationToken) where T : KernelBase
+        public static T UseQuiCommand<T>(this T kernel, IDisposable disposeOnQuit, CancellationToken cancellationToken) where T : Kernel
         {
             Quit.DisposeOnQuit = disposeOnQuit;
             KernelCommandEnvelope.RegisterCommandType<Quit>(nameof(Quit));
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.App
         }
 
         public static T UseAbout<T>(this T kernel)
-            where T : KernelBase
+            where T : Kernel
         {
             var about = new Command("#!about", "Show version and build information")
             {
@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.Interactive.App
         }
 
         public static T UseXplot<T>(this T kernel)
-            where T : KernelBase
+            where T : Kernel
         {
             Formatter<PlotlyChart>.Register(
                 (chart, writer) => writer.Write(PlotlyChartExtensions.GetHtml(chart)),
@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.Interactive.App
         }
 
         public static T UseHttpApi<T>(this T kernel, StartupOptions startupOptions, HttpProbingSettings httpProbingSettings)
-            where T : KernelBase
+            where T : Kernel
         {
 
             var initApiCommand = new Command("#!enable-http")

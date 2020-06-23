@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class UpdateDisplayedValue : KernelCommandBase
+    public class UpdateDisplayedValue : KernelCommand
     {
         public UpdateDisplayedValue(object value, FormattedValue formattedValue, string valueId)
         {

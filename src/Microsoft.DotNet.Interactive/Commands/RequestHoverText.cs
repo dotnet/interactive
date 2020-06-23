@@ -6,25 +6,25 @@ using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class RequestHoverText : LanguageServiceCommandBase
+    public class RequestHoverText : LanguageServiceCommand
     {
         public RequestHoverText(
             string code,
-            LinePosition position,
+            LinePosition linePosition,
             string targetKernelName = null)
-            : base(code, position, targetKernelName)
+            : base(code, linePosition, targetKernelName)
         {
         }
 
         internal RequestHoverText(
             LanguageNode languageNode,
-            LinePosition position,
-            IKernelCommand parent = null)
-            : base(languageNode, position, parent)
+            LinePosition linePosition,
+            KernelCommand parent = null)
+            : base(languageNode, linePosition, parent)
         {
         }
 
-        internal override LanguageServiceCommandBase With(
+        internal override LanguageServiceCommand With(
             LanguageNode languageNode,
             LinePosition position)
         {

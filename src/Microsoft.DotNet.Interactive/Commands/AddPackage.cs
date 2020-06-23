@@ -5,7 +5,7 @@ using System;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class AddPackage : KernelCommandBase
+    public class AddPackage : KernelCommand
     {
         public AddPackage(PackageReference packageReference)
         {

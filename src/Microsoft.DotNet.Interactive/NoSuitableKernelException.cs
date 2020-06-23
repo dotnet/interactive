@@ -8,9 +8,9 @@ namespace Microsoft.DotNet.Interactive
 {
     public class NoSuitableKernelException : Exception
     {
-        public IKernelCommand Command { get; }
+        public KernelCommand Command { get; }
 
-        public NoSuitableKernelException(IKernelCommand command) : 
+        public NoSuitableKernelException(KernelCommand command) : 
             base($"No kernel found for {command}")
         {
             Command = command;

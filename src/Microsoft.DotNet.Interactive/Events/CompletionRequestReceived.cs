@@ -5,9 +5,10 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class CompletionRequestReceived : KernelEventBase
+    public class CompletionRequestReceived : KernelEvent
     {
-        public CompletionRequestReceived(IKernelCommand command) : base(command)
+        // FIX: (CompletionRequestReceived) delete
+        public CompletionRequestReceived(KernelCommand command) : base(command)
         {
         }
     }

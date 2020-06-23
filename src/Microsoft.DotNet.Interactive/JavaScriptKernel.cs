@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.Commands;
 namespace Microsoft.DotNet.Interactive
 {
     public class JavaScriptKernel :
-        KernelBase,
+        Kernel,
         IKernelCommandHandler<SubmitCode>
     {
         public const string DefaultKernelName = "javascript";

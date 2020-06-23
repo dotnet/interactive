@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.Extensions
 {
     internal static class EventExtensions
     {
-        public static LinePositionSpan? CalculateLineOffsetFromParentCommand(this KernelEventBase @event, LinePositionSpan? initialRange)
+        public static LinePositionSpan? CalculateLineOffsetFromParentCommand(this KernelEvent @event, LinePositionSpan? initialRange)
         {
             if (!initialRange.HasValue)
             {
@@ -17,11 +17,11 @@ namespace Microsoft.DotNet.Interactive.Extensions
             }
 
             var range = initialRange.GetValueOrDefault();
-            var requestCommand = @event.Command as LanguageServiceCommandBase;
-            if (requestCommand?.Parent is LanguageServiceCommandBase parentRequest)
+            var requestCommand = @event.Command as LanguageServiceCommand;
+            if (requestCommand?.Parent is LanguageServiceCommand parentRequest)
             {
-                var requestPosition = requestCommand.Position;
-                var lineOffset = parentRequest.Position.Line - requestPosition.Line;
+                var requestPosition = requestCommand.LinePosition;
+                var lineOffset = parentRequest.LinePosition.Line - requestPosition.Line;
                 return new LinePositionSpan(
                     new LinePosition(range.Start.Line + lineOffset, range.Start.Character),
                     new LinePosition(range.End.Line + lineOffset, range.End.Character));

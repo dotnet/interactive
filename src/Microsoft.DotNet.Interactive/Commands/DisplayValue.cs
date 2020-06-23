@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class DisplayValue : KernelCommandBase
+    public class DisplayValue : KernelCommand
     {
         public DisplayValue(object value, FormattedValue formattedValue, string valueId = null)
         {

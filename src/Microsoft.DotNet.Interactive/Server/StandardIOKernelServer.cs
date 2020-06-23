@@ -12,20 +12,20 @@ namespace Microsoft.DotNet.Interactive.Server
 {
     public class StandardIOKernelServer : IDisposable
     {
-        private readonly IKernel _kernel;
+        private readonly Kernel _kernel;
         private readonly InputTextStream _input;
         private readonly OutputTextStream _output;
         private readonly CompositeDisposable _disposables;
 
         public StandardIOKernelServer(
-            IKernel kernel, 
+            Kernel kernel, 
             TextReader input, 
             TextWriter output) : this(kernel, new InputTextStream(input), new OutputTextStream(output))
         {
         }
 
         private StandardIOKernelServer(
-            IKernel kernel, 
+            Kernel kernel, 
             InputTextStream input,
             OutputTextStream output)
         {
@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Interactive.Server
             await _kernel.SendAsync(streamKernelCommand.Command);
         }
 
-        private void WriteEventToOutput(IKernelEvent kernelEvent)
+        private void WriteEventToOutput(KernelEvent kernelEvent)
         {
             if (kernelEvent is ReturnValueProduced rvp && rvp.Value is DisplayedValue)
             {

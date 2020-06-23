@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [Fact(Timeout = 45000)]
         public void Create_creates_envelope_of_the_correct_type()
         {
-            IKernelEvent @event = new DisplayedValueProduced(
+            KernelEvent @event = new DisplayedValueProduced(
                 123,
                 new SubmitCode("display(123)"));
 
@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [Fact(Timeout = 45000)]
         public void Create_creates_envelope_with_reference_to_original_event()
         {
-            IKernelEvent @event = new DisplayedValueProduced(
+            KernelEvent @event = new DisplayedValueProduced(
                 123,
                 new SubmitCode("display(123)"));
 

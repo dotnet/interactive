@@ -4,10 +4,10 @@
 import {
     CommandFailed,
     CommandFailedType,
-    CommandHandledType,
-    CompletionRequestCompleted,
-    CompletionRequestCompletedType,
-    DisplayEventBase,
+    CommandSucceededType,
+    CompletionsProduced,
+    CompletionsProducedType,
+    DisplayEvent,
     DisplayedValueProducedType,
     DisplayedValueUpdatedType,
     DisposableSubscription,
@@ -20,8 +20,8 @@ import {
     KernelEventEnvelopeObserver,
     KernelEventType,
     KernelTransport,
-    RequestCompletion,
-    RequestCompletionType,
+    RequestCompletions,
+    RequestCompletionsType,
     RequestHoverText,
     RequestHoverTextType,
     ReturnValueProducedType,
@@ -58,7 +58,7 @@ export class InteractiveClient {
                 }
     
                 switch (eventEnvelope.eventType) {
-                    case CommandHandledType:
+                    case CommandSucceededType:
                         resolve();
                         break;
                     case CommandFailedType:
@@ -79,7 +79,7 @@ export class InteractiveClient {
                     case StandardErrorValueProducedType:
                     case StandardOutputValueProducedType:
                         {
-                            let disp = <DisplayEventBase>eventEnvelope.event;
+                            let disp = <DisplayEvent>eventEnvelope.event;
                             let output = displayEventToCellOutput(disp);
                             outputs.push(output);
                             reportOutputs();
@@ -89,7 +89,7 @@ export class InteractiveClient {
                     case DisplayedValueUpdatedType:
                     case ReturnValueProducedType:
                         {
-                            let disp = <DisplayEventBase>eventEnvelope.event;
+                            let disp = <DisplayEvent>eventEnvelope.event;
                             let output = displayEventToCellOutput(disp);
 
                             if (disp.valueId) {
@@ -122,22 +122,22 @@ export class InteractiveClient {
         });
     }
 
-    completion(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionRequestCompleted> {
-        let command: RequestCompletion = {
+    completion(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionsProduced> {
+        let command: RequestCompletions = {
             code: code,
-            position: {
+            linePosition: {
                 line,
                 character
             },
             targetKernelName: language
         };
-        return this.submitCommandAndGetResult<CompletionRequestCompleted>(command, RequestCompletionType, CompletionRequestCompletedType, token);
+        return this.submitCommandAndGetResult<CompletionsProduced>(command, RequestCompletionsType, CompletionsProducedType, token);
     }
 
     hover(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<HoverTextProduced> {
         let command: RequestHoverText = {
             code: code,
-            position: {
+            linePosition: {
                 line: line,
                 character: character,
             },
@@ -176,7 +176,7 @@ export class InteractiveClient {
                             reject(err);
                         }
                         break;
-                    case CommandHandledType:
+                    case CommandSucceededType:
                         if (!handled) {
                             handled = true;
                             disposable.dispose();
@@ -233,7 +233,7 @@ export class InteractiveClient {
                     case DisplayedValueProducedType:
                     case DisplayedValueUpdatedType:
                     case ReturnValueProducedType:
-                        let disp = <DisplayEventBase>eventEnvelope.event;
+                        let disp = <DisplayEvent>eventEnvelope.event;
                         let output = displayEventToCellOutput(disp);
                         this.deferredOutput.push(output);
                         break;
@@ -247,7 +247,7 @@ export class InteractiveClient {
     }
 }
 
-export function displayEventToCellOutput(disp: DisplayEventBase): CellDisplayOutput {
+export function displayEventToCellOutput(disp: DisplayEvent): CellDisplayOutput {
     let data: { [key: string]: any; } = {};
     if (disp.formattedValues && disp.formattedValues.length > 0) {
         for (let formatted of disp.formattedValues) {

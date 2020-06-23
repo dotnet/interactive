@@ -66,7 +66,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                                        e => e.Should().BeOfType<DisplayedValueUpdated>().Which
                                              .Value.Should().BeOfType<string>().Which
                                              .Should().Be(string.Empty),
-                                       e => e.Should().BeOfType<CommandHandled>());
+                                       e => e.Should().BeOfType<CommandSucceeded>());
         }
 
         [Fact]
@@ -102,7 +102,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                         .BeOfType<StandardOutputValueProduced>()
                         .Which.Value.ToString()
                         .Should().Be("/this/is/a/path" + Environment.NewLine),
-                e => e.Should().BeOfType<CommandHandled>(),
+                e => e.Should().BeOfType<CommandSucceeded>(),
                 e => e.Should()
                         .BeOfType<CodeSubmissionReceived>()
                         .Which.Code
@@ -119,7 +119,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                         .BeOfType<StandardOutputValueProduced>()
                         .Which.Value.ToString()
                         .Should().Be("echo" + Environment.NewLine),
-                e => e.Should().BeOfType<CommandHandled>());
+                e => e.Should().BeOfType<CommandSucceeded>());
         }
 
         [Fact]

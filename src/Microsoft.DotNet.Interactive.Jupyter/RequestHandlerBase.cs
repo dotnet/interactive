@@ -18,19 +18,19 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     {
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
-        protected RequestHandlerBase(IKernel kernel, IScheduler scheduler)
+        protected RequestHandlerBase(Kernel kernel, IScheduler scheduler)
         {
             Kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
             KernelEvents = Kernel.KernelEvents.ObserveOn(scheduler ?? throw new ArgumentNullException(nameof(scheduler)));
         }
 
-        protected IObservable<IKernelEvent> KernelEvents { get; }
+        protected IObservable<KernelEvent> KernelEvents { get; }
 
-        protected FrontendEnvironment FrontendEnvironment => (Kernel as KernelBase)?.FrontendEnvironment;
+        protected FrontendEnvironment FrontendEnvironment => Kernel.FrontendEnvironment;
 
         protected async Task SendAsync(
             JupyterRequestContext context,
-            IKernelCommand command)
+            KernelCommand command)
         {
             command.SetToken(context.Token);
 
@@ -39,18 +39,18 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                       .Where(ShouldForward)
                       .Subscribe(e => OnKernelEventReceived(e, context));
 
-            await ((KernelBase) Kernel).SendAsync(
+            await Kernel.SendAsync(
                 command,
                 CancellationToken.None);
 
-            bool ShouldForward(IKernelEvent e)
+            bool ShouldForward(KernelEvent e)
             {
                 return (e.Command?.GetToken() == context.Token) || e.Command.ShouldPublishInternalEvents();
             }
         }
 
         protected abstract void OnKernelEventReceived(
-            IKernelEvent @event,
+            KernelEvent @event,
             JupyterRequestContext context);
 
         protected static T GetJupyterRequest(JupyterRequestContext context)
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             return request;
         }
 
-        protected IKernel Kernel { get; }
+        protected Kernel Kernel { get; }
 
         public void Dispose()
         {

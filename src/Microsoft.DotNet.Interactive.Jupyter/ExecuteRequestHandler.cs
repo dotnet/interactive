@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             _textSpanFormatter = new TextSpanFormatter();
         }
 
-        public ExecuteRequestHandler(IKernel kernel, IScheduler scheduler = null)
+        public ExecuteRequestHandler(Kernel kernel, IScheduler scheduler = null)
             : base(kernel, scheduler ?? CurrentThreadScheduler.Instance)
         {
         }
@@ -51,18 +51,18 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         }
 
         protected override void OnKernelEventReceived(
-            IKernelEvent @event, 
+            KernelEvent @event, 
             JupyterRequestContext context)
         {
             switch (@event)
             {
-                case DisplayEventBase displayEvent:
+                case DisplayEvent displayEvent:
                     OnDisplayEvent(displayEvent, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
                     break;
                 case DiagnosticLogEntryProduced logEvent:
                     OnLogEvent(logEvent, context.JupyterRequestMessageEnvelope, context.JupyterMessageSender);
                     break;
-                case CommandHandled _:
+                case CommandSucceeded _:
                     OnCommandHandled(context.JupyterMessageSender);
                     break;
                 case CommandFailed commandFailed:
@@ -140,7 +140,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             jupyterMessageSender.Send(executeReplyPayload);
         }
 
-        private void OnDisplayEvent(DisplayEventBase displayEvent,
+        private void OnDisplayEvent(DisplayEvent displayEvent,
             ZeroMQMessage request,
             IJupyterMessageSender jupyterMessageSender)
         {

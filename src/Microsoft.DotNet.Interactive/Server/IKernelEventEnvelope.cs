@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.Interactive.Server
 {
     public interface IKernelEventEnvelope
     {
-        IKernelEvent Event { get; }
+        KernelEvent Event { get; }
 
         string EventType { get; }
     }
