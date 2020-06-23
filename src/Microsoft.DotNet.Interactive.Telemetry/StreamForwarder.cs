@@ -18,13 +18,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
         private StringWriter _capture;
         private Action<string> _writeLine;
 
-        public string CapturedOutput
-        {
-            get
-            {
-                return _capture?.GetStringBuilder()?.ToString();
-            }
-        }
+        public string CapturedOutput => _capture?.GetStringBuilder()?.ToString();
 
         public StreamForwarder Capture()
         {
@@ -53,19 +47,16 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 
         public void Read(TextReader reader)
         {
-            var bufferSize = 1;
-
-            int readCharacterCount;
-            char currentCharacter;
+            const int bufferSize = 1;
 
             var buffer = new char[bufferSize];
             _builder = new StringBuilder();
 
             // Using Read with buffer size 1 to prevent looping endlessly
             // like we would when using Read() with no buffer
-            while ((readCharacterCount = reader.Read(buffer, 0, bufferSize)) > 0)
+            while ((reader.Read(buffer, 0, bufferSize)) > 0)
             {
-                currentCharacter = buffer[0];
+                var currentCharacter = buffer[0];
 
                 if (currentCharacter == s_flushBuilderCharacter)
                 {
@@ -95,15 +86,9 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 
         private void WriteLine(string str)
         {
-            if (_capture != null)
-            {
-                _capture.WriteLine(str);
-            }
+            _capture?.WriteLine(str);
 
-            if (_writeLine != null)
-            {
-                _writeLine(str);
-            }
+            _writeLine?.Invoke(str);
         }
 
         private void ThrowIfNull(object obj)

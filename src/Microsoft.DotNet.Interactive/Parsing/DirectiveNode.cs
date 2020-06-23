@@ -31,12 +31,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 throw new InvalidOperationException($"{nameof(DirectiveParser)} was not set.");
             }
 
-            if (_parseResult == null)
-            {
-                _parseResult = DirectiveParser.Parse(Text);
-            }
-
-            return _parseResult;
+            return _parseResult ??= DirectiveParser.Parse(Text);
         }
 
         public override IEnumerable<Diagnostic> GetDiagnostics()

@@ -24,14 +24,12 @@ namespace Microsoft.DotNet.Interactive.Telemetry
             try
             {
                 var macAddress = GetMacAddressCore();
-                if (String.IsNullOrWhiteSpace(macAddress) || macAddress.Equals(InvalidMacAddress, StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrWhiteSpace(macAddress) || macAddress.Equals(InvalidMacAddress, StringComparison.OrdinalIgnoreCase))
                 {
                     return GetMacAddressByNetworkInterface();
                 }
-                else
-                {
-                    return macAddress;
-                }
+
+                return macAddress;
             }
             catch
             {
@@ -43,13 +41,13 @@ namespace Microsoft.DotNet.Interactive.Telemetry
         {
             try
             {
-                var shelloutput = GetShellOutMacAddressOutput();
-                if (String.IsNullOrWhiteSpace(shelloutput))
+                var shellOutput = GetShellOutMacAddressOutput();
+                if (string.IsNullOrWhiteSpace(shellOutput))
                 {
                     return null;
                 }
 
-                return ParseMACAddress(shelloutput);
+                return ParseMACAddress(shellOutput);
             }
             catch (Win32Exception e)
             {
@@ -57,10 +55,8 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                 {
                     return GetMacAddressByNetworkInterface();
                 }
-                else
-                {
-                    throw;
-                }
+
+                throw;
             }
         }
 
@@ -76,11 +72,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                 }
             }
 
-            if (macAddress != null)
-            {
-                return macAddress;
-            }
-            return null;
+            return macAddress;
         }
 
         private static string GetIpCommandOutput()
@@ -90,16 +82,9 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                 FileName = "ip",
                 Arguments = "link",
                 UseShellExecute = false
-            }.ExecuteAndCaptureOutput(out string ipStdOut, out string ipStdErr);
+            }.ExecuteAndCaptureOutput(out var ipStdOut, out _);
 
-            if (ipResult == 0)
-            {
-                return ipStdOut;
-            }
-            else
-            {
-                return null;
-            }
+            return ipResult == 0 ? ipStdOut : null;
         }
 
         private static string GetShellOutMacAddressOutput()
@@ -110,16 +95,9 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                 {
                     FileName = "getmac.exe",
                     UseShellExecute = false
-                }.ExecuteAndCaptureOutput(out string stdOut, out string stdErr);
+                }.ExecuteAndCaptureOutput(out var stdOut, out _);
 
-                if (result == 0)
-                {
-                    return stdOut;
-                }
-                else
-                {
-                    return null;
-                }
+                return result == 0 ? stdOut : null;
             }
             else
             {
@@ -130,7 +108,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                         FileName = "ifconfig",
                         Arguments = "-a",
                         UseShellExecute = false
-                    }.ExecuteAndCaptureOutput(out string ifconfigStdOut, out string ifconfigStdErr);
+                    }.ExecuteAndCaptureOutput(out var ifconfigStdOut, out _);
 
                     if (ifconfigResult == 0)
                     {
@@ -157,26 +135,26 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 
         private static string GetMacAddressByNetworkInterface()
         {
-            return GetMacAddressesByNetworkInterface().Where(x => !x.Equals(InvalidMacAddress, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            return GetMacAddressesByNetworkInterface().FirstOrDefault(x => !x.Equals(InvalidMacAddress, StringComparison.OrdinalIgnoreCase));
         }
 
         private static List<string> GetMacAddressesByNetworkInterface()
         {
-            NetworkInterface[] nics = NetworkInterface.GetAllNetworkInterfaces();
+            var nics = NetworkInterface.GetAllNetworkInterfaces();
             var macs = new List<string>();
 
-            if (nics == null || nics.Length < 1)
+            if (nics.Length < 1)
             {
                 macs.Add(string.Empty);
                 return macs;
             }
 
-            foreach (NetworkInterface adapter in nics)
+            foreach (var adapter in nics)
             {
-                IPInterfaceProperties properties = adapter.GetIPProperties();
+                var properties = adapter.GetIPProperties();
 
-                PhysicalAddress address = adapter.GetPhysicalAddress();
-                byte[] bytes = address.GetAddressBytes();
+                var address = adapter.GetPhysicalAddress();
+                var bytes = address.GetAddressBytes();
                 macs.Add(string.Join("-", bytes.Select(x => x.ToString("X2"))));
                 if (macs.Count >= 10)
                 {
