@@ -30,7 +30,7 @@ namespace SampleExtensions.Tests
             KernelEvents = _kernel.KernelEvents.ToSubscribedList();
         }
 
-        public SubscribedList<KernelEvent> KernelEvents { get; set; }
+        public SubscribedList<IKernelEvent> KernelEvents { get; set; }
 
         public void Dispose()
         {

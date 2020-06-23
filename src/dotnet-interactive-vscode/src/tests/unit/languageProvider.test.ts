@@ -17,7 +17,7 @@ describe('LanguageProvider tests', () => {
                 {
                     eventType: CompletionsProducedType,
                     event: {
-                        range: null,
+                        linePositionSpan: null,
                         completions: [
                             {
                                 displayText: 'Sqrt',
@@ -53,7 +53,7 @@ describe('LanguageProvider tests', () => {
         // perform the completion request
         let completion = await provideCompletion(clientMapper, 'csharp', document, position, token);
         expect(completion).to.deep.equal({
-            range: null,
+            linePositionSpan: null,
             completions: [
                 {
                     displayText: 'Sqrt',
@@ -81,7 +81,7 @@ describe('LanguageProvider tests', () => {
                             }
                         ],
                         isMarkdown: true,
-                        range: {
+                        linePositionSpan: {
                             start: {
                                 line: 0,
                                 character: 8
