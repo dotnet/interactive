@@ -221,6 +221,41 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                                      because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
         }
 
+        [Fact]
+        public async Task Magic_command_completions_do_not_include_duplicates()
+        {
+            var cSharpKernel = new CSharpKernel();
+
+            using var compositeKernel = new CompositeKernel
+            {
+                cSharpKernel
+            };
+
+            compositeKernel.DefaultKernelName = cSharpKernel.Name;
+
+            var commandName = "#!hello";
+            compositeKernel.AddDirective(new Command(commandName)
+            {
+                Handler = CommandHandler.Create(() => {})
+            });
+            cSharpKernel.AddDirective(new Command(commandName)
+            {
+                Handler = CommandHandler.Create(() => {})
+            });
+
+            var result = await compositeKernel.SendAsync(new RequestCompletions("#!", new LinePosition(0, 2)));
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events
+                .Should()
+                .ContainSingle<CompletionsProduced>()
+                .Which
+                .Completions
+                .Should()
+                .ContainSingle(e => e.DisplayText == commandName);
+        }
+
         [Theory]
         [InlineData("[|#!d|]", "#!directiveOnChild,#!directiveOnParent", Language.CSharp)]
         [InlineData("[|#!dir|]\n", "#!directiveOnChild,#!directiveOnParent", Language.CSharp)]
@@ -235,7 +270,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         {
             var kernel = CreateKernel(defaultLanguage);
 
-            var kernelToExtend = (Kernel) kernel.FindKernel(defaultLanguage.LanguageName());
+            var kernelToExtend = kernel.FindKernel(defaultLanguage.LanguageName());
 
             kernelToExtend.AddDirective(new Command("#!directiveOnChild")
             {

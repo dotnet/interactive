@@ -229,7 +229,9 @@ namespace Microsoft.DotNet.Interactive
                 allCompletions.AddRange(completions);
             }
 
-            return allCompletions;
+            return allCompletions
+                   .Distinct(CompletionItemComparer.Instance)
+                   .ToArray();
         }
 
         public IEnumerator<Kernel> GetEnumerator() => _childKernels.GetEnumerator();
