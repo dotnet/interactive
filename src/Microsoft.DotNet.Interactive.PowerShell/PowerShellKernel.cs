@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Management.Automation.Language;
@@ -126,7 +127,19 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 switch (variable.Value)
                 {
                     case PSObject psobject:
-                        value = (T) psobject.BaseObject;
+                        if (psobject.BaseObject is PSCustomObject)
+                        {
+                            Dictionary<string, object> table = new Dictionary<string, object>();
+                            foreach (var p in psobject.Properties)
+                            {
+                                table.Add(p.Name, p.Value);
+                            }
+                            value = (T) ((Object)table);
+                        }
+                        else
+                        {
+                            value = (T) psobject.BaseObject;
+                        }
                         break;
                     default:
                         value = (T) variable.Value;
