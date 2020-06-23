@@ -160,7 +160,7 @@ using static {typeof(TopLevelMethods).FullName};
 
                 t.WriteTo(writer, HtmlEncoder.Default);
 
-                IEnumerable<IHtmlContent> Summary(ICommand command)
+                static IEnumerable<IHtmlContent> Summary(ICommand command)
                 {
                     yield return new HtmlString("<pre>");
 

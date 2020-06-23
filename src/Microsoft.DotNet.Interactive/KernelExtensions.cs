@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive
             var root = kernel
                        .RecurseWhileNotNull(k => k switch
                        {
-                           Kernel kb => kb.ParentKernel,
+                           { } kb => kb.ParentKernel,
                            _ => null
                        })
                        .LastOrDefault();

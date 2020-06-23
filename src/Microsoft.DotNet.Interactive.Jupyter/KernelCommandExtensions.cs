@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 {
     internal static class KernelCommandExtensions
     {
-        internal const string PublishInternalEventsKey = "publish-internal-events";
+        private const string PublishInternalEventsKey = "publish-internal-events";
 
         internal static bool ShouldPublishInternalEvents(
             this KernelCommand command)
