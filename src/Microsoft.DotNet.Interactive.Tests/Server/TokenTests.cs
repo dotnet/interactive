@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 {
     public class TokenTests
     {
-        [Fact(Timeout = 45000)]
+        [Fact]
         public void A_token_is_generated_on_demand()
         {
             var command = new SubmitCode("123");
@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                    .NotBeNullOrWhiteSpace();
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public void Repeated_calls_to_GetToken_for_the_same_command_return_the_same_value()
         {
             var command = new SubmitCode("123");
@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             token2.Should().Be(token1);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task When_created_in_the_same_context_then_child_commands_having_the_same_parent_also_have_the_same_token()
         {
             var parentCommand = new SubmitCode("123");
@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             token1.Should().Be(token2);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task When_resent_then_child_commands_having_the_same_parent_have_repeatable_tokens()
         {
             var parentCommand = new SubmitCode("123");
@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             token1.Should().Be(token2);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public void Command_tokens_are_reproducible_given_the_same_seed()
         {
             var command1 = new SubmitCode("123");
@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             token2.Should().Be(token1);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public void Command_tokens_cannot_be_changed()
         {
             var command = new SubmitCode("123");

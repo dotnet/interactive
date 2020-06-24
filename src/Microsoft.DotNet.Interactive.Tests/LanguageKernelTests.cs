@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.FSharp)]
         [InlineData(Language.CSharp)]
         public async Task it_returns_the_result_of_a_non_null_expression(Language language)
@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Be(123);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.FSharp)]
         public async Task it_returns_no_result_for_a_null_value(Language language)
         {
@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         // Option 1: inline switch
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.FSharp)]
         [InlineData(Language.CSharp)]
         public async Task it_remembers_state_between_submissions(Language language)
@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Be(5);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp, Skip = "Issue #695 - dotnet-interactive with an F# notebook does not load System.Text.Json")]
         public async Task it_can_reference_system_text_json(Language language)
@@ -125,7 +125,7 @@ location.EndsWith(""System.Text.Json.dll"")"
               .Be(true);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.FSharp)]
         public async Task kernel_base_ignores_command_line_directives(Language language)
         {
@@ -146,7 +146,7 @@ location.EndsWith(""System.Text.Json.dll"")"
                 .Be(10);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task when_it_throws_exception_after_a_value_was_produced_then_only_the_error_is_returned(Language language)
@@ -194,7 +194,7 @@ location.EndsWith(""System.Text.Json.dll"")"
                 .BeLessThan(lastFailureIndex);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task it_returns_exceptions_thrown_in_user_code(Language language)
@@ -244,7 +244,7 @@ f();"
                 .BeOfType<DataMisalignedException>();
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task it_returns_diagnostics(Language language)
@@ -283,7 +283,7 @@ f();"
                 .Be(error);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.PowerShell)]
         // no F# equivalent, because it doesn't have the concept of complete/incomplete submissions
@@ -307,7 +307,7 @@ f();"
                 .Contain(e => e is IncompleteCodeSubmissionReceived);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.PowerShell)]
         // no F# equivalent, because it doesn't have the concept of complete/incomplete submissions
@@ -332,7 +332,7 @@ f();"
                 .Contain(e => e is CompleteCodeSubmissionReceived);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         // no F# equivalent, because it doesn't have the concept of complete/incomplete submissions
         public async Task it_can_analyze_complete_stdio_submissions(Language language)
@@ -355,7 +355,7 @@ f();"
                 .Contain(e => e is CompleteCodeSubmissionReceived);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task expression_evaluated_to_null_has_result_with_null_value(Language language)
@@ -379,7 +379,7 @@ f();"
                         .BeNull();
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         // F# doesn't have the concept of a statement
         public async Task it_does_not_return_a_result_for_a_statement(Language language)
@@ -403,7 +403,7 @@ f();"
                 .NotContain(e => e is ReturnValueProduced);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task it_does_not_return_a_result_for_a_binding(Language language)
@@ -427,7 +427,7 @@ f();"
                 .NotContain(e => e is ReturnValueProduced);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp, "true ? 25 : 20")]
         [InlineData(Language.FSharp, "if true then 25 else 20")]
         [InlineData(Language.FSharp, "if false then 15 elif true then 25 else 20")]
@@ -447,7 +447,7 @@ f();"
         }
 
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task it_aggregates_multiple_submissions(Language language)
@@ -483,7 +483,7 @@ f();"
                         .Be(3);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task it_produces_values_when_executing_Console_output(Language language)
@@ -517,7 +517,7 @@ Console.Write(""value three"");"
                     new StandardOutputValueProduced("value three", kernelCommand, new[] { new FormattedValue("text/plain", "value three") }));
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.FSharp)]
         public async Task kernel_captures_stdout(Language language)
         {
@@ -535,7 +535,7 @@ Console.Write(""value three"");"
                 .Be("hello from F#");
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.FSharp)]
         public async Task kernel_captures_stderr(Language language)
         {
@@ -615,7 +615,7 @@ Console.Write(""value three"");
 
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task the_output_is_asynchronous(Language language)
@@ -673,7 +673,7 @@ Console.Write(2);
 
 
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task it_formats_func_instances(Language language)
@@ -705,7 +705,7 @@ Console.Write(2);
                 .Contain(e => ((SubmitCode)e.Command).Code == source[2]);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp, "System.", "IO")]
         [InlineData(Language.FSharp, "System.", "IO")]
         [InlineData(Language.PowerShell, "[System.", "System.IO")]

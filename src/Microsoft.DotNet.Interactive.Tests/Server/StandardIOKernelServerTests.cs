@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             _disposables.Add(() => Kernel.DisplayIdGenerator = null);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public void The_server_is_started_after_creation()
         {
             _standardIOKernelServer
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 .Be("abc");
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task It_does_not_publish_ReturnValueProduced_events_if_the_value_is_DisplayedValue()
         {
             await _standardIOKernelServer.WriteAsync(new SubmitCode("display(1543)"));
@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 .NotContain(e => e.Event is ReturnValueProduced);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task It_publishes_diagnostic_events_on_json_parse_errors()
         {
             var invalidJson = "{ hello";
@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 .Contain(invalidJson);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task It_indicates_when_a_code_submission_is_incomplete()
         {
             var command = new SubmitCode(@"var a = 12");
@@ -149,7 +149,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 .NotContain("exception");
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task It_can_eval_function_instances()
         {
             await _standardIOKernelServer.WriteAsync(new SubmitCode(@"Func<int> func = () => 1;"));
@@ -164,7 +164,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 .Be(2);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public async Task Kernel_can_pound_r_nuget_using_kernel_client()
         {
             var command = new SubmitCode(@"#r ""nuget:Microsoft.Spark, 0.4.0""");

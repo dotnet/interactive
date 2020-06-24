@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 {
     public class UtilityTests
     {
-        [Fact(Timeout = 45000)]
+        [Fact]
         public void replacement_position_can_be_found_at_the_end_of_a_string()
         {
             var code = "System.Linq.Enumerable.";
@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             Assert.Equal(code.Length, pos);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public void replacement_position_can_be_found_not_at_the_end_of_a_string()
         {
             var code = "System.Linq.Enumerable.Ran";
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             Assert.Equal(lastDotPos, pos);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public void replacement_position_can_be_found_at_the_end_of_a_multiline_string()
         {
             var code = @"
@@ -39,7 +39,7 @@ Enumerable.
             Assert.Equal(lastDotPos, pos);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public void replacement_position_can_be_found_not_at_the_end_of_a_multiline_string()
         {
             var code = @"
