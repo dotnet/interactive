@@ -126,14 +126,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 object outVal;
                 if(variable.Value is PSObject psobject)
                 {
-                    if (psobject.BaseObject is PSCustomObject)
-                    {
-                        outVal = GetPSObjectProperties(psobject);
-                    }
-                    else
-                    {
-                        outVal = psobject.BaseObject;
-                    }
+                    outVal = psobject.Unwrap();
                 }
                 else
                 {
@@ -242,15 +235,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             context.Publish(completion);
             return Task.CompletedTask;
-        }
-
-        public static Dictionary<String, Object> GetPSObjectProperties(PSObject psObject){
-            Dictionary<string, object> table = new Dictionary<string, object>();
-            foreach (var p in psObject.Properties)
-            {
-                table.Add(p.Name, p.Value);
-            }
-            return table;
         }
 
         private async Task RunSubmitCodeInAzShell(string code)

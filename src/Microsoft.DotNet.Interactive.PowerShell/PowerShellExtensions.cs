@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Security;
 using System.Threading.Tasks;
@@ -95,6 +96,33 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
 
             return secure;
+        }
+
+        internal static object Unwrap(this PSObject inputObject)
+        {
+            object obj;
+            if (inputObject is PSObject psObj)
+            {
+                if (psObj.BaseObject is PSCustomObject)
+                {
+                    Dictionary<string, object> table = new Dictionary<string, object>();
+                    foreach (var p in psObj.Properties)
+                    {
+                        table.Add(p.Name, p.Value);
+                    }
+                    obj = table;
+                }
+                else
+                {
+                    obj = psObj.BaseObject;
+                }
+            }
+            else
+            {
+                obj = inputObject;
+            }
+            
+            return obj;
         }
     }
 }
