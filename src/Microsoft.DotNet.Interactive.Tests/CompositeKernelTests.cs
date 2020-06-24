@@ -93,7 +93,7 @@ new [] {1,2,3}");
                   .ContainSingle<CommandSucceeded>(e => e.Command == fsharpCommand);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(0)]
         [InlineData(1)]
         [InlineData(2)]

@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 {
     public class KernelCommandEnvelopeTests
     {
-        [Fact(Timeout = 45000)]
+        [Fact]
         public void Create_creates_envelope_of_the_correct_type()
         {
             KernelCommand command = new SubmitCode("display(123)");
@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             envelope.Should().BeOfType<KernelCommandEnvelope<SubmitCode>>();
         }
         
-        [Fact(Timeout = 45000)]
+        [Fact]
         public void Create_creates_envelope_with_reference_to_original_command()
         {
             KernelCommand command = new SubmitCode("display(123)");
