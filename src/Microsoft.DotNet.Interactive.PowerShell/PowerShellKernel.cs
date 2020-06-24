@@ -123,15 +123,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             if (variable != null)
             {
-                object outVal;
-                if(variable.Value is PSObject psobject)
-                {
-                    outVal = psobject.Unwrap();
-                }
-                else
-                {
-                    outVal = variable.Value;
-                }
+                object outVal = (variable.Value is PSObject psobject) ? psobject.Unwrap() : variable.Value;
 
                 if(outVal is T tObj)
                 {
