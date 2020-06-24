@@ -62,13 +62,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
             {
                 if (psObj.BaseObject is PSCustomObject)
                 {
-                    Dictionary<string, object> table = new Dictionary<string, object>();
-                    var props = psObj.Properties;
-                    foreach (var p in props)
-                    {
-                        table.Add(p.Name, p.Value);
-                    }
-                    obj = table;
+                    obj = PowerShellKernel.GetPSObjectProperties(psObj);
                 }
                 else
                 {
