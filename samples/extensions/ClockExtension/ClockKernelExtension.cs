@@ -5,6 +5,7 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Formatting;
 
@@ -12,7 +13,7 @@ namespace ClockExtension
 {
     public class ClockKernelExtension : IKernelExtension
     {
-        public async Task OnLoadAsync(IKernel kernel)
+        public async Task OnLoadAsync(Kernel kernel)
         {
             Formatter<DateTime>.Register((date, writer) =>
             {
@@ -24,9 +25,8 @@ namespace ClockExtension
                 writer.Write(date.DrawSvgClock());
             }, "text/html");
 
-            if (kernel is KernelBase kernelBase)
-            {
-                var clockCommand = new Command("#!clock", "Displays a clock showing the current or specified time.")
+
+            var clockCommand = new Command("#!clock", "Displays a clock showing the current or specified time.")
                 {
                     new Option<int>(new[]{"-o","--hour"},
                                     "The position of the hour hand"),
@@ -36,16 +36,16 @@ namespace ClockExtension
                                     "The position of the second hand")
                 };
 
-                clockCommand.Handler = CommandHandler.Create(
-                    async (int hour, int minute, int second, KernelInvocationContext context) => 
-                {
-                    await context.DisplayAsync(SvgClock.DrawSvgClock(hour, minute, second));
-                });
+            clockCommand.Handler = CommandHandler.Create(
+                async (int hour, int minute, int second, KernelInvocationContext context) =>
+            {
+                await context.DisplayAsync(SvgClock.DrawSvgClock(hour, minute, second));
+            });
 
-                kernelBase.AddDirective(clockCommand);
-            }
+            kernel.AddDirective(clockCommand);
 
-            if (KernelInvocationContext.Current is {} context)
+
+            if (KernelInvocationContext.Current is { } context)
             {
                 await context.DisplayAsync($"`{nameof(ClockExtension)}` is loaded. It adds visualizations for `System.DateTime` and `System.DateTimeOffset`. Try it by running: `display(DateTime.Now);` or `#!clock -h`", "text/markdown");
             }

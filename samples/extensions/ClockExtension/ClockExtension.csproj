@@ -15,14 +15,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.20322.2" />
-    <PackageReference Include="microsoft.dotnet.interactive.formatting" Version="1.0.0-beta.20322.2" />
+    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.20324.1" />
+    <PackageReference Include="microsoft.dotnet.interactive.formatting" Version="1.0.0-beta.20324.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(OutputPath)/ClockExtension.dll" 
-          Pack="true" 
-          PackagePath="interactive-extensions/dotnet" />
+    <None Include="$(OutputPath)/ClockExtension.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
   </ItemGroup>
 
 </Project>
