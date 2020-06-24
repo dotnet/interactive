@@ -33,5 +33,21 @@ namespace Microsoft.DotNet.Interactive.Sql.Tests
 
             events.Should().ContainSingle<DisplayedValueProduced>().Which.Value.Should().BeOfType<string>().Which.Should().Be("HELLO WORLD");
         }
+
+        [Fact]
+        public async Task ConnectionTest()
+        {
+            using var kernel = new SqlKernel();
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            var testUri = "untitled:Test";
+            var testConnStr = "Server=localhost/SQLEXPRESS;Database=tempdb;Integrated Security=true;";
+
+            var connectResult = await kernel.ConnectAsync(testUri, testConnStr);
+            Assert.True(connectResult, "Connection attempt should succeed");
+
+            var disconnectResult = await kernel.DisconnectAsync(testUri);
+            Assert.True(disconnectResult, "Disconnect attempt should succeed");
+        }
     }
 }
