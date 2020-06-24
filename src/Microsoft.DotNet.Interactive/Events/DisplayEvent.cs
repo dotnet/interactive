@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.DotNet.Interactive.Commands;
+using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
@@ -20,6 +21,7 @@ namespace Microsoft.DotNet.Interactive.Events
             ValueId = valueId;
         }
 
+        [JsonIgnore]
         public object Value { get; }
 
         public IReadOnlyCollection<FormattedValue> FormattedValues { get; }

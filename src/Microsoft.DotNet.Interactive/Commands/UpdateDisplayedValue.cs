@@ -9,19 +9,16 @@ namespace Microsoft.DotNet.Interactive.Commands
 {
     public class UpdateDisplayedValue : KernelCommand
     {
-        public UpdateDisplayedValue(object value, FormattedValue formattedValue, string valueId)
+        public UpdateDisplayedValue(FormattedValue formattedValue, string valueId)
         {
             if (string.IsNullOrWhiteSpace(valueId))
             {
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(valueId));
             }
 
-            Value = value;
             FormattedValue = formattedValue;
             ValueId = valueId;
         }
-
-        public object Value { get; }
 
         public FormattedValue FormattedValue { get; }
         
@@ -31,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         {
             context.Publish(
                 new DisplayedValueUpdated(
-                    Value,
+                    null,
                     valueId: ValueId,
                     command: this,
                     formattedValues: new[] { FormattedValue }

@@ -26,8 +26,7 @@ namespace Microsoft.DotNet.Interactive
             object value,
             string mimeType = null)
         {
-            var displayId = Kernel.DisplayIdGenerator?.Invoke() ??
-                            Guid.NewGuid().ToString();
+            var displayId = Guid.NewGuid().ToString();
 
             mimeType ??= Formatter.PreferredMimeTypeFor(value.GetType());
 
@@ -58,7 +57,6 @@ namespace Microsoft.DotNet.Interactive
 
             context.Publish(
                 new StandardOutputValueProduced(
-                    output,
                     command ?? context.Command,
                     formattedValues));
         }
@@ -76,7 +74,6 @@ namespace Microsoft.DotNet.Interactive
 
             context.Publish(
                 new StandardErrorValueProduced(
-                    error,
                     command ?? context.Command,
                     formattedValues));
         }

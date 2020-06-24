@@ -114,7 +114,6 @@ type FSharpKernelBase () as this =
 
     let handleRequestCompletions (requestCompletions: RequestCompletions) (context: KernelInvocationContext) =
         async {
-            context.Publish(CompletionRequestReceived(requestCompletions))
             let! declarationItems = script.Value.GetCompletionItems(requestCompletions.Code, requestCompletions.LinePosition.Line + 1, requestCompletions.LinePosition.Character)
             let completionItems =
                 declarationItems

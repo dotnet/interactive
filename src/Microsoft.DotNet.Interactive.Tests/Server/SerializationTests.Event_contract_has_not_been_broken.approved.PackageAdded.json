@@ -1,0 +1,1 @@
+{"event":{"packageReference":{"assemblyPaths":["C:\\path\\to\\a.dll"],"probingPaths":[],"packageRoot":"C:\\","packageName":"ThePackage","packageVersion":"1.2.3","isPackageVersionSpecified":true}},"eventType":"PackageAdded","command":null}

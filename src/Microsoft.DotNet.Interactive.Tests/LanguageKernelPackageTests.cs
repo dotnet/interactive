@@ -175,9 +175,6 @@ json"
 
             await kernel.SendAsync(new RequestCompletions("Newtonsoft.Json.JsonConvert.", new LinePosition(0, 28)));
 
-            KernelEvents.Should()
-                        .ContainSingle(e => e is CompletionRequestReceived);
-
             KernelEvents.Single(e => e is CompletionsProduced)
                         .As<CompletionsProduced>()
                         .Completions
@@ -302,7 +299,8 @@ catch (Exception e)
 
             events
                 .Should()
-                .ContainSingle<StandardOutputValueProduced>(e => e.Value.As<string>().Contains("success"));
+                .ContainSingle<StandardOutputValueProduced>(
+                    e => e.FormattedValues.Any(v => v.Value.Contains("success")));
         }
 
         [Fact]

@@ -8,6 +8,7 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public class DisplayedValueProduced : DisplayEvent
     {
+        // FIX: (DisplayValueProduced) reorder constructor parameters so FormattedValues is not optional
         public DisplayedValueProduced(
             object value,
             KernelCommand command,

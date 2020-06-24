@@ -9,10 +9,9 @@ namespace Microsoft.DotNet.Interactive.Events
     public class StandardErrorValueProduced : DisplayEvent
     {
         public StandardErrorValueProduced(
-            object value,
             KernelCommand command,
             IReadOnlyCollection<FormattedValue> formattedValues = null,
-            string valueId = null) : base(value, command, formattedValues, valueId)
+            string valueId = null) : base(null, command, formattedValues, valueId)
         {
         }
     }

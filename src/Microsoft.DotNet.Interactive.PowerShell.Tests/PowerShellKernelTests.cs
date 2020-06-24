@@ -135,10 +135,13 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                                 .ToSubscribedList()
                                 .OfType<StandardOutputValueProduced>();
 
-            outputs.Should().HaveCount(2);
-            Assert.Collection(outputs,
-                              e => e.Value.As<string>().Should().Be("Get-Verb > $null" + Environment.NewLine),
-                              e => e.Value.As<string>().Should().Be("echo bar > $null" + Environment.NewLine));
+            outputs.Should().SatisfyRespectively(
+                e => e.FormattedValues
+                      .Should()
+                      .ContainSingle(f => f.Value == "Get-Verb > $null" + Environment.NewLine),
+                e => e.FormattedValues
+                      .Should()
+                      .ContainSingle(f => f.Value == "echo bar > $null" + Environment.NewLine));
         }
 
         [Fact]
@@ -153,11 +156,15 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             await kernel.SendAsync(command);
 
             var outputs = KernelEvents.OfType<StandardOutputValueProduced>();
+
             outputs.Should().HaveCountGreaterThan(1);
-            outputs.Select(e => e.Value.ToString())
+            
+            outputs
+                .SelectMany(e => e.FormattedValues.Select(v => v.Value))
                 .First(s => s.Trim().Length > 0)
                 .ToLowerInvariant()
-                .Should().Match("*ping*data*");
+                .Should()
+                .Match("*ping*data*");
         }
 
         [Fact]

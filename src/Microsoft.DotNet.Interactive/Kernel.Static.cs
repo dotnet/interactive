@@ -15,8 +15,6 @@ namespace Microsoft.DotNet.Interactive
 {
     public partial class Kernel
     {
-        public static Func<string> DisplayIdGenerator { get; set; }
-
         public static DisplayedValue display(
             object value,
             string mimeType = null)
@@ -41,7 +39,7 @@ namespace Microsoft.DotNet.Interactive
             var kernel = KernelInvocationContext.Current.HandlingKernel;
 
             Task.Run(() =>
-                         kernel.SendAsync(new DisplayValue(value, formatted)))
+                         kernel.SendAsync(new DisplayValue(formatted)))
                 .Wait();
         }
 
