@@ -124,26 +124,25 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             if (variable != null)
             {
                 object outVal;
-                switch (variable.Value)
+                if(variable.Value is PSObject psobject)
                 {
-                    case PSObject psobject:
-                        if (psobject.BaseObject is PSCustomObject)
+                    if (psobject.BaseObject is PSCustomObject)
+                    {
+                        Dictionary<string, object> table = new Dictionary<string, object>();
+                        foreach (var p in psobject.Properties)
                         {
-                            Dictionary<string, object> table = new Dictionary<string, object>();
-                            foreach (var p in psobject.Properties)
-                            {
-                                table.Add(p.Name, p.Value);
-                            }
-                            outVal = table;
+                            table.Add(p.Name, p.Value);
                         }
-                        else
-                        {
-                            outVal = psobject.BaseObject;
-                        }
-                        break;
-                    default:
-                        outVal = variable.Value;
-                        break;
+                        outVal = table;
+                    }
+                    else
+                    {
+                        outVal = psobject.BaseObject;
+                    }
+                }
+                else
+                {
+                    outVal = variable.Value;
                 }
 
                 if(outVal is T tObj)
