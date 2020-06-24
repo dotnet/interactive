@@ -98,30 +98,19 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return secure;
         }
 
-        internal static object Unwrap(this PSObject inputObject)
+        internal static object Unwrap(this PSObject psObj)
         {
-            object obj;
-            if (inputObject is PSObject psObj)
+            object obj = psObj.BaseObject;
+            if (psObj.BaseObject is PSCustomObject)
             {
-                if (psObj.BaseObject is PSCustomObject)
+                Dictionary<string, object> table = new Dictionary<string, object>();
+                foreach (var p in psObj.Properties)
                 {
-                    Dictionary<string, object> table = new Dictionary<string, object>();
-                    foreach (var p in psObj.Properties)
-                    {
-                        table.Add(p.Name, p.Value);
-                    }
-                    obj = table;
+                    table.Add(p.Name, p.Value);
                 }
-                else
-                {
-                    obj = psObj.BaseObject;
-                }
+                obj = table;
             }
-            else
-            {
-                obj = inputObject;
-            }
-            
+
             return obj;
         }
     }
