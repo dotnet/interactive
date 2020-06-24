@@ -16,9 +16,22 @@ namespace Microsoft.DotNet.Interactive.Sql
         IKernelCommandHandler<SubmitCode>
     {
         internal const string DefaultKernelName = "sql";
+        private readonly ToolsServiceClient serviceClient;
+
         public SqlKernel(): base(DefaultKernelName)
         {
-           
+            serviceClient = new ToolsServiceClient();
+            serviceClient.startProcessAndRedirectIO();
+        }
+
+        public async Task<bool> ConnectAsync(string ownerUri, string connectionStr)
+        {
+            return await serviceClient.ConnectAsync(ownerUri, connectionStr);
+        }
+
+        public async Task<bool> DisconnectAsync(string ownerUri)
+        {
+            return await serviceClient.DisconnectAsync(ownerUri);
         }
 
         public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
@@ -29,6 +42,5 @@ namespace Microsoft.DotNet.Interactive.Sql
             // Display
             await context.DisplayAsync("HELLO WORLD");
         }
-
     }
 }
