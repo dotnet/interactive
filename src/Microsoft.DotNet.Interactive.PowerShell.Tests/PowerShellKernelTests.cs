@@ -89,36 +89,42 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             await kernel.SendAsync(new SubmitCode("echo /this/is/a/path"));
             await kernel.SendAsync(new SubmitCode("$$; $^"));
 
-            Assert.Collection(KernelEvents,
+            KernelEvents.Should().SatisfyRespectively(
                 e => e.Should()
-                        .BeOfType<CodeSubmissionReceived>()
-                        .Which.Code
-                        .Should().Be("echo /this/is/a/path"),
+                      .BeOfType<CodeSubmissionReceived>()
+                      .Which.Code
+                      .Should().Be("echo /this/is/a/path"),
                 e => e.Should()
-                        .BeOfType<CompleteCodeSubmissionReceived>()
-                        .Which.Code
-                        .Should().Be("echo /this/is/a/path"),
+                      .BeOfType<CompleteCodeSubmissionReceived>()
+                      .Which.Code
+                      .Should().Be("echo /this/is/a/path"),
                 e => e.Should()
-                        .BeOfType<StandardOutputValueProduced>()
-                        .Which.Value.ToString()
-                        .Should().Be("/this/is/a/path" + Environment.NewLine),
+                      .BeOfType<StandardOutputValueProduced>()
+                      .Which
+                      .FormattedValues
+                      .Should()
+                      .ContainSingle(f => f.Value == "/this/is/a/path" + Environment.NewLine),
                 e => e.Should().BeOfType<CommandSucceeded>(),
                 e => e.Should()
-                        .BeOfType<CodeSubmissionReceived>()
-                        .Which.Code
-                        .Should().Be("$$; $^"),
+                      .BeOfType<CodeSubmissionReceived>()
+                      .Which.Code
+                      .Should().Be("$$; $^"),
                 e => e.Should()
-                        .BeOfType<CompleteCodeSubmissionReceived>()
-                        .Which.Code
-                        .Should().Be("$$; $^"),
+                      .BeOfType<CompleteCodeSubmissionReceived>()
+                      .Which.Code
+                      .Should().Be("$$; $^"),
                 e => e.Should()
-                        .BeOfType<StandardOutputValueProduced>()
-                        .Which.Value.ToString()
-                        .Should().Be("/this/is/a/path" + Environment.NewLine),
+                      .BeOfType<StandardOutputValueProduced>()
+                      .Which
+                      .FormattedValues
+                      .Should()
+                      .ContainSingle(f => f.Value == "/this/is/a/path" + Environment.NewLine),
                 e => e.Should()
-                        .BeOfType<StandardOutputValueProduced>()
-                        .Which.Value.ToString()
-                        .Should().Be("echo" + Environment.NewLine),
+                      .BeOfType<StandardOutputValueProduced>()
+                      .Which
+                      .FormattedValues
+                      .Should()
+                      .ContainSingle(f => f.Value == "echo" + Environment.NewLine),
                 e => e.Should().BeOfType<CommandSucceeded>());
         }
 
