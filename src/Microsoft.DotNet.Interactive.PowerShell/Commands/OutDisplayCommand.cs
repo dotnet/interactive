@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 using Microsoft.DotNet.Interactive.Events;
 using System.Management.Automation;
-using System.Collections.Generic;
 using static Microsoft.DotNet.Interactive.Kernel;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Commands
