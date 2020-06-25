@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         internal static object Unwrap(this PSObject psObj)
         {
             object obj = psObj.BaseObject;
-            if (psObj.BaseObject is PSCustomObject)
+            if (obj is PSCustomObject)
             {
                 Dictionary<string, object> table = new Dictionary<string, object>();
                 foreach (var p in psObj.Properties)
