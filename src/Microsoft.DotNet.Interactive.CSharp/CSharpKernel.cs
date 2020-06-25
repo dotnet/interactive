@@ -278,10 +278,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             RequestCompletions command,
             KernelInvocationContext context)
         {
-            var completionRequestReceived = new CompletionRequestReceived(command);
-
-            context.Publish(completionRequestReceived);
-
             var completionList =
                 await GetCompletionList(
                     command.Code,
@@ -353,7 +349,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
             var references = resolvedReferences
                              .SelectMany(r => r.AssemblyPaths)
-                             .Select(r => MetadataReference.CreateFromFile(r.FullName));
+                             .Select(r => MetadataReference.CreateFromFile(r));
 
             ScriptOptions = ScriptOptions.AddReferences(references);
         }

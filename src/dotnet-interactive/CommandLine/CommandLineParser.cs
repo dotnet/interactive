@@ -164,7 +164,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                        }
 
                        // If sentinel does not exist, print the welcome message showing the telemetry notification.
-                       if (!firstTimeUseNoticeSentinel.Exists() && !Telemetry.Telemetry.SkipFirstTimeExperience)
+                       if (!Telemetry.Telemetry.SkipFirstTimeExperience && 
+                           !firstTimeUseNoticeSentinel.Exists())
                        {
                            context.Console.Out.WriteLine();
                            context.Console.Out.WriteLine(Telemetry.Telemetry.WelcomeMessage);

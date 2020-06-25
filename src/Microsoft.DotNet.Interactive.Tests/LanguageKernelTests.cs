@@ -11,6 +11,7 @@ using FluentAssertions.Extensions;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
@@ -512,9 +513,9 @@ Console.Write(""value three"");"
                 .OfType<StandardOutputValueProduced>()
                 .Should()
                 .BeEquivalentTo(
-                    new StandardOutputValueProduced("value one", kernelCommand, new[] { new FormattedValue("text/plain", "value one") }),
-                    new StandardOutputValueProduced("value two", kernelCommand, new[] { new FormattedValue("text/plain", "value two") }),
-                    new StandardOutputValueProduced("value three", kernelCommand, new[] { new FormattedValue("text/plain", "value three") }));
+                    new StandardOutputValueProduced(kernelCommand, new[] { new FormattedValue("text/plain", "value one") }),
+                    new StandardOutputValueProduced(kernelCommand, new[] { new FormattedValue("text/plain", "value two") }),
+                    new StandardOutputValueProduced(kernelCommand, new[] { new FormattedValue("text/plain", "value three") }));
         }
 
         [Theory]
@@ -530,9 +531,10 @@ Console.Write(""value three"");"
             KernelEvents
                 .OfType<StandardOutputValueProduced>()
                 .Last()
-                .Value
+                .FormattedValues
                 .Should()
-                .Be("hello from F#");
+                .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType &&
+                                    v.Value == "hello from F#");
         }
 
         [Theory]
@@ -548,9 +550,9 @@ Console.Write(""value three"");"
             KernelEvents
                 .OfType<StandardErrorValueProduced>()
                 .Last()
-                .Value
+                .FormattedValues
                 .Should()
-                .Be("hello from F#");
+                .ContainSingle(v => v.Value == "hello from F#");
         }
 
         [Theory]
@@ -649,7 +651,9 @@ Console.Write(2);
             var diff = events[1].Timestamp - events[0].Timestamp;
 
             diff.Should().BeCloseTo(1.Seconds(), precision: 500);
-            events.Select(e => ((StandardOutputValueProduced) e.Value).Value)
+            events
+                .Select(e => e.Value as StandardOutputValueProduced)
+                .SelectMany(e => e.FormattedValues.Select(v => v.Value))
                 .Should()
                 .BeEquivalentTo(new [] {"1", "2"});
 
@@ -717,10 +721,6 @@ Console.Write(2);
             await kernel.SendAsync(new RequestCompletions(codeToComplete, new LinePosition(0, codeToComplete.Length)));
 
             KernelEvents
-                .Should()
-                .ContainSingle(e => e is CompletionRequestReceived);
-
-            KernelEvents
                 .OfType<CompletionsProduced>()
                 .Single()
                 .Completions
@@ -746,10 +746,6 @@ Console.Write(2);
             await SubmitCode(kernel, source);
 
             await kernel.SendAsync(new RequestCompletions("al", new LinePosition(0, 2)));
-
-            KernelEvents
-                        .Should()
-                        .ContainSingle(e => e is CompletionRequestReceived);
 
             KernelEvents
                         .OfType<CompletionsProduced>()

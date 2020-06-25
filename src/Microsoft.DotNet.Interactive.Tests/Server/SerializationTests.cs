@@ -3,8 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using Assent;
 using FluentAssertions;
 using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis.Text;
@@ -64,6 +64,36 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                                 o => o.Excluding(envelope => envelope.Event.Command.Properties));
         }
 
+        [Theory]
+        [MemberData(nameof(Commands))]
+        public void Command_contract_has_not_been_broken(KernelCommand command)
+        {
+            var _configuration = new Configuration()
+                                 .UsingExtension($"{command.GetType().Name}.json")
+                                 .SetInteractive(false);
+
+            command.SetToken("the-token");
+
+            var json = KernelCommandEnvelope.Serialize(command);
+
+            this.Assent(json, _configuration);
+        }
+
+        [Theory]
+        [MemberData(nameof(EventsUniqueByType))]
+        public void Event_contract_has_not_been_broken(KernelEvent @event)
+        {
+            var _configuration = new Configuration()
+                                 .UsingExtension($"{@event.GetType().Name}.json")
+                                 .SetInteractive(false);
+
+            @event.Command?.SetToken("the-token");
+
+            var json = KernelEventEnvelope.Serialize(@event);
+
+            this.Assent(json, _configuration);
+        }
+
         [Fact]
         public void All_command_types_are_tested_for_round_trip_serialization()
         {
@@ -107,12 +137,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             {
                 yield return new AddPackage(new PackageReference("MyAwesomePackage", "1.2.3"));
 
-                yield return new ChangeWorkingDirectory(new DirectoryInfo("some/different/directory"));
+                yield return new ChangeWorkingDirectory("/path/to/somewhere");
 
                 yield return new DisplayError("oops!");
 
                 yield return new DisplayValue(
-                    new HtmlString("<b>hi!</b>"),
                     new FormattedValue("text/html", "<b>hi!</b>")
                 );
 
@@ -125,7 +154,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 yield return new SubmitCode("123", "csharp", SubmissionType.Run);
 
                 yield return new UpdateDisplayedValue(
-                    new HtmlString("<b>hi!</b>"),
                     new FormattedValue("text/html", "<b>hi!</b>"),
                     "the-value-id");
             }
@@ -173,8 +201,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     },
                     requestCompletion);
 
-                yield return new CompletionRequestReceived(requestCompletion);
-
                 yield return new DiagnosticLogEntryProduced("oops!", submitCode);
 
                 yield return new DisplayedValueProduced(
@@ -208,7 +234,12 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new LinePositionSpan(new LinePosition(1, 2), new LinePosition(3, 4)));
 
                 yield return new PackageAdded(
-                    new ResolvedPackageReference("ThePackage", "1.2.3", new[] { new FileInfo(Path.GetTempFileName()) }));
+                    new ResolvedPackageReference(
+                        packageName: "ThePackage",
+                        packageVersion: "1.2.3",
+                        assemblyPaths: new[] { "/path/to/a.dll" },
+                        packageRoot: "/the/package/root",
+                        probingPaths: new[] { "/probing/path/1", "/probing/path/2" }));
 
                 yield return new PasswordRequested("password", submitCode);
 
@@ -221,7 +252,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     });
 
                 yield return new StandardErrorValueProduced(
-                    "oops!",
                     submitCode,
                     new[]
                     {
@@ -229,7 +259,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     });
 
                 yield return new StandardOutputValueProduced(
-                    123,
                     new SubmitCode("Console.Write(123);", "csharp", SubmissionType.Run),
                     new[]
                     {
@@ -237,9 +266,21 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     });
 
                 yield return new WorkingDirectoryChanged(
-                    new DirectoryInfo("some/different/directory"),
-                    new ChangeWorkingDirectory(new DirectoryInfo("some/different/directory")));
+                    "some/different/directory",
+                    new ChangeWorkingDirectory("some/different/directory"));
             }
+        }
+
+        public static IEnumerable<object[]> EventsUniqueByType()
+        {
+            var dictionary = new Dictionary<Type, KernelEvent>();
+
+            foreach (var e in Events().SelectMany(e => e).OfType<KernelEvent>())
+            {
+                dictionary[e.GetType()] = e;
+            }
+
+            return dictionary.Values.Select(e => new[] { e });
         }
     }
 }

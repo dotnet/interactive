@@ -89,36 +89,42 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             await kernel.SendAsync(new SubmitCode("echo /this/is/a/path"));
             await kernel.SendAsync(new SubmitCode("$$; $^"));
 
-            Assert.Collection(KernelEvents,
+            KernelEvents.Should().SatisfyRespectively(
                 e => e.Should()
-                        .BeOfType<CodeSubmissionReceived>()
-                        .Which.Code
-                        .Should().Be("echo /this/is/a/path"),
+                      .BeOfType<CodeSubmissionReceived>()
+                      .Which.Code
+                      .Should().Be("echo /this/is/a/path"),
                 e => e.Should()
-                        .BeOfType<CompleteCodeSubmissionReceived>()
-                        .Which.Code
-                        .Should().Be("echo /this/is/a/path"),
+                      .BeOfType<CompleteCodeSubmissionReceived>()
+                      .Which.Code
+                      .Should().Be("echo /this/is/a/path"),
                 e => e.Should()
-                        .BeOfType<StandardOutputValueProduced>()
-                        .Which.Value.ToString()
-                        .Should().Be("/this/is/a/path" + Environment.NewLine),
+                      .BeOfType<StandardOutputValueProduced>()
+                      .Which
+                      .FormattedValues
+                      .Should()
+                      .ContainSingle(f => f.Value == "/this/is/a/path" + Environment.NewLine),
                 e => e.Should().BeOfType<CommandSucceeded>(),
                 e => e.Should()
-                        .BeOfType<CodeSubmissionReceived>()
-                        .Which.Code
-                        .Should().Be("$$; $^"),
+                      .BeOfType<CodeSubmissionReceived>()
+                      .Which.Code
+                      .Should().Be("$$; $^"),
                 e => e.Should()
-                        .BeOfType<CompleteCodeSubmissionReceived>()
-                        .Which.Code
-                        .Should().Be("$$; $^"),
+                      .BeOfType<CompleteCodeSubmissionReceived>()
+                      .Which.Code
+                      .Should().Be("$$; $^"),
                 e => e.Should()
-                        .BeOfType<StandardOutputValueProduced>()
-                        .Which.Value.ToString()
-                        .Should().Be("/this/is/a/path" + Environment.NewLine),
+                      .BeOfType<StandardOutputValueProduced>()
+                      .Which
+                      .FormattedValues
+                      .Should()
+                      .ContainSingle(f => f.Value == "/this/is/a/path" + Environment.NewLine),
                 e => e.Should()
-                        .BeOfType<StandardOutputValueProduced>()
-                        .Which.Value.ToString()
-                        .Should().Be("echo" + Environment.NewLine),
+                      .BeOfType<StandardOutputValueProduced>()
+                      .Which
+                      .FormattedValues
+                      .Should()
+                      .ContainSingle(f => f.Value == "echo" + Environment.NewLine),
                 e => e.Should().BeOfType<CommandSucceeded>());
         }
 
@@ -135,10 +141,13 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                                 .ToSubscribedList()
                                 .OfType<StandardOutputValueProduced>();
 
-            outputs.Should().HaveCount(2);
-            Assert.Collection(outputs,
-                              e => e.Value.As<string>().Should().Be("Get-Verb > $null" + Environment.NewLine),
-                              e => e.Value.As<string>().Should().Be("echo bar > $null" + Environment.NewLine));
+            outputs.Should().SatisfyRespectively(
+                e => e.FormattedValues
+                      .Should()
+                      .ContainSingle(f => f.Value == "Get-Verb > $null" + Environment.NewLine),
+                e => e.FormattedValues
+                      .Should()
+                      .ContainSingle(f => f.Value == "echo bar > $null" + Environment.NewLine));
         }
 
         [Fact]
@@ -153,11 +162,15 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             await kernel.SendAsync(command);
 
             var outputs = KernelEvents.OfType<StandardOutputValueProduced>();
+
             outputs.Should().HaveCountGreaterThan(1);
-            outputs.Select(e => e.Value.ToString())
+            
+            outputs
+                .SelectMany(e => e.FormattedValues.Select(v => v.Value))
                 .First(s => s.Trim().Length > 0)
                 .ToLowerInvariant()
-                .Should().Match("*ping*data*");
+                .Should()
+                .Match("*ping*data*");
         }
 
         [Fact]

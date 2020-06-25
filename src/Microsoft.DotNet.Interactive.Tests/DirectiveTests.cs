@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -226,42 +227,27 @@ i");
                 new Option<bool>("--loudness")
             };
 
-            var findKernel = compositeKernel.FindKernel(kernelName);
+            var kernel = compositeKernel.FindKernel(kernelName);
 
-            var kernelWithDirective = findKernel switch
-            {
-                Kernel k => k,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-
-            kernelWithDirective.AddDirective(command);
+            kernel.AddDirective(command);
 
             using var events = compositeKernel.KernelEvents.ToSubscribedList();
 
             await compositeKernel.SubmitCodeAsync("#!hello -h");
 
-            var stdOut = string.Join(
-                "",
-                events
-                    .OfType<StandardOutputValueProduced>()
-                    .Select(e => e.Value.As<string>()));
+            events.Should()
+                  .ContainSingle<StandardOutputValueProduced>()
+                  .Which
+                  .FormattedValues
+                  .Should()
+                  .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
+                  .Which
+                  .Value
+                  .Should()
+                  .ContainAll("Usage", "#!hello", "[options]", "--loudness");
 
-            var stdErr = string.Join(
-                "",
-                events
-                    .OfType<StandardErrorValueProduced>()
-                    .Select(e => e.Value.As<string>()));
-
-            stdOut
-                .Should()
-                .ContainAll("Usage", "#!hello", "[options]", "--loudness");
-
-            stdOut
-                .Should()
-                .NotContain(new RootCommand().Name,
-                            "RootCommand.Name is generally intended to reflect the command line tool's name but in this case it's just an implementation detail and it looks weird in the output.");
-
-            stdErr.Should().BeEmpty();
+            events.Should()
+                  .NotContainErrors();
         }
 
         [Fact]

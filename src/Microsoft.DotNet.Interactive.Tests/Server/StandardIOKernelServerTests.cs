@@ -6,11 +6,11 @@ using System.IO;
 using System.Reactive.Linq;
 using FluentAssertions;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -29,11 +29,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
         public StandardIOKernelServerTests(ITestOutputHelper output)
         {
-            var displayIdSeed = 0;
-
-            Kernel.DisplayIdGenerator =
-                () => Interlocked.Increment(ref displayIdSeed).ToString();
-
             var kernel = new CompositeKernel
             {
                 new CSharpKernel()
@@ -58,7 +53,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             _disposables.Add(output.SubscribeToPocketLogger());
             _disposables.Add(kernel.LogEventsToPocketLogger());
             _disposables.Add(kernel);
-            _disposables.Add(() => Kernel.DisplayIdGenerator = null);
         }
 
         [Fact]
@@ -171,7 +165,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             command.SetToken("abc");
 
             await _standardIOKernelServer.WriteAsync(command);
-            
 
             _kernelEvents
                 .Should()
@@ -185,17 +178,19 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             var guid = Guid.NewGuid().ToString();
 
-            var command = new SubmitCode($"Console.WriteLine(\"{guid}\");");
+            var command = new SubmitCode($"Console.Write(\"{guid}\");");
 
             await _standardIOKernelServer.WriteAsync(command);
 
-            var stdOut = string.Join(
-                "",
-                _kernelEvents
-                    .OfType<KernelEventEnvelope<StandardOutputValueProduced>>()
-                    .Select(e => e.Event.Value.As<string>()));
-
-            stdOut.Should().Contain(guid);
+            _kernelEvents
+                .Should()
+                .ContainSingle<KernelEventEnvelope<StandardOutputValueProduced>>()
+                .Which
+                .Event
+                .FormattedValues
+                .Should()
+                .ContainSingle(f => f.MimeType == PlainTextFormatter.MimeType &&
+                                    f.Value.Equals(guid));
         }
 
         public void Dispose()

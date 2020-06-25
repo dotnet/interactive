@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -107,8 +108,11 @@ namespace Microsoft.DotNet.Interactive.Tests
             events.Should()
                   .ContainSingle<StandardOutputValueProduced>()
                   .Which
+                  .FormattedValues
+                  .Should()
+                  .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
+                  .Which
                   .Value
-                  .As<string>()
                   .Trim()
                   .Should()
                   .Be("123:System.Int32");

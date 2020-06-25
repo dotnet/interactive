@@ -43,7 +43,6 @@ export interface DisplayError extends KernelCommand {
 }
 
 export interface DisplayValue extends KernelCommand {
-    value: any;
     formattedValue: FormattedValue;
     valueId: string;
 }
@@ -68,7 +67,6 @@ export interface SubmitCode extends KernelCommand {
 }
 
 export interface UpdateDisplayedValue extends KernelCommand {
-    value: any;
     formattedValue: FormattedValue;
     valueId: string;
 }
@@ -79,7 +77,6 @@ export const CodeSubmissionReceivedType = "CodeSubmissionReceived";
 export const CommandFailedType = "CommandFailed";
 export const CommandSucceededType = "CommandSucceeded";
 export const CompleteCodeSubmissionReceivedType = "CompleteCodeSubmissionReceived";
-export const CompletionRequestReceivedType = "CompletionRequestReceived";
 export const CompletionsProducedType = "CompletionsProduced";
 export const DiagnosticLogEntryProducedType = "DiagnosticLogEntryProduced";
 export const DisplayedValueProducedType = "DisplayedValueProduced";
@@ -100,7 +97,6 @@ export type KernelEventType =
     | typeof CommandFailedType
     | typeof CommandSucceededType
     | typeof CompleteCodeSubmissionReceivedType
-    | typeof CompletionRequestReceivedType
     | typeof CompletionsProducedType
     | typeof DiagnosticLogEntryProducedType
     | typeof DisplayedValueProducedType
@@ -134,9 +130,6 @@ export interface CompleteCodeSubmissionReceived extends KernelEvent {
     code: string;
 }
 
-export interface CompletionRequestReceived extends KernelEvent {
-}
-
 export interface CompletionsProduced extends KernelEvent {
     linePositionSpan?: LinePositionSpan;
     completions: Array<CompletionItem>;
@@ -153,7 +146,6 @@ export interface DisplayedValueProduced extends DisplayEvent {
 }
 
 export interface DisplayEvent extends KernelEvent {
-    value: any;
     formattedValues: Array<FormattedValue>;
     valueId: string;
 }

@@ -1,0 +1,1 @@
+{"token":"the-token","commandType":"AddPackage","command":{"packageReference":{"packageName":"MyAwesomePackage","packageVersion":"1.2.3","isPackageVersionSpecified":true},"targetKernelName":null}}

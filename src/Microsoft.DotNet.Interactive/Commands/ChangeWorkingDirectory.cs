@@ -9,16 +9,16 @@ namespace Microsoft.DotNet.Interactive.Commands
 {
     public class ChangeWorkingDirectory : KernelCommand
     {
-        public DirectoryInfo WorkingDirectory { get; }
+        public string WorkingDirectory { get; }
 
-        public ChangeWorkingDirectory(DirectoryInfo workingDirectory)
+        public ChangeWorkingDirectory(string workingDirectory)
         {
             WorkingDirectory = workingDirectory;
         }
 
         public override Task InvokeAsync(KernelInvocationContext context)
         {
-            Directory.SetCurrentDirectory(WorkingDirectory.FullName);
+            Directory.SetCurrentDirectory(WorkingDirectory);
             context.Publish(new WorkingDirectoryChanged(WorkingDirectory, this));
             return Task.CompletedTask;
         }

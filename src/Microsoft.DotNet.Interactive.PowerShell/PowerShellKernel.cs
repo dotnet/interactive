@@ -199,7 +199,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             KernelInvocationContext context)
         {
             CompletionsProduced completion;
-            context.Publish(new CompletionRequestReceived(requestCompletions));
 
             if (AzShell != null)
             {

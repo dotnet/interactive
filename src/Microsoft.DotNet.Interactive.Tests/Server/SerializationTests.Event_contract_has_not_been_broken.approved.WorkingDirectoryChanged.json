@@ -1,0 +1,1 @@
+{"event":{"workingDirectory":"some/different/directory"},"eventType":"WorkingDirectoryChanged","command":{"token":"the-token","commandType":"ChangeWorkingDirectory","command":{"workingDirectory":"some/different/directory","targetKernelName":null}}}
