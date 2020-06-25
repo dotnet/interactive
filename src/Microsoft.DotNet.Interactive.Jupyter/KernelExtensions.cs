@@ -117,7 +117,7 @@ using static {typeof(TopLevelMethods).FullName};
                     {
                         var timer = new Stopwatch();
                         timer.Start();
-                        
+
                         context.OnComplete(invocationContext =>
                         {
                             var elapsed = timer.Elapsed;
@@ -154,29 +154,37 @@ using static {typeof(TopLevelMethods).FullName};
 
             Formatter<SupportedDirectives>.Register((directives, writer) =>
             {
+                var indentLevel = 1.5;
                 PocketView t = div(
                     h3(directives.KernelName + " kernel"),
-                    div(directives.Commands.Select(v => div[style: "text-indent:1.5em"](Summary(v)))));
+                    div(directives.Commands.Select(v => div[style: $"text-indent:{indentLevel:##.#}em"](Summary(v, 0)))));
 
                 t.WriteTo(writer, HtmlEncoder.Default);
 
-                static IEnumerable<IHtmlContent> Summary(ICommand command)
+                IEnumerable<IHtmlContent> Summary(ICommand command, double offset)
                 {
                     yield return new HtmlString("<pre>");
-
+                    var level = indentLevel + offset;
                     for (var i = 0; i < command.Aliases.Count; i++)
                     {
-                        yield return span[style: "color:#512bd4"](command.Aliases[i]);
+                        yield return span[style: $"text-indent:{level:##.#}em; color:#512bd4"](command.Aliases[i]);
 
                         if (i < command.Aliases.Count - 1)
                         {
-                            yield return span[style: "color:darkgray"](", ");
+                            yield return span[style: $"text-indent:{level:##.#}em; color:darkgray"](", ");
                         }
                     }
 
+                    var nextLevel = (indentLevel * 2) + offset;
                     yield return new HtmlString("</pre>");
 
-                    yield return div[style: "text-indent:3em"](command.Description);
+                    yield return div[style: $"text-indent:{nextLevel:##.#}em"](command.Description);
+
+                    foreach (var subCommand in command.Children.OfType<ICommand>())
+                    {
+                        yield return div[style: $"text-indent:{nextLevel:##.#}em"](Summary(subCommand, nextLevel));
+                    }
+
                 }
             }, "text/html");
 
@@ -202,7 +210,7 @@ using static {typeof(TopLevelMethods).FullName};
                     {
                         if (k.Directives.Any(d => d.Name == "#!lsmagic"))
                         {
-                            await k.SendAsync(new SubmitCode(((SubmitCode) context.Command).Code));
+                            await k.SendAsync(new SubmitCode(((SubmitCode)context.Command).Code));
                         }
                     });
                 })
