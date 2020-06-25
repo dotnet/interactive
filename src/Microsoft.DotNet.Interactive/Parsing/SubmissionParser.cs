@@ -256,6 +256,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
             _directiveParser = null;
         }
 
+        internal void ResetParser()
+        {
+            _directiveParser = null;
+        }
+
         public static CompletionItem CompletionItemFor(string name, ParseResult parseResult)
         {
             var symbol = parseResult.CommandResult

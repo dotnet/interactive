@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Proxy;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
@@ -144,8 +145,7 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        public static T UseProxyKernel<T>(this T kernel)
-            where T : CompositeKernel
+        public static CompositeKernel UseProxyKernel(this CompositeKernel kernel)
         {
             var command = new Command("#!connect", "Connect to the specified remote kernel.")
             {

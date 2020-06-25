@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
@@ -17,7 +18,7 @@ using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class CompositeKernel : 
+    public sealed class CompositeKernel : 
         Kernel,
         IExtensibleKernel,
         IEnumerable<Kernel>
@@ -27,6 +28,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly Dictionary<string, Kernel> _kernelsByNameOrAlias;
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
         private string _defaultKernelName;
+        private Command _connectCommand;
 
         public CompositeKernel() : base(".NET")
         {
@@ -246,6 +248,19 @@ namespace Microsoft.DotNet.Interactive
                 directory,
                 this,
                 context);
+        }
+
+        public void ConfigureConnection(Command connectionCommand)
+        {
+            if (_connectCommand == null)
+            {
+                _connectCommand = new Command("#!connect", "Provides functionality to connect to kernels");
+                AddDirective(_connectCommand);
+            }
+
+            _connectCommand.AddCommand(connectionCommand);
+
+           SubmissionParser.ResetParser();
         }
     }
 }
