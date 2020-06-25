@@ -32,7 +32,6 @@ describe('Notebook tests', () => {
                     {
                         eventType: ReturnValueProducedType,
                         event: {
-                            value: 2,
                             valueId: null,
                             formattedValues: [
                                 {
@@ -91,7 +90,6 @@ Console.WriteLine(1);
                     eventType: StandardOutputValueProducedType,
                     event: {
                         valueId: null,
-                        value: '1\r\n',
                         formattedValues: [
                             {
                                 mimeType: 'text/plain',
@@ -105,7 +103,6 @@ Console.WriteLine(1);
                     eventType: StandardOutputValueProducedType,
                     event: {
                         valueId: null,
-                        value: '2\r\n',
                         formattedValues: [
                             {
                                 mimeType: 'text/plain',
@@ -119,7 +116,6 @@ Console.WriteLine(1);
                     eventType: StandardOutputValueProducedType,
                     event: {
                         valueId: null,
-                        value: '3\r\n',
                         formattedValues: [
                             {
                                 mimeType: 'text/plain',
@@ -184,8 +180,10 @@ Console.WriteLine(1);
                     eventType: DisplayedValueProducedType,
                     event: {
                         valueId: 'newtonsoft.json',
-                        value: 'Installing package Newtonsoft.Json...',
-                        formattedValues: []
+                        formattedValues: [{
+                            mimeType: "text/plain",
+                            value: "Installing package Newtonsoft.Json..."
+                        }]
                     },
                     token
                 },
@@ -193,8 +191,11 @@ Console.WriteLine(1);
                     eventType: DisplayedValueUpdatedType,
                     event: {
                         valueId: 'newtonsoft.json',
-                        value: 'Installed package Newtonsoft.Json version 1.2.3.4',
-                        formattedValues: []
+                        formattedValues: [
+                            {
+                                mimeType: "text/plain",
+                                value: "Installed package Newtonsoft.Json version 1.2.3.4"
+                            }]
                     },
                     token
                 },
@@ -202,8 +203,10 @@ Console.WriteLine(1);
                     eventType: DisplayedValueProducedType,
                     event: {
                         valueId: null,
-                        value: 'sentinel',
-                        formattedValue: []
+                        formattedValues: [{
+                            mimeType: "text/plain",
+                            value: "sentinel"
+                        }]
                     },
                     token
                 },
@@ -255,7 +258,6 @@ Console.WriteLine(1);
                 {
                     eventType: ReturnValueProducedType,
                     event: {
-                        value: 2,
                         valueId: null,
                         formattedValues: [
                             {

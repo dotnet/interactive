@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelCommand, KernelCommandType, KernelEventType, KernelEventEnvelopeObserver, DisposableSubscription, KernelTransport } from "../../contracts";
+import { KernelCommand, KernelCommandType, KernelEventType, KernelEventEnvelopeObserver, DisposableSubscription, KernelTransport, KernelEvent, AnyKernelEvent } from "../../contracts";
 import { KernelTransportCreationResult } from "../../interfaces";
 
 // Replays all events given to it
@@ -9,10 +9,10 @@ export class TestKernelTransport {
     private theObserver: KernelEventEnvelopeObserver | undefined;
     private fakedCommandCounter: Map<string, number> = new Map<string, number>();
 
-    constructor(readonly fakedEventEnvelopes: { [key: string]: {eventType: KernelEventType, event: any, token: string}[] }) {
+    constructor(readonly fakedEventEnvelopes: { [key: string]: {eventType: KernelEventType, event: AnyKernelEvent, token: string}[] }) {
     }
 
-    static create(fakedEventEnvelopes: { [key: string]: { eventType: KernelEventType, event: any, token: string}[] }): KernelTransportCreationResult {
+    static create(fakedEventEnvelopes: { [key: string]: { eventType: KernelEventType, event: AnyKernelEvent, token: string}[] }): KernelTransportCreationResult {
         let transport = new TestKernelTransport(fakedEventEnvelopes);
         return {
             transport,

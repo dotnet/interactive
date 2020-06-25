@@ -256,10 +256,7 @@ export function displayEventToCellOutput(disp: DisplayEvent): CellDisplayOutput 
                 : formatted.value;
             data[formatted.mimeType] = value;
         }
-    } else if (disp.value) {
-        // no formatted values returned, this is the best we can do
-        data['text/plain'] = disp.value.toString();
-    }
+    } 
 
     let output: CellDisplayOutput = {
         outputKind: CellOutputKind.Rich,
