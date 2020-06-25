@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
+using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
@@ -84,7 +85,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             var _configuration = new Configuration()
                                  .UsingExtension($"{@event.GetType().Name}.json")
-                                 .SetInteractive(true);
+                                 .SetInteractive(false);
 
             @event.Command?.SetToken("the-token");
 
@@ -233,7 +234,12 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new LinePositionSpan(new LinePosition(1, 2), new LinePosition(3, 4)));
 
                 yield return new PackageAdded(
-                    new ResolvedPackageReference("ThePackage", "1.2.3", new[] { "/path/to/a.dll" }));
+                    new ResolvedPackageReference(
+                        packageName: "ThePackage",
+                        packageVersion: "1.2.3",
+                        assemblyPaths: new[] { "/path/to/a.dll" },
+                        packageRoot: "/the/package/root",
+                        probingPaths: new[] { "/probing/path/1", "/probing/path/2" }));
 
                 yield return new PasswordRequested("password", submitCode);
 

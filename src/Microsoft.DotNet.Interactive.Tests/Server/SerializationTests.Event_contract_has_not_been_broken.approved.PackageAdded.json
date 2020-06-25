@@ -1,1 +1,1 @@
-{"event":{"packageReference":{"assemblyPaths":["/path/to/a.dll"],"probingPaths":[],"packageRoot":"C:\\","packageName":"ThePackage","packageVersion":"1.2.3","isPackageVersionSpecified":true}},"eventType":"PackageAdded","command":null}
+{"event":{"packageReference":{"assemblyPaths":["/path/to/a.dll"],"probingPaths":["/probing/path/1","/probing/path/2"],"packageRoot":"/the/package/root","packageName":"ThePackage","packageVersion":"1.2.3","isPackageVersionSpecified":true}},"eventType":"PackageAdded","command":null}
