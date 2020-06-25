@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.IO.Pipes;
+using System.Reactive.Disposables;
 using System.Security.Principal;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -17,6 +18,10 @@ namespace Microsoft.DotNet.Interactive
 
         public NamedPipeKernel(string name) : base(name)
         {
+            RegisterForDisposal(Disposable.Create(() =>
+            {
+                _clientStream?.Dispose();
+            }));
         }
 
         private async Task PollEvents(string commandToken)
@@ -48,10 +53,7 @@ namespace Microsoft.DotNet.Interactive
 
         public async Task ConnectAsync(string pipeName)
         {
-            if (_clientStream != null)
-            {
-                _clientStream.Close();
-            }
+            _clientStream?.Close();
 
             _pipeName = pipeName;
 
@@ -59,7 +61,7 @@ namespace Microsoft.DotNet.Interactive
             await clientStream.ConnectAsync();
             clientStream.ReadMode = PipeTransmissionMode.Message;
             _clientStream = clientStream;
-            RegisterForDisposal(clientStream);
+           
         }
     }
 }
