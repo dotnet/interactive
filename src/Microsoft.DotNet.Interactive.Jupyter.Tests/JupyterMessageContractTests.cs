@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             _configuration = new Configuration()
                 .UsingExtension("json");
 
-            _configuration = _configuration.SetInteractive(true);
+            _configuration = _configuration.SetInteractive(false);
         }
 
         [Fact]

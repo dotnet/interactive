@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             var _configuration = new Configuration()
                                  .UsingExtension($"{command.GetType().Name}.json")
-                                 .SetInteractive(true);
+                                 .SetInteractive(false);
 
             command.SetToken("the-token");
 
@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             var _configuration = new Configuration()
                                  .UsingExtension($"{@event.GetType().Name}.json")
-                                 .SetInteractive(true);
+                                 .SetInteractive(false);
 
             @event.Command?.SetToken("the-token");
 

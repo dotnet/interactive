@@ -92,26 +92,6 @@ export const StandardErrorValueProducedType = "StandardErrorValueProduced";
 export const StandardOutputValueProducedType = "StandardOutputValueProduced";
 export const WorkingDirectoryChangedType = "WorkingDirectoryChanged";
 
-export type AnyKernelEvent =
-      CodeSubmissionReceived
-    | CommandFailed
-    | CommandSucceeded
-    | CompleteCodeSubmissionReceived
-    | CompletionsProduced
-    | DiagnosticLogEntryProduced
-    | DisplayedValueProduced
-    | DisplayedValueUpdated
-    | ErrorProduced
-    | HoverTextProduced
-    | IncompleteCodeSubmissionReceived
-    | InputRequested
-    | PackageAdded
-    | PasswordRequested
-    | ReturnValueProduced
-    | StandardErrorValueProduced
-    | StandardOutputValueProduced
-    | WorkingDirectoryChanged;
-
 export type KernelEventType =
       typeof CodeSubmissionReceivedType
     | typeof CommandFailedType
