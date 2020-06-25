@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Assent;
 using FluentAssertions;
@@ -12,7 +11,6 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
-using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
@@ -86,7 +84,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             var _configuration = new Configuration()
                                  .UsingExtension($"{@event.GetType().Name}.json")
-                                 .SetInteractive(false);
+                                 .SetInteractive(true);
 
             @event.Command?.SetToken("the-token");
 
@@ -235,7 +233,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new LinePositionSpan(new LinePosition(1, 2), new LinePosition(3, 4)));
 
                 yield return new PackageAdded(
-                    new ResolvedPackageReference("ThePackage", "1.2.3", new[] { new FileInfo("/path/to/a.dll") }));
+                    new ResolvedPackageReference("ThePackage", "1.2.3", new[] { "/path/to/a.dll" }));
 
                 yield return new PasswordRequested("password", submitCode);
 

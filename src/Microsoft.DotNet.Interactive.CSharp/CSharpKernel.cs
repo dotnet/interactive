@@ -349,7 +349,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
             var references = resolvedReferences
                              .SelectMany(r => r.AssemblyPaths)
-                             .Select(r => MetadataReference.CreateFromFile(r.FullName));
+                             .Select(r => MetadataReference.CreateFromFile(r));
 
             ScriptOptions = ScriptOptions.AddReferences(references);
         }

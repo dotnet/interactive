@@ -185,17 +185,17 @@ type FSharpKernelBase () as this =
 
             for reference in packageReferences do
                 for assembly in reference.AssemblyPaths do
-                    if hashset.Add(assembly.FullName) then
-                        if assembly.Exists then
-                            sb.AppendFormat("#r @\"{0}\"", assembly.FullName) |> ignore
+                    if hashset.Add(assembly) then
+                        if File.Exists assembly then
+                            sb.AppendFormat("#r @\"{0}\"", assembly) |> ignore
                             sb.Append(Environment.NewLine) |> ignore
 
                 match reference.PackageRoot with
                 | null -> ()
                 | root ->
-                    if hashset.Add(root.FullName) then
-                        if root.Exists then
-                            sb.AppendFormat("#I @\"{0}\"", root.FullName) |> ignore
+                    if hashset.Add(root) then
+                        if File.Exists root then
+                            sb.AppendFormat("#I @\"{0}\"", root) |> ignore
                             sb.Append(Environment.NewLine) |> ignore
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command)

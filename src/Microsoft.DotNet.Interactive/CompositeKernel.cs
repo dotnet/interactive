@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.Interactive
                 var extensionDir =
                     new DirectoryInfo
                     (Path.Combine(
-                         packageRootDir.FullName,
+                         packageRootDir,
                          "interactive-extensions",
                          "dotnet"));
                 
