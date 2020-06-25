@@ -3,15 +3,17 @@
 
 using System.CommandLine;
 using System.Linq;
-using System.Management.Automation.Internal;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
@@ -47,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 new CSharpKernel().UseDefaultMagicCommands()
             };
 
-            compositeKernel.ConfigureConnection( 
+            compositeKernel.ConfigureConnection(
                 new Command("customTransport", "Connects to remote kernel via custom Transport")
             );
 
@@ -56,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             await compositeKernel.SendAsync(new SubmitCode("#!lsmagic"));
 
             var valueProducedEvents = events.OfType<DisplayedValueProduced>().ToArray();
-            
+
             valueProducedEvents[0].FormattedValues
                 .FirstOrDefault(fv => fv.MimeType == HtmlFormatter.MimeType)
                 .Value
