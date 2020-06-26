@@ -10,21 +10,21 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
-    public class StandardIOKernelServer : IDisposable
+    public class KernelServer : IDisposable
     {
         private readonly Kernel _kernel;
         private readonly InputTextStream _input;
         private readonly OutputTextStream _output;
         private readonly CompositeDisposable _disposables;
 
-        public StandardIOKernelServer(
+        public KernelServer(
             Kernel kernel, 
             TextReader input, 
             TextWriter output) : this(kernel, new InputTextStream(input), new OutputTextStream(output))
         {
         }
 
-        private StandardIOKernelServer(
+        private KernelServer(
             Kernel kernel, 
             InputTextStream input,
             OutputTextStream output)

@@ -21,13 +21,13 @@ using Xunit.Abstractions;
 namespace Microsoft.DotNet.Interactive.Tests.Server
 {
     [LogTestNamesToPocketLogger]
-    public class StandardIOKernelServerTests : IDisposable
+    public class KernelServerTests : IDisposable
     {
-        private readonly StandardIOKernelServer _standardIOKernelServer;
+        private readonly KernelServer _kernelServer;
         private readonly SubscribedList<IKernelEventEnvelope> _kernelEvents;
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
-        public StandardIOKernelServerTests(ITestOutputHelper output)
+        public KernelServerTests(ITestOutputHelper output)
         {
             var kernel = new CompositeKernel
             {
@@ -38,18 +38,18 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     .UseDefaultMagicCommands()
             };
 
-            _standardIOKernelServer = new StandardIOKernelServer(
+            _kernelServer = new KernelServer(
                 kernel,
                 new StreamReader(new MemoryStream()),
                 new StringWriter());
 
-            _kernelEvents = _standardIOKernelServer
+            _kernelEvents = _kernelServer
                             .Output
                             .Where(s => !string.IsNullOrWhiteSpace(s))
                             .Select(KernelEventEnvelope.Deserialize)
                             .ToSubscribedList();
 
-            _disposables.Add(_standardIOKernelServer);
+            _disposables.Add(_kernelServer);
             _disposables.Add(output.SubscribeToPocketLogger());
             _disposables.Add(kernel.LogEventsToPocketLogger());
             _disposables.Add(kernel);
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [Fact]
         public void The_server_is_started_after_creation()
         {
-            _standardIOKernelServer
+            _kernelServer
                 .IsStarted
                 .Should()
                 .BeTrue();
@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var command = new SubmitCode("#!time\ndisplay(1543); display(4567);");
             command.SetToken("abc");
 
-            await _standardIOKernelServer.WriteAsync(command);
+            await _kernelServer.WriteAsync(command);
 
             _kernelEvents
                 .Should()
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [Fact]
         public async Task It_does_not_publish_ReturnValueProduced_events_if_the_value_is_DisplayedValue()
         {
-            await _standardIOKernelServer.WriteAsync(new SubmitCode("display(1543)"));
+            await _kernelServer.WriteAsync(new SubmitCode("display(1543)"));
 
             _kernelEvents
                 .Should()
@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             var invalidJson = "{ hello";
 
-            await _standardIOKernelServer.WriteAsync(invalidJson);
+            await _kernelServer.WriteAsync(invalidJson);
 
             _kernelEvents
                 .Should()
@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var command = new SubmitCode(@"var a = 12");
             command.SetToken("abc");
 
-            await _standardIOKernelServer.WriteAsync(command);
+            await _kernelServer.WriteAsync(command);
 
             _kernelEvents
                 .Should()
@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var command = new SubmitCode("DOES NOT COMPILE");
             command.SetToken("abc");
 
-            await _standardIOKernelServer.WriteAsync(command);
+            await _kernelServer.WriteAsync(command);
 
             _kernelEvents
                 .Should()
@@ -146,11 +146,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [Fact]
         public async Task It_can_eval_function_instances()
         {
-            await _standardIOKernelServer.WriteAsync(new SubmitCode(@"Func<int> func = () => 1;"));
+            await _kernelServer.WriteAsync(new SubmitCode(@"Func<int> func = () => 1;"));
 
-            await _standardIOKernelServer.WriteAsync(new SubmitCode(@"func()"));
+            await _kernelServer.WriteAsync(new SubmitCode(@"func()"));
 
-            await _standardIOKernelServer.WriteAsync(new SubmitCode(@"func"));
+            await _kernelServer.WriteAsync(new SubmitCode(@"func"));
 
             _kernelEvents
                 .Count(e => e.Event is ReturnValueProduced)
@@ -164,7 +164,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var command = new SubmitCode(@"#r ""nuget:Microsoft.Spark, 0.4.0""");
             command.SetToken("abc");
 
-            await _standardIOKernelServer.WriteAsync(command);
+            await _kernelServer.WriteAsync(command);
 
             _kernelEvents
                 .Should()
@@ -180,7 +180,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
             var command = new SubmitCode($"Console.Write(\"{guid}\");");
 
-            await _standardIOKernelServer.WriteAsync(command);
+            await _kernelServer.WriteAsync(command);
 
             _kernelEvents
                 .Should()

@@ -7,10 +7,10 @@ using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.Tests.Server
 {
-    public static class StandardIOKernelServerExtensions
+    public static class KernelServerExtensions
     {
         public static Task WriteAsync(
-            this StandardIOKernelServer server,
+            this KernelServer server,
             KernelCommand command)
         {
             var json = KernelCommandEnvelope.Serialize(
