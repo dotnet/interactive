@@ -23,7 +23,6 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public static KernelClient CreateClient(NamedPipeClientStream remote)
         {
-
             if (remote == null)
             {
                 throw new ArgumentNullException(nameof(remote));
