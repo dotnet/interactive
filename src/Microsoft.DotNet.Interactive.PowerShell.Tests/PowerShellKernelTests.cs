@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Management.Automation;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using System.Linq;
@@ -228,6 +229,25 @@ for ($j = 0; $j -le 4; $j += 4 ) {
 
                 File.Delete(_allUsersCurrentHostProfilePath);
             }
+        }
+
+        [Fact]
+        public async Task Powershell_customobject_is_formatted_for_outdisplay()
+        {
+            var kernel = CreateKernel(Language.PowerShell);
+            var result = await kernel.SendAsync(new SubmitCode("[pscustomobject]@{ prop1 = 'value1'; prop2 = 'value2'; prop3 = 'value3' } | Out-Display"));
+            var outputs = result.KernelEvents.ToSubscribedList();
+
+            string mimeType = "text/html";
+            string formattedHtml = "<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>prop1</td><td>value1</td></tr><tr><td>prop2</td><td>value2</td></tr><tr><td>prop3</td><td>value3</td></tr></tbody></table>";
+            FormattedValue fv = new FormattedValue(mimeType, formattedHtml);
+
+            outputs.Should().SatisfyRespectively(
+                e => e.Should().BeOfType<CodeSubmissionReceived>(),
+                e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues.ElementAt(0).Should().BeEquivalentTo(fv),
+                e => e.Should().BeOfType<CommandSucceeded>()
+            );
         }
     }
 }

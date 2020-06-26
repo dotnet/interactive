@@ -122,17 +122,13 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             if (variable != null)
             {
-                switch (variable.Value)
-                {
-                    case PSObject psobject:
-                        value = (T) psobject.BaseObject;
-                        break;
-                    default:
-                        value = (T) variable.Value;
-                        break;
-                }
+                object outVal = (variable.Value is PSObject psobject) ? psobject.Unwrap() : variable.Value;
 
-                return true;
+                if(outVal is T tObj)
+                {
+                    value = tObj;
+                    return true;
+                }
             }
 
             value = default;
