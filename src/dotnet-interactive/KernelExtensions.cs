@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.App
 {
     public static class KernelExtensions
     {
-        public static T UseQuiCommand<T>(this T kernel, IDisposable disposeOnQuit, CancellationToken cancellationToken) where T : Kernel
+        public static T UseQuitCommand<T>(this T kernel, IDisposable disposeOnQuit, CancellationToken cancellationToken) where T : Kernel
         {
             Quit.DisposeOnQuit = disposeOnQuit;
             KernelCommandEnvelope.RegisterCommandType<Quit>(nameof(Quit));

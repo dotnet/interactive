@@ -9,6 +9,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Pocket;
+using Serilog;
 
 namespace Microsoft.DotNet.Interactive.App
 {
@@ -34,6 +36,7 @@ namespace Microsoft.DotNet.Interactive.App
 
         public void ConfigureServices(IServiceCollection services)
         {
+            using var _ = Pocket.Logger.Log.OnEnterAndExit();
             if (StartupOptions.EnableHttpApi)
             {
                 services.AddSingleton((c) => new KernelHubConnection(c.GetRequiredService<CompositeKernel>()));
@@ -59,6 +62,7 @@ namespace Microsoft.DotNet.Interactive.App
             IHostApplicationLifetime lifetime,
             IServiceProvider serviceProvider)
         {
+            var operation = Pocket.Logger.Log.OnEnterAndExit();
             if (StartupOptions.EnableHttpApi)
             {
                 app.UseStaticFiles(new StaticFileOptions
@@ -70,14 +74,17 @@ namespace Microsoft.DotNet.Interactive.App
                 app.UseRouting();
                 app.UseRouter(r =>
                 {
+                    operation.Info("configuring routing");
                     var frontendEnvironment = serviceProvider.GetService<HtmlNotebookFrontedEnvironment>();
                     if (frontendEnvironment != null)
                     {
                         r.Routes.Add(new DiscoveryRouter(frontendEnvironment));
                     }
 
-                    r.Routes.Add(new VariableRouter(serviceProvider.GetRequiredService<Kernel>()));
-                    r.Routes.Add(new KernelsRouter(serviceProvider.GetRequiredService<Kernel>()));
+                    var kernel = serviceProvider.GetRequiredService<Kernel>();
+
+                    r.Routes.Add(new VariableRouter(kernel));
+                    r.Routes.Add(new KernelsRouter(kernel));
                 });
                 app.UseEndpoints(endpoints =>
                 {

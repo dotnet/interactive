@@ -27,7 +27,6 @@ namespace Microsoft.DotNet.Interactive.App
         public static async Task<int> Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
-
             return await CommandLineParser.Create(_serviceCollection).InvokeAsync(args);
         }
 
@@ -70,12 +69,14 @@ namespace Microsoft.DotNet.Interactive.App
             StartupOptions options, 
             IServiceCollection serviceCollection)
         {
+            using var _ = Log.OnEnterAndExit();
+
             // FIX: (ConstructWebHostBuilder) dispose me
             var disposables = new CompositeDisposable
             {
                 StartToolLogging(options)
             };
-
+            
             var httpPort = GetFreePort(options);
 
             var probingSettings = HttpProbingSettings.Create(httpPort.PortNumber);
@@ -105,6 +106,7 @@ namespace Microsoft.DotNet.Interactive.App
 
             static HttpPort GetFreePort(StartupOptions startupOptions)
             {
+                using var __ = Log.OnEnterAndExit(nameof(GetFreePort));
                 if (startupOptions.HttpPort != null && !startupOptions.HttpPort.IsAuto)
                 {
                     return startupOptions.HttpPort;
