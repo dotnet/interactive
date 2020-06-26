@@ -2,11 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as cp from 'child_process';
-import * as path from 'path';
 import {
-    CommandFailed,
-    CommandFailedType,
-    CommandSucceededType,
     DisposableSubscription,
     KernelCommand,
     KernelCommandType,
@@ -14,18 +10,34 @@ import {
     KernelEventEnvelopeObserver,
     DiagnosticLogEntryProducedType,
     DiagnosticLogEntryProduced,
-    ChangeWorkingDirectory
+    KernelReadyType
 } from "./contracts";
-import { ProcessStart, KernelTransportCreationResult } from './interfaces';
+import { ProcessStart } from './interfaces';
 import { ReportChannel } from './interfaces/vscode';
 import { LineReader } from './lineReader';
 
 export class StdioKernelTransport {
     private childProcess: cp.ChildProcessWithoutNullStreams;
     private lineReader: LineReader;
+    private readyPromise: Promise<void>;
     private subscribers: Array<KernelEventEnvelopeObserver> = [];
 
-    private constructor(processStart: ProcessStart, notebookPath: string, private diagnosticChannel: ReportChannel) {
+    constructor(processStart: ProcessStart, private diagnosticChannel: ReportChannel) {
+        // prepare root event handler
+        this.lineReader = new LineReader();
+        this.lineReader.subscribe(line => this.handleLine(line));
+
+        // prepare one-time ready event
+        this.readyPromise = new Promise<void>((resolve, reject) => {
+            const readySubscriber = this.subscribeToKernelEvents(eventEnvelope => {
+                if (eventEnvelope.eventType === KernelReadyType) {
+                    readySubscriber.dispose();
+                    resolve();
+                }
+            });
+        });
+
+        // launch the process
         this.childProcess = cp.spawn(processStart.command, processStart.args, { cwd: processStart.workingDirectory });
         this.diagnosticChannel.appendLine(`Kernel started with pid ${this.childProcess.pid}.`);
         this.childProcess.on('exit', (code: number, _signal: string) => {
@@ -35,8 +47,6 @@ export class StdioKernelTransport {
                 : '';
             this.diagnosticChannel.appendLine(message + messageSuffix);
         });
-        this.lineReader = new LineReader();
-        this.lineReader.subscribe(line => this.handleLine(line));
         this.childProcess.stdout.on('data', data => this.lineReader.onData(data));
     }
 
@@ -52,40 +62,6 @@ export class StdioKernelTransport {
         for (let i = this.subscribers.length - 1; i >= 0; i--) {
             this.subscribers[i](envelope);
         }
-    }
-
-    static create(processStart: ProcessStart, notebookPath: string, diagnosticChannel: ReportChannel): KernelTransportCreationResult {
-        let kernelTransport = new StdioKernelTransport(processStart, notebookPath, diagnosticChannel);
-        // set the working directory to be next to the notebook; this allows relative file access to work as expected
-        // immediately clean up afterwards because we'll never do this again
-        let token = 'change-working-directory-token';
-        let command: ChangeWorkingDirectory = {
-            workingDirectory: path.dirname(notebookPath)
-        };
-        const initialization = new Promise<void>((resolve, reject) => {
-            let disposable = kernelTransport.subscribeToKernelEvents(envelope => {
-                if (envelope.command?.token === token) {
-                    switch (envelope.eventType) {
-                        case CommandFailedType:
-                            let failed = <CommandFailed>envelope.event;
-                            let message = `Unable to set notebook working directory to '${notebookPath}'.\n${failed.message}`;
-                            diagnosticChannel.appendLine(message);
-                            disposable.dispose();
-                            resolve();
-                            break;
-                        case CommandSucceededType:
-                            disposable.dispose();
-                            resolve();
-                            break;
-                    }
-                }
-            });
-            kernelTransport.submitCommand(command, 'ChangeWorkingDirectory', token);
-        });
-        return {
-            transport: kernelTransport,
-            initialization
-        };
     }
 
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
@@ -113,6 +89,10 @@ export class StdioKernelTransport {
             this.childProcess.stdin.write('\n');
             resolve();
         });
+    }
+
+    waitForReady(): Promise<void> {
+        return this.readyPromise;
     }
 
     dispose() {

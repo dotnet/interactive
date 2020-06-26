@@ -12,7 +12,7 @@ import { CommandSucceededType, CompletionsProducedType } from '../../contracts';
 describe('LanguageProvider tests', () => {
     it('CompletionProvider', async () => {
         let token = '123';
-        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
             'RequestCompletions': [
                 {
                     eventType: CompletionsProducedType,
@@ -69,7 +69,7 @@ describe('LanguageProvider tests', () => {
 
     it('HoverProvider', async () => {
         let token = '123';
-        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
             'RequestHoverText': [
                 {
                     eventType: 'HoverTextProduced',

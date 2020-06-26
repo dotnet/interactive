@@ -62,6 +62,10 @@ export async function signalTransportFactory(rootUrl: string): Promise<KernelTra
             return connection.send("submitCommand", JSON.stringify(envelope));
         },
 
+        waitForReady: (): Promise<void> => {
+            return Promise.resolve();
+        },
+
         dispose: (): void => {
         }
     };

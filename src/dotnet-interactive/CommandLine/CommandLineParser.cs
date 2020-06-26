@@ -324,12 +324,17 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
                     description: "Specifies the range of ports to use to enable HTTP services");
 
+                var workingDirOption = new Option<DirectoryInfo>(
+                    "--working-dir",
+                    "Working directory to which to change after launching the kernel.");
+
                 var command = new Command(
                     "stdio",
                     "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
                 {
                     defaultKernelOption,
-                    httpPortRangeOption
+                    httpPortRangeOption,
+                    workingDirOption
                 };
 
                 command.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext, CancellationToken>(
@@ -348,7 +353,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                         c.GetService<HtmlNotebookFrontedEnvironment>());
                                 }, kernel =>
                                 {
-                                    kernel.CreateKernelServer();
+                                    kernel.CreateKernelServer(startupOptions.WorkingDir);
 
                                     kernel.UseQuiCommand(disposeOnQuit, cancellationToken);
                                 });

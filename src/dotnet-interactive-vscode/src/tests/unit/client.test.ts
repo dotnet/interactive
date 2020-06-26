@@ -12,7 +12,7 @@ describe('InteractiveClient tests', () => {
     it('command execution returns deferred events', async () => {
         let token = 'test-token';
         let code = '1 + 1';
-        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
             'SubmitCode': [
                 {
                     // deferred event; unassociated with the original submission; has its own token
@@ -86,7 +86,7 @@ describe('InteractiveClient tests', () => {
     it('deferred events do not interfere with display update events', async () => {
         let token = 'test-token';
         let code = '1 + 1';
-        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
             'SubmitCode': [
                 {
                     // deferred event; unassociated with the original submission; has its own token
@@ -160,7 +160,7 @@ describe('InteractiveClient tests', () => {
     it('interleaved deferred events do not interfere with display update events', async () => {
         let token = 'test-token';
         let code = '1 + 1';
-        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
             'SubmitCode': [
                 {
                     // deferred event; unassociated with the original submission; has its own token
@@ -254,7 +254,7 @@ describe('InteractiveClient tests', () => {
 
     it('display update events from separate submissions trigger the correct observer', async () => {
         let code = '1 + 1';
-        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
             'SubmitCode#1': [
                 {
                     eventType: DisplayedValueProducedType,

@@ -40,6 +40,10 @@ export class MockKernelTransport implements KernelTransport {
         return Promise.resolve();
     }
 
+    public waitForReady(): Promise<void> {
+        return Promise.resolve();
+    }
+
     public dispose() {
     }
 }

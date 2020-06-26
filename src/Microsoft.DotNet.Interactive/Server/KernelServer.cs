@@ -19,9 +19,10 @@ namespace Microsoft.DotNet.Interactive.Server
 
 
         public KernelServer(
-            Kernel kernel, 
+            Kernel kernel,
             IInputTextStream input,
-            IOutputTextStream output)
+            IOutputTextStream output,
+            DirectoryInfo workingDir = null)
         {
             _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
             _input = input ?? throw new ArgumentNullException(nameof(input));
@@ -36,6 +37,11 @@ namespace Microsoft.DotNet.Interactive.Server
                 _kernel.KernelEvents.Subscribe(WriteEventToOutput),
                 _input
             };
+
+            if (workingDir is { })
+            {
+                Environment.CurrentDirectory = workingDir.FullName;
+            }
 
             WriteEventToOutput(new KernelReady());
         }

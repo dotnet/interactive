@@ -1,12 +1,14 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import * as path from 'path';
 import { ProcessStart } from "./interfaces";
 
-export function processArguments(template: { args: Array<string>, workingDirectory: string }, dotnetPath: string, globalStoragePath: string): ProcessStart {
+export function processArguments(template: { args: Array<string>, workingDirectory: string }, notebookPath: string, dotnetPath: string, globalStoragePath: string): ProcessStart {
     let map: { [key: string]: string } = {
         'dotnet_path': dotnetPath,
-        'global_storage_path': globalStoragePath
+        'global_storage_path': globalStoragePath,
+        'working_dir': path.dirname(notebookPath)
     };
     let processed = template.args.map(a => performReplacement(a, map));
     return {

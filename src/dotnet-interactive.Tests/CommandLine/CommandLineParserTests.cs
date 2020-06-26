@@ -14,6 +14,7 @@ using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.Commands;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
+using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
@@ -314,6 +315,16 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             await _parser.InvokeAsync($"jupyter {expected}", testConsole);
 
             testConsole.Error.ToString().Should().Contain("File does not exist: not_exist.json");
+        }
+
+        [Fact]
+        public async Task stdio_command_supports_working_dir_option()
+        {
+            using var workingDirectory = DisposableDirectory.Create();
+
+            await _parser.InvokeAsync($"stdio --working-dir \"{workingDirectory.Directory.FullName}\"");
+
+            _startOptions.WorkingDir.FullName.Should().Be(workingDirectory.Directory.FullName);
         }
 
         [Theory]

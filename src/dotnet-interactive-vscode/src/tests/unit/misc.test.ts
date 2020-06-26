@@ -14,11 +14,13 @@ describe('Miscellaneous tests', () => {
                 'run',
                 'dotnet-interactive',
                 '--',
-                'stdio'
+                'stdio',
+                '--working-dir',
+                '{working_dir}'
             ],
             workingDirectory: '{global_storage_path}'
         };
-        let actual = processArguments(template, 'replacement-dotnet-path', 'replacement-global-storage-path');
+        let actual = processArguments(template, 'replacement-working-dir/notebook-file.dib', 'replacement-dotnet-path', 'replacement-global-storage-path');
         expect(actual).to.deep.equal({
             command: 'replacement-dotnet-path',
             args: [
@@ -26,7 +28,9 @@ describe('Miscellaneous tests', () => {
                 'run',
                 'dotnet-interactive',
                 '--',
-                'stdio'
+                'stdio',
+                '--working-dir',
+                'replacement-working-dir'
             ],
             workingDirectory: 'replacement-global-storage-path'
         });
