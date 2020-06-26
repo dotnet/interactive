@@ -38,15 +38,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     .UseDefaultMagicCommands()
             };
 
-            var inputStream = new TextReaderInputStream(new StreamReader(new MemoryStream()));
-            var outputStream = new TextWriterOutputStream(new StringWriter());
-
-            _kernelServer = new KernelServer(
-                kernel,
-                inputStream,
-                outputStream
-                );
-
+            
+            _kernelServer = kernel.CreateKernelServer(new StreamReader(new MemoryStream()), new StringWriter());
+            
             _kernelEvents = _kernelServer
                             .Output
                             .Where(s => !string.IsNullOrWhiteSpace(s))
