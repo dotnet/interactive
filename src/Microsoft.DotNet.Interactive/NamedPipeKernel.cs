@@ -5,13 +5,14 @@ using System.IO.Pipes;
 using System.Reactive.Disposables;
 using System.Security.Principal;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal class NamedPipeKernel : ProxyKernel, IKernelCommandHandler<SubmitCode>
+    internal class NamedPipeKernel : ProxyKernelObsolete, IKernelCommandHandler<SubmitCode>
     {
         private string _pipeName;
         private NamedPipeClientStream _clientStream;
@@ -61,7 +62,7 @@ namespace Microsoft.DotNet.Interactive
             await clientStream.ConnectAsync();
             clientStream.ReadMode = PipeTransmissionMode.Message;
             _clientStream = clientStream;
-           
+
         }
     }
 }
