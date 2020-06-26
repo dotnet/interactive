@@ -9,18 +9,18 @@ using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public sealed class ProxyKernel : Kernel, IKernelCommandHandler<SubmitCode>, IKernelCommandHandler<RequestCompletions>
+    public sealed class ProxyKernel : 
+        Kernel, 
+        IKernelCommandHandler<SubmitCode>, 
+        IKernelCommandHandler<RequestCompletions>,
+        IKernelCommandHandler<RequestHoverText>
     {
         private readonly KernelClient _client;
 
         public ProxyKernel(string name, KernelClient client) : base(name)
         {
             _client = client;
-            RegisterForDisposal(client);
-            RegisterForDisposal(() =>
-            {
-                client.KernelEvents.Subscribe(OnKernelEvents);
-            });
+            RegisterForDisposal(client.KernelEvents.Subscribe(OnKernelEvents));
         }
 
         private void OnKernelEvents(KernelEvent kernelEvent)
@@ -38,5 +38,9 @@ namespace Microsoft.DotNet.Interactive
             return _client.SendAsync(command);
         }
 
+        public Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
+        {
+            return _client.SendAsync(command);
+        }
     }
 }

@@ -31,8 +31,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
             _disposables = new CompositeDisposable
             {
-                _input.Subscribe(DeserializeAndSendEvent),
-                _input
+                _input.Subscribe(DeserializeAndSendEvent)
             };
         }
         public IObservable<string> Input => _input;

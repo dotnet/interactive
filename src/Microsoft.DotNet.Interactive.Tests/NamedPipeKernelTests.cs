@@ -42,16 +42,8 @@ namespace Microsoft.DotNet.Interactive.Tests
             kernel.DefaultKernelName = fSharpKernel.Name;
 
             var pipeName = Guid.NewGuid().ToString();
-            using var cSharpKernel = new CSharpKernel();
-            Action doWait = () =>
-                Task.Run(() =>
-                {
-                    var serverStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
-                    serverStream.WaitForConnection();
-
-                  NamedPipeTransport.CreateServer(cSharpKernel, serverStream);
-                });
-            doWait();
+            using var remoteKernel = new CSharpKernel();
+            StartServer(remoteKernel, pipeName);
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
@@ -69,47 +61,42 @@ x", targetKernelName: "test");
                   .ContainSingle<CommandSucceeded>(e => e.Command == proxyCommand);
         }
 
+        void StartServer(Kernel remoteKernel, string pipeName) => Task.Run(() => { remoteKernel.EnableApiOverNamedPipe(pipeName); });
+
         [FactSkipLinux]
         public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_directive_as_a_proxy_named_pipe2()
         {
             var fSharpKernel = new FSharpKernel();
-            using var kernel = new CompositeKernel
+            using var localKernel = new CompositeKernel
             {
                 fSharpKernel
             }.UseProxyKernelWithNamedPipe();
-            kernel.DefaultKernelName = fSharpKernel.Name;
+
+            localKernel.DefaultKernelName = fSharpKernel.Name;
 
             var pipeName = Guid.NewGuid().ToString();
-            using var cSharpKernel = new CSharpKernel();
-            Action doWait = () =>
-                Task.Run(() =>
-                {
-                    var serverStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
-                    serverStream.WaitForConnection();
+            using var remoteKernel = new CSharpKernel();
+            StartServer(remoteKernel, pipeName);
 
-                    NamedPipeTransport.CreateServer(cSharpKernel, serverStream);
-                });
-            doWait();
-
-            using var events = kernel.KernelEvents.ToSubscribedList();
+            using var events = localKernel.KernelEvents.ToSubscribedList();
 
             var proxyCommand = new SubmitCode($"#!connect named-pipe test {pipeName}");
 
-            await kernel.SendAsync(proxyCommand);
+            await localKernel.SendAsync(proxyCommand);
 
             var proxyCommand2 = new SubmitCode(@"
 #!test
 var x = 1 + 1;
 x");
 
-            await kernel.SendAsync(proxyCommand2);
+            await localKernel.SendAsync(proxyCommand2);
 
             var proxyCommand3 = new SubmitCode(@"
 #!test
 var y = x + x;
 y");
 
-            await kernel.SendAsync(proxyCommand3);
+            await localKernel.SendAsync(proxyCommand3);
 
             events.Should()
                   .ContainSingle<CommandSucceeded>(e => e.Command == proxyCommand2);
