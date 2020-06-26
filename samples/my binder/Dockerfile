@@ -52,9 +52,6 @@ RUN dotnet_sdk_version=3.1.301 \
     # Trigger first run experience by running arbitrary cmd
     && dotnet help
 
-# Trigger first run experience by running arbitrary cmd
-RUN dotnet help
-
 # Copy notebooks
 
 COPY ./notebooks/ ${HOME}/notebooks/
