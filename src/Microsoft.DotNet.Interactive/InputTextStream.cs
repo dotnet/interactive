@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public abstract class InputTextStream : IObservable<string>, IDisposable
+    public abstract class InputTextStream : IInputTextStream
     {
         private readonly object _lock = new object();
        
@@ -18,10 +18,9 @@ namespace Microsoft.DotNet.Interactive
         private readonly CancellationTokenSource _cancellationSource;
 
 
-        public InputTextStream()
+        protected InputTextStream()
         {
             _cancellationSource = new CancellationTokenSource();
-            
         }
 
         public IDisposable Subscribe(IObserver<string> observer)

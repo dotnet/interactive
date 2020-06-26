@@ -10,7 +10,7 @@ using System.Linq;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
@@ -174,7 +174,44 @@ namespace Microsoft.DotNet.Interactive
 
                 }
             });
-            kernel.ConfigureConnection(connectionCommand);
+            kernel.AddConnectionDirective(connectionCommand);
+            return kernel;
+        }
+
+        public static CompositeKernel UseProxyKernelWithSignalR(this CompositeKernel kernel)
+        {
+            var connectionCommand = new Command("signalr");
+            connectionCommand.AddArgument(new Argument<string>("kernel-name"));
+            connectionCommand.AddArgument(new Argument<string>("hub-url"));
+
+            connectionCommand.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (kernelName, hubUrl, context) =>
+            {
+                var existingProxyKernel = kernel.FindKernel(kernelName);
+                if (existingProxyKernel == null)
+                {
+                  
+                    var connection = new HubConnectionBuilder()
+                        .WithUrl(hubUrl)
+                        .Build();
+
+                    await connection.StartAsync();
+
+                    var client = connection.CreateKernelClient();
+                    var proxyKernel = new ProxyKernel(kernelName, client);
+                    await connection.SendAsync("connect");
+
+                    proxyKernel.RegisterForDisposal(client);
+                    proxyKernel.RegisterForDisposal(async () =>
+                    {
+                        await connection.DisposeAsync();
+                    });
+                    
+                    kernel.Add(proxyKernel);
+
+                    
+                }
+            });
+            kernel.AddConnectionDirective(connectionCommand);
             return kernel;
         }
 

@@ -250,7 +250,7 @@ namespace Microsoft.DotNet.Interactive
                 context);
         }
 
-        public void ConfigureConnection(Command connectionCommand)
+        public void AddConnectionDirective(Command connectionCommand)
         {
             if (_connectCommand == null)
             {
