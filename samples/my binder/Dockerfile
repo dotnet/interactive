@@ -33,9 +33,8 @@ RUN apt-get update \
         libicu66 \
         libssl1.1 \
         libstdc++6 \
-        zlib1g 
-
-RUN rm -rf /var/lib/apt/lists/*
+        zlib1g \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install .NET Core SDK
 
