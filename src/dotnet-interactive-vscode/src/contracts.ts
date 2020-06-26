@@ -85,6 +85,7 @@ export const ErrorProducedType = "ErrorProduced";
 export const HoverTextProducedType = "HoverTextProduced";
 export const IncompleteCodeSubmissionReceivedType = "IncompleteCodeSubmissionReceived";
 export const InputRequestedType = "InputRequested";
+export const KernelReadyType = "KernelReady";
 export const PackageAddedType = "PackageAdded";
 export const PasswordRequestedType = "PasswordRequested";
 export const ReturnValueProducedType = "ReturnValueProduced";
@@ -105,6 +106,7 @@ export type KernelEventType =
     | typeof HoverTextProducedType
     | typeof IncompleteCodeSubmissionReceivedType
     | typeof InputRequestedType
+    | typeof KernelReadyType
     | typeof PackageAddedType
     | typeof PasswordRequestedType
     | typeof ReturnValueProducedType
@@ -167,6 +169,9 @@ export interface IncompleteCodeSubmissionReceived extends KernelEvent {
 
 export interface InputRequested extends KernelEvent {
     prompt: string;
+}
+
+export interface KernelReady extends KernelEvent {
 }
 
 export interface PackageAdded extends KernelEvent {

@@ -233,6 +233,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new[] { new FormattedValue("text/markdown", "markdown") },
                     new LinePositionSpan(new LinePosition(1, 2), new LinePosition(3, 4)));
 
+                yield return new KernelReady();
+
                 yield return new PackageAdded(
                     new ResolvedPackageReference(
                         packageName: "ThePackage",
