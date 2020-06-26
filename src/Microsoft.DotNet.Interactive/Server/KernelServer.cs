@@ -17,14 +17,8 @@ namespace Microsoft.DotNet.Interactive.Server
         private readonly OutputTextStream _output;
         private readonly CompositeDisposable _disposables;
 
-        public KernelServer(
-            Kernel kernel, 
-            TextReader input, 
-            TextWriter output) : this(kernel, new InputTextStream(input), new OutputTextStream(output))
-        {
-        }
 
-        private KernelServer(
+        public KernelServer(
             Kernel kernel, 
             InputTextStream input,
             OutputTextStream output)
@@ -54,10 +48,10 @@ namespace Microsoft.DotNet.Interactive.Server
 
         private async Task DeserializeAndSendCommand(string line)
         {
-            IKernelCommandEnvelope streamKernelCommand;
+            IKernelCommandEnvelope kernelCommandEnvelope;
             try
             {
-                streamKernelCommand = KernelCommandEnvelope.Deserialize(line);
+                kernelCommandEnvelope = KernelCommandEnvelope.Deserialize(line);
             }
             catch (JsonReaderException ex)
             {
@@ -68,7 +62,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 return;
             }
             
-            await _kernel.SendAsync(streamKernelCommand.Command);
+            await _kernel.SendAsync(kernelCommandEnvelope.Command);
         }
 
         private void WriteEventToOutput(KernelEvent kernelEvent)

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.IO.Pipes;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -43,7 +44,13 @@ namespace Microsoft.DotNet.Interactive.Tests
             var pipeName = Guid.NewGuid().ToString();
             using var cSharpKernel = new CSharpKernel();
             Action doWait = () =>
-                Task.Run(() => NamedPipeKernelServer.WaitForConnection(cSharpKernel, pipeName));
+                Task.Run(() =>
+                {
+                    var serverStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+                    serverStream.WaitForConnection();
+
+                  NamedPipeTransport.CreateServer(cSharpKernel, serverStream);
+                });
             doWait();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
@@ -75,7 +82,13 @@ x", targetKernelName: "test");
             var pipeName = Guid.NewGuid().ToString();
             using var cSharpKernel = new CSharpKernel();
             Action doWait = () =>
-                Task.Run(() => NamedPipeKernelServer.WaitForConnection(cSharpKernel, pipeName));
+                Task.Run(() =>
+                {
+                    var serverStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+                    serverStream.WaitForConnection();
+
+                    NamedPipeTransport.CreateServer(cSharpKernel, serverStream);
+                });
             doWait();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
