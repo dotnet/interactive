@@ -38,10 +38,14 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     .UseDefaultMagicCommands()
             };
 
+            var inputStream = new TextReaderInputStream(new StreamReader(new MemoryStream()));
+            var outputStream = new TextWriterOutputStream(new StringWriter());
+
             _kernelServer = new KernelServer(
                 kernel,
-                new StreamReader(new MemoryStream()),
-                new StringWriter());
+                inputStream,
+                outputStream
+                );
 
             _kernelEvents = _kernelServer
                             .Output

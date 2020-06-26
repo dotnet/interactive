@@ -24,6 +24,7 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Microsoft.DotNet.Interactive.PowerShell;
+using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -347,7 +348,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                         c.GetService<HtmlNotebookFrontedEnvironment>());
                                 }, kernel =>
                                 {
-                                    StdIOCommand.CreateServer(kernel, console);
+                                    StdIOTransport.CreateServer(kernel);
 
                                     kernel.UseQuiCommand(disposeOnQuit, cancellationToken);
                                 });

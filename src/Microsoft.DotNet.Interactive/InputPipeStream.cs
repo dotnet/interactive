@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive
                 while (!_complete)
                 {
                     var message = await _input.ReadMessageAsync();
-                    if (String.IsNullOrEmpty(message))
+                    if (string.IsNullOrEmpty(message))
                     {
                         await Task.Delay(100);
                     }

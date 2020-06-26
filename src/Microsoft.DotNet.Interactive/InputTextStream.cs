@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -10,18 +9,17 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal class InputTextStream : IObservable<string>, IDisposable
+    public abstract class InputTextStream : IObservable<string>, IDisposable
     {
         private readonly object _lock = new object();
-        private readonly TextReader _input;
+       
         private readonly Subject<string> _channel = new Subject<string>();
         private bool _complete;
         private readonly CancellationTokenSource _cancellationSource;
 
 
-        public InputTextStream(TextReader input)
+        public InputTextStream()
         {
-            _input = input ?? throw new ArgumentNullException(nameof(input));
             _cancellationSource = new CancellationTokenSource();
             
         }
@@ -36,6 +34,8 @@ namespace Microsoft.DotNet.Interactive
                 _channel.Subscribe(observer)
             };
         }
+
+        protected abstract Task<string> ReadLineAsync();
 
         private void EnsureStarted()
         {
@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 while (!_complete)
                 {
-                    var line = await _input.ReadLineAsync();
+                    var line = await ReadLineAsync();
                     if (line == null)
                     {
                         await Task.Delay(100, _cancellationSource.Token);
