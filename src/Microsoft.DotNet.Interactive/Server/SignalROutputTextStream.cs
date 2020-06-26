@@ -4,9 +4,9 @@
 using System;
 using Microsoft.AspNetCore.SignalR.Client;
 
-namespace Microsoft.DotNet.Interactive.SignalR
+namespace Microsoft.DotNet.Interactive.Server
 {
-    public class SignalROutputTextStream : OutputTextStream
+    internal class SignalROutputTextStream : OutputTextStream
     {
         private readonly HubConnection _connection;
 

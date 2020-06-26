@@ -7,7 +7,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive.Server
 {
     internal class InputPipeStream : IObservable<string>, IDisposable
     {

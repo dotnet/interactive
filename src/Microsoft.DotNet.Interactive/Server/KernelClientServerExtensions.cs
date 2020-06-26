@@ -3,9 +3,9 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.IO.Pipes;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.DotNet.Interactive.SignalR;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
@@ -13,13 +13,18 @@ namespace Microsoft.DotNet.Interactive.Server
     {
         public static  KernelServer CreateKernelServer(this Kernel kernel)
         {
+            return kernel.CreateKernelServer(Console.In, Console.Out);
+        }
+
+        public static KernelServer CreateKernelServer(this Kernel kernel, TextReader inputStream, TextWriter outputStream)
+        {
             if (kernel == null)
             {
                 throw new ArgumentNullException(nameof(kernel));
             }
 
-            var input = new TextReaderInputStream(Console.In);
-            var output = new TextWriterOutputStream(Console.Out);
+            var input = new TextReaderInputStream(inputStream);
+            var output = new TextWriterOutputStream(outputStream);
             var kernelServer = new KernelServer(kernel, input, output);
 
             kernel.RegisterForDisposal(kernelServer);

@@ -7,9 +7,9 @@ using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive.Server
 {
-    public abstract class InputTextStream : IInputTextStream
+    internal abstract class InputTextStream : IInputTextStream
     {
         private readonly object _lock = new object();
        

@@ -6,9 +6,9 @@ using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using Microsoft.AspNetCore.SignalR.Client;
 
-namespace Microsoft.DotNet.Interactive.SignalR
+namespace Microsoft.DotNet.Interactive.Server
 {
-    public class SignalRInputTextStream : IInputTextStream
+    internal class SignalRInputTextStream : IInputTextStream
     {
         private readonly Subject<string> _channel = new Subject<string>();
         private readonly HubConnection _connection;

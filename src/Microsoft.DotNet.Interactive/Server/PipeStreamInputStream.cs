@@ -2,23 +2,23 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
+using System.IO.Pipes;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive.Server
 {
-    public class TextReaderInputStream : InputTextStream
+    internal class PipeStreamInputStream : InputTextStream
     {
-        private readonly TextReader _input;
-        public TextReaderInputStream(TextReader input)
+        private readonly PipeStream _input;
+        public PipeStreamInputStream(PipeStream input)
         {
             _input = input ?? throw new ArgumentNullException(nameof(input));
         }
 
         protected override async Task<string> ReadLineAsync()
         {
-            var line = await _input.ReadLineAsync();
-            return line;
+            var message = await _input.ReadMessageAsync();
+            return message;
         }
     }
 }

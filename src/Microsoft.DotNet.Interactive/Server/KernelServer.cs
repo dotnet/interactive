@@ -13,15 +13,15 @@ namespace Microsoft.DotNet.Interactive.Server
     public class KernelServer : IDisposable
     {
         private readonly Kernel _kernel;
-        private readonly InputTextStream _input;
-        private readonly OutputTextStream _output;
+        private readonly IInputTextStream _input;
+        private readonly IOutputTextStream _output;
         private readonly CompositeDisposable _disposables;
 
 
         public KernelServer(
             Kernel kernel, 
-            InputTextStream input,
-            OutputTextStream output)
+            IInputTextStream input,
+            IOutputTextStream output)
         {
             _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
             _input = input ?? throw new ArgumentNullException(nameof(input));

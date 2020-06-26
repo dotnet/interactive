@@ -1,12 +1,12 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.DotNet.Interactive
+using System;
+
+namespace Microsoft.DotNet.Interactive.Server
 {
-    internal abstract class ProxyKernelObsolete : Kernel
+    public interface IInputTextStream : IObservable<string>, IDisposable
     {
-        public ProxyKernelObsolete(string name) : base(name)
-        {
-        }
+        bool IsStarted { get; }
     }
 }

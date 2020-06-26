@@ -4,9 +4,9 @@
 using System;
 using System.Reactive.Subjects;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive.Server
 {
-    public abstract class OutputTextStream : IOutputTextStream
+    internal abstract class OutputTextStream : IOutputTextStream
     {
         private readonly Subject<string> _subject = new Subject<string>();
        
