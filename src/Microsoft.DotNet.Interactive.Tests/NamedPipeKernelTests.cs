@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO.Pipes;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -37,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var kernel = new CompositeKernel
             {
                 fSharpKernel
-            }.UseProxyKernelWithNamedPipe();
+            }.UseConnectionOverNamedPipe();
 
             kernel.DefaultKernelName = fSharpKernel.Name;
 
@@ -70,7 +69,7 @@ x", targetKernelName: "test");
             using var localKernel = new CompositeKernel
             {
                 fSharpKernel
-            }.UseProxyKernelWithNamedPipe();
+            }.UseConnectionOverNamedPipe();
 
             localKernel.DefaultKernelName = fSharpKernel.Name;
 
