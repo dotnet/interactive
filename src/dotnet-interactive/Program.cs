@@ -57,13 +57,6 @@ namespace Microsoft.DotNet.Interactive.App
                 disposables.Add(log);
             }
 
-            if (options.Verbose)
-            {
-                disposables.Add(
-                    LogEvents.Subscribe(e => Console.WriteLine(e.ToLogString()),
-                                        _assembliesEmittingPocketLoggerLogs));
-            }
-
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
                 Log.Warning($"{nameof(TaskScheduler.UnobservedTaskException)}", args.Exception);
