@@ -481,6 +481,11 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                          .UseConnectionOverNamedPipe()
                          .UseConnectionOverSignalR();
 
+            if (startupOptions.Verbose)
+            {
+                kernel.LogEventsToPocketLogger();
+            }
+
             SetUpFormatters(frontendEnvironment, startupOptions);
 
             kernel.DefaultKernelName = defaultKernelName;
