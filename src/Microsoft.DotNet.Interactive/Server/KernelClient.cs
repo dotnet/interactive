@@ -16,15 +16,15 @@ namespace Microsoft.DotNet.Interactive.Server
 {
     public class KernelClient : IDisposable
     {
-        private readonly InputTextStream _input;
-        private readonly OutputTextStream _output;
+        private readonly IInputTextStream _input;
+        private readonly IOutputTextStream _output;
 
         private readonly CompositeDisposable _disposables;
         private readonly ISubject<KernelEvent> _kernelEvents = new Subject<KernelEvent>();
 
         public KernelClient(
-            InputTextStream input,
-            OutputTextStream output)
+            IInputTextStream input,
+            IOutputTextStream output)
         {
             _input = input ?? throw new ArgumentNullException(nameof(input));
             _output = output ?? throw new ArgumentNullException(nameof(output));

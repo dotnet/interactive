@@ -6,7 +6,7 @@ using System.Reactive.Subjects;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public abstract class OutputTextStream
+    public abstract class OutputTextStream : IOutputTextStream
     {
         private readonly Subject<string> _subject = new Subject<string>();
        

@@ -4,6 +4,8 @@
 using System;
 using System.Diagnostics;
 using System.IO.Pipes;
+using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.DotNet.Interactive.SignalR;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
@@ -74,6 +76,16 @@ namespace Microsoft.DotNet.Interactive.Server
 
             var input = new PipeStreamInputStream(remote);
             var output = new PipeStreamOutputStream(remote);
+            var kernelClient = new KernelClient(input, output);
+            return kernelClient;
+        }
+
+        public static KernelClient CreateKernelClient(this HubConnection hubConnection)
+        {
+            if (hubConnection == null) throw new ArgumentNullException(nameof(hubConnection));
+
+            var input = new SignalRInputTextStream(hubConnection);
+            var output = new SignalROutputTextStream(hubConnection);
             var kernelClient = new KernelClient(input, output);
             return kernelClient;
         }

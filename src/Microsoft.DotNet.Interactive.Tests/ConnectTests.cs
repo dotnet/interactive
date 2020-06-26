@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 new CSharpKernel().UseDefaultMagicCommands()
             };
 
-            compositeKernel.ConfigureConnection(
+            compositeKernel.AddConnectionDirective(
                 new Command("Data", "Connects to a data kernel")
             );
 
@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 new CSharpKernel().UseDefaultMagicCommands()
             };
 
-            compositeKernel.ConfigureConnection(
+            compositeKernel.AddConnectionDirective(
                 new Command("Data", "Connects to a data kernel")
             );
 
