@@ -20,9 +20,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             return 0;
         }
 
-        internal static StandardIOKernelServer CreateServer(Kernel kernel, IConsole console)
+        internal static KernelServer CreateServer(Kernel kernel, IConsole console)
         {
-            var server = new StandardIOKernelServer(
+            var server = new KernelServer(
                 kernel,
                 Console.In,
                 Console.Out);
