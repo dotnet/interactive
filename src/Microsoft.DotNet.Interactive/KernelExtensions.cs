@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        public static CompositeKernel UseProxyKernelWithNamedPipe(this CompositeKernel kernel)
+        public static CompositeKernel UseConnectionOverNamedPipe(this CompositeKernel kernel)
         {
             var connectionCommand = new Command("named-pipe");
             connectionCommand.AddArgument(new Argument<string>("kernel-name"));
@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        public static CompositeKernel UseProxyKernelWithSignalR(this CompositeKernel kernel)
+        public static CompositeKernel UseConnectionOverSignalR(this CompositeKernel kernel)
         {
             var connectionCommand = new Command("signalr");
             connectionCommand.AddArgument(new Argument<string>("kernel-name"));
