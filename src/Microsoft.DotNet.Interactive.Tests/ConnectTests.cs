@@ -3,16 +3,11 @@
 
 using System.CommandLine;
 using System.Linq;
-using System.Threading.Tasks;
 
 using FluentAssertions;
 
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
-using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter;
-using Microsoft.DotNet.Interactive.Tests.Utility;
 
 using Xunit;
 
@@ -21,28 +16,20 @@ namespace Microsoft.DotNet.Interactive.Tests
     public class ConnectTests
     {
         [Fact]
-        public async Task connect_command_is_not_available_by_default()
+        public void connect_command_is_not_available_by_default()
         {
             using var compositeKernel = new CompositeKernel
             {
                 new CSharpKernel().UseDefaultMagicCommands()
             };
 
-            var events = compositeKernel.KernelEvents.ToSubscribedList();
-
-            await compositeKernel.SendAsync(new SubmitCode("#!lsmagic"));
-
-            var valueProducedEvents = events.OfType<DisplayedValueProduced>().ToArray();
-
-            valueProducedEvents[0].FormattedValues
-                .FirstOrDefault(fv => fv.MimeType == HtmlFormatter.MimeType)
-                .Value
+            compositeKernel.Directives
                 .Should()
-                .NotContain("#!connect");
+                .NotContain(c => c.Name == "#!connect");
         }
 
         [Fact]
-        public async Task connect_command_is_available_when_subcommands_are_added()
+        public void connect_command_is_available_when_a_user_adds_a_kernel_connection_type()
         {
             using var compositeKernel = new CompositeKernel
             {
@@ -50,20 +37,34 @@ namespace Microsoft.DotNet.Interactive.Tests
             };
 
             compositeKernel.ConfigureConnection(
-                new Command("customTransport", "Connects to remote kernel via custom Transport")
+                new Command("Data", "Connects to a data kernel")
             );
 
-            var events = compositeKernel.KernelEvents.ToSubscribedList();
-
-            await compositeKernel.SendAsync(new SubmitCode("#!lsmagic"));
-
-            var valueProducedEvents = events.OfType<DisplayedValueProduced>().ToArray();
-
-            valueProducedEvents[0].FormattedValues
-                .FirstOrDefault(fv => fv.MimeType == HtmlFormatter.MimeType)
-                .Value
+            compositeKernel.Directives
                 .Should()
-                .ContainAll("#!connect", "customTransport");
+                .Contain(c => c.Name == "#!connect");
+        }
+
+        [Fact]
+        public void when_a_user_defines_kernel_connection_type_it_is_available_as_subcommand_of_connect()
+        {
+            using var compositeKernel = new CompositeKernel
+            {
+                new CSharpKernel().UseDefaultMagicCommands()
+            };
+
+            compositeKernel.ConfigureConnection(
+                new Command("Data", "Connects to a data kernel")
+            );
+
+            compositeKernel.Directives
+                .Should()
+                .ContainSingle(c => c.Name == "#!connect")
+                .Which
+                .Children
+                .OfType<ICommand>()
+                .Should()
+                .ContainSingle(c => c.Name == "Data");
         }
     }
 }
