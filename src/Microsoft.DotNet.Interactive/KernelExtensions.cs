@@ -5,13 +5,19 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Diagnostics;
+using System.IO.Pipes;
 using System.Linq;
+using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Utility;
+
 using Pocket;
+
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive
@@ -144,68 +150,27 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        public static CompositeKernel UseProxyKernel(this CompositeKernel kernel)
+        public static CompositeKernel UseProxyKernelWithNamedPipe(this CompositeKernel kernel)
         {
-            var command = new Command("#!connect", "Connect to the specified remote kernel.")
-            {
-                new Argument<string>("kernel-name"),
-                new Argument<string>("remote-name")
-            };
+            var connectionCommand = new Command("named-pipe");
+            connectionCommand.AddArgument(new Argument<string>("kernel-name"));
+            connectionCommand.AddArgument(new Argument<string>("pipe-name"));
 
-            command.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (kernelName, remoteName, context) =>
+            connectionCommand.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (kernelName, pipeName, context) =>
             {
                 var existingProxyKernel = kernel.FindKernel(kernelName);
                 if (existingProxyKernel == null)
                 {
-                    var proxyKernel = new NamedPipeKernel(kernelName);
-                    try
-                    {
-                        await proxyKernel.ConnectAsync(remoteName);
-                        kernel.Add(proxyKernel);
-                    }
-                    catch
-                    {
-                        proxyKernel.Dispose();
-                        throw;
-                    }
+                    var clientStream = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
+                    await clientStream.ConnectAsync();
+                    clientStream.ReadMode = PipeTransmissionMode.Message;
+                    var client = NamedPipeTransport.CreateClient(clientStream);
+                    var proxyKernel = new ProxyKernel(kernelName, client);
+                    kernel.Add(proxyKernel);
+
                 }
             });
-
-            kernel.AddDirective(command);
-
-            return kernel;
-        }
-
-        [DebuggerStepThrough]
-        public static T LogEventsToPocketLogger<T>(this T kernel)
-            where T : Kernel
-        {
-            var disposables = new CompositeDisposable();
-
-            disposables.Add(
-                kernel.KernelEvents
-                      .Subscribe(
-                          e =>
-                          {
-                              Logger.Log.Info("{kernel}: {event}",
-                                              kernel.Name,
-                                              e);
-                          }));
-
-            kernel.VisitSubkernels(k =>
-            {
-                disposables.Add(
-                    k.KernelEvents.Subscribe(
-                        e =>
-                        {
-                            Logger.Log.Info("{kernel}: {event}",
-                                            k.Name,
-                                            e);
-                        }));
-            });
-
-            kernel.RegisterForDisposal(disposables);
-
+            kernel.ConfigureConnection(connectionCommand);
             return kernel;
         }
 

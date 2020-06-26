@@ -255,6 +255,7 @@ namespace Microsoft.DotNet.Interactive
             if (_connectCommand == null)
             {
                 _connectCommand = new Command("#!connect", "Provides functionality to connect to kernels");
+              
                 AddDirective(_connectCommand);
             }
 

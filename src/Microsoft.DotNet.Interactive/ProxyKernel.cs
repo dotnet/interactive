@@ -37,5 +37,6 @@ namespace Microsoft.DotNet.Interactive
         {
             return _client.SendAsync(command);
         }
+
     }
 }
