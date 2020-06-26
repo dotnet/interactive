@@ -5,25 +5,21 @@ namespace Microsoft.DotNet.Interactive.Server
 {
     public static class NamedPipeTransport
     {
-        public static KernelServer CreateServer(Kernel kernel, NamedPipeServerStream server)
+        public static KernelServer CreateServer(Kernel kernel, NamedPipeServerStream local)
         {
             if (kernel == null)
             {
                 throw new ArgumentNullException(nameof(kernel));
             }
-            var input = new PipeStreamInputStream(server);
-            var output = new PipeStreamOutputStream(server);
+            var input = new PipeStreamInputStream(local);
+            var output = new PipeStreamOutputStream(local);
             var kernelServer = new KernelServer(kernel, input, output);
             kernel.RegisterForDisposal(kernelServer);
             return kernelServer;
         }
 
-        public static KernelClient CreateClient(Kernel kernel, NamedPipeClientStream remote)
+        public static KernelClient CreateClient(NamedPipeClientStream remote)
         {
-            if (kernel == null)
-            {
-                throw new ArgumentNullException(nameof(kernel));
-            }
 
             if (remote == null)
             {
@@ -33,7 +29,6 @@ namespace Microsoft.DotNet.Interactive.Server
             var input = new PipeStreamInputStream(remote);
             var output = new PipeStreamOutputStream(remote);
             var kernelClient = new KernelClient(input, output);
-            kernel.RegisterForDisposal(kernelClient);
             return kernelClient;
         }
     }
