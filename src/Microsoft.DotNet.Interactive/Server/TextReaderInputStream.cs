@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
-    internal class TextReaderInputStream : InputTextStream
+    public class TextReaderInputStream : InputTextStream
     {
         private readonly TextReader _input;
         public TextReaderInputStream(TextReader input)

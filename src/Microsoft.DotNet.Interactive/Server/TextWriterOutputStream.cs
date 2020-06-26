@@ -6,7 +6,7 @@ using System.IO;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
-    internal class TextWriterOutputStream : OutputTextStream
+    public class TextWriterOutputStream : OutputTextStream
     {
         private readonly TextWriter _output;
 

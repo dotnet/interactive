@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
-    internal abstract class InputTextStream : IInputTextStream
+    public abstract class InputTextStream : IInputTextStream
     {
         private readonly object _lock = new object();
        

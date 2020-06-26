@@ -16,8 +16,8 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
     public class TestStdioClient : IDisposable
     {
         private readonly Process _process;
-        private readonly InputTextStream _input;
-        private readonly OutputTextStream _output;
+        private readonly TextReaderInputStream _input;
+        private readonly TextWriterOutputStream _output;
         private readonly Subject<KernelEvent> _events = new Subject<KernelEvent>();
         private readonly CompositeDisposable _disposables;
         private readonly TaskCompletionSource<bool> _ready = new TaskCompletionSource<bool>();
