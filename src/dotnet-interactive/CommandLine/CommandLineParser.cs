@@ -31,6 +31,8 @@ using Microsoft.Extensions.Hosting;
 using Pocket;
 using Recipes;
 
+using static Pocket.Logger;
+
 using CommandHandler = System.CommandLine.Invocation.CommandHandler;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
@@ -68,7 +70,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             ITelemetry telemetry = null,
             IFirstTimeUseNoticeSentinel firstTimeUseNoticeSentinel = null)
         {
-          
+            var operation = Log.OnEnterAndExit();
+
             if (services == null)
             {
                 throw new ArgumentNullException(nameof(services));
@@ -77,8 +80,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             
             startServer ??= (startupOptions, invocationContext) =>
             {
+                operation.Info("constructing webhost");
                 var webHost = Program.ConstructWebHost(startupOptions);
                 disposeOnQuit.Add(webHost);
+                operation.Info("starting server");
                 webHost.Run();
             };
 
@@ -340,6 +345,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 command.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext, CancellationToken>(
                     (startupOptions, options, console, context, cancellationToken) =>
                     {
+                        FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi 
+                            ? new HtmlNotebookFrontedEnvironment() 
+                            : new BrowserFrontendEnvironment();
+                        
+                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment,
+                            startupOptions);
+                        kernel.UseQuitCommand(disposeOnQuit, cancellationToken);
+
                         if (startupOptions.EnableHttpApi)
                         {
                             RegisterKernelInServiceCollection(
@@ -348,31 +361,23 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                 options.DefaultKernel,
                                 serviceCollection =>
                                 {
-                                    serviceCollection.AddSingleton(_ => new HtmlNotebookFrontedEnvironment());
-                                    serviceCollection.AddSingleton<FrontendEnvironment>(c =>
-                                        c.GetService<HtmlNotebookFrontedEnvironment>());
+                                    serviceCollection.AddSingleton((HtmlNotebookFrontedEnvironment)frontendEnvironment);
+                                    serviceCollection.AddSingleton(frontendEnvironment);
                                 }, kernel =>
                                 {
-                                    kernel.CreateKernelServer(startupOptions.WorkingDir);
-
-                                    kernel.UseQuiCommand(disposeOnQuit, cancellationToken);
+                                    kernel.CreateKernelServer();
                                 });
 
                             return startHttp(startupOptions, console, startServer, context);
                         }
-
-                        {
-                            var kernel = CreateKernel(options.DefaultKernel, new BrowserFrontendEnvironment(),
-                                startupOptions);
-                            disposeOnQuit.Add(kernel);
-                            kernel.UseQuiCommand(disposeOnQuit, cancellationToken);
-                           
-
-                            return startStdIO(
-                                startupOptions,
-                                kernel,
-                                console);
-                        }
+                        
+                        disposeOnQuit.Add(kernel);
+                        
+                        return startStdIO(
+                            startupOptions,
+                            kernel,
+                            console);
+                        
                     });
 
                 return command;
@@ -419,6 +424,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             services
                 .AddSingleton(c =>
                 {
+                    using var _ = Log.OnEnterAndExit("creating kernel");
                     var frontendEnvironment = c.GetRequiredService<FrontendEnvironment>();
                     var kernel = CreateKernel(defaultKernel, frontendEnvironment, startupOptions,
                         c.GetService<HttpProbingSettings>());
@@ -489,6 +495,11 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             if (startupOptions.Verbose)
             {
                 kernel.LogEventsToPocketLogger();
+            }
+
+            if (startupOptions.Verbose)
+            {
+               kernel.LogEventsToPocketLogger();
             }
 
             SetUpFormatters(frontendEnvironment, startupOptions);
