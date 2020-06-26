@@ -161,11 +161,15 @@ namespace Microsoft.DotNet.Interactive
                 var existingProxyKernel = kernel.FindKernel(kernelName);
                 if (existingProxyKernel == null)
                 {
-                    var clientStream = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
+                    var clientStream = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut,
+                        PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
+                    
                     await clientStream.ConnectAsync();
                     clientStream.ReadMode = PipeTransmissionMode.Message;
-                    var client = NamedPipeTransport.CreateClient(clientStream);
+                    var client = clientStream.CreateKernelClient();
                     var proxyKernel = new ProxyKernel(kernelName, client);
+                    
+                    proxyKernel.RegisterForDisposal(client);
                     kernel.Add(proxyKernel);
 
                 }

@@ -348,7 +348,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                         c.GetService<HtmlNotebookFrontedEnvironment>());
                                 }, kernel =>
                                 {
-                                    StdIOTransport.CreateServer(kernel);
+                                    kernel.CreateKernelServer();
 
                                     kernel.UseQuiCommand(disposeOnQuit, cancellationToken);
                                 });
