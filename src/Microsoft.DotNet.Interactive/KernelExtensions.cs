@@ -174,6 +174,39 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
+        [DebuggerStepThrough]
+        public static T LogEventsToPocketLogger<T>(this T kernel)
+            where T : Kernel
+        {
+            var disposables = new CompositeDisposable();
+
+            disposables.Add(
+                kernel.KernelEvents
+                      .Subscribe(
+                          e =>
+                          {
+                              Logger.Log.Info("{kernel}: {event}",
+                                              kernel.Name,
+                                              e);
+                          }));
+
+            kernel.VisitSubkernels(k =>
+            {
+                disposables.Add(
+                    k.KernelEvents.Subscribe(
+                        e =>
+                        {
+                            Logger.Log.Info("{kernel}: {event}",
+                                            k.Name,
+                                            e);
+                        }));
+            });
+
+            kernel.RegisterForDisposal(disposables);
+
+            return kernel;
+        }
+
         public static void VisitSubkernels(
             this Kernel kernel,
             Action<Kernel> onVisit,
