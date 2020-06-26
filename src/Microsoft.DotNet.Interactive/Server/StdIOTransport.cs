@@ -23,12 +23,8 @@ namespace Microsoft.DotNet.Interactive.Server
             return kernelServer;
         }
 
-        public static KernelClient CreateClient(Kernel kernel, Process remote)
+        public static KernelClient CreateClient(Process remote)
         {
-            if (kernel == null)
-            {
-                throw new ArgumentNullException(nameof(kernel));
-            }
 
             if (remote == null)
             {
@@ -42,9 +38,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
             var input = new TextReaderInputStream(remote.StandardOutput);
             var output = new TextWriterOutputStream(remote.StandardInput);
-
             var kernelClient = new KernelClient(input, output);
-            kernel.RegisterForDisposal(kernelClient);
             return kernelClient;
         }
     }
