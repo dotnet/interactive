@@ -478,7 +478,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                          .UseDefaultMagicCommands()
                          .UseLog()
                          .UseAbout()
-                         .UseProxyKernel();
+                         .UseProxyKernelWithNamedPipe();
 
             SetUpFormatters(frontendEnvironment, startupOptions);
 
