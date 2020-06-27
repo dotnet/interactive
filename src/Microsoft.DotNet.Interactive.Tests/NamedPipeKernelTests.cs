@@ -27,7 +27,110 @@ namespace Microsoft.DotNet.Interactive.Tests
         public void Dispose()
         {
             _disposables.Dispose();
-        } 
+        }
+
+        [FactSkipLinux]
+        public async Task can_address_remote_composite_kernel_specifying_a_remote_targetKernelName()
+        {
+            var fSharpKernel = new FSharpKernel();
+            using var kernel = new CompositeKernel
+            {
+                fSharpKernel
+            }.UseConnectionOverNamedPipe();
+
+            kernel.DefaultKernelName = fSharpKernel.Name;
+
+            var pipeName = Guid.NewGuid().ToString();
+            var remoteKernelInvoked = false;
+
+            var defaultRemoteKernel = new FakeKernel("defaultRemote")
+            {
+                Handle = (command, context) => Task.CompletedTask
+            };
+
+            var expectedRemoteKernel = new FakeKernel("expectedRemote")
+            {
+                Handle = (command, context) =>
+                {
+                    remoteKernelInvoked = true;
+                    return Task.CompletedTask;
+                }
+            };
+
+            using var remoteKernel = new CompositeKernel
+            {
+                defaultRemoteKernel,
+                expectedRemoteKernel
+            };
+
+            remoteKernel.DefaultKernelName = defaultRemoteKernel.Name;
+
+            StartServer(remoteKernel, pipeName);
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            var proxyCommand = new SubmitCode($"#!connect named-pipe test {pipeName} --remote-kernel-name expectedRemote");
+
+            await kernel.SendAsync(proxyCommand);
+
+            var proxyCommand2 = new SubmitCode(@"
+var x = 1 + 1;
+x", targetKernelName: "test");
+
+            await kernel.SendAsync(proxyCommand2);
+
+            remoteKernelInvoked.Should()
+                .BeTrue();
+        }
+
+        [FactSkipLinux]
+        public async Task can_address_remote_composite_kernel()
+        {
+            var fSharpKernel = new FSharpKernel();
+            using var kernel = new CompositeKernel
+            {
+                fSharpKernel
+            }.UseConnectionOverNamedPipe();
+
+            kernel.DefaultKernelName = fSharpKernel.Name;
+
+            var pipeName = Guid.NewGuid().ToString();
+            var remoteKernelInvoked = false;
+
+            var defaultRemoteKernel = new FakeKernel("defaultRemote")
+            {
+                Handle = (command, context) =>
+                {
+                    remoteKernelInvoked = true;
+                    return Task.CompletedTask;
+                }
+            };
+
+            using var remoteKernel = new CompositeKernel
+            {
+                defaultRemoteKernel,
+                new FSharpKernel()
+            };
+
+            remoteKernel.DefaultKernelName = defaultRemoteKernel.Name;
+
+            StartServer(remoteKernel, pipeName);
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            var proxyCommand = new SubmitCode($"#!connect named-pipe test {pipeName}");
+
+            await kernel.SendAsync(proxyCommand);
+
+            var proxyCommand2 = new SubmitCode(@"
+var x = 1 + 1;
+x", targetKernelName: "test");
+
+            await kernel.SendAsync(proxyCommand2);
+
+            remoteKernelInvoked.Should()
+                .BeTrue();
+        }
 
         [FactSkipLinux]
         public async Task Handling_kernel_can_be_specified_using_kernel_name_as_a_directive_as_a_proxy_named_pipe()
