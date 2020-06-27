@@ -11,12 +11,12 @@ namespace Microsoft.DotNet.Interactive.Server
 {
     public static class ConnectableKernel
     {
-        public static  KernelServer CreateKernelServer(this Kernel kernel)
+        public static  KernelServer CreateKernelServer(this Kernel kernel, DirectoryInfo workingDir = null)
         {
-            return kernel.CreateKernelServer(Console.In, Console.Out);
+            return kernel.CreateKernelServer(Console.In, Console.Out, workingDir);
         }
 
-        public static KernelServer CreateKernelServer(this Kernel kernel, TextReader inputStream, TextWriter outputStream)
+        public static KernelServer CreateKernelServer(this Kernel kernel, TextReader inputStream, TextWriter outputStream, DirectoryInfo workingDir = null)
         {
             if (kernel == null)
             {
@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
             var input = new TextReaderInputStream(inputStream);
             var output = new TextWriterOutputStream(outputStream);
-            var kernelServer = new KernelServer(kernel, input, output);
+            var kernelServer = new KernelServer(kernel, input, output, workingDir);
 
             kernel.RegisterForDisposal(kernelServer);
             return kernelServer;

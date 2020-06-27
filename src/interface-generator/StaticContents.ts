@@ -24,4 +24,5 @@ export interface DisposableSubscription extends Disposable {
 export interface KernelTransport extends Disposable {
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
     submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void>;
+    waitForReady(): Promise<void>;
 }
