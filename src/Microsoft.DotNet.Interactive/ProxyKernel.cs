@@ -16,10 +16,12 @@ namespace Microsoft.DotNet.Interactive
         IKernelCommandHandler<RequestHoverText>
     {
         private readonly KernelClient _client;
+        private readonly string _remoteTargetKernelName;
 
-        public ProxyKernel(string name, KernelClient client) : base(name)
+        public ProxyKernel(string name, KernelClient client, string remoteTargetKernelName = null) : base(name)
         {
-            _client = client;
+            _client = client ?? throw new ArgumentNullException(nameof(client));
+            _remoteTargetKernelName = remoteTargetKernelName;
             RegisterForDisposal(client.KernelEvents.Subscribe(OnKernelEvents));
         }
 
@@ -28,19 +30,27 @@ namespace Microsoft.DotNet.Interactive
             PublishEvent(kernelEvent);
         }
 
-        public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+        public  Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
-            return _client.SendAsync(command);
+            return SendCommandToRemoteKernel(command);
         }
 
         public Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
         {
-            return _client.SendAsync(command);
+            return SendCommandToRemoteKernel(command);
         }
 
-        public Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
+        public  Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
-            return _client.SendAsync(command);
+            return SendCommandToRemoteKernel(command);
+        }
+
+        private async Task SendCommandToRemoteKernel(KernelCommand command)
+        {
+            var targetKernelName = command.TargetKernelName;
+            command.TargetKernelName = _remoteTargetKernelName;
+            await _client.SendAsync(command);
+            command.TargetKernelName = targetKernelName;
         }
     }
 }

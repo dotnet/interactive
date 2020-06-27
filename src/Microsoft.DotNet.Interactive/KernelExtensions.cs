@@ -10,6 +10,7 @@ using System.Linq;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -152,23 +153,24 @@ namespace Microsoft.DotNet.Interactive
 
         public static CompositeKernel UseConnectionOverNamedPipe(this CompositeKernel kernel)
         {
-            var connectionCommand = new Command("named-pipe");
+            var connectionCommand = new Command("named-pipe", "Connects to a kernel using named pipes");
             connectionCommand.AddArgument(new Argument<string>("kernel-name"));
             connectionCommand.AddArgument(new Argument<string>("pipe-name"));
+            connectionCommand.AddOption(new Option<string>("--remote-kernel-name"));
 
-            connectionCommand.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (kernelName, pipeName, context) =>
+            connectionCommand.Handler = CommandHandler.Create<string, string, string, KernelInvocationContext>(async (kernelName, pipeName, remoteKernelName, context) =>
             {
                 var existingProxyKernel = kernel.FindKernel(kernelName);
                 if (existingProxyKernel == null)
                 {
                     var clientStream = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut,
                         PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
-                    
+
                     await clientStream.ConnectAsync();
                     clientStream.ReadMode = PipeTransmissionMode.Message;
                     var client = clientStream.CreateKernelClient();
-                    var proxyKernel = new ProxyKernel(kernelName, client);
-                    
+                    var proxyKernel = new ProxyKernel(kernelName, client, remoteKernelName);
+
                     proxyKernel.RegisterForDisposal(client);
                     kernel.Add(proxyKernel);
 
@@ -180,16 +182,17 @@ namespace Microsoft.DotNet.Interactive
 
         public static CompositeKernel UseConnectionOverSignalR(this CompositeKernel kernel)
         {
-            var connectionCommand = new Command("signalr");
+            var connectionCommand = new Command("signalr", "Connects to a kernel using signal R");
             connectionCommand.AddArgument(new Argument<string>("kernel-name"));
             connectionCommand.AddArgument(new Argument<string>("hub-url"));
+            connectionCommand.AddOption(new Option<string>("--remote-kernel-name"));
 
-            connectionCommand.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (kernelName, hubUrl, context) =>
+            connectionCommand.Handler = CommandHandler.Create<string, string, string, KernelInvocationContext>(async (kernelName, hubUrl, remoteKernelName, context) =>
             {
                 var existingProxyKernel = kernel.FindKernel(kernelName);
                 if (existingProxyKernel == null)
                 {
-                  
+
                     var connection = new HubConnectionBuilder()
                         .WithUrl(hubUrl)
                         .Build();
@@ -197,7 +200,7 @@ namespace Microsoft.DotNet.Interactive
                     await connection.StartAsync();
 
                     var client = connection.CreateKernelClient();
-                    var proxyKernel = new ProxyKernel(kernelName, client);
+                    var proxyKernel = new ProxyKernel(kernelName, client, remoteKernelName);
                     await connection.SendAsync("connect");
 
                     proxyKernel.RegisterForDisposal(client);
@@ -205,10 +208,10 @@ namespace Microsoft.DotNet.Interactive
                     {
                         await connection.DisposeAsync();
                     });
-                    
+
                     kernel.Add(proxyKernel);
 
-                    
+
                 }
             });
             kernel.AddConnectionDirective(connectionCommand);
