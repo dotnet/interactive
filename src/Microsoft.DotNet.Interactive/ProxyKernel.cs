@@ -16,12 +16,11 @@ namespace Microsoft.DotNet.Interactive
         IKernelCommandHandler<RequestHoverText>
     {
         private readonly KernelClient _client;
-        private readonly string _remoteTargetKernelName;
 
-        public ProxyKernel(string name, KernelClient client, string remoteTargetKernelName = null) : base(name)
+        public ProxyKernel(string name, KernelClient client) : base(name)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
-            _remoteTargetKernelName = remoteTargetKernelName;
+        
             RegisterForDisposal(client.KernelEvents.Subscribe(OnKernelEvents));
         }
 
@@ -48,7 +47,7 @@ namespace Microsoft.DotNet.Interactive
         private async Task SendCommandToRemoteKernel(KernelCommand command)
         {
             var targetKernelName = command.TargetKernelName;
-            command.TargetKernelName = _remoteTargetKernelName;
+            command.TargetKernelName = null;
             await _client.SendAsync(command);
             command.TargetKernelName = targetKernelName;
         }
