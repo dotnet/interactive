@@ -30,105 +30,47 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [FactSkipLinux]
-        public async Task can_address_remote_composite_kernel_specifying_a_remote_targetKernelName()
-        {
-            var fSharpKernel = new FSharpKernel();
-            using var kernel = new CompositeKernel
-            {
-                fSharpKernel
-            }.UseConnectionOverNamedPipe();
-
-            kernel.DefaultKernelName = fSharpKernel.Name;
-
-            var pipeName = Guid.NewGuid().ToString();
-            var remoteKernelInvoked = false;
-
-            var defaultRemoteKernel = new FakeKernel("defaultRemote")
-            {
-                Handle = (command, context) => Task.CompletedTask
-            };
-
-            var expectedRemoteKernel = new FakeKernel("expectedRemote")
-            {
-                Handle = (command, context) =>
-                {
-                    remoteKernelInvoked = true;
-                    return Task.CompletedTask;
-                }
-            };
-
-            using var remoteKernel = new CompositeKernel
-            {
-                defaultRemoteKernel,
-                expectedRemoteKernel
-            };
-
-            remoteKernel.DefaultKernelName = defaultRemoteKernel.Name;
-
-            StartServer(remoteKernel, pipeName);
-
-            using var events = kernel.KernelEvents.ToSubscribedList();
-
-            var proxyCommand = new SubmitCode($"#!connect named-pipe test {pipeName} --remote-kernel-name expectedRemote");
-
-            await kernel.SendAsync(proxyCommand);
-
-            var proxyCommand2 = new SubmitCode(@"
-var x = 1 + 1;
-x", targetKernelName: "test");
-
-            await kernel.SendAsync(proxyCommand2);
-
-            remoteKernelInvoked.Should()
-                .BeTrue();
-        }
-
-        [FactSkipLinux]
         public async Task can_address_remote_composite_kernel()
         {
-            var fSharpKernel = new FSharpKernel();
-            using var kernel = new CompositeKernel
+            using var localCompositeKernel = new CompositeKernel
             {
-                fSharpKernel
+                new FSharpKernel()
             }.UseConnectionOverNamedPipe();
 
-            kernel.DefaultKernelName = fSharpKernel.Name;
+            localCompositeKernel.DefaultKernelName = "fsharp";
 
             var pipeName = Guid.NewGuid().ToString();
-            var remoteKernelInvoked = false;
+            var remoteDefaultKernelInvoked = false;
 
-            var defaultRemoteKernel = new FakeKernel("defaultRemote")
+            using var remoteCompositeKernel = new CompositeKernel
             {
-                Handle = (command, context) =>
+                new FakeKernel("csharp")
                 {
-                    remoteKernelInvoked = true;
-                    return Task.CompletedTask;
-                }
+                    Handle = (command, context) =>
+                    {
+                        remoteDefaultKernelInvoked = true;
+                        return Task.CompletedTask;
+                    }
+                },
+                new FakeKernel("powershell")
             };
 
-            using var remoteKernel = new CompositeKernel
-            {
-                defaultRemoteKernel,
-                new FSharpKernel()
-            };
+            remoteCompositeKernel.DefaultKernelName = "csharp";
 
-            remoteKernel.DefaultKernelName = defaultRemoteKernel.Name;
+            StartServer(remoteCompositeKernel, pipeName);
 
-            StartServer(remoteKernel, pipeName);
+            using var events = localCompositeKernel.KernelEvents.ToSubscribedList();
 
-            using var events = kernel.KernelEvents.ToSubscribedList();
-
-            var proxyCommand = new SubmitCode($"#!connect named-pipe test {pipeName}");
-
-            await kernel.SendAsync(proxyCommand);
-
-            var proxyCommand2 = new SubmitCode(@"
+            var connectToRemoteKernel = new SubmitCode($"#!connect named-pipe newKernelName {pipeName}");
+            var codeSubmissionForRemoteKernel = new SubmitCode(@"
+#!newKernelName
 var x = 1 + 1;
-x", targetKernelName: "test");
+x");
 
-            await kernel.SendAsync(proxyCommand2);
+            await localCompositeKernel.SendAsync(connectToRemoteKernel);
+            await localCompositeKernel.SendAsync(codeSubmissionForRemoteKernel);
 
-            remoteKernelInvoked.Should()
+            remoteDefaultKernelInvoked.Should()
                 .BeTrue();
         }
 

@@ -156,9 +156,8 @@ namespace Microsoft.DotNet.Interactive
             var connectionCommand = new Command("named-pipe", "Connects to a kernel using named pipes");
             connectionCommand.AddArgument(new Argument<string>("kernel-name"));
             connectionCommand.AddArgument(new Argument<string>("pipe-name"));
-            connectionCommand.AddOption(new Option<string>("--remote-kernel-name"));
 
-            connectionCommand.Handler = CommandHandler.Create<string, string, string, KernelInvocationContext>(async (kernelName, pipeName, remoteKernelName, context) =>
+            connectionCommand.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (kernelName, pipeName,  context) =>
             {
                 var existingProxyKernel = kernel.FindKernel(kernelName);
                 if (existingProxyKernel == null)
@@ -169,7 +168,7 @@ namespace Microsoft.DotNet.Interactive
                     await clientStream.ConnectAsync();
                     clientStream.ReadMode = PipeTransmissionMode.Message;
                     var client = clientStream.CreateKernelClient();
-                    var proxyKernel = new ProxyKernel(kernelName, client, remoteKernelName);
+                    var proxyKernel = new ProxyKernel(kernelName, client);
 
                     proxyKernel.RegisterForDisposal(client);
                     kernel.Add(proxyKernel);
@@ -185,9 +184,8 @@ namespace Microsoft.DotNet.Interactive
             var connectionCommand = new Command("signalr", "Connects to a kernel using signal R");
             connectionCommand.AddArgument(new Argument<string>("kernel-name"));
             connectionCommand.AddArgument(new Argument<string>("hub-url"));
-            connectionCommand.AddOption(new Option<string>("--remote-kernel-name"));
 
-            connectionCommand.Handler = CommandHandler.Create<string, string, string, KernelInvocationContext>(async (kernelName, hubUrl, remoteKernelName, context) =>
+            connectionCommand.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (kernelName, hubUrl, context) =>
             {
                 var existingProxyKernel = kernel.FindKernel(kernelName);
                 if (existingProxyKernel == null)
@@ -200,7 +198,7 @@ namespace Microsoft.DotNet.Interactive
                     await connection.StartAsync();
 
                     var client = connection.CreateKernelClient();
-                    var proxyKernel = new ProxyKernel(kernelName, client, remoteKernelName);
+                    var proxyKernel = new ProxyKernel(kernelName, client);
                     await connection.SendAsync("connect");
 
                     proxyKernel.RegisterForDisposal(client);
