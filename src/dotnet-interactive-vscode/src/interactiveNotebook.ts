@@ -1,9 +1,11 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import * as fs from 'fs';
+import * as path from 'path';
 import { RawNotebookCell } from "./interfaces";
-import { trimTrailingCarriageReturn } from './utilities';
-import { CellKind } from "./interfaces/vscode";
+import { trimTrailingCarriageReturn, splitAndCleanLines } from './utilities';
+import { CellKind, NotebookDocument, NotebookDocumentBackup } from "./interfaces/vscode";
 
 export const notebookCellLanguages: Array<string> = [
     'dotnet-interactive.csharp',
@@ -121,6 +123,20 @@ export function parseNotebook(contents: string): NotebookFile {
     };
 }
 
+export function asNotebookFile(document: NotebookDocument): NotebookFile {
+    let cells: Array<RawNotebookCell> = [];
+    for (let cell of document.cells) {
+        cells.push({
+            language: getSimpleLanguage(cell.language),
+            contents: cell.document.getText().split('\n').map(trimTrailingCarriageReturn),
+        });
+    }
+
+    return {
+        cells
+    };
+}
+
 export function serializeNotebook(notebook: NotebookFile): string {
     let lines: Array<string> = [];
     for (let cell of notebook.cells) {
@@ -144,6 +160,32 @@ export function languageToCellKind(language: string): CellKind {
         default:
             return CellKind.Code;
     }
+}
+
+export function backupNotebook(document: NotebookDocument, location: string): Promise<NotebookDocumentBackup> {
+    return new Promise<NotebookDocumentBackup>((resolve, reject) => {
+        // ensure backup directory exists
+        const parsedPath = path.parse(location);
+        fs.mkdir(parsedPath.dir, {recursive: true}, async (err, _path) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            // save notebook to location
+            const backupFileName = location + '.dib';
+            const notebook = asNotebookFile(document);
+            const backupData = serializeNotebook(notebook);
+            fs.writeFile(backupFileName, backupData, () => {
+                resolve({
+                    id: backupFileName,
+                    delete: () => {
+                        fs.unlinkSync(backupFileName);
+                    }
+                });
+            });
+        });
+    });
 }
 
 function findIndexReverse<T>(arr: Array<T>, predicate: { (val: T): boolean }): number {

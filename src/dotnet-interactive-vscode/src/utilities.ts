@@ -26,6 +26,28 @@ function performReplacement(template: string, map: { [key: string]: string }): s
     return result;
 }
 
+export function splitAndCleanLines(source: string | Array<string>): Array<string> {
+    let lines: Array<string>;
+    if (typeof source === 'string') {
+        lines = source.split('\n');
+    } else {
+        lines = source;
+    }
+
+    return lines.map(ensureNoNewlineTerminators);
+}
+
+function ensureNoNewlineTerminators(line: string): string {
+    if (line.endsWith('\n')) {
+        line = line.substr(0, line.length - 1);
+    }
+    if (line.endsWith('\r')) {
+        line = line.substr(0, line.length - 1);
+    }
+
+    return line;
+}
+
 export function trimTrailingCarriageReturn(value: string): string {
     if (value.endsWith('\r')) {
         return value.substr(0, value.length - 1);

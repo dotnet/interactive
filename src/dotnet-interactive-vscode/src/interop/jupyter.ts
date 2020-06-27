@@ -5,6 +5,7 @@ import { CellKind, CellOutput, CellOutputKind, NotebookDocument } from "../inter
 import { JupyterCell, JupyterMetadata, JupyterNotebook, JupyterOutput } from "../interfaces/jupyter";
 import { NotebookFile, editorLanguageAliases, getNotebookSpecificLanguage, getSimpleLanguage } from "../interactiveNotebook";
 import { RawNotebookCell } from "../interfaces";
+import { splitAndCleanLines } from "../utilities";
 
 export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
     // VS Code Notebooks don't have the concept of a global notebook language, so we have to fake it.
@@ -212,17 +213,6 @@ function versionFromLanguage(language: string): string {
     }
 }
 
-function splitAndCleanLines(source: string | Array<string>): Array<string> {
-    let lines: Array<string>;
-    if (typeof source === 'string') {
-        lines = source.split('\n');
-    } else {
-        lines = source;
-    }
-
-    return lines.map(ensureNoNewlineTerminators);
-}
-
 function splitAndEnsureNewlineTerminators(source: string): Array<string> {
     // With the exception of markdown text, jupyter stores strings in an array, one entry per line, where each line has
     // a terminating `\r\n` except for the last line.
@@ -232,15 +222,4 @@ function splitAndEnsureNewlineTerminators(source: string): Array<string> {
     }
 
     return lines;
-}
-
-function ensureNoNewlineTerminators(line: string): string {
-    if (line.endsWith('\n')) {
-        line = line.substr(0, line.length - 1);
-    }
-    if (line.endsWith('\r')) {
-        line = line.substr(0, line.length - 1);
-    }
-
-    return line;
 }

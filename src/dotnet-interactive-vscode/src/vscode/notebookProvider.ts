@@ -3,9 +3,8 @@
 
 import * as vscode from 'vscode';
 import { ClientMapper } from './../clientMapper';
-import { NotebookFile, parseNotebook, serializeNotebook, notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind } from '../interactiveNotebook';
+import { parseNotebook, serializeNotebook, notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook, asNotebookFile } from '../interactiveNotebook';
 import { RawNotebookCell } from '../interfaces';
-import { trimTrailingCarriageReturn } from '../utilities';
 import { ReportChannel } from '../interfaces/vscode';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider, vscode.NotebookKernel {
@@ -48,6 +47,10 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         return notebookData;
     }
 
+    resolveNotebook(document: vscode.NotebookDocument, webview: vscode.NotebookCommunication): Promise<void> {
+        return Promise.resolve();
+    }
+
     saveNotebook(document: vscode.NotebookDocument, _cancellation: vscode.CancellationToken): Promise<void> {
         return this.save(document, document.uri);
     }
@@ -78,18 +81,13 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         });
     }
 
-    private async save(document: vscode.NotebookDocument, targetResource: vscode.Uri): Promise<void> {
-        let notebook: NotebookFile = {
-            cells: [],
-        };
-        for (let cell of document.cells) {
-            notebook.cells.push({
-                language: getSimpleLanguage(cell.language),
-                contents: cell.document.getText().split('\n').map(trimTrailingCarriageReturn),
-            });
-        }
+    backupNotebook(document: vscode.NotebookDocument, context: vscode.NotebookDocumentBackupContext, cancellation: vscode.CancellationToken): Promise<vscode.NotebookDocumentBackup> {
+        return backupNotebook(document, context.destination.fsPath);
+    }
 
-        let buffer = Buffer.from(serializeNotebook(notebook));
+    private async save(document: vscode.NotebookDocument, targetResource: vscode.Uri): Promise<void> {
+        const notebook = asNotebookFile(document);
+        const buffer = Buffer.from(serializeNotebook(notebook));
         await vscode.workspace.fs.writeFile(targetResource, buffer);
     }
 }
