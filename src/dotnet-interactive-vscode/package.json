@@ -59,7 +59,9 @@
             "[vscode]",
             "stdio",
             "--http-port-range",
-            "1000-3000"
+            "1000-3000",
+            "--working-dir",
+            "{working_dir}"
           ],
           "description": "Command and arguments used to start a notebook session."
         },
@@ -80,7 +82,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.132606",
+          "default": "1.0.132608",
           "description": "The minimum required version of the .NET Interactive tool."
         }
       }
