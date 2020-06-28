@@ -110,6 +110,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
         }
 
         private static readonly PlainTextFormatter<Type> _formatterForSystemType =
-            new PlainTextFormatter<Type>((type, writer) => type.WriteCSharpDeclarationTo(writer));
+            new PlainTextFormatter<Type>((type, writer) =>
+            {
+                if (type.IsAnonymous())
+                {
+                    writer.Write("(anonymous)");
+                    return;
+                }
+
+                type.WriteCSharpDeclarationTo(writer);
+            });
     }
 }

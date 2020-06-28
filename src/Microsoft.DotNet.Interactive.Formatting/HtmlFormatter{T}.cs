@@ -105,9 +105,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 getValues = instance => (IEnumerable) valuesProperty.GetValue(instance, null);
             }
 
-            return new HtmlFormatter<T>((value, writer) =>
+            return new HtmlFormatter<T>(BuildTable);
+
+            void BuildTable(T source, TextWriter writer)
             {
-                var (rowData, remainingCount) = getValues(value)
+                var (rowData, remainingCount) = getValues(source)
                                                 .Cast<object>()
                                                 .Select((v, i) => (v, i))
                                                 .TakeAndCountRemaining(Formatter.ListExpansionLimit);
@@ -119,31 +121,41 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }
 
                 var valuesByHeader = new Dictionary<string, Dictionary<int, object>>();
+                bool typesAreDifferent = false;
+                var types = new HashSet<Type>();
 
-                foreach (var (v, i) in rowData)
+                foreach (var (value, index) in rowData)
                 {
-                    var destructurer = Destructurer.GetOrCreate(v?.GetType());
+                    var destructurer = Destructurer.GetOrCreate(value?.GetType());
 
-                    var destructured = destructurer.Destructure(v);
+                    var destructured = destructurer.Destructure(value);
+
+                    if (!typesAreDifferent && value is {})
+                    {
+                        types.Add(value.GetType());
+
+                        typesAreDifferent = types.Count > 1;
+                    }
 
                     foreach (var pair in destructured)
                     {
-                        valuesByHeader.GetOrAdd(pair.Key, key => new Dictionary<int, object>())
-                                      .Add(i, pair.Value);
+                        valuesByHeader
+                            .GetOrAdd(pair.Key, key => new Dictionary<int, object>())
+                            .Add(index, pair.Value);
                     }
                 }
 
                 var headers = new List<IHtmlContent>();
-                var rows = new List<IHtmlContent>();
 
                 List<string> leftColumnValues;
 
                 if (getKeys != null)
                 {
                     headers.Add(th(i("key")));
-                    leftColumnValues = getKeys(value).Cast<string>()
-                                                     .Take(rowData.Count)
-                                                     .ToList();
+                    leftColumnValues = getKeys(source)
+                                       .Cast<string>()
+                                       .Take(rowData.Count)
+                                       .ToList();
                 }
                 else
                 {
@@ -153,7 +165,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
                                                  .ToList();
                 }
 
+                if (typesAreDifferent)
+                {
+                    headers.Insert(1, th(i("type")));
+                  
+                }
+
                 headers.AddRange(valuesByHeader.Keys.Select(k => (IHtmlContent) th(k)));
+                
+                var rows = new List<IHtmlContent>();
 
                 for (var rowIndex = 0; rowIndex < rowData.Count; rowIndex++)
                 {
@@ -161,6 +181,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     {
                         leftColumnValues[rowIndex]
                     };
+
+                    if (typesAreDifferent)
+                    {
+                        var type = rowData[rowIndex].v?.GetType();
+
+                        rowValues.Add(type);
+                    }
 
                     foreach (var key in valuesByHeader.Keys)
                     {
@@ -174,10 +201,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         }
                     }
 
-                    rows.Add(
-                        tr(
-                            rowValues.Select(
-                                r => td(r))));
+                    rows.Add(tr(rowValues.Select(r => td(r))));
                 }
 
                 if (remainingCount > 0)
@@ -190,7 +214,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 var table = HtmlFormatter.Table(headers, rows);
 
                 writer.Write(table);
-            });
+            }
         }
 
         private static string Value(MemberAccessor<T> m, T instance)

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 
 namespace Microsoft.DotNet.Interactive.Formatting
@@ -31,6 +32,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return _cache.GetOrAdd(type, t =>
             {
                 if (t.IsScalar())
+                {
+                    return NonDestructurer.Instance;
+                }
+
+                if (typeof(IEnumerable).IsAssignableFrom(t))
                 {
                     return NonDestructurer.Instance;
                 }
