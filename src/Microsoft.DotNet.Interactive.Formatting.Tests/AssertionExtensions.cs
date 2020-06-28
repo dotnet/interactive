@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
     public static class AssertionExtensions
     {
-        public static AndWhichConstraint<StringAssertions, string> BeEquivalentHtml(
+        public static AndWhichConstraint<StringAssertions, string> BeEquivalentHtmlTo(
             this StringAssertions assertions,
             string expected)
         {

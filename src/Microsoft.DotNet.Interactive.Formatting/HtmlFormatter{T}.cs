@@ -118,39 +118,42 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     return;
                 }
 
-                var dict = new Dictionary<string, Dictionary<int, object>>();
+                var valuesByHeader = new Dictionary<string, Dictionary<int, object>>();
 
                 foreach (var (v, i) in rowData)
                 {
-                    var des = Destructurer.GetOrCreate(v?.GetType());
+                    var destructurer = Destructurer.GetOrCreate(v?.GetType());
 
-                    foreach (var pair in des.Destructure(v))
+                    var destructured = destructurer.Destructure(v);
+
+                    foreach (var pair in destructured)
                     {
-                        dict.GetOrAdd(pair.Key, key => new Dictionary<int, object>())
-                            .Add(i, pair.Value);
+                        valuesByHeader.GetOrAdd(pair.Key, key => new Dictionary<int, object>())
+                                      .Add(i, pair.Value);
                     }
                 }
 
-                var theHeaders = new List<IHtmlContent>();
-                var theRows = new List<IHtmlContent>();
+                var headers = new List<IHtmlContent>();
+                var rows = new List<IHtmlContent>();
+
                 List<string> leftColumnValues;
 
                 if (getKeys != null)
                 {
-                    theHeaders.Add(th(i("key")));
+                    headers.Add(th(i("key")));
                     leftColumnValues = getKeys(value).Cast<string>()
                                                      .Take(rowData.Count)
                                                      .ToList();
                 }
                 else
                 {
-                    theHeaders.Add(th(i("index")));
+                    headers.Add(th(i("index")));
                     leftColumnValues = Enumerable.Range(0, rowData.Count)
                                                  .Select(i => i.ToString())
                                                  .ToList();
                 }
 
-                theHeaders.AddRange(dict.Keys.Select(k => (IHtmlContent) th(k)));
+                headers.AddRange(valuesByHeader.Keys.Select(k => (IHtmlContent) th(k)));
 
                 for (var rowIndex = 0; rowIndex < rowData.Count; rowIndex++)
                 {
@@ -159,9 +162,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         leftColumnValues[rowIndex]
                     };
 
-                    foreach (var key in dict.Keys)
+                    foreach (var key in valuesByHeader.Keys)
                     {
-                        if (dict[key].TryGetValue(rowIndex, out var cellData))
+                        if (valuesByHeader[key].TryGetValue(rowIndex, out var cellData))
                         {
                             rowValues.Add(cellData);
                         }
@@ -171,7 +174,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         }
                     }
 
-                    theRows.Add(
+                    rows.Add(
                         tr(
                             rowValues.Select(
                                 r => td(r))));
@@ -181,10 +184,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     var more = $"({remainingCount} more)";
 
-                    theRows.Add(tr(td[colspan: $"{theHeaders.Count}"](more)));
+                    rows.Add(tr(td[colspan: $"{headers.Count}"](more)));
                 }
 
-                var table = HtmlFormatter.Table(theHeaders, theRows);
+                var table = HtmlFormatter.Table(headers, rows);
 
                 writer.Write(table);
             });
