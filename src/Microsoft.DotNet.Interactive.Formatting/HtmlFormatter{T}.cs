@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         private static HtmlFormatter<T> CreateForObject(bool includeInternals)
         {
-            var members = typeof(T).GetAllMembers(includeInternals)
+            var members = typeof(T).GetMembersToFormat(includeInternals)
                                    .GetMemberAccessors<T>();
 
             if (members.Length == 0)

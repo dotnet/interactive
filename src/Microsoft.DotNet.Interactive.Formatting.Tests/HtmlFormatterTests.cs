@@ -535,7 +535,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
   </tbody>
 </table>");
             }
-
             
             [Fact]
             public void All_properties_are_shown_when_sequences_contain_different_types()
