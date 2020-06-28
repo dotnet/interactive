@@ -418,10 +418,16 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 formatted.Contains("6 more").Should().BeTrue();
             }
 
-            [Fact(Skip = "wip")]
+            [Fact]
             public void It_formats_arrays_of_disparate_types_correctly()
             {
-                var objects = new object[] { 1, (2, "two"), Enumerable.Range(1, 3) };
+                var objects = new object[]
+                {
+                    1, 
+                    (2, "two"), 
+                    Enumerable.Range(1, 3),
+                    new { name = "apple", color = "green" },
+                };
 
                 var obj0 = objects[0].ToDisplayString();
                 var obj1 = objects[1].ToDisplayString();
@@ -429,8 +435,84 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 objects.ToDisplayString("text/html")
                        .Should()
-                       .Be(
-                           $"<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>{obj0}</td></tr><tr><td>1</td><td>{obj1}</td></tr><tr><td>2</td><td>{obj2}</td></tr></tbody></table>");
+                       .BeEquivalentHtml(
+@"<table>
+  <thead>
+    <tr>
+      <th><i>index</i></th>
+      <th><i>type</i></th>
+      <th>value</th>
+      <th>Item1</th>
+      <th>Item2</th>
+      <th>name</th>
+      <th>color</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>System.Int32</td>
+      <td>1</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>System.ValueTuple&lt;System.Int32,System.String&gt;</td>
+      <td></td>
+      <td>2</td>
+      <td>two</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>System.Linq.Enumerable+RangeIterator</td>
+      <td>[ 1, 2, 3 ]</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>(anonymous)</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>apple</td>
+      <td>green</td>
+    </tr>
+  </tbody>
+</table>");
+            }
+
+            [Fact]
+            public void DateTime_is_not_destructured()
+            {
+                var date1 = DateTime.Now;
+                var date2 = DateTime.Now.AddHours(1.23);
+
+                var objects = new object[] { date1, date2 };
+
+                var html = objects.ToDisplayString("text/html");
+
+                html.Should().Be(
+                    $"<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>{date1.ToDisplayString("text/plain")}</td></tr><tr><td>1</td><td>{date2.ToDisplayString("text/plain")}</td></tr></tbody></table>");
+            }
+
+            [Fact]
+            public void System_Type_is_not_destructured()
+            {
+                var objects = new object[] { typeof(string), typeof(int) };
+
+                var html = objects.ToDisplayString("text/html");
+
+                html.Should().Be(
+                    "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>System.String</td></tr><tr><td>1</td><td>System.Int32</td></tr></tbody></table>");
             }
 
             [Fact]

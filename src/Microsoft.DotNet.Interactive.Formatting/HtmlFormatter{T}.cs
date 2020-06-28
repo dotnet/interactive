@@ -91,7 +91,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         private static HtmlFormatter<T> CreateForSequence(bool includeInternals)
         {
-            Type valueType = null;
             Func<T, IEnumerable> getKeys = null;
             Func<T, IEnumerable> getValues = instance => (IEnumerable)instance;
 
@@ -99,8 +98,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                                                  .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
             var dictionaryObjectType = typeof(T).GetAllInterfaces()
                                                 .FirstOrDefault(i => i == typeof(IDictionary));
-            var enumerableGenericType = typeof(T).GetAllInterfaces()
-                                                 .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
 
             if (dictionaryGenericType != null || dictionaryObjectType != null)
             {
@@ -109,30 +106,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 var valuesProperty = typeof(T).GetProperty("Values");
                 getValues = instance => (IEnumerable)valuesProperty.GetValue(instance, null);
-
-                if (dictionaryGenericType != null)
-                {
-                    valueType = typeof(T).GenericTypeArguments[1];
-                }
-            }
-            else if (enumerableGenericType != null)
-            {
-                if (!enumerableGenericType.IsArray)
-                {
-                    var genericTypeArguments = typeof(T).GenericTypeArguments;
-
-                    if (genericTypeArguments.Length == 1)
-                    {
-                        valueType = genericTypeArguments[0];
-                    }
-                   
-                }
-            }
-
-            var destructurerCache = new Dictionary<Type, IDestructurer>();
-            if (valueType != null)
-            {
-                destructurerCache.Add(valueType, Destructurer.Create(valueType));
             }
 
             return new HtmlFormatter<T>((value, writer) =>
@@ -142,6 +115,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 IHtmlContent indexHeader = null;
 
                 Func<string> getIndex;
+                //
+                // var valuesToFormat = 
+                //
+                // var headers = value.OfType<>
+                //
+                // if (value is IDictionary)
+                // {
+                //     
+                // }
+                //
 
                 if (getKeys != null)
                 {
@@ -177,13 +160,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         }
                         else
                         {
-                            var itemType = item.GetType();
-
-                            if (!destructurerCache.TryGetValue(itemType, out destructurer))
-                            {
-                                destructurer = Destructurer.Create(item.GetType());
-                                destructurerCache.Add(itemType, destructurer);
-                            }
+                            destructurer = Destructurer.GetOrCreate(item.GetType());
                         }
 
                         var dictionary = destructurer.Destructure(item);

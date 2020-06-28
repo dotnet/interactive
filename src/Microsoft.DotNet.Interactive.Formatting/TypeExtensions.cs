@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -11,8 +10,18 @@ using System.Runtime.CompilerServices;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    internal static partial class TypeExtensions
+    internal static class TypeExtensions
     {
+        private static readonly HashSet<Type> _typesToTreatAsScalar = new HashSet<Type>
+        {
+            typeof(decimal),
+            typeof(Guid),
+            typeof(string),
+            typeof(DateTime),
+            typeof(DateTimeOffset),
+            typeof(TimeSpan),
+        };
+
         internal static bool CanBeInstantiated(this Type type)
         {
             return !type.IsAbstract
@@ -90,8 +99,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 yield return type;
             }
+
             foreach (var i in type.GetInterfaces())
+            {
                 yield return i;
+            }
         }
 
         public static bool IsAnonymous(this Type type)
@@ -103,20 +115,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return Attribute.IsDefined(type, typeof(CompilerGeneratedAttribute), false) &&
                    type.IsGenericType && type.Name.Contains("AnonymousType") &&
-                   (type.Name.StartsWith("<>") || type.Name.StartsWith("VB$")) &&
-                   (type.Attributes & TypeAttributes.NotPublic) == TypeAttributes.NotPublic;
+                   (type.Name.StartsWith("<>") || type.Name.StartsWith("VB$"));
         }
-
-        private static readonly HashSet<Type> _knownScalarTypes = new HashSet<Type>
-        {
-            typeof(decimal),
-            typeof(Guid),
-            typeof(string),
-        };
 
         public static bool IsScalar(this Type type)
         {
-            if (_knownScalarTypes.Contains(type))
+            if (_typesToTreatAsScalar.Contains(type))
             {
                 return true;
             }
