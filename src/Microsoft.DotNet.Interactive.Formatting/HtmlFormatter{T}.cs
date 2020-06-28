@@ -44,10 +44,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             if (typeof(T).IsEnum)
             {
-                return new HtmlFormatter<T>((enumValue, writer) =>
-                {
-                    writer.Write(enumValue.ToString());
-                });
+                return new HtmlFormatter<T>((enumValue, writer) => { writer.Write(enumValue.ToString()); });
             }
 
             if (typeof(IEnumerable).IsAssignableFrom(typeof(T)))
@@ -63,7 +60,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             var members = typeof(T).GetAllMembers(includeInternals)
                                    .GetMemberAccessors<T>();
 
-            if (members.Length ==0)
+            if (members.Length == 0)
             {
                 return new HtmlFormatter<T>((value, writer) => writer.Write(value));
             }
@@ -92,7 +89,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         private static HtmlFormatter<T> CreateForSequence(bool includeInternals)
         {
             Func<T, IEnumerable> getKeys = null;
-            Func<T, IEnumerable> getValues = instance => (IEnumerable)instance;
+            Func<T, IEnumerable> getValues = instance => (IEnumerable) instance;
 
             var dictionaryGenericType = typeof(T).GetAllInterfaces()
                                                  .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
@@ -102,21 +99,26 @@ namespace Microsoft.DotNet.Interactive.Formatting
             if (dictionaryGenericType != null || dictionaryObjectType != null)
             {
                 var keysProperty = typeof(T).GetProperty("Keys");
-                getKeys = instance => (IEnumerable)keysProperty.GetValue(instance, null);
+                getKeys = instance => (IEnumerable) keysProperty.GetValue(instance, null);
 
                 var valuesProperty = typeof(T).GetProperty("Values");
-                getValues = instance => (IEnumerable)valuesProperty.GetValue(instance, null);
+                getValues = instance => (IEnumerable) valuesProperty.GetValue(instance, null);
             }
 
             return new HtmlFormatter<T>((value, writer) =>
             {
-                var dict = new Dictionary<string, Dictionary<int, object>>();
+                var (rowData, remainingCount) = getValues(value)
+                                                .Cast<object>()
+                                                .Select((v, i) => (v, i))
+                                                .TakeAndCountRemaining(Formatter.ListExpansionLimit);
 
-                var rowData = getValues(value)
-                              .Cast<object>()
-                              .Take(Formatter.ListExpansionLimit)
-                              .Select((v, i) => (v, i))
-                              .ToList();
+                if (rowData.Count == 0)
+                {
+                    writer.Write(i("(empty)"));
+                    return;
+                }
+
+                var dict = new Dictionary<string, Dictionary<int, object>>();
 
                 foreach (var (v, i) in rowData)
                 {
@@ -143,7 +145,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 else
                 {
                     theHeaders.Add(th(i("index")));
-                    leftColumnValues = Enumerable.Range(1, rowData.Count)
+                    leftColumnValues = Enumerable.Range(0, rowData.Count)
                                                  .Select(i => i.ToString())
                                                  .ToList();
                 }
@@ -156,7 +158,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     {
                         leftColumnValues[rowIndex]
                     };
-
 
                     foreach (var key in dict.Keys)
                     {
@@ -176,104 +177,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
                                 r => td(r))));
                 }
 
-                PocketView table = HtmlFormatter.Table(theHeaders, theRows);
-
-
-
-                // ----------
-
-                var index = 0;
-
-                IHtmlContent indexHeader = null;
-
-                Func<string> getIndex;
-
-                if (getKeys != null)
+                if (remainingCount > 0)
                 {
-                    var keys = new List<string>();
-                    foreach (var key in getKeys(value))
-                    {
-                        keys.Add(key.ToString());
-                    }
+                    var more = $"({remainingCount} more)";
 
-                    getIndex = () => keys[index];
-                    indexHeader = th(i("key"));
-                }
-                else
-                {
-                    getIndex = () => index.ToString();
-                    indexHeader = th(i("index"));
+                    theRows.Add(tr(td[colspan: $"{theHeaders.Count}"](more)));
                 }
 
-                var rows = new List<IHtmlContent>();
-                List<IHtmlContent> headers = null;
+                var table = HtmlFormatter.Table(theHeaders, theRows);
 
-                var values = getValues(value);
-
-                foreach (var item in values)
-                {
-                    if (index < Formatter.ListExpansionLimit)
-                    {
-                        IDestructurer destructurer;
-
-                        if (item == null)
-                        {
-                            destructurer = NonDestructurer.Instance;
-                        }
-                        else
-                        {
-                            destructurer = Destructurer.GetOrCreate(item.GetType());
-                        }
-
-                        var dictionary = destructurer.Destructure(item);
-
-                        if (headers == null)
-                        {
-                            headers = new List<IHtmlContent>();
-                            headers.Add(indexHeader);
-                            headers.AddRange(dictionary.Keys
-                                                       .Select(k => (IHtmlContent) th(k)));
-                        }
-
-                        var cells =
-                            new IHtmlContent[]
-                                {
-                                    td(getIndex().ToHtmlContent())
-                                }
-                                .Concat(
-                                    dictionary
-                                        .Values
-                                        .Select(v => (IHtmlContent) td(v)));
-
-                        rows.Add(tr(cells));
-
-                        index++;
-                    }
-                    else
-                    {
-                        var more = values switch
-                        {
-                            ICollection c => $"({c.Count - index} more)",
-                            _ => "(more...)"
-                        };
-
-                        rows.Add(tr(td[colspan: $"{headers.Count}"](more)));
-                        break;
-                    }
-                }
-
-                if (headers == null)
-                {
-                    headers = new List<IHtmlContent>
-                    {
-                        indexHeader,
-                        th("value")
-                    };
-                }
-
-                var view = HtmlFormatter.Table(headers, rows);
-
-                view.WriteTo(writer, HtmlEncoder.Default);
+                writer.Write(table);
             });
         }
 

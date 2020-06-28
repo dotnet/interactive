@@ -358,9 +358,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var html = list.ToDisplayString("text/html");
 
-                html.Should()
-                    .BeEquivalentHtml(
-                        "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody></tbody></table>");
+                html.Should().BeEquivalentHtml("<i>(empty)</i>");
             }
 
             [Fact]
@@ -370,9 +368,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var html = list.ToDisplayString("text/html");
 
-                html.Should()
-                    .BeEquivalentHtml(
-                        "<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody></tbody></table>");
+                html.Should().BeEquivalentHtml("<i>(empty)</i>");
             }
 
             [Fact]

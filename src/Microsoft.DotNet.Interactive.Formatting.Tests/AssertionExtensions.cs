@@ -15,14 +15,21 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         {
             var subject = assertions.Subject;
 
-            var compareResult = new DefaultStringComparer(true).Compare(
-                subject.IndentHtml(), 
-                expected.IndentHtml());
+            var actual = subject.IndentHtml();
 
-            compareResult.Error.Should().BeNullOrEmpty();
+            var diff = new DefaultStringComparer(true).Compare(
+                actual,
+                expected.IndentHtml()).Error;
+
+            (diff ?? "")
+                .Replace("Received:", "\nActual:\n")
+                .Replace("Approved:", "\nExpected:\n")
+                .Should()
+                .BeNullOrEmpty(because: "HTML doesn't match. Unexpected output was: \n\n" + actual);
 
             return new AndWhichConstraint<StringAssertions, string>(
-                subject.Should(), subject);
+                subject.Should(),
+                subject);
         }
     }
 }
