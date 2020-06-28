@@ -256,7 +256,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be(
+                      .BeEquivalentHtml(
                           "<table><thead><tr><th><i>index</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>0</td><td>entity one</td><td>123</td></tr><tr><td>1</td><td>entity two</td><td>456</td></tr></tbody></table>");
             }
 
@@ -301,7 +301,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be(
+                      .BeEquivalentHtml(
                           "<table><thead><tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>first</td><td>entity one</td><td>123</td></tr><tr><td>second</td><td>entity two</td><td>456</td></tr></tbody></table>");
             }
 
@@ -322,7 +322,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be(
+                      .BeEquivalentHtml(
                           "<table><thead><tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>first</td><td>entity one</td><td>123</td></tr><tr><td>second</td><td>entity two</td><td>456</td></tr></tbody></table>");
             }
 
@@ -333,7 +333,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 strings.ToDisplayString("text/html")
                        .Should()
-                       .Be(
+                       .BeEquivalentHtml(
                            "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>apple</td></tr><tr><td>1</td><td>banana</td></tr><tr><td>2</td><td>cherry</td></tr></tbody></table>");
             }
 
@@ -347,7 +347,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 var html = sorted.ToDisplayString("text/html");
 
                 html.Should()
-                    .Be(
+                    .BeEquivalentHtml(
                         "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>kiwi</td></tr><tr><td>1</td><td>apple</td></tr><tr><td>2</td><td>plantain</td></tr></tbody></table>");
             }
 
@@ -359,7 +359,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 var html = list.ToDisplayString("text/html");
 
                 html.Should()
-                    .Be(
+                    .BeEquivalentHtml(
                         "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody></tbody></table>");
             }
 
@@ -371,7 +371,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 var html = list.ToDisplayString("text/html");
 
                 html.Should()
-                    .Be(
+                    .BeEquivalentHtml(
                         "<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody></tbody></table>");
             }
 
@@ -428,10 +428,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     Enumerable.Range(1, 3),
                     new { name = "apple", color = "green" },
                 };
-
-                var obj0 = objects[0].ToDisplayString();
-                var obj1 = objects[1].ToDisplayString();
-                var obj2 = objects[2].ToDisplayString();
 
                 objects.ToDisplayString("text/html")
                        .Should()
@@ -500,7 +496,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var html = objects.ToDisplayString("text/html");
 
-                html.Should().Be(
+                html.Should().BeEquivalentHtml(
                     $"<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>{date1.ToDisplayString("text/plain")}</td></tr><tr><td>1</td><td>{date2.ToDisplayString("text/plain")}</td></tr></tbody></table>");
             }
 
@@ -511,7 +507,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var html = objects.ToDisplayString("text/html");
 
-                html.Should().Be(
+                html.Should().BeEquivalentHtml(
                     "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>System.String</td></tr><tr><td>1</td><td>System.Int32</td></tr></tbody></table>");
             }
 
@@ -528,7 +524,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be("<span>Hi!</span>");
+                      .BeEquivalentHtml("<span>Hi!</span>");
             }
 
             [Fact]
@@ -544,7 +540,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be(
+                      .BeEquivalentHtml(
                           "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>7</td></tr><tr><td>1</td><td>8</td></tr><tr><td>2</td><td>9</td></tr></tbody></table>");
             }
 
@@ -558,7 +554,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 formatter.Format(new object[] { 8, null, 9 }, writer);
 
                 writer.ToString().Should()
-                      .Be(
+                      .BeEquivalentHtml(
                           "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>8</td></tr><tr><td>1</td><td>&lt;null&gt;</td></tr><tr><td>2</td><td>9</td></tr></tbody></table>");
             }
 
@@ -579,7 +575,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 formatter.Format(GetCollection(), writer);
 
                 writer.ToString().Should()
-                      .Be(
+                      .BeEquivalentHtml(
                           "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>True</td></tr><tr><td>1</td><td>99</td></tr><tr><td>2</td><td>Hello, World</td></tr></tbody></table>");
             }
         }

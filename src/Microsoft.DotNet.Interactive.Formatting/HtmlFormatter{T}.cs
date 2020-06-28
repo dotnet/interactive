@@ -110,21 +110,83 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return new HtmlFormatter<T>((value, writer) =>
             {
+                var dict = new Dictionary<string, Dictionary<int, object>>();
+
+                var rowData = getValues(value)
+                              .Cast<object>()
+                              .Take(Formatter.ListExpansionLimit)
+                              .Select((v, i) => (v, i))
+                              .ToList();
+
+                foreach (var (v, i) in rowData)
+                {
+                    var des = Destructurer.GetOrCreate(v?.GetType());
+
+                    foreach (var pair in des.Destructure(v))
+                    {
+                        dict.GetOrAdd(pair.Key, key => new Dictionary<int, object>())
+                            .Add(i, pair.Value);
+                    }
+                }
+
+                var theHeaders = new List<IHtmlContent>();
+                var theRows = new List<IHtmlContent>();
+                List<string> leftColumnValues;
+
+                if (getKeys != null)
+                {
+                    theHeaders.Add(th(i("key")));
+                    leftColumnValues = getKeys(value).Cast<string>()
+                                                     .Take(rowData.Count)
+                                                     .ToList();
+                }
+                else
+                {
+                    theHeaders.Add(th(i("index")));
+                    leftColumnValues = Enumerable.Range(1, rowData.Count)
+                                                 .Select(i => i.ToString())
+                                                 .ToList();
+                }
+
+                theHeaders.AddRange(dict.Keys.Select(k => (IHtmlContent) th(k)));
+
+                for (var rowIndex = 0; rowIndex < rowData.Count; rowIndex++)
+                {
+                    var rowValues = new List<object>
+                    {
+                        leftColumnValues[rowIndex]
+                    };
+
+
+                    foreach (var key in dict.Keys)
+                    {
+                        if (dict[key].TryGetValue(rowIndex, out var cellData))
+                        {
+                            rowValues.Add(cellData);
+                        }
+                        else
+                        {
+                            rowValues.Add("");
+                        }
+                    }
+
+                    theRows.Add(
+                        tr(
+                            rowValues.Select(
+                                r => td(r))));
+                }
+
+                PocketView table = HtmlFormatter.Table(theHeaders, theRows);
+
+
+
+                // ----------
+
                 var index = 0;
 
                 IHtmlContent indexHeader = null;
 
                 Func<string> getIndex;
-                //
-                // var valuesToFormat = 
-                //
-                // var headers = value.OfType<>
-                //
-                // if (value is IDictionary)
-                // {
-                //     
-                // }
-                //
 
                 if (getKeys != null)
                 {

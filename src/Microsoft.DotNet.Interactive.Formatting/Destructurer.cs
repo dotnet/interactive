@@ -21,8 +21,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _cache = new ConcurrentDictionary<Type, IDestructurer>();
         }
 
-        public static IDestructurer GetOrCreate(Type type) =>
-            _cache.GetOrAdd(type, t =>
+        public static IDestructurer GetOrCreate(Type type)
+        {
+            if (type == null)
+            {
+                return NonDestructurer.Instance;
+            }
+
+            return _cache.GetOrAdd(type, t =>
             {
                 if (t.IsScalar())
                 {
@@ -36,5 +42,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 return (IDestructurer) Activator.CreateInstance(typeof(Destructurer<>).MakeGenericType(t));
             });
+        }
     }
 }
