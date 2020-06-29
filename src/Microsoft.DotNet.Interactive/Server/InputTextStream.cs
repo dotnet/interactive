@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
-    public abstract class InputTextStream : IInputTextStream
+    public abstract class InputTextStream : IPollingInputTextStream
     {
         private readonly object _lock = new object();
        
@@ -37,6 +37,11 @@ namespace Microsoft.DotNet.Interactive.Server
         protected abstract Task<string> ReadLineAsync();
 
         private void EnsureStarted()
+        {
+            Start();
+        }
+
+        public void Start()
         {
             lock (_lock)
             {

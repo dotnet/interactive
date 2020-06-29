@@ -33,5 +33,6 @@ namespace Microsoft.DotNet.Interactive.Server
         }
 
         public bool IsStarted => _connection.State == HubConnectionState.Connected;
+     
     }
 }

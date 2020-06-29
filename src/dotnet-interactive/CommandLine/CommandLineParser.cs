@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
         public delegate Task StartStdIO(
             StartupOptions options,
-            Kernel kernel,
+            KernelServer kernel,
             IConsole console);
 
         public delegate Task StartHttp(
@@ -232,13 +232,12 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context, CancellationToken cancellationToken)
                 {
                     var frontendEnvironment = new HtmlNotebookFrontedEnvironment();
+                    var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
+
                     services.AddSingleton(frontendEnvironment);
                     services.AddSingleton<FrontendEnvironment>(frontendEnvironment);
-
-                    services = RegisterKernelInServiceCollection(
-                        services,
-                        startupOptions,
-                        options.DefaultKernel);
+                    services.AddSingleton(kernel);
+                    services.AddSingleton<Kernel>(kernel);
 
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
                         .AddSingleton(c =>
@@ -303,13 +302,13 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     {
 
                         var frontendEnvironment = new BrowserFrontendEnvironment();
+                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
+
                         services.AddSingleton(frontendEnvironment);
                         services.AddSingleton<FrontendEnvironment>(frontendEnvironment);
+                        services.AddSingleton(kernel);
+                        services.AddSingleton<Kernel>(kernel);
 
-                        RegisterKernelInServiceCollection(
-                            services,
-                            startupOptions,
-                            options.DefaultKernel);
                         return startHttp(startupOptions, console, startServer, context);
                     });
 
@@ -342,24 +341,21 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi 
                             ? new HtmlNotebookFrontedEnvironment() 
                             : new BrowserFrontendEnvironment();
-
-                        services.AddSingleton((HtmlNotebookFrontedEnvironment)frontendEnvironment);
-                        services.AddSingleton(frontendEnvironment);
-
+                        
                         var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment,
                             startupOptions);
                         kernel.UseQuitCommand(disposeOnQuit, cancellationToken);
+                        
+                        var kernelServer = kernel.CreateKernelServer();
 
                         if (startupOptions.EnableHttpApi)
                         {
-                            RegisterKernelInServiceCollection(
-                                services,
-                                startupOptions,
-                                options.DefaultKernel, kernel =>
-                                {
-                                    kernel.CreateKernelServer();
-                                });
+                            services.AddSingleton((HtmlNotebookFrontedEnvironment)frontendEnvironment);
+                            services.AddSingleton(frontendEnvironment);
+                            services.AddSingleton(kernel);
+                            services.AddSingleton<Kernel>(kernel);
 
+                            kernelServer.Start();
                             return startHttp(startupOptions, console, startServer, context);
                         }
                         
@@ -367,7 +363,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         
                         return startStdIO(
                             startupOptions,
-                            kernel,
+                            kernelServer,
                             console);
                         
                     });
@@ -408,23 +404,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 var pr = new HttpPortRange(start, end);
                 return pr;
             }
-        }
-
-        private static IServiceCollection RegisterKernelInServiceCollection(IServiceCollection services, StartupOptions startupOptions, string defaultKernel, Action<Kernel> afterKernelCreation = null)
-        {
-            services
-                .AddSingleton(c =>
-                {
-                    using var _ = Log.OnEnterAndExit("creating kernel");
-                    var frontendEnvironment = c.GetRequiredService<FrontendEnvironment>();
-                    var kernel = CreateKernel(defaultKernel, frontendEnvironment, startupOptions);
-
-                    afterKernelCreation?.Invoke(kernel);
-                    return kernel;
-                })
-                .AddSingleton<Kernel>(c => c.GetRequiredService<CompositeKernel>());
-
-            return services;
         }
 
         private static CompositeKernel CreateKernel(
