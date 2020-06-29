@@ -11,9 +11,7 @@ namespace Microsoft.DotNet.Interactive
 {
     public sealed class ProxyKernel : 
         Kernel, 
-        IKernelCommandHandler<SubmitCode>, 
-        IKernelCommandHandler<RequestCompletions>,
-        IKernelCommandHandler<RequestHoverText>
+        IKernelCommandHandler<SubmitCode>
     {
         private readonly KernelClient _client;
 
@@ -30,16 +28,6 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public  Task HandleAsync(SubmitCode command, KernelInvocationContext context)
-        {
-            return SendCommandToRemoteKernel(command);
-        }
-
-        public Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
-        {
-            return SendCommandToRemoteKernel(command);
-        }
-
-        public  Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
             return SendCommandToRemoteKernel(command);
         }
