@@ -256,7 +256,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be(
+                      .BeEquivalentHtmlTo(
                           "<table><thead><tr><th><i>index</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>0</td><td>entity one</td><td>123</td></tr><tr><td>1</td><td>entity two</td><td>456</td></tr></tbody></table>");
             }
 
@@ -301,7 +301,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be(
+                      .BeEquivalentHtmlTo(
                           "<table><thead><tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>first</td><td>entity one</td><td>123</td></tr><tr><td>second</td><td>entity two</td><td>456</td></tr></tbody></table>");
             }
 
@@ -322,7 +322,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be(
+                      .BeEquivalentHtmlTo(
                           "<table><thead><tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>first</td><td>entity one</td><td>123</td></tr><tr><td>second</td><td>entity two</td><td>456</td></tr></tbody></table>");
             }
 
@@ -333,7 +333,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 strings.ToDisplayString("text/html")
                        .Should()
-                       .Be(
+                       .BeEquivalentHtmlTo(
                            "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>apple</td></tr><tr><td>1</td><td>banana</td></tr><tr><td>2</td><td>cherry</td></tr></tbody></table>");
             }
 
@@ -347,7 +347,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 var html = sorted.ToDisplayString("text/html");
 
                 html.Should()
-                    .Be(
+                    .BeEquivalentHtmlTo(
                         "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>kiwi</td></tr><tr><td>1</td><td>apple</td></tr><tr><td>2</td><td>plantain</td></tr></tbody></table>");
             }
 
@@ -358,9 +358,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var html = list.ToDisplayString("text/html");
 
-                html.Should()
-                    .Be(
-                        "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody></tbody></table>");
+                html.Should().BeEquivalentHtmlTo("<i>(empty)</i>");
             }
 
             [Fact]
@@ -370,9 +368,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var html = list.ToDisplayString("text/html");
 
-                html.Should()
-                    .Be(
-                        "<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody></tbody></table>");
+                html.Should().BeEquivalentHtmlTo("<i>(empty)</i>");
             }
 
             [Fact]
@@ -418,19 +414,29 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 formatted.Contains("6 more").Should().BeTrue();
             }
 
-            [Fact(Skip = "wip")]
-            public void It_formats_arrays_of_disparate_types_correctly()
+            [Fact]
+            public void DateTime_is_not_destructured()
             {
-                var objects = new object[] { 1, (2, "two"), Enumerable.Range(1, 3) };
+                var date1 = DateTime.Now;
+                var date2 = DateTime.Now.AddHours(1.23);
 
-                var obj0 = objects[0].ToDisplayString();
-                var obj1 = objects[1].ToDisplayString();
-                var obj2 = objects[2].ToDisplayString();
+                var objects = new object[] { date1, date2 };
 
-                objects.ToDisplayString("text/html")
-                       .Should()
-                       .Be(
-                           $"<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>{obj0}</td></tr><tr><td>1</td><td>{obj1}</td></tr><tr><td>2</td><td>{obj2}</td></tr></tbody></table>");
+                var html = objects.ToDisplayString("text/html");
+
+                html.Should().BeEquivalentHtmlTo(
+                    $"<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>{date1.ToDisplayString("text/plain")}</td></tr><tr><td>1</td><td>{date2.ToDisplayString("text/plain")}</td></tr></tbody></table>");
+            }
+
+            [Fact]
+            public void System_Type_is_not_destructured()
+            {
+                var objects = new object[] { typeof(string), typeof(int) };
+
+                var html = objects.ToDisplayString("text/html");
+
+                html.Should().BeEquivalentHtmlTo(
+                    "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>System.String</td></tr><tr><td>1</td><td>System.Int32</td></tr></tbody></table>");
             }
 
             [Fact]
@@ -446,7 +452,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be("<span>Hi!</span>");
+                      .BeEquivalentHtmlTo("<span>Hi!</span>");
             }
 
             [Fact]
@@ -462,7 +468,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be(
+                      .BeEquivalentHtmlTo(
                           "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>7</td></tr><tr><td>1</td><td>8</td></tr><tr><td>2</td><td>9</td></tr></tbody></table>");
             }
 
@@ -476,12 +482,12 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 formatter.Format(new object[] { 8, null, 9 }, writer);
 
                 writer.ToString().Should()
-                      .Be(
+                      .BeEquivalentHtmlTo(
                           "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>8</td></tr><tr><td>1</td><td>&lt;null&gt;</td></tr><tr><td>2</td><td>9</td></tr></tbody></table>");
             }
 
             [Fact]
-            public void Sequences_contain_different_types_of_elements()
+            public void Sequences_can_contain_different_types_of_elements()
             {
                 IEnumerable<object> GetCollection()
                 {
@@ -497,8 +503,104 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 formatter.Format(GetCollection(), writer);
 
                 writer.ToString().Should()
-                      .Be(
-                          "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>True</td></tr><tr><td>1</td><td>99</td></tr><tr><td>2</td><td>Hello, World</td></tr></tbody></table>");
+                      .BeEquivalentHtmlTo(
+@"<table>
+  <thead>
+    <tr>
+      <th>
+        <i>index</i>
+      </th>
+      <th>
+        <i>type</i>
+      </th>
+      <th>value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>System.Boolean</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>System.Int32</td>
+      <td>99</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>System.String</td>
+      <td>Hello, World</td>
+    </tr>
+  </tbody>
+</table>");
+            }
+            
+            [Fact]
+            public void All_properties_are_shown_when_sequences_contain_different_types()
+            {
+                var objects = new object[]
+                {
+                    1, 
+                    (2, "two"), 
+                    Enumerable.Range(1, 3),
+                    new { name = "apple", color = "green" },
+                };
+
+                objects.ToDisplayString("text/html")
+                       .Should()
+                       .BeEquivalentHtmlTo(
+                           @"<table>
+  <thead>
+    <tr>
+      <th><i>index</i></th>
+      <th><i>type</i></th>
+      <th>value</th>
+      <th>Item1</th>
+      <th>Item2</th>
+      <th>name</th>
+      <th>color</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>System.Int32</td>
+      <td>1</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>System.ValueTuple&lt;System.Int32,System.String&gt;</td>
+      <td></td>
+      <td>2</td>
+      <td>two</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>System.Linq.Enumerable+RangeIterator</td>
+      <td>[ 1, 2, 3 ]</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>(anonymous)</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>apple</td>
+      <td>green</td>
+    </tr>
+  </tbody>
+</table>");
             }
         }
     }

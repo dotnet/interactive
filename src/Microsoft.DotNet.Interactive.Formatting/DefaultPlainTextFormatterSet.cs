@@ -61,6 +61,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             var singleLineFormatter = new SingleLinePlainTextFormatter();
 
+           
             return new ConcurrentDictionary<Type, ITypeFormatter>
             {
                 [typeof(ExpandoObject)] =
@@ -94,25 +95,30 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     pair.Value.FormatTo(writer);
                 }),
 
-                [typeof(ReadOnlyMemory<char>)] = new PlainTextFormatter<ReadOnlyMemory<char>>((memory, writer) =>
-                {
-                    writer.Write(memory.Span.ToString());
-                }),
+                [typeof(ReadOnlyMemory<char>)] = new PlainTextFormatter<ReadOnlyMemory<char>>((memory, writer) => { writer.Write(memory.Span.ToString()); }),
 
-                [typeof(TimeSpan)] = new PlainTextFormatter<TimeSpan>((timespan, writer) =>
-                {
-                    writer.Write(timespan.ToString());
-                }),
+                [typeof(TimeSpan)] = new PlainTextFormatter<TimeSpan>((timespan, writer) => { writer.Write(timespan.ToString()); }),
 
-                [typeof(Type)] = new PlainTextFormatter<Type>((type, writer) =>
-                {
-                   type.WriteCSharpDeclarationTo(writer);
-                }),
+                [typeof(Type)] = _formatterForSystemType,
+
+                [typeof(Type).GetType()] = _formatterForSystemType,
 
                 [typeof(DateTime)] = new PlainTextFormatter<DateTime>((value, writer) => writer.Write(value.ToString("u"))),
 
                 [typeof(DateTimeOffset)] = new PlainTextFormatter<DateTimeOffset>((value, writer) => writer.Write(value.ToString("u")))
             };
         }
+
+        private static readonly PlainTextFormatter<Type> _formatterForSystemType =
+            new PlainTextFormatter<Type>((type, writer) =>
+            {
+                if (type.IsAnonymous())
+                {
+                    writer.Write("(anonymous)");
+                    return;
+                }
+
+                type.WriteCSharpDeclarationTo(writer);
+            });
     }
 }

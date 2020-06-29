@@ -522,13 +522,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                     Formatter<LaTeXString>.Register((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
                     Formatter<MathString>.Register((math, writer) => writer.Write(math.ToString()), "text/latex");
-                    if (startupOptions.EnableHttpApi && browserFrontendEnvironment is HtmlNotebookFrontedEnvironment jupyterFrontedEnvironment)
+                    if (startupOptions.EnableHttpApi && 
+                        browserFrontendEnvironment is HtmlNotebookFrontedEnvironment frontedEnvironment)
                     {
                         Formatter<ScriptContent>.Register((script, writer) =>
                         {
                             var fullCode = $@"if (typeof window.createDotnetInteractiveClient === typeof Function) {{
-createDotnetInteractiveClient('{jupyterFrontedEnvironment.DiscoveredUri.AbsoluteUri}').then(function (interactive) {{
-let notebookScope = getDotnetInteractiveScope('{jupyterFrontedEnvironment.DiscoveredUri.AbsoluteUri}');
+createDotnetInteractiveClient('{frontedEnvironment.DiscoveredUri.AbsoluteUri}').then(function (interactive) {{
+let notebookScope = getDotnetInteractiveScope('{frontedEnvironment.DiscoveredUri.AbsoluteUri}');
 {script.ScriptValue}
 }});
 }}";

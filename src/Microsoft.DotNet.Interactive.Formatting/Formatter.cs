@@ -457,10 +457,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         private static void ConfigureDefaultPlainTextFormattersForSpecialTypes()
         {
-            // an additional formatter is needed since typeof(Type) == System.RuntimeType, which is not public
-            Register(typeof(Type).GetType(),
-                     (obj, writer) => Formatter<Type>.FormatTo((Type) obj, writer, PlainTextFormatter.MimeType));
-
             // Newtonsoft.Json types -- these implement IEnumerable and their default output is not useful, so use their default ToString
             TryRegisterDefault("Newtonsoft.Json.Linq.JArray, Newtonsoft.Json", (obj, writer) => writer.Write(obj), PlainTextFormatter.MimeType);
             TryRegisterDefault("Newtonsoft.Json.Linq.JObject, Newtonsoft.Json", (obj, writer) => writer.Write(obj), PlainTextFormatter.MimeType);
