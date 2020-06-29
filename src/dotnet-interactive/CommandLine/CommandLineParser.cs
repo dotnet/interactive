@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     description: "Specifies the range of ports to use to enable HTTP services",
                     isDefault: true);
 
-                var command = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel")
+                var jupyterCommand = new Command("jupyter", "Starts dotnet-interactive as a Jupyter kernel")
                 {
                     defaultKernelOption,
                     httpPortRangeOption,
@@ -215,32 +215,30 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     }.ExistingOnly()
                 };
 
-                command.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext, CancellationToken>(JupyterHandler);
+                jupyterCommand.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext, CancellationToken>(JupyterHandler);
 
-                var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
+                var installSubCommand = new Command("install", "Install the .NET kernel for Jupyter")
                 {
                     httpPortRangeOption,
                     pathOption
                 };
 
-                installCommand.Handler = CommandHandler.Create<IConsole, InvocationContext, HttpPortRange, DirectoryInfo>(InstallHandler);
+                installSubCommand.Handler = CommandHandler.Create<IConsole, InvocationContext, HttpPortRange, DirectoryInfo>(InstallHandler);
 
-                command.AddCommand(installCommand);
+                jupyterCommand.AddCommand(installSubCommand);
 
-                return command;
+                return jupyterCommand;
 
                 Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context, CancellationToken cancellationToken)
                 {
+                    var frontendEnvironment = new HtmlNotebookFrontedEnvironment();
+                    services.AddSingleton(frontendEnvironment);
+                    services.AddSingleton<FrontendEnvironment>(frontendEnvironment);
+
                     services = RegisterKernelInServiceCollection(
                         services,
                         startupOptions,
-                        options.DefaultKernel,
-                        serviceCollection =>
-                        {
-                            serviceCollection.AddSingleton(_ => new HtmlNotebookFrontedEnvironment());
-                            serviceCollection.AddSingleton<FrontendEnvironment>(c =>
-                                c.GetService<HtmlNotebookFrontedEnvironment>());
-                        });
+                        options.DefaultKernel);
 
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
                         .AddSingleton(c =>
@@ -294,32 +292,28 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     },
                     isDefault: true);
 
-                var command = new Command("http", "Starts dotnet-interactive with kernel functionality exposed over http")
+                var httpCommand = new Command("http", "Starts dotnet-interactive with kernel functionality exposed over http")
                 {
                     defaultKernelOption,
                     httpPortOption
                 };
 
-                command.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
+                httpCommand.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
                     (startupOptions, options, console, context) =>
                     {
+
+                        var frontendEnvironment = new BrowserFrontendEnvironment();
+                        services.AddSingleton(frontendEnvironment);
+                        services.AddSingleton<FrontendEnvironment>(frontendEnvironment);
+
                         RegisterKernelInServiceCollection(
                             services,
                             startupOptions,
-                            options.DefaultKernel,
-                            serviceCollection =>
-                            {
-                                serviceCollection.AddSingleton(_ =>
-                                {
-                                    var frontendEnvironment = new BrowserFrontendEnvironment();
-                                    return frontendEnvironment;
-                                });
-                                serviceCollection.AddSingleton<FrontendEnvironment>(c => c.GetRequiredService<BrowserFrontendEnvironment>());
-                            });
+                            options.DefaultKernel);
                         return startHttp(startupOptions, console, startServer, context);
                     });
 
-                return command;
+                return httpCommand;
             }
 
             Command StdIO()
@@ -333,7 +327,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     "--working-dir",
                     "Working directory to which to change after launching the kernel.");
 
-                var command = new Command(
+                var stdIOCommand = new Command(
                     "stdio",
                     "Starts dotnet-interactive with kernel functionality exposed over standard I/O")
                 {
@@ -342,13 +336,16 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     workingDirOption
                 };
 
-                command.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext, CancellationToken>(
+                stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext, CancellationToken>(
                     (startupOptions, options, console, context, cancellationToken) =>
                     {
                         FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi 
                             ? new HtmlNotebookFrontedEnvironment() 
                             : new BrowserFrontendEnvironment();
-                        
+
+                        services.AddSingleton((HtmlNotebookFrontedEnvironment)frontendEnvironment);
+                        services.AddSingleton(frontendEnvironment);
+
                         var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment,
                             startupOptions);
                         kernel.UseQuitCommand(disposeOnQuit, cancellationToken);
@@ -358,12 +355,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             RegisterKernelInServiceCollection(
                                 services,
                                 startupOptions,
-                                options.DefaultKernel,
-                                serviceCollection =>
-                                {
-                                    serviceCollection.AddSingleton((HtmlNotebookFrontedEnvironment)frontendEnvironment);
-                                    serviceCollection.AddSingleton(frontendEnvironment);
-                                }, kernel =>
+                                options.DefaultKernel, kernel =>
                                 {
                                     kernel.CreateKernelServer();
                                 });
@@ -380,7 +372,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         
                     });
 
-                return command;
+                return stdIOCommand;
             }
 
             static HttpPortRange ParsePortRangeOption(ArgumentResult result)
@@ -418,16 +410,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             }
         }
 
-        private static IServiceCollection RegisterKernelInServiceCollection(IServiceCollection services, StartupOptions startupOptions, string defaultKernel, Action<IServiceCollection> configureFrontedEnvironment, Action<Kernel> afterKernelCreation = null)
+        private static IServiceCollection RegisterKernelInServiceCollection(IServiceCollection services, StartupOptions startupOptions, string defaultKernel, Action<Kernel> afterKernelCreation = null)
         {
-            configureFrontedEnvironment(services);
             services
                 .AddSingleton(c =>
                 {
                     using var _ = Log.OnEnterAndExit("creating kernel");
                     var frontendEnvironment = c.GetRequiredService<FrontendEnvironment>();
-                    var kernel = CreateKernel(defaultKernel, frontendEnvironment, startupOptions,
-                        c.GetService<HttpProbingSettings>());
+                    var kernel = CreateKernel(defaultKernel, frontendEnvironment, startupOptions);
 
                     afterKernelCreation?.Invoke(kernel);
                     return kernel;
@@ -440,8 +430,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         private static CompositeKernel CreateKernel(
             string defaultKernelName,
             FrontendEnvironment frontendEnvironment,
-            StartupOptions startupOptions,
-            HttpProbingSettings httpProbingSettings = null)
+            StartupOptions startupOptions)
         {
             var compositeKernel = new CompositeKernel();
             compositeKernel.FrontendEnvironment = frontendEnvironment;
@@ -505,14 +494,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             SetUpFormatters(frontendEnvironment, startupOptions);
 
             kernel.DefaultKernelName = defaultKernelName;
-
-            if (startupOptions.EnableHttpApi)
-            {
-                kernel = kernel.UseHttpApi(startupOptions, httpProbingSettings);
-                var enableHttp = new SubmitCode("#!enable-http", compositeKernel.Name);
-                enableHttp.PublishInternalEvents();
-                kernel.DeferCommand(enableHttp);
-            }
 
             return kernel;
         }

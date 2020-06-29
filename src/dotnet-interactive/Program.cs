@@ -76,16 +76,20 @@ namespace Microsoft.DotNet.Interactive.App
             {
                 StartToolLogging(options)
             };
-            
-            var httpPort = GetFreePort(options);
 
-            var probingSettings = HttpProbingSettings.Create(httpPort.PortNumber);
+            HttpProbingSettings probingSettings = null;
+
+            if (options.EnableHttpApi)
+            {
+                var httpPort = GetFreePort(options);
+                probingSettings = HttpProbingSettings.Create(httpPort.PortNumber);
+            }
 
             var webHost = new WebHostBuilder()
                           .UseKestrel()
                           .ConfigureServices(c =>
                           {
-                              if (options.EnableHttpApi)
+                              if (options.EnableHttpApi && probingSettings != null)
                               {
                                   c.AddSingleton(probingSettings);
                               }
@@ -97,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.App
                           })
                           .UseStartup<Startup>();
 
-            if (options.EnableHttpApi)
+            if (options.EnableHttpApi && probingSettings != null)
             {
                 webHost = webHost.UseUrls(probingSettings.AddressList.Select(a => a.AbsoluteUri).ToArray());
             }
