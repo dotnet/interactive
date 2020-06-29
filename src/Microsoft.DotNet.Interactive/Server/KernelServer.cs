@@ -91,5 +91,13 @@ namespace Microsoft.DotNet.Interactive.Server
         {
             _disposables.Dispose();
         }
+
+        public void Start()
+        {
+            if (_input is IPollingInputTextStream pollingInputTextStream)
+            {
+                pollingInputTextStream.Start();
+            }
+        }
     }
 }
