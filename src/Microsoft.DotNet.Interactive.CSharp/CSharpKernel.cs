@@ -301,24 +301,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 return Enumerable.Empty<CompletionItem>();
             }
 
-            var semanticModel = await document.GetSemanticModelAsync();
-            var symbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(
-                              semanticModel, 
-                              cursorPosition, 
-                              document.Project.Solution.Workspace);
-
-            var symbolToSymbolKey = new Dictionary<(string, int), ISymbol>();
-            foreach (var symbol in symbols)
-            {
-                var key = (symbol.Name, (int) symbol.Kind);
-                if (!symbolToSymbolKey.ContainsKey(key))
-                {
-                    symbolToSymbolKey[key] = symbol;
-                }
-            }
-
-            var items = completionList.Items.Select(item => item.ToModel(symbolToSymbolKey, document)).ToArray();
-
+            var items = completionList.Items.Select(item => item.ToModel()).ToArray();
             return items;
         }
 

@@ -50,10 +50,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return null;
         }
 
-        public static CompletionItem ToModel(
-            this RoslynCompletionItem item,
-            Dictionary<(string, int), ISymbol> recommendedSymbols,
-            Document document)
+        public static CompletionItem ToModel(this RoslynCompletionItem item)
         {
             return new CompletionItem(
                 displayText: item.DisplayText,
