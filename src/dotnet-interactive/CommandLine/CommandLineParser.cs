@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 operation.Info("constructing webhost");
                 var webHost = Program.ConstructWebHost(startupOptions);
                 disposeOnQuit.Add(webHost);
-                operation.Info("starting server");
+                operation.Info("starting  kestrel server");
                 webHost.Run();
             };
 
@@ -344,6 +344,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         
                         var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment,
                             startupOptions);
+
                         kernel.UseQuitCommand(disposeOnQuit, cancellationToken);
                         
                         var kernelServer = kernel.CreateKernelServer();
@@ -411,6 +412,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             FrontendEnvironment frontendEnvironment,
             StartupOptions startupOptions)
         {
+            using var _ = Log.OnEnterAndExit("Creating Kernels");
+
             var compositeKernel = new CompositeKernel();
             compositeKernel.FrontendEnvironment = frontendEnvironment;
 
@@ -463,11 +466,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             if (startupOptions.Verbose)
             {
                 kernel.LogEventsToPocketLogger();
-            }
-
-            if (startupOptions.Verbose)
-            {
-               kernel.LogEventsToPocketLogger();
             }
 
             SetUpFormatters(frontendEnvironment, startupOptions);
