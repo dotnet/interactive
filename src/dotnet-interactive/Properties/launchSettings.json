@@ -25,7 +25,7 @@
     },
     "dotnet-interactive-server": {
       "commandName": "Project",
-      "commandLineArgs": "stdio --log-path C:\\interactiveLogs --http-port-range 9000-10000"
+      "commandLineArgs": "stdio"
     },
     "dotnet-interactive-http": {
       "commandName": "Project",
