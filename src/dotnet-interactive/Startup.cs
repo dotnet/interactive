@@ -5,6 +5,7 @@ using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.Http;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -82,6 +83,16 @@ namespace Microsoft.DotNet.Interactive.App
                     }
 
                     var kernel = serviceProvider.GetRequiredService<Kernel>();
+                    var startupOptions = serviceProvider.GetRequiredService<StartupOptions>();
+                    if (startupOptions.EnableHttpApi)
+                    {
+                        var httpProbingSettings = serviceProvider.GetRequiredService<HttpProbingSettings>();
+
+                        kernel = kernel.UseHttpApi(startupOptions, httpProbingSettings);
+                        var enableHttp = new SubmitCode("#!enable-http", kernel.Name);
+                        enableHttp.PublishInternalEvents();
+                        kernel.DeferCommand(enableHttp);
+                    }
 
                     r.Routes.Add(new VariableRouter(kernel));
                     r.Routes.Add(new KernelsRouter(kernel));
