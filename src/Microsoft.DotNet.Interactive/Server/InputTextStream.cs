@@ -9,13 +9,14 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
-    public abstract class InputTextStream : IPollingInputTextStream
+    public abstract class InputTextStream : IInputTextStream
     {
         private readonly object _lock = new object();
-       
+
         private readonly Subject<string> _channel = new Subject<string>();
         private bool _complete;
         private readonly CancellationTokenSource _cancellationSource;
+  
 
 
         protected InputTextStream()
@@ -41,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.Server
             Start();
         }
 
-        public void Start()
+        internal void Start()
         {
             lock (_lock)
             {

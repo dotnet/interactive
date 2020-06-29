@@ -85,6 +85,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 disposeOnQuit.Add(webHost);
                 operation.Info("starting  kestrel server");
                 webHost.Run();
+                operation.Dispose();
             };
 
             jupyter ??= JupyterCommand.Do;
@@ -217,15 +218,15 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 jupyterCommand.Handler = CommandHandler.Create<StartupOptions, JupyterOptions, IConsole, InvocationContext, CancellationToken>(JupyterHandler);
 
-                var installSubCommand = new Command("install", "Install the .NET kernel for Jupyter")
+                var installCommand = new Command("install", "Install the .NET kernel for Jupyter")
                 {
                     httpPortRangeOption,
                     pathOption
                 };
 
-                installSubCommand.Handler = CommandHandler.Create<IConsole, InvocationContext, HttpPortRange, DirectoryInfo>(InstallHandler);
+                installCommand.Handler = CommandHandler.Create<IConsole, InvocationContext, HttpPortRange, DirectoryInfo>(InstallHandler);
 
-                jupyterCommand.AddCommand(installSubCommand);
+                jupyterCommand.AddCommand(installCommand);
 
                 return jupyterCommand;
 

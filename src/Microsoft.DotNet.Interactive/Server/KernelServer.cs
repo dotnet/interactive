@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public void Start()
         {
-            if (_input is IPollingInputTextStream pollingInputTextStream)
+            if (_input is InputTextStream pollingInputTextStream)
             {
                 pollingInputTextStream.Start();
             }
