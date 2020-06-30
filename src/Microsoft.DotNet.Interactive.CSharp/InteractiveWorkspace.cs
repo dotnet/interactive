@@ -3,9 +3,6 @@
 
 using System;
 using System.Reactive.Disposables;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Host.Mef;
@@ -26,6 +23,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
         private Document _languageServicesDocument;
         private TextContainer _workingTextContainer;
         private TextContainer _committedTextContainer;
+        private DocumentId _committedDocumentId;
+        private DocumentId _workingDocumentId;
 
         public InteractiveWorkspace()
         {
@@ -52,7 +51,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }));
         }
 
-        public async Task AddSubmissionAsync(ScriptState scriptState)
+        public void AddSubmission(ScriptState scriptState)
         {
             _currentCompilation = scriptState.Script.GetCompilation();
 
@@ -82,14 +81,15 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             _solution = _solution.AddProject(projectInfo);
 
-            var documentId = DocumentId.CreateNewId(
+            var currentSubmissionDocumentId = DocumentId.CreateNewId(
                 _currentSubmissionProjectId,
                 debugName: debugName);
 
+            // add the code submission to the current project
             var submissionSourceText = SourceText.From(scriptState.Script.Code);
 
             _solution = _solution.AddDocument(
-                documentId,
+                currentSubmissionDocumentId,
                 debugName,
                 submissionSourceText);
 
@@ -99,35 +99,54 @@ namespace Microsoft.DotNet.Interactive.CSharp
                     _currentSubmissionProjectId,
                     new ProjectReference(_previousSubmissionProjectId));
             }
-           
-            var rollupName = $"Rollup through #{_submissionCount - 1}";
 
-            var rollupDocId = DocumentId.CreateNewId(
+            // remove rollup and working document from project
+
+            if (_workingDocumentId != null)
+            {
+                _solution.Workspace.CloseDocument(_workingDocumentId);
+                _solution = _solution.RemoveDocument(_workingDocumentId);
+            }
+
+            if (_committedDocumentId != null)
+            {
+               
+                _solution = _solution.RemoveDocument(_committedDocumentId);
+            }
+
+            // create new ids and reuse buffers
+
+            _committedTextContainer.AppendText(scriptState.Script.Code);
+            _workingTextContainer.SetText(string.Empty);
+
+
+            var workingProjectName = $"Rollup through #{_submissionCount - 1}";
+
+            _committedDocumentId = DocumentId.CreateNewId(
                 _currentSubmissionProjectId,
-                rollupName);
+                workingProjectName);
 
-            _uncommittedSolution = _solution.AddDocument(
-                rollupDocId,
-                rollupName,
-                await CollateSubmissionsAsync());
+            _solution = _solution.AddDocument(
+                _committedDocumentId,
+                workingProjectName,
+                TextLoader.From(_committedTextContainer, new VersionStamp()));
 
-            var completionDocName = $"Fork from #{_submissionCount - 1}";
+            var workingDocumentName = $"Fork from #{_submissionCount - 1}";
             
-            var completionDocId = DocumentId.CreateNewId(
+            _workingDocumentId = DocumentId.CreateNewId(
                 _currentSubmissionProjectId,
-                completionDocName);
-            
-            
-            _uncommittedSolution = _uncommittedSolution.AddDocument(
-                completionDocId,
-                completionDocName,
+                workingDocumentName);
+
+
+            _solution = _solution.AddDocument(
+                _workingDocumentId,
+                workingDocumentName,
                 TextLoader.From(_workingTextContainer, VersionStamp.Create())
                 );
-            
-            _uncommittedSolution.Workspace.OpenDocument(completionDocId,true);
 
-            _languageServicesDocument = _uncommittedSolution.GetDocument(completionDocId);
+            _solution.Workspace.OpenDocument(_workingDocumentId,true);
 
+            _languageServicesDocument = _solution.GetDocument(_workingDocumentId);
 
         }
 
@@ -136,26 +155,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             _workingTextContainer.SetText(code);
             return _languageServicesDocument;
 
-        }
-
-        private async Task<string> CollateSubmissionsAsync()
-        {
-            var sb = new StringBuilder();
-
-            foreach (var project in _solution.Projects)
-            {
-                foreach (var document in project.Documents)
-                {
-                    var text = await document.GetTextAsync();
-
-                    if (text != null)
-                    {
-                        sb.AppendLine(text.ToString());
-                    }
-                }
-            }
-
-            return sb.ToString();
         }
 
         public void Dispose()
@@ -177,17 +176,29 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
             var old = _currentText;
             _currentText = SourceText.From(text);
-            TextChanged?.Invoke(this, new TextChangeEventArgs(old,_currentText));
+            if (TextChanged is { } e)
+            {
+                e.Invoke(this, new TextChangeEventArgs(old, _currentText));
+            }
         }
 
         public void AppendText(string text)
         {
             var old = _currentText;
             _currentText = _currentText.Replace(_currentText.Length,text.Length, text);
-            TextChanged?.Invoke(this, new TextChangeEventArgs(old, _currentText));
+            if (TextChanged is {} e)
+            {
+                e.Invoke(this, new TextChangeEventArgs(old, _currentText));
+            }
         }
 
-        public override SourceText CurrentText => _currentText;
+        public override SourceText CurrentText =>  GetSourceText();
+
+        private SourceText GetSourceText()
+        {
+            return _currentText;
+        }
+
         public override event EventHandler<TextChangeEventArgs> TextChanged;
     }
 

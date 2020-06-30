@@ -270,7 +270,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             if (ScriptState.Exception is null)
             {
-                await _workspace.AddSubmissionAsync(ScriptState);
+                _workspace.AddSubmission(ScriptState);
             }
         }
 
@@ -291,7 +291,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             int cursorPosition)
         {
             var document = _workspace.ForkDocument(code);
-
+            var text = await document.GetTextAsync();
             var service = CompletionService.GetService(document);
             
             var completionList = await service.GetCompletionsAsync(document, cursorPosition);
