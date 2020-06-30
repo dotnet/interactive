@@ -40,14 +40,18 @@ export class StdioKernelTransport {
         // launch the process
         this.childProcess = cp.spawn(processStart.command, processStart.args, { cwd: processStart.workingDirectory });
         this.diagnosticChannel.appendLine(`Kernel started with pid ${this.childProcess.pid}.`);
-        this.childProcess.on('exit', (code: number, _signal: string) => {
+        this.childProcess.on('exit', (code: number, signal: string) => {
             let message = `Kernel pid ${this.childProcess.pid} ended`;
-            let messageSuffix = (code && code !== 0)
+            let messageCodeSuffix = (code && code !== 0)
                 ? ` with code ${code}`
                 : '';
-            this.diagnosticChannel.appendLine(message + messageSuffix);
+            let messageSignalSuffix = signal
+                ? ` with signal ${signal}`
+                : '';
+            this.diagnosticChannel.appendLine(message + messageCodeSuffix + messageSignalSuffix);
         });
         this.childProcess.stdout.on('data', data => this.lineReader.onData(data));
+        this.childProcess.stderr.on('data', data => diagnosticChannel.appendLine(`kernel (${this.childProcess.pid}) stderr: ${data.toString('utf-8')}`));
     }
 
     private handleLine(line: string) {
