@@ -4,6 +4,7 @@
 using System;
 using System.Reactive.Disposables;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -22,14 +23,18 @@ namespace Microsoft.DotNet.Interactive.CSharp
         private readonly CSharpParseOptions _parseOptions;
         private Compilation _currentCompilation;
         private Solution _solution;
-        private Solution _uncommittedSolution;
+        private Document _languageServicesDocument;
+        private TextContainer _workingTextContainer;
+        private TextContainer _committedTextContainer;
 
         public InteractiveWorkspace()
         {
             var workspace = new AdhocWorkspace(MefHostServices.DefaultHost, WorkspaceKind.Interactive);
             
+            _workingTextContainer = new TextContainer();
+            _committedTextContainer = new TextContainer();
+
             _solution = workspace.CurrentSolution;
-            _uncommittedSolution = _solution;
 
             _parseOptions = new CSharpParseOptions(
                 LanguageVersion.Latest,
@@ -40,9 +45,10 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             _disposables.Add(Disposable.Create(() =>
             {
+                _committedTextContainer = null;
+                _workingTextContainer = null;
                 _currentCompilation = null;
                 _solution = null;
-                _uncommittedSolution = null;
             }));
         }
 
@@ -51,6 +57,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
             _currentCompilation = scriptState.Script.GetCompilation();
 
             _previousSubmissionProjectId = _currentSubmissionProjectId;
+
+            _committedTextContainer.AppendText(scriptState.Script.Code);
+            _workingTextContainer.SetText(string.Empty);
 
             var assemblyName = $"Submission#{_submissionCount++}";
             var debugName = assemblyName;
@@ -101,21 +110,32 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 rollupDocId,
                 rollupName,
                 await CollateSubmissionsAsync());
+
+            var completionDocName = $"Fork from #{_submissionCount - 1}";
+            
+            var completionDocId = DocumentId.CreateNewId(
+                _currentSubmissionProjectId,
+                completionDocName);
+            
+            
+            _uncommittedSolution = _uncommittedSolution.AddDocument(
+                completionDocId,
+                completionDocName,
+                TextLoader.From(_workingTextContainer, VersionStamp.Create())
+                );
+            
+            _uncommittedSolution.Workspace.OpenDocument(completionDocId,true);
+
+            _languageServicesDocument = _uncommittedSolution.GetDocument(completionDocId);
+
+
         }
 
         public Document ForkDocument(string code)
         {
-            var completionDocName = $"Fork from #{_submissionCount - 1}: {code}";
-            var completionDocId = DocumentId.CreateNewId(
-                _currentSubmissionProjectId,
-                completionDocName);
+            _workingTextContainer.SetText(code);
+            return _languageServicesDocument;
 
-            var solution = _uncommittedSolution.AddDocument(
-                    completionDocId,
-                    completionDocName,
-                    SourceText.From(code));
-
-            return solution.GetDocument(completionDocId);
         }
 
         private async Task<string> CollateSubmissionsAsync()
@@ -143,4 +163,32 @@ namespace Microsoft.DotNet.Interactive.CSharp
             _disposables.Dispose();
         }
     }
+
+    internal class TextContainer : SourceTextContainer
+    {
+        private SourceText _currentText;
+
+        public TextContainer()
+        {
+            _currentText = SourceText.From(string.Empty);
+        }
+
+        public void SetText(string text)
+        {
+            var old = _currentText;
+            _currentText = SourceText.From(text);
+            TextChanged?.Invoke(this, new TextChangeEventArgs(old,_currentText));
+        }
+
+        public void AppendText(string text)
+        {
+            var old = _currentText;
+            _currentText = _currentText.Replace(_currentText.Length,text.Length, text);
+            TextChanged?.Invoke(this, new TextChangeEventArgs(old, _currentText));
+        }
+
+        public override SourceText CurrentText => _currentText;
+        public override event EventHandler<TextChangeEventArgs> TextChanged;
+    }
+
 }
