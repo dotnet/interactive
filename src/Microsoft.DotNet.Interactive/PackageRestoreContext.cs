@@ -246,11 +246,6 @@ namespace Microsoft.DotNet.Interactive
                     _resolvedPackageReferences.TryAdd(reference.PackageName.ToLower(CultureInfo.InvariantCulture), reference);
                 }
 
-                var resolvedReferences = _resolvedPackageReferences
-                                         .Values
-                                         .Except(previouslyResolved)
-                                         .ToList();
-
                 packageRestoreResult =
                     new PackageRestoreResult(
                         succeeded: true,

@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                         DirectiveNode directiveNode;
 
-                        if (IsLanguageDirective(directiveToken))
+                        if (IsChooseKernelDirective(directiveToken))
                         {
                             directiveNode = new KernelNameDirectiveNode(directiveToken, _sourceText, rootNode.SyntaxTree);
                             currentLanguage = directiveToken.DirectiveName;
@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             directiveNode.Add(directiveArgs);
                         }
 
-                        var directiveName = directiveNode.First().Text;
+                        var directiveName = directiveNode.ChildNodesAndTokens.First().Text;
 
                         if (IsDefinedInRootKernel(directiveName))
                         {
@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                 if (value?.Value is FileInfo)
                                 {
                                     // #r <file> is treated as a LanguageNode to be handled by the compiler
-                                    AddAsLanguageNode(directiveNode);
+                                    AppendAsLanguageNode(directiveNode);
 
                                     break;
                                 }
@@ -134,15 +134,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         break;
 
                     case LanguageToken languageToken:
-                    {
-                        var languageNode = new LanguageNode(
-                            currentLanguage,
-                            _sourceText,
-                            rootNode.SyntaxTree);
-                        languageNode.Add(languageToken);
-
-                        rootNode.Add(languageNode);
-                    }
+                        AppendAsLanguageNode(languageToken);
                         break;
 
                     case TriviaToken trivia:
@@ -154,16 +146,24 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 }
             }
 
-            void AddAsLanguageNode(DirectiveNode directiveNode)
+            void AppendAsLanguageNode(SyntaxNodeOrToken nodeOrToken)
             {
-                var languageNode = new LanguageNode(
-                    currentLanguage,
-                    _sourceText,
-                    rootNode.SyntaxTree);
+                if (rootNode.ChildNodes.LastOrDefault() is LanguageNode previousLanguageNode &&
+                    previousLanguageNode.Language == currentLanguage)
+                {
+                    previousLanguageNode.Add(nodeOrToken);
+                }
+                else
+                {
+                    var languageNode = new LanguageNode(
+                        currentLanguage,
+                        _sourceText,
+                        rootNode.SyntaxTree);
 
-                languageNode.Add(directiveNode);
+                    languageNode.Add(nodeOrToken);
 
-                rootNode.Add(languageNode);
+                    rootNode.Add(languageNode);
+                }
             }
         }
 
@@ -176,7 +176,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                    .Any(c => c.HasAlias(directiveName));
         }
 
-        private bool IsLanguageDirective(DirectiveToken directiveToken)
+        private bool IsChooseKernelDirective(DirectiveToken directiveToken)
         {
             if (_kernelChooserDirectives is null &&
                 _subkernelDirectiveParsersByLanguageName != null)
@@ -187,8 +187,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         .RootCommand
                         .Children
                         .OfType<ChooseKernelDirective>()
-                        .SelectMany(c => c.Aliases)
-                );
+                        .SelectMany(c => c.Aliases));
             }
 
             return _kernelChooserDirectives?.Contains(directiveToken.Text) == true;
