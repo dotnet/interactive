@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp;
@@ -20,7 +21,9 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
+
 using XPlot.Plotly;
+
 using CompletionItem = Microsoft.DotNet.Interactive.Events.CompletionItem;
 
 namespace Microsoft.DotNet.Interactive.CSharp
@@ -84,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             {
                 _workspace.Dispose();
                 _workspace = null;
-                
+
                 _packageRestoreContext = null;
                 ScriptState = null;
                 ScriptOptions = null;
@@ -106,7 +109,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             if (ScriptState?.Variables
                            .LastOrDefault(v => v.Name == name) is { } variable)
             {
-                value = (T) variable.Value;
+                value = (T)variable.Value;
                 return true;
             }
 
@@ -134,6 +137,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var cursorPosition = text.Lines.GetPosition(command.LinePosition);
             var service = QuickInfoService.GetService(document);
             var info = await service.GetQuickInfoAsync(document, cursorPosition);
+
+            GC.Collect();
 
             if (info == null)
             {
@@ -291,15 +296,16 @@ namespace Microsoft.DotNet.Interactive.CSharp
             int cursorPosition)
         {
             var document = _workspace.ForkDocument(code);
-            var text = await document.GetTextAsync();
             var service = CompletionService.GetService(document);
-            
             var completionList = await service.GetCompletionsAsync(document, cursorPosition);
+            
+            GC.Collect();
 
             if (completionList is null)
             {
                 return Enumerable.Empty<CompletionItem>();
             }
+
 
             var items = completionList.Items.Select(item => item.ToModel()).ToArray();
             return items;
@@ -319,7 +325,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         private bool HasReturnValue =>
             ScriptState != null &&
-            (bool) _hasReturnValueMethod.Invoke(ScriptState.Script, null);
+            (bool)_hasReturnValueMethod.Invoke(ScriptState.Script, null);
 
         void ISupportNuget.AddRestoreSource(string source) => _packageRestoreContext.Value.AddRestoreSource(source);
 
@@ -339,13 +345,13 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         Task<PackageRestoreResult> ISupportNuget.RestoreAsync() => _packageRestoreContext.Value.RestoreAsync();
 
-        public IEnumerable<PackageReference> RequestedPackageReferences => 
+        public IEnumerable<PackageReference> RequestedPackageReferences =>
             PackageRestoreContext.RequestedPackageReferences;
 
-        public IEnumerable<ResolvedPackageReference> ResolvedPackageReferences => 
+        public IEnumerable<ResolvedPackageReference> ResolvedPackageReferences =>
             PackageRestoreContext.ResolvedPackageReferences;
 
-        public IEnumerable<string> RestoreSources => 
+        public IEnumerable<string> RestoreSources =>
             PackageRestoreContext.RestoreSources;
     }
 }
