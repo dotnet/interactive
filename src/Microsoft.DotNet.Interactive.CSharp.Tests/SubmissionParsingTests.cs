@@ -2,12 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
-using System.IO;
 using FluentAssertions;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -15,37 +13,42 @@ namespace Microsoft.DotNet.Interactive.CSharp.Tests
 {
     public class SubmissionParsingTests
     {
-        [Fact]
-        public async Task pound_r_is_split_into_separate_command_from_csharp_code()
+        [Theory]
+        [InlineData(@"
+#r one.dll
+#r two.dll", "csharp")]
+        [InlineData(@"
+#r one.dll
+var x = 123; // with some intervening code
+#r two.dll", "csharp")]
+        [InlineData(@"
+#r one.dll
+#r two.dll", "fsharp")]
+        [InlineData(@"
+#r one.dll
+let x = 123 // with some intervening code
+#r two.dll", "fsharp")]
+        public void Multiple_pound_r_directives_are_submitted_together(
+            string code,
+            string defaultKernel)
         {
-            var receivedCommands = new List<KernelCommand>();
-
-            using var kernel = new CSharpKernel();
-
-            kernel.AddMiddleware((command, context, next) =>
+            using var kernel = new CompositeKernel
             {
-                receivedCommands.Add(command);
-                return Task.CompletedTask;
-            });
+                new CSharpKernel().UseNugetDirective(),
+                new FSharpKernel().UseNugetDirective(),
+            };
 
-            kernel.UseNugetDirective();
-            var path = Path.GetTempFileName();
-            var poundR = $@"#r ""{path}""";
-            var usingStatement = "using Some.Namespace;";
-            var nextSubmission = "// the code";
+            kernel.DefaultKernelName = defaultKernel;
 
-            kernel.DeferCommand(new SubmitCode(poundR + Environment.NewLine + usingStatement));
+            var commands = kernel.SubmissionParser.SplitSubmission(new SubmitCode(code));
 
-            await kernel.SubmitCodeAsync(nextSubmission);
-
-            receivedCommands
-                .Cast<SubmitCode>()
-                .Select(c => c.Code.Trim())
+            commands
                 .Should()
-                .BeEquivalentSequenceTo(
-                    poundR,
-                    usingStatement,
-                    nextSubmission);
+                .ContainSingle<SubmitCode>()
+                .Which
+                .Code
+                .Should()
+                .ContainAll("#r one.dll", "#r two.dll");
         }
     }
 }

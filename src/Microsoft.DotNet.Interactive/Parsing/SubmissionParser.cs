@@ -22,9 +22,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
         private Parser _directiveParser;
         private RootCommand _rootCommand;
 
-        public IReadOnlyList<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
-        public string KernelLanguage { get; internal set; }
-
         public SubmissionParser(Kernel kernel)
         {
             _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
@@ -34,6 +31,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 _ => kernel.Name
             };
         }
+
+        public IReadOnlyList<ICommand> Directives => _rootCommand?.Children.OfType<ICommand>().ToArray() ?? Array.Empty<ICommand>();
+
+        public string KernelLanguage { get; internal set; }
 
         public PolyglotSyntaxTree Parse(string code, string language = null)
         {

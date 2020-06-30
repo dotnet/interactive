@@ -39,9 +39,15 @@ x
 
             var tree = parser.Parse(code);
 
-            tree.GetRoot()
+            var nodes = tree.GetRoot().ChildNodes;
+
+            nodes
                 .Should()
-                .ContainSingle<LanguageNode>(n => n.Text == "#r \"/path/to/a.dll\"");
+                .ContainSingle<LanguageNode>()
+                .Which
+                .Text
+                .Should()
+                .Be(code);
         }
 
         [Fact]
@@ -288,6 +294,7 @@ let x = 123
             var tree = parser.Parse(code);
 
             tree.GetRoot()
+                .ChildNodes
                 .Should()
                 .ContainSingle<LanguageNode>()
                 .Which
