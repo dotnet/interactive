@@ -20,17 +20,13 @@ namespace Microsoft.DotNet.Interactive.CSharp
         private readonly CSharpParseOptions _parseOptions;
         private Compilation _currentCompilation;
         private Solution _solution;
-        private Document _languageServicesDocument;
-        private TextContainer _workingTextContainer;
         private TextContainer _committedTextContainer;
         private DocumentId _committedDocumentId;
-        private DocumentId _workingDocumentId;
 
         public InteractiveWorkspace()
         {
             var workspace = new AdhocWorkspace(MefHostServices.DefaultHost, WorkspaceKind.Interactive);
             
-            _workingTextContainer = new TextContainer();
             _committedTextContainer = new TextContainer();
 
             _solution = workspace.CurrentSolution;
@@ -45,7 +41,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             _disposables.Add(Disposable.Create(() =>
             {
                 _committedTextContainer = null;
-                _workingTextContainer = null;
                 _currentCompilation = null;
                 _solution = null;
             }));
@@ -58,7 +53,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             _previousSubmissionProjectId = _currentSubmissionProjectId;
 
             _committedTextContainer.AppendText(scriptState.Script.Code);
-            _workingTextContainer.SetText(string.Empty);
 
             var assemblyName = $"Submission#{_submissionCount++}";
             var debugName = assemblyName;
@@ -101,24 +95,16 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
 
             // remove rollup and working document from project
-
-            if (_workingDocumentId != null)
-            {
-                _solution.Workspace.CloseDocument(_workingDocumentId);
-                _solution = _solution.RemoveDocument(_workingDocumentId);
-            }
-
+            
             if (_committedDocumentId != null)
             {
-               
                 _solution = _solution.RemoveDocument(_committedDocumentId);
             }
 
             // create new ids and reuse buffers
 
             _committedTextContainer.AppendText(scriptState.Script.Code);
-            _workingTextContainer.SetText(string.Empty);
-
+           
 
             var workingProjectName = $"Rollup through #{_submissionCount - 1}";
 
@@ -131,29 +117,28 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 workingProjectName,
                 TextLoader.From(_committedTextContainer, new VersionStamp()));
 
-            var workingDocumentName = $"Fork from #{_submissionCount - 1}";
-            
-            _workingDocumentId = DocumentId.CreateNewId(
-                _currentSubmissionProjectId,
-                workingDocumentName);
-
-
-            _solution = _solution.AddDocument(
-                _workingDocumentId,
-                workingDocumentName,
-                TextLoader.From(_workingTextContainer, VersionStamp.Create())
-                );
-
-            _solution.Workspace.OpenDocument(_workingDocumentId,true);
-
-            _languageServicesDocument = _solution.GetDocument(_workingDocumentId);
-
         }
 
         public Document ForkDocument(string code)
         {
-            _workingTextContainer.SetText(code);
-            return _languageServicesDocument;
+            var solution = _solution.GetIsolatedSolution();
+
+            var workingDocumentName = $"Fork from #{_submissionCount - 1}";
+
+            var workingDocumentId = DocumentId.CreateNewId(
+                _currentSubmissionProjectId,
+                workingDocumentName);
+
+            solution = solution.AddDocument(
+                workingDocumentId,
+                workingDocumentName,
+                SourceText.From(code)
+            );
+
+            var languageServicesDocument =
+                solution.GetDocument(workingDocumentId);
+
+            return languageServicesDocument;
 
         }
 

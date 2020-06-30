@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Linq;
@@ -292,6 +293,37 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                             .Should()
                             .Contain(expected.Split(","),
                                      because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
+        }
+
+        [Fact]
+        public async Task does_not_work()
+        {
+            var kernel = CreateKernel();
+
+            var firstCodeSubmission = new SubmitCode("var jon = new { Name = \"Jon\" };");
+
+            var secondCodeSubmission = new SubmitCode("var diego = new { Name = \"Diego\", AwesomeFriend = jon };");
+
+            await kernel.SendAsync(firstCodeSubmission);
+            await kernel.SendAsync(secondCodeSubmission);
+
+            var firstCompletionRequest = new RequestCompletions("j", new LinePosition(0, 1));
+
+            var secondCompletionRequest = new RequestCompletions("die", new LinePosition(0, 3));
+
+            await kernel.SendAsync(firstCompletionRequest);
+
+            var result = await kernel.SendAsync(secondCompletionRequest);
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events
+                .Should()
+                .ContainSingle<CompletionsProduced>()
+                .Which
+                .Completions
+                .Should()
+                .Contain(item => item.DisplayText == "diego");
         }
 
         [Theory]
