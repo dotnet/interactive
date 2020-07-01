@@ -49,6 +49,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         internal ScriptOptions ScriptOptions =
             ScriptOptions.Default
+                         .WithMetadataResolver(MyScriptMetadataResolver.Default.WithBaseDirectory(Directory.GetCurrentDirectory()))
                          .WithLanguageVersion(LanguageVersion.Latest)
                          .AddImports(
                              "System",
@@ -72,6 +73,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         public CSharpKernel() : base(DefaultKernelName)
         {
             _workspace = new InteractiveWorkspace();
+            _currentDirectory = Directory.GetCurrentDirectory();
 
             _packageRestoreContext = new Lazy<PackageRestoreContext>(() =>
             {
@@ -252,7 +254,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             {
                 _currentDirectory = currentDirectory;
                 ScriptOptions = ScriptOptions.WithMetadataResolver(
-                    ScriptMetadataResolver.Default.WithBaseDirectory(
+                    MyScriptMetadataResolver.Default.WithBaseDirectory(
                         _currentDirectory));
             }
 
