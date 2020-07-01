@@ -14,7 +14,6 @@ using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.QuickInfo;
-using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -132,14 +131,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
+            using var _ = new GCPressure(1024 * 1024);
+            
             var document = _workspace.ForkDocument(command.Code);
             var text = await document.GetTextAsync();
             var cursorPosition = text.Lines.GetPosition(command.LinePosition);
             var service = QuickInfoService.GetService(document);
             var info = await service.GetQuickInfoAsync(document, cursorPosition);
-
-            GC.Collect();
-
+            
             if (info == null)
             {
                 return;
@@ -157,6 +156,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
                         new FormattedValue("text/markdown", info.ToMarkdownString())
                     },
                     correctedLinePosSpan));
+            
+            
         }
 
         public async Task HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
@@ -295,12 +296,13 @@ namespace Microsoft.DotNet.Interactive.CSharp
             string code,
             int cursorPosition)
         {
+
+            using var _ = new GCPressure(1024 * 1024);
+
             var document = _workspace.ForkDocument(code);
             var service = CompletionService.GetService(document);
             var completionList = await service.GetCompletionsAsync(document, cursorPosition);
-            
-            GC.Collect();
-
+           
             if (completionList is null)
             {
                 return Enumerable.Empty<CompletionItem>();
