@@ -1,12 +1,11 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-
 using System;
 
-namespace Microsoft.DotNet.Interactive.CSharp
+namespace Microsoft.DotNet.Interactive.Utility
 {
-    internal class GCPressure : IDisposable
+    public class GCPressure : IDisposable
     {
         private readonly long _bytesAllocated;
 
