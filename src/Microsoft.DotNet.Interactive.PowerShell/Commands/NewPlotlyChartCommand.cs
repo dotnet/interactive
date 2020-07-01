@@ -3,7 +3,6 @@
 
 using System.Collections.Generic;
 using XPlot.Plotly;
-using static XPlot.Plotly.Graph;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Commands
 {

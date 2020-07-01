@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             // Register type accelerators for Plotly.
             var accelerator = typeof(PSObject).Assembly.GetType("System.Management.Automation.TypeAccelerators");
             MethodInfo addAccelerator = accelerator.GetMethod("Add", new Type[] { typeof(string), typeof(Type) });
-            foreach (Type type in typeof(Graph).GetNestedTypes())
+            foreach (Type type in typeof(Trace).Assembly.GetTypes().Where(t => t.BaseType == typeof(Trace)))
             {
                 addAccelerator.Invoke(null, new object[] { $"Graph.{type.Name}", type });
             }
