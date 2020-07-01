@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         public void Dispose()
         {
-            GC.AddMemoryPressure(_bytesAllocated);
+            GC.RemoveMemoryPressure(_bytesAllocated);
         }
     }
 }
