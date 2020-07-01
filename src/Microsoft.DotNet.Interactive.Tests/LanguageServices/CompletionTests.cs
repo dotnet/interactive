@@ -296,7 +296,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         }
 
         [Fact]
-        public async Task does_not_work()
+        public async Task completions_commands_produce_the_expected_results()
         {
             var kernel = CreateKernel();
 
