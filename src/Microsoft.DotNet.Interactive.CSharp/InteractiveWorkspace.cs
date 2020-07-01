@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public Document ForkDocument(string code)
         {
-            var solution = _solution.GetIsolatedSolution();
+            var solution = _solution;
 
             var workingDocumentName = $"Fork from #{_submissionCount - 1}";
 
