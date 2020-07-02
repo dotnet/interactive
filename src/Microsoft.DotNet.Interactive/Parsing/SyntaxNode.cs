@@ -48,15 +48,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
             };
         }
 
-        internal void Add(SyntaxNodeOrToken child)
+        internal void GrowSpan(SyntaxNodeOrToken child)
         {
-            if (child.Parent != null)
-            {
-                throw new InvalidOperationException($"{child.GetType().Name} {child} is already parented to {child.Parent}");
-            }
-
-            child.Parent = this;
-
             if (_span == default)
             {
                 _span = child.Span;
@@ -67,6 +60,18 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 var _spanEnd = Math.Max(_span.End, child.Span.End);
                 _span = new TextSpan(_spanStart, _spanEnd - _span.Start);
             }
+        }
+
+        internal void Add(SyntaxNodeOrToken child)
+        {
+            if (child.Parent != null)
+            {
+                throw new InvalidOperationException($"{child.GetType().Name} {child} is already parented to {child.Parent}");
+            }
+
+            child.Parent = this;
+
+            GrowSpan(child);
 
             _childNodesAndTokens.Add(child);
         }
