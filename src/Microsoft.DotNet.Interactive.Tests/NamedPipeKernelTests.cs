@@ -10,6 +10,7 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using FluentAssertions;
+using Microsoft.DotNet.Interactive.Connection;
 using Pocket;
 using Xunit.Abstractions;
 
@@ -35,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var localCompositeKernel = new CompositeKernel
             {
                 new FSharpKernel()
-            }.UseConnectionOverNamedPipe();
+            }.UseConnection(new ConnectNamedPipe());
 
             localCompositeKernel.DefaultKernelName = "fsharp";
 
@@ -61,7 +62,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             using var events = localCompositeKernel.KernelEvents.ToSubscribedList();
 
-            var connectToRemoteKernel = new SubmitCode($"#!connect named-pipe newKernelName {pipeName}");
+            var connectToRemoteKernel = new SubmitCode($"#!connect named-pipe --kernel-name newKernelName --pipe-name {pipeName}");
             var codeSubmissionForRemoteKernel = new SubmitCode(@"
 #!newKernelName
 var x = 1 + 1;
@@ -81,7 +82,7 @@ x");
             using var kernel = new CompositeKernel
             {
                 fSharpKernel
-            }.UseConnectionOverNamedPipe();
+            }.UseConnection(new ConnectNamedPipe());
 
             kernel.DefaultKernelName = fSharpKernel.Name;
 
@@ -91,7 +92,7 @@ x");
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            var proxyCommand = new SubmitCode($"#!connect named-pipe test {pipeName}");
+            var proxyCommand = new SubmitCode($"#!connect named-pipe --kernel-name test --pipe-name {pipeName}");
 
             await kernel.SendAsync(proxyCommand);
 
@@ -114,7 +115,7 @@ x", targetKernelName: "test");
             using var localKernel = new CompositeKernel
             {
                 fSharpKernel
-            }.UseConnectionOverNamedPipe();
+            }.UseConnection(new ConnectNamedPipe());
 
             localKernel.DefaultKernelName = fSharpKernel.Name;
 
@@ -124,7 +125,7 @@ x", targetKernelName: "test");
 
             using var events = localKernel.KernelEvents.ToSubscribedList();
 
-            var proxyCommand = new SubmitCode($"#!connect named-pipe test {pipeName}");
+            var proxyCommand = new SubmitCode($"#!connect named-pipe --kernel-name test --pipe-name {pipeName}");
 
             await localKernel.SendAsync(proxyCommand);
 

@@ -310,7 +310,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 return Enumerable.Empty<CompletionItem>();
             }
 
-
             var items = completionList.Items.Select(item => item.ToModel()).ToArray();
             return items;
         }

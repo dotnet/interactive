@@ -6,7 +6,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
-using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -105,7 +104,7 @@ namespace Microsoft.DotNet.Interactive
             AddMiddleware(
                 async (originalCommand, context, next) =>
                 {
-                    var commands = PreprocessCommands(originalCommand, context);
+                    var commands = PreprocessCommands(originalCommand);
 
                     if (!commands.Contains(originalCommand) && commands.Any())
                     {
@@ -152,7 +151,7 @@ namespace Microsoft.DotNet.Interactive
                 });
         }
 
-        private IReadOnlyList<KernelCommand> PreprocessCommands(KernelCommand command, KernelInvocationContext context)
+        private IReadOnlyList<KernelCommand> PreprocessCommands(KernelCommand command)
         {
             return command switch
             {

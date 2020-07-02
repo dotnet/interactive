@@ -6,12 +6,14 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Parsing;
@@ -28,7 +30,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly Dictionary<string, Kernel> _kernelsByNameOrAlias;
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
         private string _defaultKernelName;
-        private Command _connectCommand;
+        private Command _connectDirective;
 
         public CompositeKernel() : base(".NET")
         {
@@ -250,18 +252,42 @@ namespace Microsoft.DotNet.Interactive
                 context);
         }
 
-        public void AddConnectionDirective(Command connectionCommand)
+        public void AddKernelConnection<TOptions>(
+            ConnectKernelCommand<TOptions> connectionCommand)
+            where TOptions : KernelConnectionOptions
         {
-            if (_connectCommand == null)
+            // FIX: (AddKernelConnection) use a global option
+            var kernelNameOption = new Option<string>(
+                "--kernel-name",
+                "The name of the subkernel to be added");
+
+            if (_connectDirective == null)
             {
-                _connectCommand = new Command("#!connect", "Provides functionality to connect to kernels");
-              
-                AddDirective(_connectCommand);
+                _connectDirective = new Command(
+                    "#!connect", 
+                    "Connects additional subkernels");
+
+                _connectDirective.Add(kernelNameOption);
+
+                AddDirective(_connectDirective);
             }
 
-            _connectCommand.AddCommand(connectionCommand);
+            connectionCommand.Handler = CommandHandler.Create<
+                TOptions, KernelInvocationContext>(
+                async (options, context) =>
+                {
+                    var connectedKernel = await connectionCommand.CreateKernelAsync(options, context);
 
-           SubmissionParser.ResetParser();
+                    connectedKernel.Name = options.KernelName;
+                    Add(connectedKernel);
+
+                    context.Display($"Kernel added: #!{connectedKernel.Name}");
+                });
+
+            connectionCommand.Add(kernelNameOption);
+            _connectDirective.Add(connectionCommand);
+
+            SubmissionParser.ResetParser();
         }
     }
 }
