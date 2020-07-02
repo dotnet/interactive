@@ -27,7 +27,7 @@ describe('InteractiveClient tests', () => {
                             }
                         ]
                     },
-                    token: 'token-for-deferred-command-doesnt-match-any-other-token'
+                    token: 'deferredCommand::token-for-deferred-command-doesnt-match-any-other-token'
                 },
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -101,7 +101,7 @@ describe('InteractiveClient tests', () => {
                             }
                         ]
                     },
-                    token: 'token-for-deferred-command-doesnt-match-any-other-token'
+                    token: 'deferredCommand::123'
                 },
                 {
                     eventType: DisplayedValueProducedType,
@@ -175,7 +175,7 @@ describe('InteractiveClient tests', () => {
                             }
                         ]
                     },
-                    token: 'token-for-deferred-command-doesnt-match-any-other-token'
+                    token: 'deferredCommand::123'
                 },
                 {
                     eventType: DisplayedValueProducedType,
@@ -204,7 +204,7 @@ describe('InteractiveClient tests', () => {
                             }
                         ]
                     },
-                    token: 'token-for-deferred-command-doesnt-match-any-other-token'
+                    token: 'deferredCommand::456'
                 },
                 {
                     eventType: DisplayedValueUpdatedType,
