@@ -74,6 +74,7 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(command));
             }
 
+            command.SetToken($"deferredCommand::{Guid.NewGuid():N}");
             _deferredCommands.Enqueue(command);
         }
 

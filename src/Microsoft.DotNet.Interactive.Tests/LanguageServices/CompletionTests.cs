@@ -69,12 +69,12 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 Language.CSharp => new[]
                 {
                     $"var {variableName} = 123;",
-                    $"var bbbbb = 456;"
+                    "var bbbbb = 456;"
                 },
                 Language.FSharp => new[]
                 {
                     $"let {variableName} = 123",
-                    $"let bbbbb = 456"
+                    "let bbbbb = 456"
                 }
             };
 
