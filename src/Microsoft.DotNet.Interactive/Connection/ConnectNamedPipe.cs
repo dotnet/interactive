@@ -7,8 +7,6 @@ using System.Security.Principal;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Server;
 
-#nullable enable
-
 namespace Microsoft.DotNet.Interactive.Connection
 {
     public class ConnectNamedPipe : ConnectKernelCommand<NamedPipeConnectionOptions>
@@ -35,10 +33,5 @@ namespace Microsoft.DotNet.Interactive.Connection
             proxyKernel.RegisterForDisposal(client);
             return proxyKernel;
         }
-    }
-
-    public class NamedPipeConnectionOptions : KernelConnectionOptions
-    {
-        public string? PipeName { get; set; }
     }
 }
