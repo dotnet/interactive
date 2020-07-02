@@ -152,6 +152,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     previousLanguageNode.Language == currentLanguage)
                 {
                     previousLanguageNode.Add(nodeOrToken);
+                    rootNode.GrowSpan(previousLanguageNode);
                 }
                 else
                 {

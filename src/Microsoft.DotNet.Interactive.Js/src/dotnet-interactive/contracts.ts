@@ -79,6 +79,7 @@ export const CommandSucceededType = "CommandSucceeded";
 export const CompleteCodeSubmissionReceivedType = "CompleteCodeSubmissionReceived";
 export const CompletionsProducedType = "CompletionsProduced";
 export const DiagnosticLogEntryProducedType = "DiagnosticLogEntryProduced";
+export const DiagnosticsProducedType = "DiagnosticsProduced";
 export const DisplayedValueProducedType = "DisplayedValueProduced";
 export const DisplayedValueUpdatedType = "DisplayedValueUpdated";
 export const ErrorProducedType = "ErrorProduced";
@@ -100,6 +101,7 @@ export type KernelEventType =
     | typeof CompleteCodeSubmissionReceivedType
     | typeof CompletionsProducedType
     | typeof DiagnosticLogEntryProducedType
+    | typeof DiagnosticsProducedType
     | typeof DisplayedValueProducedType
     | typeof DisplayedValueUpdatedType
     | typeof ErrorProducedType
@@ -142,6 +144,10 @@ export interface DiagnosticLogEntryProduced extends DiagnosticEvent {
 }
 
 export interface DiagnosticEvent extends KernelEvent {
+}
+
+export interface DiagnosticsProduced extends KernelEvent {
+    diagnostics: Array<Diagnostic>;
 }
 
 export interface DisplayedValueProduced extends DisplayEvent {
@@ -206,9 +212,23 @@ export interface CompletionItem {
     documentation: string;
 }
 
-export interface FormattedValue {
-    mimeType: string;
-    value: string;
+export interface Diagnostic {
+    linePositionSpan: LinePositionSpan;
+    severity: DiagnosticSeverity;
+    code: string;
+    message: string;
+}
+
+export enum DiagnosticSeverity {
+    Hidden = 0,
+    Info = 1,
+    Warning = 2,
+    Error = 3,
+}
+
+export interface LinePositionSpan {
+    start: LinePosition;
+    end: LinePosition;
 }
 
 export interface LinePosition {
@@ -216,9 +236,9 @@ export interface LinePosition {
     character: number;
 }
 
-export interface LinePositionSpan {
-    start: LinePosition;
-    end: LinePosition;
+export interface FormattedValue {
+    mimeType: string;
+    value: string;
 }
 
 export interface PackageReference {

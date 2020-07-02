@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -216,17 +217,23 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 {
                     string message = null;
 
-                    if (exception is CodeSubmissionCompilationErrorException compilationError)
+                    if (exception is CodeSubmissionCompilationErrorException compilationError &&
+                        compilationError.InnerException is CompilationErrorException innerCompilationException)
                     {
                         message =
                             string.Join(Environment.NewLine,
-                                        (compilationError.InnerException as CompilationErrorException)?.Diagnostics.Select(d => d.ToString()) ?? Enumerable.Empty<string>());
+                                        innerCompilationException.Diagnostics.Select(d => d.ToString()) ?? Enumerable.Empty<string>());
+                        var diagnostics = innerCompilationException.Diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic);
+                        context.Publish(new DiagnosticsProduced(diagnostics, submitCode));
                     }
 
                     context.Fail(exception, message);
                 }
                 else
                 {
+                    var diagnostics = ScriptState?.Script.GetCompilation().GetDiagnostics() ?? ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
+                    context.Publish(new DiagnosticsProduced(diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic), submitCode));
+
                     if (ScriptState != null && HasReturnValue)
                     {
                         var formattedValues = FormattedValue.FromObject(ScriptState.ReturnValue);

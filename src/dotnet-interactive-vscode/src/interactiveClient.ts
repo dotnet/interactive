@@ -7,6 +7,9 @@ import {
     CommandSucceededType,
     CompletionsProduced,
     CompletionsProducedType,
+    Diagnostic,
+    DiagnosticsProduced,
+    DiagnosticsProducedType,
     DisplayEvent,
     DisplayedValueProducedType,
     DisplayedValueUpdatedType,
@@ -43,20 +46,25 @@ export class InteractiveClient {
         kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
     }
 
-    async execute(source: string, language: string, observer: { (outputs: Array<CellOutput>): void }, token?: string | undefined): Promise<void> {
+    async execute(source: string, language: string, outputObserver: { (outputs: Array<CellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, token?: string | undefined): Promise<void> {
         return new Promise(async (resolve, reject) => {
+            let diagnostics: Array<Diagnostic> = [];
             let outputs: Array<CellOutput> = [];
 
-            let reportOutputs = () => {
-                observer(outputs);
+            let reportDiagnostics = () => {
+                diagnosticObserver(diagnostics);
             };
 
-            let disposable = await this.submitCode(source, language, eventEnvelope => {
+            let reportOutputs = () => {
+                outputObserver(outputs);
+            };
+
+            await this.submitCode(source, language, eventEnvelope => {
                 if (this.deferredOutput.length > 0) {
                     outputs.push(...this.deferredOutput);
                     this.deferredOutput = [];
                 }
-    
+
                 switch (eventEnvelope.eventType) {
                     case CommandSucceededType:
                         resolve();
@@ -72,8 +80,14 @@ export class InteractiveClient {
                             };
                             outputs.push(output);
                             reportOutputs();
-                            disposable.dispose(); // is this correct?
-                            reject(err);
+                            resolve();
+                        }
+                        break;
+                    case DiagnosticsProducedType:
+                        {
+                            const diags = <DiagnosticsProduced>eventEnvelope.event;
+                            diagnostics.push(...diags.diagnostics);
+                            reportDiagnostics();
                         }
                         break;
                     case StandardErrorValueProducedType:
@@ -105,7 +119,7 @@ export class InteractiveClient {
                                     this.valueIdMap.set(disp.valueId, {
                                         idx: outputs.length,
                                         outputs,
-                                        observer
+                                        observer: outputObserver
                                     });
                                     outputs.push(output);
                                 }

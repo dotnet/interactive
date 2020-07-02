@@ -66,7 +66,7 @@ describe('InteractiveClient tests', () => {
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -140,7 +140,7 @@ describe('InteractiveClient tests', () => {
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -229,7 +229,7 @@ describe('InteractiveClient tests', () => {
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -302,7 +302,7 @@ describe('InteractiveClient tests', () => {
 
         // execute first command
         let result1: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result1 = outputs, 'token 1');
+        await client.execute(code, 'csharp', outputs => result1 = outputs, _ => {}, 'token 1');
         expect(result1).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -314,7 +314,7 @@ describe('InteractiveClient tests', () => {
 
         // execute second command
         let result2: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result2 = outputs, 'token 2');
+        await client.execute(code, 'csharp', outputs => result2 = outputs, _ => {}, 'token 2');
         expect(result2).to.deep.equal([]);
 
         // ensure first result array was updated

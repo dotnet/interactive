@@ -303,6 +303,21 @@ let x = 123
                 .Be(code);
         }
 
+        [Fact]
+        public void root_node_span_always_expands_with_child_nodes()
+        {
+            var code = @"#r ""path/to/file""
+// language line";
+            var parser = CreateSubmissionParser();
+            var tree = parser.Parse(code);
+            var root = tree.GetRoot();
+            var rootSpan = root.Span;
+
+            root.ChildNodes
+                .Should()
+                .AllSatisfy(child => rootSpan.Contains(child.Span).Should().BeTrue());
+        }
+
         private static SubmissionParser CreateSubmissionParser(
             string defaultLanguage = "csharp")
         {

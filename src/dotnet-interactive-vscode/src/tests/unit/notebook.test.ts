@@ -10,7 +10,19 @@ use(require('chai-fs'));
 import { ClientMapper } from './../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
 import { CellOutput, CellOutputKind, NotebookDocument, CellKind } from '../../interfaces/vscode';
-import { CodeSubmissionReceivedType, CommandSucceededType, CompleteCodeSubmissionReceivedType, DisplayedValueProducedType, DisplayedValueUpdatedType, ReturnValueProducedType, StandardOutputValueProducedType } from '../../contracts';
+import {
+    CodeSubmissionReceivedType,
+    CommandFailedType,
+    CommandSucceededType,
+    CompleteCodeSubmissionReceivedType,
+    Diagnostic,
+    DiagnosticSeverity,
+    DiagnosticsProducedType,
+    DisplayedValueProducedType,
+    DisplayedValueUpdatedType,
+    ReturnValueProducedType,
+    StandardOutputValueProducedType,
+} from '../../contracts';
 import { withFakeGlobalStorageLocation } from './utilities';
 import { backupNotebook } from '../../interactiveNotebook';
 
@@ -57,7 +69,7 @@ describe('Notebook tests', () => {
             }));
             let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
             let result: Array<CellOutput> = [];
-            await client.execute(code, language, outputs => result = outputs, token);
+            await client.execute(code, language, outputs => result = outputs, _ => {}, token);
             expect(result).to.deep.equal([
                 {
                     outputKind: CellOutputKind.Rich,
@@ -140,7 +152,7 @@ Console.WriteLine(1);
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -225,7 +237,7 @@ Console.WriteLine(1);
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -283,7 +295,7 @@ Console.WriteLine(1);
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -293,6 +305,150 @@ Console.WriteLine(1);
                         b: false
                     }
                 }
+            }
+        ]);
+    });
+
+    it('diagnostics are reported on CommandFailed', async () => {
+        let token = '123';
+        let code = 'Console.WriteLin();';
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
+            'SubmitCode': [
+                {
+                    eventType: CodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: CompleteCodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: DiagnosticsProducedType,
+                    event: {
+                        diagnostics: [
+                            {
+                                linePositionSpan: {
+                                    start: {
+                                        line: 0,
+                                        character: 8
+                                    },
+                                    end: {
+                                        line: 0,
+                                        character: 15
+                                    }
+                                },
+                                severity: DiagnosticSeverity.Error,
+                                code: 'CS0117',
+                                message: "'Console' does not contain a definition for 'WritLin'"
+                            }
+                        ]
+                    },
+                    token
+                },
+                {
+                    eventType: CommandFailedType,
+                    event: {
+                        message: "CS0117: (0,8)-(0,15) 'Console' does not contain a definition for 'WritLin'"
+                    },
+                    token
+                }
+            ]
+        }));
+        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let diagnostics: Array<Diagnostic> = [];
+        await client.execute(code, 'csharp', _ => {}, diags => diagnostics = diags, token);
+        expect(diagnostics).to.deep.equal([
+            {
+                linePositionSpan: {
+                    start: {
+                        line: 0,
+                        character: 8
+                    },
+                    end: {
+                        line: 0,
+                        character: 15
+                    }
+                },
+                severity: DiagnosticSeverity.Error,
+                code: 'CS0117',
+                message: "'Console' does not contain a definition for 'WritLin'"
+            }
+        ]);
+    });
+
+    it('diagnostics are reported on CommandSucceeded', async () => {
+        let token = '123';
+        let code = 'Console.WriteLine();';
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
+            'SubmitCode': [
+                {
+                    eventType: CodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: CompleteCodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: DiagnosticsProducedType,
+                    event: {
+                        diagnostics: [
+                            {
+                                linePositionSpan: {
+                                    start: {
+                                        line: 0,
+                                        character: 8
+                                    },
+                                    end: {
+                                        line: 0,
+                                        character: 16
+                                    }
+                                },
+                                severity: DiagnosticSeverity.Warning,
+                                code: 'CS4242',
+                                message: "This is a fake diagnostic for testing."
+                            }
+                        ]
+                    },
+                    token
+                },
+                {
+                    eventType: CommandSucceededType,
+                    event: {},
+                    token
+                }
+            ]
+        }));
+        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let diagnostics: Array<Diagnostic> = [];
+        await client.execute(code, 'csharp', _ => {}, diags => diagnostics = diags, token);
+        expect(diagnostics).to.deep.equal([
+            {
+                linePositionSpan: {
+                    start: {
+                        line: 0,
+                        character: 8
+                    },
+                    end: {
+                        line: 0,
+                        character: 16
+                    }
+                },
+                severity: DiagnosticSeverity.Warning,
+                code: 'CS4242',
+                message: "This is a fake diagnostic for testing."
             }
         ]);
     });

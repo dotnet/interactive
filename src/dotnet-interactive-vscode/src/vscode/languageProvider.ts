@@ -2,26 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
-import { LinePositionSpan, LinePosition } from '../contracts';
 import { ClientMapper } from '../clientMapper';
 import { provideCompletion } from '../languageServices/completion';
 import { provideHover } from './../languageServices/hover';
 import { notebookCellLanguages, getSimpleLanguage } from '../interactiveNotebook';
-
-function convertToPosition(linePosition: LinePosition): vscode.Position {
-    return new vscode.Position(linePosition.line, linePosition.character);
-}
-
-function convertToRange(linePositionSpan?: LinePositionSpan): (vscode.Range | undefined) {
-    if (linePositionSpan === undefined) {
-        return undefined;
-    }
-
-    return new vscode.Range(
-        convertToPosition(linePositionSpan.start),
-        convertToPosition(linePositionSpan.end)
-    );
-}
+import { convertToRange } from './vscodeUtilities';
 
 export class CompletionItemProvider implements vscode.CompletionItemProvider {
     static readonly triggerCharacters = ['.', '('];

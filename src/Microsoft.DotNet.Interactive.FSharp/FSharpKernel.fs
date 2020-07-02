@@ -11,12 +11,13 @@ open System.Text
 open System.Threading
 open System.Threading.Tasks
 
+open Microsoft.CodeAnalysis
 open Microsoft.CodeAnalysis.Tags
+open Microsoft.CodeAnalysis.Text
 open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive.Commands
 open Microsoft.DotNet.Interactive.Events
 open Microsoft.DotNet.Interactive.Extensions
-open Microsoft.DotNet.Interactive.Utility
 
 open FSharp.Compiler.Interactive.Shell
 open FSharp.Compiler.Scripting
@@ -80,6 +81,19 @@ type FSharpKernelBase () as this =
         let documentation = documentation declarationItem
         CompletionItem(declarationItem.Name, kind, filterText=filterText, documentation=documentation)
 
+    let diagnostic (error: FSharpErrorInfo) =
+        // F# errors are 1-based but should be 0-based for diagnostics, however, 0-based errors are still valid to report
+        let diagLineDelta = if error.Start.Line = 0 then 0 else -1
+        let startPos = LinePosition(error.Start.Line + diagLineDelta, error.Start.Column)
+        let endPos = LinePosition(error.End.Line + diagLineDelta, error.End.Column)
+        let linePositionSpan = LinePositionSpan(startPos, endPos)
+        let severity =
+            match error.Severity with
+            | FSharpErrorSeverity.Error -> DiagnosticSeverity.Error
+            | FSharpErrorSeverity.Warning -> DiagnosticSeverity.Warning
+        let errorId = sprintf "FS%04i" error.ErrorNumber
+        Diagnostic(linePositionSpan, severity, errorId, error.Message)
+
     let handleSubmitCode (codeSubmission: SubmitCode) (context: KernelInvocationContext) =
         async {
             let codeSubmissionReceived = CodeSubmissionReceived(codeSubmission)
@@ -91,6 +105,9 @@ type FSharpKernelBase () as this =
                 with
                 | ex -> Error(ex), [||]
 
+            let diagnostics = errors |> Array.map diagnostic
+            context.Publish(DiagnosticsProduced(diagnostics, codeSubmission))
+
             match result with
             | Ok(result) ->
                 match result with
@@ -98,7 +115,7 @@ type FSharpKernelBase () as this =
                     let value = value.ReflectionValue
                     let formattedValues = FormattedValue.FromObject(value)
                     context.Publish(ReturnValueProduced(value, codeSubmission, formattedValues))
-                | Some(value) -> ()
+                | Some(_) -> ()
                 | None -> ()
             | Error(ex) ->
                 if not (tokenSource.IsCancellationRequested) then

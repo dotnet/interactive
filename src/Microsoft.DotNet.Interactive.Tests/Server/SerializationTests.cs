@@ -7,6 +7,7 @@ using System.Linq;
 using Assent;
 using FluentAssertions;
 using Microsoft.AspNetCore.Html;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -202,6 +203,19 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     requestCompletion);
 
                 yield return new DiagnosticLogEntryProduced("oops!", submitCode);
+
+                yield return new DiagnosticsProduced(
+                    new[]
+                    {
+                        new Diagnostic(
+                            new LinePositionSpan(
+                                new LinePosition(1, 2),
+                                new LinePosition(3, 4)),
+                            DiagnosticSeverity.Error,
+                            "code",
+                            "message")
+                    },
+                    submitCode);
 
                 yield return new DisplayedValueProduced(
                     new HtmlString("<b>hi!</b>"),
