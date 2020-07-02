@@ -5,16 +5,12 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Diagnostics;
-using System.IO.Pipes;
 using System.Linq;
-using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Utility;
 
 using Pocket;
@@ -151,68 +147,13 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        public static CompositeKernel UseConnectionOverNamedPipe(this CompositeKernel kernel)
+        public static CompositeKernel UseConnection<TOptions>(
+            this CompositeKernel kernel,
+            ConnectKernelCommand<TOptions> command)
+            where TOptions : KernelConnectionOptions
         {
-            var connectionCommand = new Command("named-pipe", "Connects to a kernel using named pipes");
-            connectionCommand.AddArgument(new Argument<string>("kernel-name"));
-            connectionCommand.AddArgument(new Argument<string>("pipe-name"));
+            kernel.AddKernelConnection(command);
 
-            connectionCommand.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (kernelName, pipeName,  context) =>
-            {
-                var existingProxyKernel = kernel.FindKernel(kernelName);
-                if (existingProxyKernel == null)
-                {
-                    var clientStream = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut,
-                        PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
-
-                    await clientStream.ConnectAsync();
-                    clientStream.ReadMode = PipeTransmissionMode.Message;
-                    var client = clientStream.CreateKernelClient();
-                    var proxyKernel = new ProxyKernel(kernelName, client);
-
-                    proxyKernel.RegisterForDisposal(client);
-                    kernel.Add(proxyKernel);
-
-                }
-            });
-            kernel.AddConnectionDirective(connectionCommand);
-            return kernel;
-        }
-
-        public static CompositeKernel UseConnectionOverSignalR(this CompositeKernel kernel)
-        {
-            var connectionCommand = new Command("signalr", "Connects to a kernel using signal R");
-            connectionCommand.AddArgument(new Argument<string>("kernel-name"));
-            connectionCommand.AddArgument(new Argument<string>("hub-url"));
-
-            connectionCommand.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (kernelName, hubUrl, context) =>
-            {
-                var existingProxyKernel = kernel.FindKernel(kernelName);
-                if (existingProxyKernel == null)
-                {
-
-                    var connection = new HubConnectionBuilder()
-                        .WithUrl(hubUrl)
-                        .Build();
-
-                    await connection.StartAsync();
-
-                    var client = connection.CreateKernelClient();
-                    var proxyKernel = new ProxyKernel(kernelName, client);
-                    await connection.SendAsync("connect");
-
-                    proxyKernel.RegisterForDisposal(client);
-                    proxyKernel.RegisterForDisposal(async () =>
-                    {
-                        await connection.DisposeAsync();
-                    });
-
-                    kernel.Add(proxyKernel);
-
-
-                }
-            });
-            kernel.AddConnectionDirective(connectionCommand);
             return kernel;
         }
 

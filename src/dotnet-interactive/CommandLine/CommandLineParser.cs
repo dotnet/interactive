@@ -17,7 +17,7 @@ using Clockwise;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
-using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
@@ -461,8 +461,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                          .UseDefaultMagicCommands()
                          .UseLog()
                          .UseAbout()
-                         .UseConnectionOverNamedPipe()
-                         .UseConnectionOverSignalR();
+                         .UseConnection(new ConnectNamedPipe())
+                         .UseConnection(new ConnectSignalR());
 
             if (startupOptions.Verbose)
             {

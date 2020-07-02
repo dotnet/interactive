@@ -7,18 +7,21 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
 
-namespace Microsoft.DotNet.Interactive
+namespace Microsoft.DotNet.Interactive.Connection
 {
-    public sealed class ProxyKernel : 
-        Kernel, 
-        IKernelCommandHandler<SubmitCode>
+    public sealed class ProxyKernel :
+        Kernel,
+        IKernelCommandHandler<SubmitCode>,
+        IKernelCommandHandler<RequestCompletions>,
+        IKernelCommandHandler<RequestHoverText>
+
     {
         private readonly KernelClient _client;
 
         public ProxyKernel(string name, KernelClient client) : base(name)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
-        
+
             RegisterForDisposal(client.KernelEvents.Subscribe(OnKernelEvents));
         }
 
@@ -27,7 +30,17 @@ namespace Microsoft.DotNet.Interactive
             PublishEvent(kernelEvent);
         }
 
-        public  Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+        public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+        {
+            return SendCommandToRemoteKernel(command);
+        }
+
+        public Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
+        {
+            return SendCommandToRemoteKernel(command);
+        }
+
+        public Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
             return SendCommandToRemoteKernel(command);
         }
