@@ -248,7 +248,7 @@ f();"
         [Theory]
         [InlineData(Language.CSharp, "CS0103", "The name 'aaaadd' does not exist in the current context", "(1,1): error CS0103: The name 'aaaadd' does not exist in the current context")]
         [InlineData(Language.FSharp, "FS0039", "The value or constructor 'aaaadd' is not defined.", "input.fsx (1,1)-(1,7) typecheck error The value or constructor 'aaaadd' is not defined.")]
-        public async Task it_returns_diagnostics_on_command_failed(Language language, string code, string diagnosticMessage, string errorMessage)
+        public async Task when_code_contains_compile_time_error_diagniostics_are_produced(Language language, string code, string diagnosticMessage, string errorMessage)
         {
             var kernel = CreateKernel(language);
 
@@ -272,6 +272,8 @@ f();"
             var diagnosticRange = new LinePositionSpan(
                 new LinePosition(0, 0),
                 new LinePosition(0, 6));
+
+            using var _ = new AssertionScope();
 
             KernelEvents
                 .Should()
@@ -326,11 +328,13 @@ let x n =
     match n with
     | 0 -> ()
 ", "Incomplete pattern matches on this expression.")]
-        public async Task it_returns_diagnostics_on_command_succeeded(Language language, string code, string diagnosticText)
+        public async Task diagnostics_are_produced_on_command_succeeded(Language language, string code, string diagnosticText)
         {
             var kernel = CreateKernel(language);
 
             await kernel.SubmitCodeAsync(code);
+
+            using var _ = new AssertionScope();
 
             KernelEvents
                 .Should()
@@ -346,7 +350,7 @@ let x n =
         }
 
         [Fact(Skip = "The first failed sub-command cancels all subsequent command executions; the second kernel doesn't get a chance to report.")]
-        public async Task diagnostics_can_be_returned_from_multiple_subkernels()
+        public async Task diagnostics_can_be_produced_from_multiple_subkernels()
         {
             var kernel = CreateCompositeKernel(Language.FSharp);
 
@@ -373,7 +377,7 @@ Console.WriteLin();
         [InlineData(Language.CSharp, "Console.WritLin();")]
         [InlineData(Language.FSharp, "printfnnn \"\"")]
         [InlineData(Language.PowerShell, "::()")]
-        public async Task returned_diagnostics_are_remapped_to_the_appropriate_span(Language language, string languageSpecificCode)
+        public async Task produced_diagnostics_are_remapped_to_the_appropriate_span(Language language, string languageSpecificCode)
         {
             var kernel = CreateKernel(language);
 
