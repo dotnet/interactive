@@ -5,9 +5,11 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Management.Automation.Language;
-using System.Management.Automation.Runspaces;   
+using System.Management.Automation.Runspaces;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.PowerShell.Host;
@@ -160,6 +162,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 context.Publish(new IncompleteCodeSubmissionReceived(submitCode));
             }
 
+            var diagnostics = parseErrors.Select(ToDiagnostic);
+            context.Publish(new DiagnosticsProduced(diagnostics, submitCode));
+
             // If there were parse errors, display them and return early.
             if (parseErrors.Length > 0)
             {
@@ -303,6 +308,17 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 : new ErrorRecord(e, "JupyterPSHost.ReportException", ErrorCategory.NotSpecified, targetObject: null);
 
             ReportError(error);
+        }
+
+        private static Diagnostic ToDiagnostic(ParseError parseError)
+        {
+            return new Diagnostic(
+                new LinePositionSpan(
+                    new LinePosition(parseError.Extent.StartLineNumber - 1, parseError.Extent.StartColumnNumber),
+                    new LinePosition(parseError.Extent.EndLineNumber - 1, parseError.Extent.EndColumnNumber)),
+                DiagnosticSeverity.Error,
+                parseError.ErrorId,
+                parseError.Message);
         }
     }
 }

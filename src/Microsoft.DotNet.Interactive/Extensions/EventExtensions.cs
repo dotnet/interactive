@@ -1,6 +1,9 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -28,6 +31,26 @@ namespace Microsoft.DotNet.Interactive.Extensions
             }
 
             return range;
+        }
+
+        public static IReadOnlyCollection<Diagnostic> RemapDiagnosticsFromRequestingCommand(this KernelEvent @event, IReadOnlyCollection<Diagnostic> diagnostics)
+        {
+            if (@event.Command is SubmitCode submitCode && submitCode.LanguageNode is { })
+            {
+                var root = submitCode.LanguageNode.SyntaxTree.GetRoot();
+                var initialSpan = submitCode.LanguageNode.Span;
+                var sourceText = SourceText.From(root.Text);
+                var codePosition = sourceText.Lines.GetLinePositionSpan(initialSpan);
+                return diagnostics.Select(d => d.WithLinePositionSpan(
+                    new LinePositionSpan(
+                        new LinePosition(d.LinePositionSpan.Start.Line + codePosition.Start.Line, d.LinePositionSpan.Start.Character),
+                        new LinePosition(d.LinePositionSpan.End.Line + codePosition.Start.Line, d.LinePositionSpan.End.Character))
+                    )
+                ).ToImmutableList();
+            }
+
+            // no meaningful remapping can occur
+            return diagnostics;
         }
     }
 }

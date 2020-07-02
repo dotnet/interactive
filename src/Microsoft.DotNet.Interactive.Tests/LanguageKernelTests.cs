@@ -246,9 +246,9 @@ f();"
         }
 
         [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task it_returns_diagnostics(Language language)
+        [InlineData(Language.CSharp, "CS0103", "The name 'aaaadd' does not exist in the current context", "(1,1): error CS0103: The name 'aaaadd' does not exist in the current context")]
+        [InlineData(Language.FSharp, "FS0039", "The value or constructor 'aaaadd' is not defined.", "input.fsx (1,1)-(1,7) typecheck error The value or constructor 'aaaadd' is not defined.")]
+        public async Task it_returns_diagnostics_on_command_failed(Language language, string code, string diagnosticMessage, string errorMessage)
         {
             var kernel = CreateKernel(language);
 
@@ -269,11 +269,9 @@ f();"
 
             await SubmitCode(kernel, source);
 
-            var error = language switch
-            {
-                Language.FSharp => "input.fsx (1,1)-(1,7) typecheck error The value or constructor 'aaaadd' is not defined.",
-                Language.CSharp => "(1,1): error CS0103: The name 'aaaadd' does not exist in the current context"
-            };
+            var diagnosticRange = new LinePositionSpan(
+                new LinePosition(0, 0),
+                new LinePosition(0, 6));
 
             KernelEvents
                 .Should()
@@ -281,7 +279,126 @@ f();"
                 .Which
                 .Message
                 .Should()
-                .Be(error);
+                .Be(errorMessage);
+
+            KernelEvents
+                .Should()
+                .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
+                .Which
+                .Diagnostics
+                .Should()
+                .ContainSingle(diag => diag.LinePositionSpan == diagnosticRange && diag.Code == code && diag.Message == diagnosticMessage);
+        }
+
+        [Fact]
+        public async Task powershell_produces_diagnostics_from_parse_errors()
+        {
+            var kernel = CreateKernel(Language.PowerShell);
+
+            await kernel.SubmitCodeAsync("::()");
+
+            var diagnosticRange = new LinePositionSpan(
+                new LinePosition(0, 4),
+                new LinePosition(0, 4));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
+                .Which
+                .Diagnostics
+                .Should()
+                .ContainSingle(d => d.LinePositionSpan == diagnosticRange && d.Code == "ExpectedExpression" && d.Message == "An expression was expected after '('.");
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, @"
+int SomeFunction(int n)
+{
+    return n switch
+    {
+        0 => 0
+    };
+}
+
+", "The switch expression does not handle all possible values of its input type")]
+        [InlineData(Language.FSharp, @"
+let x n =
+    match n with
+    | 0 -> ()
+", "Incomplete pattern matches on this expression.")]
+        public async Task it_returns_diagnostics_on_command_succeeded(Language language, string code, string diagnosticText)
+        {
+            var kernel = CreateKernel(language);
+
+            await kernel.SubmitCodeAsync(code);
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CommandSucceeded>();
+
+            KernelEvents
+                .Should()
+                .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
+                .Which
+                .Diagnostics
+                .Should()
+                .ContainSingle(diag => diag.Message.Contains(diagnosticText));
+        }
+
+        [Fact(Skip = "The first failed sub-command cancels all subsequent command executions; the second kernel doesn't get a chance to report.")]
+        public async Task diagnostics_can_be_returned_from_multiple_subkernels()
+        {
+            var kernel = CreateCompositeKernel(Language.FSharp);
+
+            var code = @"
+#!fsharp
+printfnnn """"
+
+#!csharp
+Console.WriteLin();
+";
+
+            await SubmitCode(kernel, code);
+
+            KernelEvents
+                .OfType<DiagnosticsProduced>()
+                .SelectMany(dp => dp.Diagnostics)
+                .Should()
+                .ContainSingle(d => d.Code.StartsWith("CS"))
+                .And
+                .ContainSingle(d => d.Code.StartsWith("FS"));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "Console.WritLin();")]
+        [InlineData(Language.FSharp, "printfnnn \"\"")]
+        [InlineData(Language.PowerShell, "::()")]
+        public async Task returned_diagnostics_are_remapped_to_the_appropriate_span(Language language, string languageSpecificCode)
+        {
+            var kernel = CreateKernel(language);
+
+            var fullCode = $@"
+
+#!time
+
+$${languageSpecificCode}
+";
+
+            MarkupTestFile.GetLineAndColumn(fullCode, out var code, out var line, out var _column);
+
+            await SubmitCode(kernel, code);
+
+            KernelEvents
+                .Should()
+                .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
+                .Which
+                .Diagnostics
+                .Should()
+                .ContainSingle()
+                .Which
+                .LinePositionSpan.Start.Line
+                .Should()
+                .Be(line);
         }
 
         [Theory]

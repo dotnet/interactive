@@ -5,9 +5,12 @@ import * as vscode from 'vscode';
 import { ClientMapper } from './../clientMapper';
 import { parseNotebook, serializeNotebook, notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook, asNotebookFile } from '../interactiveNotebook';
 import { RawNotebookCell } from '../interfaces';
-import { ReportChannel } from '../interfaces/vscode';
+import { CellOutput, ReportChannel } from '../interfaces/vscode';
+import { Diagnostic, DiagnosticSeverity } from './../contracts';
+import { convertToRange } from './vscodeUtilities';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider, vscode.NotebookKernel {
+    private diagnosticCollectionMap: Map<vscode.Uri, vscode.DiagnosticCollection> = new Map();
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
 
     kernel: vscode.NotebookKernel;
@@ -68,11 +71,17 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         cell.outputs = [];
         let client = await this.clientMapper.getOrAddClient(document.uri);
         let source = cell.document.getText();
-        return client.execute(source, getSimpleLanguage(cell.language), outputs => {
+        function outputObserver(outputs: Array<CellOutput>) {
             // to properly trigger the UI update, `cell.outputs` needs to be uniquely assigned; simply setting it to the local variable has no effect
             cell.outputs = [];
             cell.outputs = outputs;
-        }).then(() => {
+        }
+
+        let diagnosticCollection = this.getDiagnosticCollection(cell.uri);
+        function diagnosticObserver(diags: Array<Diagnostic>) {
+            diagnosticCollection.set(cell.uri, diags.filter(d => d.severity != DiagnosticSeverity.Hidden).map(toVsCodeDiagnostic));
+        }
+        return client.execute(source, getSimpleLanguage(cell.language), outputObserver, diagnosticObserver).then(() => {
             cell.metadata.runState = vscode.NotebookCellRunState.Success;
             cell.metadata.lastRunDuration = Date.now() - startTime;
         }).catch(() => {
@@ -83,6 +92,17 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 
     backupNotebook(document: vscode.NotebookDocument, context: vscode.NotebookDocumentBackupContext, cancellation: vscode.CancellationToken): Promise<vscode.NotebookDocumentBackup> {
         return backupNotebook(document, context.destination.fsPath);
+    }
+
+    private getDiagnosticCollection(cellUri: vscode.Uri): vscode.DiagnosticCollection {
+        let collection = this.diagnosticCollectionMap.get(cellUri);
+        if (!collection) {
+            collection = vscode.languages.createDiagnosticCollection();
+            this.diagnosticCollectionMap.set(cellUri, collection);
+        }
+
+        collection.clear();
+        return collection;
     }
 
     private async save(document: vscode.NotebookDocument, targetResource: vscode.Uri): Promise<void> {
@@ -100,4 +120,25 @@ function toNotebookCellData(cell: RawNotebookCell): vscode.NotebookCellData {
         outputs: [],
         metadata: {}
     };
+}
+
+function toVsCodeDiagnostic(diagnostic: Diagnostic): vscode.Diagnostic {
+    return {
+        range: convertToRange(diagnostic.linePositionSpan)!,
+        message: diagnostic.message,
+        severity: toDiagnosticSeverity(diagnostic.severity)
+    };
+}
+
+function toDiagnosticSeverity(severity: DiagnosticSeverity): vscode.DiagnosticSeverity {
+    switch (severity) {
+        case DiagnosticSeverity.Error:
+            return vscode.DiagnosticSeverity.Error;
+        case DiagnosticSeverity.Info:
+            return vscode.DiagnosticSeverity.Information;
+        case DiagnosticSeverity.Warning:
+            return vscode.DiagnosticSeverity.Warning;
+        default:
+            return vscode.DiagnosticSeverity.Error;
+    }
 }
