@@ -228,7 +228,7 @@ export class InteractiveClient {
                 for (let listener of listeners) {
                     listener(eventEnvelope);
                 }
-            } else if(token.startsWith("deferredCommand::")) {
+            } else if (token.startsWith("deferredCommand::")) {
                 switch (eventEnvelope.eventType) {
                     case DisplayedValueProducedType:
                     case DisplayedValueUpdatedType:
