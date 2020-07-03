@@ -57,3 +57,19 @@ export function trimTrailingCarriageReturn(value: string): string {
 
     return value;
 }
+
+let debounceTimeoutMap: Map<string, NodeJS.Timeout> = new Map();
+
+function clearDebounceTimeout(key: string) {
+    const timeout = debounceTimeoutMap.get(key);
+    if (timeout) {
+        clearTimeout(timeout);
+        debounceTimeoutMap.delete(key);
+    }
+}
+
+export function debounce(key: string, timeout: number, callback: () => void) {
+    clearDebounceTimeout(key);
+    const newTimeout = setTimeout(callback, timeout);
+    debounceTimeoutMap.set(key, newTimeout);
+}

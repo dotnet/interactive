@@ -25,7 +25,7 @@ import {
     RequestDiagnosticsType,
 } from '../../contracts';
 import { withFakeGlobalStorageLocation } from './utilities';
-import { backupNotebook, notebookCellChanged } from '../../interactiveNotebook';
+import { backupNotebook } from '../../interactiveNotebook';
 
 describe('Notebook tests', () => {
     for (let language of ['csharp', 'fsharp']) {
@@ -509,84 +509,6 @@ Console.WriteLine(1);
             }
         ]);
     });
-
-    it('live diagnostics requests are de-bounced', async () => {
-        const token = '123';
-        const clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
-            'RequestDiagnostics': [
-                {
-                    eventType: DiagnosticsProducedType,
-                    event: {
-                        diagnostics: [
-                            {
-                                linePositionSpan: {
-                                    start: {
-                                        line: 0,
-                                        character: 8
-                                    },
-                                    end: {
-                                        line: 0,
-                                        character: 16
-                                    }
-                                },
-                                severity: DiagnosticSeverity.Warning,
-                                code: 'CS4242',
-                                message: "This is a fake diagnostic for testing."
-                            }
-                        ]
-                    },
-                    token
-                },
-                {
-                    eventType: CommandSucceededType,
-                    event: {},
-                    token
-                }
-            ]
-        }));
-        const document: Document = {
-            uri: {
-                fsPath: 'path/to/document',
-                toString: () => 'path/to/document'
-            },
-            getText: () => '// contents of cell'
-        };
-        const language = 'csharp';
-        const diagnosticDelay = 500;
-        let receivedDiagnostics: Array<Diagnostic> | undefined = undefined;
-        // 'fire' the event repeatedly that the cell has changed
-        for (let i = 0; i < 5; i++) {
-            notebookCellChanged(clientMapper, document, language, diagnosticDelay, diagnostics => {
-                // this callback should only happen once
-                if (receivedDiagnostics) {
-                    throw new Error('Diagnostic callback has already been fired; it should not have happened again.');
-                }
-
-                receivedDiagnostics = diagnostics;
-            });
-
-            await new Promise(resolve => setTimeout(resolve, 100)); // pause for less than the required delay
-        }
-
-        await new Promise(resolve => setTimeout(resolve, diagnosticDelay * 2)); // wait for the timer to have fully elapsed
-        expect(receivedDiagnostics).to.deep.equal([
-            {
-                linePositionSpan: {
-                    start: {
-                        line: 0,
-                        character: 8
-                    },
-                    end: {
-                        line: 0,
-                        character: 16
-                    }
-                },
-                severity: DiagnosticSeverity.Warning,
-                code: 'CS4242',
-                message: "This is a fake diagnostic for testing."
-            }
-        ]);
-    }).timeout(10000);
 
     it('notebook backup creates file: global storage exists', async () => {
         await withFakeGlobalStorageLocation(true, async globalStoragePath => {
