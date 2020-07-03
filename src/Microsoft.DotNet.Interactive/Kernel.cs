@@ -397,11 +397,21 @@ namespace Microsoft.DotNet.Interactive
                                                 .Lines
                                                 .GetPosition(command.LinePosition);
 
-                var resultRange = new LinePositionSpan(
-                    new LinePosition(command.LinePosition.Line, 0),
-                    command.LinePosition);
+                var completions = GetDirectiveCompletionItems(
+                    directiveNode, 
+                    requestPosition);
+                
+                var upToCursor =
+                    directiveNode.Text[..command.LinePosition.Character];
 
-                var completions = GetDirectiveCompletionItems(directiveNode, requestPosition);
+                var indexOfPreviousSpace =
+                    Math.Max(
+                        0, 
+                        upToCursor.LastIndexOf(" ", StringComparison.CurrentCultureIgnoreCase) + 1);
+
+                var resultRange = new LinePositionSpan(
+                    new LinePosition(command.LinePosition.Line, indexOfPreviousSpace),
+                    command.LinePosition);
 
                 context.Publish(
                     new CompletionsProduced(
@@ -411,18 +421,44 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
-        private protected virtual IReadOnlyList<CompletionItem> GetDirectiveCompletionItems(
-            DirectiveNode directiveNode, 
+        private IReadOnlyList<CompletionItem> GetDirectiveCompletionItems(
+            DirectiveNode directiveNode,
             int requestPosition)
         {
-            var parseResult = directiveNode.GetDirectiveParseResult();
+            var directiveParsers = new List<Parser>();
 
-            var completions = parseResult
-                              .GetSuggestions(requestPosition)
-                              .Select(s => SubmissionParser.CompletionItemFor(s, parseResult))
-                              .ToArray();
+            directiveParsers.AddRange(
+                GetDirectiveParsersForCompletion(directiveNode, requestPosition));
 
-            return completions;
+            var allCompletions = new List<CompletionItem>();
+            var topDirectiveParser = SubmissionParser.GetDirectiveParser();
+            var prefix = topDirectiveParser.Configuration.RootCommand.Name + " ";
+            requestPosition += prefix.Length;
+
+            foreach (var parser in directiveParsers)
+            {
+                var effectiveText = $"{prefix}{directiveNode.Text}";
+
+                var parseResult = parser.Parse(effectiveText);
+
+                var completions = parseResult
+                                  .GetSuggestions(requestPosition)
+                                  .Select(s => SubmissionParser.CompletionItemFor(s, parseResult))
+                                  .ToArray();
+
+                allCompletions.AddRange(completions);
+            }
+
+            return allCompletions
+                   .Distinct(CompletionItemComparer.Instance)
+                   .ToArray();
+        }
+
+        private protected virtual IEnumerable<Parser> GetDirectiveParsersForCompletion(
+            DirectiveNode directiveNode,
+            int requestPosition)
+        {
+            yield return SubmissionParser.GetDirectiveParser();
         }
 
         private protected void TrySetHandler(
