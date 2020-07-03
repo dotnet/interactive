@@ -60,9 +60,11 @@ export async function activate(context: vscode.ExtensionContext) {
     registerKernelCommands(context, clientMapper);
     registerInteropCommands(context);
 
+    const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable
+
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', new DotNetInteractiveNotebookContentProvider(clientMapper, dotnetInteractiveChannel)));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
-    context.subscriptions.push(registerLanguageProviders(clientMapper));
+    context.subscriptions.push(registerLanguageProviders(clientMapper, diagnosticDelay));
 }
 
 export function deactivate() {

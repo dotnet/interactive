@@ -138,6 +138,14 @@ type FSharpKernelBase () as this =
             context.Publish(CompletionsProduced(completionItems, requestCompletions))
         }
 
+    let handleRequestDiagnostics (requestDiagnostics: RequestDiagnostics) (context: KernelInvocationContext) =
+        async {
+            let! (_parseResults, checkFileResults, _checkProjectResults) = script.Value.Fsi.ParseAndCheckInteraction(requestDiagnostics.Code)
+            let errors = checkFileResults.Errors
+            let diagnostics = errors |> Array.map diagnostic
+            context.Publish(DiagnosticsProduced(diagnostics, requestDiagnostics))
+        }
+
     let createPackageRestoreContext registerForDisposal =
         let packageRestoreContext = new PackageRestoreContext()
         do registerForDisposal(fun () -> packageRestoreContext.Dispose())
@@ -172,6 +180,9 @@ type FSharpKernelBase () as this =
 
     // ideally via IKernelCommandHandler<RequestCompletion>, but requires https://github.com/dotnet/fsharp/pull/2867
     member _.HandleRequestCompletionAsync(command: RequestCompletions, context: KernelInvocationContext) = handleRequestCompletions command context |> Async.StartAsTask :> Task
+
+    // ideally via IKernelCommandHandler<RequestDiagnostics, but requires https://github.com/dotnet/fsharp/pull/2867
+    member _.HandleRequestDiagnosticsAsync(command: RequestDiagnostics, context: KernelInvocationContext) = handleRequestDiagnostics command context |> Async.StartAsTask :> Task
 
     // ideally via IKernelCommandHandler<SubmitCode, but requires https://github.com/dotnet/fsharp/pull/2867
     member _.HandleSubmitCodeAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context |> Async.StartAsTask :> Task

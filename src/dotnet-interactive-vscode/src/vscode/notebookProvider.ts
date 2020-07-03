@@ -7,10 +7,10 @@ import { parseNotebook, serializeNotebook, notebookCellLanguages, getSimpleLangu
 import { RawNotebookCell } from '../interfaces';
 import { CellOutput, ReportChannel } from '../interfaces/vscode';
 import { Diagnostic, DiagnosticSeverity } from './../contracts';
-import { convertToRange } from './vscodeUtilities';
+import { toVsCodeDiagnostic } from './vscodeUtilities';
+import { getDiagnosticCollection } from './diagnostics';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider, vscode.NotebookKernel {
-    private diagnosticCollectionMap: Map<vscode.Uri, vscode.DiagnosticCollection> = new Map();
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
 
     kernel: vscode.NotebookKernel;
@@ -77,9 +77,9 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
             cell.outputs = outputs;
         }
 
-        let diagnosticCollection = this.getDiagnosticCollection(cell.uri);
+        let diagnosticCollection = getDiagnosticCollection(cell.uri);
         function diagnosticObserver(diags: Array<Diagnostic>) {
-            diagnosticCollection.set(cell.uri, diags.filter(d => d.severity != DiagnosticSeverity.Hidden).map(toVsCodeDiagnostic));
+            diagnosticCollection.set(cell.uri, diags.filter(d => d.severity !== DiagnosticSeverity.Hidden).map(toVsCodeDiagnostic));
         }
         return client.execute(source, getSimpleLanguage(cell.language), outputObserver, diagnosticObserver).then(() => {
             cell.metadata.runState = vscode.NotebookCellRunState.Success;
@@ -92,17 +92,6 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 
     backupNotebook(document: vscode.NotebookDocument, context: vscode.NotebookDocumentBackupContext, cancellation: vscode.CancellationToken): Promise<vscode.NotebookDocumentBackup> {
         return backupNotebook(document, context.destination.fsPath);
-    }
-
-    private getDiagnosticCollection(cellUri: vscode.Uri): vscode.DiagnosticCollection {
-        let collection = this.diagnosticCollectionMap.get(cellUri);
-        if (!collection) {
-            collection = vscode.languages.createDiagnosticCollection();
-            this.diagnosticCollectionMap.set(cellUri, collection);
-        }
-
-        collection.clear();
-        return collection;
     }
 
     private async save(document: vscode.NotebookDocument, targetResource: vscode.Uri): Promise<void> {
@@ -120,25 +109,4 @@ function toNotebookCellData(cell: RawNotebookCell): vscode.NotebookCellData {
         outputs: [],
         metadata: {}
     };
-}
-
-function toVsCodeDiagnostic(diagnostic: Diagnostic): vscode.Diagnostic {
-    return {
-        range: convertToRange(diagnostic.linePositionSpan)!,
-        message: diagnostic.message,
-        severity: toDiagnosticSeverity(diagnostic.severity)
-    };
-}
-
-function toDiagnosticSeverity(severity: DiagnosticSeverity): vscode.DiagnosticSeverity {
-    switch (severity) {
-        case DiagnosticSeverity.Error:
-            return vscode.DiagnosticSeverity.Error;
-        case DiagnosticSeverity.Info:
-            return vscode.DiagnosticSeverity.Information;
-        case DiagnosticSeverity.Warning:
-            return vscode.DiagnosticSeverity.Warning;
-        default:
-            return vscode.DiagnosticSeverity.Error;
-    }
 }

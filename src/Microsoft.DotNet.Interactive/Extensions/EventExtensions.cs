@@ -35,10 +35,10 @@ namespace Microsoft.DotNet.Interactive.Extensions
 
         public static IReadOnlyCollection<Diagnostic> RemapDiagnosticsFromRequestingCommand(this KernelEvent @event, IReadOnlyCollection<Diagnostic> diagnostics)
         {
-            if (@event.Command is SubmitCode submitCode && submitCode.LanguageNode is { })
+            if (@event.Command is SplittableCommand splittableCommand && splittableCommand.LanguageNode is { })
             {
-                var root = submitCode.LanguageNode.SyntaxTree.GetRoot();
-                var initialSpan = submitCode.LanguageNode.Span;
+                var root = splittableCommand.LanguageNode.SyntaxTree.GetRoot();
+                var initialSpan = splittableCommand.LanguageNode.Span;
                 var sourceText = SourceText.From(root.Text);
                 var codePosition = sourceText.Lines.GetLinePositionSpan(initialSpan);
                 return diagnostics.Select(d => d.WithLinePositionSpan(

@@ -70,6 +70,11 @@
           "default": "{global_storage_path}",
           "description": "The working directory in which the kernel transport process is started."
         },
+        "dotnet-interactive.liveDiagnosticDelay": {
+          "type": "number",
+          "default": 500,
+          "description": "The delay in ms after the last cell edit before live diagnostics are requested."
+        },
         "dotnet-interactive.interactiveToolSource": {
           "type": "string",
           "default": "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json",

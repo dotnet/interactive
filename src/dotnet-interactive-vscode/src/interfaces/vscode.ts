@@ -35,6 +35,7 @@ export type CellOutput = CellStreamOutput | CellErrorOutput | CellDisplayOutput;
 
 export interface Uri {
     fsPath: string;
+    toString: () => string;
 }
 
 export interface Document {

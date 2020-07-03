@@ -25,6 +25,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
     public class PowerShellKernel : 
         DotNetLanguageKernel,
         IKernelCommandHandler<RequestCompletions>,
+        IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<SubmitCode>
     {
         internal const string DefaultKernelName = "pwsh";
@@ -229,6 +230,20 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
 
             context.Publish(completion);
+            return Task.CompletedTask;
+        }
+
+        public Task HandleAsync(
+            RequestDiagnostics requestDiagnostics,
+            KernelInvocationContext context)
+        {
+            string code = requestDiagnostics.Code;
+
+            IsCompleteSubmission(code, out ParseError[] parseErrors);
+
+            var diagnostics = parseErrors.Select(ToDiagnostic);
+            context.Publish(new DiagnosticsProduced(diagnostics, requestDiagnostics));
+
             return Task.CompletedTask;
         }
 
