@@ -18,7 +18,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.2.0" />
     <PackageReference Include="microsoft.csharp" Version="4.7.0" />
-    <PackageReference Include="System.CommandLine.Rendering" Version="0.3.0-alpha.20309.1" />
+    <PackageReference Include="System.CommandLine.Rendering" Version="0.3.0-alpha.20352.2" />
   </ItemGroup>
 
   <ItemGroup>
