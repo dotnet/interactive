@@ -103,6 +103,13 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
         }
 
+        public override IReadOnlyCollection<string> GetVariableNames() =>
+            ScriptState?.Variables
+                       .Select(v => v.Name)
+                       .Distinct()
+                       .ToArray() ??
+            Array.Empty<string>();
+
         public override bool TryGetVariable<T>(
             string name,
             out T value)
