@@ -12,6 +12,7 @@ namespace Microsoft.DotNet.Interactive.Commands
             string targetKernelName = null,
             SubmissionType submissionType = SubmissionType.Run) : base(code, targetKernelName)
         {
+            SubmissionType = submissionType;
         }
 
         internal SubmitCode(
@@ -20,6 +21,7 @@ namespace Microsoft.DotNet.Interactive.Commands
             KernelCommand parent = null)
             : base(languageNode, parent)
         {
+            SubmissionType = submissionType;
         }
 
         // FIX: (SubmitCode) remove SubmissionType
