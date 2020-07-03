@@ -158,6 +158,11 @@ type FSharpKernelBase () as this =
         |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
         |> List.map (fun x -> CurrentVariable(x.Name, x.Value.ReflectionType, x.Value.ReflectionValue))
 
+    override _.GetVariableNames() =
+        this.GetCurrentVariables()
+        |> List.map (fun x -> x.Name)
+        :> IReadOnlyCollection<string>
+
     override _.TryGetVariable<'a>(name: string, [<Out>] value: 'a byref) =
         match script.Value.Fsi.TryFindBoundValue(name) with
         | Some cv ->

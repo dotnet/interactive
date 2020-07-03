@@ -274,10 +274,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             var kind = symbol switch
             {
-                IArgument _ => "Value",
                 IOption _ => "Property",
                 ICommand _ => "Method",
-                _ => null
+                _ => "Value"
             };
 
             var helpBuilder = new DirectiveHelpBuilder(
@@ -290,7 +289,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 filterText: name,
                 sortText: name,
                 insertText: name,
-                documentation: helpBuilder.GetHelpForSymbol(symbol));
+                documentation:
+                symbol != null
+                    ? helpBuilder.GetHelpForSymbol(symbol)
+                    : null);
         }
 
         private void EnsureRootCommandIsInitialized()

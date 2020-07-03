@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Management.Automation.Language;
@@ -117,6 +118,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             RegisterForDisposal(pwsh);
             return pwsh;
+        }
+
+        public override IReadOnlyCollection<string> GetVariableNames()
+        {
+            // FIX: (GetVariableNames) 
+            return Array.Empty<string>();
         }
 
         public override bool TryGetVariable<T>(string name, out T value)

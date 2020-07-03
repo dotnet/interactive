@@ -141,7 +141,8 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         private Kernel CreatePowerShellKernel()
         {
-            return new PowerShellKernel();
+            return new PowerShellKernel()
+                .UseDotNetVariableSharing();
         }
 
         public async Task SubmitCode(Kernel kernel, string[] submissions, SubmissionType submissionType = SubmissionType.Run)

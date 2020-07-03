@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using FluentAssertions;
@@ -60,7 +61,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             [Fact]
             public void Insertion_range_is_correct_for_option_completions()
             {
-                var kernel = CreateKernel();
+                var kernel = CreateCompositeKernel();
 
                 "#!share fr[||]"
                     .ParseMarkupCode()
@@ -80,7 +81,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             [Fact]
             public void Insertion_range_is_correct_for_command_completions()
             {
-                var kernel = CreateKernel();
+                var kernel = CreateCompositeKernel();
 
                 "#!wh[||]"
                     .ParseMarkupCode()
@@ -130,7 +131,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             [Fact]
             public void Inner_symbol_completions_do_not_include_top_level_symbols()
             {
-                var kernel = CreateKernel();
+                var kernel = CreateCompositeKernel();
 
                 "#!share [| |]"
                     .ParseMarkupCode()
@@ -231,7 +232,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             {
                 var exeName = RootCommand.ExecutableName;
 
-                var kernel = CreateKernel();
+                var kernel = CreateCompositeKernel();
 
                 var result = await kernel.SendAsync(new RequestCompletions("#!", new LinePosition(0, 2)));
 
@@ -245,6 +246,57 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                     .Select(i => i.Documentation)
                     .Should()
                     .NotContain(i => i.Contains(exeName));
+            }
+
+            [Fact]
+            public async Task Share_suggests_kernel_names()
+            {
+                var kernel = CreateCompositeKernel();
+
+                var shareFrom = "#!share --from ";
+
+                var result = await kernel.SendAsync(new RequestCompletions(shareFrom, new LinePosition(0, shareFrom.Length)));
+
+                var events = result.KernelEvents.ToSubscribedList();
+
+                events
+                    .Should()
+                    .ContainSingle<CompletionsProduced>()
+                    .Which
+                    .Completions
+                    .Select(i => i.DisplayText)
+                    .Should()
+                    .Contain(new[] { "#!fsharp", "#!pwsh" });
+            }
+
+            [Fact]
+            public async Task Share_suggests_variable_names()
+            {
+                var kernel = CreateCompositeKernel();
+
+                var variableName = "aaaaaa";
+                await kernel.SendAsync(
+                    new SubmitCode($"var {variableName} = 123;",
+                                   targetKernelName: "csharp"));
+
+                var shareFrom = "#!share --from csharp ";
+
+                var result = await kernel.SendAsync(
+                                 new RequestCompletions(
+                                     shareFrom,
+                                     new LinePosition(0, shareFrom.Length),
+                                     targetKernelName: "fsharp"));
+
+                var events = result.KernelEvents.ToSubscribedList();
+
+                events
+                    .Should()
+                    .ContainSingle<CompletionsProduced>()
+                    .Which
+                    .Completions
+                    .Select(i => i.DisplayText)
+                    .Should()
+                    .Contain(variableName);
             }
         }
     }
