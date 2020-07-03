@@ -33,6 +33,8 @@ import {
     SubmissionType,
     SubmitCode,
     SubmitCodeType,
+    RequestDiagnostics,
+    RequestDiagnosticsType,
 } from './contracts';
 import { CellOutput, CellErrorOutput, CellOutputKind, CellDisplayOutput } from './interfaces/vscode';
 
@@ -158,6 +160,15 @@ export class InteractiveClient {
             targetKernelName: language
         };
         return this.submitCommandAndGetResult<HoverTextProduced>(command, RequestHoverTextType, HoverTextProducedType, token);
+    }
+
+    async getDiagnostics(language: string, code: string, token?: string | undefined): Promise<Array<Diagnostic>> {
+        const command: RequestDiagnostics = {
+            code,
+            targetKernelName: language
+        };
+        const diagsProduced = await this.submitCommandAndGetResult<DiagnosticsProduced>(command, RequestDiagnosticsType, DiagnosticsProducedType, token);
+        return diagsProduced.diagnostics;
     }
 
     async submitCode(code: string, language: string, observer: KernelEventEnvelopeObserver, token?: string | undefined): Promise<DisposableSubscription> {

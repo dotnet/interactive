@@ -33,6 +33,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         IExtensibleKernel,
         ISupportNuget,
         IKernelCommandHandler<RequestCompletions>,
+        IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<RequestHoverText>,
         IKernelCommandHandler<SubmitCode>
     {
@@ -319,6 +320,16 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             var items = completionList.Items.Select(item => item.ToModel()).ToArray();
             return items;
+        }
+
+        public async Task HandleAsync(
+            RequestDiagnostics command,
+            KernelInvocationContext context)
+        {
+            var document = _workspace.ForkDocument(command.Code);
+            var semanticModel = await document.GetSemanticModelAsync();
+            var diagnostics = semanticModel.GetDiagnostics();
+            context.Publish(new DiagnosticsProduced(diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic), command));
         }
 
         public async Task LoadExtensionsFromDirectoryAsync(

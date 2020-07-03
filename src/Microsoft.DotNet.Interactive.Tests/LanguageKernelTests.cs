@@ -406,6 +406,53 @@ $${languageSpecificCode}
         }
 
         [Theory]
+        [InlineData(Language.CSharp, "Console.WriteLineeeeeee();", "CS0117")]
+        [InlineData(Language.FSharp, "printfnnnnnn \"\"", "FS0039")]
+        [InlineData(Language.PowerShell, "::()", "ExpectedExpression")]
+        public async Task diagnostics_can_be_directly_requested(Language language, string source, string diagnosticCode)
+        {
+            var kernel = CreateKernel(language);
+
+            await kernel.SendAsync(new RequestDiagnostics(source));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count == 1)
+                .Which
+                .Diagnostics
+                .Should()
+                .ContainSingle(diag => diag.Code == diagnosticCode);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "Console.WriteLineeeeeee();")]
+        [InlineData(Language.FSharp, "printfnnnnnn \"\"")]
+        [InlineData(Language.PowerShell, "::()")]
+        public async Task requested_diagnostics_are_remapped_to_the_appropriate_span(Language language, string languageSpecificCode)
+        {
+            var kernel = CreateKernel(language);
+
+            var fullCode = $@"
+
+#!time
+
+$${languageSpecificCode}
+";
+
+            MarkupTestFile.GetLineAndColumn(fullCode, out var code, out var line, out var _column);
+
+            await kernel.SendAsync(new RequestDiagnostics(code));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count == 1)
+                .Which
+                .Diagnostics
+                .Should()
+                .ContainSingle(diag => diag.LinePositionSpan.Start.Line == line);
+        }
+
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.PowerShell)]
         // no F# equivalent, because it doesn't have the concept of complete/incomplete submissions

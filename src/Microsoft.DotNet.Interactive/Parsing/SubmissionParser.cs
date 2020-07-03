@@ -49,15 +49,27 @@ namespace Microsoft.DotNet.Interactive.Parsing
             return parser.Parse();
         }
 
-        public IReadOnlyList<KernelCommand> SplitSubmission(SubmitCode submitCode) 
+        public IReadOnlyList<KernelCommand> SplitSubmission(SplittableCommand splittableCommand)
+        {
+            Func<LanguageNode, KernelCommand, SplittableCommand> commandCreator = splittableCommand switch
+            {
+                SubmitCode submitCode => (languageNode, parent) => new SubmitCode(languageNode, submitCode.SubmissionType, parent),
+                RequestDiagnostics _ => (languageNode, parent) => new RequestDiagnostics(languageNode, parent),
+                _ => throw new ArgumentException(nameof(splittableCommand), "Unsupported splittable command."),
+            };
+
+            return SplitSubmission(splittableCommand, commandCreator);
+        }
+
+        public IReadOnlyList<KernelCommand> SplitSubmission(SplittableCommand splittableCommand, Func<LanguageNode, KernelCommand, SplittableCommand> commandCreator)
         {
             var commands = new List<KernelCommand>();
             var nugetRestoreOnKernels = new HashSet<string>();
             var hoistedCommandsIndex = 0;
 
-            var tree = Parse(submitCode.Code, submitCode.TargetKernelName);
+            var tree = Parse(splittableCommand.Code, splittableCommand.TargetKernelName);
             var nodes = tree.GetRoot().ChildNodes.ToArray();
-            var targetKernelName = submitCode.TargetKernelName ?? KernelLanguage;
+            var targetKernelName = splittableCommand.TargetKernelName ?? KernelLanguage;
 
             foreach (var node in nodes)
             {
@@ -79,13 +91,13 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                                     context.Fail(message: message);
                                     return Task.CompletedTask;
-                                }, parent: submitCode.Parent));
+                                }, parent: splittableCommand.Parent));
                             break;
                         }
 
                         var directiveCommand = new DirectiveCommand(
                             parseResult,
-                            submitCode.Parent,
+                            splittableCommand.Parent,
                             directiveNode);
 
                         if (directiveNode is KernelNameDirectiveNode kernelNameNode)
@@ -99,11 +111,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                             if (value.Value is FileInfo)
                             {
-                                AddHoistedCommand(
-                                    new SubmitCode(
-                                        directiveNode,
-                                        submitCode.SubmissionType,
-                                        submitCode.Parent));
+                                AddHoistedCommand(commandCreator(directiveNode, splittableCommand.Parent));
                             }
                             else
                             {
@@ -124,10 +132,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         break;
 
                     case LanguageNode languageNode:
-                        commands.Add(new SubmitCode(
-                                         languageNode,
-                                         submitCode.SubmissionType,
-                                         submitCode.Parent));
+                        commands.Add(commandCreator(languageNode, splittableCommand.Parent));
                         break;
                     
                     default:
@@ -143,7 +148,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 {
                     var restore = new DirectiveCommand(
                         parser.Parse("#!nuget-restore"),
-                        submitCode.Parent);
+                        splittableCommand.Parent);
                     AddHoistedCommand(restore);
                 }
             }
@@ -153,7 +158,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 return originalSubmission;
             }
 
-            var parent = submitCode.Parent ?? submitCode;
+            var parent = splittableCommand.Parent ?? splittableCommand;
 
             foreach (var command in commands)
             {
@@ -171,7 +176,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             {
                 if (commands.Count == 0)
                 {
-                    splitSubmission = new[] { submitCode };
+                    splitSubmission = new[] { splittableCommand };
                     return true;
                 }
 
@@ -179,9 +184,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 {
                     if (commands[0] is SubmitCode sc)
                     {
-                        if (submitCode.Code.Equals(sc.Code, StringComparison.Ordinal))
+                        if (splittableCommand.Code.Equals(sc.Code, StringComparison.Ordinal))
                         {
-                            splitSubmission = new[] { submitCode };
+                            splitSubmission = new[] { splittableCommand };
                             return true;
                         }
                     }

@@ -5,8 +5,9 @@ import * as vscode from 'vscode';
 import { ClientMapper } from '../clientMapper';
 import { provideCompletion } from '../languageServices/completion';
 import { provideHover } from './../languageServices/hover';
-import { notebookCellLanguages, getSimpleLanguage } from '../interactiveNotebook';
-import { convertToRange } from './vscodeUtilities';
+import { notebookCellLanguages, getSimpleLanguage, notebookCellChanged } from '../interactiveNotebook';
+import { convertToRange, toVsCodeDiagnostic } from './vscodeUtilities';
+import { getDiagnosticCollection } from './diagnostics';
 
 export class CompletionItemProvider implements vscode.CompletionItemProvider {
     static readonly triggerCharacters = ['.', '('];
@@ -83,12 +84,23 @@ export class HoverProvider implements vscode.HoverProvider {
     }
 }
 
-export function registerLanguageProviders(clientMapper: ClientMapper): vscode.Disposable {
+export function registerLanguageProviders(clientMapper: ClientMapper, diagnosticDelay: number): vscode.Disposable {
     const disposables: Array<vscode.Disposable> = [];
 
     let languages = [ ... notebookCellLanguages, "dotnet-interactive.magic-commands" ];
     disposables.push(vscode.languages.registerCompletionItemProvider(languages, new CompletionItemProvider(clientMapper), ...CompletionItemProvider.triggerCharacters));
     disposables.push(vscode.languages.registerHoverProvider(languages, new HoverProvider(clientMapper)));
+    disposables.push(vscode.workspace.onDidChangeTextDocument(e => {
+        if (vscode.languages.match(notebookCellLanguages, e.document)) {
+            const cell = vscode.notebook.activeNotebookEditor?.document.cells.find(cell => cell.document === e.document);
+            if (cell) {
+                notebookCellChanged(clientMapper, e.document, getSimpleLanguage(cell.language), diagnosticDelay, diagnostics => {
+                    const collection = getDiagnosticCollection(e.document.uri);
+                    collection.set(e.document.uri, diagnostics.map(toVsCodeDiagnostic));
+                });
+            }
+        }
+    }));
 
     return vscode.Disposable.from(...disposables);
 }

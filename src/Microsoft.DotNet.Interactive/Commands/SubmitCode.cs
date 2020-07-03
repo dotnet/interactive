@@ -1,40 +1,30 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class SubmitCode : KernelCommand
+    public class SubmitCode : SplittableCommand
     {
         public SubmitCode(
             string code,
             string targetKernelName = null,
-            SubmissionType submissionType = SubmissionType.Run) : base(targetKernelName)
+            SubmissionType submissionType = SubmissionType.Run) : base(code, targetKernelName)
         {
-            Code = code ?? throw new ArgumentNullException(nameof(code));
-            SubmissionType = submissionType;
         }
 
         internal SubmitCode(
             LanguageNode languageNode,
             SubmissionType submissionType = SubmissionType.Run,
             KernelCommand parent = null)
-            : base(languageNode.Language, parent)
+            : base(languageNode, parent)
         {
-            Code = languageNode.Text;
-            LanguageNode = languageNode;
-            SubmissionType = submissionType;
         }
-
-        public string Code { get; }
 
         // FIX: (SubmitCode) remove SubmissionType
         public SubmissionType SubmissionType { get; }
 
         public override string ToString() => $"{nameof(SubmitCode)}: {Code.TruncateForDisplay()}";
-
-        internal LanguageNode LanguageNode { get; }
     }
 }

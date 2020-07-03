@@ -156,8 +156,8 @@ namespace Microsoft.DotNet.Interactive
         {
             return command switch
             {
-                SubmitCode submitCode
-                when submitCode.LanguageNode is null => SubmissionParser.SplitSubmission(submitCode),
+                SplittableCommand splittableCommand
+                when splittableCommand.LanguageNode is null => SubmissionParser.SplitSubmission(splittableCommand),
 
                 LanguageServiceCommand languageServiceCommand
                 when languageServiceCommand.LanguageNode is null => PreprocessLanguageServiceCommand(languageServiceCommand),
@@ -441,6 +441,10 @@ namespace Microsoft.DotNet.Interactive
 
                     case (RequestCompletions requestCompletion, IKernelCommandHandler<RequestCompletions> requestCompletionHandler):
                         SetHandler(requestCompletionHandler, requestCompletion);
+                        break;
+
+                    case (RequestDiagnostics requestDiagnostics, IKernelCommandHandler<RequestDiagnostics> requestDiagnosticsHandler):
+                        SetHandler(requestDiagnosticsHandler, requestDiagnostics);
                         break;
 
                     case (RequestHoverText hoverCommand, IKernelCommandHandler<RequestHoverText> requestHoverTextHandler):

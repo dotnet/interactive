@@ -148,7 +148,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new RequestCompletions("Cons", new LinePosition(0, 4), "csharp");
 
-                yield return new RequestDiagnostics();
+                yield return new RequestDiagnostics("the-code");
 
                 yield return new RequestHoverText("document-contents", new LinePosition(1, 2));
 

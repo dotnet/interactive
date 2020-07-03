@@ -4,8 +4,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { RawNotebookCell } from "./interfaces";
-import { trimTrailingCarriageReturn, splitAndCleanLines } from './utilities';
-import { CellKind, NotebookDocument, NotebookDocumentBackup } from "./interfaces/vscode";
+import { trimTrailingCarriageReturn } from './utilities';
+import { CellKind, Document, NotebookDocument, NotebookDocumentBackup, Uri } from "./interfaces/vscode";
+import { ClientMapper } from './clientMapper';
+import { Diagnostic } from './contracts';
 
 export const notebookCellLanguages: Array<string> = [
     'dotnet-interactive.csharp',
@@ -186,6 +188,29 @@ export function backupNotebook(document: NotebookDocument, location: string): Pr
             });
         });
     });
+}
+
+let timeoutMap: Map<string, NodeJS.Timeout> = new Map();
+
+function clearCellChangeTimeout(cellUri: Uri) {
+    const key = cellUri.toString();
+    const timeout = timeoutMap.get(key);
+    if (timeout) {
+        clearTimeout(timeout);
+        timeoutMap.delete(key);
+    }
+}
+
+export function notebookCellChanged(clientMapper: ClientMapper, document: Document, language: string, diagnosticDelay: number, callback: (diagnostics: Array<Diagnostic>) => void) {
+    clearCellChangeTimeout(document.uri);
+
+    const newTimeout = setTimeout(async () => {
+        clearCellChangeTimeout(document.uri);
+        const client = await clientMapper.getOrAddClient(document.uri);
+        const diagnostics = await client.getDiagnostics(language, document.getText());
+        callback(diagnostics);
+    }, diagnosticDelay);
+    timeoutMap.set(document.uri.toString(), newTimeout);
 }
 
 function findIndexReverse<T>(arr: Array<T>, predicate: { (val: T): boolean }): number {

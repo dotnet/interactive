@@ -56,6 +56,7 @@ export interface LanguageServiceCommand extends KernelCommand {
 }
 
 export interface RequestDiagnostics extends KernelCommand {
+    code: string;
 }
 
 export interface RequestHoverText extends LanguageServiceCommand {
