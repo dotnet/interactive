@@ -13,8 +13,8 @@ namespace Microsoft.DotNet.Interactive.Connection
         Kernel,
         IKernelCommandHandler<SubmitCode>,
         IKernelCommandHandler<RequestCompletions>,
+        IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<RequestHoverText>
-
     {
         private readonly KernelClient _client;
 
@@ -36,6 +36,11 @@ namespace Microsoft.DotNet.Interactive.Connection
         }
 
         public Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
+        {
+            return SendCommandToRemoteKernel(command);
+        }
+
+        public Task HandleAsync(RequestDiagnostics command, KernelInvocationContext context)
         {
             return SendCommandToRemoteKernel(command);
         }
