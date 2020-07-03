@@ -3,16 +3,12 @@
 
 using System;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.FSharp;
-using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
@@ -20,13 +16,10 @@ using Xunit.Abstractions;
 #pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 {
-    public class CompletionTests : LanguageKernelTestBase
+    public partial class CompletionTests : LanguageKernelTestBase
     {
-        private readonly ITestOutputHelper _output;
-
         public CompletionTests(ITestOutputHelper output) : base(output)
         {
-            _output = output;
         }
 
         [Theory]
@@ -155,209 +148,8 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .Contain(item => item.DisplayText == variableName);
         }
 
-        [Theory]
-        // commands
-        [InlineData("[|#!c|]", "#!csharp")]
-        [InlineData("[|#!|]", "#!csharp,#!who,#!whos")]
-        [InlineData("[|#!w|]", "#!who,#!whos")]
-        [InlineData("[|#!w|]\n", "#!who,#!whos")]
-        [InlineData("[|#!w|] \n", "#!who,#!whos")]
-        // options
-        [InlineData("#!share [||]", "--from")]
-        public void Completions_are_available_for_magic_commands(
-            string markupCode,
-            string expected)
-        {
-            var kernel = CreateKernel();
-
-            markupCode
-                .ParseMarkupCode()
-                .PositionsInMarkedSpans()
-                .Should()
-                .ProvideCompletions(kernel)
-                .Which
-                .Should()
-                .AllSatisfy(
-                    requestCompleted =>
-                        requestCompleted
-                            .Completions
-                            .Select(i => i.DisplayText)
-                            .Should()
-                            .Contain(expected.Split(","),
-                                     because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
-        }
-
         [Fact]
-        public void Insertion_range_is_correct_for_magic_command_option_completions()
-        {
-            var kernel = CreateKernel();
-
-            "#!share fr[||]"
-                .ParseMarkupCode()
-                .PositionsInMarkedSpans()
-                .Should()
-                .ProvideCompletions(kernel)
-                .Which
-                .Should()
-                .AllSatisfy(c =>
-                                c.LinePositionSpan
-                                 .Should()
-                                 .BeEquivalentTo(new LinePositionSpan(
-                                                     new LinePosition(0, 8),
-                                                     new LinePosition(0, 10))));
-        }
-
-        [Fact]
-        public void Insertion_range_is_correct_for_magic_command_completions()
-        {
-            var kernel = CreateKernel();
-
-            "#!wh[||]"
-                .ParseMarkupCode()
-                .PositionsInMarkedSpans()
-                .Should()
-                .ProvideCompletions(kernel)
-                .Which
-                .Should()
-                .AllSatisfy(c =>
-                                c.LinePositionSpan
-                                 .Should()
-                                 .BeEquivalentTo(new LinePositionSpan(
-                                                     new LinePosition(0, 0),
-                                                     new LinePosition(0, 4))));
-        }
-
-        [Fact]
-        public void Magic_command_option_completions_do_not_include_magic_commands()
-        {
-            var kernel = CreateKernel();
-
-            "#!share [| |]"
-                .ParseMarkupCode()
-                .PositionsInMarkedSpans()
-                .Should()
-                .ProvideCompletions(kernel)
-                .Which
-                .Should()
-                .AllSatisfy(
-                    requestCompleted =>
-                        requestCompleted
-                            .Completions
-                            .Select(i => i.DisplayText)
-                            .Should()
-                            .NotContain(c => c.Contains("#!")));
-        }
-
-        [Fact]
-        public void Magic_command_completions_include_magic_commands_from_all_kernels()
-        {
-            var markupCode = "[|#!|]";
-            var expected = new[] { "#!csharp", "#!fsharp", "#!pwsh", "#!who" };
-
-            using var kernel = new CompositeKernel
-            {
-                new CSharpKernel().UseWho(),
-                new FSharpKernel().UseWho(),
-                new PowerShellKernel()
-            };
-
-            markupCode
-                .ParseMarkupCode()
-                .PositionsInMarkedSpans()
-                .Should()
-                .ProvideCompletions(kernel)
-                .Which
-                .Should()
-                .AllSatisfy(
-                    requestCompleted =>
-                        requestCompleted
-                            .Completions
-                            .Select(i => i.DisplayText)
-                            .Should()
-                            .Contain(expected,
-                                     because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
-        }
-
-        [Fact]
-        public async Task Magic_command_completions_do_not_include_duplicates()
-        {
-            var cSharpKernel = new CSharpKernel();
-
-            using var compositeKernel = new CompositeKernel
-            {
-                cSharpKernel
-            };
-
-            compositeKernel.DefaultKernelName = cSharpKernel.Name;
-
-            var commandName = "#!hello";
-            compositeKernel.AddDirective(new Command(commandName)
-            {
-                Handler = CommandHandler.Create(() => {})
-            });
-            cSharpKernel.AddDirective(new Command(commandName)
-            {
-                Handler = CommandHandler.Create(() => {})
-            });
-
-            var result = await compositeKernel.SendAsync(new RequestCompletions("#!", new LinePosition(0, 2)));
-
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events
-                .Should()
-                .ContainSingle<CompletionsProduced>()
-                .Which
-                .Completions
-                .Should()
-                .ContainSingle(e => e.DisplayText == commandName);
-        }
-
-        [Theory]
-        [InlineData("[|#!d|]", "#!directiveOnChild,#!directiveOnParent", Language.CSharp)]
-        [InlineData("[|#!dir|]\n", "#!directiveOnChild,#!directiveOnParent", Language.CSharp)]
-        [InlineData("[|#!d|]", "#!directiveOnChild,#!directiveOnParent", Language.FSharp)]
-        [InlineData("[|#!dir|]\n", "#!directiveOnChild,#!directiveOnParent", Language.FSharp)]
-        [InlineData("[|#!d|]", "#!directiveOnChild,#!directiveOnParent", Language.PowerShell)]
-        [InlineData("[|#!dir|]\n", "#!directiveOnChild,#!directiveOnParent", Language.PowerShell)]
-        public void Completions_are_available_for_magic_commands_added_at_runtime_to_child_and_parent_kernels(
-            string markupCode,
-            string expected,
-            Language defaultLanguage)
-        {
-            var kernel = CreateCompositeKernel(defaultLanguage);
-
-            var kernelToExtend = kernel.FindKernel(defaultLanguage.LanguageName());
-
-            kernelToExtend.AddDirective(new Command("#!directiveOnChild")
-            {
-                Handler = CommandHandler.Create(() => { })
-            });
-
-            kernel.AddDirective(new Command("#!directiveOnParent")
-            {
-                Handler = CommandHandler.Create(() => { })
-            });
-
-            markupCode
-                .ParseMarkupCode()
-                .PositionsInMarkedSpans()
-                .Should()
-                .ProvideCompletions(kernel)
-                .Which
-                .Should()
-                .AllSatisfy(
-                    requestCompleted =>
-                        requestCompleted
-                            .Completions
-                            .Select(i => i.DisplayText)
-                            .Should()
-                            .Contain(expected.Split(","),
-                                     because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
-        }
-
-        [Fact]
-        public async Task completions_commands_produce_the_expected_results()
+        public async Task Subsequent_completion_commands_produce_the_expected_results()
         {
             var kernel = CreateKernel();
 
@@ -501,27 +293,6 @@ var y = x + 2;
                 .LinePositionSpan
                 .Should()
                 .Be(new LinePositionSpan(new LinePosition(line, 0), new LinePosition(line, 3)));
-        }
-
-        [Fact]
-        public async Task Magic_command_completion_documentation_does_not_include_root_command_name()
-        {
-            var exeName = RootCommand.ExecutableName;
-
-            var kernel = CreateKernel();
-
-            var result = await kernel.SendAsync(new RequestCompletions("#!", new LinePosition(0, 2)));
-
-            var events = result.KernelEvents.ToSubscribedList();
-
-            events
-                .Should()
-                .ContainSingle<CompletionsProduced>()
-                .Which
-                .Completions
-                .Select(i => i.Documentation)
-                .Should()
-                .NotContain(i => i.Contains(exeName));
         }
     }
 }
