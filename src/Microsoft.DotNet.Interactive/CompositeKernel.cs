@@ -200,14 +200,30 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private protected override IReadOnlyList<CompletionItem> GetDirectiveCompletionItems(
-            DirectiveNode directiveNode,
+        private protected override IEnumerable<Parser> GetDirectiveParsersForCompletion(
+            DirectiveNode directiveNode, 
             int requestPosition)
         {
-            var directiveParsers = new List<Parser>
+            var upToCursor =
+                directiveNode.Text[..requestPosition];
+
+            var indexOfPreviousSpace =
+                upToCursor.LastIndexOf(" ", StringComparison.CurrentCultureIgnoreCase);
+
+            if (indexOfPreviousSpace >= 0)
             {
-                SubmissionParser.GetDirectiveParser()
-            };
+                // 
+                if (directiveNode is ActionDirectiveNode actionDirectiveNode)
+                {
+                    var kernel = this.FindKernel(actionDirectiveNode.ParentLanguage);
+
+                    yield return kernel.SubmissionParser.GetDirectiveParser();
+                }
+
+                yield break;
+            }
+
+            yield return SubmissionParser.GetDirectiveParser();
 
             for (var i = 0; i < ChildKernels.Count; i++)
             {
@@ -215,27 +231,9 @@ namespace Microsoft.DotNet.Interactive
 
                 if (kernel is { })
                 {
-                    directiveParsers.Add(kernel.SubmissionParser.GetDirectiveParser());
+                    yield return kernel.SubmissionParser.GetDirectiveParser();
                 }
             }
-
-            var allCompletions = new List<CompletionItem>();
-
-            foreach (var parser in directiveParsers)
-            {
-                var parseResult = parser.Parse(directiveNode.Text);
-
-                var completions = parseResult
-                                  .GetSuggestions(requestPosition)
-                                  .Select(s => SubmissionParser.CompletionItemFor(s, parseResult))
-                                  .ToArray();
-
-                allCompletions.AddRange(completions);
-            }
-
-            return allCompletions
-                   .Distinct(CompletionItemComparer.Instance)
-                   .ToArray();
         }
 
         public IEnumerator<Kernel> GetEnumerator() => _childKernels.GetEnumerator();

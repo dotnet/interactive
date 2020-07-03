@@ -188,6 +188,67 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         }
 
         [Fact]
+        public void Insertion_range_is_correct_for_magic_command_option_completions()
+        {
+            var kernel = CreateKernel();
+
+            "#!share fr[||]"
+                .ParseMarkupCode()
+                .PositionsInMarkedSpans()
+                .Should()
+                .ProvideCompletions(kernel)
+                .Which
+                .Should()
+                .AllSatisfy(c =>
+                                c.LinePositionSpan
+                                 .Should()
+                                 .BeEquivalentTo(new LinePositionSpan(
+                                                     new LinePosition(0, 8),
+                                                     new LinePosition(0, 10))));
+        }
+
+        [Fact]
+        public void Insertion_range_is_correct_for_magic_command_completions()
+        {
+            var kernel = CreateKernel();
+
+            "#!wh[||]"
+                .ParseMarkupCode()
+                .PositionsInMarkedSpans()
+                .Should()
+                .ProvideCompletions(kernel)
+                .Which
+                .Should()
+                .AllSatisfy(c =>
+                                c.LinePositionSpan
+                                 .Should()
+                                 .BeEquivalentTo(new LinePositionSpan(
+                                                     new LinePosition(0, 0),
+                                                     new LinePosition(0, 4))));
+        }
+
+        [Fact]
+        public void Magic_command_option_completions_do_not_include_magic_commands()
+        {
+            var kernel = CreateKernel();
+
+            "#!share [| |]"
+                .ParseMarkupCode()
+                .PositionsInMarkedSpans()
+                .Should()
+                .ProvideCompletions(kernel)
+                .Which
+                .Should()
+                .AllSatisfy(
+                    requestCompleted =>
+                        requestCompleted
+                            .Completions
+                            .Select(i => i.DisplayText)
+                            .Should()
+                            .NotContain(c => c.Contains("#!")));
+        }
+
+        [Fact]
         public void Magic_command_completions_include_magic_commands_from_all_kernels()
         {
             var markupCode = "[|#!|]";
@@ -264,7 +325,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             string expected,
             Language defaultLanguage)
         {
-            var kernel = CreateKernel(defaultLanguage);
+            var kernel = CreateCompositeKernel(defaultLanguage);
 
             var kernelToExtend = kernel.FindKernel(defaultLanguage.LanguageName());
 
