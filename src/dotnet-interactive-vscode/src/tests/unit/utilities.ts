@@ -24,4 +24,4 @@ export function withFakeGlobalStorageLocation(createLocation: boolean, callback:
             });
         });
     });
-};
+}
