@@ -1,1 +1,0 @@
-{"event":{"diagnostics":[{"linePositionSpan":{"start":{"line":1,"character":2},"end":{"line":3,"character":4}},"severity":3,"code":"code","message":"message"}]},"eventType":"DiagnosticsProduced","command":{"token":"the-token","commandType":"SubmitCode","command":{"code":"123","submissionType":0,"targetKernelName":null}}}

@@ -1,1 +1,0 @@
-{"event":{"formattedValues":[{"mimeType":"text/plain","value":"oops!"}],"valueId":null},"eventType":"StandardErrorValueProduced","command":{"token":"the-token","commandType":"SubmitCode","command":{"code":"123","submissionType":0,"targetKernelName":null}}}
