@@ -1,1 +1,0 @@
-{"event":{"code":"123"},"eventType":"CodeSubmissionReceived","command":{"token":"the-token","commandType":"SubmitCode","command":{"code":"123","submissionType":0,"targetKernelName":null}}}
