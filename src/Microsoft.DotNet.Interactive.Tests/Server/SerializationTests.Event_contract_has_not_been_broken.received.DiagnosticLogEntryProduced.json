@@ -1,1 +1,1 @@
-{"event":{"message":"oops!"},"eventType":"DiagnosticLogEntryProduced","command":{"token":"the-token","commandType":"SubmitCode","command":{"submissionType":0,"code":"123","targetKernelName":null}}}
+{"event":{"message":"oops!"},"eventType":"DiagnosticLogEntryProduced","command":{"token":"the-token","commandType":"SubmitCode","command":{"code":"123","submissionType":0,"targetKernelName":null}}}

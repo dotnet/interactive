@@ -1,1 +1,1 @@
-{"token":"the-token","commandType":"RequestDiagnostics","command":{"code":"the-code","languageNode":null,"targetKernelName":null}}
+{"token":"the-token","commandType":"RequestDiagnostics","command":{"code":"the-code","targetKernelName":null}}

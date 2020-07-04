@@ -1,1 +1,1 @@
-{"token":"the-token","commandType":"SubmitCode","command":{"submissionType":0,"code":"123","targetKernelName":"csharp"}}
+{"token":"the-token","commandType":"SubmitCode","command":{"code":"123","submissionType":0,"targetKernelName":"csharp"}}
