@@ -156,8 +156,11 @@ namespace Microsoft.DotNet.Interactive
         {
             return command switch
             {
-                SplittableCommand splittableCommand
-                when splittableCommand.LanguageNode is null => SubmissionParser.SplitSubmission(splittableCommand),
+                SubmitCode submitCode
+                when submitCode.LanguageNode is null => SubmissionParser.SplitSubmission(submitCode),
+
+                RequestDiagnostics requestDiagnostics
+                when requestDiagnostics.LanguageNode is null => SubmissionParser.SplitSubmission(requestDiagnostics),
 
                 LanguageServiceCommand languageServiceCommand
                 when languageServiceCommand.LanguageNode is null => PreprocessLanguageServiceCommand(languageServiceCommand),

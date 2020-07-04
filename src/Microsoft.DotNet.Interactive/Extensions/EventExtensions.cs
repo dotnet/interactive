@@ -7,6 +7,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Extensions
 {
@@ -35,22 +36,30 @@ namespace Microsoft.DotNet.Interactive.Extensions
 
         public static IReadOnlyCollection<Diagnostic> RemapDiagnosticsFromRequestingCommand(this KernelEvent @event, IReadOnlyCollection<Diagnostic> diagnostics)
         {
-            if (@event.Command is SplittableCommand splittableCommand && splittableCommand.LanguageNode is { })
+            return @event.Command switch
             {
-                var root = splittableCommand.LanguageNode.SyntaxTree.GetRoot();
-                var initialSpan = splittableCommand.LanguageNode.Span;
-                var sourceText = SourceText.From(root.Text);
-                var codePosition = sourceText.Lines.GetLinePositionSpan(initialSpan);
-                return diagnostics.Select(d => d.WithLinePositionSpan(
-                    new LinePositionSpan(
-                        new LinePosition(d.LinePositionSpan.Start.Line + codePosition.Start.Line, d.LinePositionSpan.Start.Character),
-                        new LinePosition(d.LinePositionSpan.End.Line + codePosition.Start.Line, d.LinePositionSpan.End.Character))
-                    )
-                ).ToImmutableList();
-            }
+                SubmitCode submitCode
+                when submitCode.LanguageNode is { } => submitCode.LanguageNode.RemapDiagnosticsFromLanguageNode(diagnostics),
 
-            // no meaningful remapping can occur
-            return diagnostics;
+                RequestDiagnostics requestDiagnostics
+                when requestDiagnostics.LanguageNode is { } => requestDiagnostics.LanguageNode.RemapDiagnosticsFromLanguageNode(diagnostics),
+
+                _ => diagnostics // no meaningful remapping can occur
+            };
+        }
+
+        private static IReadOnlyCollection<Diagnostic> RemapDiagnosticsFromLanguageNode(this LanguageNode languageNode, IReadOnlyCollection<Diagnostic> diagnostics)
+        {
+            var root = languageNode.SyntaxTree.GetRoot();
+            var initialSpan = languageNode.Span;
+            var sourceText = SourceText.From(root.Text);
+            var codePosition = sourceText.Lines.GetLinePositionSpan(initialSpan);
+            return diagnostics.Select(d => d.WithLinePositionSpan(
+                new LinePositionSpan(
+                    new LinePosition(d.LinePositionSpan.Start.Line + codePosition.Start.Line, d.LinePositionSpan.Start.Character),
+                    new LinePosition(d.LinePositionSpan.End.Line + codePosition.Start.Line, d.LinePositionSpan.End.Character))
+                )
+            ).ToImmutableList();
         }
     }
 }

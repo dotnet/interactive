@@ -67,15 +67,13 @@ let x = 123 // with some intervening code
             var command = new RequestDiagnostics(code);
             var commands = new CSharpKernel().SubmissionParser.SplitSubmission(command);
 
-            int LineFromPosition(int position)
-            {
-                var linePosition = sourceText.Lines.GetLinePosition(position);
-                return linePosition.Line;
-            }
-
             commands
                 .Should()
-                .ContainSingle<RequestDiagnostics>(d => LineFromPosition(d.LanguageNode.Span.Start) == startLineOfCode);
+                .ContainSingle<RequestDiagnostics>()
+                .Which
+                .Code
+                .Should()
+                .NotContain("#!time");
         }
     }
 }
