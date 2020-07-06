@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
@@ -65,7 +66,7 @@ let x = 123 // with some intervening code
             var sourceText = SourceText.From(code);
 
             var command = new RequestDiagnostics(code);
-            var commands = new CSharpKernel().SubmissionParser.SplitSubmission(command);
+            var commands = new CSharpKernel().UseDefaultMagicCommands().SubmissionParser.SplitSubmission(command);
 
             commands
                 .Should()
