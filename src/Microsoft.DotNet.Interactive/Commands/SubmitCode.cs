@@ -27,6 +27,11 @@ namespace Microsoft.DotNet.Interactive.Commands
             Code = languageNode.Text;
             LanguageNode = languageNode;
             SubmissionType = submissionType;
+
+            if (languageNode is ActionDirectiveNode actionDirectiveNode)
+            {
+                TargetKernelName = actionDirectiveNode.ParentLanguage;
+            }
         }
 
         public string Code { get; }
