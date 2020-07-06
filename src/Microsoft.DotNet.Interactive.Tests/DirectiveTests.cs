@@ -7,6 +7,8 @@ using System.CommandLine.Invocation;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -191,24 +193,28 @@ i");
         }
 
         [Fact]
-        public async Task When_an_unrecognized_directive_is_encountered_an_error_is_produced()
+        public async Task When_an_unrecognized_directive_is_encountered_it_is_forwarded_to_the_kernel_as_submitCode()
         {
+            SubmitCode submitCommand = null;
             using var kernel = new CompositeKernel
             {
-                new CSharpKernel()
+                new FakeKernel("csharp")
+                {
+                    Handle = (command, context) =>
+                    {
+                        submitCommand = command as SubmitCode;
+                        return Task.CompletedTask;
+                    }
+                }
             };
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync("#!oops");
-
-            events
-                .Should()
-                .ContainSingle<CommandFailed>()
-                .Which
-                .Message
-                .Should()
-                .Contain("Unrecognized command or argument '#!oops'");
+            await kernel.SubmitCodeAsync("#!undefinedDirective");
+            using var _ = new AssertionScope();
+            
+            submitCommand.Should().NotBeNull();
+            submitCommand.Code.Should().Be("#!undefinedDirective");
         }
 
         [Theory]
