@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.CodeAnalysis.Text;
@@ -192,14 +193,29 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .Be(new LinePositionSpan(new LinePosition(line, 8), new LinePosition(line, 17)));
         }
 
-        [Fact]
-        public async Task csharp_hover_text_is_returned_for_shadowing_variables()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp, Skip = "not implemented in fsharp")]
+        public async Task csharp_hover_text_is_returned_for_shadowing_variables(Language language)
         {
-            using var kernel = CreateKernel(Language.CSharp);
+            SubmitCode declaration = null;
+            SubmitCode shadowingDeclaration = null;
+            using var kernel = CreateKernel(language);
+            switch (language)
+            {
+                case Language.CSharp:
+                    declaration = new SubmitCode("var identifier = 1234;");
+                    shadowingDeclaration = new SubmitCode("var identifier = \"one-two-three-four\";");
+                    break;
+                case Language.FSharp:
+                    declaration = new SubmitCode("let identifier = 1234");
+                    shadowingDeclaration = new SubmitCode("let identifier = \"one-two-three-four\"");
+                    break;
 
-            await kernel.SubmitCodeAsync("var identifier = 1234;"); // submit int
+            }
+            await kernel.SendAsync(declaration); 
 
-            await kernel.SubmitCodeAsync("var identifier = \"one-two-three-four\";"); // shadow with string
+            await kernel.SendAsync(shadowingDeclaration); 
 
             var markupCode = "ident$$ifier";
 
