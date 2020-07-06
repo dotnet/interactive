@@ -79,19 +79,27 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                         if (parseResult.Errors.Any())
                         {
-                            commands.Clear();
-                            commands.Add(
-                                new AnonymousKernelCommand((kernelCommand, context) =>
-                                {
-                                    var message =
-                                        string.Join(Environment.NewLine,
-                                                    parseResult.Errors
-                                                               .Select(e => e.ToString()));
+                            if (parseResult.Errors.First().SymbolResult == null && directiveNode is ActionDirectiveNode actionDirectiveNode)
+                            {
+                                commands.Add(commandCreator(directiveNode, originalCommand.Parent));
+                            }
+                            else
+                            {
+                                commands.Clear();
+                                commands.Add(
+                                    new AnonymousKernelCommand((kernelCommand, context) =>
+                                    {
+                                        var message =
+                                            string.Join(Environment.NewLine,
+                                                parseResult.Errors
+                                                    .Select(e => e.ToString()));
 
-                                    context.Fail(message: message);
-                                    return Task.CompletedTask;
-                                }, parent: originalCommand.Parent));
+                                        context.Fail(message: message);
+                                        return Task.CompletedTask;
+                                    }, parent: originalCommand.Parent));
+                            }
                             break;
+
                         }
 
                         var directiveCommand = new DirectiveCommand(
