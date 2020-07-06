@@ -191,5 +191,31 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .Should()
                 .Be(new LinePositionSpan(new LinePosition(line, 8), new LinePosition(line, 17)));
         }
+
+        [Fact]
+        public async Task csharp_hover_text_is_returned_for_shadowing_variables()
+        {
+            using var kernel = CreateKernel(Language.CSharp);
+
+            await kernel.SubmitCodeAsync("var identifier = 1234;"); // submit int
+
+            await kernel.SubmitCodeAsync("var identifier = \"one-two-three-four\";"); // shadow with string
+
+            var markupCode = "ident$$ifier";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var column);
+
+            var commandResult = await SendHoverRequest(kernel, code, line, column);
+
+            commandResult
+                .KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .ContainSingle<HoverTextProduced>()
+                .Which
+                .Content
+                .Should()
+                .ContainSingle(fv => fv.Value == "(field) string identifier");
+        }
     }
 }
