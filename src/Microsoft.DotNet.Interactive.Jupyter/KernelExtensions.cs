@@ -145,11 +145,11 @@ using static {typeof(TopLevelMethods).FullName};
         private static T UseLsMagic<T>(this T kernel)
             where T : Kernel
         {
-            kernel.AddDirective(lsmagic());
+            kernel.AddDirective(lsmagic(kernel));
 
             kernel.VisitSubkernels(k =>
             {
-                k.AddDirective(lsmagic());
+                k.AddDirective(lsmagic(k));
             });
 
             Formatter<SupportedDirectives>.Register((directives, writer) =>
@@ -191,14 +191,12 @@ using static {typeof(TopLevelMethods).FullName};
             return kernel;
         }
 
-        private static Command lsmagic()
+        private static Command lsmagic(Kernel kernel)
         {
             return new Command("#!lsmagic", "List the available magic commands / directives")
             {
                 Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
                 {
-                    var kernel = context.CurrentKernel;
-
                     var supportedDirectives = new SupportedDirectives(kernel.Name);
 
                     supportedDirectives.Commands.AddRange(
@@ -210,7 +208,7 @@ using static {typeof(TopLevelMethods).FullName};
                     {
                         if (k.Directives.Any(d => d.Name == "#!lsmagic"))
                         {
-                            await k.SendAsync(new SubmitCode(((SubmitCode)context.Command).Code));
+                            await k.SendAsync(new SubmitCode(((SubmitCode) context.Command).Code));
                         }
                     });
                 })
