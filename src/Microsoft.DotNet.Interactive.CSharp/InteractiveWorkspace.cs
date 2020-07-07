@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Reactive.Disposables;
 
 using Microsoft.CodeAnalysis;
@@ -61,6 +62,24 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var debugName = assemblyName;
             var projectId = ProjectId.CreateNewId(debugName: debugName);
 
+            solution = CreateProjectAndAddToSolution(projectId, debugName, assemblyName, compilationOptions, solution,
+                projectReferenceProjectId);
+
+            var workingDocumentId = DocumentId.CreateNewId(
+                projectId,
+                debugName: $"working document for {submission}");
+
+            solution = solution.AddDocument(
+                workingDocumentId,
+                $"working document for {submission}", 
+                string.Empty);
+
+            SetCurrentSolution(solution);
+            return (projectId, workingDocumentId);
+        }
+
+        private Solution CreateProjectAndAddToSolution(ProjectId projectId, string debugName, string assemblyName, CompilationOptions compilationOptions, Solution solution, ProjectId projectReferenceProjectId, IEnumerable<MetadataReference> metadataReferences = null)
+        {
             var projectInfo = ProjectInfo.Create(
                 projectId,
                 VersionStamp.Create(),
@@ -69,8 +88,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 language: LanguageNames.CSharp,
                 parseOptions: _parseOptions,
                 compilationOptions: compilationOptions,
+                metadataReferences: metadataReferences,
                 isSubmission: true);
-            
+
             solution = solution.AddProject(projectInfo);
 
             if (projectReferenceProjectId != null)
@@ -81,18 +101,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 );
             }
 
-
-            var workingDocumentId = DocumentId.CreateNewId(
-                projectInfo.Id,
-                debugName: $"working document for {submission}");
-
-            solution = solution.AddDocument(
-                workingDocumentId,
-                $"working document for {submission}", 
-                string.Empty);
-
-            SetCurrentSolution(solution);
-            return (projectId, workingDocumentId);
+            return solution;
         }
 
         private ProjectId CreateProjectForPreviousSubmission(Compilation compilation, string code, ProjectId projectId, ProjectId projectReferenceProjectId)
@@ -116,33 +125,15 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 projectId = ProjectId.CreateNewId(debugName: debugName);
             }
 
-            var projectInfo = ProjectInfo.Create(
-                projectId,
-                VersionStamp.Create(),
-                name: debugName,
-                assemblyName: assemblyName,
-                language: LanguageNames.CSharp,
-                parseOptions: _parseOptions,
-                compilationOptions: compilationOptions,
-                metadataReferences: compilation.References,
-                isSubmission:true);
+            solution = CreateProjectAndAddToSolution(projectId, debugName, assemblyName, compilationOptions, solution,
+                projectReferenceProjectId, compilation.References);
 
             var currentSubmissionDocumentId = DocumentId.CreateNewId(
-                projectInfo.Id,
+                projectId,
                 debugName: assemblyName);
 
             // add the code submission to the current project
             var submissionSourceText = SourceText.From(code);
-
-            solution = solution.AddProject(projectInfo);
-           
-            if (projectReferenceProjectId != null)
-            {
-                solution = solution.AddProjectReference(
-                    projectId,
-                    new ProjectReference(projectReferenceProjectId)
-                );
-            }
 
             solution = solution.AddDocument(
                 currentSubmissionDocumentId,
