@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Connection
 {
     public class ConnectSignalR : ConnectKernelCommand<SignalRConnectionOptions>
     {
-        public ConnectSignalR() : base("signalr", "Connects to a kernel using signal R")
+        public ConnectSignalR() : base("signalr", "Connects to a kernel using SignalR")
         {
             AddOption(new Option<string>("--hub-url", "The URL of the SignalR hub"));
         }
