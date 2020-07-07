@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 
@@ -71,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             solution = solution.AddDocument(
                 workingDocumentId,
-                debugName, 
+                debugName,
                 string.Empty);
 
             SetCurrentSolution(solution);
@@ -107,7 +106,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         private ProjectId CreateProjectForPreviousSubmission(Compilation compilation, string code, ProjectId projectId, ProjectId projectReferenceProjectId)
         {
             var solution = CurrentSolution;
-           
+
             var compilationOptions = compilation.Options;
             var assemblyName = compilationOptions.ScriptClassName;
             if (string.IsNullOrWhiteSpace(assemblyName))
@@ -151,7 +150,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             solution = solution.RemoveDocument(_workingDocumentId);
 
             var debugName = $"Fork from #{_submissionCount}";
-            
+
             _workingDocumentId = DocumentId.CreateNewId(
                 _currentSubmissionProjectId,
                 debugName);
