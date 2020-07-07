@@ -210,22 +210,22 @@ namespace Microsoft.DotNet.Interactive
             var indexOfPreviousSpace =
                 upToCursor.LastIndexOf(" ", StringComparison.CurrentCultureIgnoreCase);
 
-            if (indexOfPreviousSpace >= 0)
+            if (indexOfPreviousSpace >= 0 &&
+                directiveNode is ActionDirectiveNode actionDirectiveNode)
             {
-                // 
-                if (directiveNode is ActionDirectiveNode actionDirectiveNode)
+                var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
+
+                var kernel = this.FindKernel(actionDirectiveNode.ParentLanguage);
+
+                var parser = kernel.SubmissionParser.GetDirectiveParser();
+
+                if (parser.Configuration.RootCommand.Children.GetByAlias(directiveName) is { })
                 {
-                    var kernel = this.FindKernel(actionDirectiveNode.ParentLanguage);
+                    // the directive is defined in the subkernel, so this is the only directive parser we need
+                    yield return parser;
 
-                    yield return kernel.SubmissionParser.GetDirectiveParser();
+                    yield break;
                 }
-                else
-                {
-                    yield return SubmissionParser.GetDirectiveParser();
-
-                }
-
-                yield break;
             }
 
             yield return SubmissionParser.GetDirectiveParser();
