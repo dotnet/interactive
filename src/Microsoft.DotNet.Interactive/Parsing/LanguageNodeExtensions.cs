@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
         public static bool IsUnknownActionDirective(this DirectiveNode directiveNode)
         {
             var parseResult = directiveNode.GetDirectiveParseResult();
-            return parseResult.Errors.All(e => e.SymbolResult == null) && directiveNode is ActionDirectiveNode;
+            return directiveNode is ActionDirectiveNode && parseResult.Errors.All(e => e.SymbolResult == null);
         }
 
     }
