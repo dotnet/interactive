@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             directiveNode.Add(directiveArgs);
                         }
 
-                        var directiveName = directiveNode.ChildNodesAndTokens.First().Text;
+                        var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
 
                         if (IsDefinedInRootKernel(directiveName))
                         {

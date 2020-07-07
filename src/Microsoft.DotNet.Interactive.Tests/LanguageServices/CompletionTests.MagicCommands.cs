@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
@@ -37,11 +38,13 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             // options
             [InlineData("#!share [||]", "--from")]
             [InlineData("#!csharp [||]", "--help")]
+            // subcommands
+            [InlineData("#!connect [||]", "--help,signalr")]
             public void Completions_are_available_for_magic_commands(
                 string markupCode,
                 string expected)
             {
-                var kernel = CreateKernel();
+                var kernel = CreateKernel().UseConnection(new ConnectSignalR());
 
                 markupCode
                     .ParseMarkupCode()
