@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
     {
         private ParseResult? _parseResult;
 
+       
         internal DirectiveNode(
             DirectiveToken directiveToken,
             SourceText sourceText,
