@@ -36,6 +36,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             [InlineData("[|#!w|] \n", "#!who,#!whos")]
             // options
             [InlineData("#!share [||]", "--from")]
+            [InlineData("#!csharp [||]", "--help")]
             public void Completions_are_available_for_magic_commands(
                 string markupCode,
                 string expected)
