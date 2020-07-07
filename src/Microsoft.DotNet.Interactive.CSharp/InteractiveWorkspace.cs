@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
     internal class InteractiveWorkspace : Workspace
     {
         private ProjectId _previousSubmissionProjectId;
-        private ProjectId _currentSubmissionProjectId;
+        private ProjectId _workingProjectId;
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private int _submissionCount;
         private readonly CSharpParseOptions _parseOptions;
@@ -35,54 +35,69 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }));
         }
 
-        public void AddSubmission(ScriptState scriptState)
+        public void UpdateWorkspace(ScriptState scriptState)
         {
             _currentCompilation = scriptState.Script.GetCompilation();
 
             var solution = CurrentSolution;
-            if (_currentSubmissionProjectId != null)
-            {
-                solution = solution.RemoveProject(_currentSubmissionProjectId);
-            }
+            solution = RemoveWorkingProjectFromSolution(solution);
 
             SetCurrentSolution(solution);
 
-            _previousSubmissionProjectId = CreateProjectForPreviousSubmission(_currentCompilation, scriptState.Script.Code, _currentSubmissionProjectId, _previousSubmissionProjectId);
+            _previousSubmissionProjectId = AddProjectWithPreviousSubmissionToSolution(_currentCompilation, scriptState.Script.Code, _workingProjectId, _previousSubmissionProjectId);
 
-            (_currentSubmissionProjectId, _workingDocumentId) = CreateProjectForCurrentSubmission(_currentCompilation, _previousSubmissionProjectId);
+            (_workingProjectId, _workingDocumentId) = AddNewWorkingProjectToSolution(_currentCompilation, _previousSubmissionProjectId);
         }
 
-        private (ProjectId projectId, DocumentId workingDocumentId) CreateProjectForCurrentSubmission(Compilation previousCompilation, ProjectId projectReferenceProjectId)
+        private Solution RemoveWorkingProjectFromSolution(Solution solution)
         {
-            var submission = _submissionCount++;
-            var solution = CurrentSolution;
-            var assemblyName = $"Submission#{submission}";
-            var compilationOptions = previousCompilation.Options.WithScriptClassName(assemblyName);
-            var debugName = assemblyName;
-            var projectId = ProjectId.CreateNewId(debugName: debugName);
+            if (_workingProjectId != null)
+            {
+                solution = solution.RemoveProject(_workingProjectId);
+            }
 
-            solution = CreateProjectAndAddToSolution(projectId, debugName, assemblyName, compilationOptions, solution,
+            return solution;
+        }
+
+        private (ProjectId projectId, DocumentId workingDocumentId) AddNewWorkingProjectToSolution(Compilation previousCompilation, ProjectId projectReferenceProjectId)
+        {
+            var solution = CurrentSolution;
+            var assemblyName = $"Submission#{_submissionCount++}";
+            var compilationOptions = previousCompilation.Options.WithScriptClassName(assemblyName);
+
+            var projectId = ProjectId.CreateNewId(debugName: $"workingProject{assemblyName}");
+
+            solution = CreateProjectAndAddToSolution(
+                projectId, 
+                assemblyName, 
+                compilationOptions, 
+                solution,
                 projectReferenceProjectId);
 
             var workingDocumentId = DocumentId.CreateNewId(
-                projectId,
-                debugName: debugName);
+                projectId);
 
             solution = solution.AddDocument(
                 workingDocumentId,
-                debugName,
+                "active",
                 string.Empty);
 
             SetCurrentSolution(solution);
             return (projectId, workingDocumentId);
         }
 
-        private Solution CreateProjectAndAddToSolution(ProjectId projectId, string debugName, string assemblyName, CompilationOptions compilationOptions, Solution solution, ProjectId projectReferenceProjectId, IEnumerable<MetadataReference> metadataReferences = null)
+        private Solution CreateProjectAndAddToSolution(
+            ProjectId projectId, 
+            string assemblyName, 
+            CompilationOptions compilationOptions, 
+            Solution solution, 
+            ProjectId projectReferenceProjectId, 
+            IEnumerable<MetadataReference> metadataReferences = null)
         {
             var projectInfo = ProjectInfo.Create(
                 projectId,
                 VersionStamp.Create(),
-                name: debugName,
+                name: assemblyName,
                 assemblyName: assemblyName,
                 language: LanguageNames.CSharp,
                 parseOptions: _parseOptions,
@@ -103,12 +118,13 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return solution;
         }
 
-        private ProjectId CreateProjectForPreviousSubmission(Compilation compilation, string code, ProjectId projectId, ProjectId projectReferenceProjectId)
+        private ProjectId AddProjectWithPreviousSubmissionToSolution(Compilation compilation, string code, ProjectId projectId, ProjectId projectReferenceProjectId)
         {
             var solution = CurrentSolution;
 
             var compilationOptions = compilation.Options;
             var assemblyName = compilationOptions.ScriptClassName;
+
             if (string.IsNullOrWhiteSpace(assemblyName))
             {
                 assemblyName = $"Submission#{_submissionCount}";
@@ -124,8 +140,13 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 projectId = ProjectId.CreateNewId(debugName: debugName);
             }
 
-            solution = CreateProjectAndAddToSolution(projectId, debugName, assemblyName, compilationOptions, solution,
-                projectReferenceProjectId, compilation.References);
+            solution = CreateProjectAndAddToSolution(
+                projectId, 
+                assemblyName, 
+                compilationOptions, 
+                solution,
+                projectReferenceProjectId, 
+                compilation.References);
 
             var currentSubmissionDocumentId = DocumentId.CreateNewId(
                 projectId,
@@ -144,27 +165,26 @@ namespace Microsoft.DotNet.Interactive.CSharp
         }
 
 
-        public Document ForkDocument(string code)
+        public Document UpdateWorkingDocument(string code)
         {
             var solution = CurrentSolution;
             solution = solution.RemoveDocument(_workingDocumentId);
 
-            var debugName = $"Fork from #{_submissionCount}";
+            var documentDebugName = $"Working from #{_submissionCount}";
 
             _workingDocumentId = DocumentId.CreateNewId(
-                _currentSubmissionProjectId,
-                debugName);
+                _workingProjectId,
+                documentDebugName);
 
             solution = solution.AddDocument(
                 _workingDocumentId,
-                debugName,
+                documentDebugName,
                 SourceText.From(code)
             );
 
-            var languageServicesDocument =
-                solution.GetDocument(_workingDocumentId);
+            var workingDocument = solution.GetDocument(_workingDocumentId);
             SetCurrentSolution(solution);
-            return languageServicesDocument;
+            return workingDocument;
 
         }
 

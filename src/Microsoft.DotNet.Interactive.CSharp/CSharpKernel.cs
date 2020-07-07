@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
             using var _ = new GCPressure(1024 * 1024);
             
-            var document = _workspace.ForkDocument(command.Code);
+            var document = _workspace.UpdateWorkingDocument(command.Code);
             var text = await document.GetTextAsync();
             var cursorPosition = text.Lines.GetPosition(command.LinePosition);
             var service = QuickInfoService.GetService(document);
@@ -293,7 +293,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             if (ScriptState.Exception is null)
             {
-                _workspace.AddSubmission(ScriptState);
+                _workspace.UpdateWorkspace(ScriptState);
             }
         }
 
@@ -316,7 +316,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             using var _ = new GCPressure(1024 * 1024);
 
-            var document = _workspace.ForkDocument(code);
+            var document = _workspace.UpdateWorkingDocument(code);
             var service = CompletionService.GetService(document);
             var completionList = await service.GetCompletionsAsync(document, cursorPosition);
            
@@ -333,7 +333,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             RequestDiagnostics command,
             KernelInvocationContext context)
         {
-            var document = _workspace.ForkDocument(command.Code);
+            var document = _workspace.UpdateWorkingDocument(command.Code);
             var semanticModel = await document.GetSemanticModelAsync();
             var diagnostics = semanticModel.GetDiagnostics();
             context.Publish(new DiagnosticsProduced(diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic), command));
