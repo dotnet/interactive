@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.Interactive
 
         internal KernelCommandPipeline Pipeline { get; }
 
-        internal CompositeKernel ParentKernel { get; set; }
+        public CompositeKernel ParentKernel { get; internal set; }
 
         public SubmissionParser SubmissionParser { get; }
 
@@ -214,13 +214,7 @@ namespace Microsoft.DotNet.Interactive
         {
             SetHandlingKernel(command, context);
 
-            var previousKernel = context.CurrentKernel;
-
-            context.CurrentKernel = this;
-
             await next(command, context);
-
-            context.CurrentKernel = previousKernel;
         }
 
         public FrontendEnvironment FrontendEnvironment

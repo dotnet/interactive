@@ -114,9 +114,7 @@ namespace Microsoft.DotNet.Interactive
 
         public static KernelInvocationContext Current => _current.Value;
 
-        public Kernel HandlingKernel { get; set; }
-
-        public Kernel CurrentKernel { get; set; }
+        public Kernel HandlingKernel { get; internal set; }
 
         public async Task QueueAction(
             KernelCommandInvocation action)

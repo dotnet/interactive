@@ -15,6 +15,8 @@ namespace Microsoft.DotNet.Interactive
 {
     public partial class Kernel
     {
+        public static Kernel Current => KernelInvocationContext.Current.HandlingKernel;
+
         public static DisplayedValue display(
             object value,
             string mimeType = null)
@@ -43,12 +45,8 @@ namespace Microsoft.DotNet.Interactive
                 .Wait();
         }
 
-        public static Kernel GetKernel(string name)
-        {
-            var kernel = KernelInvocationContext.Current.HandlingKernel;
-
-            return kernel.FindKernel(name) ??
-                   throw new KeyNotFoundException($"Kernel \"{name}\" was not found.");
-        }
+        public static Kernel GetKernel(string name) =>
+            Current.FindKernel(name) ??
+            throw new KeyNotFoundException($"Kernel \"{name}\" was not found.");
     }
 }
