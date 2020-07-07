@@ -219,6 +219,11 @@ namespace Microsoft.DotNet.Interactive
 
                     yield return kernel.SubmissionParser.GetDirectiveParser();
                 }
+                else
+                {
+                    yield return SubmissionParser.GetDirectiveParser();
+
+                }
 
                 yield break;
             }
