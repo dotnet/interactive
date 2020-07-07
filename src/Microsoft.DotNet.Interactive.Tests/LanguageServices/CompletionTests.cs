@@ -90,6 +90,32 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         }
 
         [Theory]
+        [InlineData(Language.FSharp, Skip = "Compiler error")]
+        [InlineData(Language.CSharp)]
+        public async Task Completions_are_available_for_symbols_members(Language language)
+        {
+            var declaration = language switch
+            {
+                Language.CSharp => new SubmitCode("var fileInfo = new System.IO.FileInfo(\"temp.file\");"),
+                Language.FSharp => new SubmitCode("let fileInfo = new System.IO.FileInfo(\"temp.file\")")
+            };
+
+            var kernel = CreateKernel(language);
+            await kernel.SendAsync(declaration);
+
+            MarkupTestFile.GetLineAndColumn("fileInfo.$$", out var useInput, out var line, out var column);
+            await kernel.SendAsync(new RequestCompletions(useInput, new LinePosition(line, column)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionsProduced>()
+                .Which
+                .Completions
+                .Should()
+                .Contain(item => item.DisplayText == "AppendText");
+        }
+
+        [Theory]
         [InlineData(Language.FSharp)]
         [InlineData(Language.CSharp)]
         public async Task Completions_are_available_for_symbols_declared_in_the_previous_submission_ending_in_a_trailing_expression(Language language)

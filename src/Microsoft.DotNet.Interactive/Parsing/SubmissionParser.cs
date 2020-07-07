@@ -10,6 +10,7 @@ using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -132,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     case LanguageNode languageNode:
                         commands.Add(commandCreator(languageNode, originalCommand.Parent));
                         break;
-                    
+
                     default:
                         throw new ArgumentOutOfRangeException(nameof(node));
                 }
@@ -142,7 +143,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             {
                 var kernel = _kernel.FindKernel(kernelName);
 
-                if (kernel?.SubmissionParser.GetDirectiveParser() is {} parser)
+                if (kernel?.SubmissionParser.GetDirectiveParser() is { } parser)
                 {
                     var restore = new DirectiveCommand(
                         parser.Parse("#!nuget-restore"),

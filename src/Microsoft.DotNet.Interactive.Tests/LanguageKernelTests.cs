@@ -248,7 +248,7 @@ f();"
         [Theory]
         [InlineData(Language.CSharp, "CS0103", "The name 'aaaadd' does not exist in the current context", "(1,1): error CS0103: The name 'aaaadd' does not exist in the current context")]
         [InlineData(Language.FSharp, "FS0039", "The value or constructor 'aaaadd' is not defined.", "input.fsx (1,1)-(1,7) typecheck error The value or constructor 'aaaadd' is not defined.")]
-        public async Task when_code_contains_compile_time_error_diagniostics_are_produced(Language language, string code, string diagnosticMessage, string errorMessage)
+        public async Task when_code_contains_compile_time_error_diagnostics_are_produced(Language language, string code, string diagnosticMessage, string errorMessage)
         {
             var kernel = CreateKernel(language);
 
@@ -371,6 +371,106 @@ Console.WriteLin();
                 .ContainSingle(d => d.Code.StartsWith("CS"))
                 .And
                 .ContainSingle(d => d.Code.StartsWith("FS"));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task shadowing_variable_does_not_produce_diagnostics(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var firstDeclaration = language switch
+            {
+                // null returned.
+                Language.FSharp => "let a = \"original\"",
+                Language.CSharp => "var a = \"original\";"
+            };
+
+            await SubmitCode(kernel, firstDeclaration);
+
+            var shadowingDeclaration = language switch
+            {
+                // null returned.
+                Language.FSharp => "let a = 1",
+                Language.CSharp => "var a = 1;"
+            };
+
+            await SubmitCode(kernel, shadowingDeclaration);
+
+            KernelEvents
+                .OfType<DiagnosticsProduced>()
+                .SelectMany(dp => dp.Diagnostics)
+                .Should()
+                .BeEmpty();
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task accessing_shadowed_variable_does_not_produce_diagnostics(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var firstDeclaration = language switch
+            {
+                // null returned.
+                Language.FSharp => "let a = \"original\"",
+                Language.CSharp => "var a = \"original\";"
+            };
+
+            await SubmitCode(kernel, firstDeclaration);
+
+            var shadowingDeclaration = language switch
+            {
+                // null returned.
+                Language.FSharp => "let a = 1",
+                Language.CSharp => "var a = 1;"
+            };
+
+            await SubmitCode(kernel, shadowingDeclaration);
+
+            await SubmitCode(kernel, "a");
+
+            KernelEvents
+                .OfType<DiagnosticsProduced>()
+                .SelectMany(dp => dp.Diagnostics)
+                .Should()
+                .BeEmpty();
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task typing_shadowed_variable_does_not_produce_diagnostics(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var firstDeclaration = language switch
+            {
+                // null returned.
+                Language.FSharp => "let a = \"original\"",
+                Language.CSharp => "var a = \"original\";"
+            };
+
+            await SubmitCode(kernel, firstDeclaration);
+
+            var shadowingDeclaration = language switch
+            {
+                // null returned.
+                Language.FSharp => "let a = 1",
+                Language.CSharp => "var a = 1;"
+            };
+
+            await SubmitCode(kernel, shadowingDeclaration);
+
+            await kernel.SendAsync(new RequestDiagnostics("a"));
+
+            KernelEvents
+                .OfType<DiagnosticsProduced>()
+                .SelectMany(dp => dp.Diagnostics)
+                .Should()
+                .BeEmpty();
         }
 
         [Theory]
