@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                         if (parseResult.Errors.Any())
                         {
-                            if (parseResult.Errors.All(e => e.SymbolResult == null) && directiveNode is ActionDirectiveNode actionDirectiveNode)
+                            if (directiveNode.IsUnknownActionDirective())
                             {
                                 commands.Add(commandCreator(directiveNode, originalCommand.Parent));
                             }
