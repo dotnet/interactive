@@ -67,11 +67,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             var workingDocumentId = DocumentId.CreateNewId(
                 projectId,
-                debugName: $"working document for {submission}");
+                debugName: debugName);
 
             solution = solution.AddDocument(
                 workingDocumentId,
-                $"working document for {submission}", 
+                debugName, 
                 string.Empty);
 
             SetCurrentSolution(solution);
@@ -150,15 +150,15 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var solution = CurrentSolution;
             solution = solution.RemoveDocument(_workingDocumentId);
 
-            var workingDocumentName = $"Fork from #{_submissionCount}";
+            var debugName = $"Fork from #{_submissionCount}";
             
             _workingDocumentId = DocumentId.CreateNewId(
                 _currentSubmissionProjectId,
-                workingDocumentName);
+                debugName);
 
             solution = solution.AddDocument(
                 _workingDocumentId,
-                workingDocumentName,
+                debugName,
                 SourceText.From(code)
             );
 
