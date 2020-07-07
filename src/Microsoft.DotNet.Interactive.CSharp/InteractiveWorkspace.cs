@@ -3,6 +3,7 @@
 
 using System;
 using System.Reactive.Disposables;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Host.Mef;
@@ -11,7 +12,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
-    internal class InteractiveWorkspace : IDisposable
+    internal class InteractiveWorkspace : Workspace
     {
         private ProjectId _previousSubmissionProjectId;
         private ProjectId _currentSubmissionProjectId;
@@ -19,30 +20,18 @@ namespace Microsoft.DotNet.Interactive.CSharp
         private int _submissionCount;
         private readonly CSharpParseOptions _parseOptions;
         private Compilation _currentCompilation;
-        private Solution _solution;
-        private TextContainer _committedTextContainer;
-        private DocumentId _committedDocumentId;
+        private DocumentId _workingDocumentId;
 
-        public InteractiveWorkspace()
+        public InteractiveWorkspace() : base(MefHostServices.DefaultHost, WorkspaceKind.Interactive)
         {
-            var workspace = new AdhocWorkspace(MefHostServices.DefaultHost, WorkspaceKind.Interactive);
-            
-            _committedTextContainer = new TextContainer();
-
-            _solution = workspace.CurrentSolution;
-
             _parseOptions = new CSharpParseOptions(
                 LanguageVersion.Latest,
                 DocumentationMode.None,
                 SourceCodeKind.Script);
 
-            _disposables.Add(workspace);
-
             _disposables.Add(Disposable.Create(() =>
             {
-                _committedTextContainer = null;
                 _currentCompilation = null;
-                _solution = null;
             }));
         }
 
@@ -50,141 +39,152 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
             _currentCompilation = scriptState.Script.GetCompilation();
 
-            _previousSubmissionProjectId = _currentSubmissionProjectId;
+            var solution = CurrentSolution;
+            if (_currentSubmissionProjectId != null)
+            {
+                solution = solution.RemoveProject(_currentSubmissionProjectId);
+            }
 
-            _committedTextContainer.AppendText(scriptState.Script.Code);
+            SetCurrentSolution(solution);
 
-            var assemblyName = $"Submission#{_submissionCount++}";
+            _previousSubmissionProjectId = CreateProjectForPreviousSubmission(_currentCompilation, scriptState.Script.Code, _currentSubmissionProjectId, _previousSubmissionProjectId);
+
+            (_currentSubmissionProjectId, _workingDocumentId) = CreateProjectForCurrentSubmission(_currentCompilation, _previousSubmissionProjectId);
+        }
+
+        private (ProjectId projectId, DocumentId workingDocumentId) CreateProjectForCurrentSubmission(Compilation previousCompilation, ProjectId projectReferenceProjectId)
+        {
+            var submission = _submissionCount++;
+            var solution = CurrentSolution;
+            var assemblyName = $"Submission#{submission}";
+            var compilationOptions = previousCompilation.Options.WithScriptClassName(assemblyName);
             var debugName = assemblyName;
-
-#if DEBUG
-            debugName += $": {scriptState.Script.Code}";
-#endif
-
-            _currentSubmissionProjectId = ProjectId.CreateNewId(debugName: debugName);
+            var projectId = ProjectId.CreateNewId(debugName: debugName);
 
             var projectInfo = ProjectInfo.Create(
-                _currentSubmissionProjectId,
+                projectId,
                 VersionStamp.Create(),
                 name: debugName,
                 assemblyName: assemblyName,
                 language: LanguageNames.CSharp,
                 parseOptions: _parseOptions,
-                compilationOptions: _currentCompilation.Options,
-                metadataReferences: _currentCompilation.References);
+                compilationOptions: compilationOptions,
+                isSubmission: true);
+            
+            solution = solution.AddProject(projectInfo);
 
-            _solution = _solution.AddProject(projectInfo);
+            if (projectReferenceProjectId != null)
+            {
+                solution = solution.AddProjectReference(
+                    projectId,
+                    new ProjectReference(projectReferenceProjectId)
+                );
+            }
+
+
+            var workingDocumentId = DocumentId.CreateNewId(
+                projectInfo.Id,
+                debugName: $"working document for {submission}");
+
+            solution = solution.AddDocument(
+                workingDocumentId,
+                $"working document for {submission}", 
+                string.Empty);
+
+            SetCurrentSolution(solution);
+            return (projectId, workingDocumentId);
+        }
+
+        private ProjectId CreateProjectForPreviousSubmission(Compilation compilation, string code, ProjectId projectId, ProjectId projectReferenceProjectId)
+        {
+            var solution = CurrentSolution;
+           
+            var compilationOptions = compilation.Options;
+            var assemblyName = compilationOptions.ScriptClassName;
+            if (string.IsNullOrWhiteSpace(assemblyName))
+            {
+                assemblyName = $"Submission#{_submissionCount}";
+                compilationOptions = compilationOptions.WithScriptClassName(assemblyName);
+            }
+
+            var debugName = assemblyName;
+#if DEBUG
+            debugName += $": {code}";
+#endif
+            if (projectId == null)
+            {
+                projectId = ProjectId.CreateNewId(debugName: debugName);
+            }
+
+            var projectInfo = ProjectInfo.Create(
+                projectId,
+                VersionStamp.Create(),
+                name: debugName,
+                assemblyName: assemblyName,
+                language: LanguageNames.CSharp,
+                parseOptions: _parseOptions,
+                compilationOptions: compilationOptions,
+                metadataReferences: compilation.References,
+                isSubmission:true);
 
             var currentSubmissionDocumentId = DocumentId.CreateNewId(
-                _currentSubmissionProjectId,
-                debugName: debugName);
+                projectInfo.Id,
+                debugName: assemblyName);
 
             // add the code submission to the current project
-            var submissionSourceText = SourceText.From(scriptState.Script.Code);
+            var submissionSourceText = SourceText.From(code);
 
-            _solution = _solution.AddDocument(
+            solution = solution.AddProject(projectInfo);
+           
+            if (projectReferenceProjectId != null)
+            {
+                solution = solution.AddProjectReference(
+                    projectId,
+                    new ProjectReference(projectReferenceProjectId)
+                );
+            }
+
+            solution = solution.AddDocument(
                 currentSubmissionDocumentId,
                 debugName,
                 submissionSourceText);
 
-            if (_previousSubmissionProjectId != null)
-            {
-                _solution = _solution.AddProjectReference(
-                    _currentSubmissionProjectId,
-                    new ProjectReference(_previousSubmissionProjectId));
-            }
-
-            // remove rollup and working document from project
-            
-            if (_committedDocumentId != null)
-            {
-                _solution = _solution.RemoveDocument(_committedDocumentId);
-            }
-
-            // create new ids and reuse buffers
-
-            _committedTextContainer.AppendText(scriptState.Script.Code);
-           
-
-            var workingProjectName = $"Rollup through #{_submissionCount - 1}";
-
-            _committedDocumentId = DocumentId.CreateNewId(
-                _currentSubmissionProjectId,
-                workingProjectName);
-
-            _solution = _solution.AddDocument(
-                _committedDocumentId,
-                workingProjectName,
-                TextLoader.From(_committedTextContainer, new VersionStamp()));
-
+            SetCurrentSolution(solution);
+            return projectId;
         }
+
 
         public Document ForkDocument(string code)
         {
-            var solution = _solution;
+            var solution = CurrentSolution;
+            solution = solution.RemoveDocument(_workingDocumentId);
 
-            var workingDocumentName = $"Fork from #{_submissionCount - 1}";
-
-            var workingDocumentId = DocumentId.CreateNewId(
+            var workingDocumentName = $"Fork from #{_submissionCount}";
+            
+            _workingDocumentId = DocumentId.CreateNewId(
                 _currentSubmissionProjectId,
                 workingDocumentName);
 
             solution = solution.AddDocument(
-                workingDocumentId,
+                _workingDocumentId,
                 workingDocumentName,
                 SourceText.From(code)
             );
 
             var languageServicesDocument =
-                solution.GetDocument(workingDocumentId);
-
+                solution.GetDocument(_workingDocumentId);
+            SetCurrentSolution(solution);
             return languageServicesDocument;
 
         }
 
-        public void Dispose()
+        protected override void Dispose(bool finalize)
         {
-            _disposables.Dispose();
+            if (!finalize)
+            {
+                _disposables.Dispose();
+            }
+            base.Dispose(finalize);
         }
     }
-
-    internal class TextContainer : SourceTextContainer
-    {
-        private SourceText _currentText;
-
-        public TextContainer()
-        {
-            _currentText = SourceText.From(string.Empty);
-        }
-
-        public void SetText(string text)
-        {
-            var old = _currentText;
-            _currentText = SourceText.From(text);
-            if (TextChanged is { } e)
-            {
-                e.Invoke(this, new TextChangeEventArgs(old, _currentText));
-            }
-        }
-
-        public void AppendText(string text)
-        {
-            var old = _currentText;
-            _currentText = _currentText.Replace(_currentText.Length,text.Length, text);
-            if (TextChanged is {} e)
-            {
-                e.Invoke(this, new TextChangeEventArgs(old, _currentText));
-            }
-        }
-
-        public override SourceText CurrentText =>  GetSourceText();
-
-        private SourceText GetSourceText()
-        {
-            return _currentText;
-        }
-
-        public override event EventHandler<TextChangeEventArgs> TextChanged;
-    }
-
 }
