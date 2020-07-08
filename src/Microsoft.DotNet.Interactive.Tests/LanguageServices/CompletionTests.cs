@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         }
 
         [Theory]
-        [InlineData(Language.FSharp, Skip = "Compiler error")]
+        [InlineData(Language.FSharp)]
         [InlineData(Language.CSharp)]
         public async Task Completions_are_available_for_symbols_members(Language language)
         {
