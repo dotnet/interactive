@@ -26,7 +26,7 @@ open FSharp.Compiler.SourceCodeServices
 [<AbstractClass>]
 type FSharpKernelBase () as this =
 
-    inherit DotNetLanguageKernel("fsharp")
+    inherit DotNetKernel("fsharp")
 
     static let lockObj = Object();
 

@@ -1058,7 +1058,7 @@ Console.Write(2);
 
             await kernel.SubmitCodeAsync(codeToSetVariable);
 
-            var languageKernel = kernel.ChildKernels.OfType<DotNetLanguageKernel>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
 
             var succeeded = languageKernel.TryGetVariable("x", out int x);
 
@@ -1076,7 +1076,7 @@ Console.Write(2);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<DotNetLanguageKernel>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
 
             await languageKernel.SetVariableAsync("x", 123);
 
@@ -1096,7 +1096,7 @@ Console.Write(2);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<DotNetLanguageKernel>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
 
             await languageKernel.SetVariableAsync("x", 123);
             await languageKernel.SetVariableAsync("x", 456);
@@ -1117,7 +1117,7 @@ Console.Write(2);
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<DotNetLanguageKernel>().Single();
+            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
 
             await languageKernel.SetVariableAsync("x", 123);
             await languageKernel.SetVariableAsync("x", "hello");

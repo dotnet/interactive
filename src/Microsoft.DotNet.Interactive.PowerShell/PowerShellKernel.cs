@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
     using Microsoft.DotNet.Interactive.Utility;
 
     public class PowerShellKernel : 
-        DotNetLanguageKernel,
+        DotNetKernel,
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<SubmitCode>
