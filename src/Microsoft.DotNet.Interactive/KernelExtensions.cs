@@ -130,12 +130,12 @@ namespace Microsoft.DotNet.Interactive
                 "name",
                 "The name of the variable to create in the destination kernel");
 
-            variableNameArg.Suggestions.Add(_ =>
+            variableNameArg.AddSuggestions(_ =>
             {
                 if (kernel.ParentKernel is { } composite)
                 {
                     return composite.ChildKernels
-                                    .OfType<DotNetLanguageKernel>()
+                                    .OfType<DotNetKernel>()
                                     .SelectMany(k => k.GetVariableNames());
                 }
 
@@ -146,7 +146,7 @@ namespace Microsoft.DotNet.Interactive
                 "--from",
                 "The name of the kernel where the variable has been previously declared");
 
-            fromKernelOption.AddSuggestion(_ =>
+            fromKernelOption.AddSuggestions(_ =>
             {
                 if (kernel.ParentKernel is { } composite)
                 {
