@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public static T UseDotNetVariableSharing<T>(this T kernel)
-            where T : DotNetLanguageKernel
+            where T : DotNetKernel
         {
             var variableNameArg = new Argument<string>(
                 "name",
@@ -151,7 +151,7 @@ namespace Microsoft.DotNet.Interactive
                 if (kernel.ParentKernel is { } composite)
                 {
                     return composite.ChildKernels
-                                    .OfType<DotNetLanguageKernel>()
+                                    .OfType<DotNetKernel>()
                                     .Select(k => $"#!{k.Name}");
                 }
 
@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.Interactive
 
             share.Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (from, name, context) =>
             {
-                if (kernel.FindKernel(from) is DotNetLanguageKernel fromKernel)
+                if (kernel.FindKernel(from) is DotNetKernel fromKernel)
                 {
                     if (fromKernel.TryGetVariable(name, out object shared))
                     {

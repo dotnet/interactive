@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public abstract class DotNetLanguageKernel : Kernel
+    public abstract class DotNetKernel : Kernel
     {
-        protected DotNetLanguageKernel(string name) : base(name)
+        protected DotNetKernel(string name) : base(name)
         {
         }
 

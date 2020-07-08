@@ -29,7 +29,7 @@ using CompletionItem = Microsoft.DotNet.Interactive.Events.CompletionItem;
 namespace Microsoft.DotNet.Interactive.CSharp
 {
     public class CSharpKernel :
-        DotNetLanguageKernel,
+        DotNetKernel,
         IExtensibleKernel,
         ISupportNuget,
         IKernelCommandHandler<RequestCompletions>,
