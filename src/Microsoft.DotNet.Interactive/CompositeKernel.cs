@@ -210,33 +210,45 @@ namespace Microsoft.DotNet.Interactive
             var indexOfPreviousSpace =
                 upToCursor.LastIndexOf(" ", StringComparison.CurrentCultureIgnoreCase);
 
+            var compositeKernelDirectiveParser = SubmissionParser.GetDirectiveParser();
+
             if (indexOfPreviousSpace >= 0 &&
                 directiveNode is ActionDirectiveNode actionDirectiveNode)
             {
+                // if the first token has been specified, we can narrow down to the specific directive parser that defines this directive
+
                 var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
 
                 var kernel = this.FindKernel(actionDirectiveNode.ParentLanguage);
 
-                var parser = kernel.SubmissionParser.GetDirectiveParser();
+                var languageKernelDirectiveParser = kernel.SubmissionParser.GetDirectiveParser();
 
-                if (parser.Configuration.RootCommand.Children.GetByAlias(directiveName) is { })
+                if (IsDirectiveDefinedIn(languageKernelDirectiveParser))
                 {
                     // the directive is defined in the subkernel, so this is the only directive parser we need
-                    yield return parser;
-
-                    yield break;
+                    yield return languageKernelDirectiveParser;
                 }
-            }
-
-            yield return SubmissionParser.GetDirectiveParser();
-
-            for (var i = 0; i < ChildKernels.Count; i++)
-            {
-                var kernel = ChildKernels[i];
-
-                if (kernel is { })
+                else if (IsDirectiveDefinedIn(compositeKernelDirectiveParser))
                 {
-                    yield return kernel.SubmissionParser.GetDirectiveParser();
+                    yield return compositeKernelDirectiveParser;
+                }
+
+                bool IsDirectiveDefinedIn(Parser parser) => 
+                    parser.Configuration.RootCommand.Children.GetByAlias(directiveName) is { };
+            }
+            else
+            {
+                // otherwise, return all directive parsers from the CompositeKernel as well as subkernels
+                yield return compositeKernelDirectiveParser;
+
+                for (var i = 0; i < ChildKernels.Count; i++)
+                {
+                    var kernel = ChildKernels[i];
+
+                    if (kernel is { })
+                    {
+                        yield return kernel.SubmissionParser.GetDirectiveParser();
+                    }
                 }
             }
         }

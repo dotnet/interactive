@@ -132,12 +132,14 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                                          because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
             }
 
-            [Fact]
-            public void Inner_symbol_completions_do_not_include_top_level_symbols()
+            [Theory]
+            [InlineData("#!share [| |]")]
+            [InlineData("#!connect [| |]")]
+            public void Inner_symbol_completions_do_not_include_top_level_symbols(string markupCode)
             {
-                var kernel = CreateCompositeKernel();
+                var kernel = CreateCompositeKernel().UseConnection(new ConnectSignalR());
 
-                "#!share [| |]"
+                markupCode
                     .ParseMarkupCode()
                     .PositionsInMarkedSpans()
                     .Should()
