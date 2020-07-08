@@ -134,7 +134,13 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         {
                             entryItems.Add(new KeyValuePair<string, string>("frontend", "jupyter"));
                         }
+                        else
+                        {
+                            entryItems.Add(new KeyValuePair<string, string>("frontend", "unknown"));
+                        }
                     }
+
+                    
                 });
 
             var verboseOption = new Option<bool>(
