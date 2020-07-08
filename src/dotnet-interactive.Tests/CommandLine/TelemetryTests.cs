@@ -224,12 +224,24 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
+        public async Task stdio_command_sends_default_fronted_telemetry()
+        {
+            await _parser.InvokeAsync("stdio", _console);
+            _fakeTelemetry.LogEntries.Should().Contain(
+                x => x.EventName == "command" &&
+                     x.Properties.Count == 3 &&
+                     x.Properties["verb"] == Sha256Hasher.Hash("STDIO") &&
+                     x.Properties["frontend"] == "unknown" &&
+                     x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
+        }
+
+        [Fact]
         public async Task stdio_standalone_command_sends_telemetry()
         {
             await _parser.InvokeAsync("stdio", _console);
             _fakeTelemetry.LogEntries.Should().Contain(
                 x => x.EventName == "command" &&
-                     x.Properties.Count == 2 &&
+                     x.Properties.Count >= 2 &&
                      x.Properties["verb"] == Sha256Hasher.Hash("STDIO") &&
                      x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
         }
@@ -247,7 +259,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             await _parser.InvokeAsync("stdio --default-kernel csharp", _console);
             _fakeTelemetry.LogEntries.Should().Contain(
                 x => x.EventName == "command" &&
-                     x.Properties.Count == 2 &&
+                     x.Properties.Count >= 2 &&
                      x.Properties["verb"] == Sha256Hasher.Hash("STDIO") &&
                      x.Properties["default-kernel"] == Sha256Hasher.Hash("CSHARP"));
         }
@@ -265,7 +277,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             await _parser.InvokeAsync("stdio --default-kernel fsharp", _console);
             _fakeTelemetry.LogEntries.Should().Contain(
                 x => x.EventName == "command" &&
-                     x.Properties.Count == 2 &&
+                     x.Properties.Count >= 2 &&
                      x.Properties["verb"] == Sha256Hasher.Hash("STDIO") &&
                      x.Properties["default-kernel"] == Sha256Hasher.Hash("FSHARP"));
         }
