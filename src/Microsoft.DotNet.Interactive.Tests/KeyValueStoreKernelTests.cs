@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Events;
@@ -56,6 +57,30 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Which
                 .Should()
                 .Be(storedValue);
+        }
+
+        [Fact]
+        public async Task When_mime_type_is_specified_then_the_value_is_displayed_using_the_specified_mime_type()
+        {
+            using var kernel = CreateKernel();
+
+            var storedValue = "1,2,3";
+
+            var result = await kernel.SubmitCodeAsync(
+                             @$"
+#!value --name hello --mime-type text/test-stuff
+{storedValue}
+");
+
+            using var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should()
+                  .ContainSingle<DisplayedValueProduced>()
+                  .Which
+                  .FormattedValues
+                  .Should()
+                  .ContainSingle(v => v.MimeType == "text/test-stuff" &&
+                                      v.Value == storedValue);
         }
 
         private static CompositeKernel CreateKernel() =>
