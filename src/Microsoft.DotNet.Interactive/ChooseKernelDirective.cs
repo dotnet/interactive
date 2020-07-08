@@ -8,7 +8,7 @@ using System.CommandLine.Invocation;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal class ChooseKernelDirective : Command
+    public class ChooseKernelDirective : Command
     {
         public ChooseKernelDirective(Kernel kernel) : 
             base($"#!{kernel.Name}", 

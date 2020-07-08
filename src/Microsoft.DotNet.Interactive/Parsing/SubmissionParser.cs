@@ -50,17 +50,27 @@ namespace Microsoft.DotNet.Interactive.Parsing
             return parser.Parse();
         }
 
-        public IReadOnlyList<KernelCommand> SplitSubmission(SubmitCode submitCode)
-        {
-            return SplitSubmission(submitCode, submitCode.Code, (languageNode, parent) => new SubmitCode(languageNode, submitCode.SubmissionType, parent));
-        }
+        public IReadOnlyList<KernelCommand> SplitSubmission(SubmitCode submitCode) =>
+            SplitSubmission(
+                submitCode,
+                submitCode.Code,
+                (languageNode, parent, kernelNameNode) => new SubmitCode(languageNode, submitCode.SubmissionType, parent, kernelNameNode));
 
-        public IReadOnlyList<KernelCommand> SplitSubmission(RequestDiagnostics requestDiagnostics)
-        {
-            return SplitSubmission(requestDiagnostics, requestDiagnostics.Code, (languageNode, parent) => new RequestDiagnostics(languageNode, parent));
-        }
+        public IReadOnlyList<KernelCommand> SplitSubmission(RequestDiagnostics requestDiagnostics) =>
+            SplitSubmission(
+                requestDiagnostics,
+                requestDiagnostics.Code,
+                (languageNode, parent, _) => new RequestDiagnostics(languageNode, parent));
 
-        private IReadOnlyList<KernelCommand> SplitSubmission(KernelCommand originalCommand, string code, Func<LanguageNode, KernelCommand, KernelCommand> commandCreator)
+        private delegate KernelCommand CreateChildCommand(
+            LanguageNode lanugageNode, 
+            KernelCommand parentCommand,
+            KernelNameDirectiveNode kernelNameDirectiveNode);
+
+        private IReadOnlyList<KernelCommand> SplitSubmission(
+            KernelCommand originalCommand,
+            string code,
+            CreateChildCommand createCommand)
         {
             var commands = new List<KernelCommand>();
             var nugetRestoreOnKernels = new HashSet<string>();
@@ -69,7 +79,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
             var tree = Parse(code, originalCommand.TargetKernelName);
             var nodes = tree.GetRoot().ChildNodes.ToArray();
             var targetKernelName = originalCommand.TargetKernelName ?? KernelLanguage;
-
+            KernelNameDirectiveNode lastKernelNameNode = null;
+            
             foreach (var node in nodes)
             {
                 switch (node)
@@ -81,7 +92,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         {
                             if (directiveNode.IsUnknownActionDirective())
                             {
-                                commands.Add(commandCreator(directiveNode, originalCommand.Parent));
+                                commands.Add(createCommand(directiveNode, originalCommand.Parent, lastKernelNameNode));
                             }
                             else
                             {
@@ -110,6 +121,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         if (directiveNode is KernelNameDirectiveNode kernelNameNode)
                         {
                             targetKernelName = kernelNameNode.KernelName;
+                            lastKernelNameNode = kernelNameNode;
                         }
 
                         if (parseResult.CommandResult.Command.Name == "#r")
@@ -118,7 +130,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                             if (value.Value is FileInfo)
                             {
-                                AddHoistedCommand(commandCreator(directiveNode, originalCommand.Parent));
+                                AddHoistedCommand(createCommand(directiveNode, originalCommand.Parent, lastKernelNameNode));
                             }
                             else
                             {
@@ -139,7 +151,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         break;
 
                     case LanguageNode languageNode:
-                        commands.Add(commandCreator(languageNode, originalCommand.Parent));
+                        commands.Add(createCommand(languageNode, originalCommand.Parent, lastKernelNameNode));
                         break;
 
                     default:

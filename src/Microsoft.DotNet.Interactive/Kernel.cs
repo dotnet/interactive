@@ -514,5 +514,10 @@ namespace Microsoft.DotNet.Interactive
                 ? property as T 
                 : throw new KeyNotFoundException($"Cannot find property {typeof(T)}.");
         }
+
+        protected internal virtual ChooseKernelDirective CreateChooseKernelDirective()
+        {
+            return new ChooseKernelDirective(this);
+        }
     }
 }

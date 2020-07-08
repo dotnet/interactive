@@ -21,12 +21,14 @@ namespace Microsoft.DotNet.Interactive.Commands
         internal SubmitCode(
             LanguageNode languageNode,
             SubmissionType submissionType = SubmissionType.Run,
-            KernelCommand parent = null)
+            KernelCommand parent = null,
+            KernelNameDirectiveNode kernelNameDirectiveNode = null)
             : base(languageNode.Language, parent)
         {
             Code = languageNode.Text;
             LanguageNode = languageNode;
             SubmissionType = submissionType;
+            KernelNameDirectiveNode = kernelNameDirectiveNode;
 
             if (languageNode is ActionDirectiveNode actionDirectiveNode)
             {
@@ -42,5 +44,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         public override string ToString() => $"{nameof(SubmitCode)}: {Code.TruncateForDisplay()}";
 
         internal LanguageNode LanguageNode { get; }
+
+        internal KernelNameDirectiveNode KernelNameDirectiveNode { get; }
     }
 }
