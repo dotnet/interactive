@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     return composite.ChildKernels
                                     .OfType<DotNetKernel>()
-                                    .Select(k => $"#!{k.Name}");
+                                    .Select(k => k.Name);
                 }
 
                 return Array.Empty<string>();
