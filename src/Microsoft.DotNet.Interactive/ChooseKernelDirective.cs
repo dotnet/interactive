@@ -10,9 +10,9 @@ namespace Microsoft.DotNet.Interactive
 {
     public class ChooseKernelDirective : Command
     {
-        public ChooseKernelDirective(Kernel kernel) : 
+        public ChooseKernelDirective(Kernel kernel, string? description = null) : 
             base($"#!{kernel.Name}", 
-                 $"Run the code that follows using the {kernel.Name} kernel.")
+                 description ?? $"Run the code that follows using the {kernel.Name} kernel.")
         {
             Kernel = kernel;
             Handler = CommandHandler.Create<KernelInvocationContext>(Handle);

@@ -55,26 +55,37 @@ namespace Microsoft.DotNet.Interactive
                 return;
             }
 
-            var directiveParseResult = command.KernelNameDirectiveNode.GetDirectiveParseResult();
+            var parseResult = command.KernelNameDirectiveNode.GetDirectiveParseResult();
 
-            var name = directiveParseResult.ValueForOption<string>("--name");
+            var name = parseResult.ValueForOption<string>("--name");
 
-            await SetVariableAsync(name, command.LanguageNode.Text.Trim());
+            var value = command.LanguageNode.Text.Trim();
+
+            await SetVariableAsync(name, value);
+
+            if (parseResult.ValueForOption("--mime-type") is string mimeType)
+            {
+                await context.DisplayAsync(value, mimeType);
+            }
         }
 
         protected internal override ChooseKernelDirective CreateChooseKernelDirective() =>
-            new ChooseKernelDirective(this)
+            new ChooseKernelDirective(this, "Stores a value ")
             {
-                new Option<string>("--name", "The name of the value to create. You can use #!share to retrieve this value from another subkernel.")
+                new Option<string>(
+                    "--name", 
+                    "The name of the value to create. You can use #!share to retrieve this value from another subkernel.")
                 {
                     Required = true
                 },
                 new Option<string>("--mime-type", "A mime type for the value. If specified, displays the value immediately as a cell output using the specified mime type.")
-                    .AddSuggestions(
+                    .AddSuggestions(_ => new[]
+                    {
                         "application/json",
                         "text/html",
                         "text/plain",
-                        "text/csv")
+                        "text/csv"
+                    })
             };
     }
 }

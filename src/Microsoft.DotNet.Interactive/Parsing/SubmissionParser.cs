@@ -297,7 +297,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             {
                 IOption _ => "Property",
                 ICommand _ => "Method",
-                _ => "Value"
+                _ => "Local"
             };
 
             var helpBuilder = new DirectiveHelpBuilder(
