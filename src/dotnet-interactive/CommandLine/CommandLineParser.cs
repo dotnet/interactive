@@ -119,9 +119,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     {
                         switch (directive.Key)
                         {
-                            case "vscode":
-                            case "jupyter":
-                            case "synapse":
+                            case "debug":
+                                break;
+                            default:
                                 frontendTelemetryAdded = true;
                                 entryItems.Add(new KeyValuePair<string, string>("frontend", directive.Key));
                                 break;

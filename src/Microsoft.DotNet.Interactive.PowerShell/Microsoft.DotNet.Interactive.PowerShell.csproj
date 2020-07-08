@@ -34,7 +34,7 @@
             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <ItemGroup>
+  <!--<ItemGroup>
     <Content Include="$(PkgPackageManagement)\**"
              Exclude="$(PkgPackageManagement)\**\*.nupkg;$(PkgPackageManagement)\**\*.nuspec;$(PkgPackageManagement)\**\*.sha512;$(PkgPackageManagement)\**\fullclr\**"
              Link="Modules\PackageManagement\%(RecursiveDir)%(FileName)%(Extension)"
@@ -66,7 +66,7 @@
              PackageCopyToOutput="true"
              CopyToOutputDirectory="PreserveNewest" 
              Condition="'$(PkgThreadJob)' != ''" />
-  </ItemGroup>
+  </ItemGroup>-->
 
   <!-- The dependencies for this project -->
   <ItemGroup>
