@@ -272,7 +272,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                     .Completions
                     .Select(i => i.DisplayText)
                     .Should()
-                    .Contain(new[] { "#!fsharp", "#!pwsh" });
+                    .Contain(new[] { "fsharp", "pwsh" });
             }
 
             [Fact]
