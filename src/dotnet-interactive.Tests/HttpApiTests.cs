@@ -252,7 +252,8 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
                        "fsharp", 
                        "pwsh",
                        "html",
-                       "javascript");
+                       "javascript",
+                       "value");
         }
     }
 

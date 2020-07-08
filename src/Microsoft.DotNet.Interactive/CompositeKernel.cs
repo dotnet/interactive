@@ -16,6 +16,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive
@@ -95,12 +96,12 @@ namespace Microsoft.DotNet.Interactive
         }
 
         private void AddChooseKernelDirective(
-            Kernel kernel, 
-            IEnumerable<string> aliases)
+            Kernel kernel,
+            IEnumerable<string> aliases = null)
         {
-            var chooseKernelCommand = new ChooseKernelDirective(kernel);
+            var chooseKernelCommand = kernel.CreateChooseKernelDirective();
 
-            if (aliases is { })
+            if (aliases is {})
             {
                 foreach (var alias in aliases)
                 {
