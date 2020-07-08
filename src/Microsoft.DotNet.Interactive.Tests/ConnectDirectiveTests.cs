@@ -132,8 +132,6 @@ hello!
 
     public class FakeKernelConnectionOptions : KernelConnectionOptions
     {
-
-
         public int FakenessLevel { get; set; }
     }
 }
