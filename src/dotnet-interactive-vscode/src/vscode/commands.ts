@@ -83,7 +83,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
         }
 
         await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', document);
-        clientMapper.getOrAddClient(document.uri);
+        const _client = await clientMapper.getOrAddClient(document.uri);
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopCurrentNotebookKernel', async (document?: vscode.NotebookDocument | undefined) => {
@@ -96,11 +96,17 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
             document = vscode.notebook.activeNotebookEditor.document;
         }
 
+        for (const cell of document.cells) {
+            cell.metadata.runState = vscode.NotebookCellRunState.Idle;
+        }
+
         clientMapper.closeClient(document.uri);
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopAllNotebookKernels', async () => {
-        clientMapper.closeAllClients();
+        vscode.notebook.notebookDocuments
+            .filter(document => clientMapper.isDotNetClient(document.uri))
+            .forEach(async document => await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', document));
     }));
 }
 
