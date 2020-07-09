@@ -294,7 +294,19 @@ namespace Microsoft.DotNet.Interactive
                     var connectedKernel = await connectionCommand.CreateKernelAsync(options, context);
 
                     connectedKernel.Name = options.KernelName;
+
                     Add(connectedKernel);
+
+                    var chooseKernelDirective =
+                        Directives.OfType<ChooseKernelDirective>()
+                                  .Single(d => d.Kernel == connectedKernel);
+
+                    if (!string.IsNullOrWhiteSpace(connectionCommand.ConnectedKernelDescription))
+                    {
+                        chooseKernelDirective.Description = connectionCommand.ConnectedKernelDescription;
+                    }
+
+                    chooseKernelDirective.Description += " (Connected kernel)";
 
                     context.Display($"Kernel added: #!{connectedKernel.Name}");
                 });
