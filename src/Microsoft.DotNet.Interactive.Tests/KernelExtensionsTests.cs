@@ -29,6 +29,20 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
+        public void FindKernel_finds_a_subkernel_of_a_composite_kernel_by_alias()
+        {
+            var one = new FakeKernel("one");
+            var two = new FakeKernel("two");
+            using var compositeKernel = new CompositeKernel();
+            compositeKernel.Add(one, aliases: new[] { "one-alias" });
+            compositeKernel.Add(two);
+
+            var found = compositeKernel.FindKernel("one-alias");
+
+            found.Should().BeSameAs(one);
+        }
+
+        [Fact]
         public void FindKernel_finds_a_subkernel_of_a_parent_composite_kernel_by_name()
         {
             var one = new FakeKernel("one");

@@ -35,8 +35,12 @@ namespace Microsoft.DotNet.Interactive
             return root switch
             {
                 _ when kernel.Name == name => kernel,
-                CompositeKernel c => c.ChildKernels
-                                      .SingleOrDefault(k => k.Name == name),
+                CompositeKernel c =>
+                c.Directives
+                 .OfType<ChooseKernelDirective>()
+                 .Where(d => d.HasAlias($"#!{name}"))
+                 .Select(d => d.Kernel)
+                 .SingleOrDefault(),
                 _ => null
             };
         }

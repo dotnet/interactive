@@ -428,15 +428,16 @@ namespace Microsoft.DotNet.Interactive
             var topDirectiveParser = SubmissionParser.GetDirectiveParser();
             var prefix = topDirectiveParser.Configuration.RootCommand.Name + " ";
             requestPosition += prefix.Length;
-
+            
             foreach (var parser in directiveParsers)
             {
                 var effectiveText = $"{prefix}{directiveNode.Text}";
 
                 var parseResult = parser.Parse(effectiveText);
 
-                var completions = parseResult
-                                  .GetSuggestions(requestPosition)
+                var suggestions = parseResult.GetSuggestions(requestPosition);
+
+                var completions = suggestions
                                   .Select(s => SubmissionParser.CompletionItemFor(s, parseResult))
                                   .ToArray();
 
