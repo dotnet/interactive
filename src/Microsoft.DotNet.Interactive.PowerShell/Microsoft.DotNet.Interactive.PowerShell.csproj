@@ -76,7 +76,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.IO.Pipelines" Version="4.7.1" />
-    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.0.0" />
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.0.2" />
     <PackageReference Include="XPlot.Plotly" Version="3.0.1" />
   </ItemGroup>
 
