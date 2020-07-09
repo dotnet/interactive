@@ -36,9 +36,7 @@ export class ClientMapper {
         }
     }
 
-    closeAllClients() {
-        for (let fsPath of this.clientMap.keys()) {
-            this.closeClient({ fsPath });
-        }
+    isDotNetClient(uri: Uri): boolean {
+        return this.clientMap.has(uri.fsPath);
     }
 }
