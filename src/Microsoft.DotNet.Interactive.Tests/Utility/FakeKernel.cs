@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
         public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
-            Handle(command, context);
+            Handle?.Invoke(command, context);
             return Task.CompletedTask;
         }
     }

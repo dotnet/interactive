@@ -19,14 +19,14 @@ namespace Microsoft.DotNet.Interactive.Commands
         internal RequestDiagnostics(
             LanguageNode languageNode,
             KernelCommand parent = null)
-            : base(languageNode.Language, parent)
+            : base(languageNode.KernelName, parent)
         {
             Code = languageNode.Text;
             LanguageNode = languageNode;
 
             if (languageNode is ActionDirectiveNode actionDirectiveNode)
             {
-                TargetKernelName = actionDirectiveNode.ParentLanguage;
+                TargetKernelName = actionDirectiveNode.ParentKernelName;
             }
         }
 

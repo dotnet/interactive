@@ -19,7 +19,6 @@ namespace Microsoft.DotNet.Interactive.Tests
     public class VariableSharingTests
     {
         [Theory]
-        // To C#
         [InlineData(
             "#!fsharp",
             "let x = 123",

@@ -26,11 +26,11 @@ namespace Microsoft.DotNet.Interactive
         private readonly Subject<KernelEvent> _kernelEvents = new Subject<KernelEvent>();
         private readonly CompositeDisposable _disposables;
         private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new ConcurrentQueue<KernelCommand>();
-        private readonly ConcurrentDictionary<Type, object> _properties = new ConcurrentDictionary<Type, object>();
+
         private readonly ConcurrentQueue<KernelOperation> _commandQueue =
             new ConcurrentQueue<KernelOperation>();
         private FrontendEnvironment _frontendEnvironment;
-
+        
         protected Kernel(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -201,7 +201,7 @@ namespace Microsoft.DotNet.Interactive
                 offsetLanguageServiceCommand.TargetKernelName = node switch
                 {
                     DirectiveNode _ => Name,
-                    _ => node.Language,
+                    _ => node.KernelName,
                 };
 
                 commands.Add(offsetLanguageServiceCommand);
@@ -501,24 +501,11 @@ namespace Microsoft.DotNet.Interactive
 
         public void Dispose() => _disposables.Dispose();
 
-        public void SetProperty<T>(T property) where T : class
-        {
-            if (!_properties.TryAdd(typeof(T), property))
-            {
-                throw new InvalidOperationException($"Cannot add property with key {typeof(T)}.");
-            }
-        }
-
-        public T GetProperty<T>() where T : class
-        {
-            return _properties.TryGetValue(typeof(T), out var property) 
-                ? property as T 
-                : throw new KeyNotFoundException($"Cannot find property {typeof(T)}.");
-        }
-
         protected internal virtual ChooseKernelDirective CreateChooseKernelDirective()
         {
             return new ChooseKernelDirective(this);
         }
+
+        internal ChooseKernelDirective ChooseKernelDirective { get; set; }
     }
 }

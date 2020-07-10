@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.Commands
             SubmissionType submissionType = SubmissionType.Run,
             KernelCommand parent = null,
             KernelNameDirectiveNode kernelNameDirectiveNode = null)
-            : base(languageNode.Language, parent)
+            : base(languageNode.KernelName, parent)
         {
             Code = languageNode.Text;
             LanguageNode = languageNode;
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.Commands
 
             if (languageNode is ActionDirectiveNode actionDirectiveNode)
             {
-                TargetKernelName = actionDirectiveNode.ParentLanguage;
+                TargetKernelName = actionDirectiveNode.ParentKernelName;
             }
         }
 

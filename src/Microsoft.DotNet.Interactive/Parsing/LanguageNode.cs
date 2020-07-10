@@ -13,14 +13,14 @@ namespace Microsoft.DotNet.Interactive.Parsing
     public class LanguageNode : SyntaxNode
     {
         internal LanguageNode(
-            string language,
+            string kernelName,
             SourceText sourceText,
             PolyglotSyntaxTree? syntaxTree) : base(sourceText, syntaxTree)
         {
-            Language = language;
+            KernelName = kernelName;
         }
 
-        public string Language { get; }
+        public string KernelName { get; }
 
         public override IEnumerable<Diagnostic> GetDiagnostics() =>
             LanguageSpecificParseResult.None.GetDiagnostics();
