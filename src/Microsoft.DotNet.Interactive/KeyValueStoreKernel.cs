@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.Interactive
                     "--name", 
                     "The name of the value to create. You can use #!share to retrieve this value from another subkernel.")
                 {
-                    Required = true
+                    IsRequired = true
                 },
                 new Option<string>("--mime-type", "A mime type for the value. If specified, displays the value immediately as a cell output using the specified mime type.")
                     .AddSuggestions(_ => new[]
