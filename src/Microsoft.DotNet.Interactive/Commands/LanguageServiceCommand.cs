@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.Commands
             LanguageNode languageNode,
             LinePosition linePosition,
             KernelCommand parent = null)
-            : base(languageNode.Language, parent)
+            : base(languageNode.KernelName, parent)
         {
             Code = languageNode.Text;
             LanguageNode = languageNode;

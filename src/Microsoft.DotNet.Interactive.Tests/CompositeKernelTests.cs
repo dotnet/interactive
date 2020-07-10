@@ -94,6 +94,46 @@ new [] {1,2,3}");
         }
 
         [Theory]
+        [InlineData("#!fake1", "fake1")]
+        [InlineData("#!fake1-alias", "fake1")]
+        [InlineData("#!fake2", "fake2")]
+        [InlineData("#!fake2-alias", "fake2")]
+        public async Task Action_directives_are_routed_by_kernel_chooser_directives(
+            string chooseKernelCommand,
+            string expectedInvokedOnKernelName)
+        {
+            var received = new List<string>();
+
+            using var compositeKernel = new CompositeKernel();
+
+            var fakeKernel1 = new FakeKernel("fake1");
+            fakeKernel1.AddDirective(new Command("#!hi")
+            {
+                Handler = CommandHandler.Create(() => { received.Add("fake1"); })
+            });
+
+            var fakeKernel2 = new FakeKernel("fake2");
+            fakeKernel2.AddDirective(new Command("#!hi")
+            {
+                Handler = CommandHandler.Create(() => { received.Add("fake2"); })
+            });
+
+            compositeKernel.Add(fakeKernel1, new[] { "fake1-alias" });
+            compositeKernel.Add(fakeKernel2, new[] { "fake2-alias" });
+
+            var result = await compositeKernel.SubmitCodeAsync($"{chooseKernelCommand}\n#!hi");
+
+            result.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+
+            received
+                .Should()
+                .ContainSingle()
+                .Which
+                .Should()
+                .Be(expectedInvokedOnKernelName);
+        }
+
+        [Theory]
         [InlineData(0)]
         [InlineData(1)]
         [InlineData(2)]

@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
         public string DefaultLanguage { get; }
         private readonly SourceText _sourceText;
         private readonly Parser _rootKernelDirectiveParser;
-        private readonly IDictionary<string, Func<Parser>> _subkernelDirectiveParsersByLanguageName;
+        private readonly IDictionary<string, Func<Parser>> _subkernelDirectiveParsersByKernelName;
         private IReadOnlyList<SyntaxToken>? _tokens;
         private HashSet<string>? _kernelChooserDirectives;
 
@@ -25,12 +25,12 @@ namespace Microsoft.DotNet.Interactive.Parsing
             SourceText sourceText,
             string defaultLanguage,
             Parser rootKernelDirectiveParser,
-            IDictionary<string, Func<Parser>> subkernelDirectiveParsersByLanguageName)
+            IDictionary<string, Func<Parser>> subkernelDirectiveParsersByKernelName)
         {
             DefaultLanguage = defaultLanguage;
             _sourceText = sourceText;
             _rootKernelDirectiveParser = rootKernelDirectiveParser;
-            _subkernelDirectiveParsersByLanguageName = subkernelDirectiveParsersByLanguageName;
+            _subkernelDirectiveParsersByKernelName = subkernelDirectiveParsersByKernelName;
         }
 
         public PolyglotSyntaxTree Parse()
@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         private void ParseSubmission(PolyglotSubmissionNode rootNode)
         {
-            var currentLanguage = DefaultLanguage;
+            var currentKernelName = DefaultLanguage;
 
             for (var i = 0; i < _tokens!.Count; i++)
             {
@@ -68,14 +68,14 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         if (IsChooseKernelDirective(directiveToken))
                         {
                             directiveNode = new KernelNameDirectiveNode(directiveToken, _sourceText, rootNode.SyntaxTree);
-                            currentLanguage = directiveToken.DirectiveName;
+                            currentKernelName = directiveToken.DirectiveName;
                         }
                         else
                         {
                             directiveNode = new ActionDirectiveNode(
                                 directiveToken,
                                 _sourceText,
-                                currentLanguage,
+                                currentKernelName,
                                 rootNode.SyntaxTree);
                         }
 
@@ -101,8 +101,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         {
                             directiveNode.DirectiveParser = _rootKernelDirectiveParser;
                         }
-                        else if (_subkernelDirectiveParsersByLanguageName != null &&
-                                 _subkernelDirectiveParsersByLanguageName.TryGetValue(currentLanguage, out var getParser))
+                        else if (_subkernelDirectiveParsersByKernelName != null &&
+                                 _subkernelDirectiveParsersByKernelName.TryGetValue(currentKernelName, out var getParser))
                         {
                             directiveNode.DirectiveParser = getParser();
                         }
@@ -149,7 +149,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             void AppendAsLanguageNode(SyntaxNodeOrToken nodeOrToken)
             {
                 if (rootNode.ChildNodes.LastOrDefault() is LanguageNode previousLanguageNode &&
-                    previousLanguageNode.Language == currentLanguage)
+                    previousLanguageNode.KernelName == currentKernelName)
                 {
                     previousLanguageNode.Add(nodeOrToken);
                     rootNode.GrowSpan(previousLanguageNode);
@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 else
                 {
                     var languageNode = new LanguageNode(
-                        currentLanguage,
+                        currentKernelName,
                         _sourceText,
                         rootNode.SyntaxTree);
 
@@ -180,7 +180,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
         private bool IsChooseKernelDirective(DirectiveToken directiveToken)
         {
             if (_kernelChooserDirectives is null &&
-                _subkernelDirectiveParsersByLanguageName != null)
+                _subkernelDirectiveParsersByKernelName != null)
             {
                 _kernelChooserDirectives = new HashSet<string>(
                     _rootKernelDirectiveParser

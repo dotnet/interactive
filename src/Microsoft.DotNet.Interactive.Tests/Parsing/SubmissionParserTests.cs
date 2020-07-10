@@ -247,7 +247,7 @@ let x =
                             break;
 
                         case ActionDirectiveNode adn:
-                            adn.ParentLanguage.Should().Be(expectedParentLanguage);
+                            adn.ParentKernelName.Should().Be(expectedParentLanguage);
                             break;
 
                         default:

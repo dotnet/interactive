@@ -108,6 +108,8 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
 
+            kernel.ChooseKernelDirective = chooseKernelCommand;
+
             AddDirective(chooseKernelCommand);
         }
 
@@ -219,7 +221,7 @@ namespace Microsoft.DotNet.Interactive
 
                 var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
 
-                var kernel = this.FindKernel(actionDirectiveNode.ParentLanguage);
+                var kernel = this.FindKernel(actionDirectiveNode.ParentKernelName);
 
                 var languageKernelDirectiveParser = kernel.SubmissionParser.GetDirectiveParser();
 

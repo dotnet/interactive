@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
@@ -223,11 +224,26 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 return null;
             }
 
-            return compositeKernel
-                   .ChildKernels
-                   .ToDictionary(
-                       child => child.Name,
-                       child => new Func<Parser>(() => child.SubmissionParser.GetDirectiveParser()));
+            var dict = new Dictionary<string, Func<Parser>>();
+
+            for (var i = 0; i < compositeKernel.ChildKernels.Count; i++)
+            {
+                var kernel = compositeKernel.ChildKernels[i];
+
+                if (kernel.ChooseKernelDirective is { } chooseKernelDirective)
+                {
+                    for (var j = 0; j < chooseKernelDirective.Aliases.Count; j++)
+                    {
+                        var alias = chooseKernelDirective.Aliases[j][2..];
+
+                        dict.Add(alias, GetParser);
+                    }
+                }
+
+                Parser GetParser() => kernel.SubmissionParser.GetDirectiveParser();
+            }
+
+            return dict;
         }
 
         internal Parser GetDirectiveParser()

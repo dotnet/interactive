@@ -16,9 +16,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
             SourceText sourceText,
             PolyglotSyntaxTree? syntaxTree) : base(directiveToken, sourceText, syntaxTree)
         {
-            KernelName = directiveToken.DirectiveName;
         }
-
-        public string KernelName { get; set; }
     }
 }
