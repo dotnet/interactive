@@ -19,12 +19,7 @@ import { OutputChannelAdapter } from './OutputChannelAdapter';
 export async function activate(context: vscode.ExtensionContext) {
     // install dotnet or use global
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
-    const dotnetInteractiveChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive'));
-    dotnetInteractiveChannel.show();
-
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive : diagnostics'));
-    diagnosticsChannel.show();
-
     const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion');
     let dotnetPath: string;
     if (await isDotnetUpToDate(minDotNetSdkVersion!)) {
@@ -62,7 +57,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable
 
-    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', new DotNetInteractiveNotebookContentProvider(clientMapper, dotnetInteractiveChannel)));
+    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', new DotNetInteractiveNotebookContentProvider(clientMapper)));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(registerLanguageProviders(clientMapper, diagnosticDelay));
 }
