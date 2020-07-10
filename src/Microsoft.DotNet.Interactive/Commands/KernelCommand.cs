@@ -10,6 +10,8 @@ namespace Microsoft.DotNet.Interactive.Commands
 {
     public abstract class KernelCommand
     {
+        private bool _suppress;
+
         protected KernelCommand(string targetKernelName = null, KernelCommand parent = null)
         {
             if (parent is null)
@@ -38,7 +40,18 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         public string TargetKernelName { get; internal set; }
 
-        public virtual async Task InvokeAsync(KernelInvocationContext context)
+        public Task InvokeAsync(KernelInvocationContext context)
+        {
+            if (_suppress)
+            {
+                return Task.CompletedTask;
+
+            }
+
+            return OnInvokeAsync(context);
+        }
+
+        protected virtual async Task OnInvokeAsync(KernelInvocationContext context)
         {
             if (Handler == null)
             {
@@ -46,6 +59,11 @@ namespace Microsoft.DotNet.Interactive.Commands
             }
 
             await Handler(this, context);
+        }
+
+        internal void SuppressExecution()
+        {
+            _suppress = true;
         }
     }
 }

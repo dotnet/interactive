@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
@@ -57,14 +56,28 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 submitCode.Code,
                 (languageNode, parent, kernelNameNode) => new SubmitCode(languageNode, submitCode.SubmissionType, parent, kernelNameNode));
 
-        public IReadOnlyList<KernelCommand> SplitSubmission(RequestDiagnostics requestDiagnostics) =>
-            SplitSubmission(
-                requestDiagnostics,
-                requestDiagnostics.Code,
-                (languageNode, parent, _) => new RequestDiagnostics(languageNode, parent));
+        public IReadOnlyList<KernelCommand> SplitSubmission(RequestDiagnostics requestDiagnostics)
+        {
+            var commands = SplitSubmission(
+                   requestDiagnostics,
+                   requestDiagnostics.Code,
+                   (languageNode, parent, _) => new RequestDiagnostics(languageNode, parent));
+            foreach (var command in commands)
+            {
+                switch (command)
+                {
+                    case RequestDiagnostics _:
+                        break;
+                    default:
+                        command.SuppressExecution();
+                        break;
+                }
+            }
+            return commands;
+        }
 
         private delegate KernelCommand CreateChildCommand(
-            LanguageNode lanugageNode, 
+            LanguageNode languageNode,
             KernelCommand parentCommand,
             KernelNameDirectiveNode kernelNameDirectiveNode);
 
@@ -81,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             var nodes = tree.GetRoot().ChildNodes.ToArray();
             var targetKernelName = originalCommand.TargetKernelName ?? KernelLanguage;
             KernelNameDirectiveNode lastKernelNameNode = null;
-            
+
             foreach (var node in nodes)
             {
                 switch (node)
@@ -334,10 +347,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         private void EnsureRootCommandIsInitialized()
         {
-            if (_rootCommand == null)
-            {
-                _rootCommand = new RootCommand();
-            }
+            _rootCommand ??= new RootCommand();
         }
     }
 }

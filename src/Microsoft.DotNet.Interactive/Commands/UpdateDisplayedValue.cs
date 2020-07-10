@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         
         public string ValueId { get; }
 
-        public override Task InvokeAsync(KernelInvocationContext context)
+        protected override Task OnInvokeAsync(KernelInvocationContext context)
         {
             context.Publish(
                 new DisplayedValueUpdated(
