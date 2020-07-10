@@ -2,6 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.CommandLine;
+using System.CommandLine.Invocation;
+using System.DirectoryServices.ActiveDirectory;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -550,6 +553,37 @@ $${languageSpecificCode}
                 .Diagnostics
                 .Should()
                 .ContainSingle(diag => diag.LinePositionSpan.Start.Line == line);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "Console.WriteLineeeeeee();")]
+        [InlineData(Language.FSharp, "printfnnnnnn \"\"")]
+        [InlineData(Language.PowerShell, "::()")]
+        public async Task requested_diagnostics_does_not_execute_directives_handlers(Language language, string languageSpecificCode)
+        {
+            var kernel = CreateKernel(language);
+            var handlerInvoked = false;
+            kernel.AddDirective(new Command("#!custom")
+            {
+                Handler = CommandHandler.Create(() =>
+                {
+                    handlerInvoked = true;
+                })
+            });
+            var fullCode = $@"
+
+#!time
+#!custom
+$${languageSpecificCode}
+";
+
+            MarkupTestFile.GetLineAndColumn(fullCode, out var code, out var line, out var _column);
+
+            await kernel.SendAsync(new RequestDiagnostics(code));
+
+            handlerInvoked
+                .Should()
+                .BeFalse();
         }
 
         [Theory]
