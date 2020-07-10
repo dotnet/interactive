@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import { ClientMapper } from './../clientMapper';
 import { parseNotebook, serializeNotebook, notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook, asNotebookFile } from '../interactiveNotebook';
 import { RawNotebookCell } from '../interfaces';
-import { CellOutput, ReportChannel } from '../interfaces/vscode';
+import { CellOutput } from '../interfaces/vscode';
 import { Diagnostic, DiagnosticSeverity } from './../contracts';
 import { toVsCodeDiagnostic } from './vscodeUtilities';
 import { getDiagnosticCollection } from './diagnostics';
@@ -16,7 +16,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     kernel: vscode.NotebookKernel;
     label: string;
 
-    constructor(readonly clientMapper: ClientMapper, private readonly globalChannel : ReportChannel) {
+    constructor(readonly clientMapper: ClientMapper) {
         this.kernel = this;
         this.label = ".NET Interactive";
     }

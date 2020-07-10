@@ -7,15 +7,12 @@ import * as jp from '../interop/jupyter';
 import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
 import { serializeNotebook } from '../interactiveNotebook';
-import { OutputChannelAdapter } from '../OutputChannelAdapter';
 import { ClientMapper } from '../clientMapper';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, dotnetPath: string) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
     const minDotNetInteractiveVersion = config.get<string>('minimumInteractiveToolVersion');
     const interactiveToolSource = config.get<string>('interactiveToolSource');
-    const acquireChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive : tool acquisition'));
-    acquireChannel.show();
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.acquire', async (args?: InstallInteractiveArgs | undefined): Promise<InteractiveLaunchOptions | undefined> => {
         if (!args) {
@@ -31,10 +28,9 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, do
             context.globalStoragePath,
             getInteractiveVersion,
             createToolManifest,
-            (version: string) => { acquireChannel.append(`Installing .NET Interactive version ${version}...`); },
+            async (version: string) => { vscode.window.showInformationMessage(`Installing .NET Interactive version ${version}...`); },
             installInteractiveTool,
-            () => { acquireChannel.append('.NET Interactive installation complete.'); },
-            acquireChannel);
+            async () => { await vscode.window.showInformationMessage('.NET Interactive installation complete.'); });
         return launchOptions;
     }));
 

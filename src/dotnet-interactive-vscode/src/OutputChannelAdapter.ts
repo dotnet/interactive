@@ -2,9 +2,8 @@ import * as vscode from 'vscode';
 import { ReportChannel } from "./interfaces/vscode";
 
 export class OutputChannelAdapter implements ReportChannel{
-    
+
     constructor(private channel: vscode.OutputChannel) {   
-        
     }
 
     getName(): string {
