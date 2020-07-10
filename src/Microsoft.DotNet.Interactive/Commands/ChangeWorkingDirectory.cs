@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Commands
             WorkingDirectory = workingDirectory;
         }
 
-        protected override Task OnInvokeAsync(KernelInvocationContext context)
+        public override Task InvokeAsync(KernelInvocationContext context)
         {
             Directory.SetCurrentDirectory(WorkingDirectory);
             context.Publish(new WorkingDirectoryChanged(WorkingDirectory, this));
