@@ -62,18 +62,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
                    requestDiagnostics,
                    requestDiagnostics.Code,
                    (languageNode, parent, _) => new RequestDiagnostics(languageNode, parent));
-            foreach (var command in commands)
-            {
-                switch (command)
-                {
-                    case RequestDiagnostics _:
-                        break;
-                    default:
-                        command.SuppressExecution();
-                        break;
-                }
-            }
-            return commands;
+            
+            return commands.Where(c => c is RequestDiagnostics ).ToList();
         }
 
         private delegate KernelCommand CreateChildCommand(

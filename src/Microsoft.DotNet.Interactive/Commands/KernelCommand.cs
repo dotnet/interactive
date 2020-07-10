@@ -40,30 +40,14 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         public string TargetKernelName { get; internal set; }
 
-        public Task InvokeAsync(KernelInvocationContext context)
-        {
-            if (_suppress)
-            {
-                return Task.CompletedTask;
-
-            }
-
-            return OnInvokeAsync(context);
-        }
-
-        protected virtual async Task OnInvokeAsync(KernelInvocationContext context)
+        public virtual Task InvokeAsync(KernelInvocationContext context)
         {
             if (Handler == null)
             {
                 throw new NoSuitableKernelException(this);
             }
 
-            await Handler(this, context);
-        }
-
-        internal void SuppressExecution()
-        {
-            _suppress = true;
+            return Handler(this, context);
         }
     }
 }

@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         public DirectiveNode DirectiveNode { get; }
 
-        protected override async Task OnInvokeAsync(KernelInvocationContext context)
+        public override async Task InvokeAsync(KernelInvocationContext context)
         {
             if (ParseResult.Errors.Any())
             {
