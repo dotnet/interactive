@@ -11,12 +11,12 @@ namespace Microsoft.DotNet.Interactive.Server
 {
     public static class ConnectableKernel
     {
-        public static  KernelServer CreateKernelServer(this Kernel kernel, DirectoryInfo workingDir = null)
+        public static  KernelServer CreateKernelServer(this Kernel kernel, DirectoryInfo workingDir)
         {
             return kernel.CreateKernelServer(Console.In, Console.Out, workingDir);
         }
 
-        public static KernelServer CreateKernelServer(this Kernel kernel, TextReader inputStream, TextWriter outputStream, DirectoryInfo workingDir = null)
+        public static KernelServer CreateKernelServer(this Kernel kernel, TextReader inputStream, TextWriter outputStream, DirectoryInfo workingDir)
         {
             if (kernel == null)
             {
@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Interactive.Server
             return kernelClient;
         }
 
-        public static KernelServer CreateKernelServer(this Kernel kernel, NamedPipeServerStream local)
+        public static KernelServer CreateKernelServer(this Kernel kernel, NamedPipeServerStream local, DirectoryInfo workingDir)
         {
             if (kernel == null)
             {
@@ -58,17 +58,17 @@ namespace Microsoft.DotNet.Interactive.Server
             }
             var input = new PipeStreamInputStream(local);
             var output = new PipeStreamOutputStream(local);
-            var kernelServer = new KernelServer(kernel, input, output);
+            var kernelServer = new KernelServer(kernel, input, output, workingDir);
             kernel.RegisterForDisposal(kernelServer);
             return kernelServer;
         }
 
-        public static T EnableApiOverNamedPipe<T>(this T kernel, string pipeName) where T : Kernel
+        public static T EnableApiOverNamedPipe<T>(this T kernel, string pipeName, DirectoryInfo workingDir) where T : Kernel
         {
             var serverStream = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
 
             serverStream.WaitForConnection();
-            CreateKernelServer(kernel, serverStream);
+            CreateKernelServer(kernel, serverStream, workingDir);
             return kernel;
         }
 

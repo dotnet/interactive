@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             };
 
             
-            _kernelServer = kernel.CreateKernelServer(new StreamReader(new MemoryStream()), new StringWriter());
+            _kernelServer = kernel.CreateKernelServer(new StreamReader(new MemoryStream()), new StringWriter(), new DirectoryInfo(Environment.CurrentDirectory));
             
             _kernelEvents = _kernelServer
                             .Output

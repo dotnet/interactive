@@ -331,6 +331,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 var workingDirOption = new Option<DirectoryInfo>(
                     "--working-dir",
+                    () => new DirectoryInfo(Environment.CurrentDirectory),
                     "Working directory to which to change after launching the kernel.");
 
                 var stdIOCommand = new Command(
@@ -354,7 +355,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                         kernel.UseQuitCommand(disposeOnQuit, cancellationToken);
                         
-                        var kernelServer = kernel.CreateKernelServer();
+                        var kernelServer = kernel.CreateKernelServer(startupOptions.WorkingDir);
 
                         if (startupOptions.EnableHttpApi)
                         {
