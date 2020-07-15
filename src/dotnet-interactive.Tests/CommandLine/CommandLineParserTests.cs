@@ -318,13 +318,39 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public async Task stdio_command_supports_working_dir_option()
+        public void stdio_command_working_dir_defaults_to_process_current()
         {
-            using var workingDirectory = DisposableDirectory.Create();
+            var result = _parser.Parse("stdio");
 
-            await _parser.InvokeAsync($"stdio --working-dir \"{workingDirectory.Directory.FullName}\"");
+            var binder = new ModelBinder<StartupOptions>();
 
-            _startOptions.WorkingDir.FullName.Should().Be(workingDirectory.Directory.FullName);
+            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+
+            options.WorkingDir.FullName
+                .Should()
+                .Be(Environment.CurrentDirectory);
+        }
+
+        [Fact]
+        public void stdio_command_working_dir_can_be_specified()
+        {
+            // StartupOptions.WorkingDir is of type DirectoryInfo which normalizes paths to OS type and ensures that
+            // they're rooted.  To ensure proper testing behavior we have to give an os-specific path.
+            var workingDir = Environment.OSVersion.Platform switch
+            {
+                PlatformID.Win32NT => "C:\\some\\dir",
+                _ => "/some/dir"
+            };
+
+            var result = _parser.Parse($"stdio --working-dir {workingDir}");
+
+            var binder = new ModelBinder<StartupOptions>();
+
+            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+
+            options.WorkingDir.FullName
+                .Should()
+                .Be(workingDir);
         }
 
         [Theory]
