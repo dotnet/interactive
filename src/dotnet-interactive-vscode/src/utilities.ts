@@ -3,6 +3,7 @@
 
 import * as path from 'path';
 import { ProcessStart } from "./interfaces";
+import { Uri } from './interfaces/vscode';
 
 export function processArguments(template: { args: Array<string>, workingDirectory: string }, notebookPath: string, dotnetPath: string, globalStoragePath: string): ProcessStart {
     let map: { [key: string]: string } = {
@@ -72,4 +73,11 @@ export function debounce(key: string, timeout: number, callback: () => void) {
     clearDebounceTimeout(key);
     const newTimeout = setTimeout(callback, timeout);
     debounceTimeoutMap.set(key, newTimeout);
+}
+
+export function createUri(fsPath: string): Uri {
+    return {
+        fsPath,
+        toString: () => fsPath
+    };
 }

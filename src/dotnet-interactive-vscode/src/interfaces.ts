@@ -11,15 +11,6 @@ export interface ProcessStart {
     workingDirectory: string;
 }
 
-export interface RawNotebookCell {
-    language: string;
-    contents: Array<string>;
-}
-
-export interface DocumentWithCells {
-    cells: Array<RawNotebookCell>;
-}
-
 // interactive acquisition
 
 export interface InteractiveLaunchOptions {

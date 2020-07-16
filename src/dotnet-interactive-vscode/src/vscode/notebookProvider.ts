@@ -1,16 +1,16 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { ClientMapper } from './../clientMapper';
-import { parseNotebook, serializeNotebook, notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook, asNotebookFile } from '../interactiveNotebook';
-import { RawNotebookCell } from '../interfaces';
-import { CellOutput } from '../interfaces/vscode';
+import { parseNotebook, serializeNotebook, notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook } from '../interactiveNotebook';
+import { CellOutput, NotebookCell } from '../interfaces/vscode';
 import { Diagnostic, DiagnosticSeverity } from './../contracts';
 import { toVsCodeDiagnostic } from './vscodeUtilities';
 import { getDiagnosticCollection } from './diagnostics';
 
-export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider, vscode.NotebookKernel {
+export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider, vscode.NotebookKernel, vscode.NotebookKernelProvider<DotNetInteractiveNotebookContentProvider> {
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
 
     kernel: vscode.NotebookKernel;
@@ -23,10 +23,26 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 
     preloads?: vscode.Uri[] | undefined;
 
-    async executeAllCells(document: vscode.NotebookDocument, token: vscode.CancellationToken): Promise<void> {
-        for (let cell of document.cells) {
-            await this.executeCell(document, cell, token);
+    provideKernels(document: vscode.NotebookDocument, token: vscode.CancellationToken): vscode.ProviderResult<DotNetInteractiveNotebookContentProvider[]> {
+        const extension = path.extname(document.fileName).toLowerCase();
+        switch (extension) {
+            case '.dib':
+            case '.dotnet-interactive':
+            case '.ipynb':
+                return [this];
+            default:
+                return [];
         }
+    }
+
+    async executeAllCells(document: vscode.NotebookDocument): Promise<void> {
+        for (let cell of document.cells) {
+            await this.executeCell(document, cell);
+        }
+    }
+
+    cancelAllCellsExecution(document: vscode.NotebookDocument) {
+        // not supported
     }
 
     async openNotebook(uri: vscode.Uri): Promise<vscode.NotebookData> {
@@ -36,7 +52,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         } catch {
         }
 
-        let notebook = parseNotebook(contents);
+        let notebook = parseNotebook(uri, contents);
         await this.clientMapper.getOrAddClient(uri);
 
         let notebookData: vscode.NotebookData = {
@@ -64,7 +80,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 
     onDidChangeNotebook: vscode.Event<vscode.NotebookDocumentEditEvent> = this.onDidChangeNotebookEventEmitter.event;
 
-    async executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell, token: vscode.CancellationToken): Promise<void> {
+    async executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell): Promise<void> {
         const startTime = Date.now();
         cell.metadata.runStartTime = startTime;
         cell.metadata.runState = vscode.NotebookCellRunState.Running;
@@ -90,21 +106,25 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         });
     }
 
+    cancelCellExecution(document: vscode.NotebookDocument, cell: vscode.NotebookCell) {
+        // not supported
+    }
+
     backupNotebook(document: vscode.NotebookDocument, context: vscode.NotebookDocumentBackupContext, cancellation: vscode.CancellationToken): Promise<vscode.NotebookDocumentBackup> {
         return backupNotebook(document, context.destination.fsPath);
     }
 
     private async save(document: vscode.NotebookDocument, targetResource: vscode.Uri): Promise<void> {
-        const notebook = asNotebookFile(document);
-        const buffer = Buffer.from(serializeNotebook(notebook));
+        const contents = serializeNotebook(targetResource, document);
+        const buffer = Buffer.from(contents);
         await vscode.workspace.fs.writeFile(targetResource, buffer);
     }
 }
 
-function toNotebookCellData(cell: RawNotebookCell): vscode.NotebookCellData {
+function toNotebookCellData(cell: NotebookCell): vscode.NotebookCellData {
     return {
         cellKind: languageToCellKind(cell.language),
-        source: cell.contents.join('\n'),
+        source: cell.document.getText(),
         language: getNotebookSpecificLanguage(cell.language),
         outputs: [],
         metadata: {}

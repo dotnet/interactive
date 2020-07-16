@@ -25,9 +25,10 @@
   ],
   "activationEvents": [
     "onNotebookEditor:dotnet-interactive",
+    "onNotebookEditor:dotnet-interactive-jupyter",
     "onCommand:dotnet-interactive.acquire",
-    "onCommand:dotnet-interactive.convertJupyterNotebook",
-    "onCommand:dotnet-interactive.reportInteractiveVersion"
+    "onCommand:dotnet-interactive.openNotebook",
+    "onCommand:dotnet-interactive.saveAsNotebook"
   ],
   "main": "./out/extension.js",
   "extensionDependencies": [
@@ -43,6 +44,16 @@
             "filenamePattern": "*.{dib,dotnet-interactive}"
           }
         ]
+      },
+      {
+        "viewType": "dotnet-interactive-jupyter",
+        "displayName": ".NET Interactive for Jupyter Notebooks",
+        "selector": [
+          {
+            "filenamePattern": "*.ipynb"
+          }
+        ],
+        "priority": "option"
       }
     ],
     "configuration": {
@@ -87,7 +98,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.132904",
+          "default": "1.0.137901",
           "description": "The minimum required version of the .NET Interactive tool."
         }
       }
@@ -98,12 +109,12 @@
         "title": "Install .NET Interactive"
       },
       {
-        "command": "dotnet-interactive.convertJupyterNotebook",
-        "title": ".NET Interactive: Convert Jupyter notebook (.ipynb) to .NET Interactive notebook"
+        "command": "dotnet-interactive.openNotebook",
+        "title": ".NET Interactive: Open notebook"
       },
       {
-        "command": "dotnet-interactive.exportAsJupyterNotebook",
-        "title": ".NET Interactive: Export as Jupyter Notebook"
+        "command": "dotnet-interactive.saveAsNotebook",
+        "title": ".NET Interactive: Save notebook as specific file format"
       },
       {
         "command": "dotnet-interactive.restartCurrentNotebookKernel",
