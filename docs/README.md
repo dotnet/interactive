@@ -55,9 +55,9 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
         * F# Interactive ([FSI](https://docs.microsoft.com/en-us/dotnet/fsharp/tutorials/fsharp-interactive/))
     * [HTML and JavaScript](javascript-overview.md)
     * PowerShell
-        * PowerShell profile support
-        * PowerShell host support 
-        * AzShell support
+        * [PowerShell profile support](../samples/notebooks/powershell/Docs/Profile%20Support.ipynb)
+        * [PowerShell host support](../samples/notebooks/powershell/Docs/Interactive-Host-Experience.ipynb)
+        * [AzShell support](../samples/notebooks/powershell/Docs/Interact-With-Azure-Cloud-Shell.ipynb)
 * Getting input from the user
 * Multi-language notebooks
     * Switching between languages
