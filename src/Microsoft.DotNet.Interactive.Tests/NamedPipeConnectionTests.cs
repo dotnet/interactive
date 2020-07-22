@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var localCompositeKernel = new CompositeKernel
             {
                 new FSharpKernel()
-            }.UseConnection(new ConnectNamedPipe());
+            }.UseKernelClientConnection(new ConnectNamedPipe());
 
             localCompositeKernel.DefaultKernelName = "fsharp";
 
@@ -74,6 +74,6 @@ x");
                                       .BeTrue();
         }
 
-        void StartServer(Kernel remoteKernel, string pipeName) => Task.Run(() => { remoteKernel.EnableApiOverNamedPipe(pipeName, new DirectoryInfo(Environment.CurrentDirectory)); });
+        void StartServer(Kernel remoteKernel, string pipeName) =>  remoteKernel.UseNamedPipeKernelServer(pipeName, new DirectoryInfo(Environment.CurrentDirectory)); 
     }
 }
