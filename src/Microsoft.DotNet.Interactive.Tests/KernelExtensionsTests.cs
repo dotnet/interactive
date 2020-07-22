@@ -177,5 +177,60 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             visited.Should().BeEquivalentTo("child", "grandchild");
         }
+
+        [Fact]
+        public void VisitSubkernelsAndSelf_visits_subkernels_and_self()
+        {
+            var visited = new List<string>();
+            var child = new CompositeKernel
+            {
+                Name = "child"
+            };
+            var grandchild = new CompositeKernel
+            {
+                Name = "grandchild"
+            };
+            var parent = new CompositeKernel
+            {
+                Name = "parent"
+            };
+            child.Add(grandchild);
+            parent.Add(child);
+
+            parent.VisitSubkernelsAndSelf(kernel =>
+            {
+                visited.Add(kernel.Name);
+            }, true);
+
+            visited.Should().BeEquivalentTo("child", "parent", "grandchild");
+        }
+
+        [Fact]
+        public async Task VisitSubkernelsAndSelfAsync_visits_subkernels_and_self()
+        {
+            var visited = new List<string>();
+            var child = new CompositeKernel
+            {
+                Name = "child"
+            };
+            var grandchild = new CompositeKernel
+            {
+                Name = "grandchild"
+            };
+            var parent = new CompositeKernel
+            {
+                Name = "parent"
+            };
+            child.Add(grandchild);
+            parent.Add(child);
+
+            await parent.VisitSubkernelsAndSelfAsync(kernel =>
+            {
+                visited.Add(kernel.Name);
+                return Task.CompletedTask;
+            }, true);
+
+            visited.Should().BeEquivalentTo("child", "parent", "grandchild");
+        }
     }
 }

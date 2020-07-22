@@ -256,6 +256,16 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+        public static void VisitSubkernelsAndSelf(
+            this Kernel kernel,
+            Action<Kernel> onVisit,
+            bool recursive = false)
+        {
+            onVisit(kernel);
+
+            VisitSubkernels(kernel, onVisit, recursive);
+        }
+
         public static async Task VisitSubkernelsAsync(
             this Kernel kernel,
             Func<Kernel, Task> onVisit,
@@ -283,6 +293,16 @@ namespace Microsoft.DotNet.Interactive
                     }
                 }
             }
+        }
+
+        public static async Task VisitSubkernelsAndSelfAsync(
+            this Kernel kernel,
+            Func<Kernel, Task> onVisit,
+            bool recursive = false)
+        {
+            await onVisit(kernel);
+
+            await VisitSubkernelsAsync(kernel, onVisit, recursive);
         }
     }
 }
