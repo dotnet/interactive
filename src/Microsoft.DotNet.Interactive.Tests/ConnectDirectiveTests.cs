@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             using var compositeKernel = new CompositeKernel();
 
-            compositeKernel.UseConnection(new ConnectNamedPipe());
+            compositeKernel.UseKernelClientConnection(new ConnectNamedPipe());
 
             compositeKernel.Directives
                            .Should()
@@ -103,7 +103,7 @@ hello!
         {
             using var compositeKernel = new CompositeKernel();
 
-            compositeKernel.UseConnection(
+            compositeKernel.UseKernelClientConnection(
                 new ConnectFakeKernel("fake", "Connects the fake kernel")
                 {
                     CreateKernel = (options, context) => Task.FromResult<Kernel>(new FakeKernel())
@@ -132,7 +132,7 @@ hello!
         {
             using var compositeKernel = new CompositeKernel();
 
-            compositeKernel.UseConnection(
+            compositeKernel.UseKernelClientConnection(
                 new ConnectFakeKernel("fake", "Connects the fake kernel")
                 {
                     CreateKernel = (options, context) => Task.FromResult<Kernel>(new FakeKernel())
@@ -155,7 +155,7 @@ hello!
                 new FakeKernel("x")
             };
 
-            compositeKernel.UseConnection(
+            compositeKernel.UseKernelClientConnection(
                 new ConnectFakeKernel("fake", "Connects the fake kernel")
                 {
                     CreateKernel = (options, context) => Task.FromResult<Kernel>(fakeKernel ?? new FakeKernel())

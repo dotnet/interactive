@@ -471,8 +471,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                          .UseDefaultMagicCommands()
                          .UseLog()
                          .UseAbout()
-                         .UseConnection(new ConnectNamedPipe())
-                         .UseConnection(new ConnectSignalR());
+                         .UseKernelClientConnection(new ConnectNamedPipe())
+                         .UseKernelClientConnection(new ConnectSignalR());
 
             if (startupOptions.Verbose)
             {
