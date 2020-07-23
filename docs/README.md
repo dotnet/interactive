@@ -16,6 +16,10 @@ There are several ways to get started using .NET Interactive with Jupyter, inclu
 
 Work is underway to add support for the new Visual Studio Code [native notebook feature](https://code.visualstudio.com/updates/v1_45#_github-issue-notebook). While we are still in the early stages of this effort, if you'd like to experiment with it you can find instructions [here](../src/dotnet-interactive-vscode/README.md). 
 
+### Small factor devices
+
+We support running on devices like Raspberry Pi and PiTop, you can find instructions [here](small-factor-devices.md)
+
 ### Telemetry
 
 Telemetry is collected when various .NET Interactive command lines are run. Once .NET Interactive is running, we do not collect telemetry from any further user actions. The teletry is anonymous and collected only the values for a specific subset of the verbs on the .NET Interactive CLI. Those verbs are:

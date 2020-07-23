@@ -184,7 +184,7 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        public static CompositeKernel UseConnection<TOptions>(
+        public static CompositeKernel UseKernelClientConnection<TOptions>(
             this CompositeKernel kernel,
             ConnectKernelCommand<TOptions> command)
             where TOptions : KernelConnectionOptions
