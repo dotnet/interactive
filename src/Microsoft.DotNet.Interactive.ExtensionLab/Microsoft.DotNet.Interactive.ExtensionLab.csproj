@@ -9,6 +9,7 @@
     <PackageDescription>Experimental kernel extensions for dotnet-interactive</PackageDescription>
     <PackageTags>dotnet-interactive</PackageTags>
     <IncludeBuildOutput>true</IncludeBuildOutput>
+    <NoWarn>$(NoWarn);NU5100</NoWarn><!-- dll outside of lib/ folder -->
   </PropertyGroup>
 
  <ItemGroup>
