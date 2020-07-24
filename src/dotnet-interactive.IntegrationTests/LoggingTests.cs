@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
             _output = output;
         }
 
-        [IntegrationFact(Skip = "https://github.com/dotnet/interactive/issues/502")]
+        [IntegrationFact]
         public async Task kernel_server_honors_log_path()
         {
             using var logPath = DisposableDirectory.Create();
@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
             // start as external process
             var kernelServerProcess = ProcessHelper.Start(
                 command: "dotnet",
-                args: $@"interactive stdio --log-path ""{logPath.Directory.FullName}""",
+                args: $@"interactive stdio --log-path ""{logPath.Directory.FullName}"" --verbose",
                 workingDir: new DirectoryInfo(Directory.GetCurrentDirectory()),
                 output: _line =>
                 {
@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
                 .Should()
                 .BeTrue($"expected non-empty log file within {waitTime.TotalSeconds}s");
             var logFileContents = File.ReadAllText(logFile.FullName);
-            logFileContents.Should().Contain("ℹ OnAssemblyLoad: ");
+            logFileContents.Should().Contain("CodeSubmissionReceived: 1+1");
         }
     }
 }
