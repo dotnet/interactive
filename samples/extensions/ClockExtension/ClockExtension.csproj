@@ -15,8 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.20324.1" />
-    <PackageReference Include="microsoft.dotnet.interactive.formatting" Version="1.0.0-beta.20324.1" />
+    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.20372.2" />
+    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.20372.2" />
   </ItemGroup>
 
   <ItemGroup>

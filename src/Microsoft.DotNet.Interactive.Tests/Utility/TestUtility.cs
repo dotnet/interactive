@@ -246,7 +246,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
                     await Task.Delay(200);
                 }
 
-                return should.ContainSingle<T>(where);
+                return should.ContainSingle(where);
             }).Result;
         }
     }

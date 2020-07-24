@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Interactive
                 return;
             }
 
-            var command = @event.Command as KernelCommand;
+            var command = @event.Command;
 
             if (command == null ||
                 Command == command ||
