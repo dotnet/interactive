@@ -26,6 +26,7 @@ There are several ways to get started using .NET with Jupyter, including Jupyter
 - [Install .NET Interactive](docs/NotebooksLocalExperience.md) to create and run .NET notebooks on your machine.
 - [Share your own .NET notebooks with others online using Binder](docs/CreateBinder.md).
 - [Use .NET Interactive with nteract](https://nteract.io/kernels/dotnet)
+- [Use .NET Interactive on Raspberry Pi and piTop](docs/small-factor-devices.md)
 
 ## Visual Studio Code
 
