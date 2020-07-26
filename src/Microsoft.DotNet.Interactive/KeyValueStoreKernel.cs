@@ -157,7 +157,7 @@ return;
         {
             private readonly KeyValueStoreKernel _kernel;
 
-            public ValueDirective(KeyValueStoreKernel kernel, string? description = null) : base(kernel, description)
+            public ValueDirective(KeyValueStoreKernel kernel, string description = null) : base(kernel, description)
             {
                 _kernel = kernel;
             }
