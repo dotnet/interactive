@@ -47,6 +47,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+        [DebuggerHidden]
         private KernelCommandPipelineMiddleware BuildPipeline()
         {
             var invocations = new List<(KernelCommandPipelineMiddleware func, string name)>(_middlewares);
