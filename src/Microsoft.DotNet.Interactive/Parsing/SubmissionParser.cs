@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         {
                             if (directiveNode.IsUnknownActionDirective())
                             {
-                                commands.Add(createCommand(directiveNode, originalCommand.Parent, lastKernelNameNode));
+                                commands.Add(createCommand(directiveNode, originalCommand, lastKernelNameNode));
                             }
                             else
                             {
@@ -111,15 +111,14 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                                         context.Fail(message: message);
                                         return Task.CompletedTask;
-                                    }, parent: originalCommand.Parent));
+                                    }, parent: originalCommand));
                             }
                             break;
-
                         }
 
                         var directiveCommand = new DirectiveCommand(
                             parseResult,
-                            originalCommand.Parent,
+                            originalCommand,
                             directiveNode);
 
                         if (directiveNode is KernelNameDirectiveNode kernelNameNode)
@@ -134,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                             if (value.Value is FileInfo)
                             {
-                                AddHoistedCommand(createCommand(directiveNode, originalCommand.Parent, lastKernelNameNode));
+                                AddHoistedCommand(createCommand(directiveNode, originalCommand, lastKernelNameNode));
                             }
                             else
                             {
@@ -155,7 +154,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         break;
 
                     case LanguageNode languageNode:
-                        commands.Add(createCommand(languageNode, originalCommand.Parent, lastKernelNameNode));
+                        commands.Add(createCommand(languageNode, originalCommand, lastKernelNameNode));
                         break;
 
                     default:
@@ -171,7 +170,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 {
                     var restore = new DirectiveCommand(
                         parser.Parse("#!nuget-restore"),
-                        originalCommand.Parent);
+                        originalCommand);
                     AddHoistedCommand(restore);
                 }
             }
@@ -181,11 +180,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 return originalSubmission;
             }
 
-            var parent = originalCommand.Parent ?? originalCommand;
-
             foreach (var command in commands)
             {
-                command.Parent = parent;
+                command.Parent = originalCommand;
             }
 
             return commands;
