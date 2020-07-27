@@ -179,8 +179,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         private bool IsChooseKernelDirective(DirectiveToken directiveToken)
         {
-            if (_kernelChooserDirectives is null &&
-                _subkernelDirectiveParsersByKernelName != null)
+            if (_kernelChooserDirectives is null)
             {
                 _kernelChooserDirectives = new HashSet<string>(
                     _rootKernelDirectiveParser

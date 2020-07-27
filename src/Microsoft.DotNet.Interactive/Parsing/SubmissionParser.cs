@@ -228,19 +228,17 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             for (var i = 0; i < compositeKernel.ChildKernels.Count; i++)
             {
-                var kernel = compositeKernel.ChildKernels[i];
+                var childKernel = compositeKernel.ChildKernels[i];
 
-                if (kernel.ChooseKernelDirective is { } chooseKernelDirective)
+                if (childKernel.ChooseKernelDirective is { } chooseKernelDirective)
                 {
-                    for (var j = 0; j < chooseKernelDirective.Aliases.Count; j++)
+                    foreach (var alias in chooseKernelDirective.Aliases)
                     {
-                        var alias = chooseKernelDirective.Aliases[j][2..];
-
-                        dict.Add(alias, GetParser);
+                        dict.Add(alias[2..], GetParser);
                     }
                 }
 
-                Parser GetParser() => kernel.SubmissionParser.GetDirectiveParser();
+                Parser GetParser() => childKernel.SubmissionParser.GetDirectiveParser();
             }
 
             return dict;
@@ -294,7 +292,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             _rootCommand.Add(command);
 
-            _directiveParser = null;
+            ResetParser();
         }
 
         internal void ResetParser()
