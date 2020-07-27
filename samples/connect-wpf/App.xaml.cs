@@ -8,45 +8,77 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace WpfApp1
+namespace WpfConnect
 {
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
     public partial class App : Application
     {
-        //TODO: Dispose
         private CompositeKernel _Kernel;
         
         private const string NamedPipeName = "InteractiveWpf";
-        private bool _RunOnDispatcher;
+
+        private bool RunOnDispatcher { get; set; }
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
             _Kernel = new CompositeKernel();
-
-            var csharpKernel = new CSharpKernel()
-                .UseDefaultFormatting()
-                //WPF Formatters here
-                .UseNugetDirective()
-                .UseKernelHelpers()
-                .UseWho()
-                .UseDotNetVariableSharing();
-
-            _Kernel.Add(csharpKernel);
             _Kernel.UseLog();
 
+            AddDispatcherCommand(_Kernel);
+
+            CSharpKernel csharpKernel = RegisterCSharpKernel();
+
+            _ = Task.Run(async () =>
+              {
+                  //Load WPF app assembly 
+                  await csharpKernel.SendAsync(new SubmitCode(@$"#r ""{typeof(App).Assembly.Location}""
+using {nameof(WpfConnect)};"));
+                  //Add the WPF app as a variable that can be accessed
+                  await csharpKernel.SetVariableAsync("App", this);
+
+                  //Start named pipe
+                  _Kernel.UseNamedPipeKernelServer(NamedPipeName, new DirectoryInfo("."));
+              });
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            _Kernel?.Dispose();
+            base.OnExit(e);
+        }
+
+        private void AddDispatcherCommand(Kernel kernel)
+        {
             var dispatcherCommand = new Command("#!dispatcher", "Enable or disable running code on the Dispatcher")
             {
                 new Option<bool>("--enabled", getDefaultValue:() => true)
             };
-            dispatcherCommand.Handler = CommandHandler.Create<KernelInvocationContext, bool>(OnDispatcher);
-            _Kernel.AddDirective(dispatcherCommand);
+            dispatcherCommand.Handler = CommandHandler.Create<bool>(enabled =>
+            {
+                RunOnDispatcher = enabled;
+            });
+            kernel.AddDirective(dispatcherCommand);
+        }
+
+        private CSharpKernel RegisterCSharpKernel()
+        {
+            var csharpKernel = new CSharpKernel()
+                .UseDefaultFormatting()
+                .UseNugetDirective()
+                .UseKernelHelpers()
+                .UseWho()
+                .UseDotNetVariableSharing()
+                //This is added locally
+                .UseWpf();
+
+            _Kernel.Add(csharpKernel);
 
             csharpKernel.AddMiddleware(async (KernelCommand command, KernelInvocationContext context, KernelPipelineContinuation next) =>
             {
-                if (_RunOnDispatcher)
+                if (RunOnDispatcher)
                 {
                     await Dispatcher.InvokeAsync(async () => await next(command, context));
                 }
@@ -56,19 +88,7 @@ namespace WpfApp1
                 }
             });
 
-            _ = Task.Run(async () =>
-              {
-                  await csharpKernel.SendAsync(new SubmitCode(@$"#r ""{typeof(App).Assembly.Location}""
-using WpfApp1;"));
-                  await csharpKernel.SetVariableAsync("App", this);
-
-                  _Kernel.UseNamedPipeKernelServer(NamedPipeName, new DirectoryInfo("."));
-              });
-        }
-
-        private void OnDispatcher(KernelInvocationContext context, bool enabled)
-        {
-            _RunOnDispatcher = enabled;
+            return csharpKernel;
         }
     }
 }
