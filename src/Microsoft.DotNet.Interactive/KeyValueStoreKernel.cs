@@ -91,7 +91,7 @@ return;
             }
         }
 
-        protected internal override ChooseKernelDirective CreateChooseKernelDirective()
+        protected override ChooseKernelDirective CreateChooseKernelDirective()
         {
             var nameOption = new Option<string>(
                 "--name",
@@ -111,11 +111,7 @@ return;
                 {
                     var filePath = result.Tokens.Single().Value;
 
-                    var fromUrlResult = result.Parent
-                                              .Parent
-                                              .Children
-                                              .OfType<OptionResult>()
-                                              .FirstOrDefault(c => c.Symbol == fromUrlOption);
+                    var fromUrlResult = result.FindResultFor(fromUrlOption);
 
                     if (fromUrlResult is {})
                     {

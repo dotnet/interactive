@@ -165,11 +165,11 @@ using static {typeof(TopLevelMethods).FullName};
                 {
                     yield return new HtmlString("<pre>");
                     var level = indentLevel + offset;
-                    for (var i = 0; i < command.Aliases.Count; i++)
+                    foreach (var alias in command.Aliases)
                     {
-                        yield return span[style: $"text-indent:{level:##.#}em; color:#512bd4"](command.Aliases[i]);
+                        yield return span[style: $"text-indent:{level:##.#}em; color:#512bd4"](alias);
 
-                        if (i < command.Aliases.Count - 1)
+                        if (level < command.Aliases.Count - 1)
                         {
                             yield return span[style: $"text-indent:{level:##.#}em; color:darkgray"](", ");
                         }

@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.Interactive
             Kernel kernel,
             IEnumerable<string> aliases = null)
         {
-            var chooseKernelCommand = kernel.CreateChooseKernelDirective();
+            var chooseKernelCommand = kernel.ChooseKernelDirective;
 
             if (aliases is {})
             {
@@ -107,8 +107,6 @@ namespace Microsoft.DotNet.Interactive
                     chooseKernelCommand.AddAlias($"#!{alias}");
                 }
             }
-
-            kernel.ChooseKernelDirective = chooseKernelCommand;
 
             AddDirective(chooseKernelCommand);
         }
