@@ -30,7 +30,8 @@ namespace Microsoft.DotNet.Interactive
         private readonly ConcurrentQueue<KernelOperation> _commandQueue =
             new ConcurrentQueue<KernelOperation>();
         private FrontendEnvironment _frontendEnvironment;
-        
+        private ChooseKernelDirective _chooseKernelDirective;
+
         protected Kernel(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -501,11 +502,11 @@ namespace Microsoft.DotNet.Interactive
 
         public void Dispose() => _disposables.Dispose();
 
-        protected internal virtual ChooseKernelDirective CreateChooseKernelDirective()
+        protected virtual ChooseKernelDirective CreateChooseKernelDirective()
         {
             return new ChooseKernelDirective(this);
         }
 
-        internal ChooseKernelDirective ChooseKernelDirective { get; set; }
+        internal ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= CreateChooseKernelDirective();
     }
 }

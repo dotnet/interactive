@@ -38,7 +38,6 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         public string Code { get; }
 
-        // FIX: (SubmitCode) remove SubmissionType
         public SubmissionType SubmissionType { get; }
 
         public override string ToString() => $"{nameof(SubmitCode)}: {Code.TruncateForDisplay()}";
