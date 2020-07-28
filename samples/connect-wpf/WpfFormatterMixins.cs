@@ -6,6 +6,8 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
+using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
+
 namespace WpfConnect
 {
     public static class WpfFormatterMixins
@@ -24,16 +26,11 @@ namespace WpfConnect
                 var color = brush.Color;
                 string stringValue = $"#{color.R:X2}{color.G:X2}{color.B:X2}{color.A:X2}";
 
-                var colorDiv = new PocketView("div");
-                colorDiv.HtmlAttributes["style"] = $"border:2px solid #FFFFFF;background-color:{stringValue};width:15px;height:15px";
-
-                var colorString = new PocketView("div");
-                colorString.SetContent(new object[] { stringValue });
-
-                PocketView d = new PocketView("div");
-                d.SetContent(new object[] { colorDiv, colorString });
-
-                writer.Write(d);
+                PocketView colorDiv = div(
+                    div[style: $"border:2px solid #FFFFFF;background-color:{stringValue};width:15px;height:15px"](),
+                    div(b(stringValue))
+                );
+                writer.Write(colorDiv);
 
             }, "text/html");
         }
@@ -71,11 +68,8 @@ namespace WpfConnect
             var data = ms.ToArray();
             var imageSource = $"data:image/png;base64, {Convert.ToBase64String(data)}";
 
-            var img = new PocketView("img");
-            img.HtmlAttributes["src"] = imageSource;
-            img.HtmlAttributes["width"] = rect.Width;
-            img.HtmlAttributes["height"] = rect.Height;
-            return img;
+            PocketView png = img[src: imageSource, width: rect.Width, height: rect.Height]();
+            return png;
         }
     }
 }
