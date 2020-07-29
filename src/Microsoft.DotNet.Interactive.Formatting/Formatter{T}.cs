@@ -52,6 +52,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     (o, writer) => formatter((T) o, writer),
                     mimeType);
             }
+            else if (!typeof(T).CanBeInstantiated())
+            {
+                Formatter.RegisterLazilyForConcreteTypesOf(
+                    typeof(T), 
+                    (o, writer) => formatter((T) o, writer), mimeType);
+                return;
+            }
 
             Formatter.TypeFormatters[(typeof(T), mimeType)] = new AnonymousTypeFormatter<T>(formatter, mimeType);
         }
