@@ -335,8 +335,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
         [Theory]
         [InlineData("text/plain")]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
         [InlineData("text/html")]
         public void Formatters_can_be_registered_on_demand_for_open_generic_classes(string mimeType)
         {
@@ -362,8 +360,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
         [Theory]
         [InlineData("text/plain")]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
         [InlineData("text/html")]
         public void Formatters_can_be_registered_on_demand_for_open_generic_interfaces(string mimeType)
         {
