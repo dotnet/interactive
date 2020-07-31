@@ -7,7 +7,7 @@ import { ClientMapper } from './clientMapper';
 import { DotNetInteractiveNotebookContentProvider } from './vscode/notebookProvider';
 import { StdioKernelTransport } from './stdioKernelTransport';
 import { registerLanguageProviders } from './vscode/languageProvider';
-import { execute, registerAcquisitionCommands, registerKernelCommands, registerInteropCommands } from './vscode/commands';
+import { execute, registerAcquisitionCommands, registerKernelCommands, registerFileFormatCommands } from './vscode/commands';
 
 import { IDotnetAcquireResult } from './interfaces/dotnet';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
@@ -53,11 +53,16 @@ export async function activate(context: vscode.ExtensionContext) {
     });
 
     registerKernelCommands(context, clientMapper);
-    registerInteropCommands(context);
+    registerFileFormatCommands(context);
 
     const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable
 
-    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', new DotNetInteractiveNotebookContentProvider(clientMapper)));
+    const notebookProvider = new DotNetInteractiveNotebookContentProvider(clientMapper);
+    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookProvider));
+    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive-jupyter', notebookProvider));
+    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider({viewType: 'dotnet-interactive'}, notebookProvider));
+    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider({viewType: 'dotnet-interactive-jupyter'}, notebookProvider));
+    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider({filenamePattern: '*.{dib,dotnet-interactive,ipynb}'}, notebookProvider));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(registerLanguageProviders(clientMapper, diagnosticDelay));
 }

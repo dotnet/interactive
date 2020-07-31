@@ -11,15 +11,6 @@ export interface ProcessStart {
     workingDirectory: string;
 }
 
-export interface RawNotebookCell {
-    language: string;
-    contents: Array<string>;
-}
-
-export interface DocumentWithCells {
-    cells: Array<RawNotebookCell>;
-}
-
 // interactive acquisition
 
 export interface InteractiveLaunchOptions {
@@ -52,3 +43,10 @@ export interface InstallInteractiveTool {
 export interface ReportInstallationFinished {
     (): void;
 }
+
+// host architecture
+export const WindowsEol = "\r\n";
+export const NonWindowsEol = "\n";
+export type Eol =
+      typeof WindowsEol
+    | typeof NonWindowsEol;
