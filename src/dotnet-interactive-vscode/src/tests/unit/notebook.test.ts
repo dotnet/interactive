@@ -9,7 +9,7 @@ use(require('chai-fs'));
 
 import { ClientMapper } from './../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
-import { CellKind, CellOutput, CellOutputKind, Document, NotebookDocument } from '../../interfaces/vscode';
+import { CellKind, CellOutput, CellOutputKind, NotebookDocument } from '../../interfaces/vscode';
 import {
     CodeSubmissionReceivedType,
     CommandFailedType,
@@ -22,7 +22,6 @@ import {
     DisplayedValueUpdatedType,
     ReturnValueProducedType,
     StandardOutputValueProducedType,
-    RequestDiagnosticsType,
 } from '../../contracts';
 import { withFakeGlobalStorageLocation } from './utilities';
 import { backupNotebook } from '../../interactiveNotebook';
@@ -528,7 +527,7 @@ Console.WriteLine(1);
                 ]
             };
             const backupLocation = path.join(globalStoragePath, Date.now().toString());
-            const notebookBackup = await backupNotebook(notebook, backupLocation);
+            const notebookBackup = await backupNotebook(notebook, backupLocation, '\r\n');
             const expected = [
                 '#!csharp',
                 '',
@@ -559,7 +558,7 @@ Console.WriteLine(1);
                 ]
             };
             const backupLocation = path.join(globalStoragePath, Date.now().toString());
-            const notebookBackup = await backupNotebook(notebook, backupLocation);
+            const notebookBackup = await backupNotebook(notebook, backupLocation, '\r\n');
             const expected = [
                 '#!csharp',
                 '',
@@ -578,7 +577,7 @@ Console.WriteLine(1);
                 cells: []
             };
             const backupLocation = path.join(globalStoragePath, Date.now().toString());
-            const notebookBackup = await backupNotebook(notebook, backupLocation);
+            const notebookBackup = await backupNotebook(notebook, backupLocation, '\r\n');
             expect(notebookBackup.id).to.be.file();
             notebookBackup.delete();
             expect(notebookBackup.id).to.not.be.a.path();

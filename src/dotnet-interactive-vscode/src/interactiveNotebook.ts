@@ -3,6 +3,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { Eol } from './interfaces';
 import { debounce } from './utilities';
 import { CellKind, Document, NotebookDocument, NotebookDocumentBackup, Uri } from "./interfaces/vscode";
 import { ClientMapper } from './clientMapper';
@@ -65,14 +66,14 @@ export function parseNotebook(uri: Uri, contents: string): NotebookDocument {
     }
 }
 
-export function serializeNotebook(uri: Uri, notebook: NotebookDocument): string {
+export function serializeNotebook(uri: Uri, notebook: NotebookDocument, eol: Eol): string {
     switch (path.extname(uri.fsPath).toLowerCase()) {
         case '.ipynb':
             return serializeAsJupyterNotebook(notebook);
         case '.dib':
         case '.dotnet-interactive':
         default: // unknown
-            return serializeAsInteractiveNotebook(notebook);
+            return serializeAsInteractiveNotebook(notebook, eol);
     }
 }
 
@@ -85,7 +86,7 @@ export function languageToCellKind(language: string): CellKind {
     }
 }
 
-export function backupNotebook(document: NotebookDocument, location: string): Promise<NotebookDocumentBackup> {
+export function backupNotebook(document: NotebookDocument, location: string, eol: Eol): Promise<NotebookDocumentBackup> {
     return new Promise<NotebookDocumentBackup>((resolve, reject) => {
         // ensure backup directory exists
         const parsedPath = path.parse(location);
@@ -101,7 +102,7 @@ export function backupNotebook(document: NotebookDocument, location: string): Pr
                 fsPath: backupFileName,
                 toString: () => backupFileName
             };
-            const backupData = serializeNotebook(backupUri, document);
+            const backupData = serializeNotebook(backupUri, document, eol);
             fs.writeFile(backupFileName, backupData, () => {
                 resolve({
                     id: backupFileName,

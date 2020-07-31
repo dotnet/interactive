@@ -43,3 +43,10 @@ export interface InstallInteractiveTool {
 export interface ReportInstallationFinished {
     (): void;
 }
+
+// host architecture
+export const WindowsEol = "\r\n";
+export const NonWindowsEol = "\n";
+export type Eol =
+      typeof WindowsEol
+    | typeof NonWindowsEol;

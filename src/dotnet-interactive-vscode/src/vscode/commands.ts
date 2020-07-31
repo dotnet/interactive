@@ -7,6 +7,7 @@ import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
 import { ClientMapper } from '../clientMapper';
 import { serializeNotebook } from '../interactiveNotebook';
+import { getEol } from './vscodeUtilities';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, dotnetPath: string) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
@@ -107,6 +108,8 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
 
 export function registerFileFormatCommands(context: vscode.ExtensionContext) {
 
+    const eol = getEol();
+
     const fileFormatFilters = {
         'Jupyter Notebooks': ['ipynb'],
         '.NET Interactive Notebooks': ['dib', 'dotnet-interactive']
@@ -143,7 +146,7 @@ export function registerFileFormatCommands(context: vscode.ExtensionContext) {
             }
 
             const { document } = vscode.notebook.activeNotebookEditor;
-            const contents = serializeNotebook(uri, document);
+            const contents = serializeNotebook(uri, document, eol);
             await vscode.workspace.fs.writeFile(uri, Buffer.from(contents));
         }
     }));

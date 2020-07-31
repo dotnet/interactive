@@ -5,20 +5,23 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { ClientMapper } from './../clientMapper';
 import { parseNotebook, serializeNotebook, notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook } from '../interactiveNotebook';
+import { Eol } from '../interfaces';
 import { CellOutput, NotebookCell } from '../interfaces/vscode';
 import { Diagnostic, DiagnosticSeverity } from './../contracts';
-import { toVsCodeDiagnostic } from './vscodeUtilities';
+import { getEol, toVsCodeDiagnostic } from './vscodeUtilities';
 import { getDiagnosticCollection } from './diagnostics';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider, vscode.NotebookKernel, vscode.NotebookKernelProvider<DotNetInteractiveNotebookContentProvider> {
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
 
+    eol: Eol;
     kernel: vscode.NotebookKernel;
     label: string;
 
     constructor(readonly clientMapper: ClientMapper) {
         this.kernel = this;
         this.label = ".NET Interactive";
+        this.eol = getEol();
     }
 
     preloads?: vscode.Uri[] | undefined;
@@ -111,11 +114,11 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     }
 
     backupNotebook(document: vscode.NotebookDocument, context: vscode.NotebookDocumentBackupContext, cancellation: vscode.CancellationToken): Promise<vscode.NotebookDocumentBackup> {
-        return backupNotebook(document, context.destination.fsPath);
+        return backupNotebook(document, context.destination.fsPath, this.eol);
     }
 
     private async save(document: vscode.NotebookDocument, targetResource: vscode.Uri): Promise<void> {
-        const contents = serializeNotebook(targetResource, document);
+        const contents = serializeNotebook(targetResource, document, this.eol);
         const buffer = Buffer.from(contents);
         await vscode.workspace.fs.writeFile(targetResource, buffer);
     }

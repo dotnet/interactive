@@ -4,13 +4,14 @@
 import { expect } from 'chai';
 
 import { parseNotebook, serializeNotebook, languageToCellKind } from '../../interactiveNotebook';
+import { Eol, WindowsEol, NonWindowsEol } from '../../interfaces';
 import { CellKind, NotebookDocument } from '../../interfaces/vscode';
 import { createUri } from '../../utilities';
 import { parseAsInteractiveNotebook, serializeAsInteractiveNotebook } from '../../fileFormats/interactive';
 
 describe('dib read/write tests', () => {
 
-    //Throughout this file, the `cell.document.getText()` function causes problems
+    // Throughout this file, the `cell.document.getText()` function causes problems
     // with `.deep.equal()`, so we have to pull out the relevant parts.
 
     //-------------------------------------------------------------------------
@@ -247,7 +248,7 @@ let x = 1
                 }
             ]
         };
-        const serialized = serializeAsInteractiveNotebook(notebook);
+        const serialized = serializeAsInteractiveNotebook(notebook, '\r\n');
         const expected = [
             '#!csharp',
             '',
@@ -281,7 +282,7 @@ let x = 1
                 }
             ]
         };
-        const str = serializeAsInteractiveNotebook(notebook);
+        const str = serializeAsInteractiveNotebook(notebook, '\r\n');
         const expectedLines = [
             '#!csharp',
             '',
@@ -290,6 +291,38 @@ let x = 1
         ];
         const expected = expectedLines.join('\r\n');
         expect(str).to.equal(expected);
+    });
+
+    it('honors eol specification when writing file', () => {
+        var eols: Array<Eol> = [
+            WindowsEol,
+            NonWindowsEol
+        ];
+        for (const eol of eols) {
+            const notebook: NotebookDocument = {
+                cells: [
+                    {
+                        cellKind: CellKind.Code,
+                        document: {
+                            uri: createUri('unused'),
+                            getText: () => '// line 1\n// line 2'
+                        },
+                        language: 'dotnet-interactive.csharp',
+                        outputs: []
+                    }
+                ]
+            };
+            const str = serializeAsInteractiveNotebook(notebook, eol);
+            const expectedLines = [
+                '#!csharp',
+                '',
+                '// line 1',
+                '// line 2',
+                ''
+            ];
+            const expected = expectedLines.join(eol);
+            expect(str).to.equal(expected);
+        }
     });
 
     //-------------------------------------------------------------------------
@@ -327,7 +360,7 @@ var x = 1;
                     }
                 ]
             };
-            const serialized = serializeNotebook(createUri(`notebook.${extension}`), notebook);
+            const serialized = serializeNotebook(createUri(`notebook.${extension}`), notebook, '\r\n');
             const expected = [
                 '#!csharp',
                 '',

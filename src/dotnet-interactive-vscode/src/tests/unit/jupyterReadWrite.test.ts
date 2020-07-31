@@ -565,7 +565,7 @@ describe('jupyter read/write tests', () => {
                 }
             ]
         };
-        const serialized = serializeNotebook(createUri('notebook.ipynb'), notebook);
+        const serialized = serializeNotebook(createUri('notebook.ipynb'), notebook, '\r\n');
         const expected: JupyterNotebook = {
             cells: [
                 {

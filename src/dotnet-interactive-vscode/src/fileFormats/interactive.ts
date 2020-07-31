@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import { Eol } from "../interfaces";
 import { CellKind, NotebookCell, NotebookDocument } from "../interfaces/vscode";
 import { editorLanguageAliases, getSimpleLanguage } from "../interactiveNotebook";
 import { splitAndCleanLines, trimTrailingCarriageReturn } from "../utilities";
@@ -82,7 +83,7 @@ export function parseAsInteractiveNotebook(contents: string): NotebookDocument {
     };
 }
 
-export function serializeAsInteractiveNotebook(document: NotebookDocument): string {
+export function serializeAsInteractiveNotebook(document: NotebookDocument, eol: Eol): string {
     let lines: Array<string> = [];
     for (let cell of document.cells) {
         const cellContents = cell.document.getText();
@@ -97,7 +98,7 @@ export function serializeAsInteractiveNotebook(document: NotebookDocument): stri
         }
     }
 
-    return lines.join('\r\n');
+    return lines.join(eol);
 }
 
 function findIndexReverse<T>(arr: Array<T>, predicate: { (val: T): boolean }): number {
