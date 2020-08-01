@@ -1,13 +1,24 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { CellKind, CellOutput, CellOutputKind, NotebookDocument } from "../interfaces/vscode";
+import { CellKind, CellOutput, CellOutputKind, NotebookCell, NotebookDocument } from "../interfaces/vscode";
 import { JupyterCell, JupyterMetadata, JupyterNotebook, JupyterOutput } from "../interfaces/jupyter";
-import { NotebookFile, editorLanguageAliases, getNotebookSpecificLanguage, getSimpleLanguage } from "../interactiveNotebook";
-import { RawNotebookCell } from "../interfaces";
-import { splitAndCleanLines } from "../utilities";
+import { editorLanguageAliases, getNotebookSpecificLanguage, getSimpleLanguage } from "../interactiveNotebook";
+import { splitAndCleanLines, createUri } from "../utilities";
 
-export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
+export function parseAsJupyterNotebook(contents: string): NotebookDocument {
+    const jupyterJson = JSON.parse(contents);
+    const notebook = jupyterToNotebook(jupyterJson);
+    return notebook;
+}
+
+export function serializeAsJupyterNotebook(notebook: NotebookDocument): string {
+    const jupyterNotebook = notebookToJupyter(notebook);
+    const contents = JSON.stringify(jupyterNotebook, null, 1);
+    return contents;
+}
+
+function notebookToJupyter(document: NotebookDocument): JupyterNotebook {
     // VS Code Notebooks don't have the concept of a global notebook language, so we have to fake it.
     let notebookLanguage = 'dotnet-interactive.csharp';
     let cells: Array<JupyterCell> = [];
@@ -67,21 +78,32 @@ export function convertToJupyter(document: NotebookDocument): JupyterNotebook {
     return notebook;
 }
 
-export function convertFromJupyter(jupyter: JupyterNotebook): NotebookFile {
-    let cells: Array<RawNotebookCell> = [];
+function jupyterToNotebook(jupyter: JupyterNotebook): NotebookDocument {
+    let cells: Array<NotebookCell> = [];
     for (let jcell of jupyter.cells) {
         switch (jcell.cell_type) {
             case 'code':
                 const { cellLanguage, cellContents } = getCellLanguageAndContents(jcell.source, expandLanguageName(jupyter.metadata.kernelspec.language));
+                const cellText = cellContents.join('\n');
                 cells.push({
+                    cellKind: CellKind.Code,
+                    document: {
+                        uri: createUri('unused'),
+                        getText: () => cellText
+                    },
                     language: getNotebookSpecificLanguage(cellLanguage),
-                    contents: cellContents
+                    outputs: convertJupyterOutputsToCellOutputs(jcell.outputs)
                 });
                 break;
             case 'markdown':
                 cells.push({
+                    cellKind: CellKind.Markdown,
+                    document: {
+                        uri: createUri('unused'),
+                        getText: () => splitAndCleanLines(jcell.source).join('\n')
+                    },
                     language: 'dotnet-interactive.markdown',
-                    contents: splitAndCleanLines(jcell.source)
+                    outputs: []
                 });
                 break;
         }
@@ -161,6 +183,42 @@ function convertCellOutputDataToJupyter(data: { [key: string]: string }): { [key
     }
 
     return result;
+}
+
+function convertJupyterOutputsToCellOutputs(outputs: JupyterOutput[] | undefined): CellOutput[] {
+    if (!outputs) {
+        return [];
+    }
+
+    return outputs.map(convertJupyterOutputToCellOutput);
+}
+
+function convertJupyterOutputToCellOutput(output: JupyterOutput): CellOutput {
+    switch (output.output_type) {
+        case 'error':
+            return {
+                outputKind: CellOutputKind.Error,
+                ename: output.ename,
+                evalue: output.evalue,
+                traceback: output.traceback
+            };
+        case 'execute_result':
+            return {
+                outputKind: CellOutputKind.Rich,
+                data: output.data
+            };
+        case 'display_data':
+            return {
+                outputKind: CellOutputKind.Text,
+                text: output.data['text/plain']
+            };
+        default:
+            // unknown, but we have to return something
+            return {
+                outputKind: CellOutputKind.Text,
+                text: ''
+            };
+    }
 }
 
 function displayNameFromLanguage(language: string): string {

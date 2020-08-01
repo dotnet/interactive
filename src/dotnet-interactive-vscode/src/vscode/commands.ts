@@ -3,11 +3,11 @@
 
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
-import * as jp from '../interop/jupyter';
 import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
-import { serializeNotebook } from '../interactiveNotebook';
 import { ClientMapper } from '../clientMapper';
+import { serializeNotebook } from '../interactiveNotebook';
+import { getEol } from './vscodeUtilities';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, dotnetPath: string) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
@@ -106,66 +106,48 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     }));
 }
 
-export function registerInteropCommands(context: vscode.ExtensionContext) {
+export function registerFileFormatCommands(context: vscode.ExtensionContext) {
 
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.convertJupyterNotebook', async (jupyterUri?: vscode.Uri | undefined, notebookUri?: vscode.Uri | undefined) => {
-        // ensure we have a jupyter uri
-        if (!jupyterUri) {
+    const eol = getEol();
+
+    const fileFormatFilters = {
+        'Jupyter Notebooks': ['ipynb'],
+        '.NET Interactive Notebooks': ['dib', 'dotnet-interactive']
+    };
+
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
+        // ensure we have a notebook uri
+        if (!notebookUri) {
             const uris = await vscode.window.showOpenDialog({
-                filters: {
-                    'Jupyter Notebook Files': ['ipynb']
-                }
+                filters: fileFormatFilters
             });
 
             if (uris && uris.length > 0) {
-                jupyterUri = uris[0];
+                notebookUri = uris[0];
             }
-
-            if (!jupyterUri) {
-                // still no appropriate path
-                return;
-            }
-        }
-
-        // ensure we have a notebook uri
-        if (!notebookUri) {
-            notebookUri = await vscode.window.showSaveDialog({
-                filters: {
-                    '.NET Interactive Notebook Files': ['dib', 'dotnet-interactive']
-                }
-            });
 
             if (!notebookUri) {
-                // still no appropriate path
+                // no appropriate uri
                 return;
             }
         }
 
-        const fileContents = (Buffer.from(await vscode.workspace.fs.readFile(jupyterUri))).toString('utf-8');
-        const jupyterJson = JSON.parse(fileContents);
-        const notebook = jp.convertFromJupyter(jupyterJson);
-        const notebookContents = serializeNotebook(notebook);
-        const notebookBuffer = Buffer.from(notebookContents);
-        await vscode.workspace.fs.writeFile(notebookUri, notebookBuffer);
-
-        // currently no api to open the just-created notebook, so we'll prompt instead
-        await vscode.window.showInformationMessage(`.NET Interactive notebook saved to '${notebookUri.fsPath}'`);
+        await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'dotnet-interactive-jupyter');
     }));
 
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.exportAsJupyterNotebook', async () => {
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {
         if (vscode.notebook.activeNotebookEditor) {
             const uri = await vscode.window.showSaveDialog({
-                filters: {
-                    'Jupyter Notebook Files': ['ipynb']
-                }
+                filters: fileFormatFilters
             });
+
             if (!uri) {
                 return;
             }
 
             const { document } = vscode.notebook.activeNotebookEditor;
-            const jupyter = jp.convertToJupyter(document);
-            await vscode.workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(jupyter, null, 1)));
+            const contents = serializeNotebook(uri, document, eol);
+            await vscode.workspace.fs.writeFile(uri, Buffer.from(contents));
         }
     }));
 }
