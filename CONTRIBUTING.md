@@ -8,4 +8,4 @@ That said, please use open a GitHub to discuss first any API renames or changes 
 
 ## Developer guide
 
-This project can be developed on any platform. For more information, see our [developer guide](./DEVGUIDE.md).
+This project can be developed on any platform. For more information, see our [developer guide](./DEVELOPER-GUIDE.md).
