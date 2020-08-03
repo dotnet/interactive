@@ -88,7 +88,7 @@ displayedValue.Update("Ready.");
 
 #!markdown
 
-Because we've stored our data in top-level variables (`deathsSeries`, `confirmedSeries`, `recoveredSeries`, etc.) in the C# kernel, they're accessible from JavaScript by calling `interactive.csharp.getVariable`. The data will be returned as JSON and we can plot it using the library of our choice, pulled in using [RequireJS](https://requirejs.org/). 
+Because we've stored our data in the top-level variable `series` in the C# kernel, it is accessible from JavaScript by calling `interactive.csharp.getVariable`. The data will be returned as JSON and we can plot it using the library of our choice, pulled in using [RequireJS](https://requirejs.org/). 
 
 We'll use [Plotly](https://plot.ly/).
 
