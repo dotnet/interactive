@@ -115,7 +115,7 @@ alert('hello');
                 .Throw<TimeoutException>()
                 .Which
                 .Message
-                .Should().Be("Timeout resolving api uri, please try again.");
+                .Should().Be("Timeout resolving the kernel's HTTP endpoint. Please try again.");
         }
 
         [Fact]
