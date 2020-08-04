@@ -23,7 +23,7 @@ Port 8888 is used by Jupyter and it is where the web application runs, the range
 To run it execute the following command:
 
 ```powershell
-> docker run --rm -it -p 8888:8888 -p 1100-1200:1100-1200  --name dotnet-interactive-image dotnet-interactive:1.0
+> docker run --rm -it -p 8888:8888 -p 1000-1200:1000-1200  --name dotnet-interactive-image dotnet-interactive:1.0
 ```
 
 Remember to match the port range with the range used when building the image.
@@ -37,5 +37,5 @@ Local folder can be mounted using the `-v option`, follow the instruction to exp
 On Windows the following command will mount a local folder into the running image at the `/notebooks` mountpoint
 
 ```powershell
-docker run --rm -it -p 8888:8888 -p 1100-1200:1100-1200 -v c:\notebooks:/notebooks --name dotnet-interactive-image dotnet-interactive:1.0
+docker run --rm -it -p 8888:8888 -p 1000-1200:1000-1200 -v c:\notebooks:/notebooks --name dotnet-interactive-image dotnet-interactive:1.0
 ```
