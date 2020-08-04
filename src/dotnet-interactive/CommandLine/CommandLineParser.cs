@@ -479,14 +479,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 kernel.LogEventsToPocketLogger();
             }
 
-            SetUpFormatters(frontendEnvironment, startupOptions);
+            SetUpFormatters(frontendEnvironment, startupOptions, TimeSpan.FromSeconds(15));
 
             kernel.DefaultKernelName = defaultKernelName;
 
             return kernel;
         }
 
-        public static void SetUpFormatters(FrontendEnvironment frontendEnvironment, StartupOptions startupOptions)
+        public static void SetUpFormatters(FrontendEnvironment frontendEnvironment, StartupOptions startupOptions, TimeSpan apiUriTimeout)
         {
             switch (frontendEnvironment)
             {
@@ -507,15 +507,24 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     {
                         Formatter<ScriptContent>.Register((script, writer) =>
                         {
-                            var fullCode = $@"if (typeof window.createDotnetInteractiveClient === typeof Function) {{
-createDotnetInteractiveClient('{frontedEnvironment.DiscoveredUri.AbsoluteUri}').then(function (interactive) {{
-let notebookScope = getDotnetInteractiveScope('{frontedEnvironment.DiscoveredUri.AbsoluteUri}');
+                            if (!Task.Run(() =>
+                            {
+                                var apiUri = frontedEnvironment.GetApiUriAsync().Result;
+                                var fullCode =
+                                    $@"if (typeof window.createDotnetInteractiveClient === typeof Function) {{
+createDotnetInteractiveClient('{apiUri.AbsoluteUri}').then(function (interactive) {{
+let notebookScope = getDotnetInteractiveScope('{apiUri.AbsoluteUri}');
 {script.ScriptValue}
 }});
 }}";
-                            IHtmlContent content =
-                                PocketViewTags.script[type: "text/javascript"](fullCode.ToHtmlContent());
-                            content.WriteTo(writer, HtmlEncoder.Default);
+                                IHtmlContent content =
+                                    PocketViewTags.script[type: "text/javascript"](fullCode.ToHtmlContent());
+                                content.WriteTo(writer, HtmlEncoder.Default);
+                            }).Wait(apiUriTimeout))
+                            {
+                                throw new TimeoutException("Timeout resolving api uri, please try again.");
+                            }
+
                         }, HtmlFormatter.MimeType);
                     }
                     else
