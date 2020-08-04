@@ -507,9 +507,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     {
                         Formatter<ScriptContent>.Register((script, writer) =>
                         {
-                            if (!Task.Run(() =>
+                            if (!Task.Run(async () =>
                             {
-                                var apiUri = frontedEnvironment.GetApiUriAsync().Result;
+                                var apiUri = await frontedEnvironment.GetApiUriAsync();
                                 var fullCode =
                                     $@"if (typeof window.createDotnetInteractiveClient === typeof Function) {{
 createDotnetInteractiveClient('{apiUri.AbsoluteUri}').then(function (interactive) {{
@@ -522,7 +522,7 @@ let notebookScope = getDotnetInteractiveScope('{apiUri.AbsoluteUri}');
                                 content.WriteTo(writer, HtmlEncoder.Default);
                             }).Wait(apiUriTimeout))
                             {
-                                throw new TimeoutException("Timeout resolving api uri, please try again.");
+                                throw new TimeoutException("Timeout resolving the kernel's HTTP endpoint. Please try again.");
                             }
 
                         }, HtmlFormatter.MimeType);
