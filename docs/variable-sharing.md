@@ -10,7 +10,18 @@ Variables are shared by reference for reference types. A consequence of this is 
 
 ## Direct data entry with `#!value`
 
+It's common to have text that you'd like to use in a notebook. It might be JSON, CSV, XML, or some other format. It might be in a file, in your clipboard, or on the web. The `#!value` magic command is available to make it as easy as possible to get that text into a variable in your notebook. An important thing to know is that `#!value` is an alias to a  subkernel designed just to hold values. This means that once you store something in it, you can access it from another subkernel using `#!share`.
 
+There are a number of ways to use it. The simplest is to paste some text into the cell. The text will be stored as a string, but unlike using a `string` literal in C#, F#, or PowerShell, there's no need to escape anything.
+
+<img src="https://user-images.githubusercontent.com/547415/89252742-81273b80-d5cf-11ea-8769-6d51eaa0669f.png" width="40%">
+
+
+Optionally, you can display the value in the notebook when you submit a value, using the mime type of your choice. This accomplishes a few things. If your notebook frontend knows how to display that mime type, you can see it appropriately formatted:
+
+<img src="https://user-images.githubusercontent.com/547415/89252758-8ab0a380-d5cf-11ea-9873-78d7060f8157.png" width="40%">
+
+This also effectively stores the value in your `.ipynb` file, something that would not otherwise happen.
 
 ## Limitations
 
