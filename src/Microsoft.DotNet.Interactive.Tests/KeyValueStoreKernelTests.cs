@@ -84,17 +84,19 @@ namespace Microsoft.DotNet.Interactive.Tests
                                       v.Value == storedValue);
         }
 
-        [Fact]
-        public async Task It_can_import_file_contents_as_strings()
+        [Theory]
+        [InlineData("#!value --name hi --from-file {0}")]
+        [InlineData("#!value --name hi --from-file {0}\n")]
+        public async Task It_can_import_file_contents_as_strings(string code)
         {
             using var kernel = CreateKernel();
 
             var fileContents = "1,2,3";
 
-            var file = Path.GetTempFileName();
-            File.WriteAllText(file, fileContents);
+            var filePath = Path.GetTempFileName();
+            File.WriteAllText(filePath, fileContents);
 
-            await kernel.SubmitCodeAsync($@"#!value --name hi --from-file {file}");
+            await kernel.SubmitCodeAsync(string.Format(code, filePath));
 
             var keyValueStoreKernel = (DotNetKernel) kernel.FindKernel("value");
 
