@@ -69,7 +69,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var frontendEnvironment = server.FrontendEnvironment as HtmlNotebookFrontedEnvironment;
-            frontendEnvironment.DiscoveredUri.Should().Be(expectedUri);
+
+            var apiUri = await frontendEnvironment.GetApiUriAsync();
+            apiUri.Should().Be(expectedUri);
         }
 
         [Theory]

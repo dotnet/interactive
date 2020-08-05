@@ -6,7 +6,8 @@ A kernel doesn't have to run in its own process. The default `dotnet-interactive
 
 The `dotnet-interactive` tool also provides a number of protocols, including the [Jupyter message protocol](https://jupyter-client.readthedocs.io/en/stable/messaging.html) and a JSON protocol that can be accessed over either standard I/O or HTTP. These multiple protocols allow the core set of capabilities to be fairly portable.
 
-![image](https://user-images.githubusercontent.com/547415/84963747-16717d80-b0bf-11ea-87ca-dd1fb11fd000.png)
+![image](https://user-images.githubusercontent.com/547415/89247745-ddd02980-d5c2-11ea-8b56-3e215080f1c8.png)
+
 
 ## Commands and events
 
