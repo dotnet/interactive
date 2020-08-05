@@ -465,7 +465,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 new HtmlKernel());
 
             compositeKernel.Add(
-                new KeyValueStoreKernel());
+                new KeyValueStoreKernel()
+                    .UseWho());
 
             var kernel = compositeKernel
                          .UseDefaultMagicCommands()
