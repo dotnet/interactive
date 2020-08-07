@@ -29,13 +29,13 @@ type FSharpKernelExtensions private () =
                 referenceFromType typeof<KernelHelpers.Html.HtmlElement>
                 referenceFromType typeof<PlotlyChart>
                 referenceFromType typeof<Formatter>
-                // open Microsoft.Microsoft.AspNet.Core.Html
+                // opens Microsoft.Microsoft.AspNet.Core.Html
                 openNamespaceOrType typeof<IHtmlContent>.Namespace
-                // open Microsoft.DotNet.Interactive.FSharp.KernelHelpers.Html
+                // opens Microsoft.DotNet.Interactive.FSharp.KernelHelpers.Html
                 openNamespaceOrType (typeof<Microsoft.DotNet.Interactive.FSharp.KernelHelpers.Html.HtmlElement>.Namespace)
-                // open XPlot.Plotly
+                // opens XPlot.Plotly
                 openNamespaceOrType typeof<PlotlyChart>.Namespace
-                // open Microsoft.DotNet.Interactive.Formatting
+                // opens Microsoft.DotNet.Interactive.Formatting
                 openNamespaceOrType typeof<Formatter>.Namespace
             ] |> List.reduce(fun x y -> x + Environment.NewLine + y)
 
