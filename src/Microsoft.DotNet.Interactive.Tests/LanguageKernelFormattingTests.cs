@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             string submission,
             string expectedContent)
         {
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
 
             await kernel.SendAsync(new SubmitCode(submission));
 
@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             string submission,
             string expectedContent)
         {
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
 
             var result = await kernel.SendAsync(new SubmitCode(submission));
 
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [InlineData(Language.FSharp)]
         public async Task Display_helper_can_be_called_without_specifying_class_name(Language language)
         {
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
 
             var submission = language switch
             {
@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [InlineData(Language.FSharp)]
         public async Task Displayed_value_can_be_updated(Language language)
         {
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
 
             var submission = language switch
             {
@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [InlineData(Language.FSharp)]
         public async Task Displayed_value_can_be_updated_from_later_submissions(Language language)
         {
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
 
             var submissions = language switch
             {
@@ -174,7 +174,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [InlineData(Language.FSharp)]
         public async Task Value_display_and_update_are_in_right_order(Language language)
         {
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
 
             var submission = language switch
             {
