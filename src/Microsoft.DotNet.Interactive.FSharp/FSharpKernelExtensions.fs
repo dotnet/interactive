@@ -26,13 +26,16 @@ type FSharpKernelExtensions private () =
             [
                 referenceFromType typeof<IHtmlContent>
                 referenceFromType typeof<Kernel>
-                referenceFromType typeof<FSharpPocketViewTags>
+                referenceFromType typeof<KernelHelpers.Html.HtmlElement>
                 referenceFromType typeof<PlotlyChart>
                 referenceFromType typeof<Formatter>
+                // open Microsoft.Microsoft.AspNet.Core.Html
                 openNamespaceOrType typeof<IHtmlContent>.Namespace
-                openNamespaceOrType typeof<FSharpPocketViewTags>.FullName
-                openNamespaceOrType typeof<FSharpPocketViewTags>.Namespace
+                // open Microsoft.DotNet.Interactive.FSharp.KernelHelpers.Html
+                openNamespaceOrType (typeof<Microsoft.DotNet.Interactive.FSharp.KernelHelpers.Html.HtmlElement>.Namespace)
+                // open XPlot.Plotly
                 openNamespaceOrType typeof<PlotlyChart>.Namespace
+                // open Microsoft.DotNet.Interactive.Formatting
                 openNamespaceOrType typeof<Formatter>.Namespace
             ] |> List.reduce(fun x y -> x + Environment.NewLine + y)
 
@@ -53,8 +56,8 @@ open System.Linq"
     static member UseKernelHelpers(kernel: FSharpKernelBase) =
         let code = 
             [
-                referenceFromType typeof<FSharpKernelHelpers.IMarker>
-                openNamespaceOrType (typeof<FSharpKernelHelpers.IMarker>.DeclaringType.Namespace + "." + nameof(FSharpKernelHelpers))
+                referenceFromType typeof<KernelHelpers.Operators.IMarker>
+                openNamespaceOrType (typeof<KernelHelpers.Operators.IMarker>.DeclaringType.Namespace + "." + nameof(KernelHelpers.Operators))
             ] |> List.reduce(fun x y -> x + Environment.NewLine + y)
 
         kernel.DeferCommand(SubmitCode code)

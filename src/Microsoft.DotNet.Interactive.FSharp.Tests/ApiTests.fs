@@ -3,35 +3,39 @@
 
 namespace Microsoft.DotNet.Interactive.FSharp.Tests
 
-open Microsoft.DotNet.Interactive.FSharp.FSharpPocketViewTags
+open Microsoft.DotNet.Interactive.FSharp.KernelHelpers.Html
 open Xunit
 
 type ApiTests() =
 
     [<Fact>]
     member __.``empty tag``() =
-        Assert.Equal("<div></div>", div.ToString())
+        Assert.Equal("<div></div>", (div [] []).ToString())
 
     [<Fact>]
     member __.``indexer as attribute``() =
-        Assert.Equal("<div class=\"c\"></div>", div.["class", "c"].ToString());
+        Assert.Equal("<div class=\"c\"></div>", (div [_class "c"] []).ToString());
 
     [<Fact>]
-    member __.``inner HTML from content``() =
-        Assert.Equal("<div>d</div>", div.innerHTML("d").ToString())
+    member __.``inner HTML from string``() =
+        Assert.Equal("<div>d</div>", (div [] [str "d"]).ToString())
+
+    [<Fact>]
+    member __.``inner HTML from object``() =
+        Assert.Equal("<div>11</div>", (div [] [object 11]).ToString())
 
     [<Fact>]
     member __.``inner HTML from content with attribute``() =
-        Assert.Equal("<div class=\"c\">d</div>", div.["class", "c"].innerHTML("d").ToString())
+        Assert.Equal("<div class=\"c\">d</div>", (div [_class "c"] [str "d"]).ToString())
 
     [<Fact>]
     member __.``inner HTML from another tag``() =
-        Assert.Equal("<div><a>foo</a></div>", div.innerHTML(a.innerHTML("foo")).ToString())
+        Assert.Equal("<div><a>foo</a></div>", (div [] [a [] [str "foo"]]).ToString())
 
     [<Fact>]
     member __.``inner HTML varargs 0``() =
-        Assert.Equal("<div></div>", div.innerHTML().ToString())
+        Assert.Equal("<div></div>", (div [] [] ).ToString())
 
     [<Fact>]
     member __.``inner HTML varargs 2``() =
-        Assert.Equal("<div>ab</div>", div.innerHTML("a", "b").ToString())
+        Assert.Equal("<div>ab</div>", (div [] [str "a"; object "b"]).ToString())

@@ -141,8 +141,9 @@ location.EndsWith(""System.Text.Json.dll"")"
 |> List.sum";
 
             await SubmitCode(kernel, source);
+            var events = KernelEvents;
 
-            KernelEvents
+            events
                 .OfType<ReturnValueProduced>()
                 .Last()
                 .Value

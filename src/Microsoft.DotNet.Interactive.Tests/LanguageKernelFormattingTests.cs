@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Theory]
         // PocketView
         [InlineData(Language.CSharp, "b(123)", "<b>123</b>")]
-        [InlineData(Language.FSharp, "b.innerHTML(123)", "<b>123</b>")]
+        [InlineData(Language.FSharp, "b [] [str \"123\" ]", "<b>123</b>")]
         // sequence
         [InlineData(Language.CSharp, "new[] { 1, 2, 3, 4 }", "<table>")]
         [InlineData(Language.FSharp, "[1; 2; 3; 4]", "<table>")]
@@ -54,9 +54,9 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         [Theory]
         [InlineData(Language.CSharp, "div(123).ToString()", "<div>123</div>")]
-        [InlineData(Language.FSharp, "div.innerHTML(123).ToString()", "<div>123</div>")]
+        [InlineData(Language.FSharp, "(div [] [ str \"123\" ]).ToString()", "<div>123</div>")]
         [InlineData(Language.CSharp, "display(div(123).ToString());", "<div>123</div>")]
-        [InlineData(Language.FSharp, "display(div.innerHTML(123).ToString())", "<div>123</div>")]
+        [InlineData(Language.FSharp, "display((div [] [ str \"123\" ]).ToString())", "<div>123</div>")]
         [InlineData(Language.CSharp, "\"hi\"", "hi")]
         [InlineData(Language.FSharp, "\"hi\"", "hi")]
         public async Task String_is_rendered_as_plain_text(
@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             var submission = language switch
             {
                 Language.CSharp => "display(b(\"hi!\"));",
-                Language.FSharp => "display(b.innerHTML(\"hi!\"));",
+                Language.FSharp => "display(b [] [ str \"hi!\" ]);",
             };
 
             await kernel.SendAsync(new SubmitCode(submission));
@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             var submission = language switch
             {
                 Language.CSharp => "var d = display(b(\"hello\")); d.Update(b(\"world\"));",
-                Language.FSharp => "let d = display(b.innerHTML(\"hello\"))\nd.Update(b.innerHTML(\"world\"))",
+                Language.FSharp => "let d = display(b [] [ str \"hello\"])\nd.Update(b [] [str \"world\"])",
             };
 
             await kernel.SendAsync(new SubmitCode(submission));
@@ -149,7 +149,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             var submissions = language switch
             {
                 Language.CSharp => new[] { "var d = display(b(\"hello\"));", "d.Update(b(\"world\"));" },
-                Language.FSharp => new[] { "let d = display(b.innerHTML(\"hello\"))", "d.Update(b.innerHTML(\"world\"))" },
+                Language.FSharp => new[] { "let d = display(b [] [ str \"hello\" ])", "d.Update(b [] [ str \"world\" ])" },
             };
 
             await kernel.SubmitCodeAsync(submissions[0]);
@@ -179,7 +179,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             var submission = language switch
             {
                 Language.CSharp => "var d = display(b(\"hello\")); d.Update(b(\"world\"));",
-                Language.FSharp => "let d = display(b.innerHTML(\"hello\"))\nd.Update(b.innerHTML(\"world\"))",
+                Language.FSharp => "let d = display(b [] [ str \"hello\" ])\nd.Update(b [] [ str \"world\" ])",
             };
 
             await kernel.SendAsync(new SubmitCode(submission));
