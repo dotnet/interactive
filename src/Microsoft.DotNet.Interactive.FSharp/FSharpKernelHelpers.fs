@@ -6,8 +6,10 @@ namespace Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers
 open Microsoft.DotNet.Interactive
 open Microsoft.AspNetCore.Html
 
-module Operators =
-    type internal IMarker = interface end
+type internal IMarker = interface end
+
+[<AutoOpen>]
+module DisplayFunctions =
     
     /// Display the object using current display settings
     let display (value: obj) =

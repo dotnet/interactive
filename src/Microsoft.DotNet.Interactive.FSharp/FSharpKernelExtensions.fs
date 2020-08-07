@@ -29,15 +29,22 @@ type FSharpKernelExtensions private () =
                 referenceFromType typeof<FSharpKernelHelpers.Html.HtmlElement>
                 referenceFromType typeof<PlotlyChart>
                 referenceFromType typeof<Formatter>
+
                 // opens Microsoft.Microsoft.AspNet.Core.Html
+                // Note this will be removed in https://github.com/dotnet/interactive/pull/688
                 openNamespaceOrType typeof<IHtmlContent>.Namespace
+
                 // opens Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html
                 // Note this will be removed in https://github.com/dotnet/interactive/pull/688
                 openNamespaceOrType (typeof<Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html.HtmlElement>.DeclaringType.Namespace + "." + nameof(FSharpKernelHelpers.Html))
+
                 // opens XPlot.Plotly
+                // Note this will be removed in https://github.com/dotnet/interactive/pull/688
                 openNamespaceOrType typeof<PlotlyChart>.Namespace
+
                 // opens Microsoft.DotNet.Interactive.Formatting
                 openNamespaceOrType typeof<Formatter>.Namespace
+
             ] |> List.reduce(fun x y -> x + Environment.NewLine + y)
 
         kernel.DeferCommand(SubmitCode code)
@@ -57,8 +64,12 @@ open System.Linq"
     static member UseKernelHelpers(kernel: FSharpKernelBase) =
         let code = 
             [
-                referenceFromType typeof<FSharpKernelHelpers.Operators.IMarker>
-                openNamespaceOrType (typeof<FSharpKernelHelpers.Operators.IMarker>.DeclaringType.Namespace + "." + nameof(FSharpKernelHelpers.Operators))
+                referenceFromType typeof<FSharpKernelHelpers.Html.HtmlElement>
+                
+                // opens Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers
+                //    note this has some AutoOpen
+                openNamespaceOrType (typeof<FSharpKernelHelpers.DisplayFunctions.IMarker>.Namespace)
+
             ] |> List.reduce(fun x y -> x + Environment.NewLine + y)
 
         kernel.DeferCommand(SubmitCode code)
