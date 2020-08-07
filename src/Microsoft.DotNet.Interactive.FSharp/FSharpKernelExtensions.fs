@@ -26,13 +26,14 @@ type FSharpKernelExtensions private () =
             [
                 referenceFromType typeof<IHtmlContent>
                 referenceFromType typeof<Kernel>
-                referenceFromType typeof<KernelHelpers.Html.HtmlElement>
+                referenceFromType typeof<FSharpKernelHelpers.Html.HtmlElement>
                 referenceFromType typeof<PlotlyChart>
                 referenceFromType typeof<Formatter>
                 // opens Microsoft.Microsoft.AspNet.Core.Html
                 openNamespaceOrType typeof<IHtmlContent>.Namespace
-                // opens Microsoft.DotNet.Interactive.FSharp.KernelHelpers.Html
-                openNamespaceOrType (typeof<Microsoft.DotNet.Interactive.FSharp.KernelHelpers.Html.HtmlElement>.Namespace)
+                // opens Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html
+                // Note this will be removed in https://github.com/dotnet/interactive/pull/688
+                openNamespaceOrType (typeof<Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html.HtmlElement>.DeclaringType.Namespace + "." + nameof(FSharpKernelHelpers.Html))
                 // opens XPlot.Plotly
                 openNamespaceOrType typeof<PlotlyChart>.Namespace
                 // opens Microsoft.DotNet.Interactive.Formatting
@@ -56,8 +57,8 @@ open System.Linq"
     static member UseKernelHelpers(kernel: FSharpKernelBase) =
         let code = 
             [
-                referenceFromType typeof<KernelHelpers.Operators.IMarker>
-                openNamespaceOrType (typeof<KernelHelpers.Operators.IMarker>.DeclaringType.Namespace + "." + nameof(KernelHelpers.Operators))
+                referenceFromType typeof<FSharpKernelHelpers.Operators.IMarker>
+                openNamespaceOrType (typeof<FSharpKernelHelpers.Operators.IMarker>.DeclaringType.Namespace + "." + nameof(FSharpKernelHelpers.Operators))
             ] |> List.reduce(fun x y -> x + Environment.NewLine + y)
 
         kernel.DeferCommand(SubmitCode code)

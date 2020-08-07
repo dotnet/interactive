@@ -3,7 +3,7 @@
 
 namespace Microsoft.DotNet.Interactive.FSharp.Tests
 
-open Microsoft.DotNet.Interactive.FSharp.KernelHelpers.Html
+open Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html
 open Xunit
 
 type ApiTests() =
