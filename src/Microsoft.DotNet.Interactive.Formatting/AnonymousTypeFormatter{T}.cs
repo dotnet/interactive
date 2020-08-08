@@ -10,7 +10,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         private readonly Action<T, TextWriter> _format;
 
-        public AnonymousTypeFormatter(Action<T, TextWriter> format, string mimeType)
+        public AnonymousTypeFormatter(Action<T, TextWriter> format, string mimeType, Type type = null)
+            : base(type??typeof(T))
         {
             if (string.IsNullOrWhiteSpace(mimeType))
             {

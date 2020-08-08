@@ -11,27 +11,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public static class HtmlFormatter
     {
-        static HtmlFormatter()
-        {
-            Formatter.Clearing += (sender, args) => DefaultFormatters = new DefaultHtmlFormatterSet();
-        }
+        public static ITypeFormatter GetBestFormatter(Type type) =>
+            Formatter.GetBestFormatter(type, MimeType);
 
-        public static ITypeFormatter Create(
-            Type type,
-            bool includeInternals = false)
-        {
-            var genericCreateForAllMembers = typeof(HtmlFormatter<>)
-                                             .MakeGenericType(type)
-                                             .GetMethod(nameof(HtmlFormatter<object>.Create), new[]
-                                             {
-                                                 typeof(bool)
-                                             });
-
-            return (ITypeFormatter) genericCreateForAllMembers.Invoke(null, new object[]
-            {
-                includeInternals
-            });
-        }
+        public static ITypeFormatter DefaultForAnyObject(Type type, bool includeInternals = false) =>
+            FormattersForAnyObject.GetFormatter(type, includeInternals);
 
         public const string MimeType = "text/html";
 
@@ -45,6 +29,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 tbody(
                     rows));
 
-        internal static IFormatterSet DefaultFormatters { get; private set; } = new DefaultHtmlFormatterSet();
+        internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultHtmlFormatterSet.DefaultFormatters;
+
+        internal static FormatterTable FormattersForAnyObject =
+            new FormatterTable(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyObject));
+
+        internal static FormatterTable FormattersForAnyEnumerable =
+            new FormatterTable(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyEnumerable));
+
+
     }
 }

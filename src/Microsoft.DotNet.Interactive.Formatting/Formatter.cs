@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.InteropServices.ComTypes;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.Formatting
@@ -22,12 +23,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         private static string _defaultMimeType = HtmlFormatter.MimeType;
 
-        private static readonly ConcurrentDictionary<Type, string> _preferredMimeTypesByType = new ConcurrentDictionary<Type, string>();
+        // user specification
+        private static readonly List<(Type type, string mimeType)> _preferredMimeTypes = new List<(Type type, string mimeType)>();
+        internal static readonly List<ITypeFormatter> _typeFormatters = new List<ITypeFormatter>();
 
-        internal static readonly ConcurrentDictionary<(Type type, string mimeType), ITypeFormatter> TypeFormatters = new ConcurrentDictionary<(Type type, string mimeType), ITypeFormatter>();
-
-        private static readonly ConcurrentDictionary<Type, Action<object, TextWriter, string>> _genericFormatters =
-            new ConcurrentDictionary<Type, Action<object, TextWriter, string>>();
+        // computed state
+        private static readonly ConcurrentDictionary<Type, string> _preferredMimeTypesTable = new ConcurrentDictionary<Type, string>();
+        internal static readonly ConcurrentDictionary<(Type type, string mimeType), ITypeFormatter> _typeFormattersTable = new ConcurrentDictionary<(Type type, string mimeType), ITypeFormatter>();
+        private static readonly ConcurrentDictionary<Type, Action<object, TextWriter, string>> _genericFormattersTable = new ConcurrentDictionary<Type, Action<object, TextWriter, string>>();
 
         /// <summary>
         /// Initializes the <see cref="Formatter"/> class.
@@ -35,74 +38,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
         static Formatter()
         {
             ResetToDefault();
-        }
-
-        public static ITypeFormatter Create(
-            Type formatterType,
-            Action<object, TextWriter> format,
-            string mimeType)
-        {
-            var genericFormatDelegate = MakeGenericFormatDelegate(formatterType, format);
-
-            var genericCreateMethod = typeof(Formatter)
-                                      .GetMethods()
-                                      .Single(m => m. Name == nameof(Create) && m.IsGenericMethod);
-
-            var formatter = genericCreateMethod
-                            .MakeGenericMethod(formatterType)
-                            .Invoke(null, new object[] { genericFormatDelegate , mimeType });
-
-            return (ITypeFormatter) formatter;
-        }
-
-        private static Delegate MakeGenericFormatDelegate(
-            Type formatterType,
-            Action<object, TextWriter> untypedFormatDelegate)
-        {
-            ConstantExpression constantExpression = null;
-            if (untypedFormatDelegate.Target != null)
-            {
-                constantExpression = Expression.Constant(untypedFormatDelegate.Target);
-            }
-
-            var textWriterParam = Expression.Parameter(typeof(TextWriter), "writer");
-
-            var parameterExpression = Expression.Parameter(formatterType, "v");
-
-            var arguments = new Expression[]
-            {
-                Expression.Convert(parameterExpression, typeof(object)),
-                textWriterParam
-            };
-
-            var body = Expression.Call(
-                constantExpression,
-                untypedFormatDelegate.GetMethodInfo(),
-                arguments);
-
-            var genericFormatDelegateType = typeof(Action<,>)
-                .MakeGenericType(new[]
-                {
-                    formatterType,
-                    typeof(TextWriter)
-                });
-
-            var expression = Expression.Lambda(genericFormatDelegateType,
-                                               body,
-                                               new[]
-                                               {
-                                                   parameterExpression,
-                                                   textWriterParam
-                                               });
-
-            return expression.Compile();
-        }
-
-        public static ITypeFormatter Create<T>(
-            Action<T, TextWriter> format,
-            string mimeType)
-        {
-            return new AnonymousTypeFormatter<T>(format, mimeType);
         }
 
         private static TextWriter CreateWriter() => new StringWriter(CultureInfo.InvariantCulture);
@@ -164,11 +99,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </summary>
         public static void ResetToDefault()
         {
-            TypeFormatters.Clear();
-            _genericFormatters.Clear();
-            _preferredMimeTypesByType.Clear();
-            _defaultMimeType = HtmlFormatter.MimeType;
-            _preferredMimeTypesByType[typeof(string)] = PlainTextFormatter.MimeType;
+            ClearComputedState();
+            _typeFormatters.Clear();
+            _preferredMimeTypes.Clear();
+            SetPreferredMimeTypeFor(typeof(string), PlainTextFormatter.MimeType);
+            SetPreferredMimeTypeFor(typeof(JToken), JsonFormatter.MimeType);
 
             ListExpansionLimit = 20;
             RecursionLimit = 6;
@@ -176,7 +111,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             Clearing?.Invoke(null, EventArgs.Empty);
 
-            ConfigureDefaultPlainTextFormattersForSpecialTypes();
+        }
+
+        internal static void ClearComputedState()
+        {
+            _typeFormattersTable.Clear();
+            _genericFormattersTable.Clear();
+            _preferredMimeTypesTable.Clear();
         }
 
         public static void SetPreferredMimeTypeFor(Type type, string preferredMimeType)
@@ -191,7 +132,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(preferredMimeType));
             }
 
-            _preferredMimeTypesByType[type] = preferredMimeType;
+            _preferredMimeTypes.Insert(0, (type, preferredMimeType));
         }
 
         public static string DefaultMimeType
@@ -202,31 +143,47 @@ namespace Microsoft.DotNet.Interactive.Formatting
         }
 
         public static string PreferredMimeTypeFor(Type type) =>
-            _preferredMimeTypesByType
-                .GetOrAdd(type, t =>
-                {
-                    if (TryInferMimeType(t, out var mimeType))
-                    {
-                        return mimeType;
-                    }
-                    else
-                    {
-                        return _defaultMimeType;
-                    }
-                });
+            _preferredMimeTypesTable.GetOrAdd(type, InferMimeType);
 
-        private static bool TryInferMimeType(
-            Type type,
-            out string mimeType)
+        class StableSortByHierachy<T> : IComparer<T>
         {
-            if (typeof(JToken).IsAssignableFrom(type))
+            Func<T, Type> _typeKey;
+            Func<T, int> _indexKey;
+            public StableSortByHierachy(Func<T, Type> typeKey, Func<T, int> indexKey)
             {
-                mimeType = JsonFormatter.MimeType;
-                return true;
+                _typeKey = typeKey;
+                _indexKey = indexKey;
+            }
+            public int Compare(T inp1, T inp2)
+            {
+                var type1 = _typeKey(inp1);
+                var type2 = _typeKey(inp2);
+                var index1 = _indexKey(inp1);
+                var index2 = _indexKey(inp2);
+
+                if (type1.Equals(type2)) return Comparer<int>.Default.Compare(index1, index2);
+                else if (type1.IsRelevantFormatterFor(type2)) return 1;
+                else return -1;
             }
 
-            mimeType = default;
-            return false;
+        }
+        private static string InferMimeType(Type type)
+        {
+            // Find the most specific type that specifies a mimeType
+            var candidates =
+                _preferredMimeTypes
+                    .Where(mimeSpec => mimeSpec.type.IsRelevantFormatterFor(type))
+                    .Select((x,index) => (x.type, x.mimeType, index))
+                    .ToArray();
+            if (candidates.Length > 0)
+            {
+                Array.Sort(candidates, new StableSortByHierachy<(Type type, string mimeType, int index)>(tup => tup.type, tup => tup.index));
+                return candidates[0].mimeType;
+            }
+            else
+            {
+                return _defaultMimeType;
+            }
         }
 
         public static string ToDisplayString(
@@ -275,9 +232,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 if (typeof(T) != actualType)
                 {
                     // in some cases the generic parameter is Object but the object is of a more specific type, in which case get or add a cached accessor to the more specific Formatter<T>.Format method
-                    var genericFormatter =
-                        _genericFormatters.GetOrAdd(actualType,
-                                                    GetGenericFormatterMethod);
+                    var genericFormatter = _genericFormattersTable.GetOrAdd(actualType, GetGenericFormatterMethod);
                     genericFormatter(obj, writer, mimeType);
                     return;
                 }
@@ -376,89 +331,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public static IEnumerable<string> RegisteredMimeTypesFor(Type type)
         {
-            return TypeFormatters.Keys.Where(k => k.type == type).Select(k => k.mimeType);
-        }
-
-        public static void Register<T>(
-            Action<T, TextWriter> formatter,
-            string mimeType = PlainTextFormatter.MimeType)
-        {
-            Formatter<T>.Register(formatter, mimeType);
-        }
-
-        public static void Register(
-            Type type,
-            Action<object, TextWriter> formatter,
-            string mimeType = PlainTextFormatter.MimeType)
-        {
-            if (!type.CanBeInstantiated())
-            {
-                RegisterLazilyForConcreteTypesOf(type, formatter, mimeType);
-            }
-            else
-            {
-                var delegateType = typeof(Action<,>).MakeGenericType(type, typeof(TextWriter));
-
-                var genericRegisterMethod = typeof(Formatter<>)
-                                            .MakeGenericType(type)
-                                            .GetMethod(nameof(Formatter<object>.Register), new[]
-                                            {
-                                                delegateType,
-                                                typeof(string)
-                                            });
-
-                genericRegisterMethod.Invoke(null, new object[] { formatter, mimeType });
-            }
-        }
-
-        public static void RegisterLazilyForConcreteTypesOf(
-            Type type, 
-            Action<object, TextWriter> formatter, 
-            string mimeType)
-        {
-            switch (mimeType)
-            {
-                case HtmlFormatter.MimeType:
-                    HtmlFormatter.DefaultFormatters.AddFormatterFactory(CreateIfMatched);
-                    break;
-
-                case PlainTextFormatter.MimeType:
-                    PlainTextFormatter.DefaultFormatters.AddFormatterFactory(CreateIfMatched);
-                    break;
-            }
-
-            return;
-
-            ITypeFormatter CreateIfMatched(Type actualType)
-            {
-                var isMatch = false;
-
-                if (type.IsGenericTypeDefinition &&
-                    actualType.IsConstructedGenericType)
-                {
-                    if (type == actualType.GetGenericTypeDefinition())
-                    {
-                        isMatch = true;
-                    }
-
-                    if (type.IsInterface &&
-                        actualType.GetInterfaces()
-                                  .Any(i => i.IsConstructedGenericType &&
-                                            i.GetGenericTypeDefinition() == type))
-                    {
-                        isMatch = true;
-                    }
-                }
-
-                if (type.IsAssignableFrom(actualType))
-                {
-                    isMatch = true;
-                }
-            
-                return isMatch
-                           ? Create(actualType, formatter, mimeType)
-                           : null;
-            }
+            return _typeFormatters.Where(k => k.Type == type).Select(k => k.MimeType);
         }
 
         public static void Register(ITypeFormatter formatter)
@@ -468,14 +341,93 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 throw new ArgumentNullException(nameof(formatter));
             }
 
-            TypeFormatters[(formatter.Type, formatter.MimeType)] = formatter;
+            ClearComputedState();
+            _typeFormatters.Insert(0, formatter);
         }
 
-        private static void ConfigureDefaultPlainTextFormattersForSpecialTypes()
+        public static void Register<T>(
+            Action<T, TextWriter> formatter,
+            string mimeType = PlainTextFormatter.MimeType)
         {
-            // Newtonsoft.Json types -- these implement IEnumerable and their default output is not useful, so use their default ToString
-            TryRegisterDefault("Newtonsoft.Json.Linq.JArray, Newtonsoft.Json", (obj, writer) => writer.Write(obj), PlainTextFormatter.MimeType);
-            TryRegisterDefault("Newtonsoft.Json.Linq.JObject, Newtonsoft.Json", (obj, writer) => writer.Write(obj), PlainTextFormatter.MimeType);
+            Formatter.Register(new AnonymousTypeFormatter<T>(formatter, mimeType));
+        }
+
+        public static void Register(
+            Type type,
+            Action<object, TextWriter> formatter,
+            string mimeType = PlainTextFormatter.MimeType)
+        {
+            Formatter.Register(new AnonymousTypeFormatter<object>(formatter, mimeType, type));
+        }
+
+        /// <summary>
+        /// Registers a formatter to be used when formatting instances of type <typeparamref name="T" />.
+        /// </summary>
+        /// <param name="formatter">The formatter.</param>
+        public static void Register<T>(
+            Func<T, string> formatter,
+            string mimeType = PlainTextFormatter.MimeType)
+        {
+            Formatter.Register(new AnonymousTypeFormatter<T>((obj, writer) => writer.Write(formatter((T)obj)), mimeType));
+        }
+
+        public static ITypeFormatter GetBestFormatter(Type actualType, string mimeType)
+        {
+            return
+                _typeFormattersTable
+                    .GetOrAdd(
+                        (actualType, mimeType),
+                        tuple => InferBestFormatter(actualType, mimeType));
+        }
+
+        internal static ITypeFormatter InferBestFormatter(Type actualType, string mimeType)
+        {
+
+            // Find the most specific type that specifies a mimeType
+            var userFormatter = TryInferBestFormatter(actualType, mimeType, _typeFormatters);
+            if (userFormatter != null)
+                return userFormatter;
+
+            var defaultFormatter = TryInferBestFormatter(actualType, mimeType, GetDefaultFormatters(mimeType));
+            if (defaultFormatter != null)
+                return defaultFormatter;
+
+            return new AnonymousTypeFormatter<object>((obj, writer) => writer.Write(obj), mimeType, actualType);
+        }
+
+        internal static ITypeFormatter TryInferBestFormatter(Type actualType, string mimeType, IEnumerable<ITypeFormatter> formatters)
+        {
+
+            // Find the most specific type that specifies a mimeType
+            var candidates =
+                formatters
+                    .Where(formatter => formatter.MimeType == mimeType && formatter.Type.IsRelevantFormatterFor(actualType))
+                    .Select((x, i) => (formatter: x, index: i))
+                    .ToArray();
+
+            if (candidates.Length > 0)
+            {
+                Array.Sort(candidates, new StableSortByHierachy<(ITypeFormatter formatter, int index)>(tup => tup.formatter.Type, tup => tup.index));
+                return candidates[0].formatter;
+            }
+
+            // A last restorr
+            return null;
+        }
+
+        internal static ITypeFormatter[] GetDefaultFormatters(string mimeType)
+        {
+            switch (mimeType)
+            {
+                case HtmlFormatter.MimeType:
+                    return HtmlFormatter.DefaultFormatters;
+
+                case JsonFormatter.MimeType:
+                    return JsonFormatter.DefaultFormatters;
+
+                default:
+                    return PlainTextFormatter.DefaultFormatters;
+            }
         }
 
         private static void TryRegisterDefault(string typeName, Action<object, TextWriter> write, string mimeType)
@@ -483,7 +435,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             var type = Type.GetType(typeName);
             if (type != null)
             {
-                Register(type, write, mimeType);
+                Register(new AnonymousTypeFormatter<object>(write, mimeType, type:  type));
             }
         }
 
@@ -493,6 +445,32 @@ namespace Microsoft.DotNet.Interactive.Formatting
                                                                           .GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
                                                                           .Single(m => m.Name == nameof(ReadOnlyMemoryToArray));
 
-      
+
+    }
+    internal class FormatterTable
+    {
+        static ConcurrentDictionary<(Type type, bool flag), ITypeFormatter> _formatters = new ConcurrentDictionary<(Type type, bool flag), ITypeFormatter>();
+        Type _genericDef;
+        string _name;
+        internal FormatterTable(Type genericDef, string name)
+        {
+            _genericDef = genericDef;
+            _name = name;
+        }
+        internal ITypeFormatter GetFormatter(Type type, bool flag)
+        {
+            return
+                _formatters.GetOrAdd((type, flag),
+                    tup =>
+                    {
+                        return
+                          (ITypeFormatter)
+                            _genericDef
+                            .MakeGenericType(tup.type)
+                            .GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
+                            .Invoke(null, new object[] { flag });
+                    });
+        }
+
     }
 }

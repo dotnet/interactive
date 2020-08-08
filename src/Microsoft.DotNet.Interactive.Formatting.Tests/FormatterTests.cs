@@ -250,6 +250,76 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [InlineData("text/plain", true)]
         [InlineData("text/html", false)]
         [InlineData("text/html", true)]
+        public void Formatters_can_be_registered_for_obj_type(string mimeType, bool useGenericRegisterMethod)
+        {
+            if (useGenericRegisterMethod)
+            {
+                Formatter.Register<object>(
+                    formatter: (filInfo, writer) => writer.Write("hello"),
+                    mimeType);
+            }
+            else
+            {
+                Formatter.Register(
+                    type: typeof(object),
+                    formatter: (filInfo, writer) => writer.Write("hello"),
+                    mimeType);
+            }
+
+            new FileInfo(@"c:\temp\foo.txt").ToDisplayString(mimeType)
+                                            .Should()
+                                            .Be("hello");
+        }
+
+        [Theory]
+        [InlineData("text/plain", false)]
+        [InlineData("text/plain", true)]
+        [InlineData("text/html", false)]
+        [InlineData("text/html", true)]
+        public void Formatters_choose_most_specific_type_amongst_user_defined_formatters(string mimeType, bool useGenericRegisterMethod)
+        {
+            if (useGenericRegisterMethod)
+            {
+                Formatter.Register<FileInfo>(
+                    formatter: (filInfo, writer) => writer.Write("hello"),
+                    mimeType);
+                Formatter.Register<object>(
+                    formatter: (filInfo, writer) => writer.Write("world"),
+                    mimeType);
+            }
+            else
+            {
+                Formatter.Register(
+                    type: typeof(FileInfo),
+                    formatter: (filInfo, writer) => writer.Write("hello"),
+                    mimeType);
+                Formatter.Register(
+                    type: typeof(object),
+                    formatter: (filInfo, writer) => writer.Write("world"),
+                    mimeType);
+            }
+
+            // The more specific formatter is chosen
+            new FileInfo(@"c:\temp\foo.txt").ToDisplayString(mimeType)
+                                            .Should()
+                                            .Be("hello");
+
+            // The more specific formatter is chosen
+            new object().ToDisplayString(mimeType)
+                                            .Should()
+                                            .Be("world");
+
+            // The object formatter is chosen
+            DateTime.Now.ToDisplayString(mimeType)
+                                            .Should()
+                                            .Be("world");
+        }
+
+        [Theory]
+        [InlineData("text/plain", false)]
+        [InlineData("text/plain", true)]
+        [InlineData("text/html", false)]
+        [InlineData("text/html", true)]
         public void Formatters_can_be_registered_on_demand_for_non_generic_interfaces(string mimeType, bool useGenericRegisterMethod)
         {
             if (useGenericRegisterMethod)

@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [MemberData(nameof(JTokens))]
         public void It_does_not_JSON_encode_JSON_types(JToken jtoken)
         {
-            var formatter = JsonFormatter.Create(jtoken.GetType());
+            var formatter = JsonFormatter.GetBestFormatter(jtoken.GetType());
 
             var writer = new StringWriter();
 
