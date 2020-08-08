@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 new HtmlFormatter<IEnumerable>((obj, writer) =>
                 {
                     var type = obj.GetType();
-                    var formatter = HtmlFormatter.FormattersForAnyEnumerable.GetFormatter(type, false);
+                    var formatter = HtmlFormatter.GetDefaultFormatterForAnyEnumerable(type);
                     formatter.Format(obj, writer);
 
                 }),
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         return;
                     }
                     var type = obj.GetType();
-                    var formatter = HtmlFormatter.FormattersForAnyObject.GetFormatter(type, false);
+                    var formatter = HtmlFormatter.GetDefaultFormatterForAnyObject(type);
                     formatter.Format(obj, writer);
                 })
 

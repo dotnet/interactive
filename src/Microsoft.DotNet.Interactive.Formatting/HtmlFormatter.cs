@@ -11,11 +11,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public static class HtmlFormatter
     {
-        public static ITypeFormatter GetBestFormatter(Type type) =>
-            Formatter.GetBestFormatter(type, MimeType);
+        public static ITypeFormatter GetBestFormatterFor(Type type) =>
+            Formatter.GetBestFormatterFor(type, MimeType);
 
-        public static ITypeFormatter DefaultForAnyObject(Type type, bool includeInternals = false) =>
+        public static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
             FormattersForAnyObject.GetFormatter(type, includeInternals);
+
+        public static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
+            FormattersForAnyEnumerable.GetFormatter(type, false);
 
         public const string MimeType = "text/html";
 

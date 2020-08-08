@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void Non_generic_GetForAnyObject_creates_generic_formatter()
         {
-            PlainTextFormatter.DefaultForAnyObject(typeof(Widget))
+            PlainTextFormatter.GetDefaultFormatterForAnyObject(typeof(Widget))
                               .Should()
                               .BeOfType<PlainTextFormatter<Widget>>();
         }
@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void Non_generic_GetBestFormatter_uses_default_formatter_for_object()
         {
-            PlainTextFormatter.GetBestFormatter(typeof(Widget))
+            PlainTextFormatter.GetBestFormatterFor(typeof(Widget))
                               .Should()
                               .BeOfType<PlainTextFormatter<object>>();
         }
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void GetBestFormatter_for_List_uses_default_formatter_for_enumerable()
         {
-            PlainTextFormatter.GetBestFormatter(typeof(List<int>))
+            PlainTextFormatter.GetBestFormatterFor(typeof(List<int>))
                               .Should()
                               .BeOfType<PlainTextFormatter<IEnumerable>>();
         }
@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Create_creates_a_formatter_that_emits_the_property_names_and_values_for_a_specific_type()
             {
-                var formatter = PlainTextFormatter<Widget>.GetBestFormatter();
+                var formatter = PlainTextFormatter<Widget>.GetBestFormatterFor();
 
                 var writer = new StringWriter();
                 formatter.Format(new Widget { Name = "Bob" }, writer);
@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             {
                 var id = new EntityId("the typename", "the id");
 
-                var formatter = PlainTextFormatter.GetBestFormatter(id.GetType());
+                var formatter = PlainTextFormatter.GetBestFormatterFor(id.GetType());
 
                 var formatted = id.ToDisplayString(formatter);
 
@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var obj = new { ints, count = ints.Length };
 
-                var formatter = PlainTextFormatter.GetBestFormatter(obj.GetType());
+                var formatter = PlainTextFormatter.GetBestFormatterFor(obj.GetType());
 
                 var output = obj.ToDisplayString(formatter);
 
@@ -147,7 +147,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 expando.Name = "socks";
                 expando.Parts = null;
 
-                var formatter = PlainTextFormatter<ExpandoObject>.GetBestFormatter();
+                var formatter = PlainTextFormatter<ExpandoObject>.GetBestFormatterFor();
 
                 var expandoString = ((object) expando).ToDisplayString(formatter);
 
@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 var widget = new Widget();
                 widget.Parts = new List<Part> { new Part { Widget = widget } };
 
-                var formatter = PlainTextFormatter.GetBestFormatter(widget.GetType());
+                var formatter = PlainTextFormatter.GetBestFormatterFor(widget.GetType());
 
                 widget.Invoking(w => w.ToDisplayString(formatter)).Should().NotThrow();
             }
@@ -192,7 +192,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 };
                 widget.Parts = new List<Part> { new Part { Widget = widget } };
 
-                var formatter = PlainTextFormatter<Widget>.GetBestFormatter();
+                var formatter = PlainTextFormatter<Widget>.GetBestFormatterFor();
 
                 // this should not throw
                 var s = widget.ToDisplayString(formatter);
@@ -206,7 +206,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Static_fields_are_not_written()
             {
-                var formatter = PlainTextFormatter<Widget>.GetBestFormatter();
+                var formatter = PlainTextFormatter<Widget>.GetBestFormatterFor();
                 new Widget().ToDisplayString(formatter)
                             .Should().NotContain(nameof(SomethingAWithStaticProperty.StaticField));
             }
@@ -214,7 +214,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Static_properties_are_not_written()
             {
-                var formatter = PlainTextFormatter<Widget>.GetBestFormatter();
+                var formatter = PlainTextFormatter<Widget>.GetBestFormatterFor();
                 new Widget().ToDisplayString(formatter)
                             .Should().NotContain(nameof(SomethingAWithStaticProperty.StaticProperty));
             }
@@ -222,7 +222,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void It_expands_fields_of_objects()
             {
-                var formatter = PlainTextFormatter<SomeStruct>.GetBestFormatter();
+                var formatter = PlainTextFormatter<SomeStruct>.GetBestFormatterFor();
                 var today = DateTime.Today;
                 var tomorrow = DateTime.Today.AddDays(1);
                 var id = new SomeStruct
@@ -240,7 +240,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Output_can_include_internal_fields()
             {
-                var formatter = PlainTextFormatter.DefaultForAnyObject(typeof(Node), true);
+                var formatter = PlainTextFormatter.GetDefaultFormatterForAnyObject(typeof(Node), true);
 
                 var node = new Node { Id = "5" };
 
@@ -252,7 +252,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Output_does_not_include_autoproperty_backing_fields()
             {
-                var formatter = PlainTextFormatter.DefaultForAnyObject(typeof(Node), true);
+                var formatter = PlainTextFormatter.GetDefaultFormatterForAnyObject(typeof(Node), true);
 
                 var output = new Node().ToDisplayString(formatter);
 
@@ -263,7 +263,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Output_can_include_internal_properties()
             {
-                var formatter = PlainTextFormatter.DefaultForAnyObject(typeof(Node), true);
+                var formatter = PlainTextFormatter.GetDefaultFormatterForAnyObject(typeof(Node), true);
 
                 var output = new Node { Id = "6" }.ToDisplayString(formatter);
 
@@ -275,7 +275,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             {
                 var tuple = Tuple.Create(123, "Hello", Enumerable.Range(1, 3));
 
-                var formatter = PlainTextFormatter.GetBestFormatter(tuple.GetType());
+                var formatter = PlainTextFormatter.GetBestFormatterFor(tuple.GetType());
 
                 var formatted = tuple.ToDisplayString(formatter);
 
@@ -287,7 +287,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             {
                 var tuple = (123, "Hello", Enumerable.Range(1, 3));
 
-                var formatter = PlainTextFormatter.GetBestFormatter(tuple.GetType());
+                var formatter = PlainTextFormatter.GetBestFormatterFor(tuple.GetType());
 
                 var formatted = tuple.ToDisplayString(formatter);
 
@@ -297,7 +297,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Enums_are_formatted_using_their_names()
             {
-                var formatter = PlainTextFormatter.GetBestFormatter(typeof(FileAccess));
+                var formatter = PlainTextFormatter.GetBestFormatterFor(typeof(FileAccess));
 
                 var writer = new StringWriter();
 
@@ -309,7 +309,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void TimeSpan_is_not_destructured()
             {
-                var formatter = PlainTextFormatter.GetBestFormatter(typeof(TimeSpan));
+                var formatter = PlainTextFormatter.GetBestFormatterFor(typeof(TimeSpan));
 
                 var writer = new StringWriter();
 
@@ -328,7 +328,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             {
                 var list = new List<string> { "this", "that", "the other thing" };
 
-                var formatter = PlainTextFormatter.GetBestFormatter(list.GetType());
+                var formatter = PlainTextFormatter.GetBestFormatterFor(list.GetType());
 
                 var formatted = list.ToDisplayString(formatter);
 
@@ -347,7 +347,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 Formatter.ListExpansionLimit = 4;
 
-                var formatter = PlainTextFormatter.GetBestFormatter(list.GetType());
+                var formatter = PlainTextFormatter.GetBestFormatterFor(list.GetType());
 
                 var formatted = list.ToDisplayString(formatter);
 
@@ -368,7 +368,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 Formatter.ListExpansionLimit = 4;
 
-                var formatter = PlainTextFormatter.GetBestFormatter(list.GetType());
+                var formatter = PlainTextFormatter.GetBestFormatterFor(list.GetType());
 
                 var formatted = list.ToDisplayString(formatter);
 
@@ -393,7 +393,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                         }
                 };
 
-                var formatter = PlainTextFormatter<Node>.GetBestFormatter();
+                var formatter = PlainTextFormatter<Node>.GetBestFormatterFor();
 
                 var output = node.ToDisplayString(formatter);
 
@@ -417,7 +417,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                         }
                 };
 
-                var formatter = PlainTextFormatter<Node>.GetBestFormatter();
+                var formatter = PlainTextFormatter<Node>.GetBestFormatterFor();
 
                 var output = node.ToDisplayString(formatter);
 
@@ -431,7 +431,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             {
                 var ints = new[] { 1, 2, 3, 4, 5 };
 
-                var formatter = PlainTextFormatter.GetBestFormatter(ints.GetType());
+                var formatter = PlainTextFormatter.GetBestFormatterFor(ints.GetType());
 
                 ints.ToDisplayString(formatter)
                     .Should()
@@ -448,7 +448,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     new Widget { Name = "widget z" }
                 };
 
-                var formatter = PlainTextFormatter<List<Widget>>.GetBestFormatter();
+                var formatter = PlainTextFormatter<List<Widget>>.GetBestFormatterFor();
 
                 var formatted = list.ToDisplayString(formatter);
 
@@ -458,7 +458,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Properies_of_System_Type_instances_are_not_expanded()
             {
-                var formatter = PlainTextFormatter.GetBestFormatter(typeof(Type));
+                var formatter = PlainTextFormatter.GetBestFormatterFor(typeof(Type));
 
                 var writer = new StringWriter();
 
@@ -472,7 +472,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void ReadOnlyMemory_of_char_is_formatted_like_a_string()
             {
-                var formatter = PlainTextFormatter.GetBestFormatter(typeof(ReadOnlyMemory<char>));
+                var formatter = PlainTextFormatter.GetBestFormatterFor(typeof(ReadOnlyMemory<char>));
 
                 ReadOnlyMemory<char> readOnlyMemory = "Hi!".AsMemory();
 
@@ -488,12 +488,12 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             {
                 // There is a specific default formatter registered for ReadOnlyMemory<char>, check
                 // it is selected
-                var formatter = PlainTextFormatter.GetBestFormatter(typeof(ReadOnlyMemory<char>));
+                var formatter = PlainTextFormatter.GetBestFormatterFor(typeof(ReadOnlyMemory<char>));
 
                 formatter.GetType().Should().Be(typeof(PlainTextFormatter<ReadOnlyMemory<char>>));
                 formatter.Type.Should().Be(typeof(ReadOnlyMemory<char>));
 
-                var formatter2 = PlainTextFormatter.GetBestFormatter(typeof(ReadOnlyMemory<int>));
+                var formatter2 = PlainTextFormatter.GetBestFormatterFor(typeof(ReadOnlyMemory<int>));
 
                 formatter2.Type.Should().Be(typeof(ReadOnlyMemory<>));
             }
@@ -502,7 +502,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void ReadOnlyMemory_of_int_is_formatted_like_a_int_array()
             {
-                var formatter = PlainTextFormatter.GetBestFormatter(typeof(ReadOnlyMemory<int>));
+                var formatter = PlainTextFormatter.GetBestFormatterFor(typeof(ReadOnlyMemory<int>));
 
                 var readOnlyMemory = new ReadOnlyMemory<int>(new[] { 1, 2, 3 });
 
@@ -516,7 +516,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void It_shows_null_items_in_the_sequence_as_null()
             {
-                var formatter = PlainTextFormatter.GetBestFormatter(typeof(object[]));
+                var formatter = PlainTextFormatter.GetBestFormatterFor(typeof(object[]));
 
                 var writer = new StringWriter();
 

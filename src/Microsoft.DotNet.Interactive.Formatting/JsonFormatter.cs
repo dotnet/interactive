@@ -19,9 +19,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         }
 
-        public static ITypeFormatter GetBestFormatter(Type type)
+        public static ITypeFormatter GetBestFormatterFor(Type type)
         {
-            return Formatter.GetBestFormatter(type, MimeType);
+            return Formatter.GetBestFormatterFor(type, MimeType);
         }
 
         public const string MimeType = "application/json";

@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             if (obj == null)
             {
-                var formatter = Formatter.GetBestFormatter(typeof(T), mimeType);
+                var formatter = Formatter.GetBestFormatterFor(typeof(T), mimeType);
                 formatter.Format(null, writer);
                 return;
             }
@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             // find a formatter for the object type, and possibly register one on the fly
             if (Formatter.RecursionCounter.Depth <= Formatter.RecursionLimit)
             {
-                var formatter = Formatter.GetBestFormatter(typeof(T), mimeType);
+                var formatter = Formatter.GetBestFormatterFor(typeof(T), mimeType);
                 formatter.Format(obj, writer);
             }
             else
