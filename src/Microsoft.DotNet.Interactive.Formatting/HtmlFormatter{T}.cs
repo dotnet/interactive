@@ -21,8 +21,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _format = format;
         }
 
-        public static ITypeFormatter GetBestFormatter() =>
-            HtmlFormatter.GetBestFormatter(typeof(T));
+        public static ITypeFormatter GetBestFormatterFor() =>
+            HtmlFormatter.GetBestFormatterFor(typeof(T));
 
         public override void Format(T value, TextWriter writer)
         {

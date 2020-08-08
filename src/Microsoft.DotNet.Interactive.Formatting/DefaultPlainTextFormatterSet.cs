@@ -85,6 +85,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 // Newtonsoft.Json types -- these implement IEnumerable and their default output is not useful, so use their default ToString
                 new PlainTextFormatter<Newtonsoft.Json.Linq.JArray>((obj, writer) => writer.Write(obj)),
+
                 new PlainTextFormatter<Newtonsoft.Json.Linq.JObject>((obj, writer) => writer.Write(obj)),
 
                 // Fallback for IEnumerable
@@ -92,11 +93,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     if (obj is null)
                     {
-                        writer.Write(Formatter.NullString.HtmlEncode());
+                        writer.Write(Formatter.NullString);
                         return;
                     }
                     var type = obj.GetType();
-                    var formatter = PlainTextFormatter.FormattersForAnyEnumerable.GetFormatter(type, false);
+                    var formatter = PlainTextFormatter.GetDefaultFormatterForAnyEnumerable(type);
                     formatter.Format(obj, writer);
                 }),
 
@@ -105,11 +106,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     if (obj is null)
                     {
-                        writer.Write(Formatter.NullString.HtmlEncode());
+                        writer.Write(Formatter.NullString);
                         return;
                     }
                     var type = obj.GetType();
-                    var formatter = PlainTextFormatter.FormattersForAnyObject.GetFormatter(type, false);
+                    var formatter = PlainTextFormatter.GetDefaultFormatterForAnyObject(type);
                     formatter.Format(obj, writer);
                 })
             };

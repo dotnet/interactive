@@ -24,8 +24,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
         private static string _defaultMimeType = HtmlFormatter.MimeType;
 
         // user specification
-        private static readonly List<(Type type, string mimeType)> _preferredMimeTypes = new List<(Type type, string mimeType)>();
-        internal static readonly List<ITypeFormatter> _typeFormatters = new List<ITypeFormatter>();
+        private static readonly ConcurrentStack<(Type type, string mimeType)> _preferredMimeTypes = new ConcurrentStack<(Type type, string mimeType)>();
+        internal static readonly ConcurrentStack<ITypeFormatter> _typeFormatters = new ConcurrentStack<ITypeFormatter>();
 
         // computed state
         private static readonly ConcurrentDictionary<Type, string> _preferredMimeTypesTable = new ConcurrentDictionary<Type, string>();
@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(preferredMimeType));
             }
 
-            _preferredMimeTypes.Insert(0, (type, preferredMimeType));
+            _preferredMimeTypes.Push((type, preferredMimeType));
         }
 
         public static string DefaultMimeType
@@ -175,6 +175,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     .Where(mimeSpec => mimeSpec.type.IsRelevantFormatterFor(type))
                     .Select((x,index) => (x.type, x.mimeType, index))
                     .ToArray();
+
             if (candidates.Length > 0)
             {
                 Array.Sort(candidates, new StableSortByHierachy<(Type type, string mimeType, int index)>(tup => tup.type, tup => tup.index));
@@ -342,14 +343,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
 
             ClearComputedState();
-            _typeFormatters.Insert(0, formatter);
+            _typeFormatters.Push(formatter);
         }
 
         public static void Register<T>(
             Action<T, TextWriter> formatter,
             string mimeType = PlainTextFormatter.MimeType)
         {
-            Formatter.Register(new AnonymousTypeFormatter<T>(formatter, mimeType));
+            Register(new AnonymousTypeFormatter<T>(formatter, mimeType));
         }
 
         public static void Register(
@@ -357,7 +358,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             Action<object, TextWriter> formatter,
             string mimeType = PlainTextFormatter.MimeType)
         {
-            Formatter.Register(new AnonymousTypeFormatter<object>(formatter, mimeType, type));
+            Register(new AnonymousTypeFormatter<object>(formatter, mimeType, type));
         }
 
         /// <summary>
@@ -368,10 +369,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
             Func<T, string> formatter,
             string mimeType = PlainTextFormatter.MimeType)
         {
-            Formatter.Register(new AnonymousTypeFormatter<T>((obj, writer) => writer.Write(formatter((T)obj)), mimeType));
+            Register(new AnonymousTypeFormatter<T>((obj, writer) => writer.Write(formatter((T)obj)), mimeType));
         }
 
-        public static ITypeFormatter GetBestFormatter(Type actualType, string mimeType)
+        public static ITypeFormatter GetBestFormatterFor(Type actualType, string mimeType = PlainTextFormatter.MimeType)
         {
             return
                 _typeFormattersTable
@@ -430,15 +431,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        private static void TryRegisterDefault(string typeName, Action<object, TextWriter> write, string mimeType)
-        {
-            var type = Type.GetType(typeName);
-            if (type != null)
-            {
-                Register(new AnonymousTypeFormatter<object>(write, mimeType, type:  type));
-            }
-        }
-
         private static IReadOnlyCollection<T> ReadOnlyMemoryToArray<T>(ReadOnlyMemory<T> mem) => mem.Span.ToArray();
 
         internal static readonly MethodInfo FormatReadOnlyMemoryMethod = typeof(Formatter)
@@ -449,7 +441,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
     }
     internal class FormatterTable
     {
-        static ConcurrentDictionary<(Type type, bool flag), ITypeFormatter> _formatters = new ConcurrentDictionary<(Type type, bool flag), ITypeFormatter>();
+        ConcurrentDictionary<(Type type, bool flag), ITypeFormatter> _formatters = new ConcurrentDictionary<(Type type, bool flag), ITypeFormatter>();
         Type _genericDef;
         string _name;
         internal FormatterTable(Type genericDef, string name)
