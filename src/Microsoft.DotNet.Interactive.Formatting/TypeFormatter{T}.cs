@@ -8,9 +8,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public abstract class TypeFormatter<T> : ITypeFormatter<T>
     {
+        Type _type;
+        public TypeFormatter(Type type = null) { _type = type ?? typeof(T); }
         public abstract void Format(T value, TextWriter writer);
 
-        public Type Type => typeof(T);
+        public Type Type => _type;
 
         public abstract string MimeType { get; }
 

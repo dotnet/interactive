@@ -21,6 +21,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _format = format;
         }
 
+        public static ITypeFormatter GetBestFormatter() =>
+            HtmlFormatter.GetBestFormatter(typeof(T));
+
         public override void Format(T value, TextWriter writer)
         {
             if (value is null)
@@ -34,28 +37,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public override string MimeType => HtmlFormatter.MimeType;
 
-        public static ITypeFormatter<T> Create(bool includeInternals = false)
-        {
-            if (HtmlFormatter.DefaultFormatters.TryGetFormatterForType(typeof(T), out var formatter) &&
-                formatter is ITypeFormatter<T> ft)
-            {
-                return ft;
-            }
-
-            if (typeof(T).IsEnum)
-            {
-                return new HtmlFormatter<T>((enumValue, writer) => { writer.Write(enumValue.ToString()); });
-            }
-
-            if (typeof(IEnumerable).IsAssignableFrom(typeof(T)))
-            {
-                return CreateForSequence(includeInternals);
-            }
-
-            return CreateForObject(includeInternals);
-        }
-
-        private static HtmlFormatter<T> CreateForObject(bool includeInternals)
+        internal static HtmlFormatter<T> CreateForAnyObject(bool includeInternals)
         {
             var members = typeof(T).GetMembersToFormat(includeInternals)
                                    .GetMemberAccessors<T>();
@@ -82,14 +64,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
                             tr(
                                 values)));
 
-                ((PocketView) t).WriteTo(writer, HtmlEncoder.Default);
+                ((PocketView)t).WriteTo(writer, HtmlEncoder.Default);
             });
         }
 
-        private static HtmlFormatter<T> CreateForSequence(bool includeInternals)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Part of Pattern")]
+        internal static HtmlFormatter<T> CreateForAnyEnumerable(bool _includeInternals)
         {
             Func<T, IEnumerable> getKeys = null;
-            Func<T, IEnumerable> getValues = instance => (IEnumerable) instance;
+            Func<T, IEnumerable> getValues = instance => (IEnumerable)instance;
 
             var dictionaryGenericType = typeof(T).GetAllInterfaces()
                                                  .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
@@ -99,10 +82,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
             if (dictionaryGenericType != null || dictionaryObjectType != null)
             {
                 var keysProperty = typeof(T).GetProperty("Keys");
-                getKeys = instance => (IEnumerable) keysProperty.GetValue(instance, null);
+                getKeys = instance => (IEnumerable)keysProperty.GetValue(instance, null);
 
                 var valuesProperty = typeof(T).GetProperty("Values");
-                getValues = instance => (IEnumerable) valuesProperty.GetValue(instance, null);
+                getValues = instance => (IEnumerable)valuesProperty.GetValue(instance, null);
             }
 
             return new HtmlFormatter<T>(BuildTable);
@@ -130,7 +113,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     var destructured = destructurer.Destructure(value);
 
-                    if (!typesAreDifferent && value is {})
+                    if (!typesAreDifferent && value is { })
                     {
                         types.Add(value.GetType());
 
@@ -168,11 +151,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 if (typesAreDifferent)
                 {
                     headers.Insert(1, th(i("type")));
-                  
+
                 }
 
-                headers.AddRange(valuesByHeader.Keys.Select(k => (IHtmlContent) th(k)));
-                
+                headers.AddRange(valuesByHeader.Keys.Select(k => (IHtmlContent)th(k)));
+
                 var rows = new List<IHtmlContent>();
 
                 for (var rowIndex = 0; rowIndex < rowData.Count; rowIndex++)
