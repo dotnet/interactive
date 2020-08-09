@@ -38,10 +38,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </summary>
         static Formatter()
         {
-            _defaultTypeFormatters.PushRange(HtmlFormatter.DefaultFormatters);
-            _defaultTypeFormatters.PushRange(JsonFormatter.DefaultFormatters);
-            _defaultTypeFormatters.PushRange(PlainTextFormatter.DefaultFormatters);
-
             ResetToDefault();
         }
 
@@ -107,6 +103,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
             ClearComputedState();
             _typeFormatters.Clear();
             _preferredMimeTypes.Clear();
+            _defaultTypeFormatters.Clear();
+            _defaultTypeFormatters.PushRange(HtmlFormatter.DefaultFormatters);
+            _defaultTypeFormatters.PushRange(JsonFormatter.DefaultFormatters);
+            _defaultTypeFormatters.PushRange(PlainTextFormatter.DefaultFormatters);
+
             SetPreferredMimeTypeFor(typeof(string), PlainTextFormatter.MimeType);
             SetPreferredMimeTypeFor(typeof(JToken), JsonFormatter.MimeType);
 
@@ -115,6 +116,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
             NullString = "<null>";
 
             Clearing?.Invoke(null, EventArgs.Empty);
+
+
 
         }
 
