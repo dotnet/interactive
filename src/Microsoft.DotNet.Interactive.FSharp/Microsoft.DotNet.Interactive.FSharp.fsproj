@@ -26,6 +26,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="FSharpPlainTextFormatting.fs" />
     <Compile Include="FSharpKernel.fs" />
     <Compile Include="FSharpKernelHelpers.fs" />
     <Compile Include="FSharpPocketViewTags.fs" />
