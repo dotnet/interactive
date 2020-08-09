@@ -25,6 +25,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         // user specification
         private static readonly ConcurrentStack<(Type type, string mimeType)> _preferredMimeTypes = new ConcurrentStack<(Type type, string mimeType)>();
+        private static readonly ConcurrentStack<(Type type, string mimeType)> _defaultPreferredMimeTypes = new ConcurrentStack<(Type type, string mimeType)>();
         internal static readonly ConcurrentStack<ITypeFormatter> _typeFormatters = new ConcurrentStack<ITypeFormatter>();
         internal static readonly ConcurrentStack<ITypeFormatter> _defaultTypeFormatters = new ConcurrentStack<ITypeFormatter>();
 
@@ -104,12 +105,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _typeFormatters.Clear();
             _preferredMimeTypes.Clear();
             _defaultTypeFormatters.Clear();
+            _defaultPreferredMimeTypes.Clear();
             _defaultTypeFormatters.PushRange(HtmlFormatter.DefaultFormatters);
             _defaultTypeFormatters.PushRange(JsonFormatter.DefaultFormatters);
             _defaultTypeFormatters.PushRange(PlainTextFormatter.DefaultFormatters);
 
-            SetPreferredMimeTypeFor(typeof(string), PlainTextFormatter.MimeType);
-            SetPreferredMimeTypeFor(typeof(JToken), JsonFormatter.MimeType);
+            _defaultPreferredMimeTypes.Push((typeof(string), PlainTextFormatter.MimeType));
+            _defaultPreferredMimeTypes.Push((typeof(JToken), PlainTextFormatter.MimeType));
 
             ListExpansionLimit = 20;
             RecursionLimit = 6;
@@ -128,7 +130,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _preferredMimeTypesTable.Clear();
         }
 
-        public static void SetPreferredMimeTypeFor(Type type, string preferredMimeType)
+        public static void SetPreferredMimeTypeFor(Type type, string preferredMimeType, bool addToDefaults = false)
         {
             if (type == null)
             {
@@ -141,7 +143,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
 
             ClearComputedState();
-            _preferredMimeTypes.Push((type, preferredMimeType));
+            if (addToDefaults) 
+                _defaultPreferredMimeTypes.Push((type, preferredMimeType));
+            else
+                _preferredMimeTypes.Push((type, preferredMimeType));
         }
 
         public static string DefaultMimeType
@@ -179,13 +184,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
 
         }
-        private static string InferMimeType(Type type)
+        private static string TryInferMimeType(Type type, IEnumerable<(Type type, string mimeType)> mimeTypes )
         {
             // Find the most specific type that specifies a mimeType
             var candidates =
-                _preferredMimeTypes
+                mimeTypes
                     .Where(mimeSpec => mimeSpec.type.IsRelevantFormatterFor(type))
-                    .Select((x,index) => (x.type, x.mimeType, index))
+                    .Select((x, index) => (x.type, x.mimeType, index))
                     .ToArray();
 
             if (candidates.Length > 0)
@@ -195,8 +200,20 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
             else
             {
-                return _defaultMimeType;
+                return null;
             }
+        }
+        private static string InferMimeType(Type type)
+        {
+            var mimeType = TryInferMimeType(type, _preferredMimeTypes);
+            if (mimeType  != null)
+                return mimeType;
+
+            mimeType = TryInferMimeType(type, _defaultPreferredMimeTypes);
+            if (mimeType != null)
+                return mimeType;
+
+            return _defaultMimeType;
         }
 
         public static string ToDisplayString(
@@ -355,11 +372,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
 
             ClearComputedState();
-            if (addToDefaults) 
-                _typeFormatters.Push(formatter);
-            
-            else
+            if (addToDefaults)
                 _defaultTypeFormatters.Push(formatter);
+            else
+                _typeFormatters.Push(formatter);
 
         }
 
