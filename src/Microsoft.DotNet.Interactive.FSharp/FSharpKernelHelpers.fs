@@ -8,9 +8,12 @@ open Microsoft.AspNetCore.Html
 
 module FSharpKernelHelpers =
     type internal IMarker = interface end
+
     let display (value: obj) =
         Kernel.display value
+
     let HTML (value: string) =
         HtmlString value
+
     let Javascript (content: string) =
         Kernel.Javascript content

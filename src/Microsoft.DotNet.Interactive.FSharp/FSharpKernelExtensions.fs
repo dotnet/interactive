@@ -14,12 +14,28 @@ open Microsoft.DotNet.Interactive.FSharp
 open Microsoft.DotNet.Interactive.Formatting
 open XPlot.Plotly
 
+open FSharp.Reflection
+open Internal.Utilities.StructuredFormat // from FSharp.Compiler
+
+type IAnyToLayoutCall = 
+    abstract AnyToLayout : FormatOptions * obj * Type -> Internal.Utilities.StructuredFormat.Layout
+    abstract FsiAnyToLayout : FormatOptions * obj * Type -> Internal.Utilities.StructuredFormat.Layout
+
+type private AnyToLayoutSpecialization<'T>() = 
+    interface IAnyToLayoutCall with
+        member this.AnyToLayout(options, o : obj, ty : Type) = Internal.Utilities.StructuredFormat.Display.any_to_layout options ((Unchecked.unbox o : 'T), ty)
+        member this.FsiAnyToLayout(options, o : obj, ty : Type) = Internal.Utilities.StructuredFormat.Display.fsi_any_to_layout options ((Unchecked.unbox o : 'T), ty)
+
 [<AbstractClass; Extension; Sealed>]
 type FSharpKernelExtensions private () =
     
     static let referenceFromType = fun (typ: Type) -> sprintf "#r \"%s\"" (typ.Assembly.Location.Replace("\\", "/"))
     static let openNamespaceOrType = fun (whatToOpen: String) -> sprintf "open %s" whatToOpen
 
+    static let getAnyToLayoutCall ty = 
+        let specialized = typedefof<AnyToLayoutSpecialization<_>>.MakeGenericType [| ty |]
+        Activator.CreateInstance(specialized) :?> IAnyToLayoutCall
+    
     [<Extension>]
     static member UseDefaultFormatting(kernel: FSharpKernelBase) =
         let code = 
@@ -35,6 +51,39 @@ type FSharpKernelExtensions private () =
                 openNamespaceOrType typeof<PlotlyChart>.Namespace
                 openNamespaceOrType typeof<Formatter>.Namespace
             ] |> List.reduce(fun x y -> x + Environment.NewLine + y)
+
+        // Register F# any-to-layout box printing as the default plain text printer
+        Formatter.Register<obj>(Action<_,_>(fun object writer -> 
+            let options = 
+              { FormatOptions.Default with 
+                    // TODO get these settings from somewhere
+                    FormatProvider = fsi.FormatProvider
+                    PrintIntercepts = []
+                    FloatingPointFormat = fsi.FloatingPointFormat
+                    PrintWidth = fsi.PrintWidth 
+                    PrintDepth = fsi.PrintDepth
+                    PrintLength = fsi.PrintLength
+                    PrintSize = fsi.PrintSize
+                    ShowProperties = fsi.ShowProperties
+                    ShowIEnumerable = fsi.ShowIEnumerable }
+
+            let ty = object.GetType()
+            // strip to a static type
+            let ty =
+                if FSharpType.IsFunction ty then 
+                    FSharpType.MakeFunctionType(FSharpType.GetFunctionElements ty)
+                elif FSharpType.IsUnion ty then 
+                    FSharpType.GetUnionCases(ty).[0].DeclaringType
+                else ty
+            let anyToLayoutCall = getAnyToLayoutCall ty
+            let layout = 
+                //match printMode with
+                //| PrintDecl ->
+                anyToLayoutCall.FsiAnyToLayout(options, object, ty)
+                //| PrintExpr -> 
+                //    anyToLayoutCall.AnyToLayout(opts, x, ty)
+            Display.output_layout options writer layout
+            ), "text/plain")
 
         kernel.DeferCommand(SubmitCode code)
         kernel
