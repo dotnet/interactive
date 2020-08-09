@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         static internal readonly ITypeFormatter[] DefaultFormatters =
             new ITypeFormatter[]
             {
-                new JsonFormatter<JToken>()
+                new JsonFormatter<object>()
             };
     }
 }
