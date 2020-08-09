@@ -64,15 +64,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
                             tr(
                                 values)));
 
-                ((PocketView)t).WriteTo(writer, HtmlEncoder.Default);
+                ((PocketView) t).WriteTo(writer, HtmlEncoder.Default);
             });
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Part of Pattern")]
-        internal static HtmlFormatter<T> CreateForAnyEnumerable(bool _includeInternals)
+        internal static HtmlFormatter<T> CreateForAnyEnumerable(bool includeInternals)
         {
             Func<T, IEnumerable> getKeys = null;
-            Func<T, IEnumerable> getValues = instance => (IEnumerable)instance;
+            Func<T, IEnumerable> getValues = instance => (IEnumerable) instance;
 
             var dictionaryGenericType = typeof(T).GetAllInterfaces()
                                                  .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
@@ -82,10 +81,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
             if (dictionaryGenericType != null || dictionaryObjectType != null)
             {
                 var keysProperty = typeof(T).GetProperty("Keys");
-                getKeys = instance => (IEnumerable)keysProperty.GetValue(instance, null);
+                getKeys = instance => (IEnumerable) keysProperty.GetValue(instance, null);
 
                 var valuesProperty = typeof(T).GetProperty("Values");
-                getValues = instance => (IEnumerable)valuesProperty.GetValue(instance, null);
+                getValues = instance => (IEnumerable) valuesProperty.GetValue(instance, null);
             }
 
             return new HtmlFormatter<T>(BuildTable);
@@ -113,7 +112,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     var destructured = destructurer.Destructure(value);
 
-                    if (!typesAreDifferent && value is { })
+                    if (!typesAreDifferent && value is {})
                     {
                         types.Add(value.GetType());
 
@@ -154,7 +153,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 }
 
-                headers.AddRange(valuesByHeader.Keys.Select(k => (IHtmlContent)th(k)));
+                headers.AddRange(valuesByHeader.Keys.Select(k => (IHtmlContent) th(k)));
 
                 var rows = new List<IHtmlContent>();
 
