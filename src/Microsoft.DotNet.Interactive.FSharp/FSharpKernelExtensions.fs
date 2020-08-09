@@ -83,7 +83,7 @@ type FSharpKernelExtensions private () =
                 //| PrintExpr -> 
                 //    anyToLayoutCall.AnyToLayout(opts, x, ty)
             Display.output_layout options writer layout
-            ), "text/plain")
+            ), "text/plain", addToDefaults = true)
 
         kernel.DeferCommand(SubmitCode code)
         kernel
