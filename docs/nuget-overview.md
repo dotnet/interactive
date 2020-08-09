@@ -14,8 +14,10 @@ If you'd like to use a specific version, you can specify it like this:
 #r "nuget:System.Text.Json,4.7.2"
 ```
 
+## Adding a Nuget Source
 
+If your nuget package is not hosted on the main Nuget feed you can specify an alternative nuget source using `#i`.
 
-
-
-
+```csharp
+#i "https://www.myget.org/F/{feedurl}/api/v3/index.json"
+```
