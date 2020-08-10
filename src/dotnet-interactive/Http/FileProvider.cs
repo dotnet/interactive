@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Reactive.Linq;
+
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
@@ -38,48 +39,50 @@ namespace Microsoft.DotNet.Interactive.App.Http
 
         public IFileInfo GetFileInfo(string subpath)
         {
-            var provider = SelectProvider(subpath);
-            var path = ProcessPath(subpath);
+            var (provider, path) = GetProviderAndPath(subpath);
             return provider.GetFileInfo(path);
+        }
+
+        private (IFileProvider provider, string path) GetProviderAndPath(string subpath)
+        {
+
+            IFileProvider provider = _root;
+            var path = subpath;
+            var parts = subpath.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts[0] == "extensions")
+            {
+                provider = SelectProvider();
+                path = ProcessPath();
+            }
+
+            return (provider, path);
+
+            string ProcessPath()
+            {
+
+                return string.Join("/", parts.Skip(2));
+            }
+
+            IFileProvider SelectProvider()
+            {
+                var name = parts[1];
+                if (!_providers.TryGetValue(name, out var embeddedFileProvider))
+                {
+                    throw new StaticContentSourceNotFoundException(name);
+                }
+                return embeddedFileProvider;
+            }
         }
 
         public IDirectoryContents GetDirectoryContents(string subpath)
         {
-            var provider = SelectProvider(subpath);
-            var path = ProcessPath(subpath);
+            var (provider, path) = GetProviderAndPath(subpath);
             return provider.GetDirectoryContents(path);
         }
 
         public IChangeToken Watch(string filter)
         {
             return NullChangeToken.Singleton;
-        }
-
-        private string ProcessPath(string path)
-        {
-            path = path.TrimStart('/');
-            if (path.StartsWith("extensions/"))
-            {
-                return string.Join("/", path.Split(new[] {"/"}, StringSplitOptions.RemoveEmptyEntries).Skip(2));
-            }
-
-            return path;
-        }
-
-        private IFileProvider SelectProvider(string path)
-        {
-            path = path.TrimStart('/');
-            if (path.StartsWith("extensions/"))
-            {
-                var name = path.Split(new[] {"/"}, StringSplitOptions.RemoveEmptyEntries)[1];
-                if (!_providers.TryGetValue(name, out var provider))
-                {
-                    throw new StaticContentSourceNotFoundException(name);
-                }
-                return provider;
-            }
-
-            return _root;
         }
 
         public void Dispose()
