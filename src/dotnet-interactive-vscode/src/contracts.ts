@@ -182,7 +182,6 @@ export interface InputRequested extends KernelEvent {
 
 export interface KernelExtensionLoaded extends KernelEvent {
     extensionType: string;
-    kernelName: string;
 }
 
 export interface KernelReady extends KernelEvent {

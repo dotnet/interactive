@@ -15,18 +15,15 @@ namespace Microsoft.DotNet.Interactive.Events
         [JsonIgnore]
         public IKernelExtension KernelExtension { get; }
 
-        public string KernelName { get; }
 
         [JsonConstructor]
-        public KernelExtensionLoaded(string extensionType, string kernelName, bool isStaticContentSource ,KernelCommand command = null) : base(command)
+        public KernelExtensionLoaded(string extensionType,KernelCommand command = null) : base(command)
         {
             ExtensionType = extensionType;
-            KernelName = kernelName;
         }
-        public KernelExtensionLoaded(IKernelExtension kernelExtension, string kernelName, KernelCommand command = null) : base(command)
+        public KernelExtensionLoaded(IKernelExtension kernelExtension, KernelCommand command = null) : base(command)
         {
             KernelExtension = kernelExtension;
-            KernelName = kernelName;
             ExtensionType = kernelExtension.GetType().Name;
 
         }

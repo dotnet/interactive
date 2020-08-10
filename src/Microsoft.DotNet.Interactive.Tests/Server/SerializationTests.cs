@@ -285,7 +285,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     "some/different/directory",
                     new ChangeWorkingDirectory("some/different/directory"));
 
-                yield return new KernelExtensionLoaded("customExtension", null, false, new SubmitCode(@"#r ""nuget:package"" "));
+                yield return new KernelExtensionLoaded("customExtension", new SubmitCode(@"#r ""nuget:package"" "));
             }
         }
 
