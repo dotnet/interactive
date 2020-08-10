@@ -60,25 +60,3 @@ open System.Linq"
         kernel.DeferCommand(SubmitCode code)
         kernel
 
-    [<Extension>]
-    static member UseWho(kernel: FSharpKernelBase) =
-        let detailedName = "#!whos"
-        let command = Command(detailedName, "Display the names of the current top-level variables and their values.")
-        command.Handler <- CommandHandler.Create(
-            fun (parseResult: ParseResult) (context: KernelInvocationContext) ->
-                let detailed = parseResult.CommandResult.Command.Name = detailedName
-                match context.Command with
-                | :? SubmitCode ->
-                    match context.HandlingKernel with
-                    | :? FSharpKernelBase as kernel ->
-                        let kernelVariables = kernel.GetCurrentVariables()
-                        let currentVariables = CurrentVariables(kernelVariables, detailed)
-                        let html = currentVariables.ToDisplayString(HtmlFormatter.MimeType)
-                        context.Publish(DisplayedValueProduced(html, context.Command, [| FormattedValue(HtmlFormatter.MimeType, html) |]))
-                    | _ -> ()
-                | _ -> ()
-                Task.CompletedTask)
-        command.AddAlias("#!who")
-        kernel.AddDirective(command)
-        Formatter.Register(CurrentVariablesFormatter())
-        kernel
