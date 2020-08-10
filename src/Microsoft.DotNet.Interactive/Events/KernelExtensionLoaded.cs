@@ -16,11 +16,11 @@ namespace Microsoft.DotNet.Interactive.Events
         public IKernelExtension KernelExtension { get; }
 
         [JsonConstructor]
-        public KernelExtensionLoaded(string extensionType, string contentSourceName, bool isContentProvider ,KernelCommand command = null) : base(command)
+        public KernelExtensionLoaded(string extensionType, string contentSourceName, bool isStaticContentSource ,KernelCommand command = null) : base(command)
         {
             ExtensionType = extensionType;
             ContentSourceName = contentSourceName;
-            IsContentProvider = isContentProvider;
+            IsStaticContentSource = isStaticContentSource;
         }
         public KernelExtensionLoaded(IKernelExtension kernelExtension, KernelCommand command = null) : base(command)
         {
@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Events
 
             if (kernelExtension is IStaticContentSource contentSource)
             {
-                IsContentProvider = true;
+                IsStaticContentSource = true;
                 ContentSourceName = contentSource.Name;
             }
 
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.Events
 
         public string ContentSourceName { get; }
 
-        public bool IsContentProvider { get;  }
+        public bool IsStaticContentSource { get;  }
 
         public override string ToString() => $"{base.ToString()}: {ExtensionType}";
     }
