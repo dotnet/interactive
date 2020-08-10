@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                         var array = toArray.Invoke(null, new[] { obj });
 
-                        writer.Write(array.ToDisplayString());
+                        writer.Write(array.ToDisplayString(PlainTextFormatter.MimeType));
                     }),
 
                 new PlainTextFormatter<TextSpan>((span, writer) => writer.Write(span.ToString(OutputMode.Ansi))),

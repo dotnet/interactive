@@ -111,15 +111,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _defaultTypeFormatters.PushRange(PlainTextFormatter.DefaultFormatters);
 
             _defaultPreferredMimeTypes.Push((typeof(string), PlainTextFormatter.MimeType));
-            _defaultPreferredMimeTypes.Push((typeof(JToken), PlainTextFormatter.MimeType));
+            _defaultPreferredMimeTypes.Push((typeof(JToken), JsonFormatter.MimeType));
 
             ListExpansionLimit = 20;
             RecursionLimit = 6;
             NullString = "<null>";
 
             Clearing?.Invoke(null, EventArgs.Empty);
-
-
 
         }
 
@@ -249,12 +247,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             TextWriter writer,
             string mimeType = PlainTextFormatter.MimeType)
         {
-            if (obj is string s)
-            {
-                writer.Write(s);
-                return;
-            }
-
             if (obj != null)
             {
                 var actualType = obj.GetType();

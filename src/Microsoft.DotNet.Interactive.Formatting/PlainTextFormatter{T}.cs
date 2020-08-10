@@ -20,9 +20,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public override string MimeType => PlainTextFormatter.MimeType;
 
-        public static ITypeFormatter GetBestFormatterFor() =>
-            PlainTextFormatter.GetBestFormatterFor(typeof(T));
-
         public override void Format(T value, TextWriter writer)
         {
             if (value is null)

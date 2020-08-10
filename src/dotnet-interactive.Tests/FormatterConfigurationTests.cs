@@ -80,6 +80,21 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         }
 
         [Fact]
+        public void ScriptContent_type_with_possible_html_characters_is_formatted_unchanged()
+        {
+            var scriptText = "if (true && false) { alert('hello with embedded <>\" escapes'); };";
+            var script = new ScriptContent(scriptText);
+            var mimeType = Formatter.PreferredMimeTypeFor(script.GetType());
+
+            var formattedValue = new FormattedValue(
+                mimeType,
+                script.ToDisplayString(mimeType));
+
+            formattedValue.MimeType.Should().Be("text/html");
+            formattedValue.Value.Should().Be($"<script type=\"text/javascript\">{scriptText}</script>");
+        }
+
+        [Fact]
         public void ScriptContent_type_is_wrapped_when_http_and_the_frontendEnvironment_is_JupyterFrontedEnvironment()
         {
             var frontendEnvironment = new HtmlNotebookFrontedEnvironment(new Uri("http://12.12.12.12:4242"));

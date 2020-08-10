@@ -14,6 +14,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static ITypeFormatter GetBestFormatterFor(Type type) =>
             Formatter.GetBestFormatterFor(type, MimeType);
 
+        public static ITypeFormatter GetBestFormatterFor<T>() =>
+            GetBestFormatterFor(typeof(T));
+
         public static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
             FormattersForAnyObject.GetFormatter(type, includeInternals);
 
