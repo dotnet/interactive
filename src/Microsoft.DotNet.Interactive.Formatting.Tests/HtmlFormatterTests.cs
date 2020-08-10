@@ -349,7 +349,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
 
             [Fact]
-            public void It_formats_Enum_correctly()
+            public void It_formats_enum_value_using_the_name()
             {
                 var day = DayOfWeek.Monday;
 
