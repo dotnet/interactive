@@ -84,8 +84,19 @@ function loadDotnetInteractiveApi() {
                     'dotnet-interactive': `${root}resources`
                 }
             }) || require;
+
+            let dotnetInteractiveExtensionsRequire = require.config({
+                context: '$CACHE_BUSTER$',
+                paths: {
+                    'dotnet-interactive': `${root}extensions`
+                }
+            }) || require;
             if (!window.dotnetInteractiveRequire) {
                 window.dotnetInteractiveRequire = dotnetInteractiveRequire;
+            }
+
+            if (!window.dotnetInteractiveExtensionsRequire) {
+                window.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
             }
         
             dotnetInteractiveRequire([
