@@ -1,1 +1,1 @@
-{"event":{"extensionType":"customExtension","kernelName":null},"eventType":"KernelExtensionLoaded","command":{"token":"the-token","commandType":"SubmitCode","command":{"code":"#r \"nuget:package\" ","submissionType":0,"targetKernelName":null}}}
+{"event":{"extensionType":"customExtension"},"eventType":"KernelExtensionLoaded","command":{"token":"the-token","commandType":"SubmitCode","command":{"code":"#r \"nuget:package\" ","submissionType":0,"targetKernelName":null}}}
