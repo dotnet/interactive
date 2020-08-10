@@ -45,13 +45,13 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
 
             [Fact]
-            public void Formatter_does_not_expand_string()
+            public void Formatter_does_not_put_span_around_string()
             {
-                var formatter = HtmlFormatter<string>.GetBestFormatterFor();
+                var formatter = HtmlFormatter.GetBestFormatterFor<string>();
 
                 var s = "hello".ToDisplayString(formatter);
 
-                s.Should().Be("<span>hello</span>");
+                s.Should().Be("hello");
             }
 
             [Fact]
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 expando.Name = "socks";
                 expando.Count = 2;
 
-                var formatter = HtmlFormatter<ExpandoObject>.GetBestFormatterFor();
+                var formatter = HtmlFormatter.GetBestFormatterFor<ExpandoObject>();
 
                 var output = ((object) expando).ToDisplayString(formatter);
 
@@ -327,6 +327,70 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
 
             [Fact]
+            public void It_formats_DateTime_correctly()
+            {
+                var date1 = DateTime.Now;
+
+                var html = date1.ToDisplayString("text/html");
+
+                html.Should().BeEquivalentHtmlTo(
+                    $"<span>{date1.ToString("u")}</span>");
+            }
+
+            [Fact]
+            public void It_formats_DateTimeOffset_correctly()
+            {
+                var date1 = DateTimeOffset.Now;
+
+                var html = date1.ToDisplayString("text/html");
+
+                html.Should().BeEquivalentHtmlTo(
+                    $"<span>{date1.ToString("u")}</span>");
+            }
+
+            [Fact]
+            public void It_formats_Enum_correctly()
+            {
+                var day = DayOfWeek.Monday;
+
+                var html = day.ToDisplayString("text/html");
+
+                html.Should().BeEquivalentHtmlTo(
+                    $"<span>{day.ToString()}</span>");
+            }
+
+            [Fact]
+            public void It_formats_string_with_encoding_and_preserving_whitespace_but_without_a_span()
+            {
+                var text = "hello<b>world  </b>  \n\n  ";
+
+                var html = text.ToDisplayString("text/html");
+
+                html.Should().Be("hello&lt;b&gt;world  &lt;/b&gt;  \n\n  ");
+            }
+
+            [Fact]
+            public void It_formats_nested_string_with_encoding_and_whitespace_but_without_a_span()
+            {
+                // Note: although the whitespace in the string is emitted, it is not
+                // yet in a `<pre>` section, so will be treated according the HTML whitespace
+                // rules.
+                //
+                // Note: the absence of a span is dubious in the inner position.  It comes from this:
+                //    case string s:
+                //        writer.Write(s.HtmlEncode());
+                //        break;
+                //
+                // This test is added to capture the status quo, rather than because this is necessarily correct.
+
+                var text = new Tuple<string>("hello<b>world  </b>  \n\n  ");
+
+                var html = text.ToDisplayString("text/html");
+
+                html.Should().Be("<table><thead><tr><th>Item1</th></tr></thead><tbody><tr><td>hello&lt;b&gt;world  &lt;/b&gt;  \n\n  </td></tr></tbody></table>");
+            }
+
+            [Fact]
             public void It_formats_string_arrays_correctly()
             {
                 var strings = new[] { "apple", "banana", "cherry" };
@@ -442,7 +506,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void ReadOnlyMemory_of_char_is_formatted_like_a_string()
             {
-                var formatter = HtmlFormatter<ReadOnlyMemory<char>>.GetBestFormatterFor();
+                var formatter = HtmlFormatter.GetBestFormatterFor<ReadOnlyMemory<char>>();
 
                 var writer = new StringWriter();
 
@@ -458,7 +522,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void ReadOnlyMemory_of_int_is_formatted_like_a_int_array()
             {
-                var formatter = HtmlFormatter<ReadOnlyMemory<int>>.GetBestFormatterFor();
+                var formatter = HtmlFormatter.GetBestFormatterFor<ReadOnlyMemory<int>>();
 
                 var writer = new StringWriter();
 

@@ -31,9 +31,10 @@ namespace Microsoft.DotNet.Interactive
                     tbody(
                         instance.Select(v =>
                              tr(
+                                 // Note, embeds these as objects into the HTML content, ultimately rendered by PocketView 
                                  td(v.Name),
-                                 td(v.Type),
-                                 td(v.Value.ToDisplayString())
+                                 td(arbitrary(v.Type)),
+                                 td(arbitrary(v.Value))
                              ))));
             }
             else

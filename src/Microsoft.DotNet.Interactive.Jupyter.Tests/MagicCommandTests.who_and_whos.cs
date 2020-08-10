@@ -42,14 +42,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                     {
                         "var x = 1;",
                         "x = 2;",
-                        "var y = \"hi!\";",
+                        "var y = \"hi>!\";",
                         "var z = new object[] { x, y };",
                     },
                     Language.FSharp => new[]
                     {
                         "let mutable x = 1",
                         "x <- 2",
-                        "let y = \"hi!\"",
+                        "let y = \"hi>!\"",
                         "let z = [| x :> obj; y :> obj |]",
                     },
                 };
@@ -74,8 +74,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                       .Should()
                       .ContainAll(
                           "<td>x</td><td>System.Int32</td><td>2</td>",
-                          "<td>y</td><td>System.String</td><td>hi!</td>",
-                          "<td>z</td><td>System.Object[]</td><td>[ 2, hi! ]</td>");
+                          "<td>y</td><td>System.String</td><td>hi&gt;!</td>",
+                          "<td>z</td><td>System.Object[]</td><td>[ 2, hi&gt;! ]</td>");
             }
 
             [Theory]
