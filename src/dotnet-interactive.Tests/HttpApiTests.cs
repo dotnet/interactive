@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -105,6 +107,29 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var responseContent = await response.Content.ReadAsStringAsync();
 
             responseContent.Should().BeJsonEquivalentTo("Code value");
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "var a = \"Code value\";")]
+        [InlineData(Language.FSharp, "let a = \"Code value\"")]
+        public async Task deferred_command_produce_html_bootstrap_code(Language language, string code)
+        {
+            var server = GetServer(language);
+            var events = server.Kernel.KernelEvents.ToSubscribedList();
+            await server.Kernel.SendAsync(new SubmitCode(code, language.LanguageName()));
+
+
+
+            events.Should()
+                .ContainSingle<DisplayedValueProduced>()
+                .Which
+                .FormattedValues
+                .Should()
+                .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
+                .Which
+                .Value
+                .Should()
+                .Contain("<script type='text/javascript'>");
         }
 
         [Fact]
