@@ -4,12 +4,13 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.AspNetCore.Html;
 
 namespace Microsoft.DotNet.Interactive.App
 {
     internal static class HttpApiBootstrapper
     {
-        public static string GetHtmlInjection(Uri[] probingUris, string seed)
+        public static IHtmlContent GetHtmlInjection(Uri[] probingUris, string seed)
         {
             var apiCacheBuster = $"{Process.GetCurrentProcess().Id}.{seed}";
             var template = @"
@@ -116,9 +117,10 @@ function loadDotnetInteractiveApi() {
 </div>";
             
             var jsProbingUris = $"[{ string.Join(", ", probingUris.Select(a => $"\"{a.AbsoluteUri}\"")) }]";
-            return template
+            var html =  template
                 .Replace("$ADDRESSES$", jsProbingUris)
                 .Replace("$CACHE_BUSTER$", apiCacheBuster);
+            return new HtmlString(html);
         }
     }
 }
