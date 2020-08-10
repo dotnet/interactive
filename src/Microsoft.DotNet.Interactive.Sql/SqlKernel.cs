@@ -7,12 +7,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.LanguageService;
 
 namespace Microsoft.DotNet.Interactive.Sql
 {
     public class SqlKernel :
-        KernelBase,
+        Kernel,
         IKernelCommandHandler<SubmitCode>
     {
         internal const string DefaultKernelName = "sql";
