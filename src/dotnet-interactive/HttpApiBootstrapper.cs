@@ -78,17 +78,17 @@ function loadDotnetInteractiveApi() {
         .then((root) => {
             // use probing to find host url and api resources
             // load interactive helpers and language services
-            let dotnet_require = require.config({
+            let dotnetInteractiveRequire = require.config({
                 context: '$CACHE_BUSTER$',
                 paths: {
                     'dotnet-interactive': `${root}resources`
                 }
             }) || require;
-            if (!window.dotnet_require) {
-                window.dotnet_require = dotnet_require;
+            if (!window.dotnetInteractiveRequire) {
+                window.dotnetInteractiveRequire = dotnetInteractiveRequire;
             }
         
-            dotnet_require([
+            dotnetInteractiveRequire([
                     'dotnet-interactive/dotnet-interactive'
                 ],
                 function (dotnet) {
