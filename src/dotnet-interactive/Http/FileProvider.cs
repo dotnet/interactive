@@ -1,4 +1,9 @@
-﻿using System;
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Reactive.Linq;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.Extensions.FileProviders;
@@ -10,6 +15,7 @@ namespace Microsoft.DotNet.Interactive.App.Http
     {
         private readonly EmbeddedFileProvider _root;
         private readonly IDisposable _eventSubscription;
+        private readonly ConcurrentDictionary<string, EmbeddedFileProvider> _providers = new ConcurrentDictionary<string, EmbeddedFileProvider>();
 
         public FileProvider(Kernel kernel)
         {
@@ -25,7 +31,8 @@ namespace Microsoft.DotNet.Interactive.App.Http
         {
             if (kernelExtension is IStaticContentSource source)
             {
-
+                var name = source.Name;
+                _providers.GetOrAdd(name, key => new EmbeddedFileProvider(source.GetType().Assembly));
             }
         }
 
@@ -52,7 +59,7 @@ namespace Microsoft.DotNet.Interactive.App.Http
         {
             if (path.StartsWith("extensions/"))
             {
-                throw new NotImplementedException();
+                return string.Join("/", path.Split(new[] {"/"}, StringSplitOptions.RemoveEmptyEntries).Skip(2));
             }
 
             return path;
@@ -62,7 +69,12 @@ namespace Microsoft.DotNet.Interactive.App.Http
         {
             if (path.StartsWith("extensions/"))
             {
-                throw new NotImplementedException();
+                var name = path.Split(new[] {"/"}, StringSplitOptions.RemoveEmptyEntries)[1];
+                if (!_providers.TryGetValue(name, out var provider))
+                {
+                    throw new StaticContentSourceNotFoundException(name);
+                }
+                return provider;
             }
 
             return _root;
