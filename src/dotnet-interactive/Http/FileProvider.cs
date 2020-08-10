@@ -57,6 +57,7 @@ namespace Microsoft.DotNet.Interactive.App.Http
 
         private string ProcessPath(string path)
         {
+            path = path.TrimStart('/');
             if (path.StartsWith("extensions/"))
             {
                 return string.Join("/", path.Split(new[] {"/"}, StringSplitOptions.RemoveEmptyEntries).Skip(2));
@@ -67,6 +68,7 @@ namespace Microsoft.DotNet.Interactive.App.Http
 
         private IFileProvider SelectProvider(string path)
         {
+            path = path.TrimStart('/');
             if (path.StartsWith("extensions/"))
             {
                 var name = path.Split(new[] {"/"}, StringSplitOptions.RemoveEmptyEntries)[1];
