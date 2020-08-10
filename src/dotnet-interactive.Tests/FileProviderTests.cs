@@ -63,10 +63,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 #i ""nuget:{nupkg.Directory.FullName}""
 #r ""nuget:{packageName},{packageVersion}""            ");
 
-            var file = provider.GetFileInfo("extensions/TestKernelExtension/resources/file.txt");
+            Action action = () => provider.GetFileInfo("extensions/TestKernelExtension/resources/file.txt");
 
-            file.Should()
-                .NotBeNull();
+            action.Should().Throw<StaticContentSourceNotFoundException>();
         }
 
         [Theory]
@@ -112,10 +111,10 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var kernel = CreateKernel(language);
             var provider = new FileProvider(kernel);
 
-            var file = provider.GetFileInfo("extensions/not_found/resources/file.txt");
+            Action action
+                = () => provider.GetFileInfo("extensions/not_found/resources/file.txt");
 
-            file.Should()
-                .NotBeNull();
+            action.Should().Throw<StaticContentSourceNotFoundException>();
         }
     }
 }
