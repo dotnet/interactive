@@ -9,7 +9,7 @@ dotnet run -p (Join-Path -Path $thisDir ".." "interface-generator") --out-file (
 dotnet run -p (Join-Path -Path $thisDir ".." "interface-generator") --out-file (Join-Path $thisDir ".." "Microsoft.DotNet.Interactive.Js" "src" "dotnet-interactive" "contracts.ts")
 
 if (Test-Path 'env:DisableArcade') {
-    dotnet pack (Join-Path $thisDir "dotnet-interactive.csproj") /p:Version=0.0.0 /p:AssemblyVersion=0.0.0.1
+    dotnet pack (Join-Path $thisDir "dotnet-interactive.csproj") /p:Version=0.0.0
     $script:toolLocation = Join-Path $thisDir "bin" "debug"
     $script:toolVersion = "0.0.0"
 } else {
