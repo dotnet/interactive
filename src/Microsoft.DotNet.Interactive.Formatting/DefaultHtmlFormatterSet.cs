@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     PocketView view = span(
                         a[href: $"https://docs.microsoft.com/dotnet/api/{type.FullName}?view=netcore-3.0"](
-                            type.ToDisplayString()));
+                            type.ToDisplayString(PlainTextFormatter.MimeType)));
 
                     view.WriteTo(writer, HtmlEncoder.Default);
                 }),

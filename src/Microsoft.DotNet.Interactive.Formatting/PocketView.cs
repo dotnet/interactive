@@ -210,11 +210,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         }
                         else
                         {
-                            var e = arg
-                                    .ToDisplayString()
-                                    .HtmlEncode();
+                            var html = HtmlFormatter.DisplayEmbeddedObjectAsPlainText(arg);
 
-                            e.WriteTo(writer, HtmlEncoder.Default);
+                            html.WriteTo(writer, HtmlEncoder.Default);
                         }
 
                         break;

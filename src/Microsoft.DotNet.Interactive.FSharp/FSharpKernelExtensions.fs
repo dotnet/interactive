@@ -20,10 +20,6 @@ type FSharpKernelExtensions private () =
     static let referenceFromType = fun (typ: Type) -> sprintf "#r \"%s\"" (typ.Assembly.Location.Replace("\\", "/"))
     static let openNamespaceOrType = fun (whatToOpen: String) -> sprintf "open %s" whatToOpen
 
-    static let getAnyToLayoutCall ty = 
-        let specialized = typedefof<AnyToLayoutSpecialization<_>>.MakeGenericType [| ty |]
-        Activator.CreateInstance(specialized) :?> IAnyToLayoutCall
-    
     [<Extension>]
     static member UseDefaultFormatting(kernel: FSharpKernelBase) =
         let code = 
@@ -33,6 +29,7 @@ type FSharpKernelExtensions private () =
                 referenceFromType typeof<FSharpPocketViewTags>
                 referenceFromType typeof<PlotlyChart>
                 referenceFromType typeof<Formatter>
+                referenceFromType typeof<FSharp.Compiler.Interactive.InteractiveSession>
                 openNamespaceOrType typeof<IHtmlContent>.Namespace
                 openNamespaceOrType typeof<FSharpPocketViewTags>.FullName
                 openNamespaceOrType typeof<FSharpPocketViewTags>.Namespace
@@ -40,8 +37,25 @@ type FSharpKernelExtensions private () =
                 openNamespaceOrType typeof<Formatter>.Namespace
             ] |> List.reduce(fun x y -> x + Environment.NewLine + y)
 
-        // Register F# Interactive box printing as the default plain text printer
+        // Register F# Interactive box printing as the default plain text printer, selectively overriding plaintext settings
+        // in DefaultPlainTextFormatterSet
         Formatter.Register<obj>(Action<_,_>(FSharpPlainText.formatObject), "text/plain", addToDefaults = true)
+        Formatter.Register<System.Collections.IEnumerable>(Action<_,_>(FSharpPlainText.formatObject), "text/plain", addToDefaults = true)
+
+        // Primitives render well as HTML
+        Formatter.Register(Func<int8,string>(fun v -> v.ToString(fsi.FormatProvider).HtmlEncode().ToString()), addToDefaults = true)
+        Formatter.Register(Func<int16,string>(fun v -> v.ToString(fsi.FormatProvider).HtmlEncode().ToString()), addToDefaults = true)
+        Formatter.Register(Func<int32,string>(fun v -> v.ToString(fsi.FormatProvider).HtmlEncode().ToString()), addToDefaults = true)
+        Formatter.Register(Func<int64,string>(fun v -> v.ToString(fsi.FormatProvider).HtmlEncode().ToString()), addToDefaults = true)
+        Formatter.Register(Func<nativeint,string>(fun v -> v.ToString().HtmlEncode().ToString()), addToDefaults = true)
+        Formatter.Register(Func<uint8,string>(fun v -> v.ToString(fsi.FormatProvider).HtmlEncode().ToString()), addToDefaults = true)
+        Formatter.Register(Func<uint16,string>(fun v -> v.ToString(fsi.FormatProvider).HtmlEncode().ToString()), addToDefaults = true)
+        Formatter.Register(Func<uint32,string>(fun v -> v.ToString(fsi.FormatProvider).HtmlEncode().ToString()), addToDefaults = true)
+        Formatter.Register(Func<uint64,string>(fun v -> v.ToString(fsi.FormatProvider).HtmlEncode().ToString()), addToDefaults = true)
+        Formatter.Register(Func<uint64,string>(fun v -> v.ToString(fsi.FormatProvider).HtmlEncode().ToString()), addToDefaults = true)
+
+        // https://github.com/dotnet/interactive/issues/697
+        HtmlFormatter.PreformatEmbeddedPlainText <- true
 
         kernel.DeferCommand(SubmitCode code)
         kernel

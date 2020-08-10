@@ -44,7 +44,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             if (members.Length == 0)
             {
-                return new HtmlFormatter<T>((value, writer) => writer.Write(value));
+                return new HtmlFormatter<T>((value, writer) =>
+                {
+                    var html = HtmlFormatter.DisplayEmbeddedObjectAsPlainText(value);
+
+                    html.WriteTo(writer, HtmlEncoder.Default);
+                });
             }
 
             return new HtmlFormatter<T>((instance, writer) =>
@@ -68,7 +73,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             });
         }
 
-        internal static HtmlFormatter<T> CreateForAnyEnumerable(bool includeInternals)
+        internal static HtmlFormatter<T> CreateForAnyEnumerable()
         {
             Func<T, IEnumerable> getKeys = null;
             Func<T, IEnumerable> getValues = instance => (IEnumerable) instance;
@@ -199,16 +204,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        private static string Value(MemberAccessor<T> m, T instance)
+        private static object Value(MemberAccessor<T> m, T instance)
         {
             try
             {
                 var value = m.GetValue(instance);
-                return value.ToDisplayString();
+                return value;
             }
             catch (Exception exception)
             {
-                return exception.ToDisplayString(PlainTextFormatter.MimeType);
+                return exception;
             }
         }
     }

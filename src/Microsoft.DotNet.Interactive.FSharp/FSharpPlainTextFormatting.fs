@@ -2,7 +2,6 @@
 
 open System
 open System.IO
-open System.Reflection
 open FSharp.Reflection
 open Microsoft.DotNet.Interactive.Formatting
 open Internal.Utilities.StructuredFormat // from FSharp.Compiler
