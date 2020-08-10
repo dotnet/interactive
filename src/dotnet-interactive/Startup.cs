@@ -66,9 +66,10 @@ namespace Microsoft.DotNet.Interactive.App
             var operation = Pocket.Logger.Log.OnEnterAndExit();
             if (StartupOptions.EnableHttpApi)
             {
+                var kernel = serviceProvider.GetRequiredService<Kernel>();
                 app.UseStaticFiles(new StaticFileOptions
                 {
-                    FileProvider = new EmbeddedFileProvider(typeof(Startup).Assembly)
+                    FileProvider = new FileProvider(kernel)
                 });
                 app.UseWebSockets();
                 app.UseCors("default");
@@ -82,7 +83,7 @@ namespace Microsoft.DotNet.Interactive.App
                         r.Routes.Add(new DiscoveryRouter(frontendEnvironment));
                     }
 
-                    var kernel = serviceProvider.GetRequiredService<Kernel>();
+                   
                     var startupOptions = serviceProvider.GetRequiredService<StartupOptions>();
                     if (startupOptions.EnableHttpApi)
                     {
