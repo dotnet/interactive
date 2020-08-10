@@ -11,7 +11,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.Interactive.App.CommandLine;
-using Microsoft.DotNet.Interactive.App.Commands;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.Extensions.DependencyInjection;
 using Pocket;
@@ -28,14 +27,13 @@ namespace Microsoft.DotNet.Interactive.App
         public static async Task<int> Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
-
             return await CommandLineParser.Create(_serviceCollection).InvokeAsync(args);
         }
 
         private static readonly Assembly[] _assembliesEmittingPocketLoggerLogs =
         {
             typeof(Startup).Assembly, // dotnet-interactive.dll
-            typeof(KernelBase).Assembly, // Microsoft.DotNet.Interactive.dll
+            typeof(Kernel).Assembly, // Microsoft.DotNet.Interactive.dll
             typeof(Shell).Assembly, // Microsoft.DotNet.Interactive.Jupyter.dll
         };
 
@@ -58,13 +56,6 @@ namespace Microsoft.DotNet.Interactive.App
                 disposables.Add(log);
             }
 
-            if (options.Verbose)
-            {
-                disposables.Add(
-                    LogEvents.Subscribe(e => Console.WriteLine(e.ToLogString()),
-                                        _assembliesEmittingPocketLoggerLogs));
-            }
-
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
                 Log.Warning($"{nameof(TaskScheduler.UnobservedTaskException)}", args.Exception);
@@ -78,21 +69,27 @@ namespace Microsoft.DotNet.Interactive.App
             StartupOptions options, 
             IServiceCollection serviceCollection)
         {
+            using var _ = Log.OnEnterAndExit();
+
             // FIX: (ConstructWebHostBuilder) dispose me
             var disposables = new CompositeDisposable
             {
                 StartToolLogging(options)
             };
 
-            var httpPort = GetFreePort(options);
+            HttpProbingSettings probingSettings = null;
 
-            var probingSettings = HttpProbingSettings.Create(httpPort.PortNumber);
+            if (options.EnableHttpApi)
+            {
+                var httpPort = GetFreePort(options);
+                probingSettings = HttpProbingSettings.Create(httpPort.PortNumber);
+            }
 
             var webHost = new WebHostBuilder()
                           .UseKestrel()
                           .ConfigureServices(c =>
                           {
-                              if (options.EnableHttpApi)
+                              if (options.EnableHttpApi && probingSettings != null)
                               {
                                   c.AddSingleton(probingSettings);
                               }
@@ -104,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.App
                           })
                           .UseStartup<Startup>();
 
-            if (options.EnableHttpApi)
+            if (options.EnableHttpApi && probingSettings != null)
             {
                 webHost = webHost.UseUrls(probingSettings.AddressList.Select(a => a.AbsoluteUri).ToArray());
             }
@@ -113,6 +110,7 @@ namespace Microsoft.DotNet.Interactive.App
 
             static HttpPort GetFreePort(StartupOptions startupOptions)
             {
+                using var __ = Log.OnEnterAndExit(nameof(GetFreePort));
                 if (startupOptions.HttpPort != null && !startupOptions.HttpPort.IsAuto)
                 {
                     return startupOptions.HttpPort;

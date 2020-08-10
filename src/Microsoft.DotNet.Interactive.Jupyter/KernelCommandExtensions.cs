@@ -7,23 +7,19 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 {
     internal static class KernelCommandExtensions
     {
-        internal const string PublishInternalEventsKey = "publish-internal-events";
+        private const string PublishInternalEventsKey = "publish-internal-events";
 
         internal static bool ShouldPublishInternalEvents(
-            this IKernelCommand command)
+            this KernelCommand command)
         {
             var returnValue = false;
             if (command.Properties.TryGetValue(PublishInternalEventsKey, out var produceEvents))
             {
                 returnValue = (bool) produceEvents;
             }
-            else
+            else if (command?.Parent != null)
             {
-                if (command is KernelCommandBase commandBase &&
-                    commandBase.Parent != null)
-                {
-                    returnValue = commandBase.Parent.ShouldPublishInternalEvents();
-                }
+                returnValue = command.Parent.ShouldPublishInternalEvents();
             }
 
             return returnValue;

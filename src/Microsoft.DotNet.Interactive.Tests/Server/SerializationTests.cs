@@ -3,10 +3,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using Assent;
 using FluentAssertions;
 using Microsoft.AspNetCore.Html;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -27,9 +28,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             _output = output;
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [MemberData(nameof(Commands))]
-        public void All_command_types_are_round_trip_serializable(IKernelCommand command)
+        public void All_command_types_are_round_trip_serializable(KernelCommand command)
         {
             var originalEnvelope = KernelCommandEnvelope.Create(command);
 
@@ -42,12 +43,13 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             deserializedEnvelope
                 .Should()
                 .BeEquivalentTo(originalEnvelope,
-                                o => o.Excluding(e => e.Command.Properties));
+                                o => o.Excluding(e => e.Command.Properties)
+                                      .Excluding(e => e.Command.Handler));
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [MemberData(nameof(Events))]
-        public void All_event_types_are_round_trip_serializable(IKernelEvent @event)
+        public void All_event_types_are_round_trip_serializable(KernelEvent @event)
         {
             var originalEnvelope = KernelEventEnvelope.Create(@event);
 
@@ -63,14 +65,44 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                                 o => o.Excluding(envelope => envelope.Event.Command.Properties));
         }
 
-        [Fact(Timeout = 45000)]
+        [Theory]
+        [MemberData(nameof(Commands))]
+        public void Command_contract_has_not_been_broken(KernelCommand command)
+        {
+            var _configuration = new Configuration()
+                                 .UsingExtension($"{command.GetType().Name}.json")
+                                 .SetInteractive(false);
+
+            command.SetToken("the-token");
+
+            var json = KernelCommandEnvelope.Serialize(command);
+
+            this.Assent(json, _configuration);
+        }
+
+        [Theory]
+        [MemberData(nameof(EventsUniqueByType))]
+        public void Event_contract_has_not_been_broken(KernelEvent @event)
+        {
+            var _configuration = new Configuration()
+                                 .UsingExtension($"{@event.GetType().Name}.json")
+                                 .SetInteractive(false);
+
+            @event.Command?.SetToken("the-token");
+
+            var json = KernelEventEnvelope.Serialize(@event);
+
+            this.Assent(json, _configuration);
+        }
+
+        [Fact]
         public void All_command_types_are_tested_for_round_trip_serialization()
         {
-            var commandTypes = typeof(IKernelCommand)
+            var commandTypes = typeof(KernelCommand)
                                .Assembly
                                .ExportedTypes
                                .Concrete()
-                               .DerivedFrom(typeof(IKernelCommand));
+                               .DerivedFrom(typeof(KernelCommand));
 
             Commands()
                 .Select(e => e[0].GetType())
@@ -79,14 +111,14 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 .BeEquivalentTo(commandTypes);
         }
 
-        [Fact(Timeout = 45000)]
+        [Fact]
         public void All_event_types_are_tested_for_round_trip_serialization()
         {
-            var eventTypes = typeof(IKernelEvent)
+            var eventTypes = typeof(KernelEvent)
                              .Assembly
                              .ExportedTypes
                              .Concrete()
-                             .DerivedFrom(typeof(IKernelEvent));
+                             .DerivedFrom(typeof(KernelEvent));
 
             Events()
                 .Select(e => e[0].GetType())
@@ -102,29 +134,27 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 yield return new object[] { command };
             }
 
-            IEnumerable<IKernelCommand> commands()
+            IEnumerable<KernelCommand> commands()
             {
                 yield return new AddPackage(new PackageReference("MyAwesomePackage", "1.2.3"));
 
-                yield return new ChangeWorkingDirectory(new DirectoryInfo("some/different/directory"));
+                yield return new ChangeWorkingDirectory("/path/to/somewhere");
 
                 yield return new DisplayError("oops!");
 
                 yield return new DisplayValue(
-                    new HtmlString("<b>hi!</b>"),
                     new FormattedValue("text/html", "<b>hi!</b>")
                 );
 
-                yield return new RequestCompletion("Cons", new LinePosition(0, 4), "csharp");
+                yield return new RequestCompletions("Cons", new LinePosition(0, 4), "csharp");
 
-                yield return new RequestDiagnostics();
+                yield return new RequestDiagnostics("the-code");
 
                 yield return new RequestHoverText("document-contents", new LinePosition(1, 2));
 
                 yield return new SubmitCode("123", "csharp", SubmissionType.Run);
 
                 yield return new UpdateDisplayedValue(
-                    new HtmlString("<b>hi!</b>"),
                     new FormattedValue("text/html", "<b>hi!</b>"),
                     "the-value-id");
             }
@@ -137,7 +167,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 yield return new object[] { @event };
             }
 
-            IEnumerable<IKernelEvent> events()
+            IEnumerable<KernelEvent> events()
             {
                 var submitCode = new SubmitCode("123");
 
@@ -153,13 +183,13 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                    submitCode,
                    "oops");
 
-                yield return new CommandHandled(submitCode);
+                yield return new CommandSucceeded(submitCode);
 
                 yield return new CompleteCodeSubmissionReceived(submitCode);
 
-                var requestCompletion = new RequestCompletion("Console.Wri", new LinePosition(0, 11));
+                var requestCompletion = new RequestCompletions("Console.Wri", new LinePosition(0, 11));
 
-                yield return new CompletionRequestCompleted(
+                yield return new CompletionsProduced(
                     new[]
                     {
                         new CompletionItem(
@@ -172,9 +202,20 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     },
                     requestCompletion);
 
-                yield return new CompletionRequestReceived(requestCompletion);
-
                 yield return new DiagnosticLogEntryProduced("oops!", submitCode);
+
+                yield return new DiagnosticsProduced(
+                    new[]
+                    {
+                        new Diagnostic(
+                            new LinePositionSpan(
+                                new LinePosition(1, 2),
+                                new LinePosition(3, 4)),
+                            DiagnosticSeverity.Error,
+                            "code",
+                            "message")
+                    },
+                    submitCode);
 
                 yield return new DisplayedValueProduced(
                     new HtmlString("<b>hi!</b>"),
@@ -206,8 +247,15 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new[] { new FormattedValue("text/markdown", "markdown") },
                     new LinePositionSpan(new LinePosition(1, 2), new LinePosition(3, 4)));
 
+                yield return new KernelReady();
+
                 yield return new PackageAdded(
-                    new ResolvedPackageReference("ThePackage", "1.2.3", new[] { new FileInfo(Path.GetTempFileName()) }));
+                    new ResolvedPackageReference(
+                        packageName: "ThePackage",
+                        packageVersion: "1.2.3",
+                        assemblyPaths: new[] { "/path/to/a.dll" },
+                        packageRoot: "/the/package/root",
+                        probingPaths: new[] { "/probing/path/1", "/probing/path/2" }));
 
                 yield return new PasswordRequested("password", submitCode);
 
@@ -220,7 +268,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     });
 
                 yield return new StandardErrorValueProduced(
-                    "oops!",
                     submitCode,
                     new[]
                     {
@@ -228,7 +275,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     });
 
                 yield return new StandardOutputValueProduced(
-                    123,
                     new SubmitCode("Console.Write(123);", "csharp", SubmissionType.Run),
                     new[]
                     {
@@ -236,9 +282,21 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     });
 
                 yield return new WorkingDirectoryChanged(
-                    new DirectoryInfo("some/different/directory"),
-                    new ChangeWorkingDirectory(new DirectoryInfo("some/different/directory")));
+                    "some/different/directory",
+                    new ChangeWorkingDirectory("some/different/directory"));
             }
+        }
+
+        public static IEnumerable<object[]> EventsUniqueByType()
+        {
+            var dictionary = new Dictionary<Type, KernelEvent>();
+
+            foreach (var e in Events().SelectMany(e => e).OfType<KernelEvent>())
+            {
+                dictionary[e.GetType()] = e;
+            }
+
+            return dictionary.Values.Select(e => new[] { e });
         }
     }
 }

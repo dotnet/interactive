@@ -29,8 +29,8 @@ namespace Microsoft.DotNet.Interactive.Tests
             result.Errors.Should().BeEmpty();
             var assemblyPaths = result.ResolvedReferences.SelectMany(r => r.AssemblyPaths).ToArray();
 
-            assemblyPaths.Should().Contain(r => r.Name.Equals("FluentAssertions.dll"));
-            assemblyPaths.Should().Contain(r => r.Name.Equals("System.Configuration.ConfigurationManager.dll"));
+            assemblyPaths.Should().Contain(r => r.EndsWith("FluentAssertions.dll"));
+            assemblyPaths.Should().Contain(r => r.EndsWith("System.Configuration.ConfigurationManager.dll"));
 
             restoreContext
                 .ResolvedPackageReferences
@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             result.Succeeded.Should().BeTrue();
             
             var assemblyPaths = result.ResolvedReferences.SelectMany(r => r.AssemblyPaths);
-            assemblyPaths.Should().Contain(r => r.Name.Equals("NewtonSoft.Json.dll", StringComparison.InvariantCultureIgnoreCase));
+            assemblyPaths.Should().Contain(r => r.EndsWith("NewtonSoft.Json.dll", StringComparison.InvariantCultureIgnoreCase));
 
             restoreContext
                 .ResolvedPackageReferences
@@ -124,18 +124,18 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             // path is a string similar to:
             /// c:/users/someuser/.nuget/packages/fluentassertions/5.7.0/netcoreapp2.0/fluentassertions.dll
-            var name = path.Name;
-            var tfm = path.Directory.Name;
-            var reflib = path.Directory.Parent.Name;
-            var version = path.Directory.Parent.Parent.Name;
-            var packageName = path.Directory.Parent.Parent.Parent.Name;
+            var dll = new FileInfo(path);
+            var tfm = dll.Directory.Name;
+            var reflib = dll.Directory.Parent.Name;
+            var version = dll.Directory.Parent.Parent.Name;
+            var packageName = dll.Directory.Parent.Parent.Parent.Name;
 
-            name.ToLower().Should().Be("fluentassertions.dll");
+            dll.Name.ToLower().Should().Be("fluentassertions.dll");
             tfm.ToLower().Should().Be("netcoreapp2.0");
             reflib.ToLower().Should().Be("lib");
             version.ToLower().Should().Be("5.7.0");
             packageName.ToLower().Should().Be("fluentassertions");
-            path.Exists.Should().BeTrue();
+            dll.Exists.Should().BeTrue();
         }
 
         [Fact]
@@ -150,11 +150,12 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var path = packageReference.PackageRoot;
 
-            var version = path.Name;
-            var packageName = path.Parent.Name;
+            var directory = new DirectoryInfo(path);
+            var version = directory.Name;
+            var packageName = directory.Parent.Name;
             version.ToLower().Should().Be("5.7.0");
             packageName.ToLower().Should().Be("fluentassertions");
-            path.Exists.Should().BeTrue();
+            directory.Exists.Should().BeTrue();
         }
 
         [Fact]
@@ -170,14 +171,14 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var path = packageReference.AssemblyPaths.Single();
 
-            path.FullName.ToLower()
+            path.ToLower()
                 .Should()
                 .EndWith("htmlagilitypack" + Path.DirectorySeparatorChar +
                          "1.11.12" + Path.DirectorySeparatorChar +
                          "lib" + Path.DirectorySeparatorChar +
                          "netstandard2.0" + Path.DirectorySeparatorChar +
                          "htmlagilitypack.dll");
-            path.Exists.Should().BeTrue();
+            File.Exists(path).Should().BeTrue();
         }
 
         [Fact]

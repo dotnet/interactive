@@ -7,8 +7,11 @@ using System.CommandLine.Invocation;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -190,24 +193,28 @@ i");
         }
 
         [Fact]
-        public async Task When_an_unrecognized_directive_is_encountered_an_error_is_produced()
+        public async Task When_an_unrecognized_directive_is_encountered_it_is_forwarded_to_the_kernel_as_submitCode()
         {
+            SubmitCode submitCommand = null;
             using var kernel = new CompositeKernel
             {
-                new CSharpKernel()
+                new FakeKernel("csharp")
+                {
+                    Handle = (command, context) =>
+                    {
+                        submitCommand = command as SubmitCode;
+                        return Task.CompletedTask;
+                    }
+                }
             };
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync("#!oops");
-
-            events
-                .Should()
-                .ContainSingle<CommandFailed>()
-                .Which
-                .Message
-                .Should()
-                .Contain("Unrecognized command or argument '#!oops'");
+            await kernel.SubmitCodeAsync("#!undefinedDirective");
+            using var _ = new AssertionScope();
+            
+            submitCommand.Should().NotBeNull();
+            submitCommand.Code.Should().Be("#!undefinedDirective");
         }
 
         [Theory]
@@ -226,42 +233,27 @@ i");
                 new Option<bool>("--loudness")
             };
 
-            var findKernel = compositeKernel.FindKernel(kernelName);
+            var kernel = compositeKernel.FindKernel(kernelName);
 
-            var kernelWithDirective = findKernel switch
-            {
-                KernelBase k => k,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-
-            kernelWithDirective.AddDirective(command);
+            kernel.AddDirective(command);
 
             using var events = compositeKernel.KernelEvents.ToSubscribedList();
 
             await compositeKernel.SubmitCodeAsync("#!hello -h");
 
-            var stdOut = string.Join(
-                "",
-                events
-                    .OfType<StandardOutputValueProduced>()
-                    .Select(e => e.Value.As<string>()));
+            events.Should()
+                  .ContainSingle<StandardOutputValueProduced>()
+                  .Which
+                  .FormattedValues
+                  .Should()
+                  .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
+                  .Which
+                  .Value
+                  .Should()
+                  .ContainAll("Usage", "#!hello", "[options]", "--loudness");
 
-            var stdErr = string.Join(
-                "",
-                events
-                    .OfType<StandardErrorValueProduced>()
-                    .Select(e => e.Value.As<string>()));
-
-            stdOut
-                .Should()
-                .ContainAll("Usage", "#!hello", "[options]", "--loudness");
-
-            stdOut
-                .Should()
-                .NotContain(new RootCommand().Name,
-                            "RootCommand.Name is generally intended to reflect the command line tool's name but in this case it's just an implementation detail and it looks weird in the output.");
-
-            stdErr.Should().BeEmpty();
+            events.Should()
+                  .NotContainErrors();
         }
 
         [Fact]

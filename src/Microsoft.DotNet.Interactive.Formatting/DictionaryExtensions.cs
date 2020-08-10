@@ -9,6 +9,20 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     internal static class DictionaryExtensions
     {
+        public static TValue GetOrAdd<TKey, TValue>(
+            this IDictionary<TKey, TValue> dictionary,
+            TKey key,
+            Func<TKey, TValue> getValue)
+        {
+            if (!dictionary.TryGetValue(key, out var value))
+            {
+                value = getValue(key);
+                dictionary.Add(key, value);
+            }
+
+            return value;
+        }
+
         public static IDictionary<TKey, TValue> Merge<TKey, TValue>(
             this IDictionary<TKey, TValue> dictionary1,
             IDictionary<TKey, TValue> dictionary2,

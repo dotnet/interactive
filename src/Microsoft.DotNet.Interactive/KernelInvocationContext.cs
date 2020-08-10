@@ -17,9 +17,9 @@ namespace Microsoft.DotNet.Interactive
     {
         private static readonly AsyncLocal<KernelInvocationContext> _current = new AsyncLocal<KernelInvocationContext>();
 
-        private readonly ReplaySubject<IKernelEvent> _events = new ReplaySubject<IKernelEvent>();
+        private readonly ReplaySubject<KernelEvent> _events = new ReplaySubject<KernelEvent>();
 
-        private readonly HashSet<IKernelCommand> _childCommands = new HashSet<IKernelCommand>();
+        private readonly HashSet<KernelCommand> _childCommands = new HashSet<KernelCommand>();
 
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly CancellationTokenSource _cancellationTokenSource;
 
-        private KernelInvocationContext(IKernelCommand command)
+        private KernelInvocationContext(KernelCommand command)
         {
             _cancellationTokenSource = new CancellationTokenSource();
             Command = command;
@@ -35,19 +35,19 @@ namespace Microsoft.DotNet.Interactive
             Result = new KernelCommandResult(_events);
         }
 
-        public IKernelCommand Command { get; }
+        public KernelCommand Command { get; }
 
         public bool IsComplete { get; private set; }
 
         public CancellationToken CancellationToken => _cancellationTokenSource.Token;
 
-        internal IKernelCommand CommandToSignalCompletion { get; set; }
+        internal KernelCommand CommandToSignalCompletion { get; set; }
 
-        public void Complete(IKernelCommand command)
+        public void Complete(KernelCommand command)
         {
             if (command == Command)
             {
-                Publish(new CommandHandled(Command));
+                Publish(new CommandSucceeded(Command));
                 if (!_events.IsDisposed)
                 {
                     _events.OnCompleted();
@@ -75,14 +75,14 @@ namespace Microsoft.DotNet.Interactive
             _onCompleteActions.Add(onComplete);
         }
 
-        public void Publish(IKernelEvent @event)
+        public void Publish(KernelEvent @event)
         {
             if (IsComplete)
             {
                 return;
             }
 
-            var command = @event.Command as KernelCommandBase;
+            var command = @event.Command;
 
             if (command == null ||
                 Command == command ||
@@ -92,11 +92,11 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public IObservable<IKernelEvent> KernelEvents => _events;
+        public IObservable<KernelEvent> KernelEvents => _events;
 
-        public IKernelCommandResult Result { get; }
+        public KernelCommandResult Result { get; }
 
-        public static KernelInvocationContext Establish(IKernelCommand command)
+        public static KernelInvocationContext Establish(KernelCommand command)
         {
             if (_current.Value == null || _current.Value.IsComplete)
             {
@@ -114,9 +114,7 @@ namespace Microsoft.DotNet.Interactive
 
         public static KernelInvocationContext Current => _current.Value;
 
-        public IKernel HandlingKernel { get; set; }
-
-        public IKernel CurrentKernel { get; set; }
+        public Kernel HandlingKernel { get; internal set; }
 
         public async Task QueueAction(
             KernelCommandInvocation action)

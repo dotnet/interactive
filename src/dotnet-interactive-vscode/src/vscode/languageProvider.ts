@@ -2,26 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
-import { LinePositionSpan, LinePosition } from '../contracts';
 import { ClientMapper } from '../clientMapper';
 import { provideCompletion } from '../languageServices/completion';
 import { provideHover } from './../languageServices/hover';
-import { notebookCellLanguages, getSimpleLanguage } from '../interactiveNotebook';
-
-function convertToPosition(linePosition: LinePosition): vscode.Position {
-    return new vscode.Position(linePosition.line, linePosition.character);
-}
-
-function convertToRange(linePositionSpan?: LinePositionSpan): (vscode.Range | undefined) {
-    if (linePositionSpan === undefined) {
-        return undefined;
-    }
-
-    return new vscode.Range(
-        convertToPosition(linePositionSpan.start),
-        convertToPosition(linePositionSpan.end)
-    );
-}
+import { notebookCellLanguages, getSimpleLanguage, notebookCellChanged } from '../interactiveNotebook';
+import { convertToRange, toVsCodeDiagnostic } from './vscodeUtilities';
+import { getDiagnosticCollection } from './diagnostics';
 
 export class CompletionItemProvider implements vscode.CompletionItemProvider {
     static readonly triggerCharacters = ['.', '('];
@@ -33,14 +19,15 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
         return new Promise<vscode.CompletionList>((resolve, reject) => {
             provideCompletion(this.clientMapper, getSimpleLanguage(document.languageId), document, position).then(result => {
                 let range: vscode.Range | undefined = undefined;
-                if (result.range) {
+                if (result.linePositionSpan) {
                     range = new vscode.Range(
-                        new vscode.Position(result.range.start.line, result.range.start.character),
-                        new vscode.Position(result.range.end.line, result.range.end.character));
+                        new vscode.Position(result.linePositionSpan.start.line, result.linePositionSpan.start.character),
+                        new vscode.Position(result.linePositionSpan.end.line, result.linePositionSpan.end.character));
                 }
                 let completionItems: Array<vscode.CompletionItem> = [];
-                for (let item of result.completionList) {
+                for (let item of result.completions) {
                     let vscodeItem : vscode.CompletionItem = {
+                        // range: new vscode.Range(position, position),
                         label: item.displayText,
                         documentation: item.documentation,
                         filterText: item.filterText,
@@ -75,6 +62,7 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
             case "Namespace": return vscode.CompletionItemKind.Module;
             case "Property": return vscode.CompletionItemKind.Property;
             case "Structure": return vscode.CompletionItemKind.Struct;
+            case "Value": return vscode.CompletionItemKind.Value;
             default: return vscode.CompletionItemKind.Text; // what's an appropriate default?
         }
     }
@@ -97,12 +85,23 @@ export class HoverProvider implements vscode.HoverProvider {
     }
 }
 
-export function registerLanguageProviders(clientMapper: ClientMapper): vscode.Disposable {
+export function registerLanguageProviders(clientMapper: ClientMapper, diagnosticDelay: number): vscode.Disposable {
     const disposables: Array<vscode.Disposable> = [];
 
     let languages = [ ... notebookCellLanguages, "dotnet-interactive.magic-commands" ];
     disposables.push(vscode.languages.registerCompletionItemProvider(languages, new CompletionItemProvider(clientMapper), ...CompletionItemProvider.triggerCharacters));
     disposables.push(vscode.languages.registerHoverProvider(languages, new HoverProvider(clientMapper)));
+    disposables.push(vscode.workspace.onDidChangeTextDocument(e => {
+        if (vscode.languages.match(notebookCellLanguages, e.document)) {
+            const cell = vscode.notebook.activeNotebookEditor?.document.cells.find(cell => cell.document === e.document);
+            if (cell) {
+                notebookCellChanged(clientMapper, e.document, getSimpleLanguage(cell.language), diagnosticDelay, diagnostics => {
+                    const collection = getDiagnosticCollection(e.document.uri);
+                    collection.set(e.document.uri, diagnostics.map(toVsCodeDiagnostic));
+                });
+            }
+        }
+    }));
 
     return vscode.Disposable.from(...disposables);
 }

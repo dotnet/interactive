@@ -4,10 +4,13 @@
 import {
     CommandFailed,
     CommandFailedType,
-    CommandHandledType,
-    CompletionRequestCompleted,
-    CompletionRequestCompletedType,
-    DisplayEventBase,
+    CommandSucceededType,
+    CompletionsProduced,
+    CompletionsProducedType,
+    Diagnostic,
+    DiagnosticsProduced,
+    DiagnosticsProducedType,
+    DisplayEvent,
     DisplayedValueProducedType,
     DisplayedValueUpdatedType,
     DisposableSubscription,
@@ -20,8 +23,8 @@ import {
     KernelEventEnvelopeObserver,
     KernelEventType,
     KernelTransport,
-    RequestCompletion,
-    RequestCompletionType,
+    RequestCompletions,
+    RequestCompletionsType,
     RequestHoverText,
     RequestHoverTextType,
     ReturnValueProducedType,
@@ -30,6 +33,8 @@ import {
     SubmissionType,
     SubmitCode,
     SubmitCodeType,
+    RequestDiagnostics,
+    RequestDiagnosticsType,
 } from './contracts';
 import { CellOutput, CellErrorOutput, CellOutputKind, CellDisplayOutput } from './interfaces/vscode';
 
@@ -43,22 +48,27 @@ export class InteractiveClient {
         kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
     }
 
-    async execute(source: string, language: string, observer: { (outputs: Array<CellOutput>): void }, token?: string | undefined): Promise<void> {
+    async execute(source: string, language: string, outputObserver: { (outputs: Array<CellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, token?: string | undefined): Promise<void> {
         return new Promise(async (resolve, reject) => {
+            let diagnostics: Array<Diagnostic> = [];
             let outputs: Array<CellOutput> = [];
 
-            let reportOutputs = () => {
-                observer(outputs);
+            let reportDiagnostics = () => {
+                diagnosticObserver(diagnostics);
             };
 
-            let disposable = await this.submitCode(source, language, eventEnvelope => {
+            let reportOutputs = () => {
+                outputObserver(outputs);
+            };
+
+            await this.submitCode(source, language, eventEnvelope => {
                 if (this.deferredOutput.length > 0) {
                     outputs.push(...this.deferredOutput);
                     this.deferredOutput = [];
                 }
-    
+
                 switch (eventEnvelope.eventType) {
-                    case CommandHandledType:
+                    case CommandSucceededType:
                         resolve();
                         break;
                     case CommandFailedType:
@@ -72,14 +82,20 @@ export class InteractiveClient {
                             };
                             outputs.push(output);
                             reportOutputs();
-                            disposable.dispose(); // is this correct?
-                            reject(err);
+                            resolve();
+                        }
+                        break;
+                    case DiagnosticsProducedType:
+                        {
+                            const diags = <DiagnosticsProduced>eventEnvelope.event;
+                            diagnostics.push(...diags.diagnostics);
+                            reportDiagnostics();
                         }
                         break;
                     case StandardErrorValueProducedType:
                     case StandardOutputValueProducedType:
                         {
-                            let disp = <DisplayEventBase>eventEnvelope.event;
+                            let disp = <DisplayEvent>eventEnvelope.event;
                             let output = displayEventToCellOutput(disp);
                             outputs.push(output);
                             reportOutputs();
@@ -89,7 +105,7 @@ export class InteractiveClient {
                     case DisplayedValueUpdatedType:
                     case ReturnValueProducedType:
                         {
-                            let disp = <DisplayEventBase>eventEnvelope.event;
+                            let disp = <DisplayEvent>eventEnvelope.event;
                             let output = displayEventToCellOutput(disp);
 
                             if (disp.valueId) {
@@ -105,7 +121,7 @@ export class InteractiveClient {
                                     this.valueIdMap.set(disp.valueId, {
                                         idx: outputs.length,
                                         outputs,
-                                        observer
+                                        observer: outputObserver
                                     });
                                     outputs.push(output);
                                 }
@@ -122,28 +138,37 @@ export class InteractiveClient {
         });
     }
 
-    completion(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionRequestCompleted> {
-        let command: RequestCompletion = {
+    completion(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<CompletionsProduced> {
+        let command: RequestCompletions = {
             code: code,
-            position: {
+            linePosition: {
                 line,
                 character
             },
             targetKernelName: language
         };
-        return this.submitCommandAndGetResult<CompletionRequestCompleted>(command, RequestCompletionType, CompletionRequestCompletedType, token);
+        return this.submitCommandAndGetResult<CompletionsProduced>(command, RequestCompletionsType, CompletionsProducedType, token);
     }
 
     hover(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<HoverTextProduced> {
         let command: RequestHoverText = {
             code: code,
-            position: {
+            linePosition: {
                 line: line,
                 character: character,
             },
             targetKernelName: language
         };
         return this.submitCommandAndGetResult<HoverTextProduced>(command, RequestHoverTextType, HoverTextProducedType, token);
+    }
+
+    async getDiagnostics(language: string, code: string, token?: string | undefined): Promise<Array<Diagnostic>> {
+        const command: RequestDiagnostics = {
+            code,
+            targetKernelName: language
+        };
+        const diagsProduced = await this.submitCommandAndGetResult<DiagnosticsProduced>(command, RequestDiagnosticsType, DiagnosticsProducedType, token);
+        return diagsProduced.diagnostics;
     }
 
     async submitCode(code: string, language: string, observer: KernelEventEnvelopeObserver, token?: string | undefined): Promise<DisposableSubscription> {
@@ -176,7 +201,7 @@ export class InteractiveClient {
                             reject(err);
                         }
                         break;
-                    case CommandHandledType:
+                    case CommandSucceededType:
                         if (!handled) {
                             handled = true;
                             disposable.dispose();
@@ -228,12 +253,12 @@ export class InteractiveClient {
                 for (let listener of listeners) {
                     listener(eventEnvelope);
                 }
-            } else {
+            } else if (token.startsWith("deferredCommand::")) {
                 switch (eventEnvelope.eventType) {
                     case DisplayedValueProducedType:
                     case DisplayedValueUpdatedType:
                     case ReturnValueProducedType:
-                        let disp = <DisplayEventBase>eventEnvelope.event;
+                        let disp = <DisplayEvent>eventEnvelope.event;
                         let output = displayEventToCellOutput(disp);
                         this.deferredOutput.push(output);
                         break;
@@ -247,7 +272,7 @@ export class InteractiveClient {
     }
 }
 
-export function displayEventToCellOutput(disp: DisplayEventBase): CellDisplayOutput {
+export function displayEventToCellOutput(disp: DisplayEvent): CellDisplayOutput {
     let data: { [key: string]: any; } = {};
     if (disp.formattedValues && disp.formattedValues.length > 0) {
         for (let formatted of disp.formattedValues) {
@@ -256,10 +281,7 @@ export function displayEventToCellOutput(disp: DisplayEventBase): CellDisplayOut
                 : formatted.value;
             data[formatted.mimeType] = value;
         }
-    } else if (disp.value) {
-        // no formatted values returned, this is the best we can do
-        data['text/plain'] = disp.value.toString();
-    }
+    } 
 
     let output: CellDisplayOutput = {
         outputKind: CellOutputKind.Rich,

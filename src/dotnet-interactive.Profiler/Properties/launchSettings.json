@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "dotnet-interactive.Profiler": {
+      "commandName": "Project",
+      "commandLineArgs": "--operation RequestCompletion --iteration-count 5"
+    }
+  }
+}

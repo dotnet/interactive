@@ -6,11 +6,12 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class DisplayedValueProduced : DisplayEventBase
+    public class DisplayedValueProduced : DisplayEvent
     {
+        // FIX: (DisplayValueProduced) reorder constructor parameters so FormattedValues is not optional
         public DisplayedValueProduced(
             object value,
-            IKernelCommand command,
+            KernelCommand command,
             IReadOnlyCollection<FormattedValue> formattedValues = null,
             string valueId = null) : base(value, command, formattedValues, valueId)
         {

@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.Commands;
 namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
     public class FakeKernel :
-        KernelBase,
+        Kernel,
         IKernelCommandHandler<SubmitCode>
     {
         public FakeKernel([CallerMemberName] string name = null) : base(name)
@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
         public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
-            Handle(command, context);
+            Handle?.Invoke(command, context);
             return Task.CompletedTask;
         }
     }

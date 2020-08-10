@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Management.Automation;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using System.Linq;
@@ -57,6 +58,8 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             Assert.Collection(events,
                                        e => e.Should().BeOfType<CodeSubmissionReceived>(),
                                        e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                                       e => e.Should().BeOfType<DiagnosticsProduced>().Which
+                                             .Diagnostics.Count.Should().Be(0),
                                        e => e.Should().BeOfType<DisplayedValueProduced>().Which
                                              .Value.Should().BeOfType<string>().Which
                                              .Should().Match("* Search in Progress* 0% Complete* [ * ] *"),
@@ -66,7 +69,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                                        e => e.Should().BeOfType<DisplayedValueUpdated>().Which
                                              .Value.Should().BeOfType<string>().Which
                                              .Should().Be(string.Empty),
-                                       e => e.Should().BeOfType<CommandHandled>());
+                                       e => e.Should().BeOfType<CommandSucceeded>());
         }
 
         [Fact]
@@ -89,37 +92,47 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             await kernel.SendAsync(new SubmitCode("echo /this/is/a/path"));
             await kernel.SendAsync(new SubmitCode("$$; $^"));
 
-            Assert.Collection(KernelEvents,
+            KernelEvents.Should().SatisfyRespectively(
                 e => e.Should()
-                        .BeOfType<CodeSubmissionReceived>()
-                        .Which.Code
-                        .Should().Be("echo /this/is/a/path"),
+                      .BeOfType<CodeSubmissionReceived>()
+                      .Which.Code
+                      .Should().Be("echo /this/is/a/path"),
                 e => e.Should()
-                        .BeOfType<CompleteCodeSubmissionReceived>()
-                        .Which.Code
-                        .Should().Be("echo /this/is/a/path"),
+                      .BeOfType<CompleteCodeSubmissionReceived>()
+                      .Which.Code
+                      .Should().Be("echo /this/is/a/path"),
+                e => e.Should().BeOfType<DiagnosticsProduced>()
+                      .Which.Diagnostics.Count.Should().Be(0),
                 e => e.Should()
-                        .BeOfType<StandardOutputValueProduced>()
-                        .Which.Value.ToString()
-                        .Should().Be("/this/is/a/path" + Environment.NewLine),
-                e => e.Should().BeOfType<CommandHandled>(),
+                      .BeOfType<StandardOutputValueProduced>()
+                      .Which
+                      .FormattedValues
+                      .Should()
+                      .ContainSingle(f => f.Value == "/this/is/a/path" + Environment.NewLine),
+                e => e.Should().BeOfType<CommandSucceeded>(),
                 e => e.Should()
-                        .BeOfType<CodeSubmissionReceived>()
-                        .Which.Code
-                        .Should().Be("$$; $^"),
+                      .BeOfType<CodeSubmissionReceived>()
+                      .Which.Code
+                      .Should().Be("$$; $^"),
                 e => e.Should()
-                        .BeOfType<CompleteCodeSubmissionReceived>()
-                        .Which.Code
-                        .Should().Be("$$; $^"),
+                      .BeOfType<CompleteCodeSubmissionReceived>()
+                      .Which.Code
+                      .Should().Be("$$; $^"),
+                e => e.Should().BeOfType<DiagnosticsProduced>()
+                      .Which.Diagnostics.Count.Should().Be(0),
                 e => e.Should()
-                        .BeOfType<StandardOutputValueProduced>()
-                        .Which.Value.ToString()
-                        .Should().Be("/this/is/a/path" + Environment.NewLine),
+                      .BeOfType<StandardOutputValueProduced>()
+                      .Which
+                      .FormattedValues
+                      .Should()
+                      .ContainSingle(f => f.Value == "/this/is/a/path" + Environment.NewLine),
                 e => e.Should()
-                        .BeOfType<StandardOutputValueProduced>()
-                        .Which.Value.ToString()
-                        .Should().Be("echo" + Environment.NewLine),
-                e => e.Should().BeOfType<CommandHandled>());
+                      .BeOfType<StandardOutputValueProduced>()
+                      .Which
+                      .FormattedValues
+                      .Should()
+                      .ContainSingle(f => f.Value == "echo" + Environment.NewLine),
+                e => e.Should().BeOfType<CommandSucceeded>());
         }
 
         [Fact]
@@ -135,10 +148,13 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                                 .ToSubscribedList()
                                 .OfType<StandardOutputValueProduced>();
 
-            outputs.Should().HaveCount(2);
-            Assert.Collection(outputs,
-                              e => e.Value.As<string>().Should().Be("Get-Verb > $null" + Environment.NewLine),
-                              e => e.Value.As<string>().Should().Be("echo bar > $null" + Environment.NewLine));
+            outputs.Should().SatisfyRespectively(
+                e => e.FormattedValues
+                      .Should()
+                      .ContainSingle(f => f.Value == "Get-Verb > $null" + Environment.NewLine),
+                e => e.FormattedValues
+                      .Should()
+                      .ContainSingle(f => f.Value == "echo bar > $null" + Environment.NewLine));
         }
 
         [Fact]
@@ -153,11 +169,15 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             await kernel.SendAsync(command);
 
             var outputs = KernelEvents.OfType<StandardOutputValueProduced>();
+
             outputs.Should().HaveCountGreaterThan(1);
-            outputs.Select(e => e.Value.ToString())
+            
+            outputs
+                .SelectMany(e => e.FormattedValues.Select(v => v.Value))
                 .First(s => s.Trim().Length > 0)
                 .ToLowerInvariant()
-                .Should().Match("*ping*data*");
+                .Should()
+                .Match("*ping*data*");
         }
 
         [Fact]
@@ -215,6 +235,26 @@ for ($j = 0; $j -le 4; $j += 4 ) {
 
                 File.Delete(_allUsersCurrentHostProfilePath);
             }
+        }
+
+        [Fact]
+        public async Task Powershell_customobject_is_formatted_for_outdisplay()
+        {
+            var kernel = CreateKernel(Language.PowerShell);
+            var result = await kernel.SendAsync(new SubmitCode("[pscustomobject]@{ prop1 = 'value1'; prop2 = 'value2'; prop3 = 'value3' } | Out-Display"));
+            var outputs = result.KernelEvents.ToSubscribedList();
+
+            string mimeType = "text/html";
+            string formattedHtml = "<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>prop1</td><td>value1</td></tr><tr><td>prop2</td><td>value2</td></tr><tr><td>prop3</td><td>value3</td></tr></tbody></table>";
+            FormattedValue fv = new FormattedValue(mimeType, formattedHtml);
+
+            outputs.Should().SatisfyRespectively(
+                e => e.Should().BeOfType<CodeSubmissionReceived>(),
+                e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                e => e.Should().BeOfType<DiagnosticsProduced>().Which.Diagnostics.Count.Should().Be(0),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues.ElementAt(0).Should().BeEquivalentTo(fv),
+                e => e.Should().BeOfType<CommandSucceeded>()
+            );
         }
     }
 }

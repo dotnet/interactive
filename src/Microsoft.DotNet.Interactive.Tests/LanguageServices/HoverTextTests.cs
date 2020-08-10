@@ -1,7 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Linq;
+using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.CodeAnalysis.Text;
@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         {
         }
 
-        private Task<IKernelCommandResult> SendHoverRequest(KernelBase kernel, string code, int line, int character)
+        private Task<KernelCommandResult> SendHoverRequest(Kernel kernel, string code, int line, int character)
         {
             var command = new RequestHoverText(code, new LinePosition(line, character));
             return kernel.SendAsync(command);
@@ -111,6 +111,127 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .Content
                 .Should()
                 .ContainEquivalentOf(new FormattedValue(expectedMimeType, expectedContent));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 17 overloads)")]
+        public async Task hover_text_commands_have_offsets_normalized_after_magic_commands(Language language, string markupCode, string expectedMimeType, string expectedContent)
+        {
+            using var kernel = CreateKernel(language);
+
+            var fullMarkupCode = string.Join("\r\n", new[]
+            {
+                "", // blank like to force offsets to be wrong
+                "#!time", // prepend with magic commands to make line offsets wrong
+                markupCode
+            });
+
+            MarkupTestFile.GetLineAndColumn(fullMarkupCode, out var code, out var line, out var character);
+            var commandResult = await SendHoverRequest(kernel, code, line, character);
+
+            commandResult
+                .KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .ContainSingle<HoverTextProduced>()
+                .Which
+                .Content
+                .Should()
+                .ContainEquivalentOf(new FormattedValue(expectedMimeType, expectedContent));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 17 overloads)")]
+        public async Task hover_text_commands_have_offsets_normalized_after_switching_to_the_same_language(Language language, string markupCode, string expectedMimeType, string expectedContent)
+        {
+            using var kernel = CreateKernel(language);
+
+            var fullMarkupCode = string.Join("\r\n", new[]
+            {
+                "", // blank line to force offsets to be wrong
+                $"#!{language.LanguageName()}", // 'switch' to the same language
+                markupCode
+            });
+
+            MarkupTestFile.GetLineAndColumn(fullMarkupCode, out var code, out var line, out var character);
+            var commandResult = await SendHoverRequest(kernel, code, line, character);
+
+            commandResult
+                .KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .ContainSingle<HoverTextProduced>()
+                .Which
+                .Content
+                .Should()
+                .ContainEquivalentOf(new FormattedValue(expectedMimeType, expectedContent));
+        }
+
+        [Fact]
+        public async Task hover_text_commands_and_events_have_offsets_normalized_when_switching_languages()
+        {
+            // switch to C# from an F# kernel/cell
+            using var kernel = CreateCompositeKernel(Language.FSharp);
+            var fullMarkupCode = string.Join("\r\n", new[]
+            {
+                "let x = 1",
+                "#!csharp",
+                "Console.Write$$Line()"
+            });
+
+            MarkupTestFile.GetLineAndColumn(fullMarkupCode, out var code, out var line, out var character);
+            var commandResult = await SendHoverRequest(kernel, code, line, character);
+
+            commandResult
+                .KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .ContainSingle<HoverTextProduced>()
+                .Which
+                .LinePositionSpan
+                .Should()
+                .Be(new LinePositionSpan(new LinePosition(line, 8), new LinePosition(line, 17)));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp, Skip = "not implemented in fsharp")]
+        public async Task csharp_hover_text_is_returned_for_shadowing_variables(Language language)
+        {
+            SubmitCode declaration = null;
+            SubmitCode shadowingDeclaration = null;
+            using var kernel = CreateKernel(language);
+            switch (language)
+            {
+                case Language.CSharp:
+                    declaration = new SubmitCode("var identifier = 1234;");
+                    shadowingDeclaration = new SubmitCode("var identifier = \"one-two-three-four\";");
+                    break;
+                case Language.FSharp:
+                    declaration = new SubmitCode("let identifier = 1234");
+                    shadowingDeclaration = new SubmitCode("let identifier = \"one-two-three-four\"");
+                    break;
+
+            }
+            await kernel.SendAsync(declaration); 
+
+            await kernel.SendAsync(shadowingDeclaration); 
+
+            var markupCode = "ident$$ifier";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var column);
+
+            var commandResult = await SendHoverRequest(kernel, code, line, column);
+
+            commandResult
+                .KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .ContainSingle<HoverTextProduced>()
+                .Which
+                .Content
+                .Should()
+                .ContainSingle(fv => fv.Value == "(field) string identifier");
         }
     }
 }

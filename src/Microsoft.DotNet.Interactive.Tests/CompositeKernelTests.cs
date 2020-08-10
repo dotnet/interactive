@@ -59,11 +59,11 @@ new [] {1,2,3}");
             await kernel.SendAsync(fsharpCommand);
 
             events.Should()
-                  .ContainSingle<CommandHandled>(e => e.Command == csharpCommand);
+                  .ContainSingle<CommandSucceeded>(e => e.Command == csharpCommand);
             events.Should()
-                  .ContainSingle<CommandHandled>(e => e.Command == fsharpCommand);
+                  .ContainSingle<CommandSucceeded>(e => e.Command == fsharpCommand);
         }
-        
+
         [Fact]
         public async Task Handling_kernel_can_be_specified_using_kernel_alias_as_a_directive()
         {
@@ -88,12 +88,52 @@ new [] {1,2,3}");
             await kernel.SendAsync(fsharpCommand);
 
             events.Should()
-                  .ContainSingle<CommandHandled>(e => e.Command == csharpCommand);
+                  .ContainSingle<CommandSucceeded>(e => e.Command == csharpCommand);
             events.Should()
-                  .ContainSingle<CommandHandled>(e => e.Command == fsharpCommand);
+                  .ContainSingle<CommandSucceeded>(e => e.Command == fsharpCommand);
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
+        [InlineData("#!fake1", "fake1")]
+        [InlineData("#!fake1-alias", "fake1")]
+        [InlineData("#!fake2", "fake2")]
+        [InlineData("#!fake2-alias", "fake2")]
+        public async Task Action_directives_are_routed_by_kernel_chooser_directives(
+            string chooseKernelCommand,
+            string expectedInvokedOnKernelName)
+        {
+            var received = new List<string>();
+
+            using var compositeKernel = new CompositeKernel();
+
+            var fakeKernel1 = new FakeKernel("fake1");
+            fakeKernel1.AddDirective(new Command("#!hi")
+            {
+                Handler = CommandHandler.Create(() => { received.Add("fake1"); })
+            });
+
+            var fakeKernel2 = new FakeKernel("fake2");
+            fakeKernel2.AddDirective(new Command("#!hi")
+            {
+                Handler = CommandHandler.Create(() => { received.Add("fake2"); })
+            });
+
+            compositeKernel.Add(fakeKernel1, new[] { "fake1-alias" });
+            compositeKernel.Add(fakeKernel2, new[] { "fake2-alias" });
+
+            var result = await compositeKernel.SubmitCodeAsync($"{chooseKernelCommand}\n#!hi");
+
+            result.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+
+            received
+                .Should()
+                .ContainSingle()
+                .Which
+                .Should()
+                .Be(expectedInvokedOnKernelName);
+        }
+
+        [Theory]
         [InlineData(0)]
         [InlineData(1)]
         [InlineData(2)]
@@ -152,7 +192,7 @@ new [] {1,2,3}");
             await kernel.SendAsync(submitCode);
 
             events.Should()
-                .ContainSingle<CommandHandled>()
+                .ContainSingle<CommandSucceeded>()
                 .Which
                 .Command
                 .Should()
@@ -162,7 +202,7 @@ new [] {1,2,3}");
         [Fact]
         public async Task commands_targeting_compositeKernel_are_not_routed_to_childKernels()
         {
-            var receivedOnFakeKernel = new List<IKernelCommand>();
+            var receivedOnFakeKernel = new List<KernelCommand>();
             using var kernel = new CompositeKernel
             {
                 new FakeKernel("fake")
@@ -185,7 +225,7 @@ new [] {1,2,3}");
         [Fact]
         public async Task Handling_kernel_can_be_specified_by_setting_the_kernel_name_in_the_command()
         {
-            var receivedOnFakeKernel = new List<IKernelCommand>();
+            var receivedOnFakeKernel = new List<KernelCommand>();
 
             using var kernel = new CompositeKernel
             {
@@ -226,7 +266,7 @@ new [] {1,2,3}");
         [Fact]
         public async Task Handling_kernel_can_be_specified_as_a_default()
         {
-            var receivedOnFakeKernel = new List<IKernelCommand>();
+            var receivedOnFakeKernel = new List<KernelCommand>();
 
             using var kernel = new CompositeKernel
             {
@@ -260,7 +300,7 @@ new [] {1,2,3}");
         [Fact]
         public async Task Handling_kernel_can_be_specified_as_a_default_via_an_alias()
         {
-            var receivedOnFakeKernel = new List<IKernelCommand>();
+            var receivedOnFakeKernel = new List<KernelCommand>();
 
             var fakeKernel = new FakeKernel("fake")
             {
@@ -343,7 +383,7 @@ new [] {1,2,3}");
                 .ContainInOrder(
                     typeof(CodeSubmissionReceived),
                     typeof(CompleteCodeSubmissionReceived),
-                    typeof(CommandHandled));
+                    typeof(CommandSucceeded));
         }
 
         [Fact]
@@ -382,7 +422,7 @@ new [] {1,2,3}");
                 .ContainInOrder(
                     typeof(CodeSubmissionReceived),
                     typeof(CompleteCodeSubmissionReceived),
-                    typeof(CommandHandled));
+                    typeof(CommandSucceeded));
         }
 
         [Fact]
@@ -420,7 +460,7 @@ new [] {1,2,3}");
                 .ContainInOrder(
                     typeof(CodeSubmissionReceived),
                     typeof(CompleteCodeSubmissionReceived),
-                    typeof(CommandHandled));
+                    typeof(CommandSucceeded));
         }
 
         [Fact]
@@ -458,7 +498,7 @@ new [] {1,2,3}");
 
             compositeKernel
                 .ChildKernels
-                .OfType<KernelBase>()
+                .OfType<Kernel>()
                 .Single()
                 .FrontendEnvironment
                 .Should()
@@ -476,7 +516,7 @@ new [] {1,2,3}");
 
             compositeKernel
                 .ChildKernels
-                .OfType<KernelBase>()
+                .OfType<Kernel>()
                 .Single()
                 .FrontendEnvironment
                 .Should()

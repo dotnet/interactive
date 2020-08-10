@@ -12,13 +12,13 @@ namespace Microsoft.DotNet.Interactive
 {
     internal class KernelCommandPipeline
     {
-        private readonly KernelBase _kernel;
+        private readonly Kernel _kernel;
 
         private readonly List<(KernelCommandPipelineMiddleware func, string name)> _middlewares = new List<(KernelCommandPipelineMiddleware func, string name)>();
 
         private KernelCommandPipelineMiddleware _pipeline;
 
-        public KernelCommandPipeline(KernelBase kernel)
+        public KernelCommandPipeline(Kernel kernel)
         {
             _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         }
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         internal async Task SendAsync(
-            IKernelCommand command,
+            KernelCommand command,
             KernelInvocationContext context)
         {
             EnsureMiddlewarePipelineIsInitialized();
@@ -47,6 +47,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+        [DebuggerHidden]
         private KernelCommandPipelineMiddleware BuildPipeline()
         {
             var invocations = new List<(KernelCommandPipelineMiddleware func, string name)>(_middlewares);
@@ -64,7 +65,7 @@ namespace Microsoft.DotNet.Interactive
                         {
                             return (Combine, first.name + "->" + second.name);
 
-                            async Task Combine(IKernelCommand cmd1, KernelInvocationContext ctx1, KernelPipelineContinuation next)
+                            async Task Combine(KernelCommand cmd1, KernelInvocationContext ctx1, KernelPipelineContinuation next)
                             {
                                 await first.func(cmd1, ctx1, async (cmd2, ctx2) =>
                                 {

@@ -39,9 +39,15 @@ x
 
             var tree = parser.Parse(code);
 
-            tree.GetRoot()
+            var nodes = tree.GetRoot().ChildNodes;
+
+            nodes
                 .Should()
-                .ContainSingle<LanguageNode>(n => n.Text == "#r \"/path/to/a.dll\"");
+                .ContainSingle<LanguageNode>()
+                .Which
+                .Text
+                .Should()
+                .Be(code);
         }
 
         [Fact]
@@ -57,7 +63,6 @@ x
                 .ContainSingle<DirectiveNode>()
                 .Which
                 .Text
-                .Trim()
                 .Should()
                 .Be("#r \"nuget:SomePackage\"");
         }
@@ -75,7 +80,6 @@ x
                 .ContainSingle<DirectiveNode>()
                 .Which
                 .Text
-                .Trim()
                 .Should()
                 .Be("#r \"nuget:SomePackage\"");
         }
@@ -93,7 +97,6 @@ x
                 .ContainSingle<DirectiveNode>()
                 .Which
                 .Text
-                .Trim()
                 .Should()
                 .Be("#i \"nuget:/some/path\"");
         }
@@ -244,7 +247,7 @@ let x =
                             break;
 
                         case ActionDirectiveNode adn:
-                            adn.ParentLanguage.Should().Be(expectedParentLanguage);
+                            adn.ParentKernelName.Should().Be(expectedParentLanguage);
                             break;
 
                         default:
@@ -291,12 +294,28 @@ let x = 123
             var tree = parser.Parse(code);
 
             tree.GetRoot()
+                .ChildNodes
                 .Should()
                 .ContainSingle<LanguageNode>()
                 .Which
                 .Text
                 .Should()
                 .Be(code);
+        }
+
+        [Fact]
+        public void root_node_span_always_expands_with_child_nodes()
+        {
+            var code = @"#r ""path/to/file""
+// language line";
+            var parser = CreateSubmissionParser();
+            var tree = parser.Parse(code);
+            var root = tree.GetRoot();
+            var rootSpan = root.Span;
+
+            root.ChildNodes
+                .Should()
+                .AllSatisfy(child => rootSpan.Contains(child.Span).Should().BeTrue());
         }
 
         private static SubmissionParser CreateSubmissionParser(

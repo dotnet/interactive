@@ -35,6 +35,7 @@ export type CellOutput = CellStreamOutput | CellErrorOutput | CellDisplayOutput;
 
 export interface Uri {
     fsPath: string;
+    toString: () => string;
 }
 
 export interface Document {
@@ -44,13 +45,18 @@ export interface Document {
 
 export interface NotebookCell {
     cellKind: CellKind;
-    source: string;
+    document: Document;
     language: string;
     outputs: CellOutput[];
 }
 
 export interface NotebookDocument {
     cells: NotebookCell[];
+}
+
+export interface NotebookDocumentBackup {
+    readonly id: string;
+    delete(): void;
 }
 
 export interface ReportChannel{

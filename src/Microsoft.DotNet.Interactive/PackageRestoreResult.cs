@@ -3,9 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -35,12 +33,6 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public IReadOnlyList<ResolvedPackageReference> ResolvedReferences { get; }
-
-        public IReadOnlyList<DirectoryInfo> NativeLibraryProbingPaths =>
-            ResolvedReferences
-                .SelectMany(path => path.ProbingPaths)
-                .Distinct()
-                .ToArray();
 
         public bool Succeeded { get; }
 

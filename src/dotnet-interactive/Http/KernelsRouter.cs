@@ -13,9 +13,9 @@ namespace Microsoft.DotNet.Interactive.App.Http
 {
     public class KernelsRouter : IRouter
     {
-        private readonly IKernel _kernel;
+        private readonly Kernel _kernel;
 
-        public KernelsRouter(IKernel kernel)
+        public KernelsRouter(Kernel kernel)
         {
             _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         }

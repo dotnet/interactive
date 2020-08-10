@@ -3,11 +3,10 @@
 
 using System;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class PackageAdded : KernelEventBase
+    public class PackageAdded : KernelEvent
     {
         public PackageAdded(
             ResolvedPackageReference packageReference,

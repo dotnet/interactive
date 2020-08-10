@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         internal const string PublishInternalEventsKey = "publish-internal-events";
 
         internal static void PublishInternalEvents(
-            this IKernelCommand command)
+            this KernelCommand command)
         {
             command.Properties[PublishInternalEventsKey] = true;
         }

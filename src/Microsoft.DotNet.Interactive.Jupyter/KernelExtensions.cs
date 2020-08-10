@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     public static class KernelExtensions
     {
         public static T UseDefaultMagicCommands<T>(this T kernel)
-            where T : KernelBase
+            where T : Kernel
         {
             kernel.UseLsMagic()
                   .UseMarkdown()
@@ -37,8 +37,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             this CSharpKernel kernel)
         {
             var command = new SubmitCode($@"
-#r ""{typeof(Kernel).Assembly.Location.Replace("\\", "/")}""
-using static {typeof(Kernel).FullName};
+#r ""{typeof(TopLevelMethods).Assembly.Location.Replace("\\", "/")}""
+using static {typeof(TopLevelMethods).FullName};
 ");
 
             kernel.DeferCommand(command);
@@ -48,13 +48,13 @@ using static {typeof(Kernel).FullName};
         public static PowerShellKernel UseJupyterHelpers(
             this PowerShellKernel kernel)
         {
-            kernel.ReadInput = Kernel.input;
-            kernel.ReadPassword = Kernel.password;
+            kernel.ReadInput = TopLevelMethods.input;
+            kernel.ReadPassword = TopLevelMethods.password;
             return kernel;
         }
 
         private static T UseMarkdown<T>(this T kernel)
-            where T : KernelBase
+            where T : Kernel
         {
             var pipeline = new MarkdownPipelineBuilder()
                    .UseMathematics()
@@ -103,7 +103,7 @@ using static {typeof(Kernel).FullName};
         }
 
         private static T UseTime<T>(this T kernel)
-            where T : KernelBase
+            where T : Kernel
         {
             kernel.AddDirective(time());
 
@@ -117,7 +117,7 @@ using static {typeof(Kernel).FullName};
                     {
                         var timer = new Stopwatch();
                         timer.Start();
-                        
+
                         context.OnComplete(invocationContext =>
                         {
                             var elapsed = timer.Elapsed;
@@ -143,57 +143,60 @@ using static {typeof(Kernel).FullName};
         }
 
         private static T UseLsMagic<T>(this T kernel)
-            where T : KernelBase
+            where T : Kernel
         {
-            kernel.AddDirective(lsmagic());
+            kernel.AddDirective(lsmagic(kernel));
 
             kernel.VisitSubkernels(k =>
             {
-                if (k is KernelBase kb)
-                {
-                    kb.AddDirective(lsmagic());
-                }
+                k.AddDirective(lsmagic(k));
             });
 
             Formatter<SupportedDirectives>.Register((directives, writer) =>
             {
+                var indentLevel = 1.5;
                 PocketView t = div(
                     h3(directives.KernelName + " kernel"),
-                    div(directives.Commands.Select(v => div[style: "text-indent:1.5em"](Summary(v)))));
+                    div(directives.Commands.Select(v => div[style: $"text-indent:{indentLevel:##.#}em"](Summary(v, 0)))));
 
                 t.WriteTo(writer, HtmlEncoder.Default);
 
-                IEnumerable<IHtmlContent> Summary(ICommand command)
+                IEnumerable<IHtmlContent> Summary(ICommand command, double offset)
                 {
                     yield return new HtmlString("<pre>");
-
-                    for (var i = 0; i < command.Aliases.Count; i++)
+                    var level = indentLevel + offset;
+                    foreach (var alias in command.Aliases)
                     {
-                        yield return span[style: "color:#512bd4"](command.Aliases[i]);
+                        yield return span[style: $"text-indent:{level:##.#}em; color:#512bd4"](alias);
 
-                        if (i < command.Aliases.Count - 1)
+                        if (level < command.Aliases.Count - 1)
                         {
-                            yield return span[style: "color:darkgray"](", ");
+                            yield return span[style: $"text-indent:{level:##.#}em; color:darkgray"](", ");
                         }
                     }
 
+                    var nextLevel = (indentLevel * 2) + offset;
                     yield return new HtmlString("</pre>");
 
-                    yield return div[style: "text-indent:3em"](command.Description);
+                    yield return div[style: $"text-indent:{nextLevel:##.#}em"](command.Description);
+
+                    foreach (var subCommand in command.Children.OfType<ICommand>())
+                    {
+                        yield return div[style: $"text-indent:{nextLevel:##.#}em"](Summary(subCommand, nextLevel));
+                    }
+
                 }
             }, "text/html");
 
             return kernel;
         }
 
-        private static Command lsmagic()
+        private static Command lsmagic(Kernel kernel)
         {
             return new Command("#!lsmagic", "List the available magic commands / directives")
             {
                 Handler = CommandHandler.Create(async (KernelInvocationContext context) =>
                 {
-                    var kernel = context.CurrentKernel;
-
                     var supportedDirectives = new SupportedDirectives(kernel.Name);
 
                     supportedDirectives.Commands.AddRange(

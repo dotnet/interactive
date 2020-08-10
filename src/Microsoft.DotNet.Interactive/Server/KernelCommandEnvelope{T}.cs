@@ -6,7 +6,7 @@ using Microsoft.DotNet.Interactive.Commands;
 namespace Microsoft.DotNet.Interactive.Server
 {
     public class KernelCommandEnvelope<T> : KernelCommandEnvelope
-        where T : class, IKernelCommand
+        where T : KernelCommand
     {
         public KernelCommandEnvelope(T command) : base(command)
         {

@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         // PocketView
         [InlineData(Language.CSharp, "b(123)", "<b>123</b>")]
         [InlineData(Language.FSharp, "b.innerHTML(123)", "<b>123</b>")]
@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                                    v.Value.ToString().Contains(expectedContent));
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp, "div(123).ToString()", "<div>123</div>")]
         [InlineData(Language.FSharp, "div.innerHTML(123).ToString()", "<div>123</div>")]
         [InlineData(Language.CSharp, "display(div(123).ToString());", "<div>123</div>")]
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var valueProduced = await result
                                       .KernelEvents
-                                      .OfType<DisplayEventBase>()
+                                      .OfType<DisplayEvent>()
                                       .Timeout(5.Seconds())
                                       .FirstAsync();
 
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                                    v.Value.ToString().Contains(expectedContent));
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task Display_helper_can_be_called_without_specifying_class_name(Language language)
@@ -106,7 +106,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                     v.Value.ToString().Contains("<b>hi!</b>"));
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task Displayed_value_can_be_updated(Language language)
@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                     v.Value.ToString().Contains("<b>world</b>"));
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task Value_display_and_update_are_in_right_order(Language language)
@@ -194,7 +194,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             valueEvents.Last().Should().BeOfType<DisplayedValueUpdated>();
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp, "display(HTML(\"<b>hi!</b>\"));")]
         [InlineData(Language.FSharp, "display(HTML(\"<b>hi!</b>\"))")]
         public async Task HTML_helper_emits_HTML_which_is_not_encoded_and_has_the_text_html_mime_type(
@@ -218,7 +218,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                                       f.MimeType == "text/html");
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task Javascript_helper_emits_string_as_content_within_a_script_element(Language language)
@@ -248,7 +248,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                                    v.Value.ToString().Contains($@"<script type=""text/javascript"">{scriptContent}</script>"));
         }
 
-        [Theory(Timeout = 45000)]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task it_displays_detailed_information_for_exceptions_thrown_in_user_code(Language language)

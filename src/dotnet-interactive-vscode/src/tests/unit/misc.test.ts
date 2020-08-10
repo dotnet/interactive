@@ -3,7 +3,7 @@
 
 import { expect } from 'chai';
 
-import { processArguments } from '../../utilities';
+import { debounce, processArguments } from '../../utilities';
 
 describe('Miscellaneous tests', () => {
     it(`verify command and argument replacement is as expected`, () => {
@@ -14,11 +14,13 @@ describe('Miscellaneous tests', () => {
                 'run',
                 'dotnet-interactive',
                 '--',
-                'stdio'
+                'stdio',
+                '--working-dir',
+                '{working_dir}'
             ],
             workingDirectory: '{global_storage_path}'
         };
-        let actual = processArguments(template, 'replacement-dotnet-path', 'replacement-global-storage-path');
+        let actual = processArguments(template, 'replacement-working-dir/notebook-file.dib', 'replacement-dotnet-path', 'replacement-global-storage-path');
         expect(actual).to.deep.equal({
             command: 'replacement-dotnet-path',
             args: [
@@ -26,9 +28,33 @@ describe('Miscellaneous tests', () => {
                 'run',
                 'dotnet-interactive',
                 '--',
-                'stdio'
+                'stdio',
+                '--working-dir',
+                'replacement-working-dir'
             ],
             workingDirectory: 'replacement-global-storage-path'
         });
     });
+
+    it('debounce test', async () => {
+        let callbackHit = false;
+        let debounceDelay = 500;
+
+        // repeatedly call `debounce` with small delays
+        for (let i = 0; i < 10; i++) {
+            debounce('key', debounceDelay, () => {
+                if (callbackHit) {
+                    throw new Error('Deboune callback was called more than once; this should never happen.');
+                }
+
+                callbackHit = true;
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        // wait for the debounced callback to actually have a chance
+        await new Promise(resolve => setTimeout(resolve, debounceDelay * 1.1));
+        expect(callbackHit).to.be.true;
+    }).timeout(5000);
 });

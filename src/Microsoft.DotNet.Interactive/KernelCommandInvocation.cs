@@ -7,6 +7,6 @@ using Microsoft.DotNet.Interactive.Commands;
 namespace Microsoft.DotNet.Interactive
 {
     public delegate Task KernelCommandInvocation(
-        IKernelCommand command,
+        KernelCommand command,
         KernelInvocationContext context);
 }

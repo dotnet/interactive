@@ -10,7 +10,7 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <PackageDescription>Microsoft.DotNet.Interactive.IKernel implementation for PowerShell</PackageDescription>
+    <PackageDescription>Microsoft.DotNet.Interactive.Kernel implementation for PowerShell</PackageDescription>
     <PackageTags>interactive PowerShell</PackageTags>
   </PropertyGroup>
 
@@ -66,7 +66,6 @@
              PackageCopyToOutput="true"
              CopyToOutputDirectory="PreserveNewest" 
              Condition="'$(PkgThreadJob)' != ''" />
-
   </ItemGroup>
 
   <!-- The dependencies for this project -->
@@ -76,8 +75,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.IO.Pipelines" Version="4.7.0" />
-    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.0.0" />
+    <PackageReference Include="System.IO.Pipelines" Version="4.7.1" />
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.0.2" />
     <PackageReference Include="XPlot.Plotly" Version="3.0.1" />
   </ItemGroup>
 

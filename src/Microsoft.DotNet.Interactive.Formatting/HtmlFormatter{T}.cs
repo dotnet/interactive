@@ -44,10 +44,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             if (typeof(T).IsEnum)
             {
-                return new HtmlFormatter<T>((enumValue, writer) =>
-                {
-                    writer.Write(enumValue.ToString());
-                });
+                return new HtmlFormatter<T>((enumValue, writer) => { writer.Write(enumValue.ToString()); });
             }
 
             if (typeof(IEnumerable).IsAssignableFrom(typeof(T)))
@@ -60,10 +57,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         private static HtmlFormatter<T> CreateForObject(bool includeInternals)
         {
-            var members = typeof(T).GetAllMembers(includeInternals)
+            var members = typeof(T).GetMembersToFormat(includeInternals)
                                    .GetMemberAccessors<T>();
 
-            if (members.Length ==0)
+            if (members.Length == 0)
             {
                 return new HtmlFormatter<T>((value, writer) => writer.Write(value));
             }
@@ -91,151 +88,133 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         private static HtmlFormatter<T> CreateForSequence(bool includeInternals)
         {
-            Type valueType = null;
             Func<T, IEnumerable> getKeys = null;
-            Func<T, IEnumerable> getValues = instance => (IEnumerable)instance;
+            Func<T, IEnumerable> getValues = instance => (IEnumerable) instance;
 
             var dictionaryGenericType = typeof(T).GetAllInterfaces()
                                                  .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
             var dictionaryObjectType = typeof(T).GetAllInterfaces()
                                                 .FirstOrDefault(i => i == typeof(IDictionary));
-            var enumerableGenericType = typeof(T).GetAllInterfaces()
-                                                 .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
 
             if (dictionaryGenericType != null || dictionaryObjectType != null)
             {
                 var keysProperty = typeof(T).GetProperty("Keys");
-                getKeys = instance => (IEnumerable)keysProperty.GetValue(instance, null);
+                getKeys = instance => (IEnumerable) keysProperty.GetValue(instance, null);
 
                 var valuesProperty = typeof(T).GetProperty("Values");
-                getValues = instance => (IEnumerable)valuesProperty.GetValue(instance, null);
-
-                if (dictionaryGenericType != null)
-                {
-                    valueType = typeof(T).GenericTypeArguments[1];
-                }
+                getValues = instance => (IEnumerable) valuesProperty.GetValue(instance, null);
             }
-            else if (enumerableGenericType != null)
-            {
-                if (!enumerableGenericType.IsArray)
-                {
-                    var genericTypeArguments = typeof(T).GenericTypeArguments;
 
-                    if (genericTypeArguments.Length == 1)
+            return new HtmlFormatter<T>(BuildTable);
+
+            void BuildTable(T source, TextWriter writer)
+            {
+                var (rowData, remainingCount) = getValues(source)
+                                                .Cast<object>()
+                                                .Select((v, i) => (v, i))
+                                                .TakeAndCountRemaining(Formatter.ListExpansionLimit);
+
+                if (rowData.Count == 0)
+                {
+                    writer.Write(i("(empty)"));
+                    return;
+                }
+
+                var valuesByHeader = new Dictionary<string, Dictionary<int, object>>();
+                bool typesAreDifferent = false;
+                var types = new HashSet<Type>();
+
+                foreach (var (value, index) in rowData)
+                {
+                    var destructurer = Destructurer.GetOrCreate(value?.GetType());
+
+                    var destructured = destructurer.Destructure(value);
+
+                    if (!typesAreDifferent && value is {})
                     {
-                        valueType = genericTypeArguments[0];
+                        types.Add(value.GetType());
+
+                        typesAreDifferent = types.Count > 1;
                     }
-                   
+
+                    foreach (var pair in destructured)
+                    {
+                        valuesByHeader
+                            .GetOrAdd(pair.Key, key => new Dictionary<int, object>())
+                            .Add(index, pair.Value);
+                    }
                 }
-            }
 
-            var destructurerCache = new Dictionary<Type, IDestructurer>();
-            if (valueType != null)
-            {
-                destructurerCache.Add(valueType, Destructurer.Create(valueType));
-            }
+                var headers = new List<IHtmlContent>();
 
-            return new HtmlFormatter<T>((value, writer) =>
-            {
-                var index = 0;
-
-                IHtmlContent indexHeader = null;
-
-                Func<string> getIndex;
+                List<string> leftColumnValues;
 
                 if (getKeys != null)
                 {
-                    var keys = new List<string>();
-                    foreach (var key in getKeys(value))
-                    {
-                        keys.Add(key.ToString());
-                    }
-
-                    getIndex = () => keys[index];
-                    indexHeader = th(i("key"));
+                    headers.Add(th(i("key")));
+                    leftColumnValues = getKeys(source)
+                                       .Cast<string>()
+                                       .Take(rowData.Count)
+                                       .ToList();
                 }
                 else
                 {
-                    getIndex = () => index.ToString();
-                    indexHeader = th(i("index"));
+                    headers.Add(th(i("index")));
+                    leftColumnValues = Enumerable.Range(0, rowData.Count)
+                                                 .Select(i => i.ToString())
+                                                 .ToList();
                 }
 
-                var rows = new List<IHtmlContent>();
-                List<IHtmlContent> headers = null;
-
-                var values = getValues(value);
-
-                foreach (var item in values)
+                if (typesAreDifferent)
                 {
-                    if (index < Formatter.ListExpansionLimit)
-                    {
-                        IDestructurer destructurer;
+                    headers.Insert(1, th(i("type")));
+                  
+                }
 
-                        if (item == null)
+                headers.AddRange(valuesByHeader.Keys.Select(k => (IHtmlContent) th(k)));
+                
+                var rows = new List<IHtmlContent>();
+
+                for (var rowIndex = 0; rowIndex < rowData.Count; rowIndex++)
+                {
+                    var rowValues = new List<object>
+                    {
+                        leftColumnValues[rowIndex]
+                    };
+
+                    if (typesAreDifferent)
+                    {
+                        var type = rowData[rowIndex].v?.GetType();
+
+                        rowValues.Add(type);
+                    }
+
+                    foreach (var key in valuesByHeader.Keys)
+                    {
+                        if (valuesByHeader[key].TryGetValue(rowIndex, out var cellData))
                         {
-                            destructurer = NonDestructurer.Instance;
+                            rowValues.Add(cellData);
                         }
                         else
                         {
-                            var itemType = item.GetType();
-
-                            if (!destructurerCache.TryGetValue(itemType, out destructurer))
-                            {
-                                destructurer = Destructurer.Create(item.GetType());
-                                destructurerCache.Add(itemType, destructurer);
-                            }
+                            rowValues.Add("");
                         }
-
-                        var dictionary = destructurer.Destructure(item);
-
-                        if (headers == null)
-                        {
-                            headers = new List<IHtmlContent>();
-                            headers.Add(indexHeader);
-                            headers.AddRange(dictionary.Keys
-                                                       .Select(k => (IHtmlContent) th(k)));
-                        }
-
-                        var cells =
-                            new IHtmlContent[]
-                                {
-                                    td(getIndex().ToHtmlContent())
-                                }
-                                .Concat(
-                                    dictionary
-                                        .Values
-                                        .Select(v => (IHtmlContent) td(v)));
-
-                        rows.Add(tr(cells));
-
-                        index++;
                     }
-                    else
-                    {
-                        var more = values switch
-                        {
-                            ICollection c => $"({c.Count - index} more)",
-                            _ => "(more...)"
-                        };
 
-                        rows.Add(tr(td[colspan: $"{headers.Count}"](more)));
-                        break;
-                    }
+                    rows.Add(tr(rowValues.Select(r => td(r))));
                 }
 
-                if (headers == null)
+                if (remainingCount > 0)
                 {
-                    headers = new List<IHtmlContent>
-                    {
-                        indexHeader,
-                        th("value")
-                    };
+                    var more = $"({remainingCount} more)";
+
+                    rows.Add(tr(td[colspan: $"{headers.Count}"](more)));
                 }
 
-                var view = HtmlFormatter.Table(headers, rows);
+                var table = HtmlFormatter.Table(headers, rows);
 
-                view.WriteTo(writer, HtmlEncoder.Default);
-            });
+                writer.Write(table);
+            }
         }
 
         private static string Value(MemberAccessor<T> m, T instance)

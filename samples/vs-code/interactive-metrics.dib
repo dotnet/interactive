@@ -2,12 +2,12 @@
 
 # .NET interactive report 
 
-project report for [.NET interactive repo]()
+Project report for [.NET interactive repo]()
 
 #!markdown
 
 ## Setup
-Importing pacakges and setting up connection
+Importing packages and setting up connection
 
 #!csharp
 
@@ -53,7 +53,7 @@ var pullRequestRequest = new PullRequestRequest {
 
 #!markdown
 
-Perform github queries
+Perform GitHub queries
 
 #!csharp
 

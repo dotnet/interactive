@@ -14,12 +14,12 @@ namespace Microsoft.DotNet.Interactive.Parsing
         internal ActionDirectiveNode(
             DirectiveToken directiveToken, 
             SourceText sourceText,
-            string parentLanguage,
+            string parentKernelName,
             PolyglotSyntaxTree? syntaxTree) : base(directiveToken, sourceText, syntaxTree)
         {
-            ParentLanguage = parentLanguage;
+            ParentKernelName = parentKernelName;
         }
 
-        public string ParentLanguage { get; }
+        public string ParentKernelName { get; }
     }
 }

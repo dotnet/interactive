@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class PasswordRequested : KernelEventBase
+    public class PasswordRequested : KernelEvent
     {
         [JsonConstructor]
         internal PasswordRequested(string prompt)
@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Events
 
         public PasswordRequested(
             string prompt,
-            IKernelCommand command) : base(command)
+            KernelCommand command) : base(command)
         {
             if (command == null)
             {

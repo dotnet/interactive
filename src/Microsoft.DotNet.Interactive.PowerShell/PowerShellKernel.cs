@@ -2,15 +2,17 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Management.Automation.Language;
-using System.Management.Automation.Runspaces;   
+using System.Management.Automation.Runspaces;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.PowerShell.Host;
 using Microsoft.PowerShell;
 using Microsoft.PowerShell.Commands;
@@ -22,8 +24,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell
     using Microsoft.DotNet.Interactive.Utility;
 
     public class PowerShellKernel : 
-        DotNetLanguageKernel,
-        IKernelCommandHandler<RequestCompletion>,
+        DotNetKernel,
+        IKernelCommandHandler<RequestCompletions>,
+        IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<SubmitCode>
     {
         internal const string DefaultKernelName = "pwsh";
@@ -117,23 +120,25 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return pwsh;
         }
 
+        public override IReadOnlyCollection<string> GetVariableNames()
+        {
+            // FIX: (GetVariableNames) 
+            return Array.Empty<string>();
+        }
+
         public override bool TryGetVariable<T>(string name, out T value)
         {
             var variable = pwsh.Runspace.SessionStateProxy.PSVariable.Get(name);
 
             if (variable != null)
             {
-                switch (variable.Value)
-                {
-                    case PSObject psobject:
-                        value = (T) psobject.BaseObject;
-                        break;
-                    default:
-                        value = (T) variable.Value;
-                        break;
-                }
+                object outVal = (variable.Value is PSObject psobject) ? psobject.Unwrap() : variable.Value;
 
-                return true;
+                if(outVal is T tObj)
+                {
+                    value = tObj;
+                    return true;
+                }
             }
 
             value = default;
@@ -164,6 +169,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             {
                 context.Publish(new IncompleteCodeSubmissionReceived(submitCode));
             }
+
+            var diagnostics = parseErrors.Select(ToDiagnostic);
+            context.Publish(new DiagnosticsProduced(diagnostics, submitCode));
 
             // If there were parse errors, display them and return early.
             if (parseErrors.Length > 0)
@@ -196,22 +204,21 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         }
 
         public Task HandleAsync(
-            RequestCompletion requestCompletion,
+            RequestCompletions requestCompletions,
             KernelInvocationContext context)
         {
-            CompletionRequestCompleted completion;
-            context.Publish(new CompletionRequestReceived(requestCompletion));
+            CompletionsProduced completion;
 
             if (AzShell != null)
             {
                 // Currently no tab completion when interacting with AzShell.
-                completion = new CompletionRequestCompleted(Array.Empty<CompletionItem>(), requestCompletion);
+                completion = new CompletionsProduced(Array.Empty<CompletionItem>(), requestCompletions);
             }
             else
             {
                 CommandCompletion results = CommandCompletion.CompleteInput(
-                    requestCompletion.Code,
-                    SourceUtilities.GetCursorOffsetFromPosition(requestCompletion.Code, requestCompletion.Position),
+                    requestCompletions.Code,
+                    SourceUtilities.GetCursorOffsetFromPosition(requestCompletions.Code, requestCompletions.LinePosition),
                     options: null,
                     pwsh);
 
@@ -223,13 +230,27 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
                 // The end index is the start index plus the length of the replacement.
                 var endIndex = results.ReplacementIndex + results.ReplacementLength;
-                completion = new CompletionRequestCompleted(
+                completion = new CompletionsProduced(
                     completionItems,
-                    requestCompletion,
-                    SourceUtilities.GetLinePositionSpanFromStartAndEndIndices(requestCompletion.Code, results.ReplacementIndex, endIndex));
+                    requestCompletions,
+                    SourceUtilities.GetLinePositionSpanFromStartAndEndIndices(requestCompletions.Code, results.ReplacementIndex, endIndex));
             }
 
             context.Publish(completion);
+            return Task.CompletedTask;
+        }
+
+        public Task HandleAsync(
+            RequestDiagnostics requestDiagnostics,
+            KernelInvocationContext context)
+        {
+            string code = requestDiagnostics.Code;
+
+            IsCompleteSubmission(code, out ParseError[] parseErrors);
+
+            var diagnostics = parseErrors.Select(ToDiagnostic);
+            context.Publish(new DiagnosticsProduced(diagnostics, requestDiagnostics));
+
             return Task.CompletedTask;
         }
 
@@ -309,6 +330,17 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 : new ErrorRecord(e, "JupyterPSHost.ReportException", ErrorCategory.NotSpecified, targetObject: null);
 
             ReportError(error);
+        }
+
+        private static Diagnostic ToDiagnostic(ParseError parseError)
+        {
+            return new Diagnostic(
+                new LinePositionSpan(
+                    new LinePosition(parseError.Extent.StartLineNumber - 1, parseError.Extent.StartColumnNumber),
+                    new LinePosition(parseError.Extent.EndLineNumber - 1, parseError.Extent.EndColumnNumber)),
+                DiagnosticSeverity.Error,
+                parseError.ErrorId,
+                parseError.Message);
         }
     }
 }

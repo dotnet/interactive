@@ -15,9 +15,9 @@ namespace Microsoft.DotNet.Interactive.App.Http
 {
     public class VariableRouter : IRouter
     {
-        private readonly IKernel _kernel;
+        private readonly Kernel _kernel;
 
-        public VariableRouter(IKernel kernel)
+        public VariableRouter(Kernel kernel)
         {
             _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
         }
@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Interactive.App.Http
                     var propertyBag = new JObject();
                     response[kernelName] = propertyBag;
                     var targetKernel = GetKernel(kernelName);
-                    if (targetKernel is DotNetLanguageKernel languageKernel)
+                    if (targetKernel is DotNetKernel languageKernel)
                     {
                         foreach (var variableName in kernelProperty.Value.Values<string>())
                         {
@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.Interactive.App.Http
 
                 var targetKernel = GetKernel(kernelName);
 
-                if (targetKernel is DotNetLanguageKernel languageKernel)
+                if (targetKernel is DotNetKernel languageKernel)
                 {
                     if (languageKernel.TryGetVariable(variableName, out object value))
                     {
@@ -155,9 +155,9 @@ namespace Microsoft.DotNet.Interactive.App.Http
             }
         }
 
-        private IKernel GetKernel(string kernelName)
+        private Kernel GetKernel(string kernelName)
         {
-            IKernel targetKernel = null;
+            Kernel targetKernel = null;
             if (_kernel.Name != kernelName)
             {
                 if (_kernel is CompositeKernel composite)

@@ -7,12 +7,12 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class DisplayedValueUpdated : DisplayEventBase
+    public class DisplayedValueUpdated : DisplayEvent
     {
         public DisplayedValueUpdated(
             object value,
             string valueId,
-            IKernelCommand command = null,
+            KernelCommand command = null,
             IReadOnlyCollection<FormattedValue> formattedValues = null) : base(value, command, formattedValues, valueId)
         {
             if (string.IsNullOrWhiteSpace(valueId))

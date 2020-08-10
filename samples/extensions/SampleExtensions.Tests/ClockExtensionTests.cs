@@ -7,15 +7,15 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Tests;
 using ClockExtension;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
 namespace SampleExtensions.Tests
 {
     public class ClockExtensionTests : IDisposable
     {
-        private readonly IKernel _kernel;
+        private readonly Kernel _kernel;
 
         public ClockExtensionTests()
         {
@@ -30,7 +30,7 @@ namespace SampleExtensions.Tests
             KernelEvents = _kernel.KernelEvents.ToSubscribedList();
         }
 
-        public SubscribedList<IKernelEvent> KernelEvents { get; set; }
+        public SubscribedList<KernelEvent> KernelEvents { get; }
 
         public void Dispose()
         {
@@ -72,7 +72,7 @@ namespace SampleExtensions.Tests
         {
             KernelEvents
                 .Should()
-                .ContainSingle<DisplayEventBase>()
+                .ContainSingle<DisplayEvent>()
                 .Which
                 .FormattedValues
                 .Should()

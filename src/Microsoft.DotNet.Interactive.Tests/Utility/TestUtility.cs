@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Collections;
 using FluentAssertions.Execution;
@@ -20,11 +21,24 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
     public static class AssertionExtensions
     {
+        public static GenericCollectionAssertions<T> AllSatisfy<T>(
+            this GenericCollectionAssertions<T> assertions,
+            Action<T> assert)
+        {
+            using var _ = new AssertionScope();
+
+            foreach (var item in assertions.Subject)
+            {
+                assert(item);
+            }
+
+            return assertions;
+        }
+
         public static void BeJsonEquivalentTo<T>(this StringAssertions assertion, T expected)
         {
             var obj = JsonConvert.DeserializeObject(assertion.Subject, expected.GetType());
             obj.Should().BeEquivalentTo(expected);
-            
         }
 
         public static AndConstraint<GenericCollectionAssertions<T>> BeEquivalentSequenceTo<T>(
@@ -61,9 +75,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         }
 
         public static AndWhichConstraint<ObjectAssertions, T> ContainSingle<T>(
-            this GenericCollectionAssertions<IKernelCommand> should,
+            this GenericCollectionAssertions<KernelCommand> should,
             Func<T, bool> where = null)
-            where T : IKernelCommand
+            where T : KernelCommand
         {
             T subject;
 
@@ -115,11 +129,39 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
             return new AndWhichConstraint<ObjectAssertions, T>(subject.Should(), subject);
         }
+        
+        public static AndWhichConstraint<ObjectAssertions, T> ContainSingle<T>(
+            this GenericCollectionAssertions<SyntaxNode> should,
+            Func<T, bool> where = null)
+            where T : SyntaxNode
+        {
+            T subject;
+
+            if (where == null)
+            {
+                should.ContainSingle(e => e is T);
+
+                subject = should.Subject
+                                .OfType<T>()
+                                .Single();
+            }
+            else
+            {
+                should.ContainSingle(e => e is T && where((T) e));
+
+                subject = should.Subject
+                                .OfType<T>()
+                                .Where(where)
+                                .Single();
+            }
+
+            return new AndWhichConstraint<ObjectAssertions, T>(subject.Should(), subject);
+        }
 
         public static AndWhichConstraint<ObjectAssertions, T> ContainSingle<T>(
-            this GenericCollectionAssertions<IKernelEvent> should,
+            this GenericCollectionAssertions<KernelEvent> should,
             Func<T, bool> where = null)
-            where T : IKernelEvent
+            where T : KernelEvent
         {
             T subject;
 
@@ -172,12 +214,41 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             return new AndWhichConstraint<ObjectAssertions, T>(subject.Should(), subject);
         }
 
-        public static AndConstraint<GenericCollectionAssertions<IKernelEvent>> NotContainErrors(
-            this GenericCollectionAssertions<IKernelEvent> should) =>
+        public static AndConstraint<GenericCollectionAssertions<KernelEvent>> NotContainErrors(
+            this GenericCollectionAssertions<KernelEvent> should) =>
             should
                 .NotContain(e => e is ErrorProduced)
                 .And
                 .NotContain(e => e is CommandFailed);
+
+        public static AndWhichConstraint<ObjectAssertions, T> EventuallyContainSingle<T>(
+            this GenericCollectionAssertions<KernelEvent> should,
+            Func<T, bool> where = null,
+            int timeout = 3000)
+            where T : KernelEvent
+        {
+            return Task.Run(async () =>
+            {
+                if (where == null)
+                {
+                    where = _ => true;
+                }
+
+                var startTime = DateTime.UtcNow;
+                var endTime = startTime + TimeSpan.FromMilliseconds(timeout);
+                while (DateTime.UtcNow < endTime)
+                {
+                    if (should.Subject.OfType<T>().Any(where))
+                    {
+                        break;
+                    }
+
+                    await Task.Delay(200);
+                }
+
+                return should.ContainSingle(where);
+            }).Result;
+        }
     }
 
     public static class ObservableExtensions

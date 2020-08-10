@@ -1,8 +1,6 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelTransport } from "./contracts";
-
 export interface IsValidToolVersion {
     (actualVersion: string, minSupportedVersion: string): boolean;
 }
@@ -11,15 +9,6 @@ export interface ProcessStart {
     command: string;
     args: Array<string>;
     workingDirectory: string;
-}
-
-export interface RawNotebookCell {
-    language: string;
-    contents: Array<string>;
-}
-
-export interface DocumentWithCells {
-    cells: Array<RawNotebookCell>;
 }
 
 // interactive acquisition
@@ -55,7 +44,9 @@ export interface ReportInstallationFinished {
     (): void;
 }
 
-export interface KernelTransportCreationResult {
-    transport: KernelTransport;
-    initialization: Promise<void>;
-}
+// host architecture
+export const WindowsEol = "\r\n";
+export const NonWindowsEol = "\n";
+export type Eol =
+      typeof WindowsEol
+    | typeof NonWindowsEol;

@@ -32,7 +32,8 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             public void Default_formatter_for_Type_displays_generic_parameter_name_for_multiple_parameter_generic_type()
             {
                 typeof(Dictionary<string, IEnumerable<int>>).ToDisplayString()
-                                                            .Should().Be("System.Collections.Generic.Dictionary<System.String,System.Collections.Generic.IEnumerable<System.Int32>>");
+                                                            .Should().Be(
+                                                                "System.Collections.Generic.Dictionary<System.String,System.Collections.Generic.IEnumerable<System.Int32>>");
             }
 
             [Fact]
@@ -219,14 +220,25 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
-        public void Custom_formatters_can_be_registered_for_types_not_known_until_runtime(string mimeType)
+        [InlineData("text/plain", false)]
+        [InlineData("text/plain", true)]
+        [InlineData("text/html", false)]
+        [InlineData("text/html", true)]
+        public void Formatters_can_be_registered_for_concrete_types(string mimeType, bool useGenericRegisterMethod)
         {
-            Formatter.Register(
-                type: typeof(FileInfo),
-                formatter: (filInfo, writer) => writer.Write("hello"),
-                mimeType);
+            if (useGenericRegisterMethod)
+            {
+                Formatter.Register<FileInfo>(
+                    formatter: (filInfo, writer) => writer.Write("hello"),
+                    mimeType);
+            }
+            else
+            {
+                Formatter.Register(
+                    type: typeof(FileInfo),
+                    formatter: (filInfo, writer) => writer.Write("hello"),
+                    mimeType);
+            }
 
             new FileInfo(@"c:\temp\foo.txt").ToDisplayString(mimeType)
                                             .Should()
@@ -234,22 +246,41 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         [Theory]
-        [InlineData("text/plain")]
-        [InlineData("text/html")]
-        public void Custom_formatters_can_be_registered_for_interfaces(string mimeType)
+        [InlineData("text/plain", false)]
+        [InlineData("text/plain", true)]
+        [InlineData("text/html", false)]
+        [InlineData("text/html", true)]
+        public void Formatters_can_be_registered_on_demand_for_non_generic_interfaces(string mimeType, bool useGenericRegisterMethod)
         {
-            Formatter.Register(
-                type: typeof(IEnumerable),
-                formatter: (obj, writer) =>
-                {
-                    var i = 0;
-                    foreach (var item in (IEnumerable) obj)
+            if (useGenericRegisterMethod)
+            {
+                Formatter.Register<IEnumerable>(
+                    formatter: (obj, writer) =>
                     {
-                        i++;
-                    }
+                        var i = 0;
+                        foreach (var item in obj)
+                        {
+                            i++;
+                        }
 
-                    writer.Write(i);
-                }, mimeType);
+                        writer.Write(i);
+                    }, mimeType);
+            }
+            else
+            {
+                Formatter.Register(
+                    type: typeof(IEnumerable),
+                    formatter: (obj, writer) =>
+                    {
+                        var i = 0;
+                        foreach (var item in (IEnumerable) obj)
+                        {
+                            i++;
+                        }
+
+                        writer.Write(i);
+                    }, mimeType);
+            }
 
             var list = new ArrayList { 1, 2, 3, 4, 5 };
 
@@ -259,9 +290,53 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         [Theory]
+        [InlineData("text/plain", false)]
+        [InlineData("text/plain", true)]
+        [InlineData("text/html", false)]
+        [InlineData("text/html", true)]
+        public void Formatters_can_be_registered_on_demand_for_abstract_classes(string mimeType, bool useGenericRegisterMethod)
+        {
+            if (useGenericRegisterMethod)
+            {
+                Formatter.Register<AbstractClass>(
+                    (obj, writer) => writer.Write(obj.GetType().Name.ToUpperInvariant()), mimeType);
+            }
+            else
+            {
+                Formatter.Register(
+                    type: typeof(AbstractClass),
+                    formatter: (obj, writer) => writer.Write(obj.GetType().Name.ToUpperInvariant()), mimeType);
+            }
+
+            var instanceOf1 = new ConcreteClass1InheritingAbstractClass();
+
+            instanceOf1.ToDisplayString(mimeType)
+                       .Should()
+                       .Be(instanceOf1.GetType().Name.ToUpperInvariant());
+
+            var instanceOf2 = new ConcreteClass2InheritingAbstractClass();
+
+            instanceOf2.ToDisplayString(mimeType)
+                       .Should()
+                       .Be(instanceOf2.GetType().Name.ToUpperInvariant());
+        }
+
+        public abstract class AbstractClass
+        {
+        };
+
+        public class ConcreteClass1InheritingAbstractClass : AbstractClass
+        {
+        };
+
+        public class ConcreteClass2InheritingAbstractClass : AbstractClass
+        {
+        };
+
+        [Theory]
         [InlineData("text/plain")]
         [InlineData("text/html")]
-        public void Custom_formatters_can_be_registered_for_open_generic_classes(string mimeType)
+        public void Formatters_can_be_registered_on_demand_for_open_generic_classes(string mimeType)
         {
             Formatter.Register(
                 type: typeof(List<>),
@@ -282,18 +357,18 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 .Should()
                 .Be(list.Count.ToString());
         }
-        
-        [Theory(Skip = "bug is here?")]
+
+        [Theory]
         [InlineData("text/plain")]
         [InlineData("text/html")]
-        public void Custom_formatters_can_be_registered_for_open_generic_interfaces(string mimeType)
+        public void Formatters_can_be_registered_on_demand_for_open_generic_interfaces(string mimeType)
         {
             Formatter.Register(
                 type: typeof(IList<>),
                 formatter: (obj, writer) =>
                 {
                     var i = 0;
-                    foreach (var item in (IEnumerable) obj)
+                    foreach (var _ in (IEnumerable) obj)
                     {
                         i++;
                     }

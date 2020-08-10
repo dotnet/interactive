@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                               .Should()
                               .BeOfType<PlainTextFormatter<Widget>>();
         }
-   
+
         public class Objects : FormatterTestBase
         {
             [Fact]

@@ -33,9 +33,9 @@ namespace Microsoft.DotNet.Interactive
         {
             foreach (var package in _resolvedPackageReferences.Values)
             {
-                foreach (var fi in package.AssemblyPaths)
+                foreach (var path in package.AssemblyPaths)
                 {
-                    yield return fi.FullName;
+                    yield return path;
                 }
             }
         }
@@ -44,9 +44,9 @@ namespace Microsoft.DotNet.Interactive
         {
             foreach (var package in _resolvedPackageReferences.Values)
             {
-                foreach (var di in package.ProbingPaths)
+                foreach (var path in package.ProbingPaths)
                 {
-                    yield return di.FullName;
+                    yield return path;
                 }
             }
         }
@@ -162,23 +162,25 @@ namespace Microsoft.DotNet.Interactive
             IEnumerable<FileInfo> resolutions,
             IEnumerable<DirectoryInfo> packageRoots)
         {
+            var resolutionsArray = resolutions.ToArray();
+
             foreach (var root in packageRoots)
             {
                 if (TryGetPackageAndVersionFromPackageRoot(root, out var packageReference))
                 {
-                    var assemblyPaths = GetAssemblyPathsForPackage(root, resolutions);
-                    var probingPaths = new List<DirectoryInfo>();
-                    probingPaths.Add(root);
+                    var probingPaths = new List<string>
+                    {
+                        root.FullName
+                    };
 
-                    // PackageReference thingy
-                    var resolvedPackageReference =
-                        new ResolvedPackageReference(
-                            packageReference.PackageName,
-                            packageReference.PackageVersion,
-                            new List<FileInfo>(assemblyPaths).AsReadOnly(),
-                            root,
-                            new List<DirectoryInfo>(probingPaths).AsReadOnly());
-                    yield return resolvedPackageReference;
+                    yield return new ResolvedPackageReference(
+                        packageReference.PackageName,
+                        packageReference.PackageVersion,
+                        GetAssemblyPathsForPackage(root, resolutionsArray)
+                            .Select(p => p.FullName)
+                            .ToArray(),
+                        root.FullName,
+                        probingPaths);
                 }
             }
         }
@@ -243,11 +245,6 @@ namespace Microsoft.DotNet.Interactive
                 {
                     _resolvedPackageReferences.TryAdd(reference.PackageName.ToLower(CultureInfo.InvariantCulture), reference);
                 }
-
-                var resolvedReferences = _resolvedPackageReferences
-                                         .Values
-                                         .Except(previouslyResolved)
-                                         .ToList();
 
                 packageRestoreResult =
                     new PackageRestoreResult(

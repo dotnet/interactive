@@ -41,7 +41,7 @@ If the contract change is deliberate, then the TypeScript contracts file '{inter
 
 Please run the following:
 
-dotnet run -p src/interface-generator --  --out-file {contractFile.FullName}
+dotnet run -p src/interface-generator -- --out-file {contractFile.FullName}
 
 ");
         }

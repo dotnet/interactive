@@ -11,12 +11,13 @@ open System.Text
 open System.Threading
 open System.Threading.Tasks
 
+open Microsoft.CodeAnalysis
 open Microsoft.CodeAnalysis.Tags
+open Microsoft.CodeAnalysis.Text
 open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive.Commands
 open Microsoft.DotNet.Interactive.Events
 open Microsoft.DotNet.Interactive.Extensions
-open Microsoft.DotNet.Interactive.Utility
 
 open FSharp.Compiler.Interactive.Shell
 open FSharp.Compiler.Scripting
@@ -25,7 +26,7 @@ open FSharp.Compiler.SourceCodeServices
 [<AbstractClass>]
 type FSharpKernelBase () as this =
 
-    inherit DotNetLanguageKernel("fsharp")
+    inherit DotNetKernel("fsharp")
 
     static let lockObj = Object();
 
@@ -80,6 +81,19 @@ type FSharpKernelBase () as this =
         let documentation = documentation declarationItem
         CompletionItem(declarationItem.Name, kind, filterText=filterText, documentation=documentation)
 
+    let diagnostic (error: FSharpErrorInfo) =
+        // F# errors are 1-based but should be 0-based for diagnostics, however, 0-based errors are still valid to report
+        let diagLineDelta = if error.Start.Line = 0 then 0 else -1
+        let startPos = LinePosition(error.Start.Line + diagLineDelta, error.Start.Column)
+        let endPos = LinePosition(error.End.Line + diagLineDelta, error.End.Column)
+        let linePositionSpan = LinePositionSpan(startPos, endPos)
+        let severity =
+            match error.Severity with
+            | FSharpErrorSeverity.Error -> DiagnosticSeverity.Error
+            | FSharpErrorSeverity.Warning -> DiagnosticSeverity.Warning
+        let errorId = sprintf "FS%04i" error.ErrorNumber
+        Diagnostic(linePositionSpan, severity, errorId, error.Message)
+
     let handleSubmitCode (codeSubmission: SubmitCode) (context: KernelInvocationContext) =
         async {
             let codeSubmissionReceived = CodeSubmissionReceived(codeSubmission)
@@ -91,6 +105,9 @@ type FSharpKernelBase () as this =
                 with
                 | ex -> Error(ex), [||]
 
+            let diagnostics = errors |> Array.map diagnostic
+            context.Publish(DiagnosticsProduced(diagnostics, codeSubmission))
+
             match result with
             | Ok(result) ->
                 match result with
@@ -98,7 +115,7 @@ type FSharpKernelBase () as this =
                     let value = value.ReflectionValue
                     let formattedValues = FormattedValue.FromObject(value)
                     context.Publish(ReturnValueProduced(value, codeSubmission, formattedValues))
-                | Some(value) -> ()
+                | Some(_) -> ()
                 | None -> ()
             | Error(ex) ->
                 if not (tokenSource.IsCancellationRequested) then
@@ -112,14 +129,21 @@ type FSharpKernelBase () as this =
                     context.Fail(null, "Command cancelled")
         }
 
-    let handleRequestCompletion (requestCompletion: RequestCompletion) (context: KernelInvocationContext) =
+    let handleRequestCompletions (requestCompletions: RequestCompletions) (context: KernelInvocationContext) =
         async {
-            context.Publish(CompletionRequestReceived(requestCompletion))
-            let! declarationItems = script.Value.GetCompletionItems(requestCompletion.Code, requestCompletion.Position.Line + 1, requestCompletion.Position.Character)
+            let! declarationItems = script.Value.GetCompletionItems(requestCompletions.Code, requestCompletions.LinePosition.Line + 1, requestCompletions.LinePosition.Character)
             let completionItems =
                 declarationItems
                 |> Array.map completionItem
-            context.Publish(CompletionRequestCompleted(completionItems, requestCompletion))
+            context.Publish(CompletionsProduced(completionItems, requestCompletions))
+        }
+
+    let handleRequestDiagnostics (requestDiagnostics: RequestDiagnostics) (context: KernelInvocationContext) =
+        async {
+            let! (_parseResults, checkFileResults, _checkProjectResults) = script.Value.Fsi.ParseAndCheckInteraction(requestDiagnostics.Code)
+            let errors = checkFileResults.Errors
+            let diagnostics = errors |> Array.map diagnostic
+            context.Publish(DiagnosticsProduced(diagnostics, requestDiagnostics))
         }
 
     let createPackageRestoreContext registerForDisposal =
@@ -133,6 +157,11 @@ type FSharpKernelBase () as this =
         script.Value.Fsi.GetBoundValues()
         |> List.filter (fun x -> x.Name <> "it") // don't report special variable `it`
         |> List.map (fun x -> CurrentVariable(x.Name, x.Value.ReflectionType, x.Value.ReflectionValue))
+
+    override _.GetVariableNames() =
+        this.GetCurrentVariables()
+        |> List.map (fun x -> x.Name)
+        :> IReadOnlyCollection<string>
 
     override _.TryGetVariable<'a>(name: string, [<Out>] value: 'a byref) =
         match script.Value.Fsi.TryFindBoundValue(name) with
@@ -155,7 +184,10 @@ type FSharpKernelBase () as this =
     member _.PackageRestoreContext = _packageRestoreContext.Value
 
     // ideally via IKernelCommandHandler<RequestCompletion>, but requires https://github.com/dotnet/fsharp/pull/2867
-    member _.HandleRequestCompletionAsync(command: RequestCompletion, context: KernelInvocationContext) = handleRequestCompletion command context |> Async.StartAsTask :> Task
+    member _.HandleRequestCompletionAsync(command: RequestCompletions, context: KernelInvocationContext) = handleRequestCompletions command context |> Async.StartAsTask :> Task
+
+    // ideally via IKernelCommandHandler<RequestDiagnostics, but requires https://github.com/dotnet/fsharp/pull/2867
+    member _.HandleRequestDiagnosticsAsync(command: RequestDiagnostics, context: KernelInvocationContext) = handleRequestDiagnostics command context |> Async.StartAsTask :> Task
 
     // ideally via IKernelCommandHandler<SubmitCode, but requires https://github.com/dotnet/fsharp/pull/2867
     member _.HandleSubmitCodeAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context |> Async.StartAsTask :> Task
@@ -186,17 +218,17 @@ type FSharpKernelBase () as this =
 
             for reference in packageReferences do
                 for assembly in reference.AssemblyPaths do
-                    if hashset.Add(assembly.FullName) then
-                        if assembly.Exists then
-                            sb.AppendFormat("#r @\"{0}\"", assembly.FullName) |> ignore
+                    if hashset.Add(assembly) then
+                        if File.Exists assembly then
+                            sb.AppendFormat("#r @\"{0}\"", assembly) |> ignore
                             sb.Append(Environment.NewLine) |> ignore
 
                 match reference.PackageRoot with
                 | null -> ()
                 | root ->
-                    if hashset.Add(root.FullName) then
-                        if root.Exists then
-                            sb.AppendFormat("#I @\"{0}\"", root.FullName) |> ignore
+                    if hashset.Add(root) then
+                        if File.Exists root then
+                            sb.AppendFormat("#I @\"{0}\"", root) |> ignore
                             sb.Append(Environment.NewLine) |> ignore
             let command = new SubmitCode(sb.ToString(), "fsharp")
             this.DeferCommand(command)

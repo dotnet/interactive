@@ -3,34 +3,37 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.QuickInfo;
-using Microsoft.CodeAnalysis.Recommendations;
 using Microsoft.CodeAnalysis.Scripting;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.LanguageService;
 using Microsoft.DotNet.Interactive.Utility;
+
 using XPlot.Plotly;
+
+using CompletionItem = Microsoft.DotNet.Interactive.Events.CompletionItem;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
     public class CSharpKernel :
-        DotNetLanguageKernel,
+        DotNetKernel,
         IExtensibleKernel,
         ISupportNuget,
-        IKernelCommandHandler<RequestCompletion>,
+        IKernelCommandHandler<RequestCompletions>,
+        IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<RequestHoverText>,
         IKernelCommandHandler<SubmitCode>
     {
@@ -48,6 +51,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         internal ScriptOptions ScriptOptions =
             ScriptOptions.Default
+                         .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(Directory.GetCurrentDirectory()))
                          .WithLanguageVersion(LanguageVersion.Latest)
                          .AddImports(
                              "System",
@@ -60,7 +64,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              typeof(Enumerable).Assembly,
                              typeof(IEnumerable<>).Assembly,
                              typeof(Task<>).Assembly,
-                             typeof(IKernel).Assembly,
+                             typeof(Kernel).Assembly,
                              typeof(CSharpKernel).Assembly,
                              typeof(PocketView).Assembly,
                              typeof(PlotlyChart).Assembly);
@@ -71,6 +75,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         public CSharpKernel() : base(DefaultKernelName)
         {
             _workspace = new InteractiveWorkspace();
+            _currentDirectory = Directory.GetCurrentDirectory();
 
             _packageRestoreContext = new Lazy<PackageRestoreContext>(() =>
             {
@@ -85,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             {
                 _workspace.Dispose();
                 _workspace = null;
-                
+
                 _packageRestoreContext = null;
                 ScriptState = null;
                 ScriptOptions = null;
@@ -100,6 +105,13 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return Task.FromResult(SyntaxFactory.IsCompleteSubmission(syntaxTree));
         }
 
+        public override IReadOnlyCollection<string> GetVariableNames() =>
+            ScriptState?.Variables
+                       .Select(v => v.Name)
+                       .Distinct()
+                       .ToArray() ??
+            Array.Empty<string>();
+
         public override bool TryGetVariable<T>(
             string name,
             out T value)
@@ -107,7 +119,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             if (ScriptState?.Variables
                            .LastOrDefault(v => v.Name == name) is { } variable)
             {
-                value = (T) variable.Value;
+                value = (T)variable.Value;
                 return true;
             }
 
@@ -130,12 +142,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
-            var document = _workspace.ForkDocument(command.Code);
+            using var _ = new GCPressure(1024 * 1024);
+            
+            var document = _workspace.UpdateWorkingDocument(command.Code);
             var text = await document.GetTextAsync();
-            var cursorPosition = text.Lines.GetPosition(new LinePosition(command.Position.Line, command.Position.Character));
+            var cursorPosition = text.Lines.GetPosition(command.LinePosition);
             var service = QuickInfoService.GetService(document);
             var info = await service.GetQuickInfoAsync(document, cursorPosition);
-
+            
             if (info == null)
             {
                 return;
@@ -145,7 +159,16 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var linePosSpan = text.Lines.GetLinePositionSpan(info.Span);
             var correctedLinePosSpan = linePosSpan.SubtractLineOffset(scriptSpanStart);
 
-            context.PublishHoverTextMarkdownResponse(command, info.ToMarkdownString(), correctedLinePosSpan);
+            context.Publish(
+                new HoverTextProduced(
+                    command,
+                    new[]
+                    {
+                        new FormattedValue("text/markdown", info.ToMarkdownString())
+                    },
+                    correctedLinePosSpan));
+            
+            
         }
 
         public async Task HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
@@ -202,17 +225,23 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 {
                     string message = null;
 
-                    if (exception is CodeSubmissionCompilationErrorException compilationError)
+                    if (exception is CodeSubmissionCompilationErrorException compilationError &&
+                        compilationError.InnerException is CompilationErrorException innerCompilationException)
                     {
                         message =
                             string.Join(Environment.NewLine,
-                                        (compilationError.InnerException as CompilationErrorException)?.Diagnostics.Select(d => d.ToString()) ?? Enumerable.Empty<string>());
+                                        innerCompilationException.Diagnostics.Select(d => d.ToString()) ?? Enumerable.Empty<string>());
+                        var diagnostics = innerCompilationException.Diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic);
+                        context.Publish(new DiagnosticsProduced(diagnostics, submitCode));
                     }
 
                     context.Fail(exception, message);
                 }
                 else
                 {
+                    var diagnostics = ScriptState?.Script.GetCompilation().GetDiagnostics() ?? ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
+                    context.Publish(new DiagnosticsProduced(diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic), submitCode));
+
                     if (ScriptState != null && HasReturnValue)
                     {
                         var formattedValues = FormattedValue.FromObject(ScriptState.ReturnValue);
@@ -240,7 +269,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             {
                 _currentDirectory = currentDirectory;
                 ScriptOptions = ScriptOptions.WithMetadataResolver(
-                    ScriptMetadataResolver.Default.WithBaseDirectory(
+                    CachingMetadataResolver.Default.WithBaseDirectory(
                         _currentDirectory));
             }
 
@@ -264,60 +293,50 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             if (ScriptState.Exception is null)
             {
-                await _workspace.AddSubmissionAsync(ScriptState);
+                _workspace.UpdateWorkspace(ScriptState);
             }
         }
 
         public async Task HandleAsync(
-            RequestCompletion requestCompletion,
+            RequestCompletions command,
             KernelInvocationContext context)
         {
-            var completionRequestReceived = new CompletionRequestReceived(requestCompletion);
-
-            context.Publish(completionRequestReceived);
-
             var completionList =
                 await GetCompletionList(
-                    requestCompletion.Code,
-                    SourceUtilities.GetCursorOffsetFromPosition(requestCompletion.Code, requestCompletion.Position));
+                    command.Code,
+                    SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.LinePosition));
 
-            context.Publish(new CompletionRequestCompleted(completionList, requestCompletion));
+            context.Publish(new CompletionsProduced(completionList, command));
         }
 
         private async Task<IEnumerable<CompletionItem>> GetCompletionList(
             string code,
             int cursorPosition)
         {
-            var document = _workspace.ForkDocument(code);
 
+            using var _ = new GCPressure(1024 * 1024);
+
+            var document = _workspace.UpdateWorkingDocument(code);
             var service = CompletionService.GetService(document);
-            
             var completionList = await service.GetCompletionsAsync(document, cursorPosition);
-
+           
             if (completionList is null)
             {
                 return Enumerable.Empty<CompletionItem>();
             }
 
-            var semanticModel = await document.GetSemanticModelAsync();
-            var symbols = await Recommender.GetRecommendedSymbolsAtPositionAsync(
-                              semanticModel, 
-                              cursorPosition, 
-                              document.Project.Solution.Workspace);
-
-            var symbolToSymbolKey = new Dictionary<(string, int), ISymbol>();
-            foreach (var symbol in symbols)
-            {
-                var key = (symbol.Name, (int) symbol.Kind);
-                if (!symbolToSymbolKey.ContainsKey(key))
-                {
-                    symbolToSymbolKey[key] = symbol;
-                }
-            }
-
-            var items = completionList.Items.Select(item => item.ToModel(symbolToSymbolKey, document)).ToArray();
-
+            var items = completionList.Items.Select(item => item.ToModel()).ToArray();
             return items;
+        }
+
+        public async Task HandleAsync(
+            RequestDiagnostics command,
+            KernelInvocationContext context)
+        {
+            var document = _workspace.UpdateWorkingDocument(command.Code);
+            var semanticModel = await document.GetSemanticModelAsync();
+            var diagnostics = semanticModel.GetDiagnostics();
+            context.Publish(new DiagnosticsProduced(diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic), command));
         }
 
         public async Task LoadExtensionsFromDirectoryAsync(
@@ -334,7 +353,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         private bool HasReturnValue =>
             ScriptState != null &&
-            (bool) _hasReturnValueMethod.Invoke(ScriptState.Script, null);
+            (bool)_hasReturnValueMethod.Invoke(ScriptState.Script, null);
 
         void ISupportNuget.AddRestoreSource(string source) => _packageRestoreContext.Value.AddRestoreSource(source);
 
@@ -347,20 +366,20 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
             var references = resolvedReferences
                              .SelectMany(r => r.AssemblyPaths)
-                             .Select(r => MetadataReference.CreateFromFile(r.FullName));
+                             .Select(r => MetadataReference.CreateFromFile(r));
 
             ScriptOptions = ScriptOptions.AddReferences(references);
         }
 
         Task<PackageRestoreResult> ISupportNuget.RestoreAsync() => _packageRestoreContext.Value.RestoreAsync();
 
-        public IEnumerable<PackageReference> RequestedPackageReferences => 
+        public IEnumerable<PackageReference> RequestedPackageReferences =>
             PackageRestoreContext.RequestedPackageReferences;
 
-        public IEnumerable<ResolvedPackageReference> ResolvedPackageReferences => 
+        public IEnumerable<ResolvedPackageReference> ResolvedPackageReferences =>
             PackageRestoreContext.ResolvedPackageReferences;
 
-        public IEnumerable<string> RestoreSources => 
+        public IEnumerable<string> RestoreSources =>
             PackageRestoreContext.RestoreSources;
     }
 }

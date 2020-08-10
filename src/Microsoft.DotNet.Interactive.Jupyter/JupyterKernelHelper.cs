@@ -6,36 +6,45 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
-    public static class Kernel
+    public static class TopLevelMethods
     {
         public static string input(string prompt = "")
         {
             var context = KernelInvocationContext.Current;
 
-            if (context?.HandlingKernel is KernelBase kernelBase &&
-                kernelBase.FrontendEnvironment.AllowStandardInput)
+            if (!StandardInputIsAllowed(context))
             {
-                var inputReqEvent = new InputRequested(prompt, context.Command);
-                context.Publish(inputReqEvent);
-                return inputReqEvent.Content;
+                throw new NotSupportedException(
+                    "Input request is not supported. The stdin channel is not allowed by the frontend.");
+
             }
 
-            throw new NotSupportedException("Input request is not supported. The stdin channel is not allowed by the frontend.");
+            var inputReqEvent = new InputRequested(prompt, context.Command);
+            context.Publish(inputReqEvent);
+            return inputReqEvent.Content;
+
         }
 
         public static PasswordString password(string prompt = "")
         {
             var context = KernelInvocationContext.Current;
 
-            if (context?.HandlingKernel is KernelBase kernelBase &&
-                kernelBase.FrontendEnvironment.AllowStandardInput)
+            if (!StandardInputIsAllowed(context))
             {
-                var passwordReqEvent = new PasswordRequested(prompt, context.Command);
-                context.Publish(passwordReqEvent);
-                return passwordReqEvent.Content;
+                throw new NotSupportedException(
+                    "Password request is not supported. The stdin channel is not allowed by the frontend.");
+
             }
 
-            throw new NotSupportedException("Password request is not supported. The stdin channel is not allowed by the frontend.");
+            var passwordReqEvent = new PasswordRequested(prompt, context.Command);
+            context.Publish(passwordReqEvent);
+            return passwordReqEvent.Content;
+
+        }
+
+        private static bool StandardInputIsAllowed(KernelInvocationContext context)
+        {
+            return context?.HandlingKernel is { } kernel && kernel.FrontendEnvironment.AllowStandardInput;
         }
     }
 }

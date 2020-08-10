@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
                 new Option<FileInfo>("--out-file")
                 {
                     Description = "Location to write the generated interface file",
-                    Required = true
+                    IsRequired = true
                 }.ExistingOnly()
             };
             command.Handler = CommandHandler.Create((FileInfo outFile) =>

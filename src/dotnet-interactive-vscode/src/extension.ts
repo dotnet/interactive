@@ -7,7 +7,7 @@ import { ClientMapper } from './clientMapper';
 import { DotNetInteractiveNotebookContentProvider } from './vscode/notebookProvider';
 import { StdioKernelTransport } from './stdioKernelTransport';
 import { registerLanguageProviders } from './vscode/languageProvider';
-import { execute, registerAcquisitionCommands, registerKernelCommands, registerInteropCommands } from './vscode/commands';
+import { execute, registerAcquisitionCommands, registerKernelCommands, registerFileFormatCommands } from './vscode/commands';
 
 import { IDotnetAcquireResult } from './interfaces/dotnet';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
@@ -19,12 +19,7 @@ import { OutputChannelAdapter } from './OutputChannelAdapter';
 export async function activate(context: vscode.ExtensionContext) {
     // install dotnet or use global
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
-    const dotnetInteractiveChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive'));
-    dotnetInteractiveChannel.show();
-
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive : diagnostics'));
-    diagnosticsChannel.show();
-
     const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion');
     let dotnetPath: string;
     if (await isDotnetUpToDate(minDotNetSdkVersion!)) {
@@ -43,7 +38,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const launchOptions = await vscode.commands.executeCommand<InteractiveLaunchOptions>('dotnet-interactive.acquire', installArgs);
 
     // register with VS Code
-    const clientMapper = new ClientMapper(notebookPath => {
+    const clientMapper = new ClientMapper(async (notebookPath) => {
         // prepare kernel transport launch arguments and working directory using a fresh config item so we don't get cached values
         const config = vscode.workspace.getConfiguration('dotnet-interactive');
         const kernelTransportArgs = config.get<Array<string>>('kernelTransportArgs')!;
@@ -51,16 +46,25 @@ export async function activate(context: vscode.ExtensionContext) {
             args: kernelTransportArgs,
             workingDirectory: config.get<string>('kernelTransportWorkingDirectory')!
         };
-        const processStart = processArguments(argsTemplate, dotnetPath, launchOptions!.workingDirectory);
-        return StdioKernelTransport.create(processStart, notebookPath, diagnosticsChannel);
+        const processStart = processArguments(argsTemplate, notebookPath, dotnetPath, launchOptions!.workingDirectory);
+        const transport = new StdioKernelTransport(processStart, diagnosticsChannel);
+        await transport.waitForReady();
+        return transport;
     });
 
     registerKernelCommands(context, clientMapper);
-    registerInteropCommands(context);
+    registerFileFormatCommands(context);
 
-    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', new DotNetInteractiveNotebookContentProvider(clientMapper, dotnetInteractiveChannel)));
+    const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable
+
+    const notebookProvider = new DotNetInteractiveNotebookContentProvider(clientMapper);
+    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookProvider));
+    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive-jupyter', notebookProvider));
+    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider({viewType: 'dotnet-interactive'}, notebookProvider));
+    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider({viewType: 'dotnet-interactive-jupyter'}, notebookProvider));
+    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider({filenamePattern: '*.{dib,dotnet-interactive,ipynb}'}, notebookProvider));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
-    context.subscriptions.push(registerLanguageProviders(clientMapper));
+    context.subscriptions.push(registerLanguageProviders(clientMapper, diagnosticDelay));
 }
 
 export function deactivate() {

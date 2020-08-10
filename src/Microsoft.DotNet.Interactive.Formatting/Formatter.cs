@@ -379,6 +379,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return TypeFormatters.Keys.Where(k => k.type == type).Select(k => k.mimeType);
         }
 
+        public static void Register<T>(
+            Action<T, TextWriter> formatter,
+            string mimeType = PlainTextFormatter.MimeType)
+        {
+            Formatter<T>.Register(formatter, mimeType);
+        }
+
         public static void Register(
             Type type,
             Action<object, TextWriter> formatter,
@@ -386,63 +393,72 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             if (!type.CanBeInstantiated())
             {
-                switch (mimeType)
+                RegisterLazilyForConcreteTypesOf(type, formatter, mimeType);
+            }
+            else
+            {
+                var delegateType = typeof(Action<,>).MakeGenericType(type, typeof(TextWriter));
+
+                var genericRegisterMethod = typeof(Formatter<>)
+                                            .MakeGenericType(type)
+                                            .GetMethod(nameof(Formatter<object>.Register), new[]
+                                            {
+                                                delegateType,
+                                                typeof(string)
+                                            });
+
+                genericRegisterMethod.Invoke(null, new object[] { formatter, mimeType });
+            }
+        }
+
+        public static void RegisterLazilyForConcreteTypesOf(
+            Type type, 
+            Action<object, TextWriter> formatter, 
+            string mimeType)
+        {
+            switch (mimeType)
+            {
+                case HtmlFormatter.MimeType:
+                    HtmlFormatter.DefaultFormatters.AddFormatterFactory(CreateIfMatched);
+                    break;
+
+                case PlainTextFormatter.MimeType:
+                    PlainTextFormatter.DefaultFormatters.AddFormatterFactory(CreateIfMatched);
+                    break;
+            }
+
+            return;
+
+            ITypeFormatter CreateIfMatched(Type actualType)
+            {
+                var isMatch = false;
+
+                if (type.IsGenericTypeDefinition &&
+                    actualType.IsConstructedGenericType)
                 {
-                    case HtmlFormatter.MimeType:
-                        HtmlFormatter.DefaultFormatters.AddFormatterFactory(CreateIfMatched);
-                        break;
-
-                    case PlainTextFormatter.MimeType:
-                        PlainTextFormatter.DefaultFormatters.AddFormatterFactory(CreateIfMatched);
-                        break;
-                }
-
-                return;
-
-                ITypeFormatter CreateIfMatched(Type actualType)
-                {
-                    var isMatch = false;
-
-                    if (type.IsGenericTypeDefinition &&
-                        actualType.IsConstructedGenericType)
-                    {
-                        if (type == actualType.GetGenericTypeDefinition())
-                        {
-                            isMatch = true;
-                        }
-
-                        if (type.IsInterface &&
-                            actualType.GetInterfaces()
-                                      .Any(i => i.IsConstructedGenericType &&
-                                                i.GetGenericTypeDefinition() == type))
-                        {
-                            isMatch = true;
-                        }
-                    }
-
-                    if (type.IsInterface &&
-                        type.IsAssignableFrom(actualType))
+                    if (type == actualType.GetGenericTypeDefinition())
                     {
                         isMatch = true;
                     }
 
-                    return isMatch
-                               ? Create(actualType, formatter, mimeType)
-                               : null;
+                    if (type.IsInterface &&
+                        actualType.GetInterfaces()
+                                  .Any(i => i.IsConstructedGenericType &&
+                                            i.GetGenericTypeDefinition() == type))
+                    {
+                        isMatch = true;
+                    }
                 }
+
+                if (type.IsAssignableFrom(actualType))
+                {
+                    isMatch = true;
+                }
+            
+                return isMatch
+                           ? Create(actualType, formatter, mimeType)
+                           : null;
             }
-
-            var delegateType = typeof(Action<,>).MakeGenericType(type, typeof(TextWriter));
-
-            var genericRegisterMethod = typeof(Formatter<>)
-                                        .MakeGenericType(type)
-                                        .GetMethod(nameof(Formatter<object>.Register), new[]
-                                        {
-                                            delegateType,
-                                            typeof(string)
-                                        });
-
-            genericRegisterMethod.Invoke(null, new object[] { formatter, mimeType });
         }
 
         public static void Register(ITypeFormatter formatter)
@@ -457,10 +473,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         private static void ConfigureDefaultPlainTextFormattersForSpecialTypes()
         {
-            // an additional formatter is needed since typeof(Type) == System.RuntimeType, which is not public
-            Register(typeof(Type).GetType(),
-                     (obj, writer) => Formatter<Type>.FormatTo((Type) obj, writer, PlainTextFormatter.MimeType));
-
             // Newtonsoft.Json types -- these implement IEnumerable and their default output is not useful, so use their default ToString
             TryRegisterDefault("Newtonsoft.Json.Linq.JArray, Newtonsoft.Json", (obj, writer) => writer.Write(obj), PlainTextFormatter.MimeType);
             TryRegisterDefault("Newtonsoft.Json.Linq.JObject, Newtonsoft.Json", (obj, writer) => writer.Write(obj), PlainTextFormatter.MimeType);

@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return new PlainTextFormatter<T>(
                 PlainTextFormatter.CreateFormatDelegate<T>(
-                    typeof(T).GetAllMembers(includeInternals).ToArray()));
+                    typeof(T).GetMembersToFormat(includeInternals).ToArray()));
         }
 
         public static PlainTextFormatter<T> CreateForMembers(params Expression<Func<T, object>>[] members)

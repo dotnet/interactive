@@ -3,26 +3,28 @@
 
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Threading.Tasks;
 
 #nullable enable
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal class ChooseKernelDirective : Command
+    public class ChooseKernelDirective : Command
     {
-        public ChooseKernelDirective(IKernel kernel) : 
+        public ChooseKernelDirective(Kernel kernel, string? description = null) : 
             base($"#!{kernel.Name}", 
-                 $"Run the code that follows using the {kernel.Name} kernel.")
+                 description ?? $"Run the code that follows using the {kernel.Name} kernel.")
         {
             Kernel = kernel;
-            Handler = CommandHandler.Create<KernelInvocationContext>(Handle);
+            Handler = CommandHandler.Create<KernelInvocationContext, InvocationContext>(Handle);
         }
 
-        public IKernel Kernel { get; }
+        public Kernel Kernel { get; }
 
-        private void Handle(KernelInvocationContext context)
+        protected virtual Task Handle(KernelInvocationContext kernelInvocationContext, InvocationContext commandLineInvocationContext)
         {
-            context.HandlingKernel = Kernel;
+            kernelInvocationContext.HandlingKernel = Kernel;
+            return Task.CompletedTask;
         }
     }
 }

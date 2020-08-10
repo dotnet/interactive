@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Microsoft.AspNetCore.Html;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
@@ -27,6 +28,11 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         public static string Crunch(this IHtmlContent s)
         {
             return s.ToString().Crunch();
+        }
+
+        public static string IndentHtml(this string html)
+        {
+            return XElement.Parse(html).ToString();
         }
     }
 }

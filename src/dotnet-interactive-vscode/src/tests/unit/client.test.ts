@@ -6,13 +6,13 @@ import { expect } from 'chai';
 import { ClientMapper } from '../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
 import { CellOutput, CellOutputKind } from '../../interfaces/vscode';
-import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandHandledType, DisplayedValueProducedType, ReturnValueProducedType, UpdateDisplayedValueType, DisplayedValueUpdatedType } from '../../contracts';
+import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandSucceededType, DisplayedValueProducedType, ReturnValueProducedType, UpdateDisplayedValueType, DisplayedValueUpdatedType } from '../../contracts';
 
 describe('InteractiveClient tests', () => {
     it('command execution returns deferred events', async () => {
         let token = 'test-token';
         let code = '1 + 1';
-        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
             'SubmitCode': [
                 {
                     // deferred event; unassociated with the original submission; has its own token
@@ -27,7 +27,7 @@ describe('InteractiveClient tests', () => {
                             }
                         ]
                     },
-                    token: 'token-for-deferred-command-doesnt-match-any-other-token'
+                    token: 'deferredCommand::token-for-deferred-command-doesnt-match-any-other-token'
                 },
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -58,7 +58,7 @@ describe('InteractiveClient tests', () => {
                     token
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token
                 }
@@ -66,7 +66,7 @@ describe('InteractiveClient tests', () => {
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -86,7 +86,7 @@ describe('InteractiveClient tests', () => {
     it('deferred events do not interfere with display update events', async () => {
         let token = 'test-token';
         let code = '1 + 1';
-        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
             'SubmitCode': [
                 {
                     // deferred event; unassociated with the original submission; has its own token
@@ -101,7 +101,7 @@ describe('InteractiveClient tests', () => {
                             }
                         ]
                     },
-                    token: 'token-for-deferred-command-doesnt-match-any-other-token'
+                    token: 'deferredCommand::123'
                 },
                 {
                     eventType: DisplayedValueProducedType,
@@ -132,7 +132,7 @@ describe('InteractiveClient tests', () => {
                     token
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token
                 }
@@ -140,7 +140,7 @@ describe('InteractiveClient tests', () => {
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -160,7 +160,7 @@ describe('InteractiveClient tests', () => {
     it('interleaved deferred events do not interfere with display update events', async () => {
         let token = 'test-token';
         let code = '1 + 1';
-        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
             'SubmitCode': [
                 {
                     // deferred event; unassociated with the original submission; has its own token
@@ -175,7 +175,7 @@ describe('InteractiveClient tests', () => {
                             }
                         ]
                     },
-                    token: 'token-for-deferred-command-doesnt-match-any-other-token'
+                    token: 'deferredCommand::123'
                 },
                 {
                     eventType: DisplayedValueProducedType,
@@ -204,7 +204,7 @@ describe('InteractiveClient tests', () => {
                             }
                         ]
                     },
-                    token: 'token-for-deferred-command-doesnt-match-any-other-token'
+                    token: 'deferredCommand::456'
                 },
                 {
                     eventType: DisplayedValueUpdatedType,
@@ -221,7 +221,7 @@ describe('InteractiveClient tests', () => {
                     token
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token
                 }
@@ -229,7 +229,7 @@ describe('InteractiveClient tests', () => {
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -254,7 +254,7 @@ describe('InteractiveClient tests', () => {
 
     it('display update events from separate submissions trigger the correct observer', async () => {
         let code = '1 + 1';
-        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
             'SubmitCode#1': [
                 {
                     eventType: DisplayedValueProducedType,
@@ -271,7 +271,7 @@ describe('InteractiveClient tests', () => {
                     token: 'token 1'
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token: 'token 1'
                 }
@@ -292,7 +292,7 @@ describe('InteractiveClient tests', () => {
                     token: 'token 2'
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token: 'token 2'
                 }
@@ -302,7 +302,7 @@ describe('InteractiveClient tests', () => {
 
         // execute first command
         let result1: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result1 = outputs, 'token 1');
+        await client.execute(code, 'csharp', outputs => result1 = outputs, _ => {}, 'token 1');
         expect(result1).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -314,7 +314,7 @@ describe('InteractiveClient tests', () => {
 
         // execute second command
         let result2: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result2 = outputs, 'token 2');
+        await client.execute(code, 'csharp', outputs => result2 = outputs, _ => {}, 'token 2');
         expect(result2).to.deep.equal([]);
 
         // ensure first result array was updated

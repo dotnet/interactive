@@ -17,7 +17,7 @@ namespace Pocket
                 new[]
                 {
                     typeof(LogEvents).Assembly,
-                    typeof(IKernelEvent).Assembly,
+                    typeof(KernelEvent).Assembly,
                     typeof(CSharpKernel).Assembly,
                     typeof(FSharpKernel).Assembly,
                 });

@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public class Shell : IHostedService
     {
-        private readonly IKernel _kernel;
+        private readonly Kernel _kernel;
         private readonly ICommandScheduler<JupyterRequestContext> _scheduler;
         private readonly RouterSocket _shell;
         private readonly PublisherSocket _ioPubSocket;
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         private readonly RouterSocket _control;
 
         public Shell(
-            IKernel kernel,
+            Kernel kernel,
             ICommandScheduler<JupyterRequestContext> scheduler,
             ConnectionInformation connectionInformation)
         {

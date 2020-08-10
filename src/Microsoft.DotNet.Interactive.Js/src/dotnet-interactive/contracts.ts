@@ -9,7 +9,7 @@ export const AddPackageType = "AddPackage";
 export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
-export const RequestCompletionType = "RequestCompletion";
+export const RequestCompletionsType = "RequestCompletions";
 export const RequestDiagnosticsType = "RequestDiagnostics";
 export const RequestHoverTextType = "RequestHoverText";
 export const SubmitCodeType = "SubmitCode";
@@ -20,7 +20,7 @@ export type KernelCommandType =
     | typeof ChangeWorkingDirectoryType
     | typeof DisplayErrorType
     | typeof DisplayValueType
-    | typeof RequestCompletionType
+    | typeof RequestCompletionsType
     | typeof RequestDiagnosticsType
     | typeof RequestHoverTextType
     | typeof SubmitCodeType
@@ -43,22 +43,23 @@ export interface DisplayError extends KernelCommand {
 }
 
 export interface DisplayValue extends KernelCommand {
-    value: any;
     formattedValue: FormattedValue;
     valueId: string;
 }
 
-export interface RequestCompletion extends KernelCommand {
+export interface RequestCompletions extends LanguageServiceCommand {
+}
+
+export interface LanguageServiceCommand extends KernelCommand {
     code: string;
-    position: LinePosition;
+    linePosition: LinePosition;
 }
 
 export interface RequestDiagnostics extends KernelCommand {
+    code: string;
 }
 
-export interface RequestHoverText extends KernelCommand {
-    code: string;
-    position: LinePosition;
+export interface RequestHoverText extends LanguageServiceCommand {
 }
 
 export interface SubmitCode extends KernelCommand {
@@ -67,7 +68,6 @@ export interface SubmitCode extends KernelCommand {
 }
 
 export interface UpdateDisplayedValue extends KernelCommand {
-    value: any;
     formattedValue: FormattedValue;
     valueId: string;
 }
@@ -76,17 +76,18 @@ export interface UpdateDisplayedValue extends KernelCommand {
 
 export const CodeSubmissionReceivedType = "CodeSubmissionReceived";
 export const CommandFailedType = "CommandFailed";
-export const CommandHandledType = "CommandHandled";
+export const CommandSucceededType = "CommandSucceeded";
 export const CompleteCodeSubmissionReceivedType = "CompleteCodeSubmissionReceived";
-export const CompletionRequestCompletedType = "CompletionRequestCompleted";
-export const CompletionRequestReceivedType = "CompletionRequestReceived";
+export const CompletionsProducedType = "CompletionsProduced";
 export const DiagnosticLogEntryProducedType = "DiagnosticLogEntryProduced";
+export const DiagnosticsProducedType = "DiagnosticsProduced";
 export const DisplayedValueProducedType = "DisplayedValueProduced";
 export const DisplayedValueUpdatedType = "DisplayedValueUpdated";
 export const ErrorProducedType = "ErrorProduced";
 export const HoverTextProducedType = "HoverTextProduced";
 export const IncompleteCodeSubmissionReceivedType = "IncompleteCodeSubmissionReceived";
 export const InputRequestedType = "InputRequested";
+export const KernelReadyType = "KernelReady";
 export const PackageAddedType = "PackageAdded";
 export const PasswordRequestedType = "PasswordRequested";
 export const ReturnValueProducedType = "ReturnValueProduced";
@@ -97,17 +98,18 @@ export const WorkingDirectoryChangedType = "WorkingDirectoryChanged";
 export type KernelEventType =
       typeof CodeSubmissionReceivedType
     | typeof CommandFailedType
-    | typeof CommandHandledType
+    | typeof CommandSucceededType
     | typeof CompleteCodeSubmissionReceivedType
-    | typeof CompletionRequestCompletedType
-    | typeof CompletionRequestReceivedType
+    | typeof CompletionsProducedType
     | typeof DiagnosticLogEntryProducedType
+    | typeof DiagnosticsProducedType
     | typeof DisplayedValueProducedType
     | typeof DisplayedValueUpdatedType
     | typeof ErrorProducedType
     | typeof HoverTextProducedType
     | typeof IncompleteCodeSubmissionReceivedType
     | typeof InputRequestedType
+    | typeof KernelReadyType
     | typeof PackageAddedType
     | typeof PasswordRequestedType
     | typeof ReturnValueProducedType
@@ -120,54 +122,53 @@ export interface CodeSubmissionReceived extends KernelEvent {
 }
 
 export interface KernelEvent {
-    command: KernelCommand;
 }
 
 export interface CommandFailed extends KernelEvent {
     message: string;
 }
 
-export interface CommandHandled extends KernelEvent {
+export interface CommandSucceeded extends KernelEvent {
 }
 
 export interface CompleteCodeSubmissionReceived extends KernelEvent {
     code: string;
 }
 
-export interface CompletionRequestCompleted extends KernelEvent {
-    range?: LinePositionSpan;
-    completionList: Array<CompletionItem>;
+export interface CompletionsProduced extends KernelEvent {
+    linePositionSpan?: LinePositionSpan;
+    completions: Array<CompletionItem>;
 }
 
-export interface CompletionRequestReceived extends KernelEvent {
-}
-
-export interface DiagnosticLogEntryProduced extends DiagnosticEventBase {
+export interface DiagnosticLogEntryProduced extends DiagnosticEvent {
     message: string;
 }
 
-export interface DiagnosticEventBase extends KernelEvent {
+export interface DiagnosticEvent extends KernelEvent {
 }
 
-export interface DisplayedValueProduced extends DisplayEventBase {
+export interface DiagnosticsProduced extends KernelEvent {
+    diagnostics: Array<Diagnostic>;
 }
 
-export interface DisplayEventBase extends KernelEvent {
-    value: any;
+export interface DisplayedValueProduced extends DisplayEvent {
+}
+
+export interface DisplayEvent extends KernelEvent {
     formattedValues: Array<FormattedValue>;
     valueId: string;
 }
 
-export interface DisplayedValueUpdated extends DisplayEventBase {
+export interface DisplayedValueUpdated extends DisplayEvent {
 }
 
-export interface ErrorProduced extends DisplayEventBase {
+export interface ErrorProduced extends DisplayEvent {
     message: string;
 }
 
 export interface HoverTextProduced extends KernelEvent {
     content: Array<FormattedValue>;
-    range?: LinePositionSpan;
+    linePositionSpan?: LinePositionSpan;
 }
 
 export interface IncompleteCodeSubmissionReceived extends KernelEvent {
@@ -175,6 +176,9 @@ export interface IncompleteCodeSubmissionReceived extends KernelEvent {
 
 export interface InputRequested extends KernelEvent {
     prompt: string;
+}
+
+export interface KernelReady extends KernelEvent {
 }
 
 export interface PackageAdded extends KernelEvent {
@@ -185,13 +189,13 @@ export interface PasswordRequested extends KernelEvent {
     prompt: string;
 }
 
-export interface ReturnValueProduced extends DisplayEventBase {
+export interface ReturnValueProduced extends DisplayEvent {
 }
 
-export interface StandardErrorValueProduced extends DisplayEventBase {
+export interface StandardErrorValueProduced extends DisplayEvent {
 }
 
-export interface StandardOutputValueProduced extends DisplayEventBase {
+export interface StandardOutputValueProduced extends DisplayEvent {
 }
 
 export interface WorkingDirectoryChanged extends KernelEvent {
@@ -209,9 +213,23 @@ export interface CompletionItem {
     documentation: string;
 }
 
-export interface FormattedValue {
-    mimeType: string;
-    value: string;
+export interface Diagnostic {
+    linePositionSpan: LinePositionSpan;
+    severity: DiagnosticSeverity;
+    code: string;
+    message: string;
+}
+
+export enum DiagnosticSeverity {
+    Hidden = 0,
+    Info = 1,
+    Warning = 2,
+    Error = 3,
+}
+
+export interface LinePositionSpan {
+    start: LinePosition;
+    end: LinePosition;
 }
 
 export interface LinePosition {
@@ -219,9 +237,9 @@ export interface LinePosition {
     character: number;
 }
 
-export interface LinePositionSpan {
-    start: LinePosition;
-    end: LinePosition;
+export interface FormattedValue {
+    mimeType: string;
+    value: string;
 }
 
 export interface PackageReference {
@@ -267,4 +285,5 @@ export interface DisposableSubscription extends Disposable {
 export interface KernelTransport extends Disposable {
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
     submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void>;
+    waitForReady(): Promise<void>;
 }

@@ -26,8 +26,7 @@ namespace Microsoft.DotNet.Interactive
             object value,
             string mimeType = null)
         {
-            var displayId = Kernel.DisplayIdGenerator?.Invoke() ??
-                            Guid.NewGuid().ToString();
+            var displayId = Guid.NewGuid().ToString();
 
             mimeType ??= Formatter.PreferredMimeTypeFor(value.GetType());
 
@@ -48,7 +47,7 @@ namespace Microsoft.DotNet.Interactive
         public static void DisplayStandardOut(
             this KernelInvocationContext context,
             string output,
-            IKernelCommand command = null)
+            KernelCommand command = null)
         {
             var formattedValues = new List<FormattedValue>
             {
@@ -58,7 +57,6 @@ namespace Microsoft.DotNet.Interactive
 
             context.Publish(
                 new StandardOutputValueProduced(
-                    output,
                     command ?? context.Command,
                     formattedValues));
         }
@@ -66,7 +64,7 @@ namespace Microsoft.DotNet.Interactive
         public static void DisplayStandardError(
             this KernelInvocationContext context,
             string error,
-            IKernelCommand command = null)
+            KernelCommand command = null)
         {
             var formattedValues = new List<FormattedValue>
             {
@@ -76,7 +74,6 @@ namespace Microsoft.DotNet.Interactive
 
             context.Publish(
                 new StandardErrorValueProduced(
-                    error,
                     command ?? context.Command,
                     formattedValues));
         }

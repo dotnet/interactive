@@ -3,12 +3,12 @@
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    internal class AnonymousKernelCommand : KernelCommandBase
+    internal class AnonymousKernelCommand : KernelCommand
     {
         public AnonymousKernelCommand(
             KernelCommandInvocation handler, 
             string targetKernelName = null,
-            IKernelCommand parent = null)
+            KernelCommand parent = null)
             : base(targetKernelName, parent)
         {
             Handler = handler;

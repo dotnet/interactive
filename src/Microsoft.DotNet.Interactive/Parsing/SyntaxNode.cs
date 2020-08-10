@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
@@ -13,8 +12,7 @@ using Microsoft.DotNet.Interactive.Utility;
 namespace Microsoft.DotNet.Interactive.Parsing
 {
     public abstract class SyntaxNode : 
-        SyntaxNodeOrToken, 
-        IEnumerable<SyntaxNodeOrToken>
+        SyntaxNodeOrToken
     {
         private readonly List<SyntaxNodeOrToken> _childNodesAndTokens = new List<SyntaxNodeOrToken>();
         private TextSpan _span;
@@ -50,15 +48,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
             };
         }
 
-        internal void Add(SyntaxNodeOrToken child)
+        internal void GrowSpan(SyntaxNodeOrToken child)
         {
-            if (child.Parent != null)
-            {
-                throw new InvalidOperationException($"{child.GetType().Name} {child} is already parented to {child.Parent}");
-            }
-
-            child.Parent = this;
-
             if (_span == default)
             {
                 _span = child.Span;
@@ -69,15 +60,28 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 var _spanEnd = Math.Max(_span.End, child.Span.End);
                 _span = new TextSpan(_spanStart, _spanEnd - _span.Start);
             }
+        }
+
+        internal void Add(SyntaxNodeOrToken child)
+        {
+            if (child.Parent != null)
+            {
+                throw new InvalidOperationException($"{child.GetType().Name} {child} is already parented to {child.Parent}");
+            }
+
+            child.Parent = this;
+
+            GrowSpan(child);
 
             _childNodesAndTokens.Add(child);
         }
 
-        public IEnumerable<SyntaxNodeOrToken> ChildNodes => _childNodesAndTokens.OfType<SyntaxNode>();
+        public IEnumerable<SyntaxNode> ChildNodes => 
+            _childNodesAndTokens.OfType<SyntaxNode>();
 
         public IEnumerable<SyntaxNodeOrToken> ChildTokens => _childNodesAndTokens.OfType<SyntaxToken>();
 
-        public IEnumerable<SyntaxNodeOrToken> ChildNodesAndTokens => _childNodesAndTokens;
+        public IReadOnlyList<SyntaxNodeOrToken> ChildNodesAndTokens => _childNodesAndTokens;
 
         public IEnumerable<SyntaxNodeOrToken> DescendantNodesAndTokensAndSelf()
         {
@@ -101,15 +105,5 @@ namespace Microsoft.DotNet.Interactive.Parsing
         {
             yield break;
         } 
-
-        public IEnumerator<SyntaxNodeOrToken> GetEnumerator()
-        {
-            return _childNodesAndTokens.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
     }
 }

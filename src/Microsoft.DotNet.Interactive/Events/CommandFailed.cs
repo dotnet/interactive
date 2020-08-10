@@ -7,11 +7,11 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class CommandFailed : KernelEventBase
+    public class CommandFailed : KernelEvent
     {
         public CommandFailed(
             Exception exception,
-            IKernelCommand command,
+            KernelCommand command,
             string message = null) : base(command)
         {
             if (command == null)
@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.Events
 
         public CommandFailed(
             string message,
-            IKernelCommand command) : this(null, command, message)
+            KernelCommand command) : this(null, command, message)
         {
         }
 

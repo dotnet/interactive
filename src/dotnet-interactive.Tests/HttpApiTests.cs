@@ -23,7 +23,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 {
     public class HttpApiTests : IDisposable
     {
-
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
         public void Dispose()
@@ -70,7 +69,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var frontendEnvironment = server.FrontendEnvironment as HtmlNotebookFrontedEnvironment;
-            frontendEnvironment.DiscoveredUri.Should().Be(expectedUri);
+
+            var apiUri = await frontendEnvironment.GetApiUriAsync();
+            apiUri.Should().Be(expectedUri);
         }
 
         [Theory]
@@ -253,7 +254,8 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
                        "fsharp", 
                        "pwsh",
                        "html",
-                       "javascript");
+                       "javascript",
+                       "value");
         }
     }
 

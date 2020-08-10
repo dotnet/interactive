@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.App.Http
     public class DiscoveryRouter : IRouter
     {
         private readonly HtmlNotebookFrontedEnvironment _frontendEnvironment;
-
+      
         public DiscoveryRouter(HtmlNotebookFrontedEnvironment frontendEnvironment)
         {
             _frontendEnvironment = frontendEnvironment;
@@ -36,13 +36,11 @@ namespace Microsoft.DotNet.Interactive.App.Http
                         .Split(new[] {'/'}, StringSplitOptions.RemoveEmptyEntries);
                 if (segments[0] == "discovery")
                 {
-                    // get the body
                     using var reader = new StreamReader(context.HttpContext.Request.Body);
                     var source = await reader.ReadToEndAsync();
                     var apiUri = new Uri( source);
-                    _frontendEnvironment.DiscoveredUri = apiUri;
+                    _frontendEnvironment.SetApiUri(apiUri);
 
-                    // Do something
                     context.Handler = async httpContext =>
                     {
                         await httpContext.Response.CompleteAsync(); 

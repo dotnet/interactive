@@ -1,0 +1,1 @@
+{"event":{"formattedValues":[{"mimeType":"text/html","value":"<b>hi!</b>"}],"valueId":null},"eventType":"ReturnValueProduced","command":{"token":"the-token","commandType":"SubmitCode","command":{"code":"b(\"hi!\")","submissionType":0,"targetKernelName":"csharp"}}}

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1.201-bionic
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1.302-focal
 
 ARG HTTP_PORT_RANGE=1100-1200
 

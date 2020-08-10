@@ -8,7 +8,6 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
-using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
@@ -16,6 +15,8 @@ using Recipes;
 using Xunit.Abstractions;
 using Serilog.Sinks.RollingFileAlternate;
 using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
+using System.Collections.Generic;
+using Microsoft.DotNet.Interactive.Jupyter;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -74,33 +75,40 @@ namespace Microsoft.DotNet.Interactive.Tests
             _lockReleaser.Dispose();
         }
 
-        protected CompositeKernel CreateKernel(Language language = Language.CSharp)
+        protected CompositeKernel CreateCompositeKernel(Language defaultKernelLanguage = Language.CSharp)
         {
-            var languageKernel = language switch
+            return CreateCompositeKernel(
+                new[]
+                {
+                    CreateFSharpKernel(),
+                    CreateCSharpKernel(),
+                    CreatePowerShellKernel()
+                },
+                defaultKernelLanguage);
+        }
+
+        protected CompositeKernel CreateKernel(Language defaultLanguage = Language.CSharp)
+        {
+            var languageKernel = defaultLanguage switch
             {
-                Language.FSharp => new FSharpKernel()
-                                   .UseDefaultFormatting()
-                                   .UseNugetDirective()
-                                   .UseKernelHelpers()
-                                   .UseWho()
-                                   .UseDefaultNamespaces() as KernelBase,
-                Language.CSharp => new CSharpKernel()
-                                   .UseDefaultFormatting()
-                                   .UseNugetDirective()
-                                   .UseKernelHelpers()
-                                   .UseWho(),
-                Language.PowerShell => new PowerShellKernel(),
-                _ => throw new InvalidOperationException($"Unknown language specified: {language}")
+                Language.FSharp => CreateFSharpKernel(),
+                Language.CSharp => CreateCSharpKernel(),
+                Language.PowerShell => CreatePowerShellKernel(),
+                _ => throw new InvalidOperationException($"Unknown language specified: {defaultLanguage}")
             };
-            
-            languageKernel = languageKernel
-                .LogEventsToPocketLogger();
 
-            var kernel =
-                new CompositeKernel { languageKernel }
-                    .UseDefaultMagicCommands(); 
+            return CreateCompositeKernel(new[] { languageKernel }, defaultLanguage);
+        }
 
-            kernel.DefaultKernelName = languageKernel.Name;
+        private CompositeKernel CreateCompositeKernel(IEnumerable<Kernel> subkernels, Language defaultKernelLanguage)
+        {
+            var kernel = new CompositeKernel().UseDefaultMagicCommands();
+            foreach (var sub in subkernels)
+            {
+                kernel.Add(sub.LogEventsToPocketLogger());
+            }
+
+            kernel.DefaultKernelName = defaultKernelLanguage.LanguageName();
 
             KernelEvents = kernel.KernelEvents.ToSubscribedList();
 
@@ -110,7 +118,34 @@ namespace Microsoft.DotNet.Interactive.Tests
             return kernel;
         }
 
-        public async Task SubmitCode(KernelBase kernel, string[] submissions, SubmissionType submissionType = SubmissionType.Run)
+        private Kernel CreateFSharpKernel()
+        {
+            return new FSharpKernel()
+                .UseDefaultFormatting()
+                .UseNugetDirective()
+                .UseKernelHelpers()
+                .UseDotNetVariableSharing()
+                .UseWho()
+                .UseDefaultNamespaces();
+        }
+
+        private Kernel CreateCSharpKernel()
+        {
+            return new CSharpKernel()
+                .UseDefaultFormatting()
+                .UseNugetDirective()
+                .UseKernelHelpers()
+                .UseDotNetVariableSharing()
+                .UseWho();
+        }
+
+        private Kernel CreatePowerShellKernel()
+        {
+            return new PowerShellKernel()
+                .UseDotNetVariableSharing();
+        }
+
+        public async Task SubmitCode(Kernel kernel, string[] submissions, SubmissionType submissionType = SubmissionType.Run)
         {
             foreach (var submission in submissions)
             {
@@ -119,13 +154,13 @@ namespace Microsoft.DotNet.Interactive.Tests
             }
         }
 
-        public async Task SubmitCode(KernelBase kernel, string submission, SubmissionType submissionType = SubmissionType.Run)
+        public async Task SubmitCode(Kernel kernel, string submission, SubmissionType submissionType = SubmissionType.Run)
         {
             var command = new SubmitCode(submission, submissionType: submissionType);
             await kernel.SendAsync(command);
         }
 
-        protected SubscribedList<IKernelEvent> KernelEvents { get; private set; }
+        protected SubscribedList<KernelEvent> KernelEvents { get; private set; }
 
         protected void DisposeAfterTest(IDisposable disposable)
         {

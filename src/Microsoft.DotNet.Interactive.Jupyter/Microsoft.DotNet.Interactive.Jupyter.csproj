@@ -7,7 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Clockwise" Version="1.0.261-beta" />
-    <PackageReference Include="Markdig.Signed" Version="0.18.1" />
+    <PackageReference Include="Markdig.Signed" Version="0.18.3" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.2" />
     <PackageReference Include="NetMQ" Version="4.0.0.207" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />

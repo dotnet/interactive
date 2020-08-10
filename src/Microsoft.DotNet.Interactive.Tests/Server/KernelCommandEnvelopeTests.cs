@@ -10,20 +10,20 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 {
     public class KernelCommandEnvelopeTests
     {
-        [Fact(Timeout = 45000)]
+        [Fact]
         public void Create_creates_envelope_of_the_correct_type()
         {
-            IKernelCommand command = new SubmitCode("display(123)");
+            KernelCommand command = new SubmitCode("display(123)");
 
             var envelope = KernelCommandEnvelope.Create(command);
 
             envelope.Should().BeOfType<KernelCommandEnvelope<SubmitCode>>();
         }
         
-        [Fact(Timeout = 45000)]
+        [Fact]
         public void Create_creates_envelope_with_reference_to_original_command()
         {
-            IKernelCommand command = new SubmitCode("display(123)");
+            KernelCommand command = new SubmitCode("display(123)");
 
             var envelope = KernelCommandEnvelope.Create(command);
 

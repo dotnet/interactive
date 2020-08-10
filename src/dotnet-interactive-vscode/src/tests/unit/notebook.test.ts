@@ -1,19 +1,37 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { expect } from 'chai';
+import { expect, use } from 'chai';
+import * as fs from 'fs';
+import * as path from 'path';
+
+use(require('chai-fs'));
 
 import { ClientMapper } from './../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
-import { CellOutput, CellOutputKind } from '../../interfaces/vscode';
-import { CodeSubmissionReceivedType, CommandHandledType, CompleteCodeSubmissionReceivedType, DisplayedValueProducedType, DisplayedValueUpdatedType, ReturnValueProducedType, StandardOutputValueProducedType } from '../../contracts';
+import { CellKind, CellOutput, CellOutputKind, NotebookDocument } from '../../interfaces/vscode';
+import {
+    CodeSubmissionReceivedType,
+    CommandFailedType,
+    CommandSucceededType,
+    CompleteCodeSubmissionReceivedType,
+    Diagnostic,
+    DiagnosticSeverity,
+    DiagnosticsProducedType,
+    DisplayedValueProducedType,
+    DisplayedValueUpdatedType,
+    ReturnValueProducedType,
+    StandardOutputValueProducedType,
+} from '../../contracts';
+import { withFakeGlobalStorageLocation } from './utilities';
+import { backupNotebook } from '../../interactiveNotebook';
 
 describe('Notebook tests', () => {
     for (let language of ['csharp', 'fsharp']) {
         it(`executes and returns expected value: ${language}`, async () => {
             let token = '123';
             let code = '1+1';
-            let clientMapper = new ClientMapper(() => TestKernelTransport.create({
+            let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
                 'SubmitCode': [
                     {
                         eventType: CodeSubmissionReceivedType,
@@ -32,7 +50,6 @@ describe('Notebook tests', () => {
                     {
                         eventType: ReturnValueProducedType,
                         event: {
-                            value: 2,
                             valueId: null,
                             formattedValues: [
                                 {
@@ -44,7 +61,7 @@ describe('Notebook tests', () => {
                         token
                     },
                     {
-                        eventType: CommandHandledType,
+                        eventType: CommandSucceededType,
                         event: {},
                         token
                     }
@@ -52,7 +69,7 @@ describe('Notebook tests', () => {
             }));
             let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
             let result: Array<CellOutput> = [];
-            await client.execute(code, language, outputs => result = outputs, token);
+            await client.execute(code, language, outputs => result = outputs, _ => {}, token);
             expect(result).to.deep.equal([
                 {
                     outputKind: CellOutputKind.Rich,
@@ -71,7 +88,7 @@ Console.WriteLine(1);
 Console.WriteLine(1);
 Console.WriteLine(1);
 `;
-        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -91,7 +108,6 @@ Console.WriteLine(1);
                     eventType: StandardOutputValueProducedType,
                     event: {
                         valueId: null,
-                        value: '1\r\n',
                         formattedValues: [
                             {
                                 mimeType: 'text/plain',
@@ -105,7 +121,6 @@ Console.WriteLine(1);
                     eventType: StandardOutputValueProducedType,
                     event: {
                         valueId: null,
-                        value: '2\r\n',
                         formattedValues: [
                             {
                                 mimeType: 'text/plain',
@@ -119,7 +134,6 @@ Console.WriteLine(1);
                     eventType: StandardOutputValueProducedType,
                     event: {
                         valueId: null,
-                        value: '3\r\n',
                         formattedValues: [
                             {
                                 mimeType: 'text/plain',
@@ -130,7 +144,7 @@ Console.WriteLine(1);
                     token
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token
                 }
@@ -138,7 +152,7 @@ Console.WriteLine(1);
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -164,7 +178,7 @@ Console.WriteLine(1);
     it('updated values are replaced instead of added', async () => {
         let token = '123';
         let code = '#r nuget:Newtonsoft.Json';
-        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -184,8 +198,10 @@ Console.WriteLine(1);
                     eventType: DisplayedValueProducedType,
                     event: {
                         valueId: 'newtonsoft.json',
-                        value: 'Installing package Newtonsoft.Json...',
-                        formattedValues: []
+                        formattedValues: [{
+                            mimeType: "text/plain",
+                            value: "Installing package Newtonsoft.Json..."
+                        }]
                     },
                     token
                 },
@@ -193,8 +209,11 @@ Console.WriteLine(1);
                     eventType: DisplayedValueUpdatedType,
                     event: {
                         valueId: 'newtonsoft.json',
-                        value: 'Installed package Newtonsoft.Json version 1.2.3.4',
-                        formattedValues: []
+                        formattedValues: [
+                            {
+                                mimeType: "text/plain",
+                                value: "Installed package Newtonsoft.Json version 1.2.3.4"
+                            }]
                     },
                     token
                 },
@@ -202,13 +221,15 @@ Console.WriteLine(1);
                     eventType: DisplayedValueProducedType,
                     event: {
                         valueId: null,
-                        value: 'sentinel',
-                        formattedValue: []
+                        formattedValues: [{
+                            mimeType: "text/plain",
+                            value: "sentinel"
+                        }]
                     },
                     token
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token
                 }
@@ -216,7 +237,7 @@ Console.WriteLine(1);
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -236,7 +257,7 @@ Console.WriteLine(1);
     it('returned json is property parsed', async () => {
         let token = '123';
         let code = 'JObject.FromObject(new { a = 1, b = false })';
-        let clientMapper = new ClientMapper(() => TestKernelTransport.create({
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -255,7 +276,6 @@ Console.WriteLine(1);
                 {
                     eventType: ReturnValueProducedType,
                     event: {
-                        value: 2,
                         valueId: null,
                         formattedValues: [
                             {
@@ -267,7 +287,7 @@ Console.WriteLine(1);
                     token
                 },
                 {
-                    eventType: CommandHandledType,
+                    eventType: CommandSucceededType,
                     event: {},
                     token
                 }
@@ -275,7 +295,7 @@ Console.WriteLine(1);
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -287,5 +307,280 @@ Console.WriteLine(1);
                 }
             }
         ]);
+    });
+
+    it('diagnostics are reported on CommandFailed', async () => {
+        let token = '123';
+        let code = 'Console.WriteLin();';
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
+            'SubmitCode': [
+                {
+                    eventType: CodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: CompleteCodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: DiagnosticsProducedType,
+                    event: {
+                        diagnostics: [
+                            {
+                                linePositionSpan: {
+                                    start: {
+                                        line: 0,
+                                        character: 8
+                                    },
+                                    end: {
+                                        line: 0,
+                                        character: 15
+                                    }
+                                },
+                                severity: DiagnosticSeverity.Error,
+                                code: 'CS0117',
+                                message: "'Console' does not contain a definition for 'WritLin'"
+                            }
+                        ]
+                    },
+                    token
+                },
+                {
+                    eventType: CommandFailedType,
+                    event: {
+                        message: "CS0117: (0,8)-(0,15) 'Console' does not contain a definition for 'WritLin'"
+                    },
+                    token
+                }
+            ]
+        }));
+        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let diagnostics: Array<Diagnostic> = [];
+        await client.execute(code, 'csharp', _ => {}, diags => diagnostics = diags, token);
+        expect(diagnostics).to.deep.equal([
+            {
+                linePositionSpan: {
+                    start: {
+                        line: 0,
+                        character: 8
+                    },
+                    end: {
+                        line: 0,
+                        character: 15
+                    }
+                },
+                severity: DiagnosticSeverity.Error,
+                code: 'CS0117',
+                message: "'Console' does not contain a definition for 'WritLin'"
+            }
+        ]);
+    });
+
+    it('diagnostics are reported on CommandSucceeded', async () => {
+        let token = '123';
+        let code = 'Console.WriteLine();';
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
+            'SubmitCode': [
+                {
+                    eventType: CodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: CompleteCodeSubmissionReceivedType,
+                    event: {
+                        code: code
+                    },
+                    token
+                },
+                {
+                    eventType: DiagnosticsProducedType,
+                    event: {
+                        diagnostics: [
+                            {
+                                linePositionSpan: {
+                                    start: {
+                                        line: 0,
+                                        character: 8
+                                    },
+                                    end: {
+                                        line: 0,
+                                        character: 16
+                                    }
+                                },
+                                severity: DiagnosticSeverity.Warning,
+                                code: 'CS4242',
+                                message: "This is a fake diagnostic for testing."
+                            }
+                        ]
+                    },
+                    token
+                },
+                {
+                    eventType: CommandSucceededType,
+                    event: {},
+                    token
+                }
+            ]
+        }));
+        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let diagnostics: Array<Diagnostic> = [];
+        await client.execute(code, 'csharp', _ => {}, diags => diagnostics = diags, token);
+        expect(diagnostics).to.deep.equal([
+            {
+                linePositionSpan: {
+                    start: {
+                        line: 0,
+                        character: 8
+                    },
+                    end: {
+                        line: 0,
+                        character: 16
+                    }
+                },
+                severity: DiagnosticSeverity.Warning,
+                code: 'CS4242',
+                message: "This is a fake diagnostic for testing."
+            }
+        ]);
+    });
+
+    it('diagnostics are reported when directly requested', async () => {
+        let token = '123';
+        let code = 'Console.WriteLine();';
+        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
+            'RequestDiagnostics': [
+                {
+                    eventType: DiagnosticsProducedType,
+                    event: {
+                        diagnostics: [
+                            {
+                                linePositionSpan: {
+                                    start: {
+                                        line: 0,
+                                        character: 8
+                                    },
+                                    end: {
+                                        line: 0,
+                                        character: 16
+                                    }
+                                },
+                                severity: DiagnosticSeverity.Warning,
+                                code: 'CS4242',
+                                message: "This is a fake diagnostic for testing."
+                            }
+                        ]
+                    },
+                    token
+                },
+                {
+                    eventType: CommandSucceededType,
+                    event: {},
+                    token
+                }
+            ]
+        }));
+        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        const diagnostics = await client.getDiagnostics('csharp', code, token);
+        expect(diagnostics).to.deep.equal([
+            {
+                linePositionSpan: {
+                    start: {
+                        line: 0,
+                        character: 8
+                    },
+                    end: {
+                        line: 0,
+                        character: 16
+                    }
+                },
+                severity: DiagnosticSeverity.Warning,
+                code: 'CS4242',
+                message: "This is a fake diagnostic for testing."
+            }
+        ]);
+    });
+
+    it('notebook backup creates file: global storage exists', async () => {
+        await withFakeGlobalStorageLocation(true, async globalStoragePath => {
+            const notebook: NotebookDocument = {
+                cells: [
+                    {
+                        cellKind: CellKind.Code,
+                        document: {
+                            getText: () => '1 + 1',
+                            uri: {
+                                fsPath: 'test-path'
+                            }
+                        },
+                        language: 'dotnet-interactive.csharp',
+                        outputs: []
+                    }
+                ]
+            };
+            const backupLocation = path.join(globalStoragePath, Date.now().toString());
+            const notebookBackup = await backupNotebook(notebook, backupLocation, '\r\n');
+            const expected = [
+                '#!csharp',
+                '',
+                '1 + 1',
+                ''
+            ].join('\r\n');
+            const actualBuffer = fs.readFileSync(notebookBackup.id);
+            const actualText = actualBuffer.toString('utf-8');
+            expect(actualText).to.equal(expected);
+        });
+    });
+
+    it("notebook backup creates file: global storage doesn't exist", async () => {
+        await withFakeGlobalStorageLocation(false, async globalStoragePath => {
+            const notebook: NotebookDocument = {
+                cells: [
+                    {
+                        cellKind: CellKind.Code,
+                        document: {
+                            getText: () => '1 + 1',
+                            uri: {
+                                fsPath: 'test-path'
+                            }
+                        },
+                        language: 'dotnet-interactive.csharp',
+                        outputs: []
+                    }
+                ]
+            };
+            const backupLocation = path.join(globalStoragePath, Date.now().toString());
+            const notebookBackup = await backupNotebook(notebook, backupLocation, '\r\n');
+            const expected = [
+                '#!csharp',
+                '',
+                '1 + 1',
+                ''
+            ].join('\r\n');
+            const actualBuffer = fs.readFileSync(notebookBackup.id);
+            const actualText = actualBuffer.toString('utf-8');
+            expect(actualText).to.equal(expected);
+        });
+    });
+
+    it('notebook backup cleans up after itself', async () => {
+        await withFakeGlobalStorageLocation(true, async globalStoragePath => {
+            const notebook: NotebookDocument = {
+                cells: []
+            };
+            const backupLocation = path.join(globalStoragePath, Date.now().toString());
+            const notebookBackup = await backupNotebook(notebook, backupLocation, '\r\n');
+            expect(notebookBackup.id).to.be.file();
+            notebookBackup.delete();
+            expect(notebookBackup.id).to.not.be.a.path();
+        });
     });
 });

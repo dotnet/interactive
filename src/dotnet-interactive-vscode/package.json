@@ -25,9 +25,10 @@
   ],
   "activationEvents": [
     "onNotebookEditor:dotnet-interactive",
+    "onNotebookEditor:dotnet-interactive-jupyter",
     "onCommand:dotnet-interactive.acquire",
-    "onCommand:dotnet-interactive.convertJupyterNotebook",
-    "onCommand:dotnet-interactive.reportInteractiveVersion"
+    "onCommand:dotnet-interactive.openNotebook",
+    "onCommand:dotnet-interactive.saveAsNotebook"
   ],
   "main": "./out/extension.js",
   "extensionDependencies": [
@@ -43,6 +44,16 @@
             "filenamePattern": "*.{dib,dotnet-interactive}"
           }
         ]
+      },
+      {
+        "viewType": "dotnet-interactive-jupyter",
+        "displayName": ".NET Interactive for Jupyter Notebooks",
+        "selector": [
+          {
+            "filenamePattern": "*.ipynb"
+          }
+        ],
+        "priority": "option"
       }
     ],
     "configuration": {
@@ -59,7 +70,9 @@
             "[vscode]",
             "stdio",
             "--http-port-range",
-            "1000-3000"
+            "1000-3000",
+            "--working-dir",
+            "{working_dir}"
           ],
           "description": "Command and arguments used to start a notebook session."
         },
@@ -67,6 +80,11 @@
           "type": "string",
           "default": "{global_storage_path}",
           "description": "The working directory in which the kernel transport process is started."
+        },
+        "dotnet-interactive.liveDiagnosticDelay": {
+          "type": "number",
+          "default": 500,
+          "description": "The delay in ms after the last cell edit before live diagnostics are requested."
         },
         "dotnet-interactive.interactiveToolSource": {
           "type": "string",
@@ -80,7 +98,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.131103",
+          "default": "1.0.137901",
           "description": "The minimum required version of the .NET Interactive tool."
         }
       }
@@ -91,12 +109,12 @@
         "title": "Install .NET Interactive"
       },
       {
-        "command": "dotnet-interactive.convertJupyterNotebook",
-        "title": ".NET Interactive: Convert Jupyter notebook (.ipynb) to .NET Interactive notebook"
+        "command": "dotnet-interactive.openNotebook",
+        "title": ".NET Interactive: Open notebook"
       },
       {
-        "command": "dotnet-interactive.exportAsJupyterNotebook",
-        "title": ".NET Interactive: Export as Jupyter Notebook"
+        "command": "dotnet-interactive.saveAsNotebook",
+        "title": ".NET Interactive: Save notebook as specific file format"
       },
       {
         "command": "dotnet-interactive.restartCurrentNotebookKernel",
@@ -223,7 +241,6 @@
     "@types/mocha": "7.0.2",
     "@types/node": "13.11.0",
     "@types/tmp": "0.2.0",
-    "@types/vscode": "1.44.0",
     "@typescript-eslint/eslint-plugin": "2.26.0",
     "@typescript-eslint/parser": "2.26.0",
     "chai": "4.2.0",

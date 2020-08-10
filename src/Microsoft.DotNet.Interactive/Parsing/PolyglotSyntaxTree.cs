@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             switch (node)
             {
                 case LanguageNode languageNode:
-                    return languageNode.Language;
+                    return languageNode.KernelName;
 
                 case PolyglotSubmissionNode submissionNode:
                     return submissionNode.DefaultLanguage;

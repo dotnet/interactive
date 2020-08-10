@@ -14,6 +14,7 @@ using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.Commands;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
+using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
@@ -314,6 +315,42 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             await _parser.InvokeAsync($"jupyter {expected}", testConsole);
 
             testConsole.Error.ToString().Should().Contain("File does not exist: not_exist.json");
+        }
+
+        [Fact]
+        public void stdio_command_working_dir_defaults_to_process_current()
+        {
+            var result = _parser.Parse("stdio");
+
+            var binder = new ModelBinder<StartupOptions>();
+
+            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+
+            options.WorkingDir.FullName
+                .Should()
+                .Be(Environment.CurrentDirectory);
+        }
+
+        [Fact]
+        public void stdio_command_working_dir_can_be_specified()
+        {
+            // StartupOptions.WorkingDir is of type DirectoryInfo which normalizes paths to OS type and ensures that
+            // they're rooted.  To ensure proper testing behavior we have to give an os-specific path.
+            var workingDir = Environment.OSVersion.Platform switch
+            {
+                PlatformID.Win32NT => "C:\\some\\dir",
+                _ => "/some/dir"
+            };
+
+            var result = _parser.Parse($"stdio --working-dir {workingDir}");
+
+            var binder = new ModelBinder<StartupOptions>();
+
+            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+
+            options.WorkingDir.FullName
+                .Should()
+                .Be(workingDir);
         }
 
         [Theory]
