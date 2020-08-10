@@ -182,8 +182,7 @@ export interface InputRequested extends KernelEvent {
 
 export interface KernelExtensionLoaded extends KernelEvent {
     extensionType: string;
-    contentSourceName: string;
-    isStaticContentSource: boolean;
+    kernelName: string;
 }
 
 export interface KernelReady extends KernelEvent {
