@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             var _configuration = new Configuration()
                                  .UsingExtension($"{@event.GetType().Name}.json")
-                                 .SetInteractive(false);
+                                 .SetInteractive(true);
 
             @event.Command?.SetToken("the-token");
 
@@ -285,7 +285,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     "some/different/directory",
                     new ChangeWorkingDirectory("some/different/directory"));
 
-                yield return new KernelExtensionLoaded("customExtension", new SubmitCode(@"#r ""nuget:package"" "));
+                yield return new KernelExtensionLoaded(new SubmitCode(@"#r ""nuget:package"" "));
             }
         }
 
