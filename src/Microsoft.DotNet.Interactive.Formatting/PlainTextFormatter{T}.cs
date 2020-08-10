@@ -20,9 +20,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public override string MimeType => PlainTextFormatter.MimeType;
 
-        public static ITypeFormatter GetBestFormatterFor() =>
-            PlainTextFormatter.GetBestFormatterFor(typeof(T));
-
         public override void Format(T value, TextWriter writer)
         {
             if (value is null)
@@ -34,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _format(value, writer);
         }
 
-        internal static PlainTextFormatter<T> CreateForAnyObject(bool includeInternals = false)
+        public static PlainTextFormatter<T> CreateForAnyObject(bool includeInternals = false)
         {
             if (typeof(T).IsScalar())
             {

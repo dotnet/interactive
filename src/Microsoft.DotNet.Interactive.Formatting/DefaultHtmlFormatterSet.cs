@@ -13,14 +13,22 @@ using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    internal class DefaultHtmlFormatterSet 
+    internal class DefaultHtmlFormatterSet
     {
         static internal readonly ITypeFormatter[] DefaultFormatters =
             new ITypeFormatter[]
             {
-                new HtmlFormatter<DateTime>((value, writer) => writer.Write(value.ToString("u"))),
+                new HtmlFormatter<DateTime>((dateTime, writer) =>
+                {
+                    PocketView view = span(dateTime.ToString("u"));
+                    view.WriteTo(writer, HtmlEncoder.Default);
+                }),
 
-                new HtmlFormatter<DateTimeOffset>((value, writer) => writer.Write(value.ToString("u"))),
+                new HtmlFormatter<DateTimeOffset>((dateTime, writer) =>
+                {
+                    PocketView view = span(dateTime.ToString("u"));
+                    view.WriteTo(writer, HtmlEncoder.Default);
+                }),
 
                 new HtmlFormatter<ExpandoObject>((obj, writer) =>
                 {
@@ -29,8 +37,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     foreach (var pair in obj.OrderBy(p => p.Key))
                     {
-                        headers.Add(th(pair.Key));
-                        values.Add(td(pair.Value));
+                        // Note, embeds the keys and values as arbitrary objects into the HTML content,
+                        // ultimately rendered by PocketView
+                        headers.Add(th(arbitrary(pair.Key)));
+                        values.Add(td(arbitrary(pair.Value)));
                     }
 
                     IHtmlContent view = table(
@@ -44,11 +54,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     view.WriteTo(writer, HtmlEncoder.Default);
                 }),
 
-                new HtmlFormatter<HtmlString>((view, writer) => view.WriteTo(writer, HtmlEncoder.Default)),
-
-                new HtmlFormatter<JsonString>((view, writer) => view.WriteTo(writer, HtmlEncoder.Default)),
-
-                new HtmlFormatter<PocketView>((view, writer) => view.WriteTo(writer, HtmlEncoder.Default)),
+                new HtmlFormatter<IHtmlContent>((view, writer) => view.WriteTo(writer, HtmlEncoder.Default)),
 
                 new HtmlFormatter<ReadOnlyMemory<char>>((memory, writer) =>
                 {
@@ -57,11 +63,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     view.WriteTo(writer, HtmlEncoder.Default);
                 }),
 
-                new HtmlFormatter<string>((s, writer) => writer.Write(span(s))),
+                new HtmlFormatter<string>((s, writer) => writer.Write(s.HtmlEncode())),
 
                 new HtmlFormatter<TimeSpan>((timespan, writer) =>
                 {
-                    writer.Write(timespan.ToString());
+                    PocketView view = span(timespan.ToString());
+                    view.WriteTo(writer, HtmlEncoder.Default);
                 }),
 
                 new HtmlFormatter<Type>((type, writer) =>
@@ -73,6 +80,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     view.WriteTo(writer, HtmlEncoder.Default);
                 }),
 
+                // Transform ReadOnlyMemory to an array for formatting
                 new AnonymousTypeFormatter<object>(type: typeof(ReadOnlyMemory<>),
                     mimeType: HtmlFormatter.MimeType,
                     format: (obj, writer) =>
@@ -86,7 +94,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
                             writer.Write(array.ToDisplayString(HtmlFormatter.MimeType));
                         }),
 
-                new HtmlFormatter<Enum>((obj, writer) => writer.Write(obj.ToString())),
+                new HtmlFormatter<Enum>((enumValue, writer) =>
+                {
+                    PocketView view = span(enumValue.ToString());
+                    view.WriteTo(writer, HtmlEncoder.Default);
+                }),
 
                 new HtmlFormatter<IEnumerable>((obj, writer) =>
                 {

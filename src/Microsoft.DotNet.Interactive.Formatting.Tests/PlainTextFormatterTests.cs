@@ -16,14 +16,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
     public class PlainTextFormatterTests : FormatterTestBase
     {
         [Fact]
-        public void Non_generic_GetForAnyObject_creates_generic_formatter()
-        {
-            PlainTextFormatter.GetDefaultFormatterForAnyObject(typeof(Widget))
-                              .Should()
-                              .BeOfType<PlainTextFormatter<Widget>>();
-        }
-
-        [Fact]
         public void Non_generic_GetBestFormatter_uses_default_formatter_for_object()
         {
             PlainTextFormatter.GetBestFormatterFor(typeof(Widget))
@@ -52,7 +44,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Create_creates_a_formatter_that_emits_the_property_names_and_values_for_a_specific_type()
             {
-                var formatter = PlainTextFormatter<Widget>.GetBestFormatterFor();
+                var formatter = PlainTextFormatter.GetBestFormatterFor<Widget>();
 
                 var writer = new StringWriter();
                 formatter.Format(new Widget { Name = "Bob" }, writer);
@@ -147,7 +139,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 expando.Name = "socks";
                 expando.Parts = null;
 
-                var formatter = PlainTextFormatter<ExpandoObject>.GetBestFormatterFor();
+                var formatter = PlainTextFormatter.GetBestFormatterFor<ExpandoObject>();
 
                 var expandoString = ((object) expando).ToDisplayString(formatter);
 
@@ -192,7 +184,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 };
                 widget.Parts = new List<Part> { new Part { Widget = widget } };
 
-                var formatter = PlainTextFormatter<Widget>.GetBestFormatterFor();
+                var formatter = PlainTextFormatter.GetBestFormatterFor<Widget>();
 
                 // this should not throw
                 var s = widget.ToDisplayString(formatter);
@@ -206,7 +198,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Static_fields_are_not_written()
             {
-                var formatter = PlainTextFormatter<Widget>.GetBestFormatterFor();
+                var formatter = PlainTextFormatter.GetBestFormatterFor<Widget>();
                 new Widget().ToDisplayString(formatter)
                             .Should().NotContain(nameof(SomethingAWithStaticProperty.StaticField));
             }
@@ -214,7 +206,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Static_properties_are_not_written()
             {
-                var formatter = PlainTextFormatter<Widget>.GetBestFormatterFor();
+                var formatter = PlainTextFormatter.GetBestFormatterFor<Widget>();
                 new Widget().ToDisplayString(formatter)
                             .Should().NotContain(nameof(SomethingAWithStaticProperty.StaticProperty));
             }
@@ -222,7 +214,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void It_expands_fields_of_objects()
             {
-                var formatter = PlainTextFormatter<SomeStruct>.GetBestFormatterFor();
+                var formatter = PlainTextFormatter.GetBestFormatterFor<SomeStruct>();
                 var today = DateTime.Today;
                 var tomorrow = DateTime.Today.AddDays(1);
                 var id = new SomeStruct
@@ -240,7 +232,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Output_can_include_internal_fields()
             {
-                var formatter = PlainTextFormatter.GetDefaultFormatterForAnyObject(typeof(Node), true);
+                var formatter = PlainTextFormatter<Node>.CreateForAnyObject(true);
 
                 var node = new Node { Id = "5" };
 
@@ -252,7 +244,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Output_does_not_include_autoproperty_backing_fields()
             {
-                var formatter = PlainTextFormatter.GetDefaultFormatterForAnyObject(typeof(Node), true);
+                var formatter = PlainTextFormatter<Node>.CreateForAnyObject(true);
 
                 var output = new Node().ToDisplayString(formatter);
 
@@ -263,7 +255,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Output_can_include_internal_properties()
             {
-                var formatter = PlainTextFormatter.GetDefaultFormatterForAnyObject(typeof(Node), true);
+                var formatter = PlainTextFormatter<Node>.CreateForAnyObject(true);
 
                 var output = new Node { Id = "6" }.ToDisplayString(formatter);
 
@@ -393,7 +385,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                         }
                 };
 
-                var formatter = PlainTextFormatter<Node>.GetBestFormatterFor();
+                var formatter = PlainTextFormatter.GetBestFormatterFor<Node>();
 
                 var output = node.ToDisplayString(formatter);
 
@@ -417,7 +409,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                         }
                 };
 
-                var formatter = PlainTextFormatter<Node>.GetBestFormatterFor();
+                var formatter = PlainTextFormatter.GetBestFormatterFor<Node>();
 
                 var output = node.ToDisplayString(formatter);
 
@@ -448,7 +440,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     new Widget { Name = "widget z" }
                 };
 
-                var formatter = PlainTextFormatter<List<Widget>>.GetBestFormatterFor();
+                var formatter = PlainTextFormatter.GetBestFormatterFor<List<Widget>>();
 
                 var formatted = list.ToDisplayString(formatter);
 

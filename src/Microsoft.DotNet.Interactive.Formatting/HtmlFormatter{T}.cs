@@ -21,9 +21,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _format = format;
         }
 
-        public static ITypeFormatter GetBestFormatterFor() =>
-            HtmlFormatter.GetBestFormatterFor(typeof(T));
-
         public override void Format(T value, TextWriter writer)
         {
             if (value is null)
@@ -54,11 +51,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return new HtmlFormatter<T>((instance, writer) =>
             {
+                // Note, embeds the keys and values as arbitrary objects into the HTML content,
+                // ultimately rendered by PocketView, e.g. via ToDisplayString(PlainTextFormatter.MimeType)
                 IEnumerable<object> headers = members.Select(m => m.Member.Name)
-                                                     .Select(v => th(v));
+                                                     .Select(v => th(arbitrary(v)));
 
                 IEnumerable<object> values = members.Select(m => Value(m, instance))
-                                                    .Select(v => td(v));
+                                                    .Select(v => td(arbitrary(v)));
 
                 var t =
                     table(
@@ -188,7 +187,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         }
                     }
 
-                    rows.Add(tr(rowValues.Select(r => td(r))));
+                    // Note, embeds the values as arbitrary objects into the HTML content.
+                    rows.Add(tr(rowValues.Select(r => td(arbitrary(r)))));
                 }
 
                 if (remainingCount > 0)

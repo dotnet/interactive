@@ -14,13 +14,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static ITypeFormatter GetBestFormatterFor(Type type) =>
             Formatter.GetBestFormatterFor(type, MimeType);
 
-        public static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
-            FormattersForAnyObject.GetFormatter(type, includeInternals);
-
-        public static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
-            FormattersForAnyEnumerable.GetFormatter(type, false);
+        public static ITypeFormatter GetBestFormatterFor<T>() =>
+            GetBestFormatterFor(typeof(T));
 
         public const string MimeType = "text/plain";
+
+        internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
+            FormattersForAnyObject.GetFormatter(type, includeInternals);
+
+        internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
+            FormattersForAnyEnumerable.GetFormatter(type, false);
 
         internal static Action<T, TextWriter> CreateFormatDelegate<T>(MemberInfo[] forMembers)
         {
