@@ -88,7 +88,7 @@ function loadDotnetInteractiveApi() {
             let dotnetInteractiveExtensionsRequire = require.config({
                 context: '$CACHE_BUSTER$',
                 paths: {
-                    'dotnet-interactive': `${root}extensions`
+                    'dotnet-interactive-extensions': `${root}extensions`
                 }
             }) || require;
             if (!window.dotnetInteractiveRequire) {

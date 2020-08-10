@@ -235,6 +235,38 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         }
 
         [Fact]
+        public async Task can_get_static_content_from_extensions()
+        {
+            var server = GetServer();
+            var kernel = server.Kernel;
+            var projectDir = DirectoryUtility.CreateDirectory();
+            var fileToEmbed = new FileInfo(Path.Combine(projectDir.FullName, "file.txt"));
+            File.WriteAllText(fileToEmbed.FullName, "for testing only");
+            var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
+            var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
+            var guid = Guid.NewGuid().ToString();
+
+            var nupkg = await KernelExtensionTestHelper.CreateExtensionNupkg(
+                projectDir,
+                $"await kernel.SendAsync(new SubmitCode(\"\\\"{guid}\\\"\"));",
+                packageName,
+                packageVersion,
+                fileToEmbed);
+
+
+
+            await kernel.SubmitCodeAsync($@"
+#i ""nuget:{nupkg.Directory.FullName}""
+#r ""nuget:{packageName},{packageVersion}""            ");
+
+            var response = await server.HttpClient.GetAsync("extensions/TestKernelExtension/resources/file.txt");
+
+            await response.ShouldSucceed();
+
+            response.Content.Headers.ContentType.MediaType.Should().Be("text/plain");
+        }
+
+        [Fact]
         public async Task can_get_kernel_names()
         {
             var server = GetServer();
