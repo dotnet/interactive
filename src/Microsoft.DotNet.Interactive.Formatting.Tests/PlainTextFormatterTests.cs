@@ -16,14 +16,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
     public class PlainTextFormatterTests : FormatterTestBase
     {
         [Fact]
-        public void Non_generic_GetForAnyObject_creates_generic_formatter()
-        {
-            PlainTextFormatter.GetDefaultFormatterForAnyObject(typeof(Widget))
-                              .Should()
-                              .BeOfType<PlainTextFormatter<Widget>>();
-        }
-
-        [Fact]
         public void Non_generic_GetBestFormatter_uses_default_formatter_for_object()
         {
             PlainTextFormatter.GetBestFormatterFor(typeof(Widget))
@@ -240,7 +232,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Output_can_include_internal_fields()
             {
-                var formatter = PlainTextFormatter.GetDefaultFormatterForAnyObject(typeof(Node), true);
+                var formatter = PlainTextFormatter<Node>.CreateForAnyObject(true);
 
                 var node = new Node { Id = "5" };
 
@@ -252,7 +244,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Output_does_not_include_autoproperty_backing_fields()
             {
-                var formatter = PlainTextFormatter.GetDefaultFormatterForAnyObject(typeof(Node), true);
+                var formatter = PlainTextFormatter<Node>.CreateForAnyObject(true);
 
                 var output = new Node().ToDisplayString(formatter);
 
@@ -263,7 +255,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Output_can_include_internal_properties()
             {
-                var formatter = PlainTextFormatter.GetDefaultFormatterForAnyObject(typeof(Node), true);
+                var formatter = PlainTextFormatter<Node>.CreateForAnyObject(true);
 
                 var output = new Node { Id = "6" }.ToDisplayString(formatter);
 

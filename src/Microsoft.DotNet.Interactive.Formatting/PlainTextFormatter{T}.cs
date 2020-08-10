@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _format(value, writer);
         }
 
-        internal static PlainTextFormatter<T> CreateForAnyObject(bool includeInternals = false)
+        public static PlainTextFormatter<T> CreateForAnyObject(bool includeInternals = false)
         {
             if (typeof(T).IsScalar())
             {
