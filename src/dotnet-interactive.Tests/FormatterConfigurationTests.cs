@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         }
 
         [Fact]
-        public void ScriptContent_type_with_possible_html_characters_is_formatted_unchanged()
+        public void ScriptContent_type_with_possible_html_characters_is_not_HTML_encoded()
         {
             var scriptText = "if (true && false) { alert('hello with embedded <>\" escapes'); };";
             var script = new ScriptContent(scriptText);
