@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 var chart = new PlotlyChart();
                 var html = PlotlyChartExtensions.GetHtml(chart);
                 var document = new HtmlDocument();
-                document.LoadHtml(html);
+                document.LoadHtml(html.ToString());
 
                 document.DocumentNode.SelectSingleNode("//div").InnerHtml.Should().NotBeNull();
                 document.DocumentNode.SelectSingleNode("//div").Id.Should().NotBeNullOrEmpty();
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 var chart = new PlotlyChart();
                 var html = PlotlyChartExtensions.GetHtml(chart);
                 var document = new HtmlDocument();
-                document.LoadHtml(html);
+                document.LoadHtml(html.ToString());
 
                 document.DocumentNode.SelectSingleNode("//script")
                     .InnerHtml
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 var chart = new PlotlyChart();
                 var html = PlotlyChartExtensions.GetHtml(chart);
                 var document = new HtmlDocument();
-                document.LoadHtml(html);
+                document.LoadHtml(html.ToString());
 
                 var divId = document.DocumentNode.SelectSingleNode("//div").Id;
                 document.DocumentNode

@@ -10,13 +10,13 @@ namespace XPlot.DotNet.Interactive.KernelExtensions
 {
     public static class PlotlyChartExtensions
     {
-        public static string GetHtml(this PlotlyChart chart)
+        public static IHtmlContent GetHtml(this PlotlyChart chart)
         {
             var divElement = div[style: $"width: {chart.Width}px; height: {chart.Height}px;", id: chart.Id]();
             var jsElement = chart.GetInlineJS().Replace("<script>", string.Empty).Replace("</script>",string.Empty);
             
-            return $@"{divElement}
-{GetScriptElementWithRequire(jsElement)}";
+            return new HtmlString( $@"{divElement}
+{GetScriptElementWithRequire(jsElement)}");
         }
 
         private static IHtmlContent GetScriptElementWithRequire(string script)
