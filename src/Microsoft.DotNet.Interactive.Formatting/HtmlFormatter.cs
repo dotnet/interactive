@@ -17,13 +17,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static ITypeFormatter GetBestFormatterFor<T>() =>
             GetBestFormatterFor(typeof(T));
 
-        public static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
+        public const string MimeType = "text/html";
+
+        internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
             FormattersForAnyObject.GetFormatter(type, includeInternals);
 
-        public static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
+        internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
             FormattersForAnyEnumerable.GetFormatter(type, false);
-
-        public const string MimeType = "text/html";
 
         internal static PocketView Table(
             List<IHtmlContent> headers,
