@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return new HtmlFormatter<T>((context, instance, writer) =>
             {
-                if (members.Length == 0 || context.IsNestedTable)
+                if (members.Length == 0 || context.IsNestedInTable)
                 {
                     // This formatter refuses to format objects without members, and 
                     // refused to produce nested tables.
@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                                 tr(
                                     values)));
 
-                    var innerContext = context.WithIsNestedTable();
+                    var innerContext = context.NestedInTable();
                     ((PocketView)t).WriteTo(innerContext, writer, HtmlEncoder.Default);
                     return true;
                 }
@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             bool BuildTable(IFormatContext context, T source, TextWriter writer)
             {
-                if (context.IsNestedTable)
+                if (context.IsNestedInTable)
                 {
                     // This formatter refuses to produce nested tables.
                     return false;
@@ -219,7 +219,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 var table = HtmlFormatter.Table(headers, rows);
 
-                var innerContext = context.WithIsNestedTable();
+                var innerContext = context.NestedInTable();
                 table.WriteTo(innerContext, writer, HtmlEncoder.Default);
                 return true;
             }

@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                             tr(
                                 values)));
 
-                    var innerContext = context.WithIsNestedTable();
+                    var innerContext = context.NestedInTable();
                     view.WriteTo(innerContext, writer, HtmlEncoder.Default);
                     return true;
                 }),
