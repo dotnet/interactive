@@ -202,8 +202,16 @@ module Html =
         let ul attrs content = f "ul" attrs content
         /// Specifies an HTML element
         let video attrs content = f "video" attrs content
-        /// Specifies an HTML element using plain text
-        let str (s: string) = (HtmlElement.Text(s) :> IHtmlContent)
+
+        /// Specifies an HTML element that is the encoded text
+        let encodedText (s: string) = (HtmlElement.Text(s) :> IHtmlContent)
+
+        /// Specifies an HTML element that is the encoded text
+        let str (s: string) = encodedText s
+
+        /// Specifies HTML text that is injected directly into the output HTML
+        let rawText (s: string) = (HtmlString(s) :> IHtmlContent)
+
         /// Specifies an HTML element using an arbitrary object
         // Note: PocketView.SetContent decides what to do with this
         let object (o: obj) = (HtmlElement.Obj(o) :> IHtmlContent)

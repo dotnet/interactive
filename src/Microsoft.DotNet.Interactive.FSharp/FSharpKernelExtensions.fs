@@ -30,6 +30,9 @@ type FSharpKernelExtensions private () =
                 referenceFromType typeof<PlotlyChart>
                 referenceFromType typeof<Formatter>
 
+                openNamespaceOrType typeof<System.Console>.Namespace
+                openNamespaceOrType typeof<System.IO.File>.Namespace
+                openNamespaceOrType typeof<System.Text.StringBuilder>.Namespace
                 openNamespaceOrType typeof<Formatter>.Namespace
             ] |> String.concat Environment.NewLine
 
@@ -46,8 +49,6 @@ type FSharpKernelExtensions private () =
         let code = 
             [
                 // opens some System namespaces for testing 
-                openNamespaceOrType typeof<System.Console>.Namespace
-                openNamespaceOrType typeof<System.Text.StringBuilder>.Namespace
                 openNamespaceOrType typeof<System.Threading.Tasks.Task>.Namespace
                 openNamespaceOrType typeof<System.Linq.Enumerable>.Namespace
 

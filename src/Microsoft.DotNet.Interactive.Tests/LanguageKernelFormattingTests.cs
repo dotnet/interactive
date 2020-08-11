@@ -315,5 +315,66 @@ f();"
             KernelEvents.Should()
                         .NotContain(e => e is ReturnValueProduced);
         }
+
+        [Fact]
+        public async Task FSharpKernel_opens_System()
+        {
+            var kernel = CreateKernel(Language.FSharp);
+
+            await kernel.SubmitCodeAsync("Console.WriteLine(\"abc.fs\")");
+
+            KernelEvents.Should()
+                        .NotContain(e => e is CommandFailed);
+        }
+        [Fact]
+        public async Task FSharpKernel_opens_System_IO()
+        {
+            var kernel = CreateKernel(Language.FSharp);
+
+            await kernel.SubmitCodeAsync("let t = Path.GetFileNameWithoutExtension(\"abc.fs\")");
+
+            KernelEvents.Should()
+                        .Contain(e => e is CommandSucceeded);
+        }
+        [Fact]
+        public async Task FSharpKernel_opens_System_Text()
+        {
+            var kernel = CreateKernel(Language.FSharp);
+
+            await kernel.SubmitCodeAsync("let t = StringBuilder()");
+
+            KernelEvents.Should()
+                        .Contain(e => e is CommandSucceeded);
+        }
+        [Fact]
+        public async Task FSharpKernel_does_not_open_System_Linq()
+        {
+            var kernel = CreateKernel(Language.FSharp);
+
+            await kernel.SubmitCodeAsync("let t = Enumerable.Range(0,20)");
+
+            KernelEvents.Should()
+                        .Contain(e => e is CommandFailed);
+        }
+        [Fact]
+        public async Task FSharpKernel_does_not_open_System_Threading_Tasks()
+        {
+            var kernel = CreateKernel(Language.FSharp);
+
+            await kernel.SubmitCodeAsync("let t : Task<int> = Unchecked.defaultof<_>");
+
+            KernelEvents.Should()
+                        .Contain(e => e is CommandFailed);
+        }
+        [Fact]
+        public async Task FSharpKernel_does_not_open_HTML_DSL()
+        {
+            var kernel = CreateKernel(Language.FSharp);
+
+            await kernel.SubmitCodeAsync("let x = p [] []");
+
+            KernelEvents.Should()
+                        .Contain(e => e is CommandFailed);
+        }
     }
 }
