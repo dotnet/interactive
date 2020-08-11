@@ -1,12 +1,14 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests;
+using XPlot.DotNet.Interactive.KernelExtensions;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -29,14 +31,21 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             await kernel.SendAsync(new SubmitCode("new PlotlyChart()"));
 
             KernelEvents
-                .OfType<ReturnValueProduced>()
-                .Should().
-                ContainSingle(valueProduced =>
-                    valueProduced.FormattedValues.Any(formattedValue =>
-                    formattedValue.MimeType == "text/html"
-                        && formattedValue.Value.ToString().Contains("var xplotRequire = require.config({context:'xplot-3.0.1',paths:{plotly:'https://cdn.plot.ly/plotly-1.49.2.min'}}) || require;")
-                       && formattedValue.Value.ToString().Contains("xplotRequire([\'plotly\'], function(Plotly)")
-                 ));
+                .Should()
+                .ContainSingle<ReturnValueProduced>()
+                .Which
+                .FormattedValues
+                .Should()
+                .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
+                .Which
+                .Value
+                .Should()
+                .Contain(
+                    "var xplotRequire = require.config({context:'xplot-3.0.1',paths:{plotly:'https://cdn.plot.ly/plotly-1.49.2.min'}}) || require;")
+                .And
+                .Contain("xplotRequire([\'plotly\'], function(Plotly)")
+                .And
+                .Contain("<script type=\"text/javascript\">");
         }
     }
 }

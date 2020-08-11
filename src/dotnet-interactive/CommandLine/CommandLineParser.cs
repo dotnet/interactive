@@ -28,7 +28,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Pocket;
 using Recipes;
-
+using XPlot.DotNet.Interactive.KernelExtensions;
 using static Pocket.Logger;
 
 using CommandHandler = System.CommandLine.Invocation.CommandHandler;
