@@ -10,6 +10,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
+using XPlot.DotNet.Interactive.KernelExtensions;
 
 namespace Microsoft.DotNet.Interactive.Profiler
 {
