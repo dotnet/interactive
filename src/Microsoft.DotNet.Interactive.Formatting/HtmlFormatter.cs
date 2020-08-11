@@ -11,6 +11,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public static class HtmlFormatter
     {
+<<<<<<< HEAD
         public static bool PreformatEmbeddedPlainText { get; set; } = false;
 
         static HtmlFormatter()
@@ -18,6 +19,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
             Formatter.Clearing += (obj, sender) => PreformatEmbeddedPlainText = false;
         }
 
+=======
+>>>>>>> 0edb260c474e0a9e65351119a95aada972b3c2b0
         public static ITypeFormatter GetBestFormatterFor(Type type) =>
             Formatter.GetBestFormatterFor(type, MimeType);
 
@@ -50,6 +53,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static FormatterTable FormattersForAnyEnumerable =
             new FormatterTable(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyEnumerable));
 
+<<<<<<< HEAD
         internal static IHtmlContent DisplayEmbeddedObjectAsPlainText(object value)
         {
             var html = value.ToDisplayString(PlainTextFormatter.MimeType).HtmlEncode();
@@ -64,6 +68,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return html;
 
         }
+=======
+
+>>>>>>> 0edb260c474e0a9e65351119a95aada972b3c2b0
     }
 
 }

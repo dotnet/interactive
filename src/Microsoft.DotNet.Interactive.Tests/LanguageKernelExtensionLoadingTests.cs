@@ -15,6 +15,7 @@ using static Microsoft.DotNet.Interactive.Tests.Utility.KernelExtensionTestHelpe
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
+
     [LogTestNamesToPocketLogger]
     public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
     {

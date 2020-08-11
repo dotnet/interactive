@@ -72,7 +72,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
             });
         }
 
+<<<<<<< HEAD
         internal static HtmlFormatter<T> CreateForAnyEnumerable()
+=======
+        internal static HtmlFormatter<T> CreateForAnyEnumerable(bool includeInternals)
+>>>>>>> 0edb260c474e0a9e65351119a95aada972b3c2b0
         {
             Func<T, IEnumerable> getKeys = null;
             Func<T, IEnumerable> getValues = instance => (IEnumerable) instance;
