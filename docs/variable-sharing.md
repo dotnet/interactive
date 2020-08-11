@@ -12,16 +12,34 @@ Variables are shared by reference for reference types. A consequence of this is 
 
 It's common to have text that you'd like to use in a notebook. It might be JSON, CSV, XML, or some other format. It might be in a file, in your clipboard, or on the web. The `#!value` magic command is available to make it as easy as possible to get that text into a variable in your notebook. An important thing to know is that `#!value` is an alias to a  subkernel designed just to hold values. This means that once you store something in it, you can access it from another subkernel using `#!share`.
 
-There are a number of ways to use it. The simplest is to paste some text into the cell. The text will be stored as a string, but unlike using a `string` literal in C#, F#, or PowerShell, there's no need to escape anything.
+There are three ways to use `#!value` to get data into your notebook session:
+
+### 1. From the clipboard
+
+ The simplest way to use `#!value` is to paste some text into the cell. The text will be stored as a string, but unlike using a `string` literal in C#, F#, or PowerShell, there's no need to escape anything.
 
 <img src="https://user-images.githubusercontent.com/547415/89252742-81273b80-d5cf-11ea-8769-6d51eaa0669f.png" width="40%">
 
+### 2. From a file
 
-Optionally, you can display the value in the notebook when you submit a value, using the mime type of your choice. This accomplishes a few things. If your notebook frontend knows how to display that mime type, you can see it appropriately formatted:
+If the data you want to read into your notebook is stored in a file, you can use `#!value` with the `--from-file` option:
+
+<img src="https://user-images.githubusercontent.com/547415/89600459-fdf82680-d816-11ea-8ba6-1d5ec4e2a7e7.png" width="40%">
+
+
+### 3. From a URL
+
+You can pull data into your notebook from a URL as well, using the `--from-url` option. 
+
+<img src="https://user-images.githubusercontent.com/547415/89846563-66584800-db36-11ea-8a17-57a48b45b0f1.png" width="40%">
+
+## Specifying a MIME type
+
+Regardless of which of these approaches you use, you can additionally choose to display the value in the notebook at the time of submission by using the `--mime-type` option. This accomplishes a few things. If your notebook frontend knows how to display that mime type, you can see it appropriately formatted:
 
 <img src="https://user-images.githubusercontent.com/547415/89252758-8ab0a380-d5cf-11ea-9873-78d7060f8157.png" width="40%">
 
-This also effectively stores the value in your `.ipynb` file, something that would not otherwise happen.
+This also causes the value to be saved in your `.ipynb` file, something that would not otherwise happen.
 
 ## Limitations
 
