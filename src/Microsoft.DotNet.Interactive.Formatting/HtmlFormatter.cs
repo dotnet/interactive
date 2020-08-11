@@ -11,29 +11,19 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public static class HtmlFormatter
     {
-        static HtmlFormatter()
-        {
-            Formatter.Clearing += (sender, args) => DefaultFormatters = new DefaultHtmlFormatterSet();
-        }
+        public static ITypeFormatter GetBestFormatterFor(Type type) =>
+            Formatter.GetBestFormatterFor(type, MimeType);
 
-        public static ITypeFormatter Create(
-            Type type,
-            bool includeInternals = false)
-        {
-            var genericCreateForAllMembers = typeof(HtmlFormatter<>)
-                                             .MakeGenericType(type)
-                                             .GetMethod(nameof(HtmlFormatter<object>.Create), new[]
-                                             {
-                                                 typeof(bool)
-                                             });
-
-            return (ITypeFormatter) genericCreateForAllMembers.Invoke(null, new object[]
-            {
-                includeInternals
-            });
-        }
+        public static ITypeFormatter GetBestFormatterFor<T>() =>
+            GetBestFormatterFor(typeof(T));
 
         public const string MimeType = "text/html";
+
+        internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
+            FormattersForAnyObject.GetFormatter(type, includeInternals);
+
+        internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
+            FormattersForAnyEnumerable.GetFormatter(type, false);
 
         internal static PocketView Table(
             List<IHtmlContent> headers,
@@ -45,6 +35,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 tbody(
                     rows));
 
-        internal static IFormatterSet DefaultFormatters { get; private set; } = new DefaultHtmlFormatterSet();
+        internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultHtmlFormatterSet.DefaultFormatters;
+
+        internal static FormatterTable FormattersForAnyObject =
+            new FormatterTable(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyObject));
+
+        internal static FormatterTable FormattersForAnyEnumerable =
+            new FormatterTable(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyEnumerable));
+
+
     }
 }

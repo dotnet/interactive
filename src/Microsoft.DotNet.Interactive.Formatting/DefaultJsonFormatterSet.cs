@@ -2,22 +2,17 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    internal class DefaultJsonFormatterSet : FormatterSetBase
+    internal class DefaultJsonFormatterSet 
     {
-        protected override bool TryInferFormatter(Type type, out ITypeFormatter formatter)
-        {
-            if (typeof(JToken).IsAssignableFrom(type))
+        static internal readonly ITypeFormatter[] DefaultFormatters =
+            new ITypeFormatter[]
             {
-                formatter = new JsonFormatter<JToken>();
-                return true;
-            }
-
-            formatter = null;
-            return false;
-        }
+                new JsonFormatter<object>()
+            };
     }
 }

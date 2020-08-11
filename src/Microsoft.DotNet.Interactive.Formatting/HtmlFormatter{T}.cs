@@ -34,28 +34,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public override string MimeType => HtmlFormatter.MimeType;
 
-        public static ITypeFormatter<T> Create(bool includeInternals = false)
-        {
-            if (HtmlFormatter.DefaultFormatters.TryGetFormatterForType(typeof(T), out var formatter) &&
-                formatter is ITypeFormatter<T> ft)
-            {
-                return ft;
-            }
-
-            if (typeof(T).IsEnum)
-            {
-                return new HtmlFormatter<T>((enumValue, writer) => { writer.Write(enumValue.ToString()); });
-            }
-
-            if (typeof(IEnumerable).IsAssignableFrom(typeof(T)))
-            {
-                return CreateForSequence(includeInternals);
-            }
-
-            return CreateForObject(includeInternals);
-        }
-
-        private static HtmlFormatter<T> CreateForObject(bool includeInternals)
+        internal static HtmlFormatter<T> CreateForAnyObject(bool includeInternals)
         {
             var members = typeof(T).GetMembersToFormat(includeInternals)
                                    .GetMemberAccessors<T>();
@@ -67,11 +46,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return new HtmlFormatter<T>((instance, writer) =>
             {
+                // Note, embeds the keys and values as arbitrary objects into the HTML content,
+                // ultimately rendered by PocketView, e.g. via ToDisplayString(PlainTextFormatter.MimeType)
                 IEnumerable<object> headers = members.Select(m => m.Member.Name)
-                                                     .Select(v => th(v));
+                                                     .Select(v => th(arbitrary(v)));
 
                 IEnumerable<object> values = members.Select(m => Value(m, instance))
-                                                    .Select(v => td(v));
+                                                    .Select(v => td(arbitrary(v)));
 
                 var t =
                     table(
@@ -86,7 +67,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             });
         }
 
-        private static HtmlFormatter<T> CreateForSequence(bool includeInternals)
+        internal static HtmlFormatter<T> CreateForAnyEnumerable(bool includeInternals)
         {
             Func<T, IEnumerable> getKeys = null;
             Func<T, IEnumerable> getValues = instance => (IEnumerable) instance;
@@ -168,11 +149,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 if (typesAreDifferent)
                 {
                     headers.Insert(1, th(i("type")));
-                  
+
                 }
 
                 headers.AddRange(valuesByHeader.Keys.Select(k => (IHtmlContent) th(k)));
-                
+
                 var rows = new List<IHtmlContent>();
 
                 for (var rowIndex = 0; rowIndex < rowData.Count; rowIndex++)
@@ -201,7 +182,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         }
                     }
 
-                    rows.Add(tr(rowValues.Select(r => td(r))));
+                    // Note, embeds the values as arbitrary objects into the HTML content.
+                    rows.Add(tr(rowValues.Select(r => td(arbitrary(r)))));
                 }
 
                 if (remainingCount > 0)
@@ -217,16 +199,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        private static string Value(MemberAccessor<T> m, T instance)
+        private static object Value(MemberAccessor<T> m, T instance)
         {
             try
             {
                 var value = m.GetValue(instance);
-                return value.ToDisplayString();
+                return value;
             }
             catch (Exception exception)
             {
-                return exception.ToDisplayString(PlainTextFormatter.MimeType);
+                return exception;
             }
         }
     }

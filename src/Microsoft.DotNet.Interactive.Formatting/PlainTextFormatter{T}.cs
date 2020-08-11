@@ -13,33 +13,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         private readonly Action<T, TextWriter> _format;
 
-        protected PlainTextFormatter()
-        {
-            _format = WriteDefault;
-        }
-
         public PlainTextFormatter(Action<T, TextWriter> format)
         {
             _format = format ?? throw new ArgumentNullException(nameof(format));
-        }
-
-        public static ITypeFormatter<T> Create(bool includeInternals = false)
-        {
-            if (PlainTextFormatter.DefaultFormatters.TryGetFormatterForType(typeof(T), out var formatter) &&
-                formatter is ITypeFormatter<T> ft)
-            {
-                return ft;
-            }
-
-            if (Formatter<T>.TypeIsAnonymous ||
-                Formatter<T>.TypeIsException ||
-                Formatter<T>.TypeIsValueTuple|| 
-                !typeof(IEnumerable).IsAssignableFrom(typeof(T)))
-            {
-                return CreateForAllMembers(includeInternals);
-            }
-
-            return Default;
         }
 
         public override string MimeType => PlainTextFormatter.MimeType;
@@ -55,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _format(value, writer);
         }
 
-        private static PlainTextFormatter<T> CreateForAllMembers(bool includeInternals = false)
+        public static PlainTextFormatter<T> CreateForAnyObject(bool includeInternals = false)
         {
             if (typeof(T).IsScalar())
             {
@@ -75,30 +51,32 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return new PlainTextFormatter<T>(format);
         }
 
-        public static PlainTextFormatter<T> Default { get; } = new PlainTextFormatter<T>();
-
-        internal virtual void WriteDefault(
-            T value,
-            TextWriter writer)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Part of Pattern")]
+        public static PlainTextFormatter<T> CreateForAnyEnumerable(bool _includeInternals)
         {
-            if (value is string)
+            return new PlainTextFormatter<T>((T value, TextWriter writer) =>
             {
-                writer.Write(value);
-                return;
-            }
+                if (value is string)
+                {
+                    writer.Write(value);
+                    return;
+                }
 
-            switch (value)
-            {
-                case IEnumerable enumerable:
-                    Formatter.Join(
-                        enumerable,
-                        writer,
-                        Formatter<T>.ListExpansionLimit);
-                    break;
-                default:
-                    writer.Write(value.ToString());
-                    break;
-            }
+                switch (value)
+                {
+                    case IEnumerable enumerable:
+                        Formatter.Join(
+                            enumerable,
+                            writer,
+                            Formatter<T>.ListExpansionLimit);
+                        break;
+                    default:
+                        writer.Write(value.ToString());
+                        break;
+                }
+            });
         }
+
+        public static PlainTextFormatter<T> Default = CreateForAnyEnumerable(false);
     }
 }

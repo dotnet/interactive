@@ -11,27 +11,19 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public static class PlainTextFormatter
     {
-        static PlainTextFormatter()
-        {
-            Formatter.Clearing += (sender, args) => DefaultFormatters = new DefaultPlainTextFormatterSet();
-        }
+        public static ITypeFormatter GetBestFormatterFor(Type type) =>
+            Formatter.GetBestFormatterFor(type, MimeType);
 
-        public static ITypeFormatter Create(
-            Type type,
-            bool includeInternals = false)
-        {
-            var genericCreateForAllMembers = typeof(PlainTextFormatter<>)
-                                             .MakeGenericType(type)
-                                             .GetMethod(nameof(PlainTextFormatter<object>.Create),
-                                                        new[]
-                                                        {
-                                                            typeof(bool)
-                                                        });
-
-            return (ITypeFormatter) genericCreateForAllMembers.Invoke(null, new object[] { includeInternals });
-        }
+        public static ITypeFormatter GetBestFormatterFor<T>() =>
+            GetBestFormatterFor(typeof(T));
 
         public const string MimeType = "text/plain";
+
+        internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
+            FormattersForAnyObject.GetFormatter(type, includeInternals);
+
+        internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
+            FormattersForAnyEnumerable.GetFormatter(type, false);
 
         internal static Action<T, TextWriter> CreateFormatDelegate<T>(MemberInfo[] forMembers)
         {
@@ -157,6 +149,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        internal static IFormatterSet DefaultFormatters { get; private set; } = new DefaultPlainTextFormatterSet();
+        internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultPlainTextFormatterSet.DefaultFormatters;
+
+        internal static FormatterTable FormattersForAnyObject =
+            new FormatterTable(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyObject));
+
+        internal static FormatterTable FormattersForAnyEnumerable =
+            new FormatterTable(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyEnumerable));
+
     }
 }

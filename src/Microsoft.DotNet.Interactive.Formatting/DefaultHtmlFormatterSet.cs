@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -12,55 +13,34 @@ using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    internal class DefaultHtmlFormatterSet : FormatterSetBase
+    internal class DefaultHtmlFormatterSet
     {
-        public DefaultHtmlFormatterSet() : base(DefaultFormatters())
-        {
-        }
-
-        protected override bool TryInferFormatter(Type type, out ITypeFormatter formatter)
-        {
-            if (type.IsGenericType &&
-                type.GetGenericTypeDefinition() == typeof(ReadOnlyMemory<>))
+        static internal readonly ITypeFormatter[] DefaultFormatters =
+            new ITypeFormatter[]
             {
-                formatter = Formatter.Create(
-                    type,
-                    (obj, writer) =>
-                    {
-                        var toArray = Formatter.FormatReadOnlyMemoryMethod.MakeGenericMethod
-                            (type.GetGenericArguments());
+                new HtmlFormatter<DateTime>((dateTime, writer) =>
+                {
+                    PocketView view = span(dateTime.ToString("u"));
+                    view.WriteTo(writer, HtmlEncoder.Default);
+                }),
 
-                        var array = toArray.Invoke(null, new[]
-                        {
-                            obj
-                        });
+                new HtmlFormatter<DateTimeOffset>((dateTime, writer) =>
+                {
+                    PocketView view = span(dateTime.ToString("u"));
+                    view.WriteTo(writer, HtmlEncoder.Default);
+                }),
 
-                        writer.Write(array.ToDisplayString(HtmlFormatter.MimeType));
-                    },
-                    HtmlFormatter.MimeType);
-                return true;
-            }
-
-            formatter = null;
-            return false;
-        }
-
-        private static ConcurrentDictionary<Type, ITypeFormatter> DefaultFormatters() =>
-            new ConcurrentDictionary<Type, ITypeFormatter>
-            {
-                [typeof(DateTime)] = new HtmlFormatter<DateTime>((value, writer) => writer.Write(value.ToString("u"))),
-
-                [typeof(DateTimeOffset)] = new HtmlFormatter<DateTimeOffset>((value, writer) => writer.Write(value.ToString("u"))),
-
-                [typeof(ExpandoObject)] = new HtmlFormatter<ExpandoObject>((obj, writer) =>
+                new HtmlFormatter<ExpandoObject>((obj, writer) =>
                 {
                     var headers = new List<IHtmlContent>();
                     var values = new List<IHtmlContent>();
 
                     foreach (var pair in obj.OrderBy(p => p.Key))
                     {
-                        headers.Add(th(pair.Key));
-                        values.Add(td(pair.Value));
+                        // Note, embeds the keys and values as arbitrary objects into the HTML content,
+                        // ultimately rendered by PocketView
+                        headers.Add(th(arbitrary(pair.Key)));
+                        values.Add(td(arbitrary(pair.Value)));
                     }
 
                     IHtmlContent view = table(
@@ -74,38 +54,72 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     view.WriteTo(writer, HtmlEncoder.Default);
                 }),
 
-                [typeof(HtmlString)] = new HtmlFormatter<HtmlString>((view, writer) => view.WriteTo(writer, HtmlEncoder.Default)),
+                new HtmlFormatter<IHtmlContent>((view, writer) => view.WriteTo(writer, HtmlEncoder.Default)),
 
-                [typeof(JsonString)] = new HtmlFormatter<JsonString>((view, writer) => view.WriteTo(writer, HtmlEncoder.Default)),
-
-                [typeof(PocketView)] = new HtmlFormatter<PocketView>((view, writer) => view.WriteTo(writer, HtmlEncoder.Default)),
-
-                [typeof(ReadOnlyMemory<char>)] = new HtmlFormatter<ReadOnlyMemory<char>>((memory, writer) =>
+                new HtmlFormatter<ReadOnlyMemory<char>>((memory, writer) =>
                 {
                     PocketView view = span(memory.Span.ToString());
 
                     view.WriteTo(writer, HtmlEncoder.Default);
                 }),
 
-                [typeof(string)] = new HtmlFormatter<string>((s, writer) => writer.Write(span(s))),
+                new HtmlFormatter<string>((s, writer) => writer.Write(s.HtmlEncode())),
 
-                [typeof(TimeSpan)] = new HtmlFormatter<TimeSpan>((timespan, writer) =>
+                new HtmlFormatter<TimeSpan>((timespan, writer) =>
                 {
-                    writer.Write(timespan.ToString());
+                    PocketView view = span(timespan.ToString());
+                    view.WriteTo(writer, HtmlEncoder.Default);
                 }),
 
-                [typeof(Type)] = _formatterForSystemType,
+                new HtmlFormatter<Type>((type, writer) =>
+                {
+                    PocketView view = span(
+                        a[href: $"https://docs.microsoft.com/dotnet/api/{type.FullName}?view=netcore-3.0"](
+                            type.ToDisplayString(PlainTextFormatter.MimeType)));
 
-                [typeof(Type).GetType()] = _formatterForSystemType,
-            };
+                    view.WriteTo(writer, HtmlEncoder.Default);
+                }),
 
-        private static readonly HtmlFormatter<Type> _formatterForSystemType  = new HtmlFormatter<Type>((type, writer) =>
-        {
-            PocketView view = span(
-                a[href: $"https://docs.microsoft.com/dotnet/api/{type.FullName}?view=netcore-3.0"](
-                    type.ToDisplayString()));
+                // Transform ReadOnlyMemory to an array for formatting
+                new AnonymousTypeFormatter<object>(type: typeof(ReadOnlyMemory<>),
+                    mimeType: HtmlFormatter.MimeType,
+                    format: (obj, writer) =>
+                        {
+                            var actualType = obj.GetType();
+                            var toArray = Formatter.FormatReadOnlyMemoryMethod.MakeGenericMethod
+                                (actualType.GetGenericArguments());
 
-            view.WriteTo(writer, HtmlEncoder.Default);
-        });
+                            var array = toArray.Invoke(null, new[] { obj });
+
+                            writer.Write(array.ToDisplayString(HtmlFormatter.MimeType));
+                        }),
+
+                new HtmlFormatter<Enum>((enumValue, writer) =>
+                {
+                    PocketView view = span(enumValue.ToString());
+                    view.WriteTo(writer, HtmlEncoder.Default);
+                }),
+
+                new HtmlFormatter<IEnumerable>((obj, writer) =>
+                {
+                    var type = obj.GetType();
+                    var formatter = HtmlFormatter.GetDefaultFormatterForAnyEnumerable(type);
+                    formatter.Format(obj, writer);
+
+                }),
+
+                new HtmlFormatter<object>((obj, writer) =>
+                {
+                    if (obj is null)
+                    {
+                        writer.Write(Formatter.NullString.HtmlEncode());
+                        return;
+                    }
+                    var type = obj.GetType();
+                    var formatter = HtmlFormatter.GetDefaultFormatterForAnyObject(type);
+                    formatter.Format(obj, writer);
+                })
+
+            };            
     }
 }

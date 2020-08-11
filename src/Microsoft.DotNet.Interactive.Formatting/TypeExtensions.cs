@@ -23,13 +23,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             typeof(TimeSpan),
         };
 
-        internal static bool CanBeInstantiated(this Type type)
-        {
-            return !type.IsAbstract
-                   && !type.IsGenericTypeDefinition
-                   && !type.IsInterface;
-        }
-
         public static string MemberName<T, TValue>(this Expression<Func<T, TValue>> expression)
         {
             if (expression == null)
@@ -102,6 +95,28 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 yield return i;
             }
+        }
+
+        public static bool IsRelevantFormatterFor(this Type type, Type actualType)
+        {
+            if (!type.IsGenericTypeDefinition)
+            {
+                return type.IsAssignableFrom(actualType);
+            }
+
+            var baseChain = actualType;
+            while (baseChain != null)
+            {
+                if (baseChain.IsGenericType && baseChain.GetGenericTypeDefinition().Equals(type))
+                    return true;
+                baseChain = baseChain.BaseType;
+            }
+            foreach (var i in actualType.GetInterfaces())
+            {
+                if (i.IsGenericType && i.GetGenericTypeDefinition().Equals(type))
+                    return true;
+            }
+            return false;
         }
 
         public static bool IsAnonymous(this Type type)

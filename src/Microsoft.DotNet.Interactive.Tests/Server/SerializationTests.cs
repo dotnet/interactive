@@ -3,17 +3,22 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+
 using Assent;
+
 using FluentAssertions;
+
 using Microsoft.AspNetCore.Html;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
-using Microsoft.DotNet.Interactive.Utility;
+
 using Pocket;
+
 using Xunit;
 using Xunit.Abstractions;
 
@@ -71,7 +76,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             var _configuration = new Configuration()
                                  .UsingExtension($"{command.GetType().Name}.json")
-                                 .SetInteractive(false);
+                                 .SetInteractive(Debugger.IsAttached);
 
             command.SetToken("the-token");
 
@@ -86,7 +91,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             var _configuration = new Configuration()
                                  .UsingExtension($"{@event.GetType().Name}.json")
-                                 .SetInteractive(false);
+                                 .SetInteractive(Debugger.IsAttached);
 
             @event.Command?.SetToken("the-token");
 
@@ -284,6 +289,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 yield return new WorkingDirectoryChanged(
                     "some/different/directory",
                     new ChangeWorkingDirectory("some/different/directory"));
+
+                yield return new KernelExtensionLoaded(new SubmitCode(@"#r ""nuget:package"" "));
             }
         }
 

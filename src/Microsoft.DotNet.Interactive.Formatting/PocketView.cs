@@ -211,7 +211,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         else
                         {
                             var e = arg
-                                    .ToDisplayString()
+                                    .ToDisplayString(PlainTextFormatter.MimeType)
                                     .HtmlEncode();
 
                             e.WriteTo(writer, HtmlEncoder.Default);

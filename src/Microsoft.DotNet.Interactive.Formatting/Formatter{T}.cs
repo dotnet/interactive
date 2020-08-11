@@ -38,29 +38,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             Action<T, TextWriter> formatter,
             string mimeType = PlainTextFormatter.MimeType)
         {
-            if (formatter == null)
-            {
-                throw new ArgumentNullException(nameof(formatter));
-            }
-
-            if (typeof(T) == typeof(Type))
-            {
-                // special treatment is needed since typeof(Type) == System.RuntimeType, which is not public
-                // ReSharper disable once PossibleMistakenCallToGetType.2
-                Formatter.Register(
-                    typeof(Type).GetType(),
-                    (o, writer) => formatter((T) o, writer),
-                    mimeType);
-            }
-            else if (!typeof(T).CanBeInstantiated())
-            {
-                Formatter.RegisterLazilyForConcreteTypesOf(
-                    typeof(T), 
-                    (o, writer) => formatter((T) o, writer), mimeType);
-                return;
-            }
-
-            Formatter.TypeFormatters[(typeof(T), mimeType)] = new AnonymousTypeFormatter<T>(formatter, mimeType);
+            Formatter.Register(new AnonymousTypeFormatter<T>(formatter, mimeType));
         }
 
         /// <summary>
@@ -69,10 +47,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="formatter">The formatter.</param>
         public static void Register(
             Func<T, string> formatter,
-            string mimeType = PlainTextFormatter.MimeType) =>
-            Register(
-                (obj, writer) => writer.Write(formatter(obj)),
-                mimeType);
+            string mimeType = PlainTextFormatter.MimeType)
+        {
+            Formatter.Register(new AnonymousTypeFormatter<T>((obj, writer) => writer.Write(formatter((T)obj)), mimeType));
+        }
 
         /// <summary>
         /// Formats an object and writes it to the specified writer.
@@ -87,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             if (obj == null)
             {
-                var formatter = Create(mimeType);
+                var formatter = Formatter.GetBestFormatterFor(typeof(T), mimeType);
                 formatter.Format(null, writer);
                 return;
             }
@@ -97,50 +75,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
             // find a formatter for the object type, and possibly register one on the fly
             if (Formatter.RecursionCounter.Depth <= Formatter.RecursionLimit)
             {
-                var formatter = Formatter.TypeFormatters
-                                         .GetOrAdd(
-                                             (typeof(T), mimeType),
-                                             tuple => Create(tuple.mimeType));
-
+                var formatter = Formatter.GetBestFormatterFor(typeof(T), mimeType);
                 formatter.Format(obj, writer);
             }
             else
             {
                 PlainTextFormatter<T>.Default.Format(obj, writer);
-            }
-        }
-
-        private static ITypeFormatter Create(string mimeType)
-        {
-            switch (mimeType)
-            {
-                case HtmlFormatter.MimeType:
-                    if (HtmlFormatter.DefaultFormatters
-                                     .TryGetFormatterForType(typeof(T), out var htmlFormatter))
-                    {
-                        return htmlFormatter;
-                    }
-
-                    return HtmlFormatter<T>.Create();
-
-                case JsonFormatter.MimeType:
-                    if (JsonFormatter.DefaultFormatters
-                                     .TryGetFormatterForType(typeof(T), out var jsonFormatter))
-                    {
-                        return jsonFormatter;
-                    }
-
-                    return JsonFormatter<T>.Create();
-
-                default:
-
-                    if (PlainTextFormatter.DefaultFormatters
-                                          .TryGetFormatterForType(typeof(T), out var plainTextFormatter))
-                    {
-                        return plainTextFormatter;
-                    }
-
-                    return PlainTextFormatter<T>.Create();
             }
         }
 

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+
 namespace Microsoft.DotNet.Interactive.Formatting
 {
     public static class PocketViewTags
@@ -85,5 +87,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static dynamic u => _.u;
         public static dynamic ul => _.ul;
         public static dynamic video => _.video;
+
+        // This can be used to indicates points
+        // where we are embedding an arbitrary value into the HTML content
+        // and we are explicitly indicating that the value can be either IHtmlContent
+        // or will otherwise be formatted as plaintext.
+        public static object arbitrary(object value) => value;
     }
 }
