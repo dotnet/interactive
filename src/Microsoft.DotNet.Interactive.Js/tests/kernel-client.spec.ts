@@ -49,7 +49,7 @@ describe("dotnet-interactive", () => {
                     kernelTransportFactory: createMockKernelTransport
                 });
                 let resource = client.getResourceUrl("image.png");
-                expect(resource).to.be.equal(`${rootUrl}/resources/image.png‌⁠`);
+                expect(resource).to.be.equal("https://dotnet.interactive.com:999/resources/image.png");
             });
 
             it("returns extensions resource url", async () => {
@@ -62,7 +62,7 @@ describe("dotnet-interactive", () => {
                     kernelTransportFactory: createMockKernelTransport
                 });
                 let resource = client.getExtensionResourceUrl("customExtension","image.png");
-                expect(resource).to.be.equal(`${rootUrl}/extensions/customExtension/resources/image.png‌⁠`);
+                expect(resource).to.be.equal("https://dotnet.interactive.com:999/extensions/customExtension/resources/image.png");
             });
 
             it("returns token for correlation", async () => {
