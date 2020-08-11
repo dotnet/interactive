@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void Non_generic_GetBestFormatter_creates_generic_formatter()
         {
-            HtmlFormatter.GetBestFormatterFor(typeof(Widget))
+            HtmlFormatter.GetPreferredFormatterFor(typeof(Widget))
                          .Should()
                          .BeOfType<HtmlFormatter<object>>();
         }
@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Formatter_does_not_put_span_around_string()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor<string>();
+                var formatter = HtmlFormatter.GetPreferredFormatterFor<string>();
 
                 var s = "hello".ToDisplayString(formatter);
 
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 expando.Name = "socks";
                 expando.Count = 2;
 
-                var formatter = HtmlFormatter.GetBestFormatterFor<ExpandoObject>();
+                var formatter = HtmlFormatter.GetPreferredFormatterFor<ExpandoObject>();
 
                 var output = ((object) expando).ToDisplayString(formatter);
 
@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void It_formats_objects_as_tables_having_properties_on_the_y_axis()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(EntityId));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(EntityId));
 
                 var writer = new StringWriter();
 
@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     PropertyB = "hello"
                 };
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(instance.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
                 formatter.Format(instance, writer);
 
@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var instance = (123, "hello");
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(instance.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
                 formatter.Format(instance, writer);
 
@@ -131,7 +131,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     B = new { BA = 456 }
                 };
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(instance.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
                 formatter.Format(instance, writer);
 
@@ -151,7 +151,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     PropertyB = Enumerable.Range(1, 3)
                 };
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(instance.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
                 formatter.Format(instance, writer);
 
@@ -170,7 +170,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     PropertyA = Enumerable.Range(1, 3)
                 };
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(instance.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
                 formatter.Format(instance, writer);
 
@@ -182,7 +182,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void It_displays_exceptions_thrown_by_properties_in_the_property_value_cell()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(SomePropertyThrows));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(SomePropertyThrows));
 
                 var writer = new StringWriter();
 
@@ -198,7 +198,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Properies_of_System_Type_instances_are_not_expanded()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(Type));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
 
                 var writer = new StringWriter();
 
@@ -213,7 +213,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Enums_are_formatted_using_their_names()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(FileAccess));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(FileAccess));
 
                 var writer = new StringWriter();
 
@@ -225,7 +225,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void TimeSpan_is_not_destructured()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(TimeSpan));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(TimeSpan));
 
                 var writer = new StringWriter();
 
@@ -242,7 +242,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void It_formats_sequences_as_tables_with_an_index_on_the_y_axis()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(List<EntityId>));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(List<EntityId>));
 
                 var writer = new StringWriter();
 
@@ -263,7 +263,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void It_formats_sequence_properties_using_plain_text_formatting()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(List<float[]>));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(List<float[]>));
 
                 var writer = new StringWriter();
 
@@ -295,7 +295,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     { "second", new EntityId("entity two", "456") }
                 };
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(instance.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
                 formatter.Format(instance, writer);
 
@@ -316,7 +316,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     { "second", new EntityId("entity two", "456") }
                 };
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(instance.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
                 formatter.Format(instance, writer);
 
@@ -446,7 +446,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 Formatter.ListExpansionLimit = 4;
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(list.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(list.GetType());
 
                 var formatted = list.ToDisplayString(formatter);
 
@@ -468,7 +468,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 Formatter.ListExpansionLimit = 4;
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(list.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(list.GetType());
 
                 var formatted = list.ToDisplayString(formatter);
 
@@ -506,7 +506,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void ReadOnlyMemory_of_char_is_formatted_like_a_string()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor<ReadOnlyMemory<char>>();
+                var formatter = HtmlFormatter.GetPreferredFormatterFor<ReadOnlyMemory<char>>();
 
                 var writer = new StringWriter();
 
@@ -522,7 +522,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void ReadOnlyMemory_of_int_is_formatted_like_a_int_array()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor<ReadOnlyMemory<int>>();
+                var formatter = HtmlFormatter.GetPreferredFormatterFor<ReadOnlyMemory<int>>();
 
                 var writer = new StringWriter();
 
@@ -539,7 +539,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void It_shows_null_items_in_the_sequence_as_null()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(object[]));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(object[]));
 
                 var writer = new StringWriter();
 
@@ -560,7 +560,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     yield return "Hello, World";
                 }
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(IEnumerable<object>));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(IEnumerable<object>));
 
                 var writer = new StringWriter();
 

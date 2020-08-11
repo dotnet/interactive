@@ -179,10 +179,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return;
             }
 
-            _tag.Content = writer => Write(args, writer);
+            _tag.Content = (context, writer) => Write(context, args, writer);
         }
 
-        private void Write(IReadOnlyList<object> args, TextWriter writer)
+        private void Write(IFormatContext context, IReadOnlyList<object> args, TextWriter writer)
         {
             for (var i = 0; i < args.Count; i++)
             {
@@ -199,22 +199,18 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         break;
 
                     case IEnumerable<IHtmlContent> htmls:
-                        Write(htmls.ToArray(), writer);
+                        Write(context, htmls.ToArray(), writer);
                         break;
 
                     default:
                         if (arg is IEnumerable<object> seq &&
                             seq.All(s => s is IHtmlContent))
                         {
-                            Write(seq.OfType<IHtmlContent>().ToArray(), writer);
+                            Write(context, seq.OfType<IHtmlContent>().ToArray(), writer);
                         }
                         else
                         {
-                            var e = arg
-                                    .ToDisplayString(PlainTextFormatter.MimeType)
-                                    .HtmlEncode();
-
-                            e.WriteTo(writer, HtmlEncoder.Default);
+                            arg.FormatTo(context, writer, HtmlFormatter.MimeType);
                         }
 
                         break;
@@ -268,9 +264,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
         ///   Renders the tag to the specified <see cref = "TextWriter" />.
         /// </summary>
         /// <param name = "writer">The writer.</param>
+        public void WriteTo(IFormatContext context, TextWriter writer, HtmlEncoder encoder)
+        {
+            _tag?.WriteTo(context, writer, encoder);
+        }
+
         public void WriteTo(TextWriter writer, HtmlEncoder encoder)
         {
-            _tag?.WriteTo(writer, encoder);
+            _tag?.WriteTo(new FormatContext(), writer, encoder);
         }
 
         /// <summary>

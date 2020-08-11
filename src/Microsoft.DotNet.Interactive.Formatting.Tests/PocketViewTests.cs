@@ -151,7 +151,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 (tag, model) =>
                 {
                     tag.Name = "div";
-                    tag.Content = w =>
+                    tag.Content = (context, w) =>
                     {
                         w.Write(label[@for: model.name](model.name));
                         w.Write(input[value: model.value, type: "text", name: model.name]);

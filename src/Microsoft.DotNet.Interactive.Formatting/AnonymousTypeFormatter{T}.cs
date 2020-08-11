@@ -8,9 +8,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     internal class AnonymousTypeFormatter<T> : TypeFormatter<T>
     {
-        private readonly Action<T, TextWriter> _format;
+        private readonly Func<IFormatContext, T, TextWriter, bool> _format;
 
-        public AnonymousTypeFormatter(Action<T, TextWriter> format, string mimeType, Type type = null)
+        public AnonymousTypeFormatter(Func<IFormatContext, T, TextWriter, bool> format, string mimeType, Type type = null)
             : base(type??typeof(T))
         {
             if (string.IsNullOrWhiteSpace(mimeType))
@@ -23,9 +23,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _format = format ?? throw new ArgumentNullException(nameof(format));
         }
 
-        public override void Format(T instance, TextWriter writer)
+        public override bool Format(IFormatContext context, T instance, TextWriter writer)
         {
-            _format(instance, writer);
+            return _format(context, instance, writer);
         }
 
         public override string MimeType { get; }

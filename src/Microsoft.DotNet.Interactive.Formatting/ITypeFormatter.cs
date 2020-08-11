@@ -12,6 +12,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         Type Type { get; }
 
-        void Format(object instance, TextWriter writer);
+        bool Format(IFormatContext context,  object instance, TextWriter writer);
     }
 }

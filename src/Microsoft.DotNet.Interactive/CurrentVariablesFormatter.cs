@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive
 
         public Type Type => typeof(CurrentVariables);
 
-        public void Format(CurrentVariables instance, TextWriter writer)
+        public bool Format(IFormatContext context, CurrentVariables instance, TextWriter writer)
         {
             PocketView output = null;
 
@@ -43,14 +43,16 @@ namespace Microsoft.DotNet.Interactive
             }
 
             output.WriteTo(writer, HtmlEncoder.Default);
+            return true;
         }
 
-        public void Format(object instance, TextWriter writer)
+        public bool Format(IFormatContext context, object instance, TextWriter writer)
         {
             if (instance is CurrentVariables variables)
             {
-                Format(variables, writer);
+                return Format(context, variables, writer);
             }
+            return false;
         }
     }
 }

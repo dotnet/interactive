@@ -501,12 +501,12 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     Formatter.SetPreferredMimeTypeFor(typeof(string), PlainTextFormatter.MimeType);
                     Formatter.SetPreferredMimeTypeFor(typeof(ScriptContent), HtmlFormatter.MimeType);
 
-                    Formatter<LaTeXString>.Register((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
-                    Formatter<MathString>.Register((math, writer) => writer.Write(math.ToString()), "text/latex");
+                    Formatter.Register<LaTeXString>((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
+                    Formatter.Register<MathString>((math, writer) => writer.Write(math.ToString()), "text/latex");
                     if (startupOptions.EnableHttpApi && 
                         browserFrontendEnvironment is HtmlNotebookFrontedEnvironment frontedEnvironment)
                     {
-                        Formatter<ScriptContent>.Register((script, writer) =>
+                        Formatter.Register<ScriptContent>((script, writer) =>
                         {
                             if (!Task.Run(async () =>
                             {
@@ -530,7 +530,7 @@ let notebookScope = getDotnetInteractiveScope('{apiUri.AbsoluteUri}');
                     }
                     else
                     {
-                        Formatter<ScriptContent>.Register((script, writer) =>
+                        Formatter.Register<ScriptContent>((script, writer) =>
                         {
                             IHtmlContent content =
                                 PocketViewTags.script[type: "text/javascript"](script.ScriptValue.ToHtmlContent());

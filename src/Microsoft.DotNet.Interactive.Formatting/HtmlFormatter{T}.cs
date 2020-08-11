@@ -14,22 +14,33 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public class HtmlFormatter<T> : TypeFormatter<T>
     {
-        private readonly Action<T, TextWriter> _format;
+        private readonly Func<IFormatContext, T, TextWriter, bool> _format;
 
-        public HtmlFormatter(Action<T, TextWriter> format)
+        public HtmlFormatter(Func<IFormatContext, T, TextWriter, bool> format)
         {
             _format = format;
         }
 
-        public override void Format(T value, TextWriter writer)
+        public HtmlFormatter(Action<T, TextWriter> format)
+        {
+            _format = (context, instance, writer) => { format(instance, writer); return true; };
+        }
+
+        public HtmlFormatter(Func<T, string> format)
+        {
+            _format = (context, instance, writer) => { writer.Write(format(instance)); return true; };
+        }
+
+        public override bool Format(IFormatContext context, T value, TextWriter writer)
         {
             if (value is null)
             {
                 writer.Write(Formatter.NullString.HtmlEncode());
-                return;
+                return true;
             }
 
-            _format(value, writer);
+            _format(context, value, writer);
+            return false;
         }
 
         public override string MimeType => HtmlFormatter.MimeType;
@@ -39,31 +50,38 @@ namespace Microsoft.DotNet.Interactive.Formatting
             var members = typeof(T).GetMembersToFormat(includeInternals)
                                    .GetMemberAccessors<T>();
 
-            if (members.Length == 0)
+            return new HtmlFormatter<T>((context, instance, writer) =>
             {
-                return new HtmlFormatter<T>((value, writer) => writer.Write(value));
-            }
+                if (members.Length == 0 || context.IsNestedTable)
+                {
+                    // This formatter refuses to format objects without members, and 
+                    // refused to produce nested tables.
+                    return false;
+                }
+                else
+                {
 
-            return new HtmlFormatter<T>((instance, writer) =>
-            {
-                // Note, embeds the keys and values as arbitrary objects into the HTML content,
-                // ultimately rendered by PocketView, e.g. via ToDisplayString(PlainTextFormatter.MimeType)
-                IEnumerable<object> headers = members.Select(m => m.Member.Name)
-                                                     .Select(v => th(arbitrary(v)));
+                    // Note, embeds the keys and values as arbitrary objects into the HTML content,
+                    // ultimately rendered by PocketView, e.g. via ToDisplayString(PlainTextFormatter.MimeType)
+                    IEnumerable<object> headers = members.Select(m => m.Member.Name)
+                                                         .Select(v => th(arbitrary(v)));
 
-                IEnumerable<object> values = members.Select(m => Value(m, instance))
-                                                    .Select(v => td(arbitrary(v)));
+                    IEnumerable<object> values = members.Select(m => Value(m, instance))
+                                                        .Select(v => td(arbitrary(v)));
 
-                var t =
-                    table(
-                        thead(
-                            tr(
-                                headers)),
-                        tbody(
-                            tr(
-                                values)));
+                    var t =
+                        table(
+                            thead(
+                                tr(
+                                    headers)),
+                            tbody(
+                                tr(
+                                    values)));
 
-                ((PocketView) t).WriteTo(writer, HtmlEncoder.Default);
+                    var innerContext = context.WithIsNestedTable();
+                    ((PocketView)t).WriteTo(innerContext, writer, HtmlEncoder.Default);
+                    return true;
+                }
             });
         }
 
@@ -88,8 +106,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return new HtmlFormatter<T>(BuildTable);
 
-            void BuildTable(T source, TextWriter writer)
+            bool BuildTable(IFormatContext context, T source, TextWriter writer)
             {
+                if (context.IsNestedTable)
+                {
+                    // This formatter refuses to produce nested tables.
+                    return false;
+                }
+
                 var (rowData, remainingCount) = getValues(source)
                                                 .Cast<object>()
                                                 .Select((v, i) => (v, i))
@@ -98,7 +122,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 if (rowData.Count == 0)
                 {
                     writer.Write(i("(empty)"));
-                    return;
+                    return true;
                 }
 
                 var valuesByHeader = new Dictionary<string, Dictionary<int, object>>();
@@ -195,7 +219,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 var table = HtmlFormatter.Table(headers, rows);
 
-                writer.Write(table);
+                var innerContext = context.WithIsNestedTable();
+                table.WriteTo(innerContext, writer, HtmlEncoder.Default);
+                return true;
             }
         }
 

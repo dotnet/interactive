@@ -11,11 +11,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public static class PlainTextFormatter
     {
-        public static ITypeFormatter GetBestFormatterFor(Type type) =>
-            Formatter.GetBestFormatterFor(type, MimeType);
+        public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
+            Formatter.GetPreferredFormatterFor(type, MimeType);
 
-        public static ITypeFormatter GetBestFormatterFor<T>() =>
-            GetBestFormatterFor(typeof(T));
+        public static ITypeFormatter GetPreferredFormatterFor<T>() =>
+            GetPreferredFormatterFor(typeof(T));
 
         public const string MimeType = "text/plain";
 
@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
             FormattersForAnyEnumerable.GetFormatter(type, false);
 
-        internal static Action<T, TextWriter> CreateFormatDelegate<T>(MemberInfo[] forMembers)
+        internal static Func<IFormatContext, T, TextWriter, bool> CreateFormatDelegate<T>(MemberInfo[] forMembers)
         {
             var accessors = forMembers.GetMemberAccessors<T>();
 
@@ -62,21 +62,22 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             if (typeof(T).IsEnum)
             {
-                return (enumValue, writer) =>
+                return (context, enumValue, writer) =>
                 {
                     writer.Write(enumValue.ToString());
+                    return true;
                 };
             }
 
             return FormatObject;
 
-            void FormatObject(T target, TextWriter writer)
+            bool FormatObject(IFormatContext context, T target, TextWriter writer)
             {
                 Formatter.SingleLinePlainTextFormatter.WriteStartObject(writer);
 
                 if (!Formatter<T>.TypeIsAnonymous)
                 {
-                    Formatter<Type>.FormatTo(typeof(T), writer);
+                    Formatter<Type>.FormatTo(context, typeof(T), writer);
                     Formatter.SingleLinePlainTextFormatter.WriteEndHeader(writer);
                 }
 
@@ -102,7 +103,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     Formatter.SingleLinePlainTextFormatter.WriteStartProperty(writer);
                     writer.Write(accessor.Member.Name);
                     Formatter.SingleLinePlainTextFormatter.WriteNameValueDelimiter(writer);
-                    value.FormatTo(writer);
+                    value.FormatTo(context, writer);
                     Formatter.SingleLinePlainTextFormatter.WriteEndProperty(writer);
 
                     if (i < accessors.Length - 1)
@@ -112,9 +113,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }
 
                 Formatter.SingleLinePlainTextFormatter.WriteEndObject(writer);
+                return true;
             }
 
-            void FormatValueTuple(T target, TextWriter writer)
+            bool FormatValueTuple(IFormatContext context, T target, TextWriter writer)
             {
                 Formatter.SingleLinePlainTextFormatter.WriteStartTuple(writer);
 
@@ -131,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                         var value = accessor.GetValue(target);
 
-                        value.FormatTo(writer);
+                        value.FormatTo(context, writer);
 
                         Formatter.SingleLinePlainTextFormatter.WriteEndProperty(writer);
 
@@ -146,6 +148,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }
 
                 Formatter.SingleLinePlainTextFormatter.WriteEndTuple(writer);
+                return true;
             }
         }
 

@@ -92,6 +92,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
         // where we are embedding an arbitrary value into the HTML content
         // and we are explicitly indicating that the value can be either IHtmlContent
         // or will otherwise be formatted as plaintext.
-        public static object arbitrary(object value) => value;
+        public static dynamic arbitrary => _.arbitrary;
     }
 }

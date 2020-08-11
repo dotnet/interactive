@@ -11,32 +11,46 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public class PlainTextFormatter<T> : TypeFormatter<T>
     {
-        private readonly Action<T, TextWriter> _format;
+        private readonly Func<IFormatContext, T, TextWriter, bool> _format;
 
-        public PlainTextFormatter(Action<T, TextWriter> format)
+        public PlainTextFormatter(Func<IFormatContext, T, TextWriter, bool> format)
         {
             _format = format ?? throw new ArgumentNullException(nameof(format));
         }
 
+        public PlainTextFormatter(Action<T, TextWriter> format)
+        {
+            _format = (context, instance, writer) => { format(instance, writer); return true; };
+        }
+
+        public PlainTextFormatter(Func<T, string> format)
+        {
+            _format = (context, instance, writer) => { writer.Write(format(instance)); return true; };
+        }
+
         public override string MimeType => PlainTextFormatter.MimeType;
 
-        public override void Format(T value, TextWriter writer)
+        public override bool Format(IFormatContext context, T value, TextWriter writer)
         {
             if (value is null)
             {
                 writer.Write(Formatter.NullString);
-                return;
+                return true;
             }
 
-            _format(value, writer);
+            return _format(context, value, writer);
         }
 
         public static PlainTextFormatter<T> CreateForAnyObject(bool includeInternals = false)
         {
             if (typeof(T).IsScalar())
             {
-                return new PlainTextFormatter<T>((value, writer) => writer.Write(value));
-            }
+                return new PlainTextFormatter<T>((context, value, writer) =>
+                {
+                    writer.Write(value);
+                    return true;
+                });
+        }
 
             return new PlainTextFormatter<T>(
                 PlainTextFormatter.CreateFormatDelegate<T>(
@@ -54,18 +68,19 @@ namespace Microsoft.DotNet.Interactive.Formatting
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Part of Pattern")]
         public static PlainTextFormatter<T> CreateForAnyEnumerable(bool _includeInternals)
         {
-            return new PlainTextFormatter<T>((T value, TextWriter writer) =>
+            return new PlainTextFormatter<T>((IFormatContext context, T value, TextWriter writer) =>
             {
                 if (value is string)
                 {
                     writer.Write(value);
-                    return;
+                    return true;
                 }
 
                 switch (value)
                 {
                     case IEnumerable enumerable:
                         Formatter.Join(
+                            context, 
                             enumerable,
                             writer,
                             Formatter<T>.ListExpansionLimit);
@@ -74,6 +89,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         writer.Write(value.ToString());
                         break;
                 }
+                return true;
             });
         }
 

@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Custom_formatter_for_Type_can_be_registered()
             {
-                Formatter<Type>.Register(t => t.GUID.ToString());
+                Formatter.Register<Type>(t => t.GUID.ToString());
 
                 GetType().ToDisplayString()
                          .Should().Be(GetType().GUID.ToString());
@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var defaultValue = widget.ToDisplayString();
 
-                Formatter<Widget>.Register(e => "hello!");
+                Formatter.Register<Widget>(e => "hello!");
 
                 widget.ToDisplayString().Should().NotBe(defaultValue);
 
@@ -173,7 +173,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var defaultValue = value.ToDisplayString();
 
-                Formatter<string>.Register(e => "hello!");
+                Formatter.Register<string>(e => "hello!");
 
                 value.ToDisplayString().Should().NotBe(defaultValue);
 
@@ -236,12 +236,12 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             bool widgetFormatterCalled = false;
             bool inheritedWidgetFormatterCalled = false;
 
-            Formatter<Widget>.Register(w =>
+            Formatter.Register<Widget>(w =>
             {
                 widgetFormatterCalled = true;
                 return "";
             });
-            Formatter<InheritedWidget>.Register(w =>
+            Formatter.Register<InheritedWidget>(w =>
             {
                 inheritedWidgetFormatterCalled = true;
                 return "";

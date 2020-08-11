@@ -11,11 +11,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public static class HtmlFormatter
     {
-        public static ITypeFormatter GetBestFormatterFor(Type type) =>
-            Formatter.GetBestFormatterFor(type, MimeType);
+        public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
+            Formatter.GetPreferredFormatterFor(type, MimeType);
 
-        public static ITypeFormatter GetBestFormatterFor<T>() =>
-            GetBestFormatterFor(typeof(T));
+        public static ITypeFormatter GetPreferredFormatterFor<T>() =>
+            GetPreferredFormatterFor(typeof(T));
 
         public const string MimeType = "text/html";
 
@@ -24,6 +24,35 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
             FormattersForAnyEnumerable.GetFormatter(type, false);
+
+        public static bool PreformatEmbeddedPlainText { get; set; } = false;
+        public static bool LeftJustifyEmbeddedPlainText { get; set; } = false;
+
+        static HtmlFormatter()
+        {
+            Formatter.Clearing += (obj, sender) => PreformatEmbeddedPlainText = false;
+            Formatter.Clearing += (obj, sender) => LeftJustifyEmbeddedPlainText = false;
+        }
+
+        internal static IHtmlContent DisplayEmbeddedObjectAsPlainText(IFormatContext context, object value)
+        {
+            using var writer = Formatter.CreateWriter();
+            Formatter.FormatTo(value, context, writer, PlainTextFormatter.MimeType);
+            var text = writer.ToString();
+            var html = text.HtmlEncode();
+
+            if (PreformatEmbeddedPlainText && !value.GetType().IsPrimitive)
+            {
+                var div = new Tag("div");
+                if (LeftJustifyEmbeddedPlainText)
+                    div.HtmlAttributes["style"] = "white-space: pre; text-align: left;";
+                else
+                    div.HtmlAttributes["style"] = "white-space: pre;";
+                html = div.Containing(html);
+            }
+            return html;
+
+        }
 
         internal static PocketView Table(
             List<IHtmlContent> headers,

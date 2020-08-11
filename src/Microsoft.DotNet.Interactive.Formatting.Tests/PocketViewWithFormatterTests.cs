@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         {
             var date = DateTime.Parse("1/1/2019 12:30pm");
 
-            Formatter<DateTime>.Register(_ => "<hello>");
+            Formatter.Register<DateTime>(_ => "<hello>");
 
             string output = div(date).ToString();
 

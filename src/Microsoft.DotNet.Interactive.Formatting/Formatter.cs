@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         // computed state
         private static readonly ConcurrentDictionary<Type, string> _preferredMimeTypesTable = new ConcurrentDictionary<Type, string>();
         internal static readonly ConcurrentDictionary<(Type type, string mimeType), ITypeFormatter> _typeFormattersTable = new ConcurrentDictionary<(Type type, string mimeType), ITypeFormatter>();
-        private static readonly ConcurrentDictionary<Type, Action<object, TextWriter, string>> _genericFormattersTable = new ConcurrentDictionary<Type, Action<object, TextWriter, string>>();
+        private static readonly ConcurrentDictionary<Type, Action<IFormatContext, object, TextWriter, string>> _genericFormattersTable = new ConcurrentDictionary<Type, Action<IFormatContext, object, TextWriter, string>>();
 
         /// <summary>
         /// Initializes the <see cref="Formatter"/> class.
@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             ResetToDefault();
         }
 
-        private static TextWriter CreateWriter() => new StringWriter(CultureInfo.InvariantCulture);
+        internal static TextWriter CreateWriter() => new StringWriter(CultureInfo.InvariantCulture);
 
         internal static IPlainTextFormatter SingleLinePlainTextFormatter = new SingleLinePlainTextFormatter();
 
@@ -224,7 +224,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
 
             using var writer = CreateWriter();
-            FormatTo(obj, writer, mimeType);
+            var context = new FormatContext();
+            FormatTo(obj, context, writer, mimeType);
             return writer.ToString();
         }
 
@@ -238,12 +239,23 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
 
             using var writer = CreateWriter();
-            formatter.Format(obj, writer);
+            var context = new FormatContext();
+            formatter.Format(context, obj, writer);
             return writer.ToString();
         }
 
+        /// <summary>Invoke the formatter, creating a new format context</summary>
+        public static void FormatTo<T>(this T obj,
+            TextWriter writer,
+            string mimeType = PlainTextFormatter.MimeType)
+        {
+            obj.FormatTo(new FormatContext(), writer, mimeType);
+        }
+
+        /// <summary>Invoke the formatter</summary>
         public static void FormatTo<T>(
             this T obj,
+            IFormatContext context,
             TextWriter writer,
             string mimeType = PlainTextFormatter.MimeType)
         {
@@ -255,49 +267,56 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     // in some cases the generic parameter is Object but the object is of a more specific type, in which case get or add a cached accessor to the more specific Formatter<T>.Format method
                     var genericFormatter = _genericFormattersTable.GetOrAdd(actualType, GetGenericFormatterMethod);
-                    genericFormatter(obj, writer, mimeType);
+                    genericFormatter(context, obj, writer, mimeType);
                     return;
                 }
             }
 
-            Formatter<T>.FormatTo(obj, writer, mimeType);
+            Formatter<T>.FormatTo(context, obj, writer, mimeType);
         }
 
-        internal static Action<object, TextWriter, string> GetGenericFormatterMethod(this Type type)
+
+        internal static Action<IFormatContext, object, TextWriter, string> GetGenericFormatterMethod(this Type type)
         {
             var methodInfo = typeof(Formatter<>)
                              .MakeGenericType(type)
                              .GetMethod(nameof(Formatter<object>.FormatTo), new[]
                              {
+                                 typeof(IFormatContext),
                                  type,
                                  typeof(TextWriter),
                                  typeof(string)
                              });
 
+            var contextParam = Expression.Parameter(typeof(IFormatContext), "context");
             var targetParam = Expression.Parameter(typeof(object), "target");
-            var writerParam = Expression.Parameter(typeof(TextWriter), "target");
-            var mimeTypeParam = Expression.Parameter(typeof(string), "target");
+            var writerParam = Expression.Parameter(typeof(TextWriter), "writer");
+            var mimeTypeParam = Expression.Parameter(typeof(string), "mimeType");
 
             var methodCallExpr = Expression.Call(null,
                                                  methodInfo,
+                                                 contextParam,
                                                  Expression.Convert(targetParam, type),
                                                  writerParam,
                                                  mimeTypeParam);
 
-            return Expression.Lambda<Action<object, TextWriter, string>>(
+            return Expression.Lambda<Action<IFormatContext, object, TextWriter, string>>(
                 methodCallExpr,
+                contextParam,
                 targetParam,
                 writerParam,
                 mimeTypeParam).Compile();
         }
 
         internal static void Join(
+            IFormatContext context, 
             IEnumerable list,
             TextWriter writer,
             int? listExpansionLimit = null) =>
-            Join(list.Cast<object>(), writer, listExpansionLimit);
+            Join(context, list.Cast<object>(), writer, listExpansionLimit);
 
         internal static void Join<T>(
+            IFormatContext context, 
             IEnumerable<T> list,
             TextWriter writer,
             int? listExpansionLimit = null)
@@ -330,7 +349,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                         SingleLinePlainTextFormatter.WriteStartSequenceItem(writer);
 
-                        enumerator.Current.FormatTo(writer);
+                        enumerator.Current.FormatTo(context, writer);
                     }
                     else
                     {
@@ -356,6 +375,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return _typeFormatters.Concat(_defaultTypeFormatters).Where(k => k.Type == type).Select(k => k.MimeType);
         }
 
+        /// <summary>
+        /// Registers a formatter to be used when formatting.
+        /// </summary>
         public static void Register(ITypeFormatter formatter, bool addToDefaults = false)
         {
             if (formatter == null)
@@ -371,21 +393,57 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         }
 
+        /// <summary>
+        /// Registers a formatter to be used when formatting instances of type <typeparamref name="T" />.
+        /// </summary>
+        /// <param name="formatter">The formatter.</param>
         public static void Register<T>(
-            Action<T, TextWriter> formatter,
+            Func<IFormatContext, T, TextWriter, bool> formatter,
             string mimeType = PlainTextFormatter.MimeType,
             bool addToDefaults = false)
         {
             Register(new AnonymousTypeFormatter<T>(formatter, mimeType), addToDefaults);
         }
 
+
+        /// <summary>
+        /// Registers a formatter to be used when formatting instances of type <paramref name="type" />.
+        /// </summary>
+        /// <param name="formatter">The formatter.</param>
+        /// <param name="type">The type the formatter is registered for.</param>
         public static void Register(
             Type type,
-            Action<object, TextWriter> formatter,
+            Func<IFormatContext, object, TextWriter, bool> formatter,
             string mimeType = PlainTextFormatter.MimeType, 
             bool addToDefaults = false)
         {
             Register(new AnonymousTypeFormatter<object>(formatter, mimeType, type), addToDefaults);
+        }
+
+        /// <summary>
+        /// Registers a formatter to be used when formatting instances of type <paramref name="type" />.
+        /// </summary>
+        /// <param name="formatter">The formatting action.</param>
+        /// <param name="type">The type the formatter is registered for.</param>
+        public static void Register(
+            Type type,
+            Action<object, TextWriter> formatter,
+            string mimeType = PlainTextFormatter.MimeType,
+            bool addToDefaults = false)
+        {
+            Register(new AnonymousTypeFormatter<object>((context, value, writer) => { formatter(value, writer); return true; }, mimeType, type), addToDefaults);
+        }
+
+        /// <summary>
+        /// Registers a formatter to be used when formatting instances of type <typeparamref name="T" />.
+        /// </summary>
+        /// <param name="formatter">The formatting action.</param>
+        public static void Register<T>(
+            Action<T, TextWriter> formatter,
+            string mimeType = PlainTextFormatter.MimeType,
+            bool addToDefaults = false)
+        {
+            Register(new AnonymousTypeFormatter<object>((context, value, writer) => { formatter((T)value, writer); return true; }, mimeType, typeof(T)), addToDefaults);
         }
 
         /// <summary>
@@ -397,7 +455,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             string mimeType = PlainTextFormatter.MimeType,
             bool addToDefaults = false)
         {
-            Register(new AnonymousTypeFormatter<T>((obj, writer) => writer.Write(formatter((T)obj)), mimeType), addToDefaults);
+            Register(new AnonymousTypeFormatter<T>((context, value, writer) => { writer.Write(formatter(value)); return true; }, mimeType), addToDefaults);
         }
 
         public static IEnumerable<ITypeFormatter> RegisteredFormatters(bool includeDefaults = true)
@@ -409,7 +467,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     yield return formatter;
         }
 
-        public static ITypeFormatter GetBestFormatterFor(Type actualType, string mimeType = PlainTextFormatter.MimeType)
+        public static ITypeFormatter GetPreferredFormatterFor(Type actualType, string mimeType = PlainTextFormatter.MimeType)
         {
             return
                 _typeFormattersTable
@@ -432,7 +490,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return defaultFormatter;
 
             // Last resort backup 
-            return new AnonymousTypeFormatter<object>((obj, writer) => writer.Write(obj), mimeType, actualType);
+            return new AnonymousTypeFormatter<object>((context, obj, writer) => { writer.Write(obj); return true; }, mimeType, actualType);
         }
 
         internal static ITypeFormatter TryInferBestFormatter(Type actualType, string mimeType, IEnumerable<ITypeFormatter> formatters)
@@ -445,10 +503,23 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     .Select((x, i) => (formatter: x, index: i))
                     .ToArray();
 
+            if (candidates.Length == 1)
+                return candidates[0].formatter;
+
             if (candidates.Length > 0)
             {
                 Array.Sort(candidates, new SortByRelevanceAndOrder<(ITypeFormatter formatter, int index)>(tup => tup.formatter.Type, tup => tup.index));
-                return candidates[0].formatter;
+
+                // Compose the possible formatters into one formatter, trying each in turn
+                return new AnonymousTypeFormatter<object>((context, obj, writer) =>
+                    {
+                        foreach (var formatter in candidates)
+                        {
+                            if (formatter.formatter.Format(context, obj, writer))
+                                return true;
+                        }
+                        return false;
+                    }, mimeType);
             }
 
             // A last restorr
@@ -457,9 +528,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         private static IReadOnlyCollection<T> ReadOnlyMemoryToArray<T>(ReadOnlyMemory<T> mem) => mem.Span.ToArray();
 
-        internal static readonly MethodInfo FormatReadOnlyMemoryMethod = typeof(Formatter)
-                                                                          .GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
-                                                                          .Single(m => m.Name == nameof(ReadOnlyMemoryToArray));
+        internal static readonly MethodInfo FormatReadOnlyMemoryMethod = 
+            typeof(Formatter)
+            .GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
+            .Single(m => m.Name == nameof(ReadOnlyMemoryToArray));
 
 
     }
