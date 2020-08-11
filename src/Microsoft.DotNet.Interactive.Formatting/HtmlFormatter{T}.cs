@@ -72,11 +72,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             });
         }
 
-<<<<<<< HEAD
-        internal static HtmlFormatter<T> CreateForAnyEnumerable()
-=======
         internal static HtmlFormatter<T> CreateForAnyEnumerable(bool includeInternals)
->>>>>>> 0edb260c474e0a9e65351119a95aada972b3c2b0
         {
             Func<T, IEnumerable> getKeys = null;
             Func<T, IEnumerable> getValues = instance => (IEnumerable) instance;
@@ -88,10 +84,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             if (dictionaryGenericType != null || dictionaryObjectType != null)
             {
-                var keysProperty = typeof(T).GetProperty("Keys");
+                var dictType = (dictionaryGenericType ?? dictionaryObjectType);
+                var keysProperty = dictType.GetProperty("Keys");
                 getKeys = instance => (IEnumerable) keysProperty.GetValue(instance, null);
 
-                var valuesProperty = typeof(T).GetProperty("Values");
+                var valuesProperty = dictType.GetProperty("Values");
                 getValues = instance => (IEnumerable) valuesProperty.GetValue(instance, null);
             }
 
@@ -137,13 +134,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 var headers = new List<IHtmlContent>();
 
-                List<string> leftColumnValues;
+                List<object> leftColumnValues;
 
                 if (getKeys != null)
                 {
                     headers.Add(th(i("key")));
                     leftColumnValues = getKeys(source)
-                                       .Cast<string>()
+                                       .Cast<object>()
                                        .Take(rowData.Count)
                                        .ToList();
                 }
@@ -151,7 +148,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     headers.Add(th(i("index")));
                     leftColumnValues = Enumerable.Range(0, rowData.Count)
-                                                 .Select(i => i.ToString())
+                                                 .Cast<object>()
                                                  .ToList();
                 }
 

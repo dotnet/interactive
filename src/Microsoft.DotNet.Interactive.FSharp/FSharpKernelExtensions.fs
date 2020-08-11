@@ -17,8 +17,8 @@ open XPlot.Plotly
 [<AbstractClass; Extension; Sealed>]
 type FSharpKernelExtensions private () =
     
-    static let referenceFromType = fun (typ: Type) -> sprintf "#r \"%s\"" (typ.Assembly.Location.Replace("\\", "/"))
-    static let openNamespaceOrType = fun (whatToOpen: String) -> sprintf "open %s" whatToOpen
+    static let referenceFromType (typ: Type) = sprintf "#r \"%s\"" (typ.Assembly.Location.Replace("\\", "/"))
+    static let openNamespaceOrType (whatToOpen: string) = sprintf "open %s" whatToOpen
 
     [<Extension>]
     static member UseDefaultFormatting(kernel: FSharpKernelBase) =
@@ -26,16 +26,18 @@ type FSharpKernelExtensions private () =
             [
                 referenceFromType typeof<IHtmlContent>
                 referenceFromType typeof<Kernel>
-                referenceFromType typeof<FSharpPocketViewTags>
+                referenceFromType typeof<FSharpKernelHelpers.IMarker>
                 referenceFromType typeof<PlotlyChart>
                 referenceFromType typeof<Formatter>
                 referenceFromType typeof<FSharp.Compiler.Interactive.InteractiveSession>
                 openNamespaceOrType typeof<IHtmlContent>.Namespace
-                openNamespaceOrType typeof<FSharpPocketViewTags>.FullName
-                openNamespaceOrType typeof<FSharpPocketViewTags>.Namespace
                 openNamespaceOrType typeof<PlotlyChart>.Namespace
+
+                openNamespaceOrType typeof<System.Console>.Namespace
+                openNamespaceOrType typeof<System.IO.File>.Namespace
+                openNamespaceOrType typeof<System.Text.StringBuilder>.Namespace
                 openNamespaceOrType typeof<Formatter>.Namespace
-            ] |> List.reduce(fun x y -> x + Environment.NewLine + y)
+            ] |> String.concat Environment.NewLine
 
         // Register F# Interactive box printing as the default plain text printer, selectively overriding plaintext settings
         // in DefaultPlainTextFormatterSet
@@ -62,11 +64,29 @@ type FSharpKernelExtensions private () =
 
     [<Extension>]
     static member UseDefaultNamespaces(kernel: FSharpKernelBase) =
-        let code = @"
-open System
-open System.Text
-open System.Threading.Tasks
-open System.Linq"
+        // F# has its own views on what namespaces are open by default in its scripting model
+        kernel
+
+    [<Extension>]
+    static member UseExtraNamespacesForTesting(kernel: FSharpKernelBase) =
+        let code = 
+            [
+                // opens some System namespaces for testing 
+                openNamespaceOrType typeof<System.Threading.Tasks.Task>.Namespace
+                openNamespaceOrType typeof<System.Linq.Enumerable>.Namespace
+
+                // opens Microsoft.Microsoft.AspNet.Core.Html for testing
+                openNamespaceOrType typeof<IHtmlContent>.Namespace
+
+                // opens Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html for testing
+                //    note this has some AutoOpen modules inside
+                openNamespaceOrType (typeof<FSharpKernelHelpers.IMarker>.Namespace + "." + nameof(FSharpKernelHelpers.Html))
+
+                // opens XPlot.Plotly for testing
+                openNamespaceOrType typeof<PlotlyChart>.Namespace
+
+            ] |> String.concat Environment.NewLine
+
         kernel.DeferCommand(SubmitCode code)
         kernel
 
@@ -75,8 +95,12 @@ open System.Linq"
         let code = 
             [
                 referenceFromType typeof<FSharpKernelHelpers.IMarker>
-                openNamespaceOrType (typeof<FSharpKernelHelpers.IMarker>.DeclaringType.Namespace + "." + nameof(FSharpKernelHelpers))
-            ] |> List.reduce(fun x y -> x + Environment.NewLine + y)
+                
+                // opens Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers
+                //    note this has some AutoOpen modules inside
+                openNamespaceOrType (typeof<FSharpKernelHelpers.IMarker>.Namespace)
+
+            ] |> String.concat Environment.NewLine
 
         kernel.DeferCommand(SubmitCode code)
         kernel
