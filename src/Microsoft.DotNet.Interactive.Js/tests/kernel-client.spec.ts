@@ -38,6 +38,33 @@ describe("dotnet-interactive", () => {
         describe("submitCode", () => {
             afterEach(fetchMock.restore);
 
+
+            it("returns resource url", async () => {
+                const rootUrl = "https://dotnet.interactive.com:999";
+                configureFetchForKernelDiscovery(rootUrl);
+
+
+                let client = await createDotnetInteractiveClient({
+                    address: rootUrl,
+                    kernelTransportFactory: createMockKernelTransport
+                });
+                let resource = client.getResourceUrl("image.png");
+                expect(resource).to.be.equal(`${rootUrl}/resources/image.png‌⁠`);
+            });
+
+            it("returns extensions resource url", async () => {
+                const rootUrl = "https://dotnet.interactive.com:999";
+                configureFetchForKernelDiscovery(rootUrl);
+
+
+                let client = await createDotnetInteractiveClient({
+                    address: rootUrl,
+                    kernelTransportFactory: createMockKernelTransport
+                });
+                let resource = client.getExtensionResourceUrl("customExtension","image.png");
+                expect(resource).to.be.equal(`${rootUrl}/extensions/customExtension/resources/image.png‌⁠`);
+            });
+
             it("returns token for correlation", async () => {
                 const rootUrl = "https://dotnet.interactive.com:999";
                 configureFetchForKernelDiscovery(rootUrl);

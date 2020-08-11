@@ -26,6 +26,8 @@ export interface DotnetInteractiveClient {
     getVariables(variableRequest: VariableRequest): Promise<VariableResponse>;
     getResource(resource: string): Promise<Response>;
     getResourceUrl(resource: string): string;
+    getExtensionResource(extensionName: string, resource: string): Promise<Response>;
+    getExtensionResourceUrl(extensionName: string, resource: string): string;
     loadKernels(): Promise<void>;
     submitCode(code: string, targetKernelName?: string): Promise<string>;
     submitCommand(commandType: string, command?: any, targetKernelName?: string): Promise<string>;
