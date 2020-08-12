@@ -924,5 +924,83 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
     </table>");
             }
         }
+        [Fact]
+        public void All_properties_are_shown_when_sequences_contain_different_types_in_order_they_are_encountered()
+        {
+            var objects = new object[]
+            {
+                    new { name = "apple", Item2 = "green" },
+                    (2, "two"),
+                    1,
+                    Enumerable.Range(1, 3),
+            };
+
+            var result = objects.ToDisplayString("text/html");
+            result
+                   .Should()
+                   .BeEquivalentHtmlTo(
+                      $@"<table>
+      <thead>
+        <tr>
+          <th>
+            <i>index</i>
+          </th>
+          <th>
+            <i>type</i>
+          </th>
+          <th>name</th>
+          <th>Item2</th>
+          <th>Item1</th>
+          <th>value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0</td>
+          <td>(anonymous)</td>
+          <td>apple</td>
+          <td>green</td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=netcore-3.0\""}>System.ValueTuple&lt;System.Int32,System.String&gt;</a>
+            </span>
+          </td>
+          <td></td>
+          <td>two</td>
+          <td>2</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=netcore-3.0\""}>System.Int32</a>
+            </span>
+          </td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=netcore-3.0\""}>System.Linq.Enumerable+RangeIterator</a>
+            </span>
+          </td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td>[ 1, 2, 3 ]</td>
+        </tr>
+      </tbody>
+    </table>");
+        }
     }
 }
