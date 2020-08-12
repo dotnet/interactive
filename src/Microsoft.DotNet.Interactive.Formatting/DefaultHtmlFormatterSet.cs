@@ -20,14 +20,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 new HtmlFormatter<DateTime>((context, dateTime, writer) =>
                 {
                     PocketView view = span(dateTime.ToString("u"));
-                    view.WriteTo(context, writer, HtmlEncoder.Default);
+                    view.WriteTo(writer, HtmlEncoder.Default);
                     return true;
                 }),
 
                 new HtmlFormatter<DateTimeOffset>((context, dateTime, writer) =>
                 {
                     PocketView view = span(dateTime.ToString("u"));
-                    view.WriteTo(context, writer, HtmlEncoder.Default);
+                    view.WriteTo(writer, HtmlEncoder.Default);
                     return true;
                 }),
 
@@ -36,12 +36,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     var headers = new List<IHtmlContent>();
                     var values = new List<IHtmlContent>();
 
+                    var innerContext = context.ReduceContent(FormatContext.NestedInTable);
                     foreach (var pair in obj.OrderBy(p => p.Key))
                     {
                         // Note, embeds the keys and values as arbitrary objects into the HTML content,
                         // ultimately rendered by PocketView
-                        headers.Add(th(arbitrary(pair.Key)));
-                        values.Add(td(arbitrary(pair.Value)));
+                        headers.Add(th(embed(pair.Key, innerContext)));
+                        values.Add(td(embed(pair.Value, innerContext)));
                     }
 
                     PocketView view =
@@ -53,14 +54,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
                             tr(
                                 values)));
 
-                    var innerContext = context.NestedInTable();
-                    view.WriteTo(innerContext, writer, HtmlEncoder.Default);
+                    view.WriteTo(writer, HtmlEncoder.Default);
                     return true;
                 }),
 
                 new HtmlFormatter<PocketView>((context, view, writer) =>
                 {
-                    view.WriteTo(context, writer, HtmlEncoder.Default);
+                    view.WriteTo(writer, HtmlEncoder.Default);
                     return true;
                 }),
 
@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     PocketView view = span(memory.Span.ToString());
 
-                    view.WriteTo(context, writer, HtmlEncoder.Default);
+                    view.WriteTo(writer, HtmlEncoder.Default);
                     return true;
                 }),
 
@@ -87,17 +87,40 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 new HtmlFormatter<TimeSpan>((context, timespan, writer) =>
                 {
                     PocketView view = span(timespan.ToString());
-                    view.WriteTo(context, writer, HtmlEncoder.Default);
+                    view.WriteTo(writer, HtmlEncoder.Default);
                     return true;
                 }),
 
                 new HtmlFormatter<Type>((context, type, writer) =>
                 {
-                    PocketView view = span(
-                        a[href: $"https://docs.microsoft.com/dotnet/api/{type.FullName}?view=netcore-3.0"](
-                            type.ToDisplayString(PlainTextFormatter.MimeType)));
+                    string text = type.ToDisplayString(PlainTextFormatter.MimeType);
+                    
+                    // This is approximate
+                    bool isKnownDocType =
+                      type.Namespace != null &&
+                      (type.Namespace == "System" ||
+                       type.Namespace.StartsWith("System.") ||
+                       type.Namespace.StartsWith("Microsoft."));
 
-                    view.WriteTo(context, writer, HtmlEncoder.Default);
+                    if (type.IsAnonymous() || !isKnownDocType)
+                    {
+                        writer.Write(text.HtmlEncode());
+                    }
+                    else
+                    {
+                        //system.collections.generic.list-1
+                        //system.collections.generic.list-1.enumerator
+                        var gtype = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
+
+                        var typeLookupName =
+                            gtype.FullName.ToLower().Replace("+",".").Replace("`","-");
+
+                        PocketView view = 
+                           span(a[href: $"https://docs.microsoft.com/dotnet/api/{typeLookupName}?view=netcore-3.0"](
+                                   text));
+                        view.WriteTo(writer, HtmlEncoder.Default);
+                    }
+
                     return true;
                 }),
 
@@ -119,7 +142,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 new HtmlFormatter<Enum>((context, enumValue, writer) =>
                 {
                     PocketView view = span(enumValue.ToString());
-                    view.WriteTo(context, writer, HtmlEncoder.Default);
+                    view.WriteTo(writer, HtmlEncoder.Default);
                     return true;
                 }),
 

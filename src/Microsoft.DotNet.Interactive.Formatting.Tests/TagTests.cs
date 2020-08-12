@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void ToString_renders_Action_content()
         {
-            var p = new Tag("p", (context, w) => w.Write("content"));
+            var p = new Tag("p", w => w.Write("content"));
 
             p.ToString().Should().Be("<p>content</p>");
         }

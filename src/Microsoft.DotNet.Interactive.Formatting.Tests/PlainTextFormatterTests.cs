@@ -15,22 +15,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
     public class PlainTextFormatterTests : FormatterTestBase
     {
-        [Fact]
-        public void Non_generic_GetBestFormatter_uses_default_formatter_for_object()
-        {
-            PlainTextFormatter.GetPreferredFormatterFor(typeof(Widget))
-                              .Should()
-                              .BeOfType<PlainTextFormatter<object>>();
-        }
-
-        [Fact]
-        public void GetBestFormatter_for_List_uses_default_formatter_for_enumerable()
-        {
-            PlainTextFormatter.GetPreferredFormatterFor(typeof(List<int>))
-                              .Should()
-                              .BeOfType<PlainTextFormatter<IEnumerable>>();
-        }
-
         public class Objects : FormatterTestBase
         {
             [Fact]
@@ -473,21 +457,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 formatter.Format(readOnlyMemory, writer);
 
                 writer.ToString().Should().Be("Hi!");
-            }
-
-            [Fact]
-            public void Type_specific_formatter_is_preferred_over_generic_formatter()
-            {
-                // There is a specific default formatter registered for ReadOnlyMemory<char>, check
-                // it is selected
-                var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(ReadOnlyMemory<char>));
-
-                formatter.GetType().Should().Be(typeof(PlainTextFormatter<ReadOnlyMemory<char>>));
-                formatter.Type.Should().Be(typeof(ReadOnlyMemory<char>));
-
-                var formatter2 = PlainTextFormatter.GetPreferredFormatterFor(typeof(ReadOnlyMemory<int>));
-
-                formatter2.Type.Should().Be(typeof(ReadOnlyMemory<>));
             }
 
 

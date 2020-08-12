@@ -15,14 +15,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
     public class HtmlFormatterTests : FormatterTestBase
     {
-        [Fact]
-        public void Non_generic_GetBestFormatter_creates_generic_formatter()
-        {
-            HtmlFormatter.GetPreferredFormatterFor(typeof(Widget))
-                         .Should()
-                         .BeOfType<HtmlFormatter<object>>();
-        }
-
         public class Objects : FormatterTestBase
         {
             [Fact]
@@ -137,7 +129,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Contain("<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>123</td><td>{ BA: 456 }</td></tr></tbody></table>");
+                      .Contain("<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>123</td><td>{ BA = 456 }</td></tr></tbody></table>");
             }
 
             [Fact]
@@ -192,11 +184,25 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Contain("<td>{ System.Exception:");
+                      .Contain("<td>System.Exception: not ok");
             }
 
             [Fact]
-            public void Properies_of_System_Type_instances_are_not_expanded()
+            public void Properies_of_System_Type_instances_are_not_expanded_and_link_is_not_added()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
+
+                var writer = new StringWriter();
+
+                formatter.Format(typeof(Dummy.DummyNotInSystemNamespace), writer);
+
+                writer.ToString()
+                      .Should()
+                      .Be("Dummy.DummyNotInSystemNamespace");
+            }
+
+            [Fact]
+            public void Properies_of_System_Type_instances_are_not_expanded_and_link_is_added()
             {
                 var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
 
@@ -206,10 +212,10 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/System.String?view=netcore-3.0\">System.String</a></span>");
+                      .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=netcore-3.0\">System.String</a></span>");
             }
 
-            
+
             [Fact]
             public void Enums_are_formatted_using_their_names()
             {
@@ -489,7 +495,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 var html = objects.ToDisplayString("text/html");
 
                 html.Should().BeEquivalentHtmlTo(
-                    $"<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>{date1.ToDisplayString("text/plain")}</td></tr><tr><td>1</td><td>{date2.ToDisplayString("text/plain")}</td></tr></tbody></table>");
+                    $"<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td><span>{date1.ToDisplayString("text/plain")}</span></td></tr><tr><td>1</td><td><span>{date2.ToDisplayString("text/plain")}</span></td></tr></tbody></table>");
             }
 
             [Fact]
@@ -499,8 +505,34 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var html = objects.ToDisplayString("text/html");
 
-                html.Should().BeEquivalentHtmlTo(
-                    "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>System.String</td></tr><tr><td>1</td><td>System.Int32</td></tr></tbody></table>");
+                html.Should().BeEquivalentHtmlTo($@"<table>
+      <thead>
+        <tr>
+          <th>
+            <i>index</i>
+          </th>
+          <th>value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.string?view=netcore-3.0\""}>System.String</a>
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=netcore-3.0\""}>System.Int32</a>
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>");
             }
 
             [Fact]
@@ -567,37 +599,48 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 formatter.Format(GetCollection(), writer);
 
                 writer.ToString().Should()
-                      .BeEquivalentHtmlTo(
-@"<table>
-  <thead>
-    <tr>
-      <th>
-        <i>index</i>
-      </th>
-      <th>
-        <i>type</i>
-      </th>
-      <th>value</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>0</td>
-      <td>System.Boolean</td>
-      <td>True</td>
-    </tr>
-    <tr>
-      <td>1</td>
-      <td>System.Int32</td>
-      <td>99</td>
-    </tr>
-    <tr>
-      <td>2</td>
-      <td>System.String</td>
-      <td>Hello, World</td>
-    </tr>
-  </tbody>
-</table>");
+                      .BeEquivalentHtmlTo($@"<table>
+      <thead>
+        <tr>
+          <th>
+            <i>index</i>
+          </th>
+          <th>
+            <i>type</i>
+          </th>
+          <th>value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.boolean?view=netcore-3.0\""}>System.Boolean</a>
+            </span>
+          </td>
+          <td>True</td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=netcore-3.0\""}>System.Int32</a>
+            </span>
+          </td>
+          <td>99</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.string?view=netcore-3.0\""}>System.String</a>
+            </span>
+          </td>
+          <td>Hello, World</td>
+        </tr>
+      </tbody>
+    </table>");
             }
             
             [Fact]
@@ -615,58 +658,79 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 result
                        .Should()
                        .BeEquivalentHtmlTo(
-                           @"<table>
-  <thead>
-    <tr>
-      <th><i>index</i></th>
-      <th><i>type</i></th>
-      <th>value</th>
-      <th>Item1</th>
-      <th>Item2</th>
-      <th>name</th>
-      <th>color</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>0</td>
-      <td>System.Int32</td>
-      <td>1</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>1</td>
-      <td>System.ValueTuple&lt;System.Int32,System.String&gt;</td>
-      <td></td>
-      <td>2</td>
-      <td>two</td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>2</td>
-      <td>System.Linq.Enumerable+RangeIterator</td>
-      <td>[ 1, 2, 3 ]</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>3</td>
-      <td>(anonymous)</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>apple</td>
-      <td>green</td>
-    </tr>
-  </tbody>
-</table>");
+                          $@"<table>
+      <thead>
+        <tr>
+          <th>
+            <i>index</i>
+          </th>
+          <th>
+            <i>type</i>
+          </th>
+          <th>value</th>
+          <th>Item1</th>
+          <th>Item2</th>
+          <th>name</th>
+          <th>color</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=netcore-3.0\""}>System.Int32</a>
+            </span>
+          </td>
+          <td>1</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=netcore-3.0\""}>System.ValueTuple&lt;System.Int32,System.String&gt;</a>
+            </span>
+          </td>
+          <td></td>
+          <td>2</td>
+          <td>two</td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=netcore-3.0\""}>System.Linq.Enumerable+RangeIterator</a>
+            </span>
+          </td>
+          <td>[ 1, 2, 3 ]</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>(anonymous)</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td>apple</td>
+          <td>green</td>
+        </tr>
+      </tbody>
+    </table>");
             }
         }
     }
+}
+
+namespace Dummy
+{
+    public class DummyNotInSystemNamespace { } 
 }

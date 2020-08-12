@@ -14,9 +14,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public class HtmlFormatter<T> : TypeFormatter<T>
     {
-        private readonly Func<IFormatContext, T, TextWriter, bool> _format;
+        private readonly Func<FormatContext, T, TextWriter, bool> _format;
 
-        public HtmlFormatter(Func<IFormatContext, T, TextWriter, bool> format)
+        public HtmlFormatter(Func<FormatContext, T, TextWriter, bool> format)
         {
             _format = format;
         }
@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _format = (context, instance, writer) => { writer.Write(format(instance)); return true; };
         }
 
-        public override bool Format(IFormatContext context, T value, TextWriter writer)
+        public override bool Format(FormatContext context, T value, TextWriter writer)
         {
             if (value is null)
             {
@@ -39,8 +39,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return true;
             }
 
-            _format(context, value, writer);
-            return false;
+            return _format(context, value, writer);
         }
 
         public override string MimeType => HtmlFormatter.MimeType;
@@ -52,7 +51,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return new HtmlFormatter<T>((context, instance, writer) =>
             {
-                if (members.Length == 0 || context.IsNestedInTable)
+                if (members.Length == 0 || context.ContentThreshold < 0.9)
                 {
                     // This formatter refuses to format objects without members, and 
                     // refused to produce nested tables.
@@ -61,15 +60,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 else
                 {
 
+                    var innerContext = context.ReduceContent(FormatContext.NestedInTable);
+
                     // Note, embeds the keys and values as arbitrary objects into the HTML content,
                     // ultimately rendered by PocketView, e.g. via ToDisplayString(PlainTextFormatter.MimeType)
                     IEnumerable<object> headers = members.Select(m => m.Member.Name)
-                                                         .Select(v => th(arbitrary(v)));
+                                                         .Select(v => th(embed(v, innerContext)));
 
-                    IEnumerable<object> values = members.Select(m => Value(m, instance))
-                                                        .Select(v => td(arbitrary(v)));
+                    IEnumerable<object> values = members.Select(m => m.GetValueOrException(instance))
+                                                        .Select(v => td(embed(v, innerContext)));
 
-                    var t =
+                    PocketView t =
                         table(
                             thead(
                                 tr(
@@ -78,8 +79,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                                 tr(
                                     values)));
 
-                    var innerContext = context.NestedInTable();
-                    ((PocketView)t).WriteTo(innerContext, writer, HtmlEncoder.Default);
+                    t.WriteTo(writer, HtmlEncoder.Default);
                     return true;
                 }
             });
@@ -106,13 +106,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return new HtmlFormatter<T>(BuildTable);
 
-            bool BuildTable(IFormatContext context, T source, TextWriter writer)
+            bool BuildTable(FormatContext context, T source, TextWriter writer)
             {
-                if (context.IsNestedInTable)
+                if (context.ContentThreshold < 0.9)
                 {
                     // This formatter refuses to produce nested tables.
                     return false;
                 }
+                var innerContext = context.ReduceContent(FormatContext.NestedInTable);
 
                 var (rowData, remainingCount) = getValues(source)
                                                 .Cast<object>()
@@ -207,7 +208,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     }
 
                     // Note, embeds the values as arbitrary objects into the HTML content.
-                    rows.Add(tr(rowValues.Select(r => td(arbitrary(r)))));
+                    rows.Add(tr(rowValues.Select(r => td(embed(r, innerContext)))));
                 }
 
                 if (remainingCount > 0)
@@ -219,23 +220,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 var table = HtmlFormatter.Table(headers, rows);
 
-                var innerContext = context.NestedInTable();
-                table.WriteTo(innerContext, writer, HtmlEncoder.Default);
+                table.WriteTo(writer, HtmlEncoder.Default);
                 return true;
             }
         }
 
-        private static object Value(MemberAccessor<T> m, T instance)
-        {
-            try
-            {
-                var value = m.GetValue(instance);
-                return value;
-            }
-            catch (Exception exception)
-            {
-                return exception;
-            }
-        }
     }
 }

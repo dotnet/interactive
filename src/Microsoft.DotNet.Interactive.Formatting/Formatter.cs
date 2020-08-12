@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         // computed state
         private static readonly ConcurrentDictionary<Type, string> _preferredMimeTypesTable = new ConcurrentDictionary<Type, string>();
         internal static readonly ConcurrentDictionary<(Type type, string mimeType), ITypeFormatter> _typeFormattersTable = new ConcurrentDictionary<(Type type, string mimeType), ITypeFormatter>();
-        private static readonly ConcurrentDictionary<Type, Action<IFormatContext, object, TextWriter, string>> _genericFormattersTable = new ConcurrentDictionary<Type, Action<IFormatContext, object, TextWriter, string>>();
+        private static readonly ConcurrentDictionary<Type, Action<FormatContext, object, TextWriter, string>> _genericFormattersTable = new ConcurrentDictionary<Type, Action<FormatContext, object, TextWriter, string>>();
 
         /// <summary>
         /// Initializes the <see cref="Formatter"/> class.
@@ -106,9 +106,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _preferredMimeTypes.Clear();
             _defaultTypeFormatters.Clear();
             _defaultPreferredMimeTypes.Clear();
-            _defaultTypeFormatters.PushRange(HtmlFormatter.DefaultFormatters);
-            _defaultTypeFormatters.PushRange(JsonFormatter.DefaultFormatters);
-            _defaultTypeFormatters.PushRange(PlainTextFormatter.DefaultFormatters);
+            
+            // In the lists of default formatters, the highest priority ones come first,
+            // so register those last.
+            _defaultTypeFormatters.PushRange(HtmlFormatter.DefaultFormatters.Reverse().ToArray());
+            _defaultTypeFormatters.PushRange(JsonFormatter.DefaultFormatters.Reverse().ToArray());
+            _defaultTypeFormatters.PushRange(PlainTextFormatter.DefaultFormatters.Reverse().ToArray());
 
             _defaultPreferredMimeTypes.Push((typeof(string), PlainTextFormatter.MimeType));
             _defaultPreferredMimeTypes.Push((typeof(JToken), JsonFormatter.MimeType));
@@ -255,7 +258,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <summary>Invoke the formatter</summary>
         public static void FormatTo<T>(
             this T obj,
-            IFormatContext context,
+            FormatContext context,
             TextWriter writer,
             string mimeType = PlainTextFormatter.MimeType)
         {
@@ -275,20 +278,19 @@ namespace Microsoft.DotNet.Interactive.Formatting
             Formatter<T>.FormatTo(context, obj, writer, mimeType);
         }
 
-
-        internal static Action<IFormatContext, object, TextWriter, string> GetGenericFormatterMethod(this Type type)
+        internal static Action<FormatContext, object, TextWriter, string> GetGenericFormatterMethod(this Type type)
         {
             var methodInfo = typeof(Formatter<>)
                              .MakeGenericType(type)
                              .GetMethod(nameof(Formatter<object>.FormatTo), new[]
                              {
-                                 typeof(IFormatContext),
+                                 typeof(FormatContext),
                                  type,
                                  typeof(TextWriter),
                                  typeof(string)
                              });
 
-            var contextParam = Expression.Parameter(typeof(IFormatContext), "context");
+            var contextParam = Expression.Parameter(typeof(FormatContext), "context");
             var targetParam = Expression.Parameter(typeof(object), "target");
             var writerParam = Expression.Parameter(typeof(TextWriter), "writer");
             var mimeTypeParam = Expression.Parameter(typeof(string), "mimeType");
@@ -300,7 +302,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                                                  writerParam,
                                                  mimeTypeParam);
 
-            return Expression.Lambda<Action<IFormatContext, object, TextWriter, string>>(
+            return Expression.Lambda<Action<FormatContext, object, TextWriter, string>>(
                 methodCallExpr,
                 contextParam,
                 targetParam,
@@ -309,14 +311,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
         }
 
         internal static void Join(
-            IFormatContext context, 
+            FormatContext context, 
             IEnumerable list,
             TextWriter writer,
             int? listExpansionLimit = null) =>
             Join(context, list.Cast<object>(), writer, listExpansionLimit);
 
         internal static void Join<T>(
-            IFormatContext context, 
+            FormatContext context, 
             IEnumerable<T> list,
             TextWriter writer,
             int? listExpansionLimit = null)
@@ -398,7 +400,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </summary>
         /// <param name="formatter">The formatter.</param>
         public static void Register<T>(
-            Func<IFormatContext, T, TextWriter, bool> formatter,
+            Func<FormatContext, T, TextWriter, bool> formatter,
             string mimeType = PlainTextFormatter.MimeType,
             bool addToDefaults = false)
         {
@@ -413,7 +415,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="type">The type the formatter is registered for.</param>
         public static void Register(
             Type type,
-            Func<IFormatContext, object, TextWriter, bool> formatter,
+            Func<FormatContext, object, TextWriter, bool> formatter,
             string mimeType = PlainTextFormatter.MimeType, 
             bool addToDefaults = false)
         {
@@ -473,19 +475,19 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 _typeFormattersTable
                     .GetOrAdd(
                         (actualType, mimeType),
-                        tuple => InferBestFormatter(actualType, mimeType));
+                        tuple => InferPreferredFormatter(actualType, mimeType));
         }
 
-        internal static ITypeFormatter InferBestFormatter(Type actualType, string mimeType)
+        internal static ITypeFormatter InferPreferredFormatter(Type actualType, string mimeType)
         {
 
             // Try to find a user-specified type formatter, use the most specific type with a matching mime type
-            var userFormatter = TryInferBestFormatter(actualType, mimeType, _typeFormatters);
+            var userFormatter = TryInferPreferredFormatter(actualType, mimeType, _typeFormatters);
             if (userFormatter != null)
                 return userFormatter;
 
             // Try to find a default built-in type formatter, use the most specific type with a matching mime type
-            var defaultFormatter = TryInferBestFormatter(actualType, mimeType, _defaultTypeFormatters);
+            var defaultFormatter = TryInferPreferredFormatter(actualType, mimeType, _defaultTypeFormatters);
             if (defaultFormatter != null)
                 return defaultFormatter;
 
@@ -493,7 +495,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return new AnonymousTypeFormatter<object>((context, obj, writer) => { writer.Write(obj); return true; }, mimeType, actualType);
         }
 
-        internal static ITypeFormatter TryInferBestFormatter(Type actualType, string mimeType, IEnumerable<ITypeFormatter> formatters)
+        internal static ITypeFormatter TryInferPreferredFormatter(Type actualType, string mimeType, IEnumerable<ITypeFormatter> formatters)
         {
 
             // Find the most specific type that specifies a mimeType
@@ -535,6 +537,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
 
     }
+
     internal class FormatterTable
     {
         ConcurrentDictionary<(Type type, bool flag), ITypeFormatter> _formatters = new ConcurrentDictionary<(Type type, bool flag), ITypeFormatter>();

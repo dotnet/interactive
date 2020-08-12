@@ -179,10 +179,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return;
             }
 
-            _tag.Content = (context, writer) => Write(context, args, writer);
+            _tag.Content = writer => Write(args, writer);
         }
 
-        private void Write(IFormatContext context, IReadOnlyList<object> args, TextWriter writer)
+        private void Write(IReadOnlyList<object> args, TextWriter writer)
         {
             for (var i = 0; i < args.Count; i++)
             {
@@ -194,23 +194,32 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         writer.Write(s.HtmlEncode());
                         break;
 
+                    case PocketView html:
+                        // Maintain the contex while writing PocketView in case there are embedded objects.
+                        html.WriteTo(writer, HtmlEncoder.Default);
+                        break;
+
                     case IHtmlContent html:
                         html.WriteTo(writer, HtmlEncoder.Default);
                         break;
 
                     case IEnumerable<IHtmlContent> htmls:
-                        Write(context, htmls.ToArray(), writer);
+                        Write(htmls.ToArray(), writer);
+                        break;
+
+                    case HtmlFormatter.EmbeddedFormat embedded:
+                        embedded.Object.FormatTo(embedded.Context, writer, HtmlFormatter.MimeType);
                         break;
 
                     default:
                         if (arg is IEnumerable<object> seq &&
                             seq.All(s => s is IHtmlContent))
                         {
-                            Write(context, seq.OfType<IHtmlContent>().ToArray(), writer);
+                            Write(seq.OfType<IHtmlContent>().ToArray(), writer);
                         }
                         else
                         {
-                            arg.FormatTo(context, writer, HtmlFormatter.MimeType);
+                            arg.FormatTo(writer, HtmlFormatter.MimeType);
                         }
 
                         break;
@@ -264,14 +273,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
         ///   Renders the tag to the specified <see cref = "TextWriter" />.
         /// </summary>
         /// <param name = "writer">The writer.</param>
-        public void WriteTo(IFormatContext context, TextWriter writer, HtmlEncoder encoder)
-        {
-            _tag?.WriteTo(context, writer, encoder);
-        }
-
         public void WriteTo(TextWriter writer, HtmlEncoder encoder)
         {
-            _tag?.WriteTo(new FormatContext(), writer, encoder);
+            _tag?.WriteTo(writer, encoder);
         }
 
         /// <summary>

@@ -11,9 +11,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public class PlainTextFormatter<T> : TypeFormatter<T>
     {
-        private readonly Func<IFormatContext, T, TextWriter, bool> _format;
+        private readonly Func<FormatContext, T, TextWriter, bool> _format;
 
-        public PlainTextFormatter(Func<IFormatContext, T, TextWriter, bool> format)
+        public PlainTextFormatter(Func<FormatContext, T, TextWriter, bool> format)
         {
             _format = format ?? throw new ArgumentNullException(nameof(format));
         }
@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public override string MimeType => PlainTextFormatter.MimeType;
 
-        public override bool Format(IFormatContext context, T value, TextWriter writer)
+        public override bool Format(FormatContext context, T value, TextWriter writer)
         {
             if (value is null)
             {
@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     writer.Write(value);
                     return true;
                 });
-        }
+            }
 
             return new PlainTextFormatter<T>(
                 PlainTextFormatter.CreateFormatDelegate<T>(
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Part of Pattern")]
         public static PlainTextFormatter<T> CreateForAnyEnumerable(bool _includeInternals)
         {
-            return new PlainTextFormatter<T>((IFormatContext context, T value, TextWriter writer) =>
+            return new PlainTextFormatter<T>((FormatContext context, T value, TextWriter writer) =>
             {
                 if (value is string)
                 {

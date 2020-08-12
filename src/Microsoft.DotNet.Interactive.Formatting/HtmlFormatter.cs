@@ -26,15 +26,19 @@ namespace Microsoft.DotNet.Interactive.Formatting
             FormattersForAnyEnumerable.GetFormatter(type, false);
 
         public static bool PreformatEmbeddedPlainText { get; set; } = false;
+
         public static bool LeftJustifyEmbeddedPlainText { get; set; } = false;
 
         static HtmlFormatter()
         {
-            Formatter.Clearing += (obj, sender) => PreformatEmbeddedPlainText = false;
-            Formatter.Clearing += (obj, sender) => LeftJustifyEmbeddedPlainText = false;
+            Formatter.Clearing += (obj, sender) =>
+            {
+                PreformatEmbeddedPlainText = false;
+                LeftJustifyEmbeddedPlainText = false;
+            };
         }
 
-        internal static IHtmlContent DisplayEmbeddedObjectAsPlainText(IFormatContext context, object value)
+        internal static IHtmlContent DisplayEmbeddedObjectAsPlainText(FormatContext context, object value)
         {
             using var writer = Formatter.CreateWriter();
             Formatter.FormatTo(value, context, writer, PlainTextFormatter.MimeType);
@@ -63,6 +67,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         headers ?? new List<IHtmlContent>())),
                 tbody(
                     rows));
+
+        internal class EmbeddedFormat
+        {
+            internal FormatContext Context { get; }
+            internal object Object { get; }
+            internal EmbeddedFormat(FormatContext context, object instance)
+                { Object = instance;  Context = context;  }
+        }
+
 
         internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultHtmlFormatterSet.DefaultFormatters;
 

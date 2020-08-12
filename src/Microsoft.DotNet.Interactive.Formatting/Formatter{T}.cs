@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="writer">The writer.</param>
         /// <param name="mimeType">The mime type to format to.</param>
         public static void FormatTo(
-            IFormatContext context, 
+            FormatContext context, 
             T obj,
             TextWriter writer,
             string mimeType = PlainTextFormatter.MimeType)

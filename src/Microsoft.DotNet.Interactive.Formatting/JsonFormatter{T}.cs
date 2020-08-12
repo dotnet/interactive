@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public class JsonFormatter<T> : TypeFormatter<T>
     {
-        public override bool Format(IFormatContext context, T instance, TextWriter writer)
+        public override bool Format(FormatContext context, T instance, TextWriter writer)
         {
             var json = JsonConvert.SerializeObject(instance, JsonFormatter.SerializerSettings);
 

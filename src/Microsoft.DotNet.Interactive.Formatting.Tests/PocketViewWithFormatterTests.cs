@@ -21,15 +21,27 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         [Fact]
-        public void Embedded_objects_are_formatted_using_custom_formatter_and_encoded()
+        public void Embedded_objects_are_formatted_using_custom_html_formatter_and_encoded()
         {
             var date = DateTime.Parse("1/1/2019 12:30pm");
 
-            Formatter.Register<DateTime>(_ => "<hello>");
+            Formatter.Register<DateTime>(_ => "&lt;hello&gt;", mimeType: HtmlFormatter.MimeType);
 
             string output = div(date).ToString();
 
             output.Should().Be("<div>&lt;hello&gt;</div>");
+        }
+        [Fact]
+        public void Embedded_objects_are_not_formatted_using_custom_plaintext_formatter_when_formating_as_html()
+        {
+            var date = DateTime.Parse("1/1/2019 12:30pm");
+
+            // This formatter is not used because there is a default HTML formatter available.
+            Formatter.Register<DateTime>(_ => "no no no", mimeType: PlainTextFormatter.MimeType);
+
+            string output = div(date).ToString();
+
+            output.Should().Be($"<div><span>{date.ToString("u")}</span></div>");
         }
     }
 }
