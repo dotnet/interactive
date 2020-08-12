@@ -30,12 +30,12 @@ HtmlFormatter.PlainTextPreformat = false;
   - using plain text formatting should be displayed using left-jsutified formatting
   - that respects whitespace and newlines in the resulting strings.
 
-HtmlFormatter.PlainTextPreformatDefaultFont = false;
+HtmlFormatter.PlainTextDefaultFont = false;
 
    - Indicates that any preformatted plaintext sections should use the default
    - font rather than &lt;pre&gt; sections.
 
-HtmlFormatter.PlainTextPreformatNoLeftJustify = false;
+HtmlFormatter.PlainTextNoLeftJustify = false;
 
    - Indicates that any preformatted plaintext sections should not use left justification.
 

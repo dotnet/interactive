@@ -17,8 +17,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 MaxProperties = DefaultMaxProperties;
                 PlainTextPreformat = DefaultPlainTextPreformat;
-                PlainTextPreformatNoLeftJustify = DefaultPlainTextPreformatNoLeftJustify;
-                PlainTextPreformatDefaultFont = DefaultPlainTextPreformatDefaultFont;
+                PlainTextNoLeftJustify = DefaultPlainTextPreformatNoLeftJustify;
+                PlainTextDefaultFont = DefaultPlainTextPreformatDefaultFont;
             };
         }
 
@@ -39,12 +39,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
         ///   Indicates that any preformatted plaintext sections should use the default
         ///   font rather than &lt;pre&gt; sections.
         /// </summary>
-        public static bool PlainTextPreformatDefaultFont { get; set; } = DefaultPlainTextPreformatDefaultFont;
+        public static bool PlainTextDefaultFont { get; set; } = DefaultPlainTextPreformatDefaultFont;
 
         /// <summary>
         ///   Indicates that any preformatted plaintext sections should not use left justification.
         /// </summary>
-        public static bool PlainTextPreformatNoLeftJustify { get; set; } = DefaultPlainTextPreformatNoLeftJustify;
+        public static bool PlainTextNoLeftJustify { get; set; } = DefaultPlainTextPreformatNoLeftJustify;
 
         internal const int DefaultMaxProperties = 20;
 
@@ -68,26 +68,30 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
             FormattersForAnyEnumerable.GetFormatter(type, false);
 
-        internal static IHtmlContent FormatEmbeddedObjectAsPlainText(FormatContext context, object value)
+        internal static IHtmlContent FormatObjectAsPlainText(FormatContext context, object value)
         {
             using var writer = Formatter.CreateWriter();
             Formatter.FormatTo(value, context, writer, PlainTextFormatter.MimeType);
             var text = writer.ToString();
+            return FormatString(text);
+        }
+
+        internal static IHtmlContent FormatString(string text)
+        {
             var html = text.HtmlEncode();
 
             if (PlainTextPreformat)
             {
-                var div = PlainTextPreformatDefaultFont ? new Tag("div") : new Tag("pre");
-                if (PlainTextPreformatDefaultFont && !PlainTextPreformatNoLeftJustify)
+                var div = PlainTextDefaultFont ? new Tag("div") : new Tag("pre");
+                if (PlainTextDefaultFont && !PlainTextNoLeftJustify)
                     div.HtmlAttributes["style"] = "white-space: pre; text-align: left;";
-                else if (!PlainTextPreformatNoLeftJustify)
+                else if (!PlainTextNoLeftJustify)
                     div.HtmlAttributes["style"] = "text-align: left;";
-                else if (PlainTextPreformatDefaultFont)
+                else if (PlainTextDefaultFont)
                     div.HtmlAttributes["style"] = "white-space: pre;";
                 html = div.Containing(html);
             }
             return html;
-
         }
 
         internal static PocketView Table(

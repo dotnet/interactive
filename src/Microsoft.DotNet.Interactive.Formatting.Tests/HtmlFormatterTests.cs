@@ -261,6 +261,28 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         public class PreformatPlainText : FormatterTestBase
         {
             [Fact]
+            public void It_can_format_a_String_with_plain_text_preformatted()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(string));
+                HtmlFormatter.PlainTextPreformat = true;
+
+                var writer = new StringWriter();
+
+                string instance = @"this
+is a 
+   multiline<>
+string";
+
+                formatter.Format(instance, writer);
+
+                writer.ToString()
+                      .Should()
+                      .BeEquivalentHtmlTo(
+                          $"<pre style=\"text-align: left;\">{instance.HtmlEncode()}</pre>");
+            }
+
+
+            [Fact]
             public void It_can_format_with_plain_text_preformatted()
             {
                 var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(long));
@@ -283,7 +305,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             {
                 var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(long));
                 HtmlFormatter.PlainTextPreformat = true;
-                HtmlFormatter.PlainTextPreformatDefaultFont = true;
+                HtmlFormatter.PlainTextDefaultFont = true;
 
                 var writer = new StringWriter();
 
@@ -302,8 +324,8 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             {
                 var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(long));
                 HtmlFormatter.PlainTextPreformat = true;
-                HtmlFormatter.PlainTextPreformatDefaultFont = true;
-                HtmlFormatter.PlainTextPreformatNoLeftJustify = true;
+                HtmlFormatter.PlainTextDefaultFont = true;
+                HtmlFormatter.PlainTextNoLeftJustify = true;
 
                 var writer = new StringWriter();
 
@@ -322,7 +344,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             {
                 var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(long));
                 HtmlFormatter.PlainTextPreformat = true;
-                HtmlFormatter.PlainTextPreformatNoLeftJustify = true;
+                HtmlFormatter.PlainTextNoLeftJustify = true;
 
                 var writer = new StringWriter();
 

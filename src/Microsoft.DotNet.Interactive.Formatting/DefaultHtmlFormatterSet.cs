@@ -80,7 +80,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 new HtmlFormatter<string>((context, s, writer) =>
                 {
-                    writer.Write(s.HtmlEncode());
+                    // If PlainTextPreformat is true, then strings
+                    // will have line breaks and white-space preserved
+                    writer.Write(HtmlFormatter.FormatString(s));
                     return true;
                 }),
 
@@ -165,7 +167,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 // Final last resort is to convert to plain text
                 new HtmlFormatter<object>((context, obj, writer) =>
                 {
-                    var html = HtmlFormatter.FormatEmbeddedObjectAsPlainText(context, obj);
+                    var html = HtmlFormatter.FormatObjectAsPlainText(context, obj);
                     html.WriteTo(writer, HtmlEncoder.Default);
                     return true;
                 })
