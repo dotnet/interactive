@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }
 
                 var valuesByHeader = new Dictionary<string, Dictionary<int, object>>();
-                var headerToTypeIndex = new Dictionary<string, int>();
+                var headerToSortIndex = new Dictionary<string, (int, int)>();
                 bool typesAreDifferent = false;
                 var types = new Dictionary<Type, int>();
 
@@ -164,14 +164,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     var typeIndex = (value == null) ? 0 : types[value.GetType()];
 
-                    foreach (var pair in destructured)
+                    var pairIndex = 0;
+                    foreach(var pair in destructured)
                     {
-                        if (!headerToTypeIndex.ContainsKey(pair.Key))
-                            headerToTypeIndex.Add(pair.Key, typeIndex);
+                        if (!headerToSortIndex.ContainsKey(pair.Key))
+                            headerToSortIndex.Add(pair.Key, (typeIndex, pairIndex));
 
                         valuesByHeader
                             .GetOrAdd(pair.Key, key => new Dictionary<int, object>())
                             .Add(index, pair.Value);
+                        pairIndex++;
                     }
                 }
 
@@ -202,10 +204,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }
 
                 // Order the columns first by the *first* type to exhibit the
-                // property, then by the name of the property
+                // property, then by the destructuring order within that type.
                 var valueKeys =
                     valuesByHeader.Keys
-                       .OrderBy(x => headerToTypeIndex[x])
+                       .OrderBy(x => headerToSortIndex[x])
                        .ToArray();
 
                 var valueKeysLimited =
