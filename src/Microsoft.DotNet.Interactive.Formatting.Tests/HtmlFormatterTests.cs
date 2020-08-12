@@ -188,7 +188,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
 
             [Fact]
-            public void Properties_of_System_Type_instances_are_not_expanded_and_link_is_not_added()
+            public void Type_instances_do_not_have_properties_expanded()
             {
                 var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
 
@@ -202,7 +202,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
 
             [Fact]
-            public void Properties_of_System_Type_instances_are_not_expanded_and_link_is_added()
+            public void Type_instances_have_link_added_for_System_namespace_type()
             {
                 var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
 
@@ -213,6 +213,21 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 writer.ToString()
                       .Should()
                       .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=netcore-3.0\">System.String</a></span>");
+            }
+
+
+            [Fact]
+            public void Type_instances_have_link_added_for_Microsoft_namespace_type()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
+
+                var writer = new StringWriter();
+
+                formatter.Format(typeof(Microsoft.CSharp.RuntimeBinder.RuntimeBinderException), writer);
+
+                writer.ToString()
+                      .Should()
+                      .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/microsoft.csharp.runtimebinder.runtimebinderexception?view=netcore-3.0\">Microsoft.CSharp.RuntimeBinder.RuntimeBinderException</a></span>");
             }
 
 
