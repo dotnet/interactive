@@ -48,8 +48,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public MemberInfo Member { get; }
 
-        public bool Ignore { get; set; }
-
         public Func<T, object> Getter { get; set; }
 
         public object GetValueOrException(T instance)

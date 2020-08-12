@@ -25,19 +25,32 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
             FormattersForAnyEnumerable.GetFormatter(type, false);
 
+
+        /// <summary>
+        ///   Indicates the maximum number of properties to show in the default plaintext display of arbitrary objects.
+        ///   If set to zero no properties are shown.
+        /// </summary>
+        public static int MaxProperties { get; set; } = DefaultMaxProperties;
+
+
         public static bool PlainTextPreformat { get; set; } = false;
 
         public static bool PlainTextPreformatDefaultFont { get; set; } = false;
 
         public static bool PlainTextPreformatNoLeftJustify { get; set; } = false;
 
+        internal const int DefaultMaxProperties = 20;
+        internal const bool DefaultPlainTextPreformat = false;
+        internal const bool DefaultPlainTextPreformatDefaultFont = false;
+        internal const bool DefaultPlainTextPreformatNoLeftJustify = false;
         static HtmlFormatter()
         {
             Formatter.Clearing += (obj, sender) =>
             {
-                PlainTextPreformat = false;
-                PlainTextPreformatNoLeftJustify = false;
-                PlainTextPreformatDefaultFont = false;
+                MaxProperties = DefaultMaxProperties;
+                PlainTextPreformat = DefaultPlainTextPreformat;
+                PlainTextPreformatNoLeftJustify = DefaultPlainTextPreformatNoLeftJustify;
+                PlainTextPreformatDefaultFont = DefaultPlainTextPreformatDefaultFont;
             };
         }
 

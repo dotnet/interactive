@@ -51,24 +51,36 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return new HtmlFormatter<T>((context, instance, writer) =>
             {
-                if (members.Length == 0 || context.ContentThreshold < 0.9)
+                var reducedMembers = members.Take(Math.Max(0, HtmlFormatter.MaxProperties)).ToArray();
+
+                if (reducedMembers.Length == 0 || context.ContentThreshold < 1.0)
                 {
                     // This formatter refuses to format objects without members, and 
-                    // refused to produce nested tables.
+                    // refused to produce nested tables, or if no members are selected
                     return false;
                 }
                 else
                 {
-
+                    // Reduce the content threshold for inner formatting, amon other things
+                    // ensures no nested tables get produced.
                     var innerContext = context.ReduceContent(FormatContext.NestedInTable);
 
                     // Note, embeds the keys and values as arbitrary objects into the HTML content,
                     // ultimately rendered by PocketView, e.g. via ToDisplayString(PlainTextFormatter.MimeType)
-                    IEnumerable<object> headers = members.Select(m => m.Member.Name)
-                                                         .Select(v => th(embed(v, innerContext)));
+                    List<object> headers = 
+                        reducedMembers.Select(m => m.Member.Name)
+                                      .Select(v => th(embed(v, innerContext)))
+                                      .ToList();
+                    
+                    // Add a '..' column if we elided some members due to size limitations
+                    if (reducedMembers.Length < members.Length)
+                    {
+                        headers.Add(th(".."));
+                    }
 
-                    IEnumerable<object> values = members.Select(m => m.GetValueOrException(instance))
-                                                        .Select(v => td(embed(v, innerContext)));
+                    IEnumerable<object> values =
+                        reducedMembers.Select(m => m.GetValueOrException(instance))
+                                      .Select(v => td(embed(v, innerContext)));
 
                     PocketView t =
                         table(
@@ -94,7 +106,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                                                  .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
             var dictionaryObjectType = typeof(T).GetAllInterfaces()
                                                 .FirstOrDefault(i => i == typeof(IDictionary));
-
+            
             if (dictionaryGenericType != null || dictionaryObjectType != null)
             {
                 var keysProperty = typeof(T).GetProperty("Keys");
@@ -108,7 +120,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             bool BuildTable(FormatContext context, T source, TextWriter writer)
             {
-                if (context.ContentThreshold < 0.9)
+                if (context.ContentThreshold < 1.0)
                 {
                     // This formatter refuses to produce nested tables.
                     return false;
@@ -177,7 +189,20 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 }
 
-                headers.AddRange(valuesByHeader.Keys.Select(k => (IHtmlContent) th(k)));
+                var valueKeys =
+                    valuesByHeader.Keys.ToArray();
+
+                var valueKeysLimited =
+                    valueKeys
+                        .OrderBy(x => x)
+                        .Take(Math.Max(0, HtmlFormatter.MaxProperties))
+                        .ToArray();
+
+                headers.AddRange(valueKeysLimited.Select(k => (IHtmlContent) th(k)));
+                if (valueKeysLimited.Length < valueKeys.Length)
+                {
+                    headers.Add((IHtmlContent)th(".."));
+                }
 
                 var rows = new List<IHtmlContent>();
 
@@ -195,7 +220,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         rowValues.Add(type);
                     }
 
-                    foreach (var key in valuesByHeader.Keys)
+                    foreach (var key in valueKeysLimited)
                     {
                         if (valuesByHeader[key].TryGetValue(rowIndex, out var cellData))
                         {
@@ -209,6 +234,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     // Note, embeds the values as arbitrary objects into the HTML content.
                     rows.Add(tr(rowValues.Select(r => td(embed(r, innerContext)))));
+
                 }
 
                 if (remainingCount > 0)

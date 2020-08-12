@@ -66,6 +66,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
+
         /// <summary>
         /// Gets or sets the string that will be written out for null items.
         /// </summary>

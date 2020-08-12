@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
 
             [Fact]
-            public void Create_creates_a_formatter_that_emits_the_property_names_and_values_for_a_specific_type()
+            public void It_emits_the_property_names_and_values_for_a_specific_type()
             {
                 var formatter = PlainTextFormatter.GetPreferredFormatterFor<Widget>();
 
@@ -38,7 +38,57 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
 
             [Fact]
-            public void CreateForMembers_creates_a_formatter_that_emits_the_specified_property_names_and_values_for_a_specific_type()
+            public void It_emits_a_default_maximum_number_of_properties()
+            {
+                var formatter = PlainTextFormatter.GetPreferredFormatterFor<Dummy.DummyClassWithManyProperties>();
+
+                var writer = new StringWriter();
+                formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+
+                var s = writer.ToString();
+                s.Should().Be("{ Dummy.DummyClassWithManyProperties: X1: 1, X2: 2, X3: 3, X4: 4, X5: 5, X6: 6, X7: 7, X8: 8, X9: 9, X10: 10, X11: 11, X12: 12, X13: 13, X14: 14, X15: 15, X16: 16, X17: 17, X18: 18, X19: 19, X20: 20, .. }");
+            }
+
+            [Fact]
+            public void It_emits_a_configurable_maximum_number_of_properties()
+            {
+                var formatter = PlainTextFormatter.GetPreferredFormatterFor<Dummy.DummyClassWithManyProperties>();
+                PlainTextFormatter.MaxProperties = 1;
+
+                var writer = new StringWriter();
+                formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+
+                var s = writer.ToString();
+                s.Should().Be("{ Dummy.DummyClassWithManyProperties: X1: 1, .. }");
+            }
+
+            [Fact]
+            public void When_Zero_properties_chosen_just_ToString_is_used()
+            {
+                var formatter = PlainTextFormatter.GetPreferredFormatterFor<Dummy.DummyClassWithManyProperties>();
+                PlainTextFormatter.MaxProperties = 0;
+
+                var writer = new StringWriter();
+                formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+
+                var s = writer.ToString();
+                s.Should().Be("Dummy.DummyClassWithManyProperties");
+            }
+
+            [Fact]
+            public void When_Zero_properties_available_to_choose_just_ToString_is_used()
+            {
+                var formatter = PlainTextFormatter.GetPreferredFormatterFor<Dummy.DummyWithNoProperties>();
+
+                var writer = new StringWriter();
+                formatter.Format(new Dummy.DummyWithNoProperties(), writer);
+
+                var s = writer.ToString();
+                s.Should().Be("Dummy.DummyWithNoProperties");
+            }
+
+            [Fact]
+            public void CreateForMembers_emits_the_specified_property_names_and_values_for_a_specific_type()
             {
                 var formatter = PlainTextFormatter<SomethingWithLotsOfProperties>.CreateForMembers(
                     o => o.DateProperty,

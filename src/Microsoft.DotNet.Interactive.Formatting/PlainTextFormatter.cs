@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static Func<FormatContext, T, TextWriter, bool> CreateFormatDelegate<T>(MemberInfo[] forMembers)
         {
-            var accessors = forMembers.GetMemberAccessors<T>().Where(i => !i.Ignore).ToArray();
+            var accessors = forMembers.GetMemberAccessors<T>().ToArray();
 
             if (Formatter<T>.TypeIsValueTuple || 
                 Formatter<T>.TypeIsTuple)
@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 var reducedAccessors = accessors.Take(Math.Max(0, MaxProperties)).ToArray();
 
                 // If we haven't got any members to show, just resort to ToString()
-                if (reducedAccessors.Length == 0 || context.ContentThreshold < 0.9)
+                if (reducedAccessors.Length == 0 || context.ContentThreshold < 1.0)
                 {
                     // Write using `ToString()`
                     writer.Write(target);
@@ -128,10 +128,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     value.FormatTo(context, writer);
                     Formatter.SingleLinePlainTextFormatter.WriteEndProperty(writer);
 
-                    if (i < reducedAccessors.Length - 1)
+                    if (i < accessors.Length - 1)
                     {
                         Formatter.SingleLinePlainTextFormatter.WritePropertyDelimiter(writer);
                     }
+                }
+                if (reducedAccessors.Length < accessors.Length)
+                {
+                    Formatter.SingleLinePlainTextFormatter.WriteElidedPropertiesMarker(writer);
                 }
 
                 Formatter.SingleLinePlainTextFormatter.WriteEndObject(writer);

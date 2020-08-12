@@ -677,6 +677,109 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
 
             [Fact]
+            public void It_shows_properties_up_to_default_max()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.DummyClassWithManyProperties));
+
+                var writer = new StringWriter();
+
+                formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+
+                writer.ToString().Should()
+                      .BeEquivalentHtmlTo(@"<table>
+      <thead>
+        <tr>
+          <th>X1</th>
+          <th>X2</th>
+          <th>X3</th>
+          <th>X4</th>
+          <th>X5</th>
+          <th>X6</th>
+          <th>X7</th>
+          <th>X8</th>
+          <th>X9</th>
+          <th>X10</th>
+          <th>X11</th>
+          <th>X12</th>
+          <th>X13</th>
+          <th>X14</th>
+          <th>X15</th>
+          <th>X16</th>
+          <th>X17</th>
+          <th>X18</th>
+          <th>X19</th>
+          <th>X20</th>
+          <th>..</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>2</td>
+          <td>3</td>
+          <td>4</td>
+          <td>5</td>
+          <td>6</td>
+          <td>7</td>
+          <td>8</td>
+          <td>9</td>
+          <td>10</td>
+          <td>11</td>
+          <td>12</td>
+          <td>13</td>
+          <td>14</td>
+          <td>15</td>
+          <td>16</td>
+          <td>17</td>
+          <td>18</td>
+          <td>19</td>
+          <td>20</td>
+        </tr>
+      </tbody>
+    </table>");
+            }
+
+            [Fact]
+            public void It_shows_properties_up_to_custom_max()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.DummyClassWithManyProperties));
+
+                var writer = new StringWriter();
+                HtmlFormatter.MaxProperties = 1;
+
+                formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+
+                writer.ToString().Should()
+                      .BeEquivalentHtmlTo(@"<table>
+      <thead>
+        <tr>
+          <th>X1</th>
+          <th>..</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+        </tr>
+      </tbody>
+    </table>");
+            }
+
+            [Fact]
+            public void Setting_properties_to_zero_means_to_table_formatting()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.DummyClassWithManyProperties));
+
+                var writer = new StringWriter();
+                HtmlFormatter.MaxProperties = 0;
+                PlainTextFormatter.MaxProperties = 0;
+
+                formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+
+                writer.ToString().Should().Be(@"Dummy.DummyClassWithManyProperties");
+            }
+
+            [Fact]
             public void Sequences_can_contain_different_types_of_elements()
             {
                 IEnumerable<object> GetCollection()
@@ -822,9 +925,4 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
         }
     }
-}
-
-namespace Dummy
-{
-    public class DummyNotInSystemNamespace { } 
 }
