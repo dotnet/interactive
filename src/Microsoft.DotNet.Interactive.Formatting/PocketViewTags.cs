@@ -88,10 +88,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static dynamic ul => _.ul;
         public static dynamic video => _.video;
 
-        // This can be used to indicates points
-        // where we are embedding an arbitrary value into the HTML content
-        // and we are explicitly indicating that the value can be either IHtmlContent
-        // or will otherwise be formatted as plaintext.
-        public static object arbitrary(object value) => value;
+        /// <summary>Create an object suitable for delayed expansion to HTML</summary>
+        public static object embed(object obj, FormatContext context)
+        {
+            return new HtmlFormatter.EmbeddedFormat(context, obj);
+        }
+
     }
 }

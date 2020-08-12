@@ -2,6 +2,52 @@
 
 This document contains notes on how formatters are specified.
 
+## User Configuration of Default Formatters
+
+The following global settings can be set:
+
+* `Formatter.RecursionLimit` = 20
+
+  Gets or sets the limit to how many levels the formatter will recurse into an object graph.
+
+* `Formatter.ListExpansionLimit` = 20
+
+  Gets or sets the limit to the number of items that will be written out in detail from an IEnumerable sequence.
+
+* `Formatter<T>.ListExpansionLimit` = (not set)
+
+  An optional type-specific list expansion limit
+
+* `PlainTextFormatter.MaxProperties` = 20
+
+  Indicates the maximum number of properties to show in the default plaintext display of arbitrary objects.
+  If set to zero no properties are shown.
+
+* `HtmlFormatter.PlainTextPreformat` = false
+
+  Indicates that any objects unknown to HTML and formatted
+  using plain text formatting should be displayed using left-jsutified formatting
+  that respects whitespace and newlines in the resulting strings.
+
+  Note that this includes any string and primitive data, which will all start
+  to be formatted left-justified and in monospace font.  To avoid
+  formatting as preformatted data, convert your strings to HTML elements using `HtmlString`.
+
+* `HtmlFormatter.PlainTextDefaultFont` = false
+
+  Indicates that any preformatted plaintext sections should use the default
+  font via `<div>` rather than `<pre>` sections.
+
+* `HtmlFormatter.PlainTextNoLeftJustify` = false
+
+  Indicates that any preformatted plaintext sections should not use left justification.
+
+* `HtmlFormatter.MaxProperties` = 20
+
+  Indicates the maximum number of properties to show in HTML table displays of arbitrary objects.
+   If set to zero no properties are shown.
+```
+
 ## User Specifications of Preferred Mime Types
 
 Preferred mime types can be specified by using `Formatter.Register`, for example:

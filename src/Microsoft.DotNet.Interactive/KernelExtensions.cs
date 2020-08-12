@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -12,11 +12,11 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
-
 using Pocket;
-
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
+using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -182,6 +182,68 @@ namespace Microsoft.DotNet.Interactive
             kernel.AddDirective(share);
 
             return kernel;
+        }
+
+        public static TKernel UseWho<TKernel>(this TKernel kernel)
+            where TKernel : DotNetKernel
+        {
+            kernel.AddDirective(who_and_whos());
+            Formatter.Register(new CurrentVariablesFormatter());
+            return kernel;
+        }
+
+        private static Command who_and_whos()
+        {
+            var command = new Command("#!whos", "Display the names of the current top-level variables and their values.")
+            {
+                Handler = CommandHandler.Create((ParseResult parseResult, KernelInvocationContext context) =>
+                {
+                    var alias = parseResult.CommandResult.Token.Value;
+
+                    var detailed = alias == "#!whos";
+
+                    Display(context, detailed);
+
+                    return Task.CompletedTask;
+                })
+            };
+
+            // TODO: (who_and_whos) this should be a separate command with separate help
+            command.AddAlias("#!who");
+
+            return command;
+
+            void Display(KernelInvocationContext context, bool detailed)
+            {
+                if (context.Command is SubmitCode &&
+                    context.HandlingKernel is DotNetKernel kernel)
+                {
+                    var variables = kernel.GetVariableNames()
+                                          .Select(name =>
+                                          {
+                                              kernel.TryGetVariable(name, out object v);
+                                              return new CurrentVariable(name, v.GetType(), v);
+                                          });
+
+                    var currentVariables = new CurrentVariables(
+                        variables,
+                        detailed);
+
+                    var html = currentVariables
+                        .ToDisplayString(HtmlFormatter.MimeType);
+
+                    context.Publish(
+                        new DisplayedValueProduced(
+                            html,
+                            context.Command,
+                            new[]
+                            {
+                                new FormattedValue(
+                                    HtmlFormatter.MimeType,
+                                    html)
+                            }));
+                }
+            }
         }
 
         public static CompositeKernel UseKernelClientConnection<TOptions>(

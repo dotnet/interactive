@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.App
 
             kernel.AddDirective(about);
 
-            Formatter<VersionSensor.BuildInfo>.Register((info, writer) =>
+            Formatter.Register<VersionSensor.BuildInfo>((info, writer) =>
             {
                 var url = "https://github.com/dotnet/interactive";
                 var encodedImage = string.Empty;
@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.Interactive.App
         public static T UseXplot<T>(this T kernel)
             where T : Kernel
         {
-            Formatter<PlotlyChart>.Register(
+            Formatter.Register<PlotlyChart>(
                 (chart, writer) => writer.Write(PlotlyChartExtensions.GetHtml(chart)),
                 HtmlFormatter.MimeType);
 
