@@ -11,6 +11,49 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public static class HtmlFormatter
     {
+        static HtmlFormatter()
+        {
+            Formatter.Clearing += (obj, sender) =>
+            {
+                MaxProperties = DefaultMaxProperties;
+                PlainTextPreformat = DefaultPlainTextPreformat;
+                PlainTextPreformatNoLeftJustify = DefaultPlainTextPreformatNoLeftJustify;
+                PlainTextPreformatDefaultFont = DefaultPlainTextPreformatDefaultFont;
+            };
+        }
+
+        /// <summary>
+        ///   Indicates the maximum number of properties to show in the default plaintext display of arbitrary objects.
+        ///   If set to zero no properties are shown.
+        /// </summary>
+        public static int MaxProperties { get; set; } = DefaultMaxProperties;
+
+        /// <summary>
+        ///   Indicates that any objects unknown to HTML and formatted
+        ///   using plain text formatting should be displayed using left-jsutified formatting
+        ///   that respects whitespace and newlines in the resulting strings.
+        /// </summary>
+        public static bool PlainTextPreformat { get; set; } = DefaultPlainTextPreformat;
+
+        /// <summary>
+        ///   Indicates that any preformatted plaintext sections should use the default
+        ///   font rather than &lt;pre&gt; sections.
+        /// </summary>
+        public static bool PlainTextPreformatDefaultFont { get; set; } = DefaultPlainTextPreformatDefaultFont;
+
+        /// <summary>
+        ///   Indicates that any preformatted plaintext sections should not use left justification.
+        /// </summary>
+        public static bool PlainTextPreformatNoLeftJustify { get; set; } = DefaultPlainTextPreformatNoLeftJustify;
+
+        internal const int DefaultMaxProperties = 20;
+
+        internal const bool DefaultPlainTextPreformat = false;
+
+        internal const bool DefaultPlainTextPreformatDefaultFont = false;
+
+        internal const bool DefaultPlainTextPreformatNoLeftJustify = false;
+
         public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
             Formatter.GetPreferredFormatterFor(type, MimeType);
 
@@ -24,35 +67,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
             FormattersForAnyEnumerable.GetFormatter(type, false);
-
-
-        /// <summary>
-        ///   Indicates the maximum number of properties to show in the default plaintext display of arbitrary objects.
-        ///   If set to zero no properties are shown.
-        /// </summary>
-        public static int MaxProperties { get; set; } = DefaultMaxProperties;
-
-
-        public static bool PlainTextPreformat { get; set; } = false;
-
-        public static bool PlainTextPreformatDefaultFont { get; set; } = false;
-
-        public static bool PlainTextPreformatNoLeftJustify { get; set; } = false;
-
-        internal const int DefaultMaxProperties = 20;
-        internal const bool DefaultPlainTextPreformat = false;
-        internal const bool DefaultPlainTextPreformatDefaultFont = false;
-        internal const bool DefaultPlainTextPreformatNoLeftJustify = false;
-        static HtmlFormatter()
-        {
-            Formatter.Clearing += (obj, sender) =>
-            {
-                MaxProperties = DefaultMaxProperties;
-                PlainTextPreformat = DefaultPlainTextPreformat;
-                PlainTextPreformatNoLeftJustify = DefaultPlainTextPreformatNoLeftJustify;
-                PlainTextPreformatDefaultFont = DefaultPlainTextPreformatDefaultFont;
-            };
-        }
 
         internal static IHtmlContent FormatEmbeddedObjectAsPlainText(FormatContext context, object value)
         {

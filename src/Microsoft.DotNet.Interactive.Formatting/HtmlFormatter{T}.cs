@@ -51,7 +51,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return new HtmlFormatter<T>((context, instance, writer) =>
             {
-                var reducedMembers = members.Take(Math.Max(0, HtmlFormatter.MaxProperties)).ToArray();
+                // Note the order of members is declaration order
+                var reducedMembers = 
+                    members
+                        .Take(Math.Max(0, HtmlFormatter.MaxProperties))
+                        .ToArray();
 
                 if (reducedMembers.Length == 0 || context.ContentThreshold < 1.0)
                 {
@@ -139,8 +143,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }
 
                 var valuesByHeader = new Dictionary<string, Dictionary<int, object>>();
+                var headerToTypeIndex = new Dictionary<string, int>();
                 bool typesAreDifferent = false;
-                var types = new HashSet<Type>();
+                var types = new Dictionary<Type, int>();
 
                 foreach (var (value, index) in rowData)
                 {
@@ -148,15 +153,22 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     var destructured = destructurer.Destructure(value);
 
-                    if (!typesAreDifferent && value is {})
+                    if (value != null)
                     {
-                        types.Add(value.GetType());
+                        var type = value.GetType();
+                        if (!types.ContainsKey(type))
+                            types.Add(type, types.Count);
 
                         typesAreDifferent = types.Count > 1;
                     }
 
+                    var typeIndex = (value == null) ? 0 : types[value.GetType()];
+
                     foreach (var pair in destructured)
                     {
+                        if (!headerToTypeIndex.ContainsKey(pair.Key))
+                            headerToTypeIndex.Add(pair.Key, typeIndex);
+
                         valuesByHeader
                             .GetOrAdd(pair.Key, key => new Dictionary<int, object>())
                             .Add(index, pair.Value);
@@ -189,12 +201,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 }
 
+                // Order the columns first by the *first* type to exhibit the
+                // property, then by the name of the property
                 var valueKeys =
-                    valuesByHeader.Keys.ToArray();
+                    valuesByHeader.Keys
+                       .OrderBy(x => headerToTypeIndex[x])
+                       .ToArray();
 
                 var valueKeysLimited =
                     valueKeys
-                        .OrderBy(x => x)
                         .Take(Math.Max(0, HtmlFormatter.MaxProperties))
                         .ToArray();
 

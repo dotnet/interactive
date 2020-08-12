@@ -114,6 +114,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _defaultTypeFormatters.PushRange(JsonFormatter.DefaultFormatters.Reverse().ToArray());
             _defaultTypeFormatters.PushRange(PlainTextFormatter.DefaultFormatters.Reverse().ToArray());
 
+            // It is unclear if we need this default:
             _defaultPreferredMimeTypes.Push((typeof(string), PlainTextFormatter.MimeType));
             _defaultPreferredMimeTypes.Push((typeof(JToken), JsonFormatter.MimeType));
 
