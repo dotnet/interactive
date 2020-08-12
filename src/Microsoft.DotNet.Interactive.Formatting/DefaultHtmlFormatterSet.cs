@@ -162,10 +162,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     return formatter.Format(context, obj, writer);
                 }),
                 
-                // Final last resort is to convert to plain text and embed pre-formatted
+                // Final last resort is to convert to plain text
                 new HtmlFormatter<object>((context, obj, writer) =>
                 {
-                    var html = HtmlFormatter.DisplayEmbeddedObjectAsPlainText(context, obj);
+                    var html = HtmlFormatter.FormatEmbeddedObjectAsPlainText(context, obj);
                     html.WriteTo(writer, HtmlEncoder.Default);
                     return true;
                 })

@@ -25,32 +25,37 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
             FormattersForAnyEnumerable.GetFormatter(type, false);
 
-        public static bool PreformatEmbeddedPlainText { get; set; } = false;
+        public static bool PlainTextPreformat { get; set; } = false;
 
-        public static bool LeftJustifyEmbeddedPlainText { get; set; } = false;
+        public static bool PlainTextPreformatDefaultFont { get; set; } = false;
+
+        public static bool PlainTextPreformatNoLeftJustify { get; set; } = false;
 
         static HtmlFormatter()
         {
             Formatter.Clearing += (obj, sender) =>
             {
-                PreformatEmbeddedPlainText = false;
-                LeftJustifyEmbeddedPlainText = false;
+                PlainTextPreformat = false;
+                PlainTextPreformatNoLeftJustify = false;
+                PlainTextPreformatDefaultFont = false;
             };
         }
 
-        internal static IHtmlContent DisplayEmbeddedObjectAsPlainText(FormatContext context, object value)
+        internal static IHtmlContent FormatEmbeddedObjectAsPlainText(FormatContext context, object value)
         {
             using var writer = Formatter.CreateWriter();
             Formatter.FormatTo(value, context, writer, PlainTextFormatter.MimeType);
             var text = writer.ToString();
             var html = text.HtmlEncode();
 
-            if (PreformatEmbeddedPlainText && !value.GetType().IsPrimitive)
+            if (PlainTextPreformat)
             {
-                var div = new Tag("div");
-                if (LeftJustifyEmbeddedPlainText)
+                var div = PlainTextPreformatDefaultFont ? new Tag("div") : new Tag("pre");
+                if (PlainTextPreformatDefaultFont && !PlainTextPreformatNoLeftJustify)
                     div.HtmlAttributes["style"] = "white-space: pre; text-align: left;";
-                else
+                else if (!PlainTextPreformatNoLeftJustify)
+                    div.HtmlAttributes["style"] = "text-align: left;";
+                else if (PlainTextPreformatDefaultFont)
                     div.HtmlAttributes["style"] = "white-space: pre;";
                 html = div.Containing(html);
             }

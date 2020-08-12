@@ -188,7 +188,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
 
             [Fact]
-            public void Properies_of_System_Type_instances_are_not_expanded_and_link_is_not_added()
+            public void Properties_of_System_Type_instances_are_not_expanded_and_link_is_not_added()
             {
                 var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
 
@@ -202,7 +202,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
 
             [Fact]
-            public void Properies_of_System_Type_instances_are_not_expanded_and_link_is_added()
+            public void Properties_of_System_Type_instances_are_not_expanded_and_link_is_added()
             {
                 var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
 
@@ -243,6 +243,85 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
         }
 
+        public class PreformatPlainText : FormatterTestBase
+        {
+            [Fact]
+            public void It_can_format_with_plain_text_preformatted()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(long));
+                HtmlFormatter.PlainTextPreformat = true;
+
+                var writer = new StringWriter();
+
+                long instance = 6L;
+
+                formatter.Format(instance, writer);
+
+                writer.ToString()
+                      .Should()
+                      .BeEquivalentHtmlTo(
+                          $"<pre style=\"text-align: left;\">6</pre>");
+            }
+
+            [Fact]
+            public void It_can_format_with_plain_text_formatted_with_default_font()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(long));
+                HtmlFormatter.PlainTextPreformat = true;
+                HtmlFormatter.PlainTextPreformatDefaultFont = true;
+
+                var writer = new StringWriter();
+
+                long instance = 6L;
+
+                formatter.Format(instance, writer);
+
+                writer.ToString()
+                      .Should()
+                      .BeEquivalentHtmlTo(
+                          $"<div style=\"white-space: pre; text-align: left;\">6</div>");
+            }
+
+            [Fact]
+            public void It_can_format_with_plain_text_formatted_with_default_font_no_left_justify()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(long));
+                HtmlFormatter.PlainTextPreformat = true;
+                HtmlFormatter.PlainTextPreformatDefaultFont = true;
+                HtmlFormatter.PlainTextPreformatNoLeftJustify = true;
+
+                var writer = new StringWriter();
+
+                long instance = 6L;
+
+                formatter.Format(instance, writer);
+
+                writer.ToString()
+                      .Should()
+                      .BeEquivalentHtmlTo(
+                          $"<div style=\"white-space: pre;\">6</div>");
+            }
+
+            [Fact]
+            public void It_can_format_with_plain_text_formatted_with_no_left_justify()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(long));
+                HtmlFormatter.PlainTextPreformat = true;
+                HtmlFormatter.PlainTextPreformatNoLeftJustify = true;
+
+                var writer = new StringWriter();
+
+                long instance = 6L;
+
+                formatter.Format(instance, writer);
+
+                writer.ToString()
+                      .Should()
+                      .BeEquivalentHtmlTo(
+                          $"<pre>6</pre>");
+            }
+
+        }
         public class Sequences : FormatterTestBase
         {
             [Fact]

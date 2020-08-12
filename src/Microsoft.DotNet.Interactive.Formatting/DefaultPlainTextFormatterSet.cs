@@ -62,12 +62,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     return true;
                 }),
 
-                new PlainTextFormatter<TimeSpan>((context, timespan, writer) => 
-                { 
-                    writer.Write(timespan.ToString()); 
-                    return true;
-                }),
-
                 new PlainTextFormatter<Type>((context, type, writer) =>
                 {
                     if (type.IsAnonymous())
@@ -91,7 +85,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     writer.Write(value.ToString("u"));
                     return true;
                 }),
-
 
                 new AnonymousTypeFormatter<object>(type: typeof(ReadOnlyMemory<>),
                     mimeType: PlainTextFormatter.MimeType,
