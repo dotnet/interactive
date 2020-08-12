@@ -120,6 +120,20 @@ namespace Microsoft.DotNet.Interactive.Tests
             return kernel;
         }
 
+        private Kernel UseExtraNamespacesForFSharpTesting(Kernel kernel)
+        {
+
+            var code =
+                 "open " + typeof(System.Threading.Tasks.Task).Namespace + Environment.NewLine +
+                 "open " + typeof(System.Linq.Enumerable).Namespace + Environment.NewLine +
+                 "open " + typeof(Microsoft.AspNetCore.Html.IHtmlContent).Namespace + Environment.NewLine +
+                 "open " + typeof(Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html).FullName + Environment.NewLine +
+                 "open " + typeof(XPlot.Plotly.PlotlyChart).Namespace + Environment.NewLine;
+
+            kernel.DeferCommand(new SubmitCode(code));
+            return kernel;
+        }
+
         private Kernel CreateFSharpKernel(bool openTestingNamespaces)
         {
             var kernel =
@@ -131,7 +145,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .UseWho()
                 .UseDefaultNamespaces();
             if (openTestingNamespaces)
-                return kernel.UseExtraNamespacesForTesting();
+                return UseExtraNamespacesForFSharpTesting(kernel);
             else
                 return kernel;
         }

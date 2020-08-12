@@ -24,7 +24,7 @@ type ApiTests() =
     [<Fact>]
     // Note, the inner object is currently rendered using plaintext formatting
     member __.``HTML from inner object``() =
-        Assert.Equal("<div>11</div>", (div [] [object 11]).ToString())
+        Assert.Equal("<div>11</div>", (div [] [embed 11]).ToString())
 
     [<Fact>]
     member __.``HTML from inner object that is ScriptContent``() =
@@ -34,13 +34,13 @@ type ApiTests() =
     // Note, this test result will change in the future once F# formatting uses %A 
     // formatting by default for plaintext display
     member __.``HTML from object rendered as plaintext``() =
-        Assert.Equal("<div>[ 1, 2 ]</div>", (div [] [object [1;2]]).ToString())
+        Assert.Equal("<div>[ 1, 2 ]</div>", (div [] [embed [1;2]]).ToString())
 
     [<Fact>]
     // Note, this test result will change in the future once F# formatting uses %A 
     // formatting by default for plaintext display
     member __.``HTML from inner object rendered as plaintext with encoded characters``() =
-        Assert.Equal("<div>[ &gt;, &lt; ]</div>", (div [] [object [">";"<"]]).ToString())
+        Assert.Equal("<div>[ &gt;, &lt; ]</div>", (div [] [embed [">";"<"]]).ToString())
 
     [<Fact>]
     member __.``HTML from content with attribute``() =
@@ -56,4 +56,4 @@ type ApiTests() =
 
     [<Fact>]
     member __.``HTML varargs 2``() =
-        Assert.Equal("<div>ab</div>", (div [] [str "a"; object "b"]).ToString())
+        Assert.Equal("<div>ab</div>", (div [] [str "a"; embed "b"]).ToString())

@@ -45,29 +45,6 @@ type FSharpKernelExtensions private () =
         kernel
 
     [<Extension>]
-    static member UseExtraNamespacesForTesting(kernel: FSharpKernelBase) =
-        let code = 
-            [
-                // opens some System namespaces for testing 
-                openNamespaceOrType typeof<System.Threading.Tasks.Task>.Namespace
-                openNamespaceOrType typeof<System.Linq.Enumerable>.Namespace
-
-                // opens Microsoft.Microsoft.AspNet.Core.Html for testing
-                openNamespaceOrType typeof<IHtmlContent>.Namespace
-
-                // opens Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html for testing
-                //    note this has some AutoOpen modules inside
-                openNamespaceOrType (typeof<FSharpKernelHelpers.IMarker>.Namespace + "." + nameof(FSharpKernelHelpers.Html))
-
-                // opens XPlot.Plotly for testing
-                openNamespaceOrType typeof<PlotlyChart>.Namespace
-
-            ] |> String.concat Environment.NewLine
-
-        kernel.DeferCommand(SubmitCode code)
-        kernel
-
-    [<Extension>]
     static member UseKernelHelpers(kernel: FSharpKernelBase) =
         let code = 
             [
