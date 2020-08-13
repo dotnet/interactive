@@ -5,6 +5,7 @@ using FluentAssertions;
 using System.Linq;
 using Xunit;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
+using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
@@ -44,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         {
             string output = ul(Enumerable.Range(1, 3).Select(i => li(i))).ToString();
 
-            output.Should().Be("<ul><li>1</li><li>2</li><li>3</li></ul>");
+            output.Should().Be($"<ul><li>{PlainTextBegin}1{PlainTextEnd}</li><li>{PlainTextBegin}2{PlainTextEnd}</li><li>{PlainTextBegin}3{PlainTextEnd}</li></ul>");
         }
 
         [Fact]

@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             if (value is null)
             {
-                writer.Write(Formatter.NullString.HtmlEncode());
+                HtmlFormatter.FormatStringAsPlainText(Formatter.NullString, writer);
                 return true;
             }
 
@@ -72,14 +72,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     // Note, embeds the keys and values as arbitrary objects into the HTML content,
                     // ultimately rendered by PocketView, e.g. via ToDisplayString(PlainTextFormatter.MimeType)
                     List<object> headers = 
-                        reducedMembers.Select(m => m.Member.Name)
-                                      .Select(v => th(embed(v, innerContext)))
+                        reducedMembers.Select(m => th(str(m.Member.Name)))
                                       .ToList();
                     
                     // Add a '..' column if we elided some members due to size limitations
                     if (reducedMembers.Length < members.Length)
                     {
-                        headers.Add(th(".."));
+                        headers.Add(th(str("..")));
                     }
 
                     IEnumerable<object> values =
@@ -194,6 +193,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     headers.Add(th(i("index")));
                     leftColumnValues = Enumerable.Range(0, rowData.Count)
+                                                 .Select(i => str(i.ToString()))
                                                  .Cast<object>()
                                                  .ToList();
                 }

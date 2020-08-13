@@ -12,9 +12,16 @@ using System.Linq;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using Xunit;
+using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
+    public class Tags
+    {
+        public const string PlainTextBegin = "<div class=\"dni-plaintext\">";
+        public const string PlainTextEnd = "</div>";
+
+    }
     public class HtmlFormatterTests : FormatterTestBase
     {
         public class Objects : FormatterTestBase
@@ -25,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 var output = new { a = 123 }.ToDisplayString(HtmlFormatter.MimeType);
 
                 output.Should()
-                      .Be("<table><thead><tr><th>a</th></tr></thead><tbody><tr><td>123</td></tr></tbody></table>");
+                      .Be($"<table><thead><tr><th>a</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td></tr></tbody></table>");
             }
 
             [Fact]
@@ -35,17 +42,17 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 value.ToDisplayString(HtmlFormatter.MimeType)
                      .Should()
-                     .Be("&lt;null&gt;");
+                     .Be($"{PlainTextBegin}&lt;null&gt;{PlainTextEnd}");
             }
 
             [Fact]
-            public void Formatter_does_not_put_span_around_string()
+            public void Formatter_puts_div_with_class_around_string()
             {
                 var formatter = HtmlFormatter.GetPreferredFormatterFor<string>();
 
                 var s = "hello".ToDisplayString(formatter);
 
-                s.Should().Be("hello");
+                s.Should().Be($"{PlainTextBegin}hello{PlainTextEnd}");
             }
 
             [Fact]
@@ -59,7 +66,14 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var output = ((object) expando).ToDisplayString(formatter);
 
-                output.Should().Be("<table><thead><tr><th>Count</th><th>Name</th></tr></thead><tbody><tr><td>2</td><td>socks</td></tr></tbody></table>");
+                output.Should().BeEquivalentHtmlTo($@"
+<table>
+    <thead>
+       <tr><th>Count</th><th>Name</th></tr>
+    </thead>
+    <tbody><tr><td>{PlainTextBegin}2{PlainTextEnd}</td><td>{PlainTextBegin}socks{PlainTextEnd}</td></tr>
+    </tbody>
+</table>");
             }
 
             [Fact]
@@ -75,7 +89,13 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be("<table><thead><tr><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>TheEntity</td><td>123</td></tr></tbody></table>");
+                      .BeEquivalentHtmlTo($@"
+<table>
+   <thead><tr><th>TypeName</th><th>Id</th></tr></thead>
+   <tbody>
+     <tr><td>{PlainTextBegin}TheEntity{PlainTextEnd}</td><td>{PlainTextBegin}123{PlainTextEnd}</td></tr>
+  </tbody>
+</table>");
             }
 
             [Fact]
@@ -95,7 +115,11 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be("<table><thead><tr><th>PropertyA</th><th>PropertyB</th></tr></thead><tbody><tr><td>123</td><td>hello</td></tr></tbody></table>");
+                      .BeEquivalentHtmlTo($@"
+<table>
+ <thead><tr><th>PropertyA</th><th>PropertyB</th></tr></thead>
+ <tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}hello{PlainTextEnd}</td></tr></tbody>
+</table>");
             }
 
             [Fact]
@@ -111,7 +135,8 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be("<table><thead><tr><th>Item1</th><th>Item2</th></tr></thead><tbody><tr><td>123</td><td>hello</td></tr></tbody></table>");
+                      .BeEquivalentHtmlTo($@"<table><thead><tr><th>Item1</th><th>Item2</th></tr></thead>
+<tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}hello{PlainTextEnd}</td></tr></tbody></table>");
             }
 
             [Fact]
@@ -131,7 +156,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Contain("<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>123</td><td>{ BA = 456 }</td></tr></tbody></table>");
+                      .Contain($"<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}{{ BA = 456 }}{PlainTextEnd}</td></tr></tbody></table>");
             }
 
             [Fact]
@@ -151,7 +176,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Contain("<table><thead><tr><th>PropertyA</th><th>PropertyB</th></tr></thead><tbody><tr><td>123</td><td>[ 1, 2, 3 ]</td></tr></tbody></table>");
+                      .Contain($"<table><thead><tr><th>PropertyA</th><th>PropertyB</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}[ 1, 2, 3 ]{PlainTextEnd}</td></tr></tbody></table>");
             }
 
             [Fact]
@@ -186,7 +211,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Contain("<td>System.Exception: not ok");
+                      .Contain($"<td>{PlainTextBegin}System.Exception: not ok");
             }
 
             [Fact]
@@ -279,7 +304,7 @@ string";
                 writer.ToString()
                       .Should()
                       .BeEquivalentHtmlTo(
-                          $"<div class=\"dotnet-plaintext\">{instance.HtmlEncode()}</div>");
+                          $"{PlainTextBegin}{instance.HtmlEncode()}{PlainTextEnd}");
             }
 
 
@@ -304,7 +329,16 @@ string";
                 writer.ToString()
                       .Should()
                       .BeEquivalentHtmlTo(
-                          "<table><thead><tr><th><i>index</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>0</td><td>entity one</td><td>123</td></tr><tr><td>1</td><td>entity two</td><td>456</td></tr></tbody></table>");
+                          @$"
+<table>
+   <thead>
+     <tr><th><i>index</i></th><th>TypeName</th><th>Id</th></tr>
+   </thead>
+   <tbody>
+     <tr><td>0</td><td>{PlainTextBegin}entity one{PlainTextEnd}</td><td>{PlainTextBegin}123{PlainTextEnd}</td></tr>
+     <tr><td>1</td><td>{PlainTextBegin}entity two{PlainTextEnd}</td><td>{PlainTextBegin}456{PlainTextEnd}</td></tr>
+   </tbody>
+</table>");
             }
 
             [Fact]
@@ -328,7 +362,7 @@ string";
 
                 writer.ToString()
                       .Should()
-                      .Contain($"<td>{listOfArrays.First().ToDisplayString("text/plain")}</td>");
+                      .Contain($"<td>{PlainTextBegin}{listOfArrays.First().ToDisplayString("text/plain")}{PlainTextEnd}</td>");
             }
             
             [Fact]
@@ -349,7 +383,7 @@ string";
                 writer.ToString()
                       .Should()
                       .BeEquivalentHtmlTo(
-                          "<table><thead><tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>first</td><td>entity one</td><td>123</td></tr><tr><td>second</td><td>entity two</td><td>456</td></tr></tbody></table>");
+                          $"<table><thead><tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>{PlainTextBegin}first{PlainTextEnd}</td><td>{PlainTextBegin}entity one{PlainTextEnd}</td><td>{PlainTextBegin}123{PlainTextEnd}</td></tr><tr><td>{PlainTextBegin}second{PlainTextEnd}</td><td>{PlainTextBegin}entity two{PlainTextEnd}</td><td>{PlainTextBegin}456{PlainTextEnd}</td></tr></tbody></table>");
             }
 
             [Fact]
@@ -370,7 +404,15 @@ string";
                 writer.ToString()
                       .Should()
                       .BeEquivalentHtmlTo(
-                          "<table><thead><tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>first</td><td>entity one</td><td>123</td></tr><tr><td>second</td><td>entity two</td><td>456</td></tr></tbody></table>");
+                          $@"<table>
+    <thead>
+       <tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>{PlainTextBegin}first{PlainTextEnd}</td><td>{PlainTextBegin}entity one{PlainTextEnd}</td><td>{PlainTextBegin}123{PlainTextEnd}</td></tr>
+      <tr><td>{PlainTextBegin}second{PlainTextEnd}</td><td>{PlainTextBegin}entity two{PlainTextEnd}</td><td>{PlainTextBegin}456{PlainTextEnd}</td></tr>
+    </tbody>
+</table>");
             }
 
             [Fact]
@@ -407,13 +449,13 @@ string";
             }
 
             [Fact]
-            public void It_formats_string_with_encoding_and_preserving_whitespace_but_without_a_span()
+            public void It_formats_string_with_encoding_and_preserving_whitespace_and_with_tags()
             {
                 var text = "hello<b>world  </b>  \n\n  ";
 
                 var html = text.ToDisplayString("text/html");
 
-                html.Should().Be("hello&lt;b&gt;world  &lt;/b&gt;  \n\n  ");
+                html.Should().Be($"{PlainTextBegin}hello&lt;b&gt;world  &lt;/b&gt;  \n\n  {PlainTextEnd}");
             }
 
             [Fact]
@@ -434,7 +476,7 @@ string";
 
                 var html = text.ToDisplayString("text/html");
 
-                html.Should().Be("<table><thead><tr><th>Item1</th></tr></thead><tbody><tr><td>hello&lt;b&gt;world  &lt;/b&gt;  \n\n  </td></tr></tbody></table>");
+                html.Should().BeEquivalentHtmlTo($"<table><thead><tr><th>Item1</th></tr></thead><tbody><tr><td>{PlainTextBegin}hello&lt;b&gt;world  &lt;/b&gt;  \n\n  {PlainTextEnd}</td></tr></tbody></table>");
             }
 
             [Fact]
@@ -445,7 +487,17 @@ string";
                 strings.ToDisplayString("text/html")
                        .Should()
                        .BeEquivalentHtmlTo(
-                           "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>apple</td></tr><tr><td>1</td><td>banana</td></tr><tr><td>2</td><td>cherry</td></tr></tbody></table>");
+                           $@"
+<table>
+  <thead>
+    <tr><th><i>index</i></th><th>value</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>0</td><td>{PlainTextBegin}apple{PlainTextEnd}</td></tr>
+    <tr><td>1</td><td>{PlainTextBegin}banana{PlainTextEnd}</td></tr>
+    <tr><td>2</td><td>{PlainTextBegin}cherry{PlainTextEnd}</td></tr>
+  </tbody>
+</table>");
             }
 
             [Fact]
@@ -458,8 +510,17 @@ string";
                 var html = sorted.ToDisplayString("text/html");
 
                 html.Should()
-                    .BeEquivalentHtmlTo(
-                        "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>kiwi</td></tr><tr><td>1</td><td>apple</td></tr><tr><td>2</td><td>plantain</td></tr></tbody></table>");
+                    .BeEquivalentHtmlTo($@"
+<table>
+  <thead>
+     <tr><th><i>index</i></th><th>value</th></tr>
+  </thead>
+  <tbody>
+     <tr><td>0</td><td>{PlainTextBegin}kiwi{PlainTextEnd}</td></tr>
+     <tr><td>1</td><td>{PlainTextBegin}apple{PlainTextEnd}</td></tr>
+     <tr><td>2</td><td>{PlainTextBegin}plantain{PlainTextEnd}</td></tr>
+  </tbody>
+</table>");
             }
 
             [Fact]
@@ -576,7 +637,7 @@ string";
     </table>");
             }
 
-            class SomeDict : IDictionary<int, string>
+            class SomeDictUsingInterfaceImpls : IDictionary<int, string>
             {
                 string IDictionary<int, string>.this[int key] { get => "2"; set => throw new NotImplementedException(); }
 
@@ -643,14 +704,14 @@ string";
             }
 
             [Fact]
-            public void Dictionary_with_non_String_keys_or_that_dont_support_Values_directly_on_the_class_are_formatted_correctly()
+            public void Dictionary_with_non_string_keys_are_formatted_correctly()
             {
-                var dict = new SomeDict();
+                var dict = new SomeDictUsingInterfaceImpls();
 
                 var html = dict.ToDisplayString("text/html");
 
                 html.Should().BeEquivalentHtmlTo(
-                    "<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table>");
+                    $"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>{PlainTextBegin}1{PlainTextEnd}</td><td>{PlainTextBegin}2{PlainTextEnd}</td></tr></tbody></table>");
             }
 
             [Fact]
@@ -683,7 +744,17 @@ string";
                 writer.ToString()
                       .Should()
                       .BeEquivalentHtmlTo(
-                          "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>7</td></tr><tr><td>1</td><td>8</td></tr><tr><td>2</td><td>9</td></tr></tbody></table>");
+                          $@"
+<table>
+  <thead>
+    <tr><th><i>index</i></th><th>value</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>0</td><td>{PlainTextBegin}7{PlainTextEnd}</td></tr>
+    <tr><td>1</td><td>{PlainTextBegin}8{PlainTextEnd}</td></tr>
+    <tr><td>2</td><td>{PlainTextBegin}9{PlainTextEnd}</td></tr>
+  </tbody>
+</table>");
             }
 
             [Fact]
@@ -697,7 +768,17 @@ string";
 
                 writer.ToString().Should()
                       .BeEquivalentHtmlTo(
-                          "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>8</td></tr><tr><td>1</td><td>&lt;null&gt;</td></tr><tr><td>2</td><td>9</td></tr></tbody></table>");
+                          $@"
+<table>
+  <thead>
+    <tr><th><i>index</i></th><th>value</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>0</td><td>{PlainTextBegin}8{PlainTextEnd}</td></tr>
+    <tr><td>1</td><td>{PlainTextBegin}&lt;null&gt;{PlainTextEnd}</td></tr>
+    <tr><td>2</td><td>{PlainTextBegin}9{PlainTextEnd}</td></tr>
+  </tbody>
+</table>");
             }
 
             [Fact]
@@ -710,7 +791,7 @@ string";
                 formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
 
                 writer.ToString().Should()
-                      .BeEquivalentHtmlTo(@"<table>
+                      .BeEquivalentHtmlTo($@"<table>
       <thead>
         <tr>
           <th>X1</th>
@@ -738,26 +819,26 @@ string";
       </thead>
       <tbody>
         <tr>
-          <td>1</td>
-          <td>2</td>
-          <td>3</td>
-          <td>4</td>
-          <td>5</td>
-          <td>6</td>
-          <td>7</td>
-          <td>8</td>
-          <td>9</td>
-          <td>10</td>
-          <td>11</td>
-          <td>12</td>
-          <td>13</td>
-          <td>14</td>
-          <td>15</td>
-          <td>16</td>
-          <td>17</td>
-          <td>18</td>
-          <td>19</td>
-          <td>20</td>
+          <td>{PlainTextBegin}1{PlainTextEnd}</td>
+          <td>{PlainTextBegin}2{PlainTextEnd}</td>
+          <td>{PlainTextBegin}3{PlainTextEnd}</td>
+          <td>{PlainTextBegin}4{PlainTextEnd}</td>
+          <td>{PlainTextBegin}5{PlainTextEnd}</td>
+          <td>{PlainTextBegin}6{PlainTextEnd}</td>
+          <td>{PlainTextBegin}7{PlainTextEnd}</td>
+          <td>{PlainTextBegin}8{PlainTextEnd}</td>
+          <td>{PlainTextBegin}9{PlainTextEnd}</td>
+          <td>{PlainTextBegin}10{PlainTextEnd}</td>
+          <td>{PlainTextBegin}11{PlainTextEnd}</td>
+          <td>{PlainTextBegin}12{PlainTextEnd}</td>
+          <td>{PlainTextBegin}13{PlainTextEnd}</td>
+          <td>{PlainTextBegin}14{PlainTextEnd}</td>
+          <td>{PlainTextBegin}15{PlainTextEnd}</td>
+          <td>{PlainTextBegin}16{PlainTextEnd}</td>
+          <td>{PlainTextBegin}17{PlainTextEnd}</td>
+          <td>{PlainTextBegin}18{PlainTextEnd}</td>
+          <td>{PlainTextBegin}19{PlainTextEnd}</td>
+          <td>{PlainTextBegin}20{PlainTextEnd}</td>
         </tr>
       </tbody>
     </table>");
@@ -774,7 +855,7 @@ string";
                 formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
 
                 writer.ToString().Should()
-                      .BeEquivalentHtmlTo(@"<table>
+                      .BeEquivalentHtmlTo($@"<table>
       <thead>
         <tr>
           <th>X1</th>
@@ -783,14 +864,14 @@ string";
       </thead>
       <tbody>
         <tr>
-          <td>1</td>
+          <td>{PlainTextBegin}1{PlainTextEnd}</td>
         </tr>
       </tbody>
     </table>");
             }
 
             [Fact]
-            public void Setting_properties_to_zero_means_to_table_formatting()
+            public void Setting_properties_to_zero_means_no_table_formatting_and_plaintext_gets_used()
             {
                 var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.DummyClassWithManyProperties));
 
@@ -800,7 +881,7 @@ string";
 
                 formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
 
-                writer.ToString().Should().Be(@"Dummy.DummyClassWithManyProperties");
+                writer.ToString().Should().Be($"{PlainTextBegin}Dummy.DummyClassWithManyProperties{PlainTextEnd}");
             }
 
             [Fact]
@@ -840,7 +921,7 @@ string";
               <a href={"\"https://docs.microsoft.com/dotnet/api/system.boolean?view=netcore-3.0\""}>System.Boolean</a>
             </span>
           </td>
-          <td>True</td>
+          <td>{PlainTextBegin}True{PlainTextEnd}</td>
         </tr>
         <tr>
           <td>1</td>
@@ -849,7 +930,7 @@ string";
               <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=netcore-3.0\""}>System.Int32</a>
             </span>
           </td>
-          <td>99</td>
+          <td>{PlainTextBegin}99{PlainTextEnd}</td>
         </tr>
         <tr>
           <td>2</td>
@@ -858,7 +939,7 @@ string";
               <a href={"\"https://docs.microsoft.com/dotnet/api/system.string?view=netcore-3.0\""}>System.String</a>
             </span>
           </td>
-          <td>Hello, World</td>
+          <td>{PlainTextBegin}Hello, World{PlainTextEnd}</td>
         </tr>
       </tbody>
     </table>");
@@ -903,7 +984,7 @@ string";
               <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=netcore-3.0\""}>System.Int32</a>
             </span>
           </td>
-          <td>1</td>
+          <td>{PlainTextBegin}1{PlainTextEnd}</td>
           <td></td>
           <td></td>
           <td></td>
@@ -917,8 +998,8 @@ string";
             </span>
           </td>
           <td></td>
-          <td>2</td>
-          <td>two</td>
+          <td>{PlainTextBegin}2{PlainTextEnd}</td>
+          <td>{PlainTextBegin}two{PlainTextEnd}</td>
           <td></td>
           <td></td>
         </tr>
@@ -929,7 +1010,7 @@ string";
               <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=netcore-3.0\""}>System.Linq.Enumerable+RangeIterator</a>
             </span>
           </td>
-          <td>[ 1, 2, 3 ]</td>
+          <td>{PlainTextBegin}[ 1, 2, 3 ]{PlainTextEnd}</td>
           <td></td>
           <td></td>
           <td></td>
@@ -941,8 +1022,8 @@ string";
           <td></td>
           <td></td>
           <td></td>
-          <td>apple</td>
-          <td>green</td>
+          <td>{PlainTextBegin}apple{PlainTextEnd}</td>
+          <td>{PlainTextBegin}green{PlainTextEnd}</td>
         </tr>
       </tbody>
     </table>");
@@ -982,8 +1063,8 @@ string";
         <tr>
           <td>0</td>
           <td>(anonymous)</td>
-          <td>apple</td>
-          <td>green</td>
+          <td>{PlainTextBegin}apple{PlainTextEnd}</td>
+          <td>{PlainTextBegin}green{PlainTextEnd}</td>
           <td></td>
           <td></td>
         </tr>
@@ -995,8 +1076,8 @@ string";
             </span>
           </td>
           <td></td>
-          <td>two</td>
-          <td>2</td>
+          <td>{PlainTextBegin}two{PlainTextEnd}</td>
+          <td>{PlainTextBegin}2{PlainTextEnd}</td>
           <td></td>
         </tr>
         <tr>
@@ -1009,7 +1090,7 @@ string";
           <td></td>
           <td></td>
           <td></td>
-          <td>1</td>
+          <td>{PlainTextBegin}1{PlainTextEnd}</td>
         </tr>
         <tr>
           <td>3</td>
@@ -1021,7 +1102,7 @@ string";
           <td></td>
           <td></td>
           <td></td>
-          <td>[ 1, 2, 3 ]</td>
+          <td>{PlainTextBegin}[ 1, 2, 3 ]{PlainTextEnd}</td>
         </tr>
       </tbody>
     </table>");

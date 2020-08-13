@@ -10,6 +10,9 @@ open Xunit
 
 type ApiTests() =
 
+    let PlainTextBegin = "<div class=\"dni-plaintext\">";
+    let PlainTextEnd = "</div>";
+
     [<Fact>]
     member __.``empty tag``() =
         Assert.Equal("<div></div>", (div [] []).ToString())
@@ -35,13 +38,13 @@ type ApiTests() =
     // Note, this test result will change in the future once F# formatting uses %A 
     // formatting by default for plaintext display
     member __.``HTML from object rendered as plaintext``() =
-        Assert.Equal("<div>[ 1, 2 ]</div>", (div [] [embed (FormatContext()) "[ 1, 2 ]"]).ToString())
+        Assert.Equal(sprintf "<div>%s[ 1, 2 ]%s</div>" PlainTextBegin PlainTextEnd, (div [] [embed (FormatContext()) "[ 1, 2 ]"]).ToString())
 
     [<Fact>]
     // Note, this test result will change in the future once F# formatting uses %A 
     // formatting by default for plaintext display
     member __.``HTML from inner object rendered as plaintext with encoded characters``() =
-        Assert.Equal("<div>[ &gt;, &lt; ]</div>", (div [] [embed (FormatContext()) "[ >, < ]" ]).ToString())
+        Assert.Equal(sprintf "<div>%s[ &gt;, &lt; ]%s</div>" PlainTextBegin PlainTextEnd, (div [] [embed (FormatContext()) "[ >, < ]" ]).ToString())
 
     [<Fact>]
     member __.``HTML from content with attribute``() =
@@ -57,4 +60,4 @@ type ApiTests() =
 
     [<Fact>]
     member __.``HTML varargs 2``() =
-        Assert.Equal("<div>ab</div>", (div [] [str "a"; embed (FormatContext()) "b"]).ToString())
+        Assert.Equal("<div>ab</div>", (div [] [str "a"; str "b"]).ToString())

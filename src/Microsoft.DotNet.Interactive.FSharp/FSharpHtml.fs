@@ -218,11 +218,20 @@ module Html =
         let custom tag attrs content = makeElement tag attrs content
 
         /// Specifies an HTML element using an arbitrary object in a formatting context.
+        ///
         /// If the object is an IHtmlElement or a sequence of IHtmlElement that content is used. Otherwise 
         /// the object will be rendered as HTML using the best available HTML formatter in 
-        // the gtiven context, or else as plain text, and the results treated as encoded text.
+        /// the given context, or else as plain text, and the results treated as encoded text.
         let embed (context: FormatContext) (value: obj) = 
             (HtmlElement.Obj(PocketViewTags.embed(value, context)) :> IHtmlContent)
+
+        /// Specifies an HTML element using an arbitrary object without a formatting context.
+        ///
+        /// If the object is an IHtmlElement or a sequence of IHtmlElement that content is used. Otherwise 
+        /// the object will be rendered as HTML using the best available HTML formatter
+        /// with no context, or else as plain text, and the results treated as encoded text.
+        let embedNoContext (value: obj) = 
+            (HtmlElement.Obj(value) :> IHtmlContent)
 
     /// Contains functions to specify common HTML attributes.
     [<AutoOpen>]

@@ -73,9 +73,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                       .As<string>()
                       .Should()
                       .ContainAll(
-                          $@"<td>x</td><td><span><a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=netcore-3.0\""}>System.Int32</a></span></td><td>2</td>",
-                          $@"<td>y</td><td><span><a href={"\"https://docs.microsoft.com/dotnet/api/system.string?view=netcore-3.0\""}>System.String</a></span></td><td>hi&gt;!</td>",
-                          $@"<td>z</td><td><span><a href={"\"https://docs.microsoft.com/dotnet/api/system.object[]?view=netcore-3.0\""}>System.Object[]</a></span></td><td>[ 2, hi&gt;! ]</td>");
+                          "<td>x</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.int32?view=netcore-3.0\">System.Int32</a></span></td><td><div class=\"dni-plaintext\">2</div></td>",
+                          "<td>y</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=netcore-3.0\">System.String</a></span></td><td><div class=\"dni-plaintext\">hi&gt;!</div></td>",
+                          "<td>z</td><td><span><a href=\"https://docs.microsoft.com/dotnet/api/system.object[]?view=netcore-3.0\">System.Object[]</a></span></td><td><div class=\"dni-plaintext\">[ 2, hi&gt;! ]</div></td>");
             }
 
             [Theory]

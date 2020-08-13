@@ -11,10 +11,18 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
+using static Microsoft.DotNet.Interactive.Tests.Tags;
 
 #pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests
 {
+    public class Tags
+    {
+        public const string PlainTextBegin = "<div class=\"dni-plaintext\">";
+        public const string PlainTextEnd = "</div>";
+
+    }
+
     [LogTestNamesToPocketLogger]
     public class LanguageKernelFormattingTests : LanguageKernelTestBase
     {
@@ -24,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         [Theory]
         // PocketView
-        [InlineData(Language.CSharp, "b(123)", "<b>123</b>")]
+        [InlineData(Language.CSharp, "b(123)", "<b>"+PlainTextBegin+"123"+PlainTextEnd+"</b>")]
         [InlineData(Language.FSharp, "b [] [str \"123\" ]", "<b>123</b>")]
         // sequence
         [InlineData(Language.CSharp, "new[] { 1, 2, 3, 4 }", "<table>")]
@@ -53,10 +61,8 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "div(123).ToString()", "<div>123</div>")]
-        [InlineData(Language.FSharp, "(div [] [ str \"123\" ]).ToString()", "<div>123</div>")]
-        [InlineData(Language.CSharp, "display(div(123).ToString());", "<div>123</div>")]
-        [InlineData(Language.FSharp, "display((div [] [ str \"123\" ]).ToString())", "<div>123</div>")]
+        [InlineData(Language.CSharp, "display(\"<test></test>\")", "<test></test>")]
+        [InlineData(Language.FSharp, "display(\"<test></test>\")", "<test></test>")]
         [InlineData(Language.CSharp, "\"hi\"", "hi")]
         [InlineData(Language.FSharp, "\"hi\"", "hi")]
         public async Task String_is_rendered_as_plain_text(
@@ -103,7 +109,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Should()
                 .ContainSingle(v =>
                     v.MimeType == "text/html" &&
-                    v.Value.ToString().Contains("<b>hi!</b>"));
+                    v.Value.ToString().Contains("<b>"));
         }
 
         [Theory]

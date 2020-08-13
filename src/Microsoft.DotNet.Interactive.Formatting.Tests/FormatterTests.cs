@@ -201,7 +201,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var text = value.ToDisplayString("text/html");
 
-                text.Should().Be("hola! \n \t &quot; &quot; &#39; &#39; the joy of escapes! ==&gt; &amp;   white  space  ");
+                text.Should().Be("<div class=\"dni-plaintext\">hola! \n \t &quot; &quot; &#39; &#39; the joy of escapes! ==&gt; &amp;   white  space  </div>");
             }
 
             [Fact]
@@ -211,7 +211,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var text = value.ToDisplayString("text/html");
 
-                text.Should().Be(value.HtmlEncode().ToString());
+                text.Should().Be($"<div class=\"dni-plaintext\">{value.HtmlEncode()}</div>");
             }
 
             [Fact]
@@ -254,7 +254,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         [Theory]
-        [InlineData("text/html", "# { This is the &lt;input&gt; &quot;yes&quot;\t\b\n\r }")]
+        [InlineData("text/html", "<div class=\"dni-plaintext\"># { This is the &lt;input&gt; &quot;yes&quot;\t\b\n\r }</div>")]
         [InlineData("text/plain", "# { This is the <input> \"yes\"\t\b\n\r }")]
         [InlineData("text/markdown", "# { This is the <input> \"yes\"\t\b\n\r }")]
         [InlineData("application/json", "\"# { This is the <input> \\\"yes\\\"\\t\\b\\n\\r }\"")]

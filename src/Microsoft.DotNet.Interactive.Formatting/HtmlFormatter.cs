@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -41,19 +43,23 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
             FormattersForAnyEnumerable.GetFormatter(type, false);
 
-        internal static IHtmlContent FormatObjectAsPlainText(FormatContext context, object value)
+        internal static void FormatObjectAsPlainText(FormatContext context, object value, TextWriter writer)
         {
-            using var writer = Formatter.CreateWriter();
-            Formatter.FormatTo(value, context, writer, PlainTextFormatter.MimeType);
-            var text = writer.ToString();
-            return FormatStringAsPlainText(text);
+            using var swriter = Formatter.CreateWriter();
+            Formatter.FormatTo(value, context, swriter, PlainTextFormatter.MimeType);
+            var text = swriter.ToString();
+            FormatStringAsPlainText(text, writer);
         }
 
-        internal static IHtmlContent FormatStringAsPlainText(string text)
+        internal static void FormatStringAsPlainText(string text, TextWriter writer)
         {
-            var tag = div;
-            tag.HtmlAttributes["class"] = "dotnet-plaintext";
-            return tag(text.HtmlEncode());
+            if (!string.IsNullOrEmpty(text))
+            {
+                var tag = div;
+                tag.HtmlAttributes["class"] = "dni-plaintext";
+                var html = tag(text.HtmlEncode());
+                html.WriteTo(writer, HtmlEncoder.Default);
+            }
         }
 
         internal static PocketView Table(

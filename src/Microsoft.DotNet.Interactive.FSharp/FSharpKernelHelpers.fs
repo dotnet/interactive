@@ -10,20 +10,20 @@ open Microsoft.AspNetCore.Html
 type internal IMarker = interface end
 
 [<AutoOpen>]
-type DisplayFunctions() =
+module DisplayFunctions =
     
     /// Display the object using current display settings
-    static member display (value: obj, ?mimeType: string) =
-        Kernel.display(value, mimeType=Option.toObj mimeType)
+    let display (value: obj) =
+        Kernel.display(value)
 
     /// Display the object as HTML using current display settings
-    static member HTML (value: string) =
+    let HTML (value: string) =
         HtmlString value
 
     /// Specify CSS style specifications.  If displayed, the styles will apply to the current worksheet.
-    static member CSS (styles: string) =
+    let CSS (styles: string) =
         style [] [ str styles ]
 
     /// Execute the content as Javascript
-    static member Javascript (content: string) =
+    let Javascript (content: string) =
         Kernel.Javascript content

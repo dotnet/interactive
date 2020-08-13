@@ -31,17 +31,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     return true;
                 }),
 
-                new HtmlFormatter<ExpandoObject>((context, obj, writer) =>
+                new HtmlFormatter<ExpandoObject>((context, value, writer) =>
                 {
                     var headers = new List<IHtmlContent>();
                     var values = new List<IHtmlContent>();
 
                     var innerContext = context.ReduceContent(FormatContext.NestedInTable);
-                    foreach (var pair in obj.OrderBy(p => p.Key))
+                    foreach (var pair in value.OrderBy(p => p.Key))
                     {
                         // Note, embeds the keys and values as arbitrary objects into the HTML content,
                         // ultimately rendered by PocketView
-                        headers.Add(th(embed(pair.Key, innerContext)));
+                        headers.Add(th(str(pair.Key)));
                         values.Add(td(embed(pair.Value, innerContext)));
                     }
 
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     // If PlainTextPreformat is true, then strings
                     // will have line breaks and white-space preserved
-                    writer.Write(HtmlFormatter.FormatStringAsPlainText(s));
+                    HtmlFormatter.FormatStringAsPlainText(s, writer);
                     return true;
                 }),
 
@@ -129,13 +129,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 // Transform ReadOnlyMemory to an array for formatting
                 new AnonymousTypeFormatter<object>(type: typeof(ReadOnlyMemory<>),
                     mimeType: HtmlFormatter.MimeType,
-                    format: (context, obj, writer) =>
+                    format: (context, value, writer) =>
                         {
-                            var actualType = obj.GetType();
+                            var actualType = value.GetType();
                             var toArray = Formatter.FormatReadOnlyMemoryMethod.MakeGenericMethod
                                 (actualType.GetGenericArguments());
 
-                            var array = toArray.Invoke(null, new[] { obj });
+                            var array = toArray.Invoke(null, new[] { value });
 
                             array.FormatTo(context, writer, HtmlFormatter.MimeType);
                             return true;
@@ -149,26 +149,31 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }),
 
                 // Try to display enumerable results as tables. This will return false for nested tables.
-                new HtmlFormatter<IEnumerable>((context, obj, writer) =>
+                new HtmlFormatter<IEnumerable>((context, value, writer) =>
                 {
-                    var type = obj.GetType();
+                    var type = value.GetType();
                     var formatter = HtmlFormatter.GetDefaultFormatterForAnyEnumerable(type);
-                    return formatter.Format(context, obj, writer);
+                    return formatter.Format(context, value, writer);
                 }),
 
                 // Try to display object results as tables. This will return false for nested tables.
-                new HtmlFormatter<object>((context, obj, writer) =>
+                new HtmlFormatter<object>((context, value, writer) =>
                 {
-                    var type = obj.GetType();
+                    var type = value.GetType();
                     var formatter = HtmlFormatter.GetDefaultFormatterForAnyObject(type);
-                    return formatter.Format(context, obj, writer);
+                    return formatter.Format(context, value, writer);
                 }),
                 
                 // Final last resort is to convert to plain text
-                new HtmlFormatter<object>((context, obj, writer) =>
+                new HtmlFormatter<object>((context, value, writer) =>
                 {
-                    var html = HtmlFormatter.FormatObjectAsPlainText(context, obj);
-                    html.WriteTo(writer, HtmlEncoder.Default);
+                    if (value is null)
+                    {
+                        HtmlFormatter.FormatStringAsPlainText(Formatter.NullString, writer);
+                        return true;
+                    }
+
+                    HtmlFormatter.FormatObjectAsPlainText(context, value, writer);
                     return true;
                 })
 
