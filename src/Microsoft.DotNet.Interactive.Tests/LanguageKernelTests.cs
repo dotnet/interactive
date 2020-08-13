@@ -141,8 +141,9 @@ location.EndsWith(""System.Text.Json.dll"")"
 |> List.sum";
 
             await SubmitCode(kernel, source);
+            var events = KernelEvents;
 
-            KernelEvents
+            events
                 .OfType<ReturnValueProduced>()
                 .Last()
                 .Value
@@ -862,7 +863,7 @@ Console.Write(""value three"");"
         [InlineData(Language.FSharp)]
         public async Task it_returns_a_similarly_shaped_error(Language language)
         {
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
 
             var (source, error) = language switch
             {
@@ -1036,7 +1037,7 @@ Console.Write(2);
         [InlineData(Language.PowerShell)]
         public async Task it_returns_completion_list_for_previously_declared_items(Language language)
         {
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
 
             var source = language switch
             {

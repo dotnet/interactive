@@ -4,6 +4,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.CommandLine.Rendering;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -649,6 +651,83 @@ string";
         </tr>
       </tbody>
     </table>");
+            }
+
+            class SomeDict : IDictionary<int, string>
+            {
+                string IDictionary<int, string>.this[int key] { get => "2"; set => throw new NotImplementedException(); }
+
+                ICollection<int> IDictionary<int, string>.Keys => new int[] { 1 };
+
+                ICollection<string> IDictionary<int, string>.Values => new string[] { "2" };
+
+                int ICollection<KeyValuePair<int, string>>.Count => 1;
+
+                bool ICollection<KeyValuePair<int, string>>.IsReadOnly => true;
+
+                void IDictionary<int, string>.Add(int key, string value)
+                {
+                }
+
+                void ICollection<KeyValuePair<int, string>>.Add(KeyValuePair<int, string> item)
+                {
+                }
+
+                void ICollection<KeyValuePair<int, string>>.Clear()
+                {
+                }
+
+                bool ICollection<KeyValuePair<int, string>>.Contains(KeyValuePair<int, string> item)
+                {
+                    return (item.Key == 1 && item.Value == "2");
+                }
+
+                bool IDictionary<int, string>.ContainsKey(int key)
+                {
+                    return (key == 1);
+                }
+
+                void ICollection<KeyValuePair<int, string>>.CopyTo(KeyValuePair<int, string>[] array, int arrayIndex)
+                {
+                    throw new NotImplementedException();
+                }
+
+                IEnumerator<KeyValuePair<int, string>> IEnumerable<KeyValuePair<int, string>>.GetEnumerator()
+                {
+                    return ((IEnumerable < KeyValuePair<int, string> > ) new KeyValuePair<int, string>[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
+                }
+
+                bool IDictionary<int, string>.Remove(int key)
+                {
+                    throw new NotImplementedException();
+                }
+
+                bool ICollection<KeyValuePair<int, string>>.Remove(KeyValuePair<int, string> item)
+                {
+                    return false;
+                }
+
+                bool IDictionary<int, string>.TryGetValue(int key, out string value)
+                {
+                    value = "2";
+                    return (key == 1);
+                }
+
+                IEnumerator IEnumerable.GetEnumerator()
+                {
+                    return ((IEnumerable)new KeyValuePair<int, string>[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
+                }
+            }
+
+            [Fact]
+            public void Dictionary_with_non_String_keys_or_that_dont_support_Values_directly_on_the_class_are_formatted_correctly()
+            {
+                var dict = new SomeDict();
+
+                var html = dict.ToDisplayString("text/html");
+
+                html.Should().BeEquivalentHtmlTo(
+                    "<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table>");
             }
 
             [Fact]

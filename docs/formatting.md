@@ -109,17 +109,17 @@ The default sets of formatters for a mime type always include a formatter for `o
 
 For example:
 
-* If the user registers a formatter for type `A` then it is used for all objects of type `A` (until alternative formatter for type A is later specified)
+* If you register a formatter for type `A` then it is used for all objects of type `A` (until alternative formatter for type A is later specified)
 
-* If the user registers a formatter for `System.Object`, it is preferred over all other formatters except other user-defined formatters
+* If you register a formatter for `System.Object`, it is preferred over all other formatters except other user-defined formatters
 
-* If the user registers a formatter for any sealed type, it is preferred over all other formatters (unless more formatters for that type are specified)
+* If you register a formatter for any sealed type, it is preferred over all other formatters (unless more formatters for that type are specified)
 
-* If the user registers `List<>` and `List<int>` formatters the `List<int>` formatter is preferred for objects of type `List<int>`
+* If you register `List<>` and `List<int>` formatters the `List<int>` formatter is preferred for objects of type `List<int>`
 
-* If the user registers a confusing conflicting mess of overlapping formatters incrementally, they should Formatters.Clear() or restart the kernel.
+* If you register a confusing conflicting mess of overlapping formatters incrementally, they should Formatters.Clear() or restart the kernel.
 
-* If the user registers `text/plain` as the mime type for `object` then it is used as the mime type for everything (likewise any other mime type)
+* If you register `text/plain` as the mime type for `object` then it is used as the mime type for everything (likewise any other mime type)
 
 
 ## Default Formatters

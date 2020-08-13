@@ -17,8 +17,8 @@ open XPlot.Plotly
 [<AbstractClass; Extension; Sealed>]
 type FSharpKernelExtensions private () =
     
-    static let referenceFromType = fun (typ: Type) -> sprintf "#r \"%s\"" (typ.Assembly.Location.Replace("\\", "/"))
-    static let openNamespaceOrType = fun (whatToOpen: String) -> sprintf "open %s" whatToOpen
+    static let referenceFromType (typ: Type) = sprintf "#r \"%s\"" (typ.Assembly.Location.Replace("\\", "/"))
+    static let openNamespaceOrType (whatToOpen: string) = sprintf "open %s" whatToOpen
 
     [<Extension>]
     static member UseDefaultFormatting(kernel: FSharpKernelBase) =
@@ -26,27 +26,22 @@ type FSharpKernelExtensions private () =
             [
                 referenceFromType typeof<IHtmlContent>
                 referenceFromType typeof<Kernel>
-                referenceFromType typeof<FSharpPocketViewTags>
+                referenceFromType typeof<FSharpKernelHelpers.IMarker>
                 referenceFromType typeof<PlotlyChart>
                 referenceFromType typeof<Formatter>
-                openNamespaceOrType typeof<IHtmlContent>.Namespace
-                openNamespaceOrType typeof<FSharpPocketViewTags>.FullName
-                openNamespaceOrType typeof<FSharpPocketViewTags>.Namespace
-                openNamespaceOrType typeof<PlotlyChart>.Namespace
+
+                openNamespaceOrType typeof<System.Console>.Namespace
+                openNamespaceOrType typeof<System.IO.File>.Namespace
+                openNamespaceOrType typeof<System.Text.StringBuilder>.Namespace
                 openNamespaceOrType typeof<Formatter>.Namespace
-            ] |> List.reduce(fun x y -> x + Environment.NewLine + y)
+            ] |> String.concat Environment.NewLine
 
         kernel.DeferCommand(SubmitCode code)
         kernel
 
     [<Extension>]
     static member UseDefaultNamespaces(kernel: FSharpKernelBase) =
-        let code = @"
-open System
-open System.Text
-open System.Threading.Tasks
-open System.Linq"
-        kernel.DeferCommand(SubmitCode code)
+        // F# has its own views on what namespaces are open by default in its scripting model
         kernel
 
     [<Extension>]
@@ -54,8 +49,12 @@ open System.Linq"
         let code = 
             [
                 referenceFromType typeof<FSharpKernelHelpers.IMarker>
-                openNamespaceOrType (typeof<FSharpKernelHelpers.IMarker>.DeclaringType.Namespace + "." + nameof(FSharpKernelHelpers))
-            ] |> List.reduce(fun x y -> x + Environment.NewLine + y)
+                
+                // opens Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers
+                //    note this has some AutoOpen modules inside
+                openNamespaceOrType (typeof<FSharpKernelHelpers.IMarker>.Namespace)
+
+            ] |> String.concat Environment.NewLine
 
         kernel.DeferCommand(SubmitCode code)
         kernel
