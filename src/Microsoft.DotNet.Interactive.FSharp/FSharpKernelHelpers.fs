@@ -14,7 +14,7 @@ type DisplayFunctions() =
     
     /// Display the object using current display settings
     static member display (value: obj, ?mimeType: string) =
-        Kernel.display(value, ?mimeType=mimeType)
+        Kernel.display(value, mimeType=Option.toObj mimeType)
 
     /// Display the object as HTML using current display settings
     static member HTML (value: string) =

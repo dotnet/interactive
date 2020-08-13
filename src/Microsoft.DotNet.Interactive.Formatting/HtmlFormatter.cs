@@ -51,8 +51,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static IHtmlContent FormatStringAsPlainText(string text)
         {
-            div.HtmlAttributes["class"] = "dotnet-plaintext";
-            return div.Containing(text.HtmlEncode());
+            var tag = div;
+            tag.HtmlAttributes["class"] = "dotnet-plaintext";
+            return tag(text.HtmlEncode());
         }
 
         internal static PocketView Table(

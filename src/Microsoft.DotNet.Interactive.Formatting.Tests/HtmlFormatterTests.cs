@@ -279,7 +279,7 @@ string";
                 writer.ToString()
                       .Should()
                       .BeEquivalentHtmlTo(
-                          $"<div class=\"dotnet-plaintext;\">{instance.HtmlEncode()}</div>");
+                          $"<div class=\"dotnet-plaintext\">{instance.HtmlEncode()}</div>");
             }
 
 
