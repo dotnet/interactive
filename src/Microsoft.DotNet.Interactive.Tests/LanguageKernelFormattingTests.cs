@@ -257,6 +257,36 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
+        public async Task CSS_helper_emits_content_within_a_chunk_of_javascript(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var cssContent = "h1 { background: red; }";
+
+            var submission = language switch
+            {
+                Language.CSharp => $@"CSS(""{cssContent}"");",
+                Language.FSharp => $@"CSS(""{cssContent}"")",
+            };
+
+            await kernel.SendAsync(new SubmitCode(submission));
+
+            var formatted =
+                KernelEvents
+                    .OfType<DisplayedValueProduced>()
+                    .SelectMany(v => v.FormattedValues)
+                    .ToArray();
+
+            formatted
+                .Should()
+                .ContainSingle(v =>
+                                   v.MimeType == "text/html" &&
+                                   v.Value.ToString().Contains($"var css = '{cssContent}'"));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
         public async Task it_displays_detailed_information_for_exceptions_thrown_in_user_code(Language language)
         {
             var kernel = CreateKernel(language);

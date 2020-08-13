@@ -107,14 +107,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         return true;
                     }),
 
-                // Newtonsoft.Json types -- these implement IEnumerable and their default output is not useful, so use their default ToString
-                new PlainTextFormatter<Newtonsoft.Json.Linq.JArray>((context, obj, writer) =>
-                    {
-                        writer.Write(obj);
-                        return true;
-                    }),
-
-                new PlainTextFormatter<Newtonsoft.Json.Linq.JObject>((context, obj, writer) =>
+                new PlainTextFormatter<Newtonsoft.Json.Linq.JToken>((context, obj, writer) =>
                     {
                         writer.Write(obj);
                         return true;

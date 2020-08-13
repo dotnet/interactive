@@ -1,70 +1,29 @@
 # Formatting
 
-This document contains notes on how formatters are specified.
+This document contains notes on how formatters are specified, and#
+some specific details of plain text and HTML formatting.
 
-## User Configuration of Default Formatters
+Formatting is invoked when values are displayed either implicitly or using `display`.
 
-The following global settings can be set:
+##  Registering preferred mime types
 
-* `Formatter.RecursionLimit` = 20
-
-  Gets or sets the limit to how many levels the formatter will recurse into an object graph.
-
-* `Formatter.ListExpansionLimit` = 20
-
-  Gets or sets the limit to the number of items that will be written out in detail from an IEnumerable sequence.
-
-* `Formatter<T>.ListExpansionLimit` = (not set)
-
-  An optional type-specific list expansion limit
-
-* `PlainTextFormatter.MaxProperties` = 20
-
-  Indicates the maximum number of properties to show in the default plaintext display of arbitrary objects.
-  If set to zero no properties are shown.
-
-* `HtmlFormatter.PlainTextPreformat` = false
-
-  Indicates that any objects unknown to HTML and formatted
-  using plain text formatting should be displayed using left-jsutified formatting
-  that respects whitespace and newlines in the resulting strings.
-
-  Note that this includes any string and primitive data, which will all start
-  to be formatted left-justified and in monospace font.  To avoid
-  formatting as preformatted data, convert your strings to HTML elements using `HtmlString`.
-
-* `HtmlFormatter.PlainTextDefaultFont` = false
-
-  Indicates that any preformatted plaintext sections should use the default
-  font via `<div>` rather than `<pre>` sections.
-
-* `HtmlFormatter.PlainTextNoLeftJustify` = false
-
-  Indicates that any preformatted plaintext sections should not use left justification.
-
-* `HtmlFormatter.MaxProperties` = 20
-
-  Indicates the maximum number of properties to show in HTML table displays of arbitrary objects.
-   If set to zero no properties are shown.
-```
-
-## User Specifications of Preferred Mime Types
-
-Preferred mime types can be specified by using `Formatter.Register`, for example:
+See the language-specific documentation on using `SetPreferredMimeTypeFor`.
 
 ```csharp
 Formatter.SetPreferredMimeTypeFor(typeof(System.Guid), "text/plain");
 ```
 
-## User Specifications of Formatters
+##  Registering formatters
 
-Formatters can be specified by using `Formatter.Register`, keyed by type, for example:
+Formatters can be specified by using `Formatter.Register`, keyed by type.
+See the language-specific documentation on using `Formatter.Register<_>`.
+
+For example:
 
 ```csharp
 Formatter.Register<System.Type>(t => t.GUID.ToString());
 ```
 
-Formatters will apply to all subtypes of the given type, see the selection rules below.
 Formatters can be specified by using a generic type definition as a key, for example:
 
 ```csharp
@@ -75,16 +34,18 @@ Formatter.Register(
         writer.Write("quack");
     }, mimeType);
 ```
+
 Then 
+
 ```
 var list = new List<int> { 1, 2, 3, 4, 5 };
 ```
+
 displays as `quack`.  Reflection can also be used to operate on the object at its more specific type.
 
+##  How the formatter is chosen
 
-##  Selecting a Formatter
-
-A formatter is chosen for a formatting operation on an object of type A as follows:
+The applicable formatter is chosen for an object of type A as follows:
 
 1. If no mime type is specified, determine one:
 
@@ -124,4 +85,61 @@ For example:
 
 ## Default Formatters
 
-See DefaultHtmlFormatters.cs, DefaultPlainTextFormatters.cs and DefaultJsonFormatters.cs among others.
+See `DefaultHtmlFormatters.cs`, `DefaultPlainTextFormatters.cs` and `DefaultJsonFormatters.cs` among others.
+
+## User Configuration of Default Formatters
+
+The following global settings can be set:
+
+* `Formatter.RecursionLimit` = 20
+
+  Gets or sets the limit to how many levels the formatter will recurse into an object graph.
+
+* `Formatter.ListExpansionLimit` = 20
+
+  Gets or sets the limit to the number of items that will be written out in detail from an IEnumerable sequence.
+
+* `Formatter<T>.ListExpansionLimit` = (not set)
+
+  An optional type-specific list expansion limit
+
+* `PlainTextFormatter.MaxProperties` = 20
+
+  Indicates the maximum number of properties to show in the default plaintext display of arbitrary objects.
+  If set to zero no properties are shown.
+
+* `HtmlFormatter.MaxProperties` = 20
+
+  Indicates the maximum number of properties to show in HTML table displays of arbitrary objects.
+   If set to zero no properties are shown.
+```
+
+## HTML Formatting
+
+
+### The `CSS` function
+
+The `CSS` function can be used to add CSS styling to the host HTML system.
+
+Here are some examples:
+```csharp
+CSS("h3 { background: red; }");
+
+CSS(".dni-plaintext { text-align: left; white-space: pre; font-family: monospace; });"
+```
+
+
+### CSS tags emitted
+
+The bespoke CSS tags emitted for .NET Interactive content are as follows:
+
+| tag | content|
+|:------|:-----------|
+| `dni-plaintext` |  In HTML displays of values, any content generated by formatting arbitrary embedded object values as plaintext |
+
+In the future, additional tags will be added to this list.
+
+
+
+
+

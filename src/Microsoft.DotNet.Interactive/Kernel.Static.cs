@@ -26,6 +26,23 @@ namespace Microsoft.DotNet.Interactive
 
         public static IHtmlContent HTML(string content) => content.ToHtmlContent();
 
+        public static void CSS(string content) =>
+            // From https://stackoverflow.com/questions/524696/how-to-create-a-style-tag-with-javascript
+            Javascript($@"
+            var css = '{content}',
+            head = document.head || document.getElementsByTagName('head')[0],
+            style = document.createElement('style');
+
+            head.appendChild(style);
+
+            style.type = 'text/css';
+            if (style.styleSheet){{
+              // This is required for IE8 and below.
+              style.styleSheet.cssText = css;
+            }} else {{
+              style.appendChild(document.createTextNode(css));
+            }}");
+
         public static void Javascript(
             string scriptContent)
         {

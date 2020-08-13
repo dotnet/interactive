@@ -18,11 +18,11 @@ module DisplayFunctions =
 
     /// Display the object as HTML using current display settings
     let HTML (value: string) =
-        HtmlString value
+        Kernel.HTML(value)
 
     /// Specify CSS style specifications.  If displayed, the styles will apply to the current worksheet.
     let CSS (styles: string) =
-        style [] [ str styles ]
+        Kernel.CSS styles
 
     /// Execute the content as Javascript
     let Javascript (content: string) =
