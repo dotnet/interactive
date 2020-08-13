@@ -79,10 +79,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             if (dictionaryGenericType != null || dictionaryObjectType != null)
             {
-                var keysProperty = typeof(T).GetProperty("Keys");
+                var dictType = (dictionaryGenericType ?? dictionaryObjectType);
+                var keysProperty = dictType.GetProperty("Keys");
                 getKeys = instance => (IEnumerable) keysProperty.GetValue(instance, null);
 
-                var valuesProperty = typeof(T).GetProperty("Values");
+                var valuesProperty = dictType.GetProperty("Values");
                 getValues = instance => (IEnumerable) valuesProperty.GetValue(instance, null);
             }
 
@@ -128,13 +129,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 var headers = new List<IHtmlContent>();
 
-                List<string> leftColumnValues;
+                List<object> leftColumnValues;
 
                 if (getKeys != null)
                 {
                     headers.Add(th(i("key")));
                     leftColumnValues = getKeys(source)
-                                       .Cast<string>()
+                                       .Cast<object>()
                                        .Take(rowData.Count)
                                        .ToList();
                 }
@@ -142,7 +143,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     headers.Add(th(i("index")));
                     leftColumnValues = Enumerable.Range(0, rowData.Count)
-                                                 .Select(i => i.ToString())
+                                                 .Cast<object>()
                                                  .ToList();
                 }
 

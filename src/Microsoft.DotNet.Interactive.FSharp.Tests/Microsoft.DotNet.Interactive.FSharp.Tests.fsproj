@@ -14,6 +14,8 @@
     <Compile Include="ApiTests.fs" />
   </ItemGroup>
 
+  <ItemGroup />
+
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp\Microsoft.DotNet.Interactive.FSharp.fsproj" />
   </ItemGroup>
