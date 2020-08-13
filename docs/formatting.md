@@ -16,7 +16,7 @@ Formatter.SetPreferredMimeTypeFor(typeof(System.Guid), "text/plain");
 ##  Registering formatters
 
 Formatters can be specified by using `Formatter.Register`, keyed by type.
-See the language-specific documentation on using `Formatter.Register<_>`.
+See the language-specific documentation on using `Formatter.Register`.
 
 For example:
 

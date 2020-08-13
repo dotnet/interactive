@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
             string output = div(date).ToString();
 
-            output.Should().Be($"<div>{PlainTextBegin}&lt;hello&gt;{PlainTextEnd}</div>");
+            output.Should().Be("<div>&lt;hello&gt;</div>");
         }
         [Fact]
         public void Embedded_objects_are_not_formatted_using_custom_plaintext_formatter_when_formating_as_html()
