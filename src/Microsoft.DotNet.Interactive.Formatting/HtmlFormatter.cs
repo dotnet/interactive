@@ -16,9 +16,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             Formatter.Clearing += (obj, sender) =>
             {
                 MaxProperties = DefaultMaxProperties;
-                PlainTextPreformat = DefaultPlainTextPreformat;
-                PlainTextNoLeftJustify = DefaultPlainTextPreformatNoLeftJustify;
-                PlainTextDefaultFont = DefaultPlainTextPreformatDefaultFont;
             };
         }
 
@@ -28,31 +25,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </summary>
         public static int MaxProperties { get; set; } = DefaultMaxProperties;
 
-        /// <summary>
-        ///   Indicates that any objects unknown to HTML and formatted
-        ///   using plain text formatting should be displayed using left-jsutified formatting
-        ///   that respects whitespace and newlines in the resulting strings.
-        /// </summary>
-        public static bool PlainTextPreformat { get; set; } = DefaultPlainTextPreformat;
-
-        /// <summary>
-        ///   Indicates that any preformatted plaintext sections should use the default
-        ///   font rather than &lt;pre&gt; sections.
-        /// </summary>
-        public static bool PlainTextDefaultFont { get; set; } = DefaultPlainTextPreformatDefaultFont;
-
-        /// <summary>
-        ///   Indicates that any preformatted plaintext sections should not use left justification.
-        /// </summary>
-        public static bool PlainTextNoLeftJustify { get; set; } = DefaultPlainTextPreformatNoLeftJustify;
-
         internal const int DefaultMaxProperties = 20;
-
-        internal const bool DefaultPlainTextPreformat = false;
-
-        internal const bool DefaultPlainTextPreformatDefaultFont = false;
-
-        internal const bool DefaultPlainTextPreformatNoLeftJustify = false;
 
         public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
             Formatter.GetPreferredFormatterFor(type, MimeType);
@@ -73,25 +46,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
             using var writer = Formatter.CreateWriter();
             Formatter.FormatTo(value, context, writer, PlainTextFormatter.MimeType);
             var text = writer.ToString();
-            return FormatString(text);
+            return FormatStringAsPlainText(text);
         }
 
-        internal static IHtmlContent FormatString(string text)
+        internal static IHtmlContent FormatStringAsPlainText(string text)
         {
-            var html = text.HtmlEncode();
-
-            if (PlainTextPreformat)
-            {
-                var div = PlainTextDefaultFont ? new Tag("div") : new Tag("pre");
-                if (PlainTextDefaultFont && !PlainTextNoLeftJustify)
-                    div.HtmlAttributes["style"] = "white-space: pre; text-align: left;";
-                else if (!PlainTextNoLeftJustify)
-                    div.HtmlAttributes["style"] = "text-align: left;";
-                else if (PlainTextDefaultFont)
-                    div.HtmlAttributes["style"] = "white-space: pre;";
-                html = div.Containing(html);
-            }
-            return html;
+            div.HtmlAttributes["class"] = "dotnet-plaintext";
+            return div.Containing(text.HtmlEncode());
         }
 
         internal static PocketView Table(
@@ -120,7 +81,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static FormatterTable FormattersForAnyEnumerable =
             new FormatterTable(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyEnumerable));
-
 
     }
 }

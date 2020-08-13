@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     // If PlainTextPreformat is true, then strings
                     // will have line breaks and white-space preserved
-                    writer.Write(HtmlFormatter.FormatString(s));
+                    writer.Write(HtmlFormatter.FormatStringAsPlainText(s));
                     return true;
                 }),
 

@@ -4,21 +4,26 @@
 namespace Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers
 
 open Microsoft.DotNet.Interactive
+open Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html
 open Microsoft.AspNetCore.Html
 
 type internal IMarker = interface end
 
 [<AutoOpen>]
-module DisplayFunctions =
+type DisplayFunctions() =
     
     /// Display the object using current display settings
-    let display (value: obj) =
-        Kernel.display value
+    static member display (value: obj, ?mimeType: string) =
+        Kernel.display(value, ?mimeType=mimeType)
 
     /// Display the object as HTML using current display settings
-    let HTML (value: string) =
+    static member HTML (value: string) =
         HtmlString value
 
+    /// Specify CSS style specifications.  If displayed, the styles will apply to the current worksheet.
+    static member CSS (styles: string) =
+        style [] [ str styles ]
+
     /// Execute the content as Javascript
-    let Javascript (content: string) =
+    static member Javascript (content: string) =
         Kernel.Javascript content

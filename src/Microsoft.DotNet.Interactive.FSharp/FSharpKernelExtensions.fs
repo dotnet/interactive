@@ -36,7 +36,7 @@ type FSharpKernelExtensions private () =
                 openNamespaceOrType typeof<Formatter>.Namespace
             ] |> String.concat Environment.NewLine
 
-        kernel.DeferCommand(SubmitCode code)
+<<<        kernel.DeferCommand(SubmitCode code)
         kernel
 
     [<Extension>]
