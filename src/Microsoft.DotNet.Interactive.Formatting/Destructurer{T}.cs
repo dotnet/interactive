@@ -44,9 +44,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     return;
                 }
 
-                var propertiesAndFields = typeof(T).GetMembersToFormat();
+                var members = typeof(T).GetMembersToFormat();
 
-                getters = propertiesAndFields
+                getters = members
                     .ToDictionary(member => member.Name,
                                   member => new Getter(member).GetValue,
                                   StringComparer.OrdinalIgnoreCase);

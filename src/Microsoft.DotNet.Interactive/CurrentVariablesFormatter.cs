@@ -16,12 +16,17 @@ namespace Microsoft.DotNet.Interactive
 
         public Type Type => typeof(CurrentVariables);
 
-        public void Format(CurrentVariables instance, TextWriter writer)
+        public bool Format(FormatContext context, CurrentVariables instance, TextWriter writer)
         {
             PocketView output = null;
 
+        /// <summary>
+        ///   Renders the tag to the specified <see cref = "TextWriter" />.
+        /// </summary>
+        /// <param name = "writer">The writer.</param>
             if (instance.Detailed)
             {
+                var innerContext = context.ReduceContent(FormatContext.NestedInTable);
                 output = table(
                     thead(
                         tr(
@@ -33,8 +38,8 @@ namespace Microsoft.DotNet.Interactive
                              tr(
                                  // Note, embeds these as objects into the HTML content, ultimately rendered by PocketView 
                                  td(v.Name),
-                                 td(arbitrary(v.Type)),
-                                 td(arbitrary(v.Value))
+                                 td(embed(v.Type, innerContext)),
+                                 td(embed(v.Value, innerContext))
                              ))));
             }
             else
@@ -43,14 +48,16 @@ namespace Microsoft.DotNet.Interactive
             }
 
             output.WriteTo(writer, HtmlEncoder.Default);
+            return true;
         }
 
-        public void Format(object instance, TextWriter writer)
+        public bool Format(FormatContext context, object instance, TextWriter writer)
         {
             if (instance is CurrentVariables variables)
             {
-                Format(variables, writer);
+                return Format(context, variables, writer);
             }
+            return false;
         }
     }
 }

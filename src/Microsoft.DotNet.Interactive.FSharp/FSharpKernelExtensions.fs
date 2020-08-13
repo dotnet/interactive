@@ -68,29 +68,6 @@ type FSharpKernelExtensions private () =
         kernel
 
     [<Extension>]
-    static member UseExtraNamespacesForTesting(kernel: FSharpKernelBase) =
-        let code = 
-            [
-                // opens some System namespaces for testing 
-                openNamespaceOrType typeof<System.Threading.Tasks.Task>.Namespace
-                openNamespaceOrType typeof<System.Linq.Enumerable>.Namespace
-
-                // opens Microsoft.Microsoft.AspNet.Core.Html for testing
-                openNamespaceOrType typeof<IHtmlContent>.Namespace
-
-                // opens Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html for testing
-                //    note this has some AutoOpen modules inside
-                openNamespaceOrType (typeof<FSharpKernelHelpers.IMarker>.Namespace + "." + nameof(FSharpKernelHelpers.Html))
-
-                // opens XPlot.Plotly for testing
-                openNamespaceOrType typeof<PlotlyChart>.Namespace
-
-            ] |> String.concat Environment.NewLine
-
-        kernel.DeferCommand(SubmitCode code)
-        kernel
-
-    [<Extension>]
     static member UseKernelHelpers(kernel: FSharpKernelBase) =
         let code = 
             [
@@ -105,25 +82,3 @@ type FSharpKernelExtensions private () =
         kernel.DeferCommand(SubmitCode code)
         kernel
 
-    [<Extension>]
-    static member UseWho(kernel: FSharpKernelBase) =
-        let detailedName = "#!whos"
-        let command = Command(detailedName, "Display the names of the current top-level variables and their values.")
-        command.Handler <- CommandHandler.Create(
-            fun (parseResult: ParseResult) (context: KernelInvocationContext) ->
-                let detailed = parseResult.CommandResult.Command.Name = detailedName
-                match context.Command with
-                | :? SubmitCode ->
-                    match context.HandlingKernel with
-                    | :? FSharpKernelBase as kernel ->
-                        let kernelVariables = kernel.GetCurrentVariables()
-                        let currentVariables = CurrentVariables(kernelVariables, detailed)
-                        let html = currentVariables.ToDisplayString(HtmlFormatter.MimeType)
-                        context.Publish(DisplayedValueProduced(html, context.Command, [| FormattedValue(HtmlFormatter.MimeType, html) |]))
-                    | _ -> ()
-                | _ -> ()
-                Task.CompletedTask)
-        command.AddAlias("#!who")
-        kernel.AddDirective(command)
-        Formatter.Register(CurrentVariablesFormatter())
-        kernel

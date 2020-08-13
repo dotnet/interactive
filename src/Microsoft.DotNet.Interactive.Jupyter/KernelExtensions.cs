@@ -152,7 +152,7 @@ using static {typeof(TopLevelMethods).FullName};
                 k.AddDirective(lsmagic(k));
             });
 
-            Formatter<SupportedDirectives>.Register((directives, writer) =>
+            Formatter.Register<SupportedDirectives>((directives, writer) =>
             {
                 var indentLevel = 1.5;
                 PocketView t = div(

@@ -44,6 +44,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public void WriteEndHeader(TextWriter writer) => writer.Write(": ");
 
+        public void WriteElidedPropertiesMarker(TextWriter writer) => writer.Write("..");
+
         public void WriteStartSequenceItem(TextWriter writer)
         {
         }

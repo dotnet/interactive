@@ -17,14 +17,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
     public class HtmlFormatterTests : FormatterTestBase
     {
-        [Fact]
-        public void Non_generic_GetBestFormatter_creates_generic_formatter()
-        {
-            HtmlFormatter.GetBestFormatterFor(typeof(Widget))
-                         .Should()
-                         .BeOfType<HtmlFormatter<object>>();
-        }
-
         public class Objects : FormatterTestBase
         {
             [Fact]
@@ -49,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Formatter_does_not_put_span_around_string()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor<string>();
+                var formatter = HtmlFormatter.GetPreferredFormatterFor<string>();
 
                 var s = "hello".ToDisplayString(formatter);
 
@@ -63,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 expando.Name = "socks";
                 expando.Count = 2;
 
-                var formatter = HtmlFormatter.GetBestFormatterFor<ExpandoObject>();
+                var formatter = HtmlFormatter.GetPreferredFormatterFor<ExpandoObject>();
 
                 var output = ((object) expando).ToDisplayString(formatter);
 
@@ -73,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void It_formats_objects_as_tables_having_properties_on_the_y_axis()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(EntityId));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(EntityId));
 
                 var writer = new StringWriter();
 
@@ -97,7 +89,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     PropertyB = "hello"
                 };
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(instance.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
                 formatter.Format(instance, writer);
 
@@ -113,7 +105,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var instance = (123, "hello");
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(instance.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
                 formatter.Format(instance, writer);
 
@@ -133,13 +125,13 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     B = new { BA = 456 }
                 };
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(instance.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
                 formatter.Format(instance, writer);
 
                 writer.ToString()
                       .Should()
-                      .Contain("<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>123</td><td>{ BA: 456 }</td></tr></tbody></table>");
+                      .Contain("<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>123</td><td>{ BA = 456 }</td></tr></tbody></table>");
             }
 
             [Fact]
@@ -153,7 +145,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     PropertyB = Enumerable.Range(1, 3)
                 };
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(instance.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
                 formatter.Format(instance, writer);
 
@@ -172,7 +164,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     PropertyA = Enumerable.Range(1, 3)
                 };
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(instance.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
                 formatter.Format(instance, writer);
 
@@ -184,7 +176,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void It_displays_exceptions_thrown_by_properties_in_the_property_value_cell()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(SomePropertyThrows));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(SomePropertyThrows));
 
                 var writer = new StringWriter();
 
@@ -194,13 +186,27 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Contain("<td>{ System.Exception:");
+                      .Contain("<td>System.Exception: not ok");
             }
 
             [Fact]
-            public void Properies_of_System_Type_instances_are_not_expanded()
+            public void Type_instances_do_not_have_properties_expanded()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(Type));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
+
+                var writer = new StringWriter();
+
+                formatter.Format(typeof(Dummy.DummyNotInSystemNamespace), writer);
+
+                writer.ToString()
+                      .Should()
+                      .Be("Dummy.DummyNotInSystemNamespace");
+            }
+
+            [Fact]
+            public void Type_instances_have_link_added_for_System_namespace_type()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
 
                 var writer = new StringWriter();
 
@@ -208,14 +214,29 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/System.String?view=netcore-3.0\">System.String</a></span>");
+                      .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=netcore-3.0\">System.String</a></span>");
             }
 
-            
+
+            [Fact]
+            public void Type_instances_have_link_added_for_Microsoft_namespace_type()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Type));
+
+                var writer = new StringWriter();
+
+                formatter.Format(typeof(Microsoft.CSharp.RuntimeBinder.RuntimeBinderException), writer);
+
+                writer.ToString()
+                      .Should()
+                      .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/microsoft.csharp.runtimebinder.runtimebinderexception?view=netcore-3.0\">Microsoft.CSharp.RuntimeBinder.RuntimeBinderException</a></span>");
+            }
+
+
             [Fact]
             public void Enums_are_formatted_using_their_names()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(FileAccess));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(FileAccess));
 
                 var writer = new StringWriter();
 
@@ -227,7 +248,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void TimeSpan_is_not_destructured()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(TimeSpan));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(TimeSpan));
 
                 var writer = new StringWriter();
 
@@ -239,12 +260,113 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             }
         }
 
+        public class PreformatPlainText : FormatterTestBase
+        {
+            [Fact]
+            public void It_can_format_a_String_with_plain_text_preformatted()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(string));
+                HtmlFormatter.PlainTextPreformat = true;
+
+                var writer = new StringWriter();
+
+                string instance = @"this
+is a 
+   multiline<>
+string";
+
+                formatter.Format(instance, writer);
+
+                writer.ToString()
+                      .Should()
+                      .BeEquivalentHtmlTo(
+                          $"<pre style=\"text-align: left;\">{instance.HtmlEncode()}</pre>");
+            }
+
+
+            [Fact]
+            public void It_can_format_with_plain_text_preformatted()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(long));
+                HtmlFormatter.PlainTextPreformat = true;
+
+                var writer = new StringWriter();
+
+                long instance = 6L;
+
+                formatter.Format(instance, writer);
+
+                writer.ToString()
+                      .Should()
+                      .BeEquivalentHtmlTo(
+                          $"<pre style=\"text-align: left;\">6</pre>");
+            }
+
+            [Fact]
+            public void It_can_format_with_plain_text_formatted_with_default_font()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(long));
+                HtmlFormatter.PlainTextPreformat = true;
+                HtmlFormatter.PlainTextDefaultFont = true;
+
+                var writer = new StringWriter();
+
+                long instance = 6L;
+
+                formatter.Format(instance, writer);
+
+                writer.ToString()
+                      .Should()
+                      .BeEquivalentHtmlTo(
+                          $"<div style=\"white-space: pre; text-align: left;\">6</div>");
+            }
+
+            [Fact]
+            public void It_can_format_with_plain_text_formatted_with_default_font_no_left_justify()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(long));
+                HtmlFormatter.PlainTextPreformat = true;
+                HtmlFormatter.PlainTextDefaultFont = true;
+                HtmlFormatter.PlainTextNoLeftJustify = true;
+
+                var writer = new StringWriter();
+
+                long instance = 6L;
+
+                formatter.Format(instance, writer);
+
+                writer.ToString()
+                      .Should()
+                      .BeEquivalentHtmlTo(
+                          $"<div style=\"white-space: pre;\">6</div>");
+            }
+
+            [Fact]
+            public void It_can_format_with_plain_text_formatted_with_no_left_justify()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(long));
+                HtmlFormatter.PlainTextPreformat = true;
+                HtmlFormatter.PlainTextNoLeftJustify = true;
+
+                var writer = new StringWriter();
+
+                long instance = 6L;
+
+                formatter.Format(instance, writer);
+
+                writer.ToString()
+                      .Should()
+                      .BeEquivalentHtmlTo(
+                          $"<pre>6</pre>");
+            }
+
+        }
         public class Sequences : FormatterTestBase
         {
             [Fact]
             public void It_formats_sequences_as_tables_with_an_index_on_the_y_axis()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(List<EntityId>));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(List<EntityId>));
 
                 var writer = new StringWriter();
 
@@ -265,7 +387,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void It_formats_sequence_properties_using_plain_text_formatting()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(List<float[]>));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(List<float[]>));
 
                 var writer = new StringWriter();
 
@@ -297,7 +419,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     { "second", new EntityId("entity two", "456") }
                 };
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(instance.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
                 formatter.Format(instance, writer);
 
@@ -318,7 +440,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     { "second", new EntityId("entity two", "456") }
                 };
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(instance.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(instance.GetType());
 
                 formatter.Format(instance, writer);
 
@@ -448,7 +570,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 Formatter.ListExpansionLimit = 4;
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(list.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(list.GetType());
 
                 var formatted = list.ToDisplayString(formatter);
 
@@ -470,7 +592,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 Formatter.ListExpansionLimit = 4;
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(list.GetType());
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(list.GetType());
 
                 var formatted = list.ToDisplayString(formatter);
 
@@ -491,7 +613,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 var html = objects.ToDisplayString("text/html");
 
                 html.Should().BeEquivalentHtmlTo(
-                    $"<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>{date1.ToDisplayString("text/plain")}</td></tr><tr><td>1</td><td>{date2.ToDisplayString("text/plain")}</td></tr></tbody></table>");
+                    $"<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td><span>{date1.ToDisplayString("text/plain")}</span></td></tr><tr><td>1</td><td><span>{date2.ToDisplayString("text/plain")}</span></td></tr></tbody></table>");
             }
 
             [Fact]
@@ -501,8 +623,34 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var html = objects.ToDisplayString("text/html");
 
-                html.Should().BeEquivalentHtmlTo(
-                    "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>System.String</td></tr><tr><td>1</td><td>System.Int32</td></tr></tbody></table>");
+                html.Should().BeEquivalentHtmlTo($@"<table>
+      <thead>
+        <tr>
+          <th>
+            <i>index</i>
+          </th>
+          <th>value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.string?view=netcore-3.0\""}>System.String</a>
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=netcore-3.0\""}>System.Int32</a>
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>");
             }
 
             class SomeDict : IDictionary<int, string>
@@ -585,7 +733,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void ReadOnlyMemory_of_char_is_formatted_like_a_string()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor<ReadOnlyMemory<char>>();
+                var formatter = HtmlFormatter.GetPreferredFormatterFor<ReadOnlyMemory<char>>();
 
                 var writer = new StringWriter();
 
@@ -601,7 +749,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void ReadOnlyMemory_of_int_is_formatted_like_a_int_array()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor<ReadOnlyMemory<int>>();
+                var formatter = HtmlFormatter.GetPreferredFormatterFor<ReadOnlyMemory<int>>();
 
                 var writer = new StringWriter();
 
@@ -618,7 +766,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void It_shows_null_items_in_the_sequence_as_null()
             {
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(object[]));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(object[]));
 
                 var writer = new StringWriter();
 
@@ -627,6 +775,109 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 writer.ToString().Should()
                       .BeEquivalentHtmlTo(
                           "<table><thead><tr><th><i>index</i></th><th>value</th></tr></thead><tbody><tr><td>0</td><td>8</td></tr><tr><td>1</td><td>&lt;null&gt;</td></tr><tr><td>2</td><td>9</td></tr></tbody></table>");
+            }
+
+            [Fact]
+            public void It_shows_properties_up_to_default_max()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.DummyClassWithManyProperties));
+
+                var writer = new StringWriter();
+
+                formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+
+                writer.ToString().Should()
+                      .BeEquivalentHtmlTo(@"<table>
+      <thead>
+        <tr>
+          <th>X1</th>
+          <th>X2</th>
+          <th>X3</th>
+          <th>X4</th>
+          <th>X5</th>
+          <th>X6</th>
+          <th>X7</th>
+          <th>X8</th>
+          <th>X9</th>
+          <th>X10</th>
+          <th>X11</th>
+          <th>X12</th>
+          <th>X13</th>
+          <th>X14</th>
+          <th>X15</th>
+          <th>X16</th>
+          <th>X17</th>
+          <th>X18</th>
+          <th>X19</th>
+          <th>X20</th>
+          <th>..</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>2</td>
+          <td>3</td>
+          <td>4</td>
+          <td>5</td>
+          <td>6</td>
+          <td>7</td>
+          <td>8</td>
+          <td>9</td>
+          <td>10</td>
+          <td>11</td>
+          <td>12</td>
+          <td>13</td>
+          <td>14</td>
+          <td>15</td>
+          <td>16</td>
+          <td>17</td>
+          <td>18</td>
+          <td>19</td>
+          <td>20</td>
+        </tr>
+      </tbody>
+    </table>");
+            }
+
+            [Fact]
+            public void It_shows_properties_up_to_custom_max()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.DummyClassWithManyProperties));
+
+                var writer = new StringWriter();
+                HtmlFormatter.MaxProperties = 1;
+
+                formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+
+                writer.ToString().Should()
+                      .BeEquivalentHtmlTo(@"<table>
+      <thead>
+        <tr>
+          <th>X1</th>
+          <th>..</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+        </tr>
+      </tbody>
+    </table>");
+            }
+
+            [Fact]
+            public void Setting_properties_to_zero_means_to_table_formatting()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(Dummy.DummyClassWithManyProperties));
+
+                var writer = new StringWriter();
+                HtmlFormatter.MaxProperties = 0;
+                PlainTextFormatter.MaxProperties = 0;
+
+                formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
+
+                writer.ToString().Should().Be(@"Dummy.DummyClassWithManyProperties");
             }
 
             [Fact]
@@ -639,44 +890,55 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     yield return "Hello, World";
                 }
 
-                var formatter = HtmlFormatter.GetBestFormatterFor(typeof(IEnumerable<object>));
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(IEnumerable<object>));
 
                 var writer = new StringWriter();
 
                 formatter.Format(GetCollection(), writer);
 
                 writer.ToString().Should()
-                      .BeEquivalentHtmlTo(
-@"<table>
-  <thead>
-    <tr>
-      <th>
-        <i>index</i>
-      </th>
-      <th>
-        <i>type</i>
-      </th>
-      <th>value</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>0</td>
-      <td>System.Boolean</td>
-      <td>True</td>
-    </tr>
-    <tr>
-      <td>1</td>
-      <td>System.Int32</td>
-      <td>99</td>
-    </tr>
-    <tr>
-      <td>2</td>
-      <td>System.String</td>
-      <td>Hello, World</td>
-    </tr>
-  </tbody>
-</table>");
+                      .BeEquivalentHtmlTo($@"<table>
+      <thead>
+        <tr>
+          <th>
+            <i>index</i>
+          </th>
+          <th>
+            <i>type</i>
+          </th>
+          <th>value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.boolean?view=netcore-3.0\""}>System.Boolean</a>
+            </span>
+          </td>
+          <td>True</td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=netcore-3.0\""}>System.Int32</a>
+            </span>
+          </td>
+          <td>99</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.string?view=netcore-3.0\""}>System.String</a>
+            </span>
+          </td>
+          <td>Hello, World</td>
+        </tr>
+      </tbody>
+    </table>");
             }
             
             [Fact]
@@ -694,58 +956,152 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 result
                        .Should()
                        .BeEquivalentHtmlTo(
-                           @"<table>
-  <thead>
-    <tr>
-      <th><i>index</i></th>
-      <th><i>type</i></th>
-      <th>value</th>
-      <th>Item1</th>
-      <th>Item2</th>
-      <th>name</th>
-      <th>color</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>0</td>
-      <td>System.Int32</td>
-      <td>1</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>1</td>
-      <td>System.ValueTuple&lt;System.Int32,System.String&gt;</td>
-      <td></td>
-      <td>2</td>
-      <td>two</td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>2</td>
-      <td>System.Linq.Enumerable+RangeIterator</td>
-      <td>[ 1, 2, 3 ]</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>3</td>
-      <td>(anonymous)</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>apple</td>
-      <td>green</td>
-    </tr>
-  </tbody>
-</table>");
+                          $@"<table>
+      <thead>
+        <tr>
+          <th>
+            <i>index</i>
+          </th>
+          <th>
+            <i>type</i>
+          </th>
+          <th>value</th>
+          <th>Item1</th>
+          <th>Item2</th>
+          <th>name</th>
+          <th>color</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=netcore-3.0\""}>System.Int32</a>
+            </span>
+          </td>
+          <td>1</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=netcore-3.0\""}>System.ValueTuple&lt;System.Int32,System.String&gt;</a>
+            </span>
+          </td>
+          <td></td>
+          <td>2</td>
+          <td>two</td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=netcore-3.0\""}>System.Linq.Enumerable+RangeIterator</a>
+            </span>
+          </td>
+          <td>[ 1, 2, 3 ]</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>(anonymous)</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td>apple</td>
+          <td>green</td>
+        </tr>
+      </tbody>
+    </table>");
             }
+        }
+        [Fact]
+        public void All_properties_are_shown_when_sequences_contain_different_types_in_order_they_are_encountered()
+        {
+            var objects = new object[]
+            {
+                    new { name = "apple", Item2 = "green" },
+                    (2, "two"),
+                    1,
+                    Enumerable.Range(1, 3),
+            };
+
+            var result = objects.ToDisplayString("text/html");
+            result
+                   .Should()
+                   .BeEquivalentHtmlTo(
+                      $@"<table>
+      <thead>
+        <tr>
+          <th>
+            <i>index</i>
+          </th>
+          <th>
+            <i>type</i>
+          </th>
+          <th>name</th>
+          <th>Item2</th>
+          <th>Item1</th>
+          <th>value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0</td>
+          <td>(anonymous)</td>
+          <td>apple</td>
+          <td>green</td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=netcore-3.0\""}>System.ValueTuple&lt;System.Int32,System.String&gt;</a>
+            </span>
+          </td>
+          <td></td>
+          <td>two</td>
+          <td>2</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=netcore-3.0\""}>System.Int32</a>
+            </span>
+          </td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>
+            <span>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=netcore-3.0\""}>System.Linq.Enumerable+RangeIterator</a>
+            </span>
+          </td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td>[ 1, 2, 3 ]</td>
+        </tr>
+      </tbody>
+    </table>");
         }
     }
 }

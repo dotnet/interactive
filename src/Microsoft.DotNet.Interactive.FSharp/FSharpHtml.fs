@@ -31,7 +31,7 @@ module Html =
     [<AutoOpen>]
     module HtmlElements =
         type internal IMarker = interface end
-        let private f name (attrs: HtmlAttribute list) (content: IHtmlContent list) = 
+        let private makeElement name (attrs: HtmlAttribute list) (content: IHtmlContent list) = 
             let p = new PocketView(tagName=name)
             for (tag, value) in attrs do
                 p.HtmlAttributes.[tag] <- value
@@ -53,155 +53,157 @@ module Html =
             (HtmlElement.Tagged p :> IHtmlContent)
 
         /// Specifies an HTML element
-        let a attrs content = f "a" attrs content
+        let a attrs content = makeElement "a" attrs content
         /// Specifies an HTML element
-        let area attrs content = f "area" attrs content
+        let area attrs content = makeElement "area" attrs content
         /// Specifies an HTML element
-        let aside attrs content = f "aside" attrs content
+        let aside attrs content = makeElement "aside" attrs content
         /// Specifies an HTML element
-        let b attrs content = f "b" attrs content
+        let b attrs content = makeElement "b" attrs content
         /// Specifies an HTML element
-        let body attrs content = f "body" attrs content
+        let br attrs content = makeElement "br" attrs content
         /// Specifies an HTML element
-        let br attrs content = f "br" attrs content
+        let button attrs content = makeElement "button" attrs content
         /// Specifies an HTML element
-        let button attrs content = f "button" attrs content
+        let caption attrs content = makeElement "caption" attrs content
         /// Specifies an HTML element
-        let caption attrs content = f "caption" attrs content
+        let center attrs content = makeElement "center" attrs content
         /// Specifies an HTML element
-        let center attrs content = f "center" attrs content
+        let code attrs content = makeElement "code" attrs content
         /// Specifies an HTML element
-        let code attrs content = f "code" attrs content
+        let colgroup attrs content = makeElement "colgroup" attrs content
         /// Specifies an HTML element
-        let colgroup attrs content = f "colgroup" attrs content
+        let dd attrs content = makeElement "dd" attrs content
         /// Specifies an HTML element
-        let dd attrs content = f "dd" attrs content
+        let details attrs content = makeElement "details" attrs content
         /// Specifies an HTML element
-        let details attrs content = f "details" attrs content
+        let div attrs content = makeElement "div" attrs content
         /// Specifies an HTML element
-        let div attrs content = f "div" attrs content
+        let dl attrs content = makeElement "dl" attrs content
         /// Specifies an HTML element
-        let dl attrs content = f "dl" attrs content
+        let dt attrs content = makeElement "dt" attrs content
         /// Specifies an HTML element
-        let dt attrs content = f "dt" attrs content
+        let em attrs content = makeElement "em" attrs content
         /// Specifies an HTML element
-        let em attrs content = f "em" attrs content
+        let figure attrs content = makeElement "figure" attrs content
         /// Specifies an HTML element
-        let figure attrs content = f "figure" attrs content
+        let font attrs content = makeElement "font" attrs content
         /// Specifies an HTML element
-        let font attrs content = f "font" attrs content
+        let form attrs content = makeElement "form" attrs content
         /// Specifies an HTML element
-        let form attrs content = f "form" attrs content
+        let h1 attrs content = makeElement "h1" attrs content
         /// Specifies an HTML element
-        let h1 attrs content = f "h1" attrs content
+        let h2 attrs content = makeElement "h2" attrs content
         /// Specifies an HTML element
-        let h2 attrs content = f "h2" attrs content
+        let h3 attrs content = makeElement "h3" attrs content
         /// Specifies an HTML element
-        let h3 attrs content = f "h3" attrs content
+        let h4 attrs content = makeElement "h4" attrs content
         /// Specifies an HTML element
-        let h4 attrs content = f "h4" attrs content
+        let h5 attrs content = makeElement "h5" attrs content
         /// Specifies an HTML element
-        let h5 attrs content = f "h5" attrs content
+        let h6 attrs content = makeElement "h6" attrs content
         /// Specifies an HTML element
-        let h6 attrs content = f "h6" attrs content
+        let head attrs content = makeElement "head" attrs content
         /// Specifies an HTML element
-        let head attrs content = f "head" attrs content
+        let header attrs content = makeElement "header" attrs content
         /// Specifies an HTML element
-        let header attrs content = f "header" attrs content
+        let hgroup attrs content = makeElement "hgroup" attrs content
         /// Specifies an HTML element
-        let hgroup attrs content = f "hgroup" attrs content
+        let hr attrs content = makeElement "hr" attrs content
+
+        // we skip thse because they are not commonly needed in display
+        // specifications. 
+        // let body attrs content = makeElement "body" attrs content
+        // let html attrs content = makeElement "html" attrs content
+
         /// Specifies an HTML element
-        let hr attrs content = f "hr" attrs content
+        let i attrs content = makeElement "i" attrs content
         /// Specifies an HTML element
-        let html attrs content = f "html" attrs content
+        let iframe attrs content = makeElement "iframe" attrs content
         /// Specifies an HTML element
-        let i attrs content = f "i" attrs content
+        let img attrs content = makeElement "img" attrs content
         /// Specifies an HTML element
-        let iframe attrs content = f "iframe" attrs content
+        let input attrs content = makeElement "input" attrs content
         /// Specifies an HTML element
-        let img attrs content = f "img" attrs content
+        let label attrs content = makeElement "label" attrs content
         /// Specifies an HTML element
-        let input attrs content = f "input" attrs content
+        let li attrs content = makeElement "li" attrs content
         /// Specifies an HTML element
-        let label attrs content = f "label" attrs content
+        let link attrs content = makeElement "link" attrs content
         /// Specifies an HTML element
-        let li attrs content = f "li" attrs content
+        let main attrs content = makeElement "main" attrs content
         /// Specifies an HTML element
-        let link attrs content = f "link" attrs content
+        let menu attrs content = makeElement "menu" attrs content
         /// Specifies an HTML element
-        let main attrs content = f "main" attrs content
+        let menuitem attrs content = makeElement "menuitem" attrs content
         /// Specifies an HTML element
-        let menu attrs content = f "menu" attrs content
+        let meta attrs content = makeElement "meta" attrs content
         /// Specifies an HTML element
-        let menuitem attrs content = f "menuitem" attrs content
+        let meter attrs content = makeElement "meter" attrs content
         /// Specifies an HTML element
-        let meta attrs content = f "meta" attrs content
+        let nav attrs content = makeElement "nav" attrs content
         /// Specifies an HTML element
-        let meter attrs content = f "meter" attrs content
+        let ol attrs content = makeElement "ol" attrs content
         /// Specifies an HTML element
-        let nav attrs content = f "nav" attrs content
+        let optgroup attrs content = makeElement "optgroup" attrs content
         /// Specifies an HTML element
-        let ol attrs content = f "ol" attrs content
+        let option attrs content = makeElement "option" attrs content
         /// Specifies an HTML element
-        let optgroup attrs content = f "optgroup" attrs content
+        let p attrs content = makeElement "p" attrs content
         /// Specifies an HTML element
-        let option attrs content = f "option" attrs content
+        let pre attrs content = makeElement "pre" attrs content
         /// Specifies an HTML element
-        let p attrs content = f "p" attrs content
+        let progress attrs content = makeElement "progress" attrs content
         /// Specifies an HTML element
-        let pre attrs content = f "pre" attrs content
+        let q attrs content = makeElement "q" attrs content
         /// Specifies an HTML element
-        let progress attrs content = f "progress" attrs content
+        let script attrs content = makeElement "script" attrs content
         /// Specifies an HTML element
-        let q attrs content = f "q" attrs content
+        let section attrs content = makeElement "section" attrs content
         /// Specifies an HTML element
-        let script attrs content = f "script" attrs content
+        let select attrs content = makeElement "select" attrs content
         /// Specifies an HTML element
-        let section attrs content = f "section" attrs content
+        let small attrs content = makeElement "small" attrs content
         /// Specifies an HTML element
-        let select attrs content = f "select" attrs content
+        let source attrs content = makeElement "source" attrs content
         /// Specifies an HTML element
-        let small attrs content = f "small" attrs content
+        let span attrs content = makeElement "span" attrs content
         /// Specifies an HTML element
-        let source attrs content = f "source" attrs content
+        let strike attrs content = makeElement "strike" attrs content
         /// Specifies an HTML element
-        let span attrs content = f "span" attrs content
+        let style attrs content = makeElement "style" attrs content
         /// Specifies an HTML element
-        let strike attrs content = f "strike" attrs content
+        let strong attrs content = makeElement "strong" attrs content
         /// Specifies an HTML element
-        let style attrs content = f "style" attrs content
+        let sub attrs content = makeElement "sub" attrs content
         /// Specifies an HTML element
-        let strong attrs content = f "strong" attrs content
+        let sup attrs content = makeElement "sup" attrs content
         /// Specifies an HTML element
-        let sub attrs content = f "sub" attrs content
+        let svg attrs content = makeElement "svg" attrs content
         /// Specifies an HTML element
-        let sup attrs content = f "sup" attrs content
+        let table attrs content = makeElement "table" attrs content
         /// Specifies an HTML element
-        let svg attrs content = f "svg" attrs content
+        let tbody attrs content = makeElement "tbody" attrs content
         /// Specifies an HTML element
-        let table attrs content = f "table" attrs content
+        let td attrs content = makeElement "td" attrs content
         /// Specifies an HTML element
-        let tbody attrs content = f "tbody" attrs content
+        let textarea attrs content = makeElement "textarea" attrs content
         /// Specifies an HTML element
-        let td attrs content = f "td" attrs content
+        let tfoot attrs content = makeElement "tfoot" attrs content
         /// Specifies an HTML element
-        let textarea attrs content = f "textarea" attrs content
+        let th attrs content = makeElement "th" attrs content
         /// Specifies an HTML element
-        let tfoot attrs content = f "tfoot" attrs content
+        let thead attrs content = makeElement "thead" attrs content
         /// Specifies an HTML element
-        let th attrs content = f "th" attrs content
+        let title attrs content = makeElement "title" attrs content
         /// Specifies an HTML element
-        let thead attrs content = f "thead" attrs content
+        let tr attrs content = makeElement "tr" attrs content
         /// Specifies an HTML element
-        let title attrs content = f "title" attrs content
+        let u attrs content = makeElement "u" attrs content
         /// Specifies an HTML element
-        let tr attrs content = f "tr" attrs content
+        let ul attrs content = makeElement "ul" attrs content
         /// Specifies an HTML element
-        let u attrs content = f "u" attrs content
-        /// Specifies an HTML element
-        let ul attrs content = f "ul" attrs content
-        /// Specifies an HTML element
-        let video attrs content = f "video" attrs content
+        let video attrs content = makeElement "video" attrs content
 
         /// Specifies an HTML element that is the encoded text
         let encodedText (s: string) = (HtmlElement.Text(s) :> IHtmlContent)
@@ -212,9 +214,15 @@ module Html =
         /// Specifies HTML text that is injected directly into the output HTML
         let rawText (s: string) = (HtmlString(s) :> IHtmlContent)
 
-        /// Specifies an HTML element using an arbitrary object
-        // Note: PocketView.SetContent decides what to do with this
-        let object (o: obj) = (HtmlElement.Obj(o) :> IHtmlContent)
+        /// Specifies a custom HTML element
+        let custom tag attrs content = makeElement tag attrs content
+
+        /// Specifies an HTML element using an arbitrary object in a formatting context.
+        /// If the object is an IHtmlElement or a sequence of IHtmlElement that content is used. Otherwise 
+        /// the object will be rendered as HTML using the best available HTML formatter in 
+        // the gtiven context, or else as plain text, and the results treated as encoded text.
+        let embed (context: FormatContext) (value: obj) = 
+            (HtmlElement.Obj(PocketViewTags.embed(value, context)) :> IHtmlContent)
 
     /// Contains functions to specify common HTML attributes.
     [<AutoOpen>]

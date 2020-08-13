@@ -99,6 +99,19 @@ function loadDotnetInteractiveApi() {
             if (!window.dotnetInteractiveExtensionsRequire) {
                 window.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
             }
+
+            window.getExtensionRequire = function(extensionName, extensionCacheBuster) {
+                let paths = {};
+                paths[extensionName] = `${root}extensions/${extensionName}/resources/`;
+                
+                let internalRequire = require.config({
+                    context: extensionCacheBuster,
+                    paths: paths,
+                    urlArgs: `cacheBuster=${extensionCacheBuster}`
+                    }) || require;
+
+                return internalRequire
+            };
         
             dotnetInteractiveRequire([
                     'dotnet-interactive/dotnet-interactive'

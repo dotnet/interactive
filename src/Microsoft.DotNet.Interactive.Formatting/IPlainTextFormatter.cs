@@ -17,6 +17,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         void WriteEndTuple(TextWriter writer);
         void WriteNameValueDelimiter(TextWriter writer);
         void WritePropertyDelimiter(TextWriter writer);
+        void WriteElidedPropertiesMarker(TextWriter writer);
         void WriteSequenceDelimiter(TextWriter writer);
         void WriteEndHeader(TextWriter writer);
         void WriteStartSequenceItem(TextWriter writer);

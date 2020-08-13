@@ -3,7 +3,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -196,7 +195,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         [Fact]
         public async Task Variable_serialization_can_be_customized_using_Formatter()
         {
-            Formatter<FileInfo>.Register(
+            Formatting.Formatter.Register<FileInfo>(
                 info => new { TheName = info.Name }.SerializeToJson().Value,
                 JsonFormatter.MimeType);
             
