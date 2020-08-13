@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
             events
                 .Should()
                 .EventuallyContainSingle<DisplayEvent>(
-                    where: d => d.FormattedValues.Any(fv => fv.Value.Trim() == "2"),
+                    where: d => d.FormattedValues.Any(fv => fv.Value.Trim() == "<div class=\"dni-plaintext\">2</div>"),
                     timeout: 10_000);
         }
     }
