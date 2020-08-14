@@ -10,10 +10,20 @@
     <PackageTags>dotnet-interactive</PackageTags>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <NoWarn>$(NoWarn);NU5100</NoWarn><!-- dll outside of lib/ folder -->
+     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
  <ItemGroup>
    <PackageReference Include="Microsoft.Data.Analysis" Version="0.4.0" />
+ </ItemGroup>
+
+ <ItemGroup>
+   <PackageReference Include="Iced" Version="1.8.0" />
+   <PackageReference Include="ICSharpCode.Decompiler" Version="6.1.0.5902" />
+   <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="3.7.0-1.final" />
+   <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.7.0-1.final" />
+   <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="1.1.132302" />
+   <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
  </ItemGroup>
 
   <ItemGroup>
