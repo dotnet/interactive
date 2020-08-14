@@ -39,7 +39,7 @@ type FSharpKernelBase () as this =
 
     let mutable cancellationTokenSource = new CancellationTokenSource()
 
-    let kindString (glyph: FSharpGlyph) =
+    let getKindString (glyph: FSharpGlyph) =
         match glyph with
         | FSharpGlyph.Class -> WellKnownTags.Class
         | FSharpGlyph.Constant -> WellKnownTags.Constant
@@ -63,7 +63,7 @@ type FSharpKernelBase () as this =
         | FSharpGlyph.ExtensionMethod -> WellKnownTags.ExtensionMethod
         | FSharpGlyph.Error -> WellKnownTags.Error
 
-    let filterText (declarationItem: FSharpDeclarationListItem) =
+    let getFilterText (declarationItem: FSharpDeclarationListItem) =
         match declarationItem.NamespaceToOpen, declarationItem.Name.Split '.' with
         // There is no namespace to open and the item name does not contain dots, so we don't need to pass special FilterText to Roslyn.
         | None, [|_|] -> null
@@ -71,17 +71,17 @@ type FSharpKernelBase () as this =
         // We are passing last part of long ident as FilterText.
         | _, idents -> Array.last idents
 
-    let documentation (declarationItem: FSharpDeclarationListItem) =
+    let getDocumentation (declarationItem: FSharpDeclarationListItem) =
         let result = declarationItem.DescriptionTextAsync
         result.ToString()
 
-    let completionItem (declarationItem: FSharpDeclarationListItem) =
-        let kind = kindString declarationItem.Glyph
-        let filterText = filterText declarationItem
-        let documentation = documentation declarationItem
+    let getCompletionItem (declarationItem: FSharpDeclarationListItem) =
+        let kind = getKindString declarationItem.Glyph
+        let filterText = getFilterText declarationItem
+        let documentation = getDocumentation declarationItem
         CompletionItem(declarationItem.Name, kind, filterText=filterText, documentation=documentation)
 
-    let diagnostic (error: FSharpErrorInfo) =
+    let getDiagnostic (error: FSharpErrorInfo) =
         // F# errors are 1-based but should be 0-based for diagnostics, however, 0-based errors are still valid to report
         let diagLineDelta = if error.Start.Line = 0 then 0 else -1
         let startPos = LinePosition(error.Start.Line + diagLineDelta, error.Start.Column)
@@ -99,17 +99,21 @@ type FSharpKernelBase () as this =
             let codeSubmissionReceived = CodeSubmissionReceived(codeSubmission)
             context.Publish(codeSubmissionReceived)
             let tokenSource = cancellationTokenSource
-            let result, errors =
+            let result, fsiDiagnostics =
                 try
                     script.Value.Eval(codeSubmission.Code, tokenSource.Token)
                 with
                 | ex -> Error(ex), [||]
 
-            let diagnostics = errors |> Array.map diagnostic
+            let diagnostics = fsiDiagnostics |> Array.map getDiagnostic
+            
+            // script.Eval can succeed with error diagnostics, see https://github.com/dotnet/interactive/issues/691
+            let isError = diagnostics |> Array.exists (fun d -> d.Severity = DiagnosticSeverity.Error)
+
             context.Publish(DiagnosticsProduced(diagnostics, codeSubmission))
 
             match result with
-            | Ok(result) ->
+            | Ok(result) when not isError ->
                 match result with
                 | Some(value) when value.ReflectionType <> typeof<unit>  ->
                     let value = value.ReflectionValue
@@ -117,13 +121,14 @@ type FSharpKernelBase () as this =
                     context.Publish(ReturnValueProduced(value, codeSubmission, formattedValues))
                 | Some(_) -> ()
                 | None -> ()
-            | Error(ex) ->
+            | _ ->
                 if not (tokenSource.IsCancellationRequested) then
-                    let aggregateError = String.Join("\n", errors)
+                    let aggregateError = String.Join("\n", fsiDiagnostics)
                     let reportedException =
-                        match ex with
-                        | :? FsiCompilationException -> CodeSubmissionCompilationErrorException(ex) :> Exception
-                        | _ -> ex
+                        match result with
+                        | Error (:? FsiCompilationException) 
+                        | Ok _ -> CodeSubmissionCompilationErrorException(Exception(aggregateError)) :> Exception
+                        | Error ex -> ex
                     context.Fail(reportedException, aggregateError)
                 else
                     context.Fail(null, "Command cancelled")
@@ -134,7 +139,7 @@ type FSharpKernelBase () as this =
             let! declarationItems = script.Value.GetCompletionItems(requestCompletions.Code, requestCompletions.LinePosition.Line + 1, requestCompletions.LinePosition.Character)
             let completionItems =
                 declarationItems
-                |> Array.map completionItem
+                |> Array.map getCompletionItem
             context.Publish(CompletionsProduced(completionItems, requestCompletions))
         }
 
@@ -142,7 +147,7 @@ type FSharpKernelBase () as this =
         async {
             let! (_parseResults, checkFileResults, _checkProjectResults) = script.Value.Fsi.ParseAndCheckInteraction(requestDiagnostics.Code)
             let errors = checkFileResults.Errors
-            let diagnostics = errors |> Array.map diagnostic
+            let diagnostics = errors |> Array.map getDiagnostic
             context.Publish(DiagnosticsProduced(diagnostics, requestDiagnostics))
         }
 

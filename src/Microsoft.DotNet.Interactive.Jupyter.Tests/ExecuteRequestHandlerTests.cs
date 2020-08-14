@@ -133,6 +133,27 @@ f();"));
                 .BeEquivalentTo("(1,13): error CS1002: ; expected");
         }
 
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task shows_diagnostics_on_erroneous_input(Language language)
+        {
+            var scheduler = CreateScheduler();
+            SetKernelLanguage(language);
+            var request = ZeroMQMessage.Create(new ExecuteRequest("1+!"));
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            await scheduler.Schedule(context);
+
+            await context.Done().Timeout(5.Seconds());
+
+            JupyterMessageSender.PubSubMessages.Should()
+                .ContainSingle(e => e is Error)
+                .Which.As<Error>()
+                .Traceback
+                .Should()
+                .BeEquivalentTo("(1,13): error CS1002: ; expected");
+        }
+
         [Fact]
         public async Task sends_DisplayData_message_on_ValueProduced()
         {
