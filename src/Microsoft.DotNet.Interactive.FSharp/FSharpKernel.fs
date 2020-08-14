@@ -138,6 +138,60 @@ type FSharpKernelBase () as this =
             context.Publish(CompletionsProduced(completionItems, requestCompletions))
         }
 
+    let handleRequestHoverText (requestHoverText: RequestHoverText) (context: KernelInvocationContext) =
+        async {
+            let! (parse, check, ctx) = script.Value.Fsi.ParseAndCheckInteraction(requestHoverText.Code)
+            let t = FSharp.Compiler.Text.SourceText.ofString requestHoverText.Code
+            let line = requestHoverText.LinePosition.Line + 1
+            let col = requestHoverText.LinePosition.Character
+            let lineStr = t.GetLineString(line - 1)
+
+            
+            let tokenizer = FSharpSourceTokenizer([], None).CreateLineTokenizer(lineStr)
+            let rec tokenizeLine (tokenizer:FSharpLineTokenizer) state =
+              match tokenizer.ScanToken(state) with
+              | Some tok, state ->
+                  if not System.Diagnostics.Debugger.IsAttached then
+                    System.Diagnostics.Debugger.Launch() |> ignore
+                  if tok.LeftColumn <= col && tok.RightColumn >= col then
+                    Some tok
+                  else
+                    tokenizeLine tokenizer state
+              | None, _ -> None
+
+            let token = tokenizeLine tokenizer FSharpTokenizerLexState.Initial
+
+            match token with
+            | Some token -> 
+                //System.Diagnostics.Debugger.Launch() |> ignore
+                let name = lineStr.Substring(token.LeftColumn, token.RightColumn - token.LeftColumn + 1)
+
+                let! (FSharpToolTipText (elements : list<FSharpToolTipElement<string>>)) = check.GetToolTipText(line, token.RightColumn, lineStr, [name], FSharpTokenTag.Identifier)
+
+                let all  = 
+                    elements |> List.collect (function
+                        | FSharpToolTipElement.Group g ->
+                            g |> List.map (fun g ->
+                                g.MainDescription
+                            )
+                        | _ -> []
+                    )
+
+                let res = all |> List.toArray |> Array.map (fun str -> FormattedValue("text/markdown", "`" + str + "`"))
+                
+                let sp = LinePosition(requestHoverText.LinePosition.Line, token.LeftColumn)
+                let ep = LinePosition(requestHoverText.LinePosition.Line, token.RightColumn)
+                let lps = LinePositionSpan(sp, ep)
+
+                if res.Length > 0 then
+                    context.Publish(HoverTextProduced(requestHoverText, res, lps))
+                else
+                    context.Complete(requestHoverText)
+            | None ->
+                context.Complete(requestHoverText)
+        }
+
+
     let handleRequestDiagnostics (requestDiagnostics: RequestDiagnostics) (context: KernelInvocationContext) =
         async {
             let! (_parseResults, checkFileResults, _checkProjectResults) = script.Value.Fsi.ParseAndCheckInteraction(requestDiagnostics.Code)
@@ -188,6 +242,9 @@ type FSharpKernelBase () as this =
 
     // ideally via IKernelCommandHandler<RequestDiagnostics, but requires https://github.com/dotnet/fsharp/pull/2867
     member _.HandleRequestDiagnosticsAsync(command: RequestDiagnostics, context: KernelInvocationContext) = handleRequestDiagnostics command context |> Async.StartAsTask :> Task
+    
+    // ideally via IKernelCommandHandler<RequestHoverText, but requires https://github.com/dotnet/fsharp/pull/2867
+    member _.HandleRequestHoverText(command: RequestHoverText, context: KernelInvocationContext) = handleRequestHoverText command context |> Async.StartAsTask :> Task
 
     // ideally via IKernelCommandHandler<SubmitCode, but requires https://github.com/dotnet/fsharp/pull/2867
     member _.HandleSubmitCodeAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context |> Async.StartAsTask :> Task
