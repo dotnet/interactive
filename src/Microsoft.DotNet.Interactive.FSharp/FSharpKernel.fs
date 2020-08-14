@@ -19,6 +19,7 @@ open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive.Commands
 open Microsoft.DotNet.Interactive.Events
 open Microsoft.DotNet.Interactive.Extensions
+open Microsoft.DotNet.Interactive.Formatting
 
 open FSharp.Compiler.Interactive.Shell
 open FSharp.Compiler.Scripting
@@ -111,7 +112,12 @@ type FSharpKernelBase () as this =
             // script.Eval can succeed with error diagnostics, see https://github.com/dotnet/interactive/issues/691
             let isError = fsiDiagnostics |> Array.exists (fun d -> d.Severity = FSharpErrorSeverity.Error)
 
-            context.Publish(DiagnosticsProduced(diagnostics, codeSubmission))
+            let formattedDiagnostics =
+                fsiDiagnostics
+                |> Array.map (fun d -> d.ToString())
+                |> Array.map (fun text -> new FormattedValue(PlainTextFormatter.MimeType, text))
+
+            context.Publish(DiagnosticsProduced(diagnostics, codeSubmission, formattedDiagnostics))
 
             match result with
             | Ok(result) when not isError ->
@@ -125,12 +131,12 @@ type FSharpKernelBase () as this =
                 | None -> ()
             | _ ->
                 if not (tokenSource.IsCancellationRequested) then
-                    match result with
-                    | Error (:? FsiCompilationException) 
-                    | Ok _ -> 
-                        context.Fail(null, "Compilation error")
-                    | Error ex -> 
-                        context.Fail(ex, "Compilation error")
+                    let reportedException =
+                        match result with
+                        | Error (:? FsiCompilationException) 
+                        | Ok _ -> CodeSubmissionCompilationErrorException(Exception("Compilation error")) :> Exception
+                        | Error ex -> ex
+                    context.Fail(reportedException, "Compilation error")
                 else
                     context.Fail(null, "Command cancelled")
         }

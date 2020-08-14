@@ -175,7 +175,10 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 case DiagnosticsProduced diagnosticsEvent:
                     if (diagnosticsEvent.Diagnostics.Count > 0)
                     {
-                        var output = Environment.NewLine + string.Join(Environment.NewLine + Environment.NewLine, diagnosticsEvent.Diagnostics.Select(diagnostic => diagnostic.ToString()));
+                        var output =
+                            Environment.NewLine +
+                            string.Join(Environment.NewLine + Environment.NewLine, formattedValues.Select(v => v.Value)) +
+                            Environment.NewLine;
                         dataMessage = Stream.StdErr(output);
                     }
                     break;

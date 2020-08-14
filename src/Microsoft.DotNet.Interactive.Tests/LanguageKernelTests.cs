@@ -298,8 +298,15 @@ f();"
                 .ContainSingle(diag => 
                     diag.LinePositionSpan == diagnosticRange && 
                     diag.Code == code && 
-                    diag.Message == diagnosticMessage &&
-                    diag.ToString() == errorMessage);
+                    diag.Message == diagnosticMessage);
+
+            KernelEvents
+                .Should()
+                .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
+                .Which
+                .FormattedValues
+                .Should()
+                .ContainSingle(fv => fv.Value == errorMessage);
 
         }
 

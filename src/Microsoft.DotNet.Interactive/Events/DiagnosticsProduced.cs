@@ -13,8 +13,10 @@ namespace Microsoft.DotNet.Interactive.Events
     {
         private IReadOnlyCollection<Diagnostic> _diagnostics;
 
-        public DiagnosticsProduced(IEnumerable<Diagnostic> diagnostics, KernelCommand command)
-            : base(value: null, command: command)
+        public DiagnosticsProduced(IEnumerable<Diagnostic> diagnostics,
+            KernelCommand command,
+            IReadOnlyCollection<FormattedValue> formattedValues = null)
+            : base(value: null, command: command, formattedValues)
         {
             _diagnostics = (diagnostics ?? Array.Empty<Diagnostic>()).ToImmutableList();
         }

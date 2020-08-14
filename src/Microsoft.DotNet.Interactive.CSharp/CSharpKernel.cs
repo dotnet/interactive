@@ -226,14 +226,15 @@ namespace Microsoft.DotNet.Interactive.CSharp
                     if (exception is CodeSubmissionCompilationErrorException compilationError &&
                         compilationError.InnerException is CompilationErrorException innerCompilationException)
                     {
+                        var formattedDiagnostics =
+                            innerCompilationException.Diagnostics
+                                .Select(d => d.ToString())
+                                .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
+                                .ToImmutableArray();
                         var diagnostics = innerCompilationException.Diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
-                        context.Publish(new DiagnosticsProduced(diagnostics, submitCode));
-                        context.Fail(null, "Compilation error");
+                        context.Publish(new DiagnosticsProduced(diagnostics, submitCode, formattedDiagnostics));;
                     }
-                    else
-                    {
-                        context.Fail(exception, "Compilation error");
-                    }
+                    context.Fail(exception, "Compilation error");
                 }
                 else
                 {
