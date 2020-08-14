@@ -134,9 +134,9 @@ f();"));
         }
 
         [Theory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        public async Task shows_diagnostics_on_erroneous_input(Language language)
+        [InlineData(Language.CSharp, "(1,4): error CS1733: Expected expression")]
+        [InlineData(Language.FSharp, "input.fsx (1,4)-(1,4) parse error Unexpected end of input in expression")]
+        public async Task shows_diagnostics_on_erroneous_input(Language language, string expected)
         {
             var scheduler = CreateScheduler();
             SetKernelLanguage(language);
@@ -151,7 +151,7 @@ f();"));
                 .Which.As<Error>()
                 .Traceback
                 .Should()
-                .BeEquivalentTo("(1,13): error CS1002: ; expected");
+                .ContainSingle(e => e.StartsWith(expected));
         }
 
         [Fact]
