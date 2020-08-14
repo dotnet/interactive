@@ -9,12 +9,12 @@ using Microsoft.DotNet.Interactive.Extensions;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class DiagnosticsProduced : KernelEvent
+    public class DiagnosticsProduced : DisplayEvent
     {
         private IReadOnlyCollection<Diagnostic> _diagnostics;
 
         public DiagnosticsProduced(IEnumerable<Diagnostic> diagnostics, KernelCommand command)
-            : base(command)
+            : base(value: null, command: command)
         {
             _diagnostics = (diagnostics ?? Array.Empty<Diagnostic>()).ToImmutableList();
         }

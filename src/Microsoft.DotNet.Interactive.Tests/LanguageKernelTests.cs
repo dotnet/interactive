@@ -287,7 +287,7 @@ f();"
                 .Which
                 .Message
                 .Should()
-                .Be(errorMessage);
+                .Be("Compilation error");
 
             KernelEvents
                 .Should()
@@ -295,12 +295,17 @@ f();"
                 .Which
                 .Diagnostics
                 .Should()
-                .ContainSingle(diag => diag.LinePositionSpan == diagnosticRange && diag.Code == code && diag.Message == diagnosticMessage);
+                .ContainSingle(diag => 
+                    diag.LinePositionSpan == diagnosticRange && 
+                    diag.Code == code && 
+                    diag.Message == diagnosticMessage &&
+                    diag.ToString() == errorMessage);
+
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "CS0618: (0,0)-(0,37) 'AppDomain.GetCurrentThreadId()' is obsolete: 'AppDomain.GetCurrentThreadId has been deprecated")]
-        [InlineData(Language.FSharp, "FS0044: (0,0)-(0,35) This construct is deprecated. AppDomain.GetCurrentThreadId has been deprecated")]
+        [InlineData(Language.CSharp, "'AppDomain.GetCurrentThreadId()' is obsolete: 'AppDomain.GetCurrentThreadId has been deprecated")]
+        [InlineData(Language.FSharp, "This construct is deprecated. AppDomain.GetCurrentThreadId has been deprecated")]
         public async Task when_code_contains_compile_time_warnings_diagnostics_are_produced(Language language, string diagnosticMessage)
         {
             var kernel = CreateKernel(language);
@@ -328,13 +333,13 @@ f();"
 
             KernelEvents
                 .Should()
-                .ContainSingle<StandardErrorValueProduced>(d => d.FormattedValues.Count > 0)
+                .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
                 .Which
-                .FormattedValues
+                .Diagnostics
                 .Should()
-                .ContainSingle(fv => fv.MimeType == "text/plain")
+                .ContainSingle(diagnostic => true)
                 .Which
-                .Value
+                .Message
                 .Should()
                 .StartWith(diagnosticMessage);
         }

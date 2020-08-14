@@ -108,19 +108,13 @@ type FSharpKernelBase () as this =
 
             let diagnostics = fsiDiagnostics |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
             
-            let diagnosticsEvent = DiagnosticsProduced(diagnostics, codeSubmission)
-
-            context.Publish(diagnosticsEvent)
-
             // script.Eval can succeed with error diagnostics, see https://github.com/dotnet/interactive/issues/691
             let isError = fsiDiagnostics |> Array.exists (fun d -> d.Severity = FSharpErrorSeverity.Error)
 
+            context.Publish(DiagnosticsProduced(diagnostics, codeSubmission))
+
             match result with
             | Ok(result) when not isError ->
-
-                // push the warnings through stderr
-                for diagnostic in diagnosticsEvent.Diagnostics do
-                    context.DisplayStandardError(diagnostic.ToString(), codeSubmission);
 
                 match result with
                 | Some(value) when value.ReflectionType <> typeof<unit>  ->
@@ -131,13 +125,12 @@ type FSharpKernelBase () as this =
                 | None -> ()
             | _ ->
                 if not (tokenSource.IsCancellationRequested) then
-                    let aggregateDiagnostics = String.Join("\n", fsiDiagnostics)
-                    let reportedException =
-                        match result with
-                        | Error (:? FsiCompilationException) 
-                        | Ok _ -> CodeSubmissionCompilationErrorException(Exception(aggregateDiagnostics)) :> Exception
-                        | Error ex -> ex
-                    context.Fail(reportedException, aggregateDiagnostics)
+                    match result with
+                    | Error (:? FsiCompilationException) 
+                    | Ok _ -> 
+                        context.Fail(null, "Compilation error")
+                    | Error ex -> 
+                        context.Fail(ex, "Compilation error")
                 else
                     context.Fail(null, "Command cancelled")
         }

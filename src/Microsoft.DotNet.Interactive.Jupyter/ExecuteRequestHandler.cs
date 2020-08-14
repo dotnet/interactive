@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 .ToDictionary(k => k.MimeType, v => PreserveJson(v.MimeType, v.Value));
 
             var value = displayEvent.Value;
-            PubSubMessage dataMessage;
+            PubSubMessage dataMessage = null;
 
             switch (displayEvent)
             {
@@ -170,6 +170,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                     dataMessage = new UpdateDisplayData(
                         transient: transient,
                         data: formattedValues);
+                    break;
+
+                case DiagnosticsProduced diagnosticsEvent:
+                    if (diagnosticsEvent.Diagnostics.Count > 0)
+                    {
+                        var output = Environment.NewLine + string.Join(Environment.NewLine + Environment.NewLine, diagnosticsEvent.Diagnostics.Select(diagnostic => diagnostic.ToString()));
+                        dataMessage = Stream.StdErr(output);
+                    }
                     break;
 
                 case ReturnValueProduced _:
@@ -194,7 +202,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             var isSilent = ((ExecuteRequest)request.Content).Silent;
 
-            if (!isSilent)
+            if (!isSilent && dataMessage != null)
             {
                 // send on io
                 jupyterMessageSender.Send(dataMessage);

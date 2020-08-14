@@ -223,32 +223,24 @@ namespace Microsoft.DotNet.Interactive.CSharp
             {
                 if (exception != null)
                 {
-                    string message = null;
-
                     if (exception is CodeSubmissionCompilationErrorException compilationError &&
                         compilationError.InnerException is CompilationErrorException innerCompilationException)
                     {
-                        message =
-                            string.Join(Environment.NewLine,
-                                        innerCompilationException.Diagnostics.Select(d => d.ToString()) ?? Enumerable.Empty<string>());
                         var diagnostics = innerCompilationException.Diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
                         context.Publish(new DiagnosticsProduced(diagnostics, submitCode));
+                        context.Fail(null, "Compilation error");
                     }
-
-                    context.Fail(exception, message);
+                    else
+                    {
+                        context.Fail(exception, "Compilation error");
+                    }
                 }
                 else
                 {
                     var diagnostics = ScriptState?.Script.GetCompilation().GetDiagnostics() ?? ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
                     var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
-                    var diagnosticsEvent = new DiagnosticsProduced(kernelDiagnostics, submitCode);
-                    context.Publish(diagnosticsEvent);
 
-                    // push the warnings through stderr
-                    foreach (var diagnostic in diagnosticsEvent.Diagnostics)
-                    {
-                        context.DisplayStandardError(diagnostic.ToString(), submitCode);
-                    }
+                    context.Publish(new DiagnosticsProduced(kernelDiagnostics, submitCode));
 
                     if (ScriptState != null && HasReturnValue)
                     {
