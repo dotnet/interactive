@@ -306,7 +306,11 @@ f();"
                 .Which
                 .FormattedValues
                 .Should()
-                .ContainSingle(fv => fv.Value == errorMessage);
+                .ContainSingle(fv => true)
+                .Which
+                .Value
+                .Should()
+                .Be(errorMessage);
 
         }
 
@@ -368,7 +372,22 @@ f();"
                 .Which
                 .Diagnostics
                 .Should()
-                .ContainSingle(d => d.LinePositionSpan == diagnosticRange && d.Code == "ExpectedExpression" && d.Message == "An expression was expected after '('.");
+                .ContainSingle(d =>
+                    d.LinePositionSpan == diagnosticRange &&
+                    d.Code == "ExpectedExpression" && 
+                    d.Message == "An expression was expected after '('.");
+
+            KernelEvents
+                .Should()
+                .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
+                .Which
+                .FormattedValues
+                .Should()
+                .ContainSingle(fv => true)
+                .Which
+                .Value
+                .Should()
+                .StartWith("At line:1 char:4");
         }
 
         [Theory]
