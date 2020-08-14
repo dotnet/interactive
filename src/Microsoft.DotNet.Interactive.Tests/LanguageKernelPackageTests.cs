@@ -830,11 +830,15 @@ using XPlot.Plotly;");
             await kernel.SubmitCodeAsync(@"#r ""nugt:System.Text.Json""");
 
             events.Should()
-                  .ContainSingle<CommandFailed>()
-                  .Which
-                  .Message
-                  .Should()
-                  .Contain(expectedMessage);
+                 .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
+                 .Which
+                 .FormattedValues
+                 .Should()
+                 .ContainSingle(fv => true)
+                 .Which
+                 .Value
+                 .Should()
+                 .Contain(expectedMessage);
         }
 
         [Theory]

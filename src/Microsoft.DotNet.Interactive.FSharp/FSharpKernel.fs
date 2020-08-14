@@ -117,7 +117,8 @@ type FSharpKernelBase () as this =
                 |> Array.map (fun d -> d.ToString())
                 |> Array.map (fun text -> new FormattedValue(PlainTextFormatter.MimeType, text))
 
-            context.Publish(DiagnosticsProduced(diagnostics, codeSubmission, formattedDiagnostics))
+            if diagnostics.Length > 0 then
+                context.Publish(DiagnosticsProduced(diagnostics, codeSubmission, formattedDiagnostics))
 
             match result with
             | Ok(result) when not isError ->

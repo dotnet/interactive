@@ -149,16 +149,16 @@ export interface DiagnosticLogEntryProduced extends DiagnosticEvent {
 export interface DiagnosticEvent extends KernelEvent {
 }
 
-export interface DiagnosticsProduced extends KernelEvent {
+export interface DiagnosticsProduced extends DisplayEvent {
     diagnostics: Array<Diagnostic>;
-}
-
-export interface DisplayedValueProduced extends DisplayEvent {
 }
 
 export interface DisplayEvent extends KernelEvent {
     formattedValues: Array<FormattedValue>;
     valueId: string;
+}
+
+export interface DisplayedValueProduced extends DisplayEvent {
 }
 
 export interface DisplayedValueUpdated extends DisplayEvent {

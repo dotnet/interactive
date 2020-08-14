@@ -178,9 +178,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                     .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
                     .ToImmutableArray();
 
-            var diagnostics = parseErrors.Select(ToDiagnostic);
+            var diagnostics = parseErrors.Select(ToDiagnostic).ToImmutableArray();
 
-            context.Publish(new DiagnosticsProduced(diagnostics, submitCode, formattedDiagnostics));
+            if (diagnostics.Length > 0)
+            {
+                context.Publish(new DiagnosticsProduced(diagnostics, submitCode, formattedDiagnostics));
+            }
 
             // If there were parse errors, display them and return early.
             if (parseErrors.Length > 0)

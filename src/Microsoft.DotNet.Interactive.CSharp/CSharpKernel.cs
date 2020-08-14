@@ -234,15 +234,19 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 {
                     diagnostics = ScriptState?.Script.GetCompilation().GetDiagnostics() ?? ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
                 }
-                
-                var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
 
-                var formattedDiagnostics =
-                    diagnostics
-                        .Select(d => d.ToString())
-                        .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
-                        .ToImmutableArray();
-                context.Publish(new DiagnosticsProduced(kernelDiagnostics, submitCode, formattedDiagnostics));;
+                if (diagnostics.Length > 0)
+                {
+                    var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
+
+                    var formattedDiagnostics =
+                        diagnostics
+                            .Select(d => d.ToString())
+                            .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
+                            .ToImmutableArray();
+
+                    context.Publish(new DiagnosticsProduced(kernelDiagnostics, submitCode, formattedDiagnostics)); ;
+                }
 
                 if (exception != null)
                 {
