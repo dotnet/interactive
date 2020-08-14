@@ -5,6 +5,7 @@ namespace Microsoft.DotNet.Interactive.FSharp
 
 open System
 open System.Collections.Generic
+open System.Collections.Immutable
 open System.IO
 open System.Runtime.InteropServices
 open System.Text
@@ -105,31 +106,38 @@ type FSharpKernelBase () as this =
                 with
                 | ex -> Error(ex), [||]
 
-            let diagnostics = fsiDiagnostics |> Array.map getDiagnostic
+            let diagnostics = fsiDiagnostics |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
             
-            // script.Eval can succeed with error diagnostics, see https://github.com/dotnet/interactive/issues/691
-            let isError = diagnostics |> Array.exists (fun d -> d.Severity = DiagnosticSeverity.Error)
+            let diagnosticsEvent = DiagnosticsProduced(diagnostics, codeSubmission)
 
-            context.Publish(DiagnosticsProduced(diagnostics, codeSubmission))
+            context.Publish(diagnosticsEvent)
+
+            // script.Eval can succeed with error diagnostics, see https://github.com/dotnet/interactive/issues/691
+            let isError = fsiDiagnostics |> Array.exists (fun d -> d.Severity = FSharpErrorSeverity.Error)
 
             match result with
             | Ok(result) when not isError ->
+
+                // push the warnings through stderr
+                for diagnostic in diagnosticsEvent.Diagnostics do
+                    context.DisplayStandardError(diagnostic.ToString(), codeSubmission);
+
                 match result with
                 | Some(value) when value.ReflectionType <> typeof<unit>  ->
                     let value = value.ReflectionValue
                     let formattedValues = FormattedValue.FromObject(value)
                     context.Publish(ReturnValueProduced(value, codeSubmission, formattedValues))
-                | Some(_) -> ()
+                | Some _ 
                 | None -> ()
             | _ ->
                 if not (tokenSource.IsCancellationRequested) then
-                    let aggregateError = String.Join("\n", fsiDiagnostics)
+                    let aggregateDiagnostics = String.Join("\n", fsiDiagnostics)
                     let reportedException =
                         match result with
                         | Error (:? FsiCompilationException) 
-                        | Ok _ -> CodeSubmissionCompilationErrorException(Exception(aggregateError)) :> Exception
+                        | Ok _ -> CodeSubmissionCompilationErrorException(Exception(aggregateDiagnostics)) :> Exception
                         | Error ex -> ex
-                    context.Fail(reportedException, aggregateError)
+                    context.Fail(reportedException, aggregateDiagnostics)
                 else
                     context.Fail(null, "Command cancelled")
         }
@@ -147,7 +155,7 @@ type FSharpKernelBase () as this =
         async {
             let! (_parseResults, checkFileResults, _checkProjectResults) = script.Value.Fsi.ParseAndCheckInteraction(requestDiagnostics.Code)
             let errors = checkFileResults.Errors
-            let diagnostics = errors |> Array.map getDiagnostic
+            let diagnostics = errors |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
             context.Publish(DiagnosticsProduced(diagnostics, requestDiagnostics))
         }
 

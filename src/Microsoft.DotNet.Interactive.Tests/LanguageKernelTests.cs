@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.DirectoryServices.ActiveDirectory;
@@ -249,6 +250,7 @@ f();"
                 .BeOfType<DataMisalignedException>();
         }
 
+
         [Theory]
         [InlineData(Language.CSharp, "CS0103", "The name 'aaaadd' does not exist in the current context", "(1,1): error CS0103: The name 'aaaadd' does not exist in the current context")]
         [InlineData(Language.FSharp, "FS0039", "The value or constructor 'aaaadd' is not defined.", "input.fsx (1,1)-(1,7) typecheck error The value or constructor 'aaaadd' is not defined.")]
@@ -294,6 +296,47 @@ f();"
                 .Diagnostics
                 .Should()
                 .ContainSingle(diag => diag.LinePositionSpan == diagnosticRange && diag.Code == code && diag.Message == diagnosticMessage);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "CS0618: (0,0)-(0,37) 'AppDomain.GetCurrentThreadId()' is obsolete: 'AppDomain.GetCurrentThreadId has been deprecated")]
+        [InlineData(Language.FSharp, "FS0044: (0,0)-(0,35) This construct is deprecated. AppDomain.GetCurrentThreadId has been deprecated")]
+        public async Task when_code_contains_compile_time_warnings_diagnostics_are_produced(Language language, string diagnosticMessage)
+        {
+            var kernel = CreateKernel(language);
+
+            var source = language switch
+            {
+                Language.FSharp => new[]
+                {
+                    "System.AppDomain.GetCurrentThreadId()"
+                },
+
+                Language.CSharp => new[]
+                {
+                    "System.AppDomain.GetCurrentThreadId()",
+                }
+            };
+
+            await SubmitCode(kernel, source);
+
+            using var _ = new AssertionScope();
+
+            KernelEvents
+                .Should()
+                .ContainSingle<ReturnValueProduced>();
+
+            KernelEvents
+                .Should()
+                .ContainSingle<StandardErrorValueProduced>(d => d.FormattedValues.Count > 0)
+                .Which
+                .FormattedValues
+                .Should()
+                .ContainSingle(fv => fv.MimeType == "text/plain")
+                .Which
+                .Value
+                .Should()
+                .StartWith(diagnosticMessage);
         }
 
         [Fact]

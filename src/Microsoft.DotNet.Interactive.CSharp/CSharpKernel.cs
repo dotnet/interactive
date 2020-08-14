@@ -231,7 +231,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                         message =
                             string.Join(Environment.NewLine,
                                         innerCompilationException.Diagnostics.Select(d => d.ToString()) ?? Enumerable.Empty<string>());
-                        var diagnostics = innerCompilationException.Diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic);
+                        var diagnostics = innerCompilationException.Diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
                         context.Publish(new DiagnosticsProduced(diagnostics, submitCode));
                     }
 
@@ -240,7 +240,15 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 else
                 {
                     var diagnostics = ScriptState?.Script.GetCompilation().GetDiagnostics() ?? ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
-                    context.Publish(new DiagnosticsProduced(diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic), submitCode));
+                    var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
+                    var diagnosticsEvent = new DiagnosticsProduced(kernelDiagnostics, submitCode);
+                    context.Publish(diagnosticsEvent);
+
+                    // push the warnings through stderr
+                    foreach (var diagnostic in diagnosticsEvent.Diagnostics)
+                    {
+                        context.DisplayStandardError(diagnostic.ToString(), submitCode);
+                    }
 
                     if (ScriptState != null && HasReturnValue)
                     {
@@ -336,7 +344,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var document = _workspace.UpdateWorkingDocument(command.Code);
             var semanticModel = await document.GetSemanticModelAsync();
             var diagnostics = semanticModel.GetDiagnostics();
-            context.Publish(new DiagnosticsProduced(diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic), command));
+            var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
+            context.Publish(new DiagnosticsProduced(kernelDiagnostics, command));
         }
 
         public async Task LoadExtensionsFromDirectoryAsync(
