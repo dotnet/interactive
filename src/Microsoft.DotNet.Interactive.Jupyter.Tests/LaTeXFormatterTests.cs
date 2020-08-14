@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         [Fact]
         public void Can_generate_LaTeX_string_from_LaTeX_object()
         {
-            Formatter<LaTeXString>.Register((laTeX, writer) =>
+            Formatter.Register<LaTeXString>((laTeX, writer) =>
                 {
                     writer.Write(laTeX.ToString());
                 },
@@ -36,7 +36,7 @@ F(k) = \int_{-\infty}^{\infty} f(x) e^{2\pi i k} dx
         [Fact]
         public void Can_generate_LaTeX_string_from_LaTeX_object()
         {
-            Formatter<MathString>.Register((math, writer) =>
+            Formatter.Register<MathString>((math, writer) =>
                 {
                     writer.Write(math.ToString());
                 },

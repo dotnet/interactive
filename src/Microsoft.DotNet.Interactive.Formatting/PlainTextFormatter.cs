@@ -11,13 +11,29 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public static class PlainTextFormatter
     {
-        public static ITypeFormatter GetBestFormatterFor(Type type) =>
-            Formatter.GetBestFormatterFor(type, MimeType);
+        static PlainTextFormatter()
+        {
+            Formatter.Clearing += (obj, sender) =>
+            {
+                MaxProperties = DefaultMaxProperties;
+            };
+        }
 
-        public static ITypeFormatter GetBestFormatterFor<T>() =>
-            GetBestFormatterFor(typeof(T));
+        public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
+            Formatter.GetPreferredFormatterFor(type, MimeType);
+
+        public static ITypeFormatter GetPreferredFormatterFor<T>() =>
+            GetPreferredFormatterFor(typeof(T));
 
         public const string MimeType = "text/plain";
+
+        /// <summary>
+        ///   Indicates the maximum number of properties to show in the default plaintext display of arbitrary objects.
+        ///   If set to zero no properties are shown.
+        /// </summary>
+        public static int MaxProperties { get; set; } = DefaultMaxProperties;
+
+        internal const int DefaultMaxProperties = 20;
 
         internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
             FormattersForAnyObject.GetFormatter(type, includeInternals);
@@ -25,14 +41,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
             FormattersForAnyEnumerable.GetFormatter(type, false);
 
-        internal static Action<T, TextWriter> CreateFormatDelegate<T>(MemberInfo[] forMembers)
+        internal static Func<FormatContext, T, TextWriter, bool> CreateFormatDelegate<T>(MemberInfo[] forMembers)
         {
-            var accessors = forMembers.GetMemberAccessors<T>();
+            var accessors = forMembers.GetMemberAccessors<T>().ToArray();
 
             if (Formatter<T>.TypeIsValueTuple || 
                 Formatter<T>.TypeIsTuple)
             {
-                return FormatValueTuple;
+                return FormatAnyTuple;
             }
 
             if (Formatter<T>.TypeIsException)
@@ -41,8 +57,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 var dataAccessor = accessors.SingleOrDefault(a => a.Member.Name == "Data");
                 if (dataAccessor != null)
                 {
-                    var originalGetData = dataAccessor.GetValue;
-                    dataAccessor.GetValue = e => ((IDictionary) originalGetData(e))
+                    var originalGetData = dataAccessor.Getter;
+                    dataAccessor.Getter = e => ((IDictionary) originalGetData(e))
                                                  .Cast<DictionaryEntry>()
                                                  .ToDictionary(de => de.Key, de => de.Value);
                 }
@@ -51,7 +67,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 var stackTraceAccessor = accessors.SingleOrDefault(a => a.Member.Name == "StackTrace");
                 if (stackTraceAccessor != null)
                 {
-                    stackTraceAccessor.GetValue = e =>
+                    stackTraceAccessor.Getter = e =>
                     {
                         var ex = e as Exception;
 
@@ -62,47 +78,80 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             if (typeof(T).IsEnum)
             {
-                return (enumValue, writer) =>
+                return (context, enumValue, writer) =>
                 {
                     writer.Write(enumValue.ToString());
+                    return true;
                 };
             }
 
             return FormatObject;
 
-            void FormatObject(T target, TextWriter writer)
+            bool FormatObject(FormatContext context, T target, TextWriter writer)
             {
+
+                // Greatly reduce the number of properties to show. The `ToString()` 
+                // already counts as significant content.  
+                var maxProperties = 
+                    context.ContentThreshold <= FormatContext.NestedInTable
+                    ? 0 
+                    : (int)(MaxProperties * context.ContentThreshold * context.ContentThreshold);
+
+                var reducedAccessors = accessors.Take(Math.Max(0, MaxProperties)).ToArray();
+
+                // If we haven't got any members to show, just resort to ToString()
+                if (reducedAccessors.Length == 0 || context.ContentThreshold < 1.0)
+                {
+                    // Write using `ToString()`
+                    writer.Write(target);
+                    return true;
+                }
+
                 Formatter.SingleLinePlainTextFormatter.WriteStartObject(writer);
 
                 if (!Formatter<T>.TypeIsAnonymous)
                 {
-                    Formatter<Type>.FormatTo(typeof(T), writer);
+                    // Write using `ToString()`
+                    writer.Write(target);
                     Formatter.SingleLinePlainTextFormatter.WriteEndHeader(writer);
                 }
 
-                for (var i = 0; i < accessors.Length; i++)
+                for (var i = 0; i < reducedAccessors.Length; i++)
                 {
-                    var accessor = accessors[i];
+                    var accessor = reducedAccessors[i];
 
-                    if (accessor.Ignore)
-                    {
-                        continue;
-                    }
-
-                    object value;
-                    try
-                    {
-                        value = accessor.GetValue(target);
-                    }
-                    catch (Exception exception)
-                    {
-                        value = exception;
-                    }
+                    object value = accessor.GetValueOrException(target);
 
                     Formatter.SingleLinePlainTextFormatter.WriteStartProperty(writer);
                     writer.Write(accessor.Member.Name);
                     Formatter.SingleLinePlainTextFormatter.WriteNameValueDelimiter(writer);
-                    value.FormatTo(writer);
+                    value.FormatTo(context, writer);
+                    Formatter.SingleLinePlainTextFormatter.WriteEndProperty(writer);
+
+                    if (i < accessors.Length - 1)
+                    {
+                        Formatter.SingleLinePlainTextFormatter.WritePropertyDelimiter(writer);
+                    }
+                }
+                if (reducedAccessors.Length < accessors.Length)
+                {
+                    Formatter.SingleLinePlainTextFormatter.WriteElidedPropertiesMarker(writer);
+                }
+
+                Formatter.SingleLinePlainTextFormatter.WriteEndObject(writer);
+                return true;
+            }
+
+            bool FormatAnyTuple(FormatContext context, T target, TextWriter writer)
+            {
+                Formatter.SingleLinePlainTextFormatter.WriteStartTuple(writer);
+
+                for (var i = 0; i < accessors.Length; i++)
+                {
+                    var value = accessors[i].GetValueOrException(target);
+
+                    value.FormatTo(context, writer);
+
                     Formatter.SingleLinePlainTextFormatter.WriteEndProperty(writer);
 
                     if (i < accessors.Length - 1)
@@ -111,41 +160,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     }
                 }
 
-                Formatter.SingleLinePlainTextFormatter.WriteEndObject(writer);
-            }
-
-            void FormatValueTuple(T target, TextWriter writer)
-            {
-                Formatter.SingleLinePlainTextFormatter.WriteStartTuple(writer);
-
-                for (var i = 0; i < accessors.Length; i++)
-                {
-                    try
-                    {
-                        var accessor = accessors[i];
-
-                        if (accessor.Ignore)
-                        {
-                            continue;
-                        }
-
-                        var value = accessor.GetValue(target);
-
-                        value.FormatTo(writer);
-
-                        Formatter.SingleLinePlainTextFormatter.WriteEndProperty(writer);
-
-                        if (i < accessors.Length - 1)
-                        {
-                            Formatter.SingleLinePlainTextFormatter.WritePropertyDelimiter(writer);
-                        }
-                    }
-                    catch (Exception)
-                    {
-                    }
-                }
-
                 Formatter.SingleLinePlainTextFormatter.WriteEndTuple(writer);
+                return true;
             }
         }
 

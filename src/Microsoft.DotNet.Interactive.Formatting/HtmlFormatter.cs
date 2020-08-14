@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -11,11 +13,27 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public static class HtmlFormatter
     {
-        public static ITypeFormatter GetBestFormatterFor(Type type) =>
-            Formatter.GetBestFormatterFor(type, MimeType);
+        static HtmlFormatter()
+        {
+            Formatter.Clearing += (obj, sender) =>
+            {
+                MaxProperties = DefaultMaxProperties;
+            };
+        }
 
-        public static ITypeFormatter GetBestFormatterFor<T>() =>
-            GetBestFormatterFor(typeof(T));
+        /// <summary>
+        ///   Indicates the maximum number of properties to show in the default plaintext display of arbitrary objects.
+        ///   If set to zero no properties are shown.
+        /// </summary>
+        public static int MaxProperties { get; set; } = DefaultMaxProperties;
+
+        internal const int DefaultMaxProperties = 20;
+
+        public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
+            Formatter.GetPreferredFormatterFor(type, MimeType);
+
+        public static ITypeFormatter GetPreferredFormatterFor<T>() =>
+            GetPreferredFormatterFor(typeof(T));
 
         public const string MimeType = "text/html";
 
@@ -24,6 +42,25 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
             FormattersForAnyEnumerable.GetFormatter(type, false);
+
+        internal static void FormatObjectAsPlainText(FormatContext context, object value, TextWriter writer)
+        {
+            using var swriter = Formatter.CreateWriter();
+            Formatter.FormatTo(value, context, swriter, PlainTextFormatter.MimeType);
+            var text = swriter.ToString();
+            FormatStringAsPlainText(text, writer);
+        }
+
+        internal static void FormatStringAsPlainText(string text, TextWriter writer)
+        {
+            if (!string.IsNullOrEmpty(text))
+            {
+                var tag = div;
+                tag.HtmlAttributes["class"] = "dni-plaintext";
+                var html = tag(text.HtmlEncode());
+                html.WriteTo(writer, HtmlEncoder.Default);
+            }
+        }
 
         internal static PocketView Table(
             List<IHtmlContent> headers,
@@ -35,6 +72,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 tbody(
                     rows));
 
+        internal class EmbeddedFormat
+        {
+            internal FormatContext Context { get; }
+            internal object Object { get; }
+            internal EmbeddedFormat(FormatContext context, object instance)
+                { Object = instance;  Context = context;  }
+        }
+
+
         internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultHtmlFormatterSet.DefaultFormatters;
 
         internal static FormatterTable FormattersForAnyObject =
@@ -42,7 +88,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static FormatterTable FormattersForAnyEnumerable =
             new FormatterTable(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyEnumerable));
-
 
     }
 }

@@ -35,10 +35,10 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
         }
 
         [IntegrationTheory]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
-        public async Task dotnet_kernels_can_execute_code(Language language)
+        [InlineData(Language.CSharp, "<div class=\"dni-plaintext\">2</div>")]
+        [InlineData(Language.FSharp, "<div class=\"dni-plaintext\">2</div>")]
+        [InlineData(Language.PowerShell, "2")]
+        public async Task dotnet_kernels_can_execute_code(Language language, string expected)
         {
             using var client = await CreateClient();
 
@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
             events
                 .Should()
                 .EventuallyContainSingle<DisplayEvent>(
-                    where: d => d.FormattedValues.Any(fv => fv.Value.Trim() == "2"),
+                    where: d => d.FormattedValues.Any(fv => fv.Value.Trim() == expected),
                     timeout: 10_000);
         }
     }
