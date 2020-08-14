@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
+using Microsoft.CodeAnalysis.Scripting;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
@@ -105,7 +106,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             switch (commandFailed.Exception)
             {
                 case CodeSubmissionCompilationErrorException _:
-                    traceBack.Add(commandFailed.Message);
+                    // The diagnostics have already been reported, no need to add 
+                    // the message here
                     break;
 
                 case null:

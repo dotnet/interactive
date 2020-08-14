@@ -950,9 +950,13 @@ Console.Write(""value three"");"
 
             KernelEvents
                 .Should()
-                .ContainSingle<CommandFailed>()
+                .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
                 .Which
-                .Message
+                .FormattedValues
+                .Should()
+                .ContainSingle(fv => true)
+                .Which
+                .Value
                 .Should()
                 .Be(error);
         }
