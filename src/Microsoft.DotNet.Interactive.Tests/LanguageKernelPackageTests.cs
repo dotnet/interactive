@@ -322,7 +322,7 @@ using XPlot.Plotly;");
 
             await kernel.SubmitCodeAsync(@"
 using Microsoft.AspNetCore.Html;
-Formatter<DataFrame>.Register((df, writer) =>
+Formatter.Register<DataFrame>((df, writer) =>
 {
     var headers = new List<IHtmlContent>();
     headers.Add(th(i(""index"")));

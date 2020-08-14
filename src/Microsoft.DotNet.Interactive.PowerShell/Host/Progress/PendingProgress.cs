@@ -260,8 +260,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
                 {
                     _oldestSoFar = node.Age;
                     FoundNode = node;
-                    this.ListWhereFound = listWhereFound;
-                    this.IndexWhereFound = indexWhereFound;
+                    ListWhereFound = listWhereFound;
+                    IndexWhereFound = indexWhereFound;
                 }
 
                 return true;
@@ -335,9 +335,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
             {
                 if (node.ActivityId == _idToFind && node.SourceId == _sourceIdToFind)
                 {
-                    this.FoundNode = node;
-                    this.ListWhereFound = listWhereFound;
-                    this.IndexWhereFound = indexWhereFound;
+                    FoundNode = node;
+                    ListWhereFound = listWhereFound;
+                    IndexWhereFound = indexWhereFound;
                     return false;
                 }
 

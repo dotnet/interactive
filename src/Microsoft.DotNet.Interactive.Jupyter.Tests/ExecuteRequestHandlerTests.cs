@@ -267,7 +267,7 @@ f();"));
                                 .Which
                                 .Data
                                 .Should()
-                                .ContainSingle(d => d.Key.Equals("text/html") && d.Value.Equals("4"));
+                                .ContainSingle(d => d.Key.Equals("text/html") && d.Value.Equals("<div class=\"dni-plaintext\">4</div>"));
         }
 
         [Fact]
@@ -306,7 +306,7 @@ f();"));
                                 .Which
                                 .Data
                                 .Should()
-                                .ContainSingle(d => d.Key.Equals("text/html") && d.Value.Equals("123"));
+                                .ContainSingle(d => d.Key.Equals("text/html") && d.Value.Equals("<div class=\"dni-plaintext\">123</div>"));
         }
 
         [Theory]
@@ -381,7 +381,7 @@ f();"));
             JupyterMessageSender.PubSubMessages
                 .OfType<ExecuteResult>()
                 .Should()
-                .Contain(dp => dp.Data["text/html"] as string == $"{typeof(PasswordString).FullName}");
+                .Contain(dp => dp.Data["text/html"] as string == $"<div class=\"dni-plaintext\">{typeof(PasswordString).FullName}</div>");
         }
 
         [Theory]
