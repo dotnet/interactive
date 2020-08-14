@@ -221,28 +221,35 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             if (!context.CancellationToken.IsCancellationRequested)
             {
+                var diagnostics = ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
                 if (exception != null)
                 {
                     if (exception is CodeSubmissionCompilationErrorException compilationError &&
                         compilationError.InnerException is CompilationErrorException innerCompilationException)
                     {
-                        var formattedDiagnostics =
-                            innerCompilationException.Diagnostics
-                                .Select(d => d.ToString())
-                                .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
-                                .ToImmutableArray();
-                        var diagnostics = innerCompilationException.Diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
-                        context.Publish(new DiagnosticsProduced(diagnostics, submitCode, formattedDiagnostics));;
+                        diagnostics = innerCompilationException.Diagnostics;
                     }
+                }
+                else
+                {
+                    diagnostics = ScriptState?.Script.GetCompilation().GetDiagnostics() ?? ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
+                }
+                
+                var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
+
+                var formattedDiagnostics =
+                    diagnostics
+                        .Select(d => d.ToString())
+                        .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
+                        .ToImmutableArray();
+                context.Publish(new DiagnosticsProduced(kernelDiagnostics, submitCode, formattedDiagnostics));;
+
+                if (exception != null)
+                {
                     context.Fail(exception, "Compilation error");
                 }
                 else
                 {
-                    var diagnostics = ScriptState?.Script.GetCompilation().GetDiagnostics() ?? ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
-                    var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
-
-                    context.Publish(new DiagnosticsProduced(kernelDiagnostics, submitCode));
-
                     if (ScriptState != null && HasReturnValue)
                     {
                         var formattedValues = FormattedValue.FromObject(ScriptState.ReturnValue);
