@@ -287,6 +287,8 @@ f();"
                 .Which
                 .Message
                 .Should()
+                // Note: VSCode looks for this text to add extra information, see
+                // handling of `CommandFailedType` in src/dotnet-interactive-vscode/src/interactiveClient.ts
                 .Be("Compilation error");
 
             KernelEvents

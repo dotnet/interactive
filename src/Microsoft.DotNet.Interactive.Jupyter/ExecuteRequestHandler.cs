@@ -102,12 +102,15 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             IJupyterMessageSender jupyterMessageSender)
         {
             var traceBack = new List<string>();
+            var ename = "Unhandled exception";
+            var emsg = commandFailed.Message;
 
             switch (commandFailed.Exception)
             {
                 case CodeSubmissionCompilationErrorException _:
-                    // The diagnostics have already been reported, no need to add 
-                    // the message here
+                    // The diagnostics have already been reported
+                    ename = "Code cell not executed";
+                    emsg = "compilation error";
                     break;
 
                 case null:
@@ -127,8 +130,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             }
 
             var errorContent = new Error(
-                eName: "Unhandled exception",
-                eValue: commandFailed.Message,
+                eName: ename,
+                eValue: emsg,
                 traceback: traceBack
             );
 
@@ -185,10 +188,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                     break;
 
                 case DiagnosticsProduced diagnosticsEvent:
+                    
+                    // Space out the diagnostics and send them to stderr
                     var output =
                         Environment.NewLine +
                         string.Join(Environment.NewLine + Environment.NewLine, displayEvent.FormattedValues.Select(v => v.Value)) +
+                        Environment.NewLine +
                         Environment.NewLine;
+
                     dataMessage = Stream.StdErr(output);
                     break;
 

@@ -74,10 +74,11 @@ export class InteractiveClient {
                     case CommandFailedType:
                         {
                             let err = <CommandFailed>eventEnvelope.event;
+                            var msg = err.message === "Compilation error" ? "Compilation error - see diagnostics in 'Problems' panel" : err.message;
                             let output: CellErrorOutput = {
                                 outputKind: CellOutputKind.Error,
                                 ename: 'Error',
-                                evalue: err.message,
+                                evalue: msg,
                                 traceback: [],
                             };
                             outputs.push(output);
