@@ -153,9 +153,19 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             var transient = CreateTransient(displayEvent.ValueId);
 
-            var formattedValues = displayEvent
-                .FormattedValues
-                .ToDictionary(k => k.MimeType, v => PreserveJson(v.MimeType, v.Value));
+
+            // Currently there is at most one formatted value with at most
+            // and we return a dictionary for JSON formatting keyed by that mime type
+            // 
+            // In the case of DiagnosticsProduced however there are multiple entries, one
+            // for each diagnsotic, all with the same type
+            Dictionary<string,object> GetFormattedValuesByMimeType()
+            {
+                return 
+                    displayEvent
+                    .FormattedValues
+                    .ToDictionary(k => k.MimeType, v => PreserveJson(v.MimeType, v.Value));
+            }
 
             var value = displayEvent.Value;
             PubSubMessage dataMessage = null;
@@ -165,40 +175,37 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 case DisplayedValueProduced _:
                     dataMessage = new DisplayData(
                         transient: transient,
-                        data: formattedValues);
+                        data: GetFormattedValuesByMimeType());
                     break;
 
                 case DisplayedValueUpdated _:
                     dataMessage = new UpdateDisplayData(
                         transient: transient,
-                        data: formattedValues);
+                        data: GetFormattedValuesByMimeType());
                     break;
 
                 case DiagnosticsProduced diagnosticsEvent:
-                    if (diagnosticsEvent.Diagnostics.Count > 0)
-                    {
-                        var output =
-                            Environment.NewLine +
-                            string.Join(Environment.NewLine + Environment.NewLine, formattedValues.Select(v => v.Value)) +
-                            Environment.NewLine;
-                        dataMessage = Stream.StdErr(output);
-                    }
+                    var output =
+                        Environment.NewLine +
+                        string.Join(Environment.NewLine + Environment.NewLine, displayEvent.FormattedValues.Select(v => v.Value)) +
+                        Environment.NewLine;
+                    dataMessage = Stream.StdErr(output);
                     break;
 
                 case ReturnValueProduced _:
                     dataMessage = new ExecuteResult(
                         _executionCount,
                         transient: transient,
-                        data: formattedValues);
+                        data: GetFormattedValuesByMimeType());
                     break;
 
                 case StandardOutputValueProduced _:
-                    dataMessage = Stream.StdOut(GetPlainTextValueOrDefault(formattedValues, value?.ToString() ?? string.Empty));
+                    dataMessage = Stream.StdOut(GetPlainTextValueOrDefault(GetFormattedValuesByMimeType(), value?.ToString() ?? string.Empty));
                     break;
 
                 case StandardErrorValueProduced _:
                 case ErrorProduced _:
-                    dataMessage = Stream.StdErr(GetPlainTextValueOrDefault(formattedValues, value?.ToString() ?? string.Empty));
+                    dataMessage = Stream.StdErr(GetPlainTextValueOrDefault(GetFormattedValuesByMimeType(), value?.ToString() ?? string.Empty));
                     break;
 
                 default:
@@ -207,7 +214,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             var isSilent = ((ExecuteRequest)request.Content).Silent;
 
-            if (!isSilent && dataMessage != null)
+            if (!isSilent)
             {
                 // send on io
                 jupyterMessageSender.Send(dataMessage);

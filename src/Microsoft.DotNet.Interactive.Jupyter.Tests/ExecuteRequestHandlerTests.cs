@@ -126,11 +126,11 @@ f();"));
             await context.Done().Timeout(5.Seconds());
 
             JupyterMessageSender.PubSubMessages.Should()
-                .ContainSingle(e => e is Error)
-                .Which.As<Error>()
-                .Traceback
+                .ContainSingle<Stream>()
+                .Which
+                .Text
                 .Should()
-                .BeEquivalentTo("(1,13): error CS1002: ; expected");
+                .BeEquivalentTo(Environment.NewLine + "(1,13): error CS1002: ; expected" + Environment.NewLine);
         }
 
         [Theory]
@@ -147,11 +147,11 @@ f();"));
             await context.Done().Timeout(5.Seconds());
 
             JupyterMessageSender.PubSubMessages.Should()
-                .ContainSingle(e => e is Error)
-                .Which.As<Error>()
-                .Traceback
+                .ContainSingle<Stream>()
+                .Which
+                .Text
                 .Should()
-                .ContainSingle(e => e.StartsWith(expected));
+                .Contain(expected);
         }
 
         [Fact]
