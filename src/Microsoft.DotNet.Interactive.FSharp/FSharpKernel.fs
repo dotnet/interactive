@@ -140,55 +140,40 @@ type FSharpKernelBase () as this =
 
     let handleRequestHoverText (requestHoverText: RequestHoverText) (context: KernelInvocationContext) =
         async {
-            let! (parse, check, ctx) = script.Value.Fsi.ParseAndCheckInteraction(requestHoverText.Code)
+            let! (parse, check, _ctx) = script.Value.Fsi.ParseAndCheckInteraction(requestHoverText.Code)
+
+            let res = FsAutoComplete.ParseAndCheckResults(parse, check, EntityCache())
+
             let t = FSharp.Compiler.Text.SourceText.ofString requestHoverText.Code
             let line = requestHoverText.LinePosition.Line + 1
-            let col = requestHoverText.LinePosition.Character
+            let col = requestHoverText.LinePosition.Character + 1
             let lineStr = t.GetLineString(line - 1)
+            match! res.TryGetToolTipEnhanced (FSharp.Compiler.Range.mkPos line col) lineStr with
+            | Result.Ok (startCol, endCol, tip, _, _, _) ->
+                let content = FsAutoComplete.TipFormatter.formatTip tip |> List.concat
 
-            
-            let tokenizer = FSharpSourceTokenizer([], None).CreateLineTokenizer(lineStr)
-            let rec tokenizeLine (tokenizer:FSharpLineTokenizer) state =
-              match tokenizer.ScanToken(state) with
-              | Some tok, state ->
-                  if not System.Diagnostics.Debugger.IsAttached then
-                    System.Diagnostics.Debugger.Launch() |> ignore
-                  if tok.LeftColumn <= col && tok.RightColumn >= col then
-                    Some tok
-                  else
-                    tokenizeLine tokenizer state
-              | None, _ -> None
+                let fsiModule = System.Text.RegularExpressions.Regex @"FSI_[0-9]+\."
+                let stdin = System.Text.RegularExpressions.Regex @"Stdin\."
 
-            let token = tokenizeLine tokenizer FSharpTokenizerLexState.Initial
-
-            match token with
-            | Some token -> 
-                //System.Diagnostics.Debugger.Launch() |> ignore
-                let name = lineStr.Substring(token.LeftColumn, token.RightColumn - token.LeftColumn + 1)
-
-                let! (FSharpToolTipText (elements : list<FSharpToolTipElement<string>>)) = check.GetToolTipText(line, token.RightColumn, lineStr, [name], FSharpTokenTag.Identifier)
-
-                let all  = 
-                    elements |> List.collect (function
-                        | FSharpToolTipElement.Group g ->
-                            g |> List.map (fun g ->
-                                g.MainDescription
-                            )
-                        | _ -> []
-                    )
-
-                let res = all |> List.toArray |> Array.map (fun str -> FormattedValue("text/markdown", "`" + str + "`"))
+                let res = 
+                    content 
+                    |> List.toArray 
+                    |> Array.map (fun (name, content) -> "```fsharp\r\n" + name + "\r\n```\r\n\r\n" + content)
+                    |> Array.map (fun c -> stdin.Replace(fsiModule.Replace(c, ""), ""))
+                    |> Array.map (fun str -> FormattedValue("text/markdown", str))
                 
-                let sp = LinePosition(requestHoverText.LinePosition.Line, token.LeftColumn)
-                let ep = LinePosition(requestHoverText.LinePosition.Line, token.RightColumn)
+                let sp = LinePosition(requestHoverText.LinePosition.Line, startCol)
+                let ep = LinePosition(requestHoverText.LinePosition.Line, endCol)
                 let lps = LinePositionSpan(sp, ep)
+                context.Publish(HoverTextProduced(requestHoverText, res, lps))
 
-                if res.Length > 0 then
-                    context.Publish(HoverTextProduced(requestHoverText, res, lps))
-                else
-                    context.Complete(requestHoverText)
-            | None ->
-                context.Complete(requestHoverText)
+            | Result.Error err ->
+                let sp = LinePosition(requestHoverText.LinePosition.Line, col)
+                let ep = LinePosition(requestHoverText.LinePosition.Line, col)
+                let lps = LinePositionSpan(sp, ep)
+                let reply = [| FormattedValue("text/markdown", "") |]
+                context.Publish(HoverTextProduced(requestHoverText, reply, lps))
+                ()
         }
 
 
