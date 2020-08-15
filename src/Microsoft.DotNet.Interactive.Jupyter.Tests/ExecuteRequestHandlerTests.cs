@@ -130,7 +130,7 @@ f();"));
                 .Which
                 .Text
                 .Should()
-                .BeEquivalentTo(Environment.NewLine + "(1,13): error CS1002: ; expected" + Environment.NewLine);
+                .BeEquivalentTo(Environment.NewLine + "(1,13): error CS1002: ; expected" + Environment.NewLine + Environment.NewLine);
         }
 
         [Theory]
