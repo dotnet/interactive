@@ -7,15 +7,12 @@
   <ItemGroup>
     <Compile Include="Debug.fs" />
     <Compile Include="Utils.fs" />
-    <Compile Include="DotnetNewTemplate.fs" />
-    <Compile Include="UntypedAstUtils.fs" />
     <Compile Include="TypedAstUtils.fs" />
     <Compile Include="TypedAstPatterns.fs" />
     <Compile Include="Lexer.fs" />
     <Compile Include="SignatureFormatter.fs" />
     <Compile Include="TipFormatter.fs" />
     <Compile Include="DocumentationFormatter.fs" />
-    <Compile Include="FileSystem.fs" />
     <Compile Include="KeywordList.fs" />
     <Compile Include="InteractiveDirectives.fs" />
     <Compile Include="ParseAndCheckResults.fs" />

@@ -1,6 +1,5 @@
 namespace FsAutoComplete
 
-open UntypedAstUtils
 [<AutoOpen>]
 module PrintParameter =
     let print sb = Printf.bprintf sb "%s"

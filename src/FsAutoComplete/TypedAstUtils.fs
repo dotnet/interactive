@@ -4,7 +4,6 @@ namespace FsAutoComplete
 open System
 open System.Text.RegularExpressions
 open FSharp.Compiler.SourceCodeServices
-open UntypedAstUtils
 
 
 [<AutoOpen>]
