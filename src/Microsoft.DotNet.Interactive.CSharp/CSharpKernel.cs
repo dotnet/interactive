@@ -195,6 +195,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
 
             Exception exception = null;
+            string message = null;
 
             if (!context.CancellationToken.IsCancellationRequested)
             {
@@ -222,19 +223,20 @@ namespace Microsoft.DotNet.Interactive.CSharp
             if (!context.CancellationToken.IsCancellationRequested)
             {
                 var diagnostics = ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
-                if (exception != null)
+
+                // Check for a compilation failure
+                if (exception is CodeSubmissionCompilationErrorException compilationError &&
+                    compilationError.InnerException is CompilationErrorException innerCompilationException)
                 {
-                    if (exception is CodeSubmissionCompilationErrorException compilationError &&
-                        compilationError.InnerException is CompilationErrorException innerCompilationException)
-                    {
-                        diagnostics = innerCompilationException.Diagnostics;
-                    }
+                    diagnostics = innerCompilationException.Diagnostics;
+                    message = "Compilation error";
                 }
                 else
                 {
                     diagnostics = ScriptState?.Script.GetCompilation().GetDiagnostics() ?? ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
                 }
 
+                // Publish the compilation diagnostics. This doesn't include the exception.
                 if (diagnostics.Length > 0)
                 {
                     var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
@@ -248,9 +250,10 @@ namespace Microsoft.DotNet.Interactive.CSharp
                     context.Publish(new DiagnosticsProduced(kernelDiagnostics, submitCode, formattedDiagnostics)); ;
                 }
 
+                // Report the compilation failure or exception
                 if (exception != null)
                 {
-                    context.Fail(exception, "Compilation error");
+                    context.Fail(exception, message);
                 }
                 else
                 {

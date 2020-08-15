@@ -132,12 +132,14 @@ type FSharpKernelBase () as this =
                 | None -> ()
             | _ ->
                 if not (tokenSource.IsCancellationRequested) then
-                    let reportedException =
-                        match result with
-                        | Error (:? FsiCompilationException) 
-                        | Ok _ -> CodeSubmissionCompilationErrorException(Exception("Compilation error")) :> Exception
-                        | Error ex -> ex
-                    context.Fail(reportedException, "Compilation error")
+                    match result with
+                    | Error (:? FsiCompilationException) 
+                    | Ok _ ->
+                        let message = "Compilation error"
+                        let ex = CodeSubmissionCompilationErrorException(Exception(message))
+                        context.Fail(ex, message)
+                    | Error ex ->
+                        context.Fail(ex, null)
                 else
                     context.Fail(null, "Command cancelled")
         }
