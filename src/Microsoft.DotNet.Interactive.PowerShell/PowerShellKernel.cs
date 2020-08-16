@@ -180,10 +180,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             var diagnostics = parseErrors.Select(ToDiagnostic).ToImmutableArray();
 
-            if (diagnostics.Length > 0)
-            {
-                context.Publish(new DiagnosticsProduced(diagnostics, submitCode, formattedDiagnostics));
-            }
+            context.Publish(new DiagnosticsProduced(diagnostics, submitCode, formattedDiagnostics));
 
             // If there were parse errors, display them and return early.
             if (parseErrors.Length > 0)

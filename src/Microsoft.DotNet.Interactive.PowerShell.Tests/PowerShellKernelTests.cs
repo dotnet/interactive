@@ -65,6 +65,8 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             Assert.Collection(events,
                                        e => e.Should().BeOfType<CodeSubmissionReceived>(),
                                        e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                                       e => e.Should().BeOfType<DiagnosticsProduced>()
+                                              .Which.Diagnostics.Count.Should().Be(0),
                                        e => e.Should().BeOfType<DisplayedValueProduced>().Which
                                              .Value.Should().BeOfType<string>().Which
                                              .Should().Match("* Search in Progress* 0% Complete* [ * ] *"),
@@ -106,6 +108,8 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                       .BeOfType<CompleteCodeSubmissionReceived>()
                       .Which.Code
                       .Should().Be("echo /this/is/a/path"),
+                e => e.Should().BeOfType<DiagnosticsProduced>()
+                      .Which.Diagnostics.Count.Should().Be(0),
                 e => e.Should()
                       .BeOfType<StandardOutputValueProduced>()
                       .Which
@@ -121,6 +125,8 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                       .BeOfType<CompleteCodeSubmissionReceived>()
                       .Which.Code
                       .Should().Be("$$; $^"),
+                e => e.Should().BeOfType<DiagnosticsProduced>()
+                      .Which.Diagnostics.Count.Should().Be(0),
                 e => e.Should()
                       .BeOfType<StandardOutputValueProduced>()
                       .Which
@@ -252,6 +258,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             outputs.Should().SatisfyRespectively(
                 e => e.Should().BeOfType<CodeSubmissionReceived>(),
                 e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                e => e.Should().BeOfType<DiagnosticsProduced>().Which.Diagnostics.Count.Should().Be(0),
                 e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues.ElementAt(0).Should().BeEquivalentTo(fv),
                 e => e.Should().BeOfType<CommandSucceeded>()
             );

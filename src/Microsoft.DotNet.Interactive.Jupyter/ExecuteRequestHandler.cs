@@ -188,15 +188,17 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                     break;
 
                 case DiagnosticsProduced diagnosticsEvent:
-                    
+
                     // Space out the diagnostics and send them to stderr
-                    var output =
+                    if (displayEvent.FormattedValues.Count() > 0)
+                    {
+                        var output =
                         Environment.NewLine +
                         string.Join(Environment.NewLine + Environment.NewLine, displayEvent.FormattedValues.Select(v => v.Value)) +
                         Environment.NewLine +
                         Environment.NewLine;
-
-                    dataMessage = Stream.StdErr(output);
+                        dataMessage = Stream.StdErr(output);
+                    }
                     break;
 
                 case ReturnValueProduced _:
@@ -221,7 +223,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             var isSilent = ((ExecuteRequest)request.Content).Silent;
 
-            if (!isSilent)
+            if (!isSilent && dataMessage != null)
             {
                 // send on io
                 jupyterMessageSender.Send(dataMessage);
