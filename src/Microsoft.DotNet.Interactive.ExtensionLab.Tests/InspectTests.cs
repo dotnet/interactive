@@ -148,10 +148,14 @@ public class A
 
             var submission = @$"
 #!inspect -k {kind}
-
+using System;
 public class A
 {{
     public string P1 {{ get; set; }}
+    public A(string p)
+    {{
+        this.P1 = p ?? throw new ArgumentNullException(nameof(p));
+    }}
 }}
 ";
 
@@ -177,7 +181,7 @@ public class A
                     "Tabbed view ",
                     "[assembly: CompilationRelaxations(8)]", "[assembly: RuntimeCompatibility(WrapNonExceptionThrows = true)]",
                     "private auto ansi ", "instance string get_P1 () cil managed",
-                    "A..ctor()", "A.get_P1()");
+                    "A..ctor", "A.get_P1()");
         }
 
             [Fact]
