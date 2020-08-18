@@ -19,5 +19,5 @@ If you'd like to use a specific version, you can specify it like this:
 If your nuget package is not hosted on the main Nuget feed you can specify an alternative nuget source using `#i`.
 
 ```csharp
-#i "https://www.myget.org/F/{feedurl}/api/v3/index.json"
+#i "nuget:https://www.myget.org/F/{feedurl}/api/v3/index.json"
 ```
