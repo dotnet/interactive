@@ -143,13 +143,13 @@ namespace Microsoft.DotNet.Interactive.CSharp
         public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
             using var _ = new GCPressure(1024 * 1024);
-            
+
             var document = _workspace.UpdateWorkingDocument(command.Code);
             var text = await document.GetTextAsync();
             var cursorPosition = text.Lines.GetPosition(command.LinePosition);
             var service = QuickInfoService.GetService(document);
             var info = await service.GetQuickInfoAsync(document, cursorPosition);
-            
+
             if (info == null)
             {
                 return;
@@ -167,8 +167,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
                         new FormattedValue("text/markdown", info.ToMarkdownString())
                     },
                     correctedLinePosSpan));
-            
-            
+
+
         }
 
         public async Task HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
@@ -319,7 +319,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var document = _workspace.UpdateWorkingDocument(code);
             var service = CompletionService.GetService(document);
             var completionList = await service.GetCompletionsAsync(document, cursorPosition);
-           
+
             if (completionList is null)
             {
                 return Enumerable.Empty<CompletionItem>();

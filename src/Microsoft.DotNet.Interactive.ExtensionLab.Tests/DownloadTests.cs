@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             events.Should()
                   .ContainSingle<DisplayedValueProduced>(e => e.Value.As<string>() == $"Created file: {expectedFilePath}");
         }
-        
+
         [Fact]
         public async Task it_downloads_a_file_to_the_specified_location()
         {

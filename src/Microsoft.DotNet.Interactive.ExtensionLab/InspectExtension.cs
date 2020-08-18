@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Html;
+using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab.Inspector;
@@ -17,13 +18,22 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
     public class InspectExtension : IKernelExtension
     {
-        private const string INSPECT_COMMAND = "#!inspect";
+        private const string INSPECT_COMMAND = "inspect";
         public Task OnLoadAsync(Kernel kernel)
         {
-            var inspect = new Command(INSPECT_COMMAND, "Inspect the following code in the submission")
+            var inspect = new Command($"#!{INSPECT_COMMAND}", "Inspect the following code in the submission")
             {
-                Handler = CommandHandler.Create((KernelInvocationContext context) => Inspect(context))
+                new Option<OptimizationLevel>(
+                        new [] {"-c", "--configuration"},
+                        getDefaultValue: () => OptimizationLevel.Debug,
+                        description: "Build configuration to use. Debug or Release."),
+                new Option<SourceCodeKind>(
+                        new [] {"-k", "--kind"},
+                        getDefaultValue: () => SourceCodeKind.Script,
+                        description: "Source code kind. Script or Regular."),
             };
+
+            inspect.Handler = CommandHandler.Create((OptimizationLevel configuration, SourceCodeKind kind, Platform platform, KernelInvocationContext context) => Inspect(configuration, kind, platform, context));
 
             kernel.AddDirective(inspect);
 
@@ -31,24 +41,23 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return Task.CompletedTask;
         }
 
-        private async Task Inspect(KernelInvocationContext context)
+        private async Task Inspect(OptimizationLevel configuration, SourceCodeKind kind, Platform platform, KernelInvocationContext context)
         {
             if (!(context.Command is SubmitCode))
                 return;
 
             var command = context.Command as SubmitCode;
 
-            // TODO: Is there a "more" proper way of cleaning up code from the magic commands?
-            // TODO: CLean the whole line once settings are supported.
-            var code = command.Code.Replace(INSPECT_COMMAND, "").Trim();
+            // TODO: Is there a proper way of cleaning up code from the magic commands?
+            var code = Regex.Replace(command.Code, @$"#!{INSPECT_COMMAND}(.+)\n", "");
 
             var options = new InspectionOptions
             {
                 CompilationLanguage = InspectionOptions.LanguageVersion.CSHARP_PREVIEW,
                 DecompilationLanguage = InspectionOptions.LanguageVersion.CSHARP_PREVIEW,
-                Kind = CodeAnalysis.SourceCodeKind.Script,
-                OptimizationLevel = CodeAnalysis.OptimizationLevel.Debug,
-                Platform = CodeAnalysis.Platform.AnyCpu
+                Kind = kind,
+                OptimizationLevel = configuration,
+                Platform = Platform.AnyCpu
             };
 
             var inspect = Inspector.Inspector.Create(options);
@@ -79,30 +88,56 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private static PocketView RenderResultInTabs(string cs, string il, string jit)
         {
-            PocketView styles = style[type: "text/css"](TabbedCss());
+            PocketView styles = style[type: "text/css"](GetCss());
+
+            var prismScripts = GetPrismJS();
+            var prismStyles = GetPrismCSS();
 
             // TODO: Quite ugly temporary formatting.
             static IEnumerable<string> SplitWithNewline(string text) => text.Split(Environment.NewLine);
 
-            return div[@class: "tab-wrap"](styles,
+            return div[@class: "tab-wrap"](prismStyles, styles,
                 input[type: "radio", name: "tabs", id: "tab1", @checked: "checked"],
                 div[@class:"tab-label-content", id:"tab1-content"](
                   label[@for:"tab1"]("C#"),
-                  div[@class:"tab-content"](pre[@class: "code"](SplitWithNewline(cs).Select(l => span[@class: "line"](l))))),
+                  div[@class:"tab-content"](pre[@class: "code line-numbers"](code[@class: "language-csharp"](cs)))),
 
                 input[type:"radio", name:"tabs", id:"tab2"],
                 div[@class:"tab-label-content", id:"tab2-content"](
                   label[@for:"tab2"]("IL"),
-                  div[@class:"tab-content"](pre[@class: "code"](SplitWithNewline(il).Select(l => span[@class: "line"](l))))),
+                  div[@class:"tab-content"](pre[@class: "code line-numbers"](code[@class: "language-cil"](il)))),
 
                 input[type:"radio", name:"tabs", id:"tab3"],
                 div[@class:"tab-label-content", id:"tab3-content"](
-                  label[@for:"tab3"]("JIT ASm"),
-                  div[@class:"tab-content"](pre[@class:"code"](SplitWithNewline(jit).Select(l => span[@class: "line"](l)))))
+                  label[@for:"tab3"]("JIT Asm"),
+                  div[@class:"tab-content"](pre[@class: "code line-numbers"](code[@class: "language-nasm"](jit)))),
+                prismScripts
             );
         }
 
-        private static IHtmlContent TabbedCss()
+        private static IHtmlContent GetPrismJS()
+        {
+            return new HtmlString(@"
+<script src=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/prism.min.js""></script>
+<script src=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/plugins/match-braces/prism-match-braces.min.js""></script>
+<script src=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/plugins/line-numbers/prism-line-numbers.min.js""></script>
+<script src=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/plugins/line-highlight/prism-line-highlight.min.js""></script>
+<script src=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/plugins/autoloader/prism-autoloader.min.js""></script>
+<script src=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/components/prism-csharp.min.js""></script>
+<script src=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/components/prism-cil.min.js""></script>
+<script src=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/components/prism-nasm.min.js""></script>");
+        }
+
+        private static IHtmlContent GetPrismCSS()
+        {
+            return new HtmlString(@"
+<link href=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/themes/prism-coy.min.css"" rel=""stylesheet""/>
+<link href=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/plugins/match-braces/prism-match-braces.min.css"" rel=""stylesheet""/>
+<link href=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/plugins/line-numbers/prism-line-numbers.min.css"" rel=""stylesheet""/>
+<link href=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/plugins/line-highlight/prism-line-highlight.min.css"" rel=""stylesheet""/>");
+        }
+
+        private static IHtmlContent GetCss()
         {
             return new HtmlString(
                 @"
@@ -121,6 +156,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     width: 100%;
                 }
                 .tab-label-content .tab-content {
+                    width: 100%;
                     position: absolute;
                     top: 20px;
                     left: 16px;
@@ -133,8 +169,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     display: none;
                 }
                 input[type=""radio""][name=""tabs""]:checked + .tab-label-content label {
-                    color: red;
-                    border-bottom: 3px solid red;
+                    color: #333;
+                    font-weight: 800;
+                    border-bottom: 3px solid #777;
                 }
                 input[type=""radio""][name=""tabs""]:checked + .tab-label-content .tab-content {
                     display: block;
@@ -157,24 +194,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     width: 100%;
                 }
                 .code {
-                    font-family: monospace;
-                    padding: 0.5em;
-                    line-height: 0;
-                    counter-reset: line;
-                }
-                .code .line {
-                    display: block;
-                    line-height: 1.2rem;
-                }
-                .code .line:before {
-                    counter-increment: line;
-                    content: counter(line);
-                    display: inline-block;
-                    border-right: 1px solid #ddd;
-                    padding: 0;
-                    margin-right: 1em;
-                    color: #888;
-                    width: 5ch;
+                    width: 100%;
+                    top: 1.5em;
+                    left: -1em;
                 }
 ");
         }
