@@ -16,8 +16,9 @@ If you'd like to use a specific version, you can specify it like this:
 
 ## Adding a Nuget Source
 
-If your nuget package is not hosted on the main Nuget feed you can specify an alternative nuget source using `#i`.
+If your nuget package is not hosted on the main Nuget feed you can specify an alternative nuget source using `#i`. In the following example we are adding the dotnet pre-release nuget feed.
 
 ```csharp
-#i "nuget:https://www.myget.org/F/{feedurl}/api/v3/index.json"
+#i "nuget:https://www.myget.org/F/dotnet/api/v3/index.json"
 ```
+
