@@ -131,12 +131,12 @@ type FSharpKernelBase () as this =
                 | None -> ()
             | _ ->
                 if not (tokenSource.IsCancellationRequested) then
+                    let aggregateError = String.Join("\n", fsiDiagnostics )
                     match result with
                     | Error (:? FsiCompilationException) 
                     | Ok _ ->
-                        let message = "Compilation error"
-                        let ex = CodeSubmissionCompilationErrorException(Exception(message))
-                        context.Fail(ex, message)
+                        let ex = CodeSubmissionCompilationErrorException(Exception(aggregateError))
+                        context.Fail(ex, aggregateError)
                     | Error ex ->
                         context.Fail(ex, null)
                 else

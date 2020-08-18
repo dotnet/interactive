@@ -250,7 +250,6 @@ f();"
                 .BeOfType<DataMisalignedException>();
         }
 
-
         [Theory]
         [InlineData(Language.CSharp, "CS0103", "The name 'aaaadd' does not exist in the current context", "(1,1): error CS0103: The name 'aaaadd' does not exist in the current context")]
         [InlineData(Language.FSharp, "FS0039", "The value or constructor 'aaaadd' is not defined.", "input.fsx (1,1)-(1,7) typecheck error The value or constructor 'aaaadd' is not defined.")]
@@ -281,16 +280,16 @@ f();"
 
             using var _ = new AssertionScope();
 
+            // The CommandFailed message is populated
             KernelEvents
                 .Should()
                 .ContainSingle<CommandFailed>()
                 .Which
                 .Message
                 .Should()
-                // Note: VSCode looks for this text to add extra information, see
-                // handling of `CommandFailedType` in src/dotnet-interactive-vscode/src/interactiveClient.ts
-                .Be("Compilation error");
+                .Be(errorMessage);
 
+            // The Diagnostics of DiagnosticsProduced event are populated
             KernelEvents
                 .Should()
                 .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
@@ -302,6 +301,7 @@ f();"
                     diag.Code == code && 
                     diag.Message == diagnosticMessage);
 
+            // The FormattedValues are populated of DiagnosticsProduced event are populated
             KernelEvents
                 .Should()
                 .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)

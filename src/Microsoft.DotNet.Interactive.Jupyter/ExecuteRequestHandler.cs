@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             {
                 case CodeSubmissionCompilationErrorException _:
                     // The diagnostics have already been reported
-                    ename = "Code cell not executed";
+                    ename = "Cell not executed";
                     emsg = "compilation error";
                     break;
 

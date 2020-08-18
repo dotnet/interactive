@@ -63,9 +63,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Theory]
         [InlineData(Language.CSharp, "display(\"<test></test>\")", "<test></test>")]
         [InlineData(Language.FSharp, "display(\"<test></test>\")", "<test></test>")]
-        [InlineData(Language.CSharp, "\"hi\"", "hi")]
-        [InlineData(Language.FSharp, "\"hi\"", "hi")]
-        public async Task String_is_rendered_as_plain_text(
+        public async Task String_is_rendered_as_plain_text_via_display(
             Language language,
             string submission,
             string expectedContent)
@@ -76,7 +74,33 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var valueProduced = await result
                                       .KernelEvents
-                                      .OfType<DisplayEvent>()
+                                      .OfType<DisplayedValueProduced>()
+                                      .Timeout(5.Seconds())
+                                      .FirstAsync();
+
+            valueProduced
+                .FormattedValues
+                .Should()
+                .ContainSingle(v =>
+                                   v.MimeType == "text/plain" &&
+                                   v.Value.ToString().Contains(expectedContent));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "\"hi\"", "hi")]
+        [InlineData(Language.FSharp, "\"hi\"", "hi")]
+        public async Task String_is_rendered_as_plain_text_via_implicit_return(
+            Language language,
+            string submission,
+            string expectedContent)
+        {
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
+
+            var result = await kernel.SendAsync(new SubmitCode(submission));
+
+            var valueProduced = await result
+                                      .KernelEvents
+                                      .OfType<ReturnValueProduced>()
                                       .Timeout(5.Seconds())
                                       .FirstAsync();
 

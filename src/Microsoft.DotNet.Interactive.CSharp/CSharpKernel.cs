@@ -229,7 +229,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
                     compilationError.InnerException is CompilationErrorException innerCompilationException)
                 {
                     diagnostics = innerCompilationException.Diagnostics;
-                    message = "Compilation error";
+                    // In the case of an error the diagnostics get attached to both the 
+                    // DiagnosticsProduced and CommandFailed events.
+                    message =
+                        string.Join(Environment.NewLine,
+                                    innerCompilationException.Diagnostics.Select(d => d.ToString()) ?? Enumerable.Empty<string>());
                 }
                 else
                 {
