@@ -14,29 +14,27 @@ open System.Collections.Generic
 [<AutoOpen>]
 module AssertExtensions =   
     open System.Text.RegularExpressions
+    
+    let wsRx = Regex @"([a-z_A-Z0-9][ ]+[a-z_A-Z0-9])|([^a-z_A-Z0-9][ ]+[a-z_A-Z0-9])|([a-z_A-Z0-9][ ]+[^a-z_A-Z0-9])|([^a-z_A-Z0-9][ ]+[^a-z_A-Z0-9])"
     type Assert with
 
         static member ContainsSubstring(expected : string, actual : seq<string>) =
             if not (actual |> Seq.exists (fun a -> a.Contains expected)) then
                 raise <| Xunit.Sdk.ContainsException(expected, actual)
 
-        static member ContainsMatching(expectedPattern : string, actual : seq<string>) =
+        static member ContainsMatching(pattern : string, actual : seq<string>) =
+
+            let expectedPattern = 
+                wsRx.Replace(pattern, fun m ->  
+                    if m.Groups.[1].Success then m.Value.Substring(0, 1) + "[ \t\r\n]+" + m.Value.Substring(2, 1) 
+                    else m.Value.Substring(0, 1) + "[ \t\r\n]*" + m.Value.Substring(2, 1)
+                )
+
+
+
             let rx = Regex expectedPattern
             if not (actual |> Seq.exists (fun a -> rx.IsMatch a)) then
-
-                let expected = 
-                    Regex(@"\\").Replace(
-                        Regex(@"\\w(\+|\*)").Replace(
-                            Regex(@"\\s\*").Replace(
-                                Regex(@"\\s\+").Replace(expectedPattern, " "),
-                                " "
-                            ),
-                            "_"
-                        ),
-                        ""
-                    )
-
-                raise <| Xunit.Sdk.ContainsException(expected, actual)
+                raise <| Xunit.Sdk.ContainsException(pattern, actual)
 
 
 type KernelTests() =
@@ -79,7 +77,7 @@ type KernelTests() =
             ]
 
         /// val a : int
-        Assert.ContainsMatching(@"val\s+a\s*:\s*int", texts)
+        Assert.ContainsMatching(@"val a : int", texts)
         
     [<Fact>]
     member __.``HoverText for Keywords``() =
@@ -100,7 +98,7 @@ type KernelTests() =
             ]
 
         // Math.Sin(a: float) : float
-        Assert.ContainsMatching(@"Math\.Sin\(\w+\s*\:\s*float\)\s*:\s*float", texts)
+        Assert.ContainsMatching(@"static member Sin: \w+: float \-\> float", texts)
 
     [<Fact>]
     member __.``HoverText for Types``() =
@@ -113,7 +111,7 @@ type KernelTests() =
         // type Math =
         //     static val E : float
         //     ...
-        Assert.ContainsMatching(@"type\s+Math\s*\=", texts)
+        Assert.ContainsMatching(@"type Math", texts)
         
     [<Fact>]
     member __.``HoverText for Hidden Bindings``() =
@@ -126,7 +124,7 @@ type KernelTests() =
             ]
 
         // val a : float
-        Assert.ContainsMatching(@"val\s+a\s*:\s*float", texts)
+        Assert.ContainsMatching(@"val a : float", texts)
         
         
     [<Fact>]
@@ -137,7 +135,7 @@ type KernelTests() =
             ]
 
         // val int : value:'T -> int (requires member op_Explicit)
-        Assert.ContainsMatching(@"val\s+int\s*:\s*\w+\s*:\s*'\w+\s*\-\>\s*int\s+\(\s*requires\s+member\s+op_Explicit\s*\)", texts)
+        Assert.ContainsMatching(@"val int: \w+: \^\w+ \( requires static member op_Explicit \) \-\> int", texts)
         
 
 

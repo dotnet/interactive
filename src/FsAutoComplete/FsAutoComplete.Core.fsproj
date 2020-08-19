@@ -5,7 +5,6 @@
     <DefineConstants>NO_EXTENSIONTYPING;$(DefineConstants);DOTNET_SPAWN;NETCORE_FSI</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Debug.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="TypedAstUtils.fs" />
     <Compile Include="TypedAstPatterns.fs" />
