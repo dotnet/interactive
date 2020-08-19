@@ -75,6 +75,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             result.KernelEvents.Subscribe(e => events.Add(e));
 
             var values = events.OfType<DisplayEvent>()
+                               .Where(x => x is ReturnValueProduced || x is DisplayedValueProduced)
                                .Select(v => v.Value);
 
             values

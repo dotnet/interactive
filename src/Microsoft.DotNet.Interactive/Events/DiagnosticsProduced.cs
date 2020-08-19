@@ -13,12 +13,18 @@ namespace Microsoft.DotNet.Interactive.Events
     {
         private IReadOnlyCollection<Diagnostic> _diagnostics;
 
-        public DiagnosticsProduced(IEnumerable<Diagnostic> diagnostics, KernelCommand command)
-            : base(command)
+        public DiagnosticsProduced(IEnumerable<Diagnostic> diagnostics,
+            KernelCommand command,
+            IReadOnlyCollection<FormattedValue> formattedDiagnostics = null) : base(command)
         {
             _diagnostics = (diagnostics ?? Array.Empty<Diagnostic>()).ToImmutableList();
+            FormattedDiagnostics = formattedDiagnostics ?? Array.Empty<FormattedValue>();
         }
 
         public IReadOnlyCollection<Diagnostic> Diagnostics => this.RemapDiagnosticsFromRequestingCommand(_diagnostics);
+
+        public IReadOnlyCollection<FormattedValue> FormattedDiagnostics { get; }
+
+        public override string ToString() => $"{GetType().Name}";
     }
 }

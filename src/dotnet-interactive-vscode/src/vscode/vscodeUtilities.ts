@@ -24,7 +24,7 @@ export function convertToRange(linePositionSpan?: LinePositionSpan): (vscode.Ran
 export function toVsCodeDiagnostic(diagnostic: Diagnostic): vscode.Diagnostic {
     return {
         range: convertToRange(diagnostic.linePositionSpan)!,
-        message: diagnostic.message,
+        message: diagnostic .message,
         severity: toDiagnosticSeverity(diagnostic.severity)
     };
 }
