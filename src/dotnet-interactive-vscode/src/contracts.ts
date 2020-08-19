@@ -154,12 +154,12 @@ export interface DiagnosticsProduced extends KernelEvent {
     formattedDiagnostics: Array<FormattedValue>;
 }
 
+export interface DisplayedValueProduced extends DisplayEvent {
+}
+
 export interface DisplayEvent extends KernelEvent {
     formattedValues: Array<FormattedValue>;
     valueId: string;
-}
-
-export interface DisplayedValueProduced extends DisplayEvent {
 }
 
 export interface DisplayedValueUpdated extends DisplayEvent {
