@@ -1,9 +1,9 @@
 # CI and PR triggers
 trigger:
-- master
+- main
 - feature/*
 pr:
-- master
+- main
 - feature/*
 
 # Variables
