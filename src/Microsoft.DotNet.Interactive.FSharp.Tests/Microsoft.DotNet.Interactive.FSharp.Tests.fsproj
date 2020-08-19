@@ -12,11 +12,11 @@
 
   <ItemGroup>
     <Compile Include="ApiTests.fs" />
+    <Compile Include="KernelTests.fs" />
   </ItemGroup>
 
-  <ItemGroup />
-
   <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp.Wrapper\Microsoft.DotNet.Interactive.FSharp.Wrapper.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp\Microsoft.DotNet.Interactive.FSharp.fsproj" />
   </ItemGroup>
 
