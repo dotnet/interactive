@@ -75,6 +75,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 case PasswordRequested passwordRequested:
                     OnPasswordRequested(context, passwordRequested);
                     break;
+                case DiagnosticsProduced diagnosticsProduced:
+                    OnDiagnosticsProduced(context, context.JupyterRequestMessageEnvelope, diagnosticsProduced);
+                    break;
             }
         }
 
@@ -95,6 +98,29 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             var passReq = new InputRequest(passwordRequested.Prompt, password: true);
             var clearTextPassword = context.JupyterMessageSender.Send(passReq);
             passwordRequested.Content = new PasswordString(clearTextPassword);
+        }
+
+        private void OnDiagnosticsProduced(JupyterRequestContext context, 
+            ZeroMQMessage request,
+            DiagnosticsProduced diagnosticsProduced)
+        {
+            // Space out the diagnostics and send them to stderr
+            if (diagnosticsProduced.FormattedDiagnostics.Count() > 0)
+            {
+                var output =
+                Environment.NewLine +
+                string.Join(Environment.NewLine + Environment.NewLine, diagnosticsProduced.FormattedDiagnostics.Select(v => v.Value)) +
+                Environment.NewLine +
+                Environment.NewLine;
+                var dataMessage = Stream.StdErr(output);
+                var isSilent = ((ExecuteRequest)request.Content).Silent;
+
+                if (!isSilent)
+                {
+                    // send on io
+                    context.JupyterMessageSender.Send(dataMessage);
+                }
+            }
         }
 
         private void OnCommandFailed(
@@ -187,20 +213,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                         data: GetFormattedValuesByMimeType());
                     break;
 
-                case DiagnosticsProduced diagnosticsEvent:
-
-                    // Space out the diagnostics and send them to stderr
-                    if (displayEvent.FormattedValues.Count() > 0)
-                    {
-                        var output =
-                        Environment.NewLine +
-                        string.Join(Environment.NewLine + Environment.NewLine, displayEvent.FormattedValues.Select(v => v.Value)) +
-                        Environment.NewLine +
-                        Environment.NewLine;
-                        dataMessage = Stream.StdErr(output);
-                    }
-                    break;
-
                 case ReturnValueProduced _:
                     dataMessage = new ExecuteResult(
                         _executionCount,
@@ -223,7 +235,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             var isSilent = ((ExecuteRequest)request.Content).Silent;
 
-            if (!isSilent && dataMessage != null)
+            if (!isSilent)
             {
                 // send on io
                 jupyterMessageSender.Send(dataMessage);

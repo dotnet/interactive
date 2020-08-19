@@ -149,8 +149,9 @@ export interface DiagnosticLogEntryProduced extends DiagnosticEvent {
 export interface DiagnosticEvent extends KernelEvent {
 }
 
-export interface DiagnosticsProduced extends DisplayEvent {
+export interface DiagnosticsProduced extends KernelEvent {
     diagnostics: Array<Diagnostic>;
+    formattedDiagnostics: Array<FormattedValue>;
 }
 
 export interface DisplayEvent extends KernelEvent {

@@ -345,6 +345,20 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return items;
         }
 
+        internal DiagnosticsProduced GetDiagnosticsProduced(
+            KernelCommand command,
+            ImmutableArray<CodeAnalysis.Diagnostic> diagnostics)
+        {
+            var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
+            var formattedDiagnostics =
+                diagnostics
+                    .Select(d => d.ToString())
+                    .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
+                    .ToImmutableArray();
+
+            return new DiagnosticsProduced(kernelDiagnostics, command, formattedDiagnostics);
+        }
+
         public async Task HandleAsync(
             RequestDiagnostics command,
             KernelInvocationContext context)
@@ -352,8 +366,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var document = _workspace.UpdateWorkingDocument(command.Code);
             var semanticModel = await document.GetSemanticModelAsync();
             var diagnostics = semanticModel.GetDiagnostics();
-            var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
-            context.Publish(new DiagnosticsProduced(kernelDiagnostics, command));
+            context.Publish(GetDiagnosticsProduced(command, diagnostics));
         }
 
         public async Task LoadExtensionsFromDirectoryAsync(

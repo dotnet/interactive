@@ -832,7 +832,7 @@ using XPlot.Plotly;");
             events.Should()
                  .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
                  .Which
-                 .FormattedValues
+                 .FormattedDiagnostics
                  .Should()
                  .ContainSingle(fv => true)
                  .Which

@@ -306,7 +306,7 @@ f();"
                 .Should()
                 .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
                 .Which
-                .FormattedValues
+                .FormattedDiagnostics
                 .Should()
                 .ContainSingle(fv => true)
                 .Which
@@ -383,7 +383,7 @@ f();"
                 .Should()
                 .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
                 .Which
-                .FormattedValues
+                .FormattedDiagnostics
                 .Should()
                 .ContainSingle(fv => true)
                 .Which
@@ -954,7 +954,7 @@ Console.Write(""value three"");"
                 .Should()
                 .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
                 .Which
-                .FormattedValues
+                .FormattedDiagnostics
                 .Should()
                 .ContainSingle(fv => true)
                 .Which

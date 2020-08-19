@@ -9,18 +9,22 @@ using Microsoft.DotNet.Interactive.Extensions;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class DiagnosticsProduced : DisplayEvent
+    public class DiagnosticsProduced : KernelEvent
     {
         private IReadOnlyCollection<Diagnostic> _diagnostics;
 
         public DiagnosticsProduced(IEnumerable<Diagnostic> diagnostics,
             KernelCommand command,
-            IReadOnlyCollection<FormattedValue> formattedValues = null)
-            : base(value: null, command: command, formattedValues)
+            IReadOnlyCollection<FormattedValue> formattedDiagnostics = null) : base(command)
         {
             _diagnostics = (diagnostics ?? Array.Empty<Diagnostic>()).ToImmutableList();
+            FormattedDiagnostics = formattedDiagnostics ?? Array.Empty<FormattedValue>();
         }
 
         public IReadOnlyCollection<Diagnostic> Diagnostics => this.RemapDiagnosticsFromRequestingCommand(_diagnostics);
+
+        public IReadOnlyCollection<FormattedValue> FormattedDiagnostics { get; }
+
+        public override string ToString() => $"{GetType().Name}";
     }
 }
