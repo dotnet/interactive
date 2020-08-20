@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft. All rights reserved. 
+﻿// Copyright (c) Microsoft. All rights reserved. 
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             [Fact]
             public void Custom_formatter_for_Type_can_be_registered()
             {
-                Formatter<Type>.Register(t => t.GUID.ToString());
+                Formatter.Register<Type>(t => t.GUID.ToString());
 
                 GetType().ToDisplayString()
                          .Should().Be(GetType().GUID.ToString());
@@ -157,13 +157,61 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var defaultValue = widget.ToDisplayString();
 
-                Formatter<Widget>.Register(e => "hello!");
+                Formatter.Register<Widget>(e => "hello!");
 
                 widget.ToDisplayString().Should().NotBe(defaultValue);
 
                 Formatter.ResetToDefault();
 
                 widget.ToDisplayString().Should().Be(defaultValue);
+            }
+
+            [Fact]
+            public void Can_Register_formatter_for_type_string()
+            {
+                var value = "hola!";
+
+                var defaultValue = value.ToDisplayString();
+
+                Formatter.Register<string>(e => "hello!");
+
+                value.ToDisplayString().Should().NotBe(defaultValue);
+
+                Formatter.ResetToDefault();
+
+                value.ToDisplayString().Should().Be(defaultValue);
+            }
+
+            [Fact]
+            public void Check_default_formatting_of_strings_with_escapes()
+            {
+                var value = "hola! \n \t \" \" ' ' the joy of escapes! and    white  space  ";
+
+                var mimeType = Formatter.PreferredMimeTypeFor(typeof(string));
+                var text = value.ToDisplayString(mimeType);
+
+                mimeType.Should().Be("text/plain");
+                text.Should().Be(value);
+            }
+
+            [Fact]
+            public void Check_default_HTML_formatting_of_strings_with_escapes()
+            {
+                var value = "hola! \n \t \" \" ' ' the joy of escapes! ==> &   white  space  ";
+
+                var text = value.ToDisplayString("text/html");
+
+                text.Should().Be("<div class=\"dni-plaintext\">hola! \n \t &quot; &quot; &#39; &#39; the joy of escapes! ==&gt; &amp;   white  space  </div>");
+            }
+
+            [Fact]
+            public void Check_default_HTML_formatting_of_unicode()
+            {
+                var value = "hola! ʰ˽˵ΘϱϪԘÓŴ𝓌🦁♿🌪🍒☝🏿";
+
+                var text = value.ToDisplayString("text/html");
+
+                text.Should().Be($"<div class=\"dni-plaintext\">{value.HtmlEncode()}</div>");
             }
 
             [Fact]
@@ -188,12 +236,12 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             bool widgetFormatterCalled = false;
             bool inheritedWidgetFormatterCalled = false;
 
-            Formatter<Widget>.Register(w =>
+            Formatter.Register<Widget>(w =>
             {
                 widgetFormatterCalled = true;
                 return "";
             });
-            Formatter<InheritedWidget>.Register(w =>
+            Formatter.Register<InheritedWidget>(w =>
             {
                 inheritedWidgetFormatterCalled = true;
                 return "";
@@ -206,17 +254,18 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         [Theory]
-        [InlineData("text/html")]
-        [InlineData("text/plain")]
-        [InlineData("text/markdown")]
-        [InlineData("application/json")]
-        public void When_input_is_a_string_then_it_is_not_modified(string mimeType)
+        [InlineData("text/html", "<div class=\"dni-plaintext\"># { This is the &lt;input&gt; &quot;yes&quot;\t\b\n\r }</div>")]
+        [InlineData("text/plain", "# { This is the <input> \"yes\"\t\b\n\r }")]
+        [InlineData("text/markdown", "# { This is the <input> \"yes\"\t\b\n\r }")]
+        [InlineData("application/json", "\"# { This is the <input> \\\"yes\\\"\\t\\b\\n\\r }\"")]
+        public void When_input_is_a_string_with_unusual_characters_then_it_is_encoded_appropriately(string mimeType, string expected)
         {
-            var input = "# { This is the <input> }";
+            var input = "# { This is the <input> \"yes\"\t\b\n\r }";
 
-            var output = input.ToDisplayString(mimeType);
+            var result = input.ToDisplayString(mimeType);
 
-            output.Should().Be(input);
+            result.Should().Be(expected);
+
         }
 
         [Theory]
@@ -243,6 +292,218 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             new FileInfo(@"c:\temp\foo.txt").ToDisplayString(mimeType)
                                             .Should()
                                             .Be("hello");
+        }
+
+        [Theory]
+        [InlineData("text/plain", false)]
+        [InlineData("text/plain", true)]
+        [InlineData("text/html", false)]
+        [InlineData("text/html", true)]
+        public void Formatters_can_be_registered_for_obj_type(string mimeType, bool useGenericRegisterMethod)
+        {
+            if (useGenericRegisterMethod)
+            {
+                Formatter.Register<object>(
+                    formatter: (filInfo, writer) => writer.Write("hello"),
+                    mimeType);
+            }
+            else
+            {
+                Formatter.Register(
+                    type: typeof(object),
+                    formatter: (filInfo, writer) => writer.Write("hello"),
+                    mimeType);
+            }
+
+            new FileInfo(@"c:\temp\foo.txt").ToDisplayString(mimeType)
+                                            .Should()
+                                            .Be("hello");
+        }
+
+        [Theory]
+        [InlineData("text/plain", false)]
+        [InlineData("text/plain", true)]
+        [InlineData("text/html", false)]
+        [InlineData("text/html", true)]
+        public void Formatters_choose_exact_type_amongst_user_defined_formatters(string mimeType, bool useGenericRegisterMethod)
+        {
+            if (useGenericRegisterMethod)
+            {
+                Formatter.Register<FileInfo>(
+                    formatter: (filInfo, writer) => writer.Write("hello"),
+                    mimeType);
+                Formatter.Register<object>(
+                    formatter: (filInfo, writer) => writer.Write("world"),
+                    mimeType);
+            }
+            else
+            {
+                Formatter.Register(
+                    type: typeof(FileInfo),
+                    formatter: (filInfo, writer) => writer.Write("hello"),
+                    mimeType);
+                Formatter.Register(
+                    type: typeof(object),
+                    formatter: (filInfo, writer) => writer.Write("world"),
+                    mimeType);
+            }
+
+            // The FileInfo formatter is chosen for FileInfo
+            new FileInfo(@"c:\temp\foo.txt").ToDisplayString(mimeType)
+                                            .Should()
+                                            .Be("hello");
+
+            // The object formatter is chosen for System.Object
+            (new object()).ToDisplayString(mimeType)
+                                            .Should()
+                                            .Be("world");
+
+            // The object formatter is chosen for DirectoryInfo (which is a FileSystemInfo but not a FileInfo).
+            new DirectoryInfo(@"c:\temp").ToDisplayString(mimeType)
+                                          .Should()
+                                          .Be("world");
+
+        }
+
+        [Theory]
+        [InlineData("text/plain", false)]
+        [InlineData("text/plain", true)]
+        [InlineData("text/html", false)]
+        [InlineData("text/html", true)]
+        public void Formatters_choose_most_specific_type_amongst_user_defined_formatters(string mimeType, bool useGenericRegisterMethod)
+        {
+            if (useGenericRegisterMethod)
+            {
+                Formatter.Register<IComparable>(
+                    formatter: (filInfo, writer) => writer.Write("hello"),
+                    mimeType);
+                Formatter.Register<object>(
+                    formatter: (filInfo, writer) => writer.Write("world"),
+                    mimeType);
+            }
+            else
+            {
+                Formatter.Register(
+                    type: typeof(IComparable),
+                    formatter: (filInfo, writer) => writer.Write("hello"),
+                    mimeType);
+                Formatter.Register(
+                    type: typeof(object),
+                    formatter: (filInfo, writer) => writer.Write("world"),
+                    mimeType);
+            }
+
+            // The IComparable formatter is chosen for System.Int32, which supports 'IComparable'
+            (100).ToDisplayString(mimeType)
+                  .Should()
+                  .Be("hello");
+
+            // The IComparable formatter is chosen for System.DateTime, which supports 'IComparable'
+            DateTime.Now.ToDisplayString(mimeType)
+                                            .Should()
+                                            .Be("hello");
+
+            // The object formatter is chosen for something not supporting 'IComparable'
+            // Note System.Type doesn't support IComparable.
+            typeof(int).ToDisplayString(mimeType)
+                                            .Should()
+                                            .Be("world");
+
+        }
+
+        [Theory]
+        [InlineData("text/plain")]
+        [InlineData("text/html")]
+        public void Formatters_choose_most_recently_registered_formatter_is_preferred(string mimeType)
+        {
+            Formatter.Register<IComparable>(
+                formatter: (filInfo, writer) => writer.Write("hello"),
+                mimeType);
+            Formatter.Register<object>(
+                formatter: (filInfo, writer) => writer.Write("world"),
+                mimeType);
+
+            // The first IComparable formatter is chosen for System.Int32, which supports 'IComparable'
+            (100).ToDisplayString(mimeType)
+                  .Should()
+                  .Be("hello");
+
+            Formatter.Register<IComparable>(
+                formatter: (filInfo, writer) => writer.Write("hello again!"),
+                mimeType);
+
+            // Now the second IComparable formatter is chosen for System.Int32, which supports 'IComparable'
+            (100).ToDisplayString(mimeType)
+                  .Should()
+                  .Be("hello again!");
+
+            // The object formatter is chosen for something not supporting 'IComparable'
+            // Note System.Type doesn't support IComparable.
+            typeof(int).ToDisplayString(mimeType)
+                                            .Should()
+                                            .Be("world");
+
+        }
+
+        [Theory]
+        [InlineData("text/plain")]
+        [InlineData("text/html")]
+        public void Formatters_mime_type_preference_overrides_all_defaults(string mimeType)
+        {
+            Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
+
+            Formatter.PreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
+            Formatter.PreferredMimeTypeFor(typeof(object)).Should().Be(mimeType);
+            Formatter.PreferredMimeTypeFor(typeof(string)).Should().Be(mimeType);
+            Formatter.PreferredMimeTypeFor(typeof(Type)).Should().Be(mimeType);
+            Formatter.PreferredMimeTypeFor(typeof(JsonToken)).Should().Be(mimeType);
+
+        }
+
+        [Theory]
+        [InlineData("text/plain")]
+        [InlineData("text/html")]
+        [InlineData("text/whacky")]
+        public void Formatters_multiple_mime_type_preference_overrides_all_defaults(string mimeType)
+        {
+            // the last one should win
+            Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
+            Formatter.SetPreferredMimeTypeFor(typeof(object), "text/plain");
+            Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
+            Formatter.SetPreferredMimeTypeFor(typeof(object), "text/html");
+            Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
+
+            Formatter.PreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
+            Formatter.PreferredMimeTypeFor(typeof(object)).Should().Be(mimeType);
+            Formatter.PreferredMimeTypeFor(typeof(string)).Should().Be(mimeType);
+            Formatter.PreferredMimeTypeFor(typeof(Type)).Should().Be(mimeType);
+            Formatter.PreferredMimeTypeFor(typeof(JsonToken)).Should().Be(mimeType);
+
+        }
+
+        [Theory]
+        [InlineData("text/plain")]
+        [InlineData("text/html")]
+        [InlineData("text/whacky")]
+        public void Formatters_can_override_default_preference_for_single_type(string mimeType)
+        {
+            Formatter.SetPreferredMimeTypeFor(typeof(int), mimeType);
+
+            Formatter.PreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
+
+        }
+
+        [Theory]
+        [InlineData("text/plain")]
+        [InlineData("text/html")]
+        [InlineData("text/whacky")]
+        public void Formatters_can_clear_default_preference_for_single_type(string mimeType)
+        {
+            Formatter.SetPreferredMimeTypeFor(typeof(int), mimeType);
+            Formatter.ResetToDefault();
+
+            Formatter.PreferredMimeTypeFor(typeof(int)).Should().Be("text/html");
+
         }
 
         [Theory]
@@ -438,5 +699,37 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             now.ToDisplayString(PlainTextFormatter.MimeType).Should().Be("plain");
             now.ToDisplayString(HtmlFormatter.MimeType).Should().Be("html");
         }
+    }
+}
+
+
+namespace Dummy
+{
+    public class DummyNotInSystemNamespace { }
+    public class DummyWithNoProperties{ }
+
+    public class DummyClassWithManyProperties
+    {
+        public int X1 { get; } = 1;
+        public int X2 { get; } = 2;
+        public int X3 { get; } = 3;
+        public int X4 { get; } = 4;
+        public int X5 { get; } = 5;
+        public int X6 { get; } = 6;
+        public int X7 { get; } = 7;
+        public int X8 { get; } = 8;
+        public int X9 { get; } = 9;
+        public int X10 { get; } = 10;
+        public int X11 { get; } = 11;
+        public int X12 { get; } = 12;
+        public int X13 { get; } = 13;
+        public int X14 { get; } = 14;
+        public int X15 { get; } = 15;
+        public int X16 { get; } = 16;
+        public int X17 { get; } = 17;
+        public int X18 { get; } = 18;
+        public int X19 { get; } = 19;
+        public int X20 { get; } = 20;
+        public int X21 { get; } = 21;
     }
 }

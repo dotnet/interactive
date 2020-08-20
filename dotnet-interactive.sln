@@ -59,6 +59,25 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.Interactiv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.Interactive.Sql", "src\Microsoft.DotNet.Interactive.Sql\Microsoft.DotNet.Interactive.Sql.csproj", "{0DC791A4-5C65-4414-A3BF-858203F4ED74}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{4DD50BCA-133B-4594-8368-ED56939BAF6B}"
+	ProjectSection(SolutionItems) = preProject
+		docs\CreateBinder.md = docs\CreateBinder.md
+		docs\display-output-csharp.md = docs\display-output-csharp.md
+		docs\extending-dotnet-interactive.md = docs\extending-dotnet-interactive.md
+		docs\formatting.md = docs\formatting.md
+		docs\javascript-overview.md = docs\javascript-overview.md
+		docs\kernels-overview.md = docs\kernels-overview.md
+		docs\magic-commands.md = docs\magic-commands.md
+		docs\NotebooksLocalExperience.md = docs\NotebooksLocalExperience.md
+		docs\NotebooksOnBinder.md = docs\NotebooksOnBinder.md
+		docs\nuget-overview.md = docs\nuget-overview.md
+		docs\pocketview.md = docs\pocketview.md
+		docs\polyglot.md = docs\polyglot.md
+		docs\README.md = docs\README.md
+		docs\small-factor-devices.md = docs\small-factor-devices.md
+		docs\variable-sharing.md = docs\variable-sharing.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -63,8 +63,15 @@ export class KernelClientImpl implements DotnetInteractiveClient {
     }
 
     public getResourceUrl(resource: string): string {
-        let resourceUrl: string = `${this._rootUrl}resources/${resource}`;
-        return resourceUrl;
+        return `${this._rootUrl}resources/${resource}`;
+    }
+
+    public getExtensionResource(extensionName: string, resource: string): Promise<Response> {
+        return this._clientFetch(`extension/${extensionName}/resources/${resource}`);
+    }
+
+    public getExtensionResourceUrl(extensionName: string, resource: string): string {
+        return `${this._rootUrl}extensions/${extensionName}/resources/${resource}`;
     }
 
     public async loadKernels(): Promise<void> {

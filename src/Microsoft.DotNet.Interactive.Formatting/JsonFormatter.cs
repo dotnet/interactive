@@ -17,22 +17,21 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 Formatting = Newtonsoft.Json.Formatting.None
             };
 
-            Formatter.Clearing += (sender, args) => DefaultFormatters = new DefaultJsonFormatterSet();
         }
+
+        public static ITypeFormatter GetPreferredFormatterFor(Type type)
+        {
+            return Formatter.GetPreferredFormatterFor(type, MimeType);
+        }
+
+        public static ITypeFormatter GetPreferredFormatterFor<T>() =>
+            GetPreferredFormatterFor(typeof(T));
 
         public const string MimeType = "application/json";
 
-        internal static IFormatterSet DefaultFormatters { get; private set; } = new DefaultJsonFormatterSet();
+        internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultJsonFormatterSet.DefaultFormatters;
 
         public static JsonSerializerSettings SerializerSettings { get; }
 
-        public static ITypeFormatter Create(Type type)
-        {
-            var genericCreateForAllMembers = typeof(JsonFormatter<>)
-                                             .MakeGenericType(type)
-                                             .GetMethod(nameof(JsonFormatter<object>.Create));
-
-            return (ITypeFormatter) genericCreateForAllMembers.Invoke(null, null);
-        }
     }
 }

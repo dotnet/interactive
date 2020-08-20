@@ -3,8 +3,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text.Encodings.Web;
+using Microsoft.AspNetCore.Html;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -139,7 +141,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </returns>
         public override string ToString()
         {
-            var writer = new StringWriter();
+            var writer = new StringWriter(CultureInfo.InvariantCulture);
             WriteTo(writer, HtmlEncoder.Default);
             return writer.ToString();
         }

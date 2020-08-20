@@ -52,7 +52,11 @@ Linux or macOS:
 
 ## Install your local build
 
-To build and then install your developer build of the `dotnet-interactive` global tool, you can run the PowerShell script `<REPO-ROOT>/src/dotnet-interactive/build-and-install-dotnet-interactive.ps1`. This will uninstall any previous version of `dotnet-interactive` you might have installed.
+To build and then install your developer build of the `dotnet-interactive` global tool, you can run the PowerShell script
+
+    pwsh src/dotnet-interactive/build-and-install-dotnet-interactive.ps1
+   
+Powershell for .NET Core is required. This will uninstall any previous version of `dotnet-interactive` you might have installed.
 
 ## Arcade build system
 

@@ -1,6 +1,9 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.AspNetCore.Html;
+using System;
+
 namespace Microsoft.DotNet.Interactive.Formatting
 {
     public static class PocketViewTags
@@ -85,5 +88,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static dynamic u => _.u;
         public static dynamic ul => _.ul;
         public static dynamic video => _.video;
+
+        /// <summary>An element that consists of an HtmlString</summary>
+        public static object str(string text)
+        {
+            return new HtmlString(text);
+        }
+        /// <summary>Create an object suitable for delayed expansion to HTML</summary>
+        public static object embed(object obj, FormatContext context)
+        {
+            return new HtmlFormatter.EmbeddedFormat(context, obj);
+        }
+
     }
 }

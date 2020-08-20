@@ -27,8 +27,8 @@
 
   <ItemGroup>
     <Compile Include="FSharpKernel.fs" />
+    <Compile Include="FSharpHtml.fs" />
     <Compile Include="FSharpKernelHelpers.fs" />
-    <Compile Include="FSharpPocketViewTags.fs" />
     <Compile Include="FSharpKernelExtensions.fs" />
   </ItemGroup>
 

@@ -75,23 +75,25 @@ namespace Microsoft.DotNet.Interactive.Tests
             _lockReleaser.Dispose();
         }
 
-        protected CompositeKernel CreateCompositeKernel(Language defaultKernelLanguage = Language.CSharp)
+        protected CompositeKernel CreateCompositeKernel(Language defaultKernelLanguage = Language.CSharp,
+            bool openTestingNamespaces = false)
         {
             return CreateCompositeKernel(
                 new[]
                 {
-                    CreateFSharpKernel(),
+                    CreateFSharpKernel(openTestingNamespaces),
                     CreateCSharpKernel(),
                     CreatePowerShellKernel()
                 },
                 defaultKernelLanguage);
         }
 
-        protected CompositeKernel CreateKernel(Language defaultLanguage = Language.CSharp)
+        protected CompositeKernel CreateKernel(Language defaultLanguage = Language.CSharp, 
+            bool openTestingNamespaces = false)
         {
             var languageKernel = defaultLanguage switch
             {
-                Language.FSharp => CreateFSharpKernel(),
+                Language.FSharp => CreateFSharpKernel(openTestingNamespaces),
                 Language.CSharp => CreateCSharpKernel(),
                 Language.PowerShell => CreatePowerShellKernel(),
                 _ => throw new InvalidOperationException($"Unknown language specified: {defaultLanguage}")
@@ -118,15 +120,34 @@ namespace Microsoft.DotNet.Interactive.Tests
             return kernel;
         }
 
-        private Kernel CreateFSharpKernel()
+        private Kernel UseExtraNamespacesForFSharpTesting(Kernel kernel)
         {
-            return new FSharpKernel()
+
+            var code =
+                 "open " + typeof(System.Threading.Tasks.Task).Namespace + Environment.NewLine +
+                 "open " + typeof(System.Linq.Enumerable).Namespace + Environment.NewLine +
+                 "open " + typeof(Microsoft.AspNetCore.Html.IHtmlContent).Namespace + Environment.NewLine +
+                 "open " + typeof(Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html).FullName + Environment.NewLine +
+                 "open " + typeof(XPlot.Plotly.PlotlyChart).Namespace + Environment.NewLine;
+
+            kernel.DeferCommand(new SubmitCode(code));
+            return kernel;
+        }
+
+        private Kernel CreateFSharpKernel(bool openTestingNamespaces)
+        {
+            var kernel =
+                new FSharpKernel()
                 .UseDefaultFormatting()
                 .UseNugetDirective()
                 .UseKernelHelpers()
                 .UseDotNetVariableSharing()
                 .UseWho()
                 .UseDefaultNamespaces();
+            if (openTestingNamespaces)
+                return UseExtraNamespacesForFSharpTesting(kernel);
+            else
+                return kernel;
         }
 
         private Kernel CreateCSharpKernel()

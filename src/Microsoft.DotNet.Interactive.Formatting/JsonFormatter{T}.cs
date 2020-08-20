@@ -8,22 +8,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public class JsonFormatter<T> : TypeFormatter<T>
     {
-        public static ITypeFormatter<T> Create()
-        {
-            if (JsonFormatter.DefaultFormatters.TryGetFormatterForType(typeof(T), out var formatter) &&
-                formatter is ITypeFormatter<T> ft)
-            {
-                return ft;
-            }
-
-            return new JsonFormatter<T>();
-        }
-
-        public override void Format(T instance, TextWriter writer)
+        public override bool Format(FormatContext context, T instance, TextWriter writer)
         {
             var json = JsonConvert.SerializeObject(instance, JsonFormatter.SerializerSettings);
 
             writer.Write(json);
+            return true;
         }
 
         public override string MimeType { get; } = JsonFormatter.MimeType;

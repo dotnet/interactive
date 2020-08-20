@@ -55,24 +55,29 @@ namespace Microsoft.DotNet.Interactive
         public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
             var parseResult = command.KernelNameDirectiveNode.GetDirectiveParseResult();
-            
+
             var value = command.LanguageNode.Text.Trim();
 
             var options = ValueDirectiveOptions.Create(parseResult);
 
-            if (!string.IsNullOrWhiteSpace(value))
+            if (options.FromFile is {})
             {
-                if (options.FromFile is {})
+                if (!string.IsNullOrWhiteSpace(value))
                 {
-context.Fail(message: "The --from-file option cannot be used in combination with a content submission.");
-return;
+                    context.Fail(message: "The --from-file option cannot be used in combination with a content submission.");
                 }
 
-                if (options.FromUrl is {})
+                return;
+            }
+
+            if (options.FromUrl is {})
+            {
+                if (!string.IsNullOrWhiteSpace(value))
                 {
-context.Fail(message: "The --from-url option cannot be used in combination with a content submission.");
-return;
+                    context.Fail(message: "The --from-url option cannot be used in combination with a content submission.");
                 }
+
+                return;
             }
 
             await StoreValueAsync(value, options, context);

@@ -10,6 +10,7 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -107,6 +108,29 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             responseContent.Should().BeJsonEquivalentTo("Code value");
         }
 
+        [Theory]
+        [InlineData(Language.CSharp, "var a = \"Code value\";")]
+        [InlineData(Language.FSharp, "let a = \"Code value\"")]
+        public async Task deferred_command_produce_html_bootstrap_code(Language language, string code)
+        {
+            var server = GetServer(language);
+            var events = server.Kernel.KernelEvents.ToSubscribedList();
+            await server.Kernel.SendAsync(new SubmitCode(code, language.LanguageName()));
+
+
+
+            events.Should()
+                .ContainSingle<DisplayedValueProduced>()
+                .Which
+                .FormattedValues
+                .Should()
+                .ContainSingle(v => v.MimeType == HtmlFormatter.MimeType)
+                .Which
+                .Value
+                .Should()
+                .Contain("<script type='text/javascript'>");
+        }
+
         [Fact]
         public async Task can_get_variables_with_bulk_request()
         {
@@ -171,7 +195,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         [Fact]
         public async Task Variable_serialization_can_be_customized_using_Formatter()
         {
-            Formatter<FileInfo>.Register(
+            Formatting.Formatter.Register<FileInfo>(
                 info => new { TheName = info.Name }.SerializeToJson().Value,
                 JsonFormatter.MimeType);
             
@@ -232,6 +256,38 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
             await response.ShouldSucceed();
 
             response.Content.Headers.ContentType.MediaType.Should().Be("image/png");
+        }
+
+        [Fact]
+        public async Task can_get_static_content_from_extensions()
+        {
+            var server = GetServer();
+            var kernel = server.Kernel;
+            var projectDir = DirectoryUtility.CreateDirectory();
+            var fileToEmbed = new FileInfo(Path.Combine(projectDir.FullName, "file.txt"));
+            File.WriteAllText(fileToEmbed.FullName, "for testing only");
+            var packageName = $"MyTestExtension.{Path.GetRandomFileName()}";
+            var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
+            var guid = Guid.NewGuid().ToString();
+
+            var nupkg = await KernelExtensionTestHelper.CreateExtensionNupkg(
+                projectDir,
+                $"await kernel.SendAsync(new SubmitCode(\"\\\"{guid}\\\"\"));",
+                packageName,
+                packageVersion,
+                fileToEmbed);
+
+
+
+            await kernel.SubmitCodeAsync($@"
+#i ""nuget:{nupkg.Directory.FullName}""
+#r ""nuget:{packageName},{packageVersion}""            ");
+
+            var response = await server.HttpClient.GetAsync("extensions/TestKernelExtension/resources/file.txt");
+
+            await response.ShouldSucceed();
+
+            response.Content.Headers.ContentType.MediaType.Should().Be("text/plain");
         }
 
         [Fact]

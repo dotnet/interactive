@@ -4,24 +4,30 @@
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
-    internal static class KernelExtensionTestHelper
+    public static class KernelExtensionTestHelper
     {
         private static readonly string _microsoftDotNetInteractiveDllPath = typeof(IKernelExtension).Assembly.Location;
 
-        internal static async Task<FileInfo> CreateExtensionNupkg(
+        public static async Task<FileInfo> CreateExtensionNupkg(
             DirectoryInfo projectDir,
             string code,
             string packageName,
-            string packageVersion)
+            string packageVersion,
+            params FileInfo[] filesToEmbed)
         {
+            var msbuildFragment = GenerateEmbeddedResourceFragment(filesToEmbed);
+
+
+            var extensionCode = filesToEmbed?.Length == 0 ? ExtensionCs(code) : FileProviderExtensionCs(code);
             projectDir.Populate(
-                ExtensionCs(code),
+                extensionCode,
                 ("Extension.csproj", $@"
 <Project Sdk=""Microsoft.NET.Sdk"">
 
@@ -36,6 +42,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
   <ItemGroup>
     <None Include=""$(OutputPath)/{packageName}.dll"" Pack=""true"" PackagePath=""interactive-extensions/dotnet"" />
   </ItemGroup>
+
+{msbuildFragment}
 
   <ItemGroup>
     <Reference Include=""Microsoft.DotNet.Interactive"">
@@ -58,7 +66,26 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
                    .Single();
         }
 
-        internal static async Task<FileInfo> CreateExtensionAssembly(
+        private static string GenerateEmbeddedResourceFragment(FileInfo[] filesToEmbed)
+        {
+            if (filesToEmbed?.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            var builder = new StringBuilder();
+            builder.AppendLine(@"   <ItemGroup>");
+            foreach (var fileInfo in filesToEmbed)
+            {
+                builder.AppendLine($@"      <FilesToEmbed Include=""{fileInfo.FullName}"" />");
+            }
+            builder.AppendLine(@"      <EmbeddedResource Include=""@(FilesToEmbed)"" LogicalName=""$(AssemblyName).resources.%(FileName)%(Extension)""  />");
+            builder.AppendLine(@"   </ItemGroup>");
+
+            return builder.ToString();
+        }
+
+        public static async Task<FileInfo> CreateExtensionAssembly(
             DirectoryInfo projectDir,
             string code,
             DirectoryInfo copyDllTo = null,
@@ -144,6 +171,29 @@ public class TestKernelExtension : IKernelExtension
     }}
 }}
 ");
+
+        }
+
+        private static (string, string) FileProviderExtensionCs(string code)
+        {
+            return ("Extension.cs", $@"
+using System;
+using System.Reflection;
+using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.Commands;
+
+public class TestKernelExtension : IKernelExtension, IStaticContentSource
+{{
+    public async Task OnLoadAsync(Kernel kernel)
+    {{
+        {code}
+    }}
+
+    public string  Name => ""TestKernelExtension"";
+}}
+");
+
         }
     }
 }

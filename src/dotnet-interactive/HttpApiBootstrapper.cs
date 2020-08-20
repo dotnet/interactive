@@ -4,12 +4,13 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.AspNetCore.Html;
 
 namespace Microsoft.DotNet.Interactive.App
 {
     internal static class HttpApiBootstrapper
     {
-        public static string GetHtmlInjection(Uri[] probingUris, string seed)
+        public static IHtmlContent GetHtmlInjection(Uri[] probingUris, string seed)
         {
             var apiCacheBuster = $"{Process.GetCurrentProcess().Id}.{seed}";
             var template = @"
@@ -78,17 +79,41 @@ function loadDotnetInteractiveApi() {
         .then((root) => {
             // use probing to find host url and api resources
             // load interactive helpers and language services
-            let dotnet_require = require.config({
+            let dotnetInteractiveRequire = require.config({
                 context: '$CACHE_BUSTER$',
                 paths: {
                     'dotnet-interactive': `${root}resources`
                 }
             }) || require;
-            if (!window.dotnet_require) {
-                window.dotnet_require = dotnet_require;
+
+            let dotnetInteractiveExtensionsRequire = require.config({
+                context: '$CACHE_BUSTER$',
+                paths: {
+                    'dotnet-interactive-extensions': `${root}extensions`
+                }
+            }) || require;
+            if (!window.dotnetInteractiveRequire) {
+                window.dotnetInteractiveRequire = dotnetInteractiveRequire;
             }
+
+            if (!window.dotnetInteractiveExtensionsRequire) {
+                window.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
+            }
+
+            window.getExtensionRequire = function(extensionName, extensionCacheBuster) {
+                let paths = {};
+                paths[extensionName] = `${root}extensions/${extensionName}/resources/`;
+                
+                let internalRequire = require.config({
+                    context: extensionCacheBuster,
+                    paths: paths,
+                    urlArgs: `cacheBuster=${extensionCacheBuster}`
+                    }) || require;
+
+                return internalRequire
+            };
         
-            dotnet_require([
+            dotnetInteractiveRequire([
                     'dotnet-interactive/dotnet-interactive'
                 ],
                 function (dotnet) {
@@ -105,9 +130,10 @@ function loadDotnetInteractiveApi() {
 </div>";
             
             var jsProbingUris = $"[{ string.Join(", ", probingUris.Select(a => $"\"{a.AbsoluteUri}\"")) }]";
-            return template
+            var html =  template
                 .Replace("$ADDRESSES$", jsProbingUris)
                 .Replace("$CACHE_BUSTER$", apiCacheBuster);
+            return new HtmlString(html);
         }
     }
 }

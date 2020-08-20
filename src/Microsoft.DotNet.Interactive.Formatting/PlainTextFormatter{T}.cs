@@ -11,55 +11,45 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public class PlainTextFormatter<T> : TypeFormatter<T>
     {
-        private readonly Action<T, TextWriter> _format;
+        private readonly Func<FormatContext, T, TextWriter, bool> _format;
 
-        protected PlainTextFormatter()
-        {
-            _format = WriteDefault;
-        }
-
-        public PlainTextFormatter(Action<T, TextWriter> format)
+        public PlainTextFormatter(Func<FormatContext, T, TextWriter, bool> format)
         {
             _format = format ?? throw new ArgumentNullException(nameof(format));
         }
 
-        public static ITypeFormatter<T> Create(bool includeInternals = false)
+        public PlainTextFormatter(Action<T, TextWriter> format)
         {
-            if (PlainTextFormatter.DefaultFormatters.TryGetFormatterForType(typeof(T), out var formatter) &&
-                formatter is ITypeFormatter<T> ft)
-            {
-                return ft;
-            }
+            _format = (context, instance, writer) => { format(instance, writer); return true; };
+        }
 
-            if (Formatter<T>.TypeIsAnonymous ||
-                Formatter<T>.TypeIsException ||
-                Formatter<T>.TypeIsValueTuple|| 
-                !typeof(IEnumerable).IsAssignableFrom(typeof(T)))
-            {
-                return CreateForAllMembers(includeInternals);
-            }
-
-            return Default;
+        public PlainTextFormatter(Func<T, string> format)
+        {
+            _format = (context, instance, writer) => { writer.Write(format(instance)); return true; };
         }
 
         public override string MimeType => PlainTextFormatter.MimeType;
 
-        public override void Format(T value, TextWriter writer)
+        public override bool Format(FormatContext context, T value, TextWriter writer)
         {
             if (value is null)
             {
                 writer.Write(Formatter.NullString);
-                return;
+                return true;
             }
 
-            _format(value, writer);
+            return _format(context, value, writer);
         }
 
-        private static PlainTextFormatter<T> CreateForAllMembers(bool includeInternals = false)
+        public static PlainTextFormatter<T> CreateForAnyObject(bool includeInternals = false)
         {
             if (typeof(T).IsScalar())
             {
-                return new PlainTextFormatter<T>((value, writer) => writer.Write(value));
+                return new PlainTextFormatter<T>((context, value, writer) =>
+                {
+                    writer.Write(value);
+                    return true;
+                });
             }
 
             return new PlainTextFormatter<T>(
@@ -75,30 +65,34 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return new PlainTextFormatter<T>(format);
         }
 
-        public static PlainTextFormatter<T> Default { get; } = new PlainTextFormatter<T>();
-
-        internal virtual void WriteDefault(
-            T value,
-            TextWriter writer)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Part of Pattern")]
+        public static PlainTextFormatter<T> CreateForAnyEnumerable(bool _includeInternals)
         {
-            if (value is string)
+            return new PlainTextFormatter<T>((FormatContext context, T value, TextWriter writer) =>
             {
-                writer.Write(value);
-                return;
-            }
+                if (value is string)
+                {
+                    writer.Write(value);
+                    return true;
+                }
 
-            switch (value)
-            {
-                case IEnumerable enumerable:
-                    Formatter.Join(
-                        enumerable,
-                        writer,
-                        Formatter<T>.ListExpansionLimit);
-                    break;
-                default:
-                    writer.Write(value.ToString());
-                    break;
-            }
+                switch (value)
+                {
+                    case IEnumerable enumerable:
+                        Formatter.Join(
+                            context, 
+                            enumerable,
+                            writer,
+                            Formatter<T>.ListExpansionLimit);
+                        break;
+                    default:
+                        writer.Write(value.ToString());
+                        break;
+                }
+                return true;
+            });
         }
+
+        public static PlainTextFormatter<T> Default = CreateForAnyEnumerable(false);
     }
 }

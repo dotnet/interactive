@@ -194,12 +194,21 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         writer.Write(s.HtmlEncode());
                         break;
 
+                    case PocketView html:
+                        // Maintain the contex while writing PocketView in case there are embedded objects.
+                        html.WriteTo(writer, HtmlEncoder.Default);
+                        break;
+
                     case IHtmlContent html:
                         html.WriteTo(writer, HtmlEncoder.Default);
                         break;
 
                     case IEnumerable<IHtmlContent> htmls:
                         Write(htmls.ToArray(), writer);
+                        break;
+
+                    case HtmlFormatter.EmbeddedFormat embedded:
+                        embedded.Object.FormatTo(embedded.Context, writer, HtmlFormatter.MimeType);
                         break;
 
                     default:
@@ -210,11 +219,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         }
                         else
                         {
-                            var e = arg
-                                    .ToDisplayString()
-                                    .HtmlEncode();
-
-                            e.WriteTo(writer, HtmlEncoder.Default);
+                            arg.FormatTo(writer, HtmlFormatter.MimeType);
                         }
 
                         break;
