@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             _output = output;
         }
 
-        [Fact]
+        [Fact(Skip = "Requires database")]
         public async Task It_can_connect_and_query_data()
         {
             using var kernel = new CompositeKernel
