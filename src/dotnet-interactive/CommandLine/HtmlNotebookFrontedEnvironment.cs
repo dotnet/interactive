@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
         internal void SetApiUri(Uri apiUri)
         {
-            _completionSource.SetResult(apiUri);
+            _completionSource.TrySetResult(apiUri);
         }
 
         public Task<Uri> GetApiUriAsync()
