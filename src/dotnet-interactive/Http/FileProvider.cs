@@ -45,7 +45,6 @@ namespace Microsoft.DotNet.Interactive.App.Http
 
         private (IFileProvider provider, string path) GetProviderAndPath(string subpath)
         {
-
             IFileProvider provider = _root;
             var path = subpath;
             var parts = subpath.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);

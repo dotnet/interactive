@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.DirectoryServices.ActiveDirectory;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;

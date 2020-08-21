@@ -22,10 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.20372.2" />
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.20372.2" />
-    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.20372.2" />
-    <PackageReference Include="microsoft.data.analysis" Version="0.4.0" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp.Wrapper\Microsoft.DotNet.Interactive.FSharp.Wrapper.csproj" />
   </ItemGroup>
 
   <ItemGroup>
