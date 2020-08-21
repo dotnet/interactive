@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,7 +12,7 @@ using Microsoft.DotNet.Interactive.Events;
 namespace Microsoft.DotNet.Interactive.Sql
 {
     public class SqlKernel :
-        Kernel,
+        DotNetKernel,
         IKernelCommandHandler<SubmitCode>
     {
         internal const string DefaultKernelName = "sql";
@@ -50,6 +51,21 @@ namespace Microsoft.DotNet.Interactive.Sql
             // Get results
             // Display
             await context.DisplayAsync("HELLO WORLD");
+        }
+
+        public override bool TryGetVariable<T>(string name, out T value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task SetVariableAsync(string name, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override IReadOnlyCollection<string> GetVariableNames()
+        {
+            throw new NotImplementedException();
         }
     }
 }
