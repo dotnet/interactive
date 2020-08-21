@@ -41,7 +41,22 @@ namespace Microsoft.DotNet.Interactive.Sql.Tests
 
             events.Should().ContainSingle<DisplayedValueProduced>().Which.Value.Should().BeOfType<string>().Which.Should().Be("HELLO WORLD");
         }
+        
+        [Fact]
+        public async Task CompletionTestAsync()
+        {
+            using var kernel = new SqlKernel();
+            using var events = kernel.KernelEvents.ToSubscribedList();
 
+            var testUri = "connection://test";
+            var testConnStr = "Server=localhost;Database=tempdb;Integrated Security=true;";
+
+            var connectResult = await kernel.ConnectAsync(testUri, testConnStr);
+            var completionItemsResult = await kernel.ProvideCompletionItemsAsync();
+
+            Assert.True(completionItemsResult != null, "Completion list should not be null");
+
+        }
         [Fact]
         public async Task ConnectionTestAsync()
         {

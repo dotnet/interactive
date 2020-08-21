@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.Sql
 
         public void startProcessAndRedirectIO()
         {
-            var startInfo = new ProcessStartInfo("C:\\sts\\MicrosoftSqlToolsServiceLayer.exe")
+            var startInfo = new ProcessStartInfo("Enter Path to /MicrosoftSqlToolsServiceLayer")
             {
                 UseShellExecute = false,
                 RedirectStandardInput = true,
@@ -62,6 +62,16 @@ namespace Microsoft.DotNet.Interactive.Sql
         {
             var disconnectParams = new DisconnectParams() { OwnerUri = ownerUri };
             var result = await rpc.InvokeWithParameterObjectAsync<bool>("connection/disconnect", disconnectParams);
+            return result;
+        }
+
+        public async Task<CompletionItem[]> ProvideCompletionItemsAsync()
+        {
+            TextDocumentIdentifier docId = new TextDocumentIdentifier() { uri = "/Users/vasubhog/Desktop/test.sql" };
+            Position position = new Position() { line = 1, character = 2 };
+            CompletionContext context = new CompletionContext() { triggerKind = 1, triggerCharacter = null };
+            var completionParams = new CompletionParams() { textDocument = docId, position = position, workDoneToken = null, context = context, partialResultToken = null };
+            var result = await rpc.InvokeWithParameterObjectAsync<CompletionItem[]>("textDocument/completion", completionParams);
             return result;
         }
 
@@ -132,6 +142,66 @@ namespace Microsoft.DotNet.Interactive.Sql
         public bool GetFullColumnSchema = false;
 
         public ExecutionPlanOptions ExecutionPlanOptions { get; set; }
+    }
+
+    public class CompletionItem
+    {
+        public string label;
+        public int kind;
+        public int[] tags; //CompletionItemTag
+        public string detail;
+        public string documentation; // | MarkupContent
+        public bool deprecated;
+        public bool preselect;
+        public string sortText;
+        public string filterText;
+        public string insertText;
+        int insertTextFormat; //InsertTextFormat
+        TextEdit textEdit;
+        TextEdit[] additionalTextEdits;
+        string[] commitCharacters;
+        Command command;
+        public string data;
+    }
+
+    public class Command
+    {
+        public string title;
+        public string command;
+        public string[] arguments; //any
+    }
+
+    public class TextEdit
+    {
+        public Range range;
+        public string newText;
+    }
+
+
+    public class CompletionContext
+    {
+        public int triggerKind; // CompletionTriggerKind
+        public string triggerCharacter;
+    }
+
+    public class TextDocumentIdentifier
+    {
+        public string uri; //DocumentUri
+    }
+
+    public class Position
+    {
+        public int line;
+        public int character;
+    }
+    public class CompletionParams
+    {
+        public TextDocumentIdentifier textDocument;
+        public Position position;
+        public string workDoneToken; //ProgressToken = number | string
+        public string partialResultToken; //ProgressToken = number | string
+        public CompletionContext context;
+
     }
 
     public struct ExecutionPlanOptions

@@ -34,6 +34,12 @@ namespace Microsoft.DotNet.Interactive.Sql
             return await serviceClient.DisconnectAsync(ownerUri);
         }
 
+        //Completion 
+        public async Task<CompletionItem[]> ProvideCompletionItemsAsync()
+        {
+            return await serviceClient.ProvideCompletionItemsAsync();
+        }
+
         public async Task<ExecuteRequestResult> ExecuteQueryStringAsync(string ownerUri, string queryString)
         {
             return await serviceClient.ExecuteQueryStringAsync(ownerUri, queryString);
