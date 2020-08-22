@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
+using Microsoft.CodeAnalysis.Scripting;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
@@ -74,6 +75,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter
                 case PasswordRequested passwordRequested:
                     OnPasswordRequested(context, passwordRequested);
                     break;
+                case DiagnosticsProduced diagnosticsProduced:
+                    OnDiagnosticsProduced(context, context.JupyterRequestMessageEnvelope, diagnosticsProduced);
+                    break;
             }
         }
 
@@ -96,16 +100,43 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             passwordRequested.Content = new PasswordString(clearTextPassword);
         }
 
+        private void OnDiagnosticsProduced(JupyterRequestContext context, 
+            ZeroMQMessage request,
+            DiagnosticsProduced diagnosticsProduced)
+        {
+            // Space out the diagnostics and send them to stderr
+            if (diagnosticsProduced.FormattedDiagnostics.Count() > 0)
+            {
+                var output =
+                Environment.NewLine +
+                string.Join(Environment.NewLine + Environment.NewLine, diagnosticsProduced.FormattedDiagnostics.Select(v => v.Value)) +
+                Environment.NewLine +
+                Environment.NewLine;
+                var dataMessage = Stream.StdErr(output);
+                var isSilent = ((ExecuteRequest)request.Content).Silent;
+
+                if (!isSilent)
+                {
+                    // send on io
+                    context.JupyterMessageSender.Send(dataMessage);
+                }
+            }
+        }
+
         private void OnCommandFailed(
             CommandFailed commandFailed,
             IJupyterMessageSender jupyterMessageSender)
         {
             var traceBack = new List<string>();
+            var ename = "Unhandled exception";
+            var emsg = commandFailed.Message;
 
             switch (commandFailed.Exception)
             {
                 case CodeSubmissionCompilationErrorException _:
-                    traceBack.Add(commandFailed.Message);
+                    // The diagnostics have already been reported
+                    ename = "Cell not executed";
+                    emsg = "compilation error";
                     break;
 
                 case null:
@@ -125,8 +156,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             }
 
             var errorContent = new Error(
-                eName: "Unhandled exception",
-                eValue: commandFailed.Message,
+                eName: ename,
+                eValue: emsg,
                 traceback: traceBack
             );
 
@@ -151,41 +182,51 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
             var transient = CreateTransient(displayEvent.ValueId);
 
-            var formattedValues = displayEvent
-                .FormattedValues
-                .ToDictionary(k => k.MimeType, v => PreserveJson(v.MimeType, v.Value));
+
+            // Currently there is at most one formatted value with at most
+            // and we return a dictionary for JSON formatting keyed by that mime type
+            // 
+            // In the case of DiagnosticsProduced however there are multiple entries, one
+            // for each diagnsotic, all with the same type
+            Dictionary<string,object> GetFormattedValuesByMimeType()
+            {
+                return 
+                    displayEvent
+                    .FormattedValues
+                    .ToDictionary(k => k.MimeType, v => PreserveJson(v.MimeType, v.Value));
+            }
 
             var value = displayEvent.Value;
-            PubSubMessage dataMessage;
+            PubSubMessage dataMessage = null;
 
             switch (displayEvent)
             {
                 case DisplayedValueProduced _:
                     dataMessage = new DisplayData(
                         transient: transient,
-                        data: formattedValues);
+                        data: GetFormattedValuesByMimeType());
                     break;
 
                 case DisplayedValueUpdated _:
                     dataMessage = new UpdateDisplayData(
                         transient: transient,
-                        data: formattedValues);
+                        data: GetFormattedValuesByMimeType());
                     break;
 
                 case ReturnValueProduced _:
                     dataMessage = new ExecuteResult(
                         _executionCount,
                         transient: transient,
-                        data: formattedValues);
+                        data: GetFormattedValuesByMimeType());
                     break;
 
                 case StandardOutputValueProduced _:
-                    dataMessage = Stream.StdOut(GetPlainTextValueOrDefault(formattedValues, value?.ToString() ?? string.Empty));
+                    dataMessage = Stream.StdOut(GetPlainTextValueOrDefault(GetFormattedValuesByMimeType(), value?.ToString() ?? string.Empty));
                     break;
 
                 case StandardErrorValueProduced _:
                 case ErrorProduced _:
-                    dataMessage = Stream.StdErr(GetPlainTextValueOrDefault(formattedValues, value?.ToString() ?? string.Empty));
+                    dataMessage = Stream.StdErr(GetPlainTextValueOrDefault(GetFormattedValuesByMimeType(), value?.ToString() ?? string.Empty));
                     break;
 
                 default:
