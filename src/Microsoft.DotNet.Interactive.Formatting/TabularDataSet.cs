@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    public class TabularDataSet
+    internal class TabularDataSet
     {
         public TabularDataSet(TabularDataSchema schema, IEnumerable data)
         {

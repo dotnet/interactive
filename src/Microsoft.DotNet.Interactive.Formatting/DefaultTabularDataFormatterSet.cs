@@ -15,19 +15,20 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     if (!(source is string))
                     {
-                        var tabularData = source.TabularJsonString();
+                        var tabularData = source.ToTabularJsonString();
                         writer.Write(tabularData.ToString());
                         return true;
                     }
 
                     return false;
                 }),
+               
                 new TabularDataFormatter<TabularDataSet>((context, source, writer) =>
                 {
                     var tabularData = source.ToJson();
                     writer.Write(tabularData);
                     return true;
-                })
+                }),
             };
     }
 }

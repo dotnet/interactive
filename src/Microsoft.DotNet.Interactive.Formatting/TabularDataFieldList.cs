@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    public class TabularDataFieldList : List<TabularDataSchemaField>
+    internal class TabularDataFieldList : List<TabularDataSchemaField>
     {
     }
 }

@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    public class TabularDataSchema
+    internal class TabularDataSchema
     {
         [JsonProperty(PropertyName = "primaryKey")]
         public List<string> PrimaryKey { get; } = new List<string>();

@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    public class TabularDataSchemaField
+    internal class TabularDataSchemaField
     {
         public TabularDataSchemaField(string name, string type)
         {
