@@ -1,0 +1,46 @@
+{
+  "schema": {
+    "primaryKey": [],
+    "fields": [
+      {
+        "name": "Name",
+        "type": "string"
+      },
+      {
+        "name": "IsValid",
+        "type": "boolean"
+      },
+      {
+        "name": "Cost",
+        "type": "number"
+      }
+    ]
+  },
+  "data": [
+    {
+      "Name": "Q",
+      "IsValid": false,
+      "Cost": 10.0
+    },
+    {
+      "Name": "U",
+      "IsValid": false,
+      "Cost": 5.0
+    },
+    {
+      "Name": "E",
+      "IsValid": true,
+      "Cost": 10.0
+    },
+    {
+      "Name": "S",
+      "IsValid": false,
+      "Cost": 10.0
+    },
+    {
+      "Name": "T",
+      "IsValid": false,
+      "Cost": 10.0
+    }
+  ]
+}

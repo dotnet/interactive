@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         private static (TabularDataSchema schema, JArray data) Generate(IEnumerable source)
         {
             var schema = new TabularDataSchema();
-
+            var fields = new HashSet<string>();
             var members = new HashSet<(string name, Type type)>();
             var data = new JArray();
 
@@ -101,7 +101,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                     foreach (var memberInfo in members)
                     {
-                        schema.Fields.Add(new TabularDataSchemaField(memberInfo.name, memberInfo.type.ToTableFieldType()));
+                        if (fields.Add(memberInfo.name))
+                        {
+                            schema.Fields.Add(new TabularDataSchemaField(memberInfo.name, memberInfo.type.ToTableFieldType()));
+                        }
                     }
             }
 
@@ -109,8 +112,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 foreach (var (name, value) in valueTuples)
                 {
-                    schema.Fields.Add(new TabularDataSchemaField(name, value?.GetType().ToTableFieldType()));
-
+                    if (fields.Add(name))
+                    {
+                        schema.Fields.Add(new TabularDataSchemaField(name, value?.GetType().ToTableFieldType()));
+                    }
                 }
             }
 
@@ -118,7 +123,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 foreach (var keyValuePair in keyValuePairs)
                 {
-                    schema.Fields.Add(new TabularDataSchemaField(keyValuePair.Key, keyValuePair.Value?.GetType().ToTableFieldType()));
+                    if (fields.Add(keyValuePair.Key))
+                    {
+                        schema.Fields.Add(new TabularDataSchemaField(keyValuePair.Key, keyValuePair.Value?.GetType().ToTableFieldType()));
+                    }
 
                 }
             }
