@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 new TabularDataFormatter<IEnumerable>((context, source, writer) =>
                 {
 
-                    if (source.GetType() != typeof(string))
+                    if (!(source is string))
                     {
                         var tabularData = source.TabularJsonString();
                         writer.Write(tabularData.ToString());
