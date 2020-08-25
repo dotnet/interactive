@@ -33,9 +33,9 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 new { Name = "T", IsValid = false, Cost = 10.0 }
             };
 
-            var formattedData = data.ToTabularJsonString();
+            var formattedData = data.ToDisplayString(TabularDataFormatter.MimeType);
 
-            this.Assent(formattedData.ToString(), _configuration);
+            this.Assent(formattedData, _configuration);
         }
 
         [Fact]
@@ -67,9 +67,9 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     },
                 };
 
-            var formattedData = data.ToTabularJsonString();
+            var formattedData = data.ToDisplayString(TabularDataFormatter.MimeType);
 
-            this.Assent(formattedData.ToString(), _configuration);
+            this.Assent(formattedData, _configuration);
         }
 
         [Fact]
@@ -101,9 +101,9 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     },
                 };
 
-            var formattedData = data.ToTabularJsonString();
+            var formattedData = data.ToDisplayString(TabularDataFormatter.MimeType);
 
-            this.Assent(formattedData.ToString(), _configuration);
+            this.Assent(formattedData, _configuration);
         }
 
         public void Dispose()
