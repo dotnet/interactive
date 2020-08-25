@@ -125,7 +125,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        private static string ToTableFieldType(this Type type) =>
+        internal static string ToTableFieldType(this Type type) =>
             type switch
             {
                 { } t when t == typeof(bool) => "boolean",
