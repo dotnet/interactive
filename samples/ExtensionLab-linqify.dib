@@ -1,0 +1,39 @@
+#!csharp
+
+#r "nuget:Microsoft.Data.Analysis,0.4.0"
+
+#!csharp
+
+#i "nuget:C:\temp"
+#r "nuget:Microsoft.DotNet.Interactive.ExtensionLab"
+
+#!csharp
+
+using System.IO;
+using System.Net.Http;
+string housingPath = "housing.csv";
+
+if (!File.Exists(housingPath))
+{
+    var contents = await new HttpClient()
+        .GetStringAsync("https://raw.githubusercontent.com/ageron/handson-ml2/master/datasets/housing/housing.csv");
+        
+    File.WriteAllText("housing.csv", contents);
+}
+
+#!csharp
+
+using Microsoft.Data.Analysis;
+
+var housing = DataFrame.LoadCsv(@"C:\dev\interactive\samples\notebooks\csharp\Samples\housing.csv");
+
+#!csharp
+
+#!linqify housing
+
+#!csharp
+
+housing
+    .OrderBy(row => row.ocean_proximity)
+    .ThenBy(row => row.population)
+    .Take(15)
