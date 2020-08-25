@@ -14,12 +14,10 @@ import { getDiagnosticCollection } from './diagnostics';
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider, vscode.NotebookKernel, vscode.NotebookKernelProvider<DotNetInteractiveNotebookContentProvider> {
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
 
-    eol: Eol;
-    kernel: vscode.NotebookKernel;
+    eol: Eol;   
     label: string;
 
-    constructor(readonly clientMapper: ClientMapper) {
-        this.kernel = this;
+    constructor(readonly clientMapper: ClientMapper) {       
         this.label = ".NET Interactive";
         this.eol = getEol();
     }
