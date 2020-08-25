@@ -24,12 +24,20 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     {
         public static T UseDataExplorer<T>(this T kernel) where T : Kernel
         {
+            RegisterFormatters();
             return kernel;
         }
 
-      
+        public static void RegisterFormatters()
+        {
+            Formatter.Register<TabularJsonString>((explorer, writer) =>
+            {
+                var html = explorer.RenderDataExplorer();
+                writer.Write(html);
+            }, HtmlFormatter.MimeType);
+        }
 
-        internal static HtmlString RenderDataExplorer(this TabularJsonString data)
+        private static HtmlString RenderDataExplorer(this TabularJsonString data)
         {
             var divId = Guid.NewGuid().ToString("N");
             var code = new StringBuilder();

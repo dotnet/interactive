@@ -3,188 +3,41 @@
     "primaryKey": [],
     "fields": [
       {
-        "name": "ProductID",
+        "name": "id",
         "type": "integer"
       },
       {
-        "name": "Name",
+        "name": "name",
         "type": "string"
       },
       {
-        "name": "ProductNumber",
+        "name": "color",
         "type": "string"
       },
       {
-        "name": "MakeFlag",
-        "type": "boolean"
-      },
-      {
-        "name": "FinishedGoodsFlag",
-        "type": "boolean"
-      },
-      {
-        "name": "Color",
-        "type": "any"
-      },
-      {
-        "name": "SafetyStockLevel",
-        "type": "any"
-      },
-      {
-        "name": "ReorderPoint",
-        "type": "any"
-      },
-      {
-        "name": "StandardCost",
-        "type": "number"
-      },
-      {
-        "name": "ListPrice",
-        "type": "number"
-      },
-      {
-        "name": "Size",
-        "type": "any"
-      },
-      {
-        "name": "SizeUnitMeasureCode",
-        "type": "any"
-      },
-      {
-        "name": "WeightUnitMeasureCode",
-        "type": "any"
-      },
-      {
-        "name": "Weight",
-        "type": "any"
-      },
-      {
-        "name": "DaysToManufacture",
+        "name": "deliciousness",
         "type": "integer"
-      },
-      {
-        "name": "ProductLine",
-        "type": "any"
-      },
-      {
-        "name": "Class",
-        "type": "any"
-      },
-      {
-        "name": "Style",
-        "type": "any"
-      },
-      {
-        "name": "ProductSubcategoryID",
-        "type": "any"
-      },
-      {
-        "name": "ProductModelID",
-        "type": "any"
-      },
-      {
-        "name": "SellStartDate",
-        "type": "datetime"
-      },
-      {
-        "name": "SellEndDate",
-        "type": "any"
-      },
-      {
-        "name": "DiscontinuedDate",
-        "type": "any"
-      },
-      {
-        "name": "rowguid",
-        "type": "any"
-      },
-      {
-        "name": "ModifiedDate",
-        "type": "datetime"
       }
     ]
   },
   "data": [
     {
-      "ProductID": 1,
-      "Name": "Adjustable Race",
-      "ProductNumber": "AR-5381",
-      "MakeFlag": false,
-      "FinishedGoodsFlag": false,
-      "Color": null,
-      "SafetyStockLevel": 1000,
-      "ReorderPoint": 750,
-      "StandardCost": 0.0000,
-      "ListPrice": 0.0000,
-      "Size": null,
-      "SizeUnitMeasureCode": null,
-      "WeightUnitMeasureCode": null,
-      "Weight": null,
-      "DaysToManufacture": 0,
-      "ProductLine": null,
-      "Class": null,
-      "Style": null,
-      "ProductSubcategoryID": null,
-      "ProductModelID": null,
-      "SellStartDate": "2008-04-30T00:00:00",
-      "SellEndDate": null,
-      "DiscontinuedDate": null,
-      "rowguid": "694215b7-08f7-4c0d-acb1-d734ba44c0c8",
-      "ModifiedDate": "2014-02-08T10:01:36.827"
+      "id": 1,
+      "name": "apple",
+      "color": "green",
+      "deliciousness": 10
     },
     {
-      "ProductID": 2,
-      "Name": "Bearing Ball",
-      "ProductNumber": "BA-8327",
-      "MakeFlag": false,
-      "FinishedGoodsFlag": false,
-      "Color": null,
-      "SafetyStockLevel": 1000,
-      "ReorderPoint": 750,
-      "StandardCost": 0.0000,
-      "ListPrice": 0.0000,
-      "Size": null,
-      "SizeUnitMeasureCode": null,
-      "WeightUnitMeasureCode": null,
-      "Weight": null,
-      "DaysToManufacture": 0,
-      "ProductLine": null,
-      "Class": null,
-      "Style": null,
-      "ProductSubcategoryID": null,
-      "ProductModelID": null,
-      "SellStartDate": "2008-04-30T00:00:00",
-      "SellEndDate": null,
-      "DiscontinuedDate": null,
-      "rowguid": "58ae3c20-4f3a-4749-a7d4-d568806cc537",
-      "ModifiedDate": "2014-02-08T10:01:36.827"
+      "id": 2,
+      "name": "banana",
+      "color": "red",
+      "deliciousness": 11
     },
     {
-      "ProductID": 3,
-      "Name": "BB Ball Bearing",
-      "ProductNumber": "BE-2349",
-      "MakeFlag": true,
-      "FinishedGoodsFlag": false,
-      "Color": null,
-      "SafetyStockLevel": 800,
-      "ReorderPoint": 600,
-      "StandardCost": 0.0000,
-      "ListPrice": 0.0000,
-      "Size": null,
-      "SizeUnitMeasureCode": null,
-      "WeightUnitMeasureCode": null,
-      "Weight": null,
-      "DaysToManufacture": 1,
-      "ProductLine": null,
-      "Class": null,
-      "Style": null,
-      "ProductSubcategoryID": null,
-      "ProductModelID": null,
-      "SellStartDate": "2008-04-30T00:00:00",
-      "SellEndDate": null,
-      "DiscontinuedDate": null,
-      "rowguid": "9c21aed2-5bfa-4f18-bcb8-f11638dc2e4e",
-      "ModifiedDate": "2014-02-08T10:01:36.827"
+      "id": 3,
+      "name": "cherry",
+      "color": "red",
+      "deliciousness": 9000
     }
   ]
 }

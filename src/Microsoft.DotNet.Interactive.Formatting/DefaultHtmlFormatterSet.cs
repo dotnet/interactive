@@ -15,7 +15,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
     internal class DefaultHtmlFormatterSet
     {
         static internal readonly ITypeFormatter[] DefaultFormatters =
-            new ITypeFormatter[]
             {
                 new HtmlFormatter<DateTime>((context, dateTime, writer) =>
                 {
@@ -95,10 +94,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 new HtmlFormatter<Type>((context, type, writer) =>
                 {
-                    string text = type.ToDisplayString(PlainTextFormatter.MimeType);
+                    var text = type.ToDisplayString(PlainTextFormatter.MimeType);
                     
                     // This is approximate
-                    bool isKnownDocType =
+                    var isKnownDocType =
                       type.Namespace != null &&
                       (type.Namespace == "System" ||
                        type.Namespace.StartsWith("System.") ||
@@ -112,10 +111,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     {
                         //system.collections.generic.list-1
                         //system.collections.generic.list-1.enumerator
-                        var gtype = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
+                        var genericTypeDefinition = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
 
                         var typeLookupName =
-                            gtype.FullName.ToLower().Replace("+",".").Replace("`","-");
+                            genericTypeDefinition.FullName.ToLower().Replace("+",".").Replace("`","-");
 
                         PocketView view = 
                            span(a[href: $"https://docs.microsoft.com/dotnet/api/{typeLookupName}?view=netcore-3.0"](

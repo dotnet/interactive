@@ -10,8 +10,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Assent;
 using Microsoft.Data.SqlClient;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -31,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         }
 
 
-        [Fact(Skip = "Requires database")]
+        [Fact]
         public async Task can_generate_tabular_json_from_database_table_result()
         {
             using var kernel = new CompositeKernel
@@ -44,19 +47,23 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             await extension.OnLoadAsync(kernel);
 
-            var connectionString = "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost";
+            using var _ = SqlLiteConnectionTests.CreateInMemorySQLiteDb(out var connectionString);
 
-            await using var connection = new SqlConnection(connectionString);
-            connection.Open();
+            await kernel.SubmitCodeAsync(
+                $"#!connect --kernel-name mydb sqlite \"{connectionString}\"");
 
-            await using var command = connection.CreateCommand();
-            command.CommandText = "SELECT TOP 3 * FROM Production.Product";
+            var result = await kernel.SubmitCodeAsync(@"
+#!mydb
+SELECT * FROM fruit
+");
 
-            var data = Execute(command);
+            var events = result.KernelEvents.ToSubscribedList();
 
-            var formattedData = data.First().ToTabularJsonString();
+            var formattedData = events.OfType<DisplayedValueProduced>().Single()
+                .FormattedValues.Single(fm => fm.MimeType == HtmlFormatter.MimeType)
+                .Value;
 
-            this.Assent(formattedData.ToString(), _configuration);
+            this.Assent(formattedData, _configuration);
         }
 
         private static IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> Execute(IDbCommand command)

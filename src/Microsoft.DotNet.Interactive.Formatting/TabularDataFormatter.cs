@@ -18,18 +18,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultTabularDataFormatterSet.DefaultFormatters;
 
 
-        internal static TabularDataSet ToTabularDataSet<T>(this IEnumerable<T> source)
-        {
-            var (schema, data) = Generate(source);
-
-            var tabularDataSet = new TabularDataSet(schema, data);
-
-            return tabularDataSet;
-        }
-
         public static TabularJsonString ToTabularJsonString<T>(this IEnumerable<T> source)
         {
-           return source.ToTabularDataSet().ToJson();
+            var (schema, data) = Generate(source);
+            var tabularDataSet = new TabularDataSet(schema, data);
+            return tabularDataSet.ToJson();
         }
 
         private static (TabularDataSchema schema, JArray data) Generate<T>(IEnumerable<T> source)
