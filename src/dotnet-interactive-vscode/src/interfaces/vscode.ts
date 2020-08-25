@@ -46,12 +46,12 @@ export interface Document {
 export interface NotebookCell {
     cellKind: CellKind;
     document: Document;
-    language: string;
+    readonly language: string;
     outputs: CellOutput[];
 }
 
 export interface NotebookDocument {
-    cells: NotebookCell[];
+    readonly cells: ReadonlyArray<NotebookCell>;
 }
 
 export interface NotebookDocumentBackup {
