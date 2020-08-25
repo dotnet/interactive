@@ -4,6 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>preview</LangVersion>
     <IsPackable>true</IsPackable>
+    <NoWarn>$(NoWarn);8002</NoWarn> <!-- Assent isn't strongly signed -->
   </PropertyGroup>
 
   <ItemGroup>
