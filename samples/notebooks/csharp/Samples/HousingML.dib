@@ -1,8 +1,8 @@
 #!csharp
 
-#r "nuget:Microsoft.ML,1.4.0"
-#r "nuget:Microsoft.ML.AutoML,0.16.0"
-#r "nuget:Microsoft.Data.Analysis,0.1.0"
+#r "nuget:Microsoft.ML,1.5.1"
+#r "nuget:Microsoft.ML.AutoML,0.17.1"
+#r "nuget:Microsoft.Data.Analysis,0.4.0"
 
 #!csharp
 
@@ -19,11 +19,11 @@ Formatter.Register<DataFrame>((df, writer) =>
     headers.AddRange(df.Columns.Select(c => (IHtmlContent) th(c.Name)));
     var rows = new List<List<IHtmlContent>>();
     var take = 20;
-    for (var i = 0; i < Math.Min(take, df.RowCount); i++)
+    for (var i = 0; i < Math.Min(take, df.Rows.Count); i++)
     {
         var cells = new List<IHtmlContent>();
         cells.Add(td(i));
-        foreach (var obj in df[i])
+        foreach (var obj in df.Rows[i])
         {
             cells.Add(td(obj));
         }
@@ -45,10 +45,11 @@ Formatter.Register<DataFrame>((df, writer) =>
 using System.IO;
 using System.Net.Http;
 string housingPath = "housing.csv";
+
 if (!File.Exists(housingPath))
 {
-    var contents = new HttpClient()
-        .GetStringAsync("https://raw.githubusercontent.com/ageron/handson-ml2/master/datasets/housing/housing.csv").Result;
+    var contents = await new HttpClient()
+        .GetStringAsync("https://raw.githubusercontent.com/ageron/handson-ml2/master/datasets/housing/housing.csv");
         
     File.WriteAllText("housing.csv", contents);
 }
@@ -67,7 +68,7 @@ housingData.Description()
 Chart.Plot(
     new Graph.Histogram()
     {
-        x = housingData["median_house_value"],
+        x = housingData.Columns["median_house_value"],
         nbinsx = 20
     }
 )
@@ -77,12 +78,12 @@ Chart.Plot(
 var chart = Chart.Plot(
     new Graph.Scattergl()
     {
-        x = housingData["longitude"],
-        y = housingData["latitude"],
+        x = housingData.Columns["longitude"],
+        y = housingData.Columns["latitude"],
         mode = "markers",
         marker = new Graph.Marker()
         {
-            color = housingData["median_house_value"],
+            color = housingData.Columns["median_house_value"],
             colorscale = "Jet"
         }
     }
@@ -107,16 +108,16 @@ static T[] Shuffle<T>(T[] array)
     return array;
 }
 
-int[] randomIndices = Shuffle(Enumerable.Range(0, (int)housingData.RowCount).ToArray());
-int testSize = (int)(housingData.RowCount * .1);
+int[] randomIndices = Shuffle(Enumerable.Range(0, (int)housingData.Rows.Count).ToArray());
+int testSize = (int)(housingData.Rows.Count * .1);
 int[] trainRows = randomIndices[testSize..];
 int[] testRows = randomIndices[..testSize];
 
 DataFrame housing_train = housingData[trainRows];
 DataFrame housing_test = housingData[testRows];
 
-display(housing_train.RowCount);
-display(housing_test.RowCount);
+display(housing_train.Rows.Count);
+display(housing_test.Rows.Count);
 
 #!csharp
 
