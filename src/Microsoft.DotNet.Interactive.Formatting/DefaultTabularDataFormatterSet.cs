@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -10,19 +11,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static readonly ITypeFormatter[] DefaultFormatters =
             new ITypeFormatter[]
             {
-                new TabularDataFormatter<IEnumerable>((context, source, writer) =>
+                new TabularDataFormatter<IEnumerable<object>>((context, source, writer) =>
                 {
-
-                    if (!(source is string))
-                    {
-                        var tabularData = source.ToTabularJsonString();
+                    var tabularData = source.ToTabularJsonString();
                         writer.Write(tabularData.ToString());
                         return true;
-                    }
-
-                    return false;
                 }),
-               
+
                 new TabularDataFormatter<TabularDataSet>((context, source, writer) =>
                 {
                     var tabularData = source.ToJson();
