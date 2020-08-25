@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Data
 
         public static TabularJsonString ToTabularJsonString(this IDataView source)
         {
-            var fields = source.Schema.Select( column => (column.Name, column.Type.RawType));
+            var fields = source.Schema.ToDictionary( column => column.Name, column => column.Type.RawType);
             var data = new JArray();
 
             var cursor = source.GetRowCursor(source.Schema);
@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Data
                         .MakeGenericMethod(type);
 
                     var valueGetter = getGetterMethod.Invoke(cursor, new object[] { column });
-
+                   
                     object value = GetValue((dynamic)valueGetter);
 
                     if (value is ReadOnlyMemory<char>)

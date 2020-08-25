@@ -4,7 +4,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -15,13 +14,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
         }
 
-        public static TabularJsonString Create(IEnumerable<(string Name, Type RawType)> fields, IEnumerable data)
+        public static TabularJsonString Create(IReadOnlyDictionary<string , Type> fields, IEnumerable data)
         {
             var schema = new TabularDataSchema();
 
-            foreach (var (name, rawType) in fields)
+            foreach (var entry in fields)
             {
-               schema.Fields.Add(new TabularDataSchemaField(name, rawType.ToTableFieldType())); 
+               schema.Fields.Add(new TabularDataSchemaField(entry.Key, entry.Value.ToTableFieldType())); 
             }
             var tabularDataSet = new TabularDataSet(schema, data);
 
