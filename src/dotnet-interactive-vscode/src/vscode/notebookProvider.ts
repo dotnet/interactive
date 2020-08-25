@@ -25,6 +25,11 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     preloads?: vscode.Uri[] | undefined;
 
     provideKernels(document: vscode.NotebookDocument, token: vscode.CancellationToken): vscode.ProviderResult<DotNetInteractiveNotebookContentProvider[]> {
+        if (document.uri.scheme === "untitled")
+        {
+            return [this];
+        }
+        
         const extension = path.extname(document.fileName).toLowerCase();
         switch (extension) {
             case '.dib':
