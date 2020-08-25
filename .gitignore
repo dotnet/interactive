@@ -375,3 +375,7 @@ src/Microsoft.DotNet.Interactive.Js/dist/
 
 .fake
 .ionide
+
+src/Microsoft.DotNet.Interactive.nteract.js/dist/
+
+src/Microsoft.DotNet.Interactive.nteract.js/lib/
