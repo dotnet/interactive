@@ -1,0 +1,56 @@
+{
+  "name": "microsoft.dotnet.interactive.nteract.dataexplorer",
+  "version": "1.0.0",
+  "description": "api to create nteract dataexplorer",
+  "main": "lib/index.js",
+  "types": "./lib/index.d.ts",
+  "files": [
+    "lib/**/*.js",
+    "dist/*.js",
+    "css/*.css"
+  ],
+  "scripts": {
+    "build:lib": "tsc",
+    "build:extension": "webpack -p",
+    "build": "npm run build:extension",
+    "clean:lib": "rimraf lib",
+    "prepack": "npm run build:lib",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/colombod/dotnet-interactive-visualization.git"
+  },
+  "author": "Diego Colombo",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/colombod/dotnet-interactive-visualization/issues"
+  },
+  "homepage": "https://github.com/colombod/dotnet-interactive-visualization#readme",
+  "dependencies": {
+    "@nteract/data-explorer": "8.2.9",
+    "react": "16.13.1",
+    "react-dom": "16.13.1",
+    "styled-components": "5.1.1"
+  },
+  "devDependencies": {
+    "@types/expect.js": "0.3.29",
+    "@types/mocha": "5.2.5",
+    "@types/node": "10.11.6",
+    "@types/react-dom": "16.9.8",
+    "@types/styled-components": "5.1.2",
+    "@types/webpack-env": "1.15.2",
+    "css-loader": "4.2.2",
+    "fs-extra": "9.0.1",
+    "mkdirp": "1.0.4",
+    "mocha": "5.2.0",
+    "npm-run-all": "4.1.5",
+    "rimraf": "3.0.2",
+    "source-map-loader": "1.0.2",
+    "style-loader": "1.2.1",
+    "ts-loader": "8.0.3",
+    "typescript": "3.9.2",
+    "webpack": "4.44.1",
+    "webpack-cli": "3.3.12"
+  }
+}

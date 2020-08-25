@@ -4,8 +4,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.CommandLine.Rendering;
-using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.IO;
 using System.Linq;

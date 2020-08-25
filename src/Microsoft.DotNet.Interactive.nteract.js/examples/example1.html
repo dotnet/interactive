@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>The demo thing</title>
+    <script src="../dist/index.js"></script>
+</head>
+
+<body>
+
+    <div id="output" style="height: 100ch ;margin: 2px;"></div>
+
+    <script>
+        let basicData = {
+            schema: {
+                fields: [
+                    {
+                        name: "valueA",
+                        type: "integer"
+                    },
+                    {
+                        name: "valueB",
+                        type: "integer"
+                    },
+                    {
+                        name: "valueC",
+                        type: "integer"
+                    },
+                    {
+                        name: "label",
+                        type: "string"
+                    },
+                    {
+                        name: "isGood",
+                        type: "boolean"
+                    }
+                ],
+                primaryKey: []
+            },
+            data: [
+                { valueA: 3, valueB: 5, valueC: 1, label: "first", isGood: false },
+                { valueA: 10, valueB: 1, valueC: 12, label: "second", isGood: true },
+                { valueA: 10, valueB: 1, valueC: 12, label: "fifth", isGood: true },
+                { valueA: 10, valueB: 1, valueC: 12, label: "sixth", isGood: true },
+                { valueA: 10, valueB: 1, valueC: 12, label: "seventh", isGood: true },
+                { valueA: -5, valueB: 8, valueC: 6, label: "third", isGood: true },
+                { valueA: -50, valueB: 8, valueC: 6, label: "third", isGood: true }
+            ]
+        };
+
+        let viewer = nteract.createDataExplorer({
+            data: basicData,
+            container: document.getElementById("output")
+        });
+    </script>
+
+</body>
+
+</html>
