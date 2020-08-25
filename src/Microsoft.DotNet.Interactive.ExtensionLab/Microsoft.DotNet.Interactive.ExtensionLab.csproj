@@ -13,11 +13,28 @@
     <NoWarn>$(NoWarn);NU5100</NoWarn><!-- dll outside of lib/ folder -->
   </PropertyGroup>
 
+  <PropertyGroup>
+    <JsApiRoot>$(MSBuildThisFileDirectory)/../Microsoft.DotNet.Interactive.nteract.js/</JsApiRoot>
+  </PropertyGroup>
+
  <ItemGroup>
    <Compile Remove="bin\**" />
    <EmbeddedResource Remove="bin\**" />
    <None Remove="bin\**" />
  </ItemGroup>
+
+  <ItemGroup>
+    <TypescriptInputs Include="$(JsApiRoot)package.json" />
+    <TypescriptInputs Include="$(JsApiRoot)package-lock.json" />
+    <TypescriptInputs Include="$(JsApiRoot)rollup.config.js" />
+    <TypescriptInputs Include="$(JsApiRoot)tsconfig.json" />
+    <TypescriptInputs Include="$(JsApiRoot)src/**/*.ts" />
+
+    <TypescriptOutputFiles Include="$(JsApiRoot)dist/index.js" />
+
+    <EmbeddedResource Include="@(TypescriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)" />
+
+  </ItemGroup>
 
  <ItemGroup>
    <PackageReference Include="Microsoft.Data.Analysis" Version="0.4.0" />
@@ -26,6 +43,7 @@
  </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj" />
   </ItemGroup>
@@ -33,5 +51,13 @@
   <ItemGroup>
     <None Include="$(OutputPath)/Microsoft.DotNet.Interactive.ExtensionLab.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
   </ItemGroup>
+
+  <Target Name="InstallNodeModules">
+    <Exec Command="npm i" WorkingDirectory="$(JsApiRoot)" />
+  </Target>
+
+  <Target Name="CompileTypescript" Inputs="@(TypescriptInputs)" Outputs="@(TypescriptOutputFiles)" DependsOnTargets="InstallNodeModules" BeforeTargets="BeforeBuild" Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'">
+    <Exec Command="npm run build" WorkingDirectory="$(JsApiRoot)" />
+  </Target>
 
 </Project>
