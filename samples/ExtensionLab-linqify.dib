@@ -4,8 +4,7 @@
 
 #!csharp
 
-#i "nuget:C:\temp"
-#r "nuget:Microsoft.DotNet.Interactive.ExtensionLab"
+#r "nuget:Microsoft.DotNet.Interactive.ExtensionLab,1.0.0-beta.20425.1" 
 
 #!csharp
 
