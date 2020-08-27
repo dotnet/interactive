@@ -52,6 +52,10 @@
     <None Include="$(OutputPath)/Microsoft.DotNet.Interactive.ExtensionLab.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Microsoft.ML\" />
+  </ItemGroup>
+
   <Target Name="InstallNodeModules">
     <Exec Command="npm i" WorkingDirectory="$(JsApiRoot)" />
   </Target>

@@ -15,6 +15,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
+using Enumerable = System.Linq.Enumerable;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 {

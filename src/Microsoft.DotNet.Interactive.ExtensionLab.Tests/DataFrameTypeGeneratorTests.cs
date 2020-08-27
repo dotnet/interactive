@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             var kernel = new CSharpKernel()
                 .UseNugetDirective();
 
-            await new DataFrameTypeGeneratorExtension().OnLoadAsync(kernel);
+            await new DataFrameKernelExtension().OnLoadAsync(kernel);
 
             await kernel.SubmitCodeAsync($@"
 #r ""{typeof(DataFrame).Assembly.Location}""
@@ -122,7 +122,7 @@ using Microsoft.Data.Analysis;
             var kernel = new CSharpKernel()
                 .UseNugetDirective();
 
-            await new DataFrameTypeGeneratorExtension().OnLoadAsync(kernel);
+            await new DataFrameKernelExtension().OnLoadAsync(kernel);
 
             await kernel.SubmitCodeAsync($@"
 #r ""{typeof(DataFrame).Assembly.Location}""
@@ -148,7 +148,7 @@ using Microsoft.Data.Analysis;
             var kernel = new CSharpKernel()
                 .UseNugetDirective();
 
-            await new DataFrameTypeGeneratorExtension().OnLoadAsync(kernel);
+            await new DataFrameKernelExtension().OnLoadAsync(kernel);
 
             await kernel.SubmitCodeAsync($@"
 #r ""{typeof(DataFrame).Assembly.Location}""

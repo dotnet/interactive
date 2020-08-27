@@ -12,8 +12,8 @@
     <PackageId>Microsoft.dotnet-interactive</PackageId>
     <ToolCommandName>dotnet-interactive</ToolCommandName>
     <IsPackable>true</IsPackable>
-    <PackageDescription>Command line tool for interactive programming with C# and F#, including support for Jupyter Notebooks.</PackageDescription>
-    <PackageTags>dotnet interactive Jupyter</PackageTags>
+    <PackageDescription>Command line tool for interactive programming with C#, F#, and PowerShell, including support for Jupyter Notebooks.</PackageDescription>
+    <PackageTags>dotnet interactive Jupyter csharp fsharp PowerShell</PackageTags>
     <PackAsTool>true</PackAsTool>
     <AutoGenerateAssemblyVersion>false</AutoGenerateAssemblyVersion>
     <PreReleaseVersionLabel></PreReleaseVersionLabel>
