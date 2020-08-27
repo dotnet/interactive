@@ -16,12 +16,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
     public class DataFrameKernelExtensionTests : IDisposable
     {
 
-        private readonly ITestOutputHelper _output;
         private readonly Configuration _configuration;
 
         public DataFrameKernelExtensionTests(ITestOutputHelper output)
         {
-            _output = output;
             _configuration = new Configuration()
                 .SetInteractive(Debugger.IsAttached)
                 .UsingExtension("json");
