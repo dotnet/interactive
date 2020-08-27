@@ -88,15 +88,15 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 
     async executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell): Promise<void> {
         const startTime = Date.now();
-        cell.metadata.runStartTime = startTime;
-        cell.metadata.runState = vscode.NotebookCellRunState.Running;
-        cell.outputs = [];
+        DotNetInteractiveNotebookContentProvider.updateCellMetadata(document, cell, {
+            runStartTime: startTime,
+            runState: vscode.NotebookCellRunState.Running,
+        });
+        DotNetInteractiveNotebookContentProvider.updateCellOutputs(document, cell, []);
         let client = await this.clientMapper.getOrAddClient(document.uri);
         let source = cell.document.getText();
         function outputObserver(outputs: Array<CellOutput>) {
-            // to properly trigger the UI update, `cell.outputs` needs to be uniquely assigned; simply setting it to the local variable has no effect
-            cell.outputs = [];
-            cell.outputs = outputs;
+            DotNetInteractiveNotebookContentProvider.updateCellOutputs(document, cell, outputs);
         }
 
         let diagnosticCollection = getDiagnosticCollection(cell.uri);
@@ -104,12 +104,37 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
             diagnosticCollection.set(cell.uri, diags.filter(d => d.severity !== DiagnosticSeverity.Hidden).map(toVsCodeDiagnostic));
         }
         return client.execute(source, getSimpleLanguage(cell.language), outputObserver, diagnosticObserver).then(() => {
-            cell.metadata.runState = vscode.NotebookCellRunState.Success;
-            cell.metadata.lastRunDuration = Date.now() - startTime;
+            DotNetInteractiveNotebookContentProvider.updateCellMetadata(document, cell, {
+                runState: vscode.NotebookCellRunState.Success,
+                lastRunDuration: Date.now() - startTime,
+            });
         }).catch(() => {
-            cell.metadata.runState = vscode.NotebookCellRunState.Error;
-            cell.metadata.lastRunDuration = Date.now() - startTime;
+            DotNetInteractiveNotebookContentProvider.updateCellMetadata(document, cell, {
+                runState: vscode.NotebookCellRunState.Error,
+                lastRunDuration: Date.now() - startTime,
+            });
         });
+    }
+
+    static updateCellMetadata(document: vscode.NotebookDocument, cell: vscode.NotebookCell, metadata: vscode.NotebookCellMetadata) {
+        cell.metadata = metadata;
+        // const index = document.cells.findIndex(c => c === cell);
+        // if (index >= 0) {
+        //     vscode.notebook.activeNotebookEditor?.edit(editBuilder => {
+        //         editBuilder.replaceMetadata(index, metadata);
+        //     });
+        // }
+    }
+
+    static updateCellOutputs(document: vscode.NotebookDocument, cell: vscode.NotebookCell, outputs: vscode.CellOutput[]) {
+        cell.outputs = [];
+        cell.outputs = outputs;
+        // const index = document.cells.findIndex(c => c === cell);
+        // if (index >= 0) {
+        //     vscode.notebook.activeNotebookEditor?.edit(editBuilder => {
+        //         editBuilder.replaceOutput(index, outputs);
+        //     });
+        // }
     }
 
     cancelCellExecution(document: vscode.NotebookDocument, cell: vscode.NotebookCell) {

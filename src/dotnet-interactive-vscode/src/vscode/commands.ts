@@ -92,8 +92,14 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
             document = vscode.notebook.activeNotebookEditor.document;
         }
 
-        for (const cell of document.cells) {
-            cell.metadata.runState = vscode.NotebookCellRunState.Idle;
+        const cellCount = document.cells.length;
+        const notebookEditor = vscode.notebook.activeNotebookEditor;
+        if (notebookEditor) {
+            notebookEditor.edit(editBuilder => {
+                for (let i = 0; i < cellCount; i++) {
+                    editBuilder.replaceMetadata(i, { runState: vscode.NotebookCellRunState.Idle });
+                }
+            });
         }
 
         clientMapper.closeClient(document.uri);
