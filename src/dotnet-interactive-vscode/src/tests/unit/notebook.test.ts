@@ -24,7 +24,7 @@ import {
     StandardOutputValueProducedType,
 } from '../../contracts';
 import { withFakeGlobalStorageLocation } from './utilities';
-import { backupNotebook } from '../../interactiveNotebook';
+import { backupNotebook, languageToCellKind } from '../../interactiveNotebook';
 
 describe('Notebook tests', () => {
     for (let language of ['csharp', 'fsharp']) {
@@ -511,76 +511,60 @@ Console.WriteLine(1);
 
     it('notebook backup creates file: global storage exists', async () => {
         await withFakeGlobalStorageLocation(true, async globalStoragePath => {
-            const notebook: NotebookDocument = {
-                cells: [
-                    {
-                        cellKind: CellKind.Code,
-                        document: {
-                            getText: () => '1 + 1',
-                            uri: {
-                                fsPath: 'test-path'
-                            }
-                        },
-                        language: 'dotnet-interactive.csharp',
-                        outputs: []
-                    }
-                ]
-            };
+            const rawData = new Uint8Array([1, 2, 3]);
             const backupLocation = path.join(globalStoragePath, Date.now().toString());
-            const notebookBackup = await backupNotebook(notebook, backupLocation, '\r\n');
-            const expected = [
-                '#!csharp',
-                '',
-                '1 + 1',
-                ''
-            ].join('\r\n');
+            const notebookBackup = await backupNotebook(rawData, backupLocation);
             const actualBuffer = fs.readFileSync(notebookBackup.id);
-            const actualText = actualBuffer.toString('utf-8');
-            expect(actualText).to.equal(expected);
+            const actualContents = Array.from(actualBuffer.values());
+            expect(actualContents).to.deep.equal([1, 2, 3]);
         });
     });
 
     it("notebook backup creates file: global storage doesn't exist", async () => {
         await withFakeGlobalStorageLocation(false, async globalStoragePath => {
-            const notebook: NotebookDocument = {
-                cells: [
-                    {
-                        cellKind: CellKind.Code,
-                        document: {
-                            getText: () => '1 + 1',
-                            uri: {
-                                fsPath: 'test-path'
-                            }
-                        },
-                        language: 'dotnet-interactive.csharp',
-                        outputs: []
-                    }
-                ]
-            };
+            const rawData = new Uint8Array([1, 2, 3]);
             const backupLocation = path.join(globalStoragePath, Date.now().toString());
-            const notebookBackup = await backupNotebook(notebook, backupLocation, '\r\n');
-            const expected = [
-                '#!csharp',
-                '',
-                '1 + 1',
-                ''
-            ].join('\r\n');
+            const notebookBackup = await backupNotebook(rawData, backupLocation);
             const actualBuffer = fs.readFileSync(notebookBackup.id);
-            const actualText = actualBuffer.toString('utf-8');
-            expect(actualText).to.equal(expected);
+            const actualContents = Array.from(actualBuffer.values());
+            expect(actualContents).to.deep.equal([1, 2, 3]);
         });
     });
 
     it('notebook backup cleans up after itself', async () => {
         await withFakeGlobalStorageLocation(true, async globalStoragePath => {
-            const notebook: NotebookDocument = {
-                cells: []
-            };
+            const rawData = new Uint8Array([1, 2, 3]);
             const backupLocation = path.join(globalStoragePath, Date.now().toString());
-            const notebookBackup = await backupNotebook(notebook, backupLocation, '\r\n');
+            const notebookBackup = await backupNotebook(rawData, backupLocation);
             expect(notebookBackup.id).to.be.file();
             notebookBackup.delete();
             expect(notebookBackup.id).to.not.be.a.path();
         });
+    });
+
+    //-------------------------------------------------------------------------
+    //                                                               misc tests
+    //-------------------------------------------------------------------------
+
+    it('code cells are appropriately classified by language', () => {
+        const codeLanguages = [
+            'csharp',
+            'fsharp',
+            'html',
+            'javascript',
+            'pwsh'
+        ];
+        for (let language of codeLanguages) {
+            expect(languageToCellKind(language)).to.equal(CellKind.Code);
+        }
+    });
+
+    it('markdown cells are appropriately classified', () => {
+        const markdownLanguages = [
+            'markdown'
+        ];
+        for (let language of markdownLanguages) {
+            expect(languageToCellKind(language)).to.equal(CellKind.Markdown);
+        }
     });
 });

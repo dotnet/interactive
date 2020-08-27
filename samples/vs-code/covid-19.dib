@@ -10,7 +10,7 @@ Also, due to travel restrictions, you should run this at home on isolated comput
 
 Since Johns Hopkins has put COVID-19 time series data on [GitHub](https://github.com/CSSEGISandData/COVID-19), let's take a look at it. We can download it using PowerShell:
 
-#!powershell
+#!pwsh
 
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv" -OutFile "./Confirmed.csv"
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv" -OutFile "./Deaths.csv"

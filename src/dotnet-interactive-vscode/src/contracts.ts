@@ -9,9 +9,11 @@ export const AddPackageType = "AddPackage";
 export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
+export const ParseNotebookType = "ParseNotebook";
 export const RequestCompletionsType = "RequestCompletions";
 export const RequestDiagnosticsType = "RequestDiagnostics";
 export const RequestHoverTextType = "RequestHoverText";
+export const SerializeNotebookType = "SerializeNotebook";
 export const SubmitCodeType = "SubmitCode";
 export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 
@@ -20,9 +22,11 @@ export type KernelCommandType =
     | typeof ChangeWorkingDirectoryType
     | typeof DisplayErrorType
     | typeof DisplayValueType
+    | typeof ParseNotebookType
     | typeof RequestCompletionsType
     | typeof RequestDiagnosticsType
     | typeof RequestHoverTextType
+    | typeof SerializeNotebookType
     | typeof SubmitCodeType
     | typeof UpdateDisplayedValueType;
 
@@ -47,6 +51,11 @@ export interface DisplayValue extends KernelCommand {
     valueId: string;
 }
 
+export interface ParseNotebook extends KernelCommand {
+    fileName: string;
+    rawData: Uint8Array;
+}
+
 export interface RequestCompletions extends LanguageServiceCommand {
 }
 
@@ -60,6 +69,12 @@ export interface RequestDiagnostics extends KernelCommand {
 }
 
 export interface RequestHoverText extends LanguageServiceCommand {
+}
+
+export interface SerializeNotebook extends KernelCommand {
+    fileName: string;
+    notebook: NotebookDocument;
+    newLine: string;
 }
 
 export interface SubmitCode extends KernelCommand {
@@ -89,6 +104,8 @@ export const IncompleteCodeSubmissionReceivedType = "IncompleteCodeSubmissionRec
 export const InputRequestedType = "InputRequested";
 export const KernelExtensionLoadedType = "KernelExtensionLoaded";
 export const KernelReadyType = "KernelReady";
+export const NotebookParsedType = "NotebookParsed";
+export const NotebookSerializedType = "NotebookSerialized";
 export const PackageAddedType = "PackageAdded";
 export const PasswordRequestedType = "PasswordRequested";
 export const ReturnValueProducedType = "ReturnValueProduced";
@@ -112,6 +129,8 @@ export type KernelEventType =
     | typeof InputRequestedType
     | typeof KernelExtensionLoadedType
     | typeof KernelReadyType
+    | typeof NotebookParsedType
+    | typeof NotebookSerializedType
     | typeof PackageAddedType
     | typeof PasswordRequestedType
     | typeof ReturnValueProducedType
@@ -187,6 +206,14 @@ export interface KernelExtensionLoaded extends KernelEvent {
 export interface KernelReady extends KernelEvent {
 }
 
+export interface NotebookParsed extends KernelEvent {
+    notebook: NotebookDocument;
+}
+
+export interface NotebookSerialized extends KernelEvent {
+    rawData: Uint8Array;
+}
+
 export interface PackageAdded extends KernelEvent {
     packageReference: ResolvedPackageReference;
 }
@@ -246,6 +273,33 @@ export interface LinePosition {
 export interface FormattedValue {
     mimeType: string;
     value: string;
+}
+
+export interface NotebookDocument {
+    cells: Array<NotebookCell>;
+}
+
+export interface NotebookCell {
+    language: string;
+    contents: string;
+    outputs: Array<NotebookCellOutput>;
+}
+
+export interface NotebookCellOutput {
+}
+
+export interface NotebookCellDisplayOutput extends NotebookCellOutput {
+    data: { [key: string]: any; };
+}
+
+export interface NotebookCellErrorOutput extends NotebookCellOutput {
+    errorName: string;
+    errorValue: string;
+    stackTrace: Array<string>;
+}
+
+export interface NotebookCellTextOutput extends NotebookCellOutput {
+    text: string;
 }
 
 export interface PackageReference {

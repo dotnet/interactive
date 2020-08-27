@@ -4,20 +4,21 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ClientMapper } from './../clientMapper';
-import { parseNotebook, serializeNotebook, notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook } from '../interactiveNotebook';
+import { notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook } from '../interactiveNotebook';
 import { Eol } from '../interfaces';
-import { CellOutput, NotebookCell } from '../interfaces/vscode';
-import { Diagnostic, DiagnosticSeverity } from './../contracts';
+import { CellOutput } from '../interfaces/vscode';
+import { Diagnostic, DiagnosticSeverity, NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookCellTextOutput, NotebookDocument } from './../contracts';
 import { getEol, toVsCodeDiagnostic } from './vscodeUtilities';
 import { getDiagnosticCollection } from './diagnostics';
+import { isDisplayOutput, isErrorOutput, isTextOutput } from '../utilities';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider, vscode.NotebookKernel, vscode.NotebookKernelProvider<DotNetInteractiveNotebookContentProvider> {
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
 
-    eol: Eol;   
+    eol: Eol;
     label: string;
 
-    constructor(readonly clientMapper: ClientMapper) {       
+    constructor(readonly clientMapper: ClientMapper) {
         this.label = ".NET Interactive";
         this.eol = getEol();
     }
@@ -29,7 +30,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         {
             return [this];
         }
-        
+
         const extension = path.extname(document.fileName).toLowerCase();
         switch (extension) {
             case '.dib':
@@ -52,21 +53,22 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     }
 
     async openNotebook(uri: vscode.Uri): Promise<vscode.NotebookData> {
-        let contents = '';
+        let buffer = new Uint8Array();
         try {
-            contents = Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf-8');
+            buffer = Buffer.from(await vscode.workspace.fs.readFile(uri));
         } catch {
         }
 
-        let notebook = parseNotebook(uri, contents);
-        await this.clientMapper.getOrAddClient(uri);
+        const client = await this.clientMapper.getOrAddClient(uri);
+        const fileName = path.basename(uri.fsPath);
+        const notebook = await client.parseNotebook(fileName, buffer);
 
         let notebookData: vscode.NotebookData = {
             languages: notebookCellLanguages,
             metadata: {
                 cellHasExecutionOrder: false
             },
-            cells: notebook.cells.map(toNotebookCellData)
+            cells: notebook.cells.map(toVsCodeNotebookCellData)
         };
 
         return notebookData;
@@ -141,23 +143,95 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         // not supported
     }
 
-    backupNotebook(document: vscode.NotebookDocument, context: vscode.NotebookDocumentBackupContext, cancellation: vscode.CancellationToken): Promise<vscode.NotebookDocumentBackup> {
-        return backupNotebook(document, context.destination.fsPath, this.eol);
+    async backupNotebook(document: vscode.NotebookDocument, context: vscode.NotebookDocumentBackupContext, cancellation: vscode.CancellationToken): Promise<vscode.NotebookDocumentBackup> {
+        const buffer = await this.serializeNotebook(document, document.uri);
+        const documentBackup = await backupNotebook(buffer, context.destination.fsPath);
+        return documentBackup;
     }
 
     private async save(document: vscode.NotebookDocument, targetResource: vscode.Uri): Promise<void> {
-        const contents = serializeNotebook(targetResource, document, this.eol);
-        const buffer = Buffer.from(contents);
+        const buffer = await this.serializeNotebook(document, targetResource);
         await vscode.workspace.fs.writeFile(targetResource, buffer);
+    }
+
+    private async serializeNotebook(document: vscode.NotebookDocument, uri: vscode.Uri): Promise<Uint8Array> {
+        const client = await this.clientMapper.getOrAddClient(uri);
+        const fileName = path.basename(uri.fsPath);
+        const notebook = toNotebookDocument(document);
+        const buffer = await client.serializeNotebook(fileName, notebook, this.eol);
+        return buffer;
     }
 }
 
-function toNotebookCellData(cell: NotebookCell): vscode.NotebookCellData {
+function toVsCodeNotebookCellData(cell: NotebookCell): vscode.NotebookCellData {
     return {
         cellKind: languageToCellKind(cell.language),
-        source: cell.document.getText(),
+        source: cell.contents,
         language: getNotebookSpecificLanguage(cell.language),
-        outputs: [],
+        outputs: cell.outputs.map(toVsCodeNotebookCellOutput),
         metadata: {}
     };
+}
+
+function toVsCodeNotebookCellOutput(output: NotebookCellOutput): vscode.CellOutput {
+    if (isDisplayOutput(output)) {
+        return {
+            outputKind: vscode.CellOutputKind.Rich,
+            data: output.data
+        };
+    } else if (isErrorOutput(output)) {
+        return {
+            outputKind: vscode.CellOutputKind.Error,
+            ename: output.errorName,
+            evalue: output.errorValue,
+            traceback: output.stackTrace
+        };
+    } else if (isTextOutput(output)) {
+        return {
+            outputKind: vscode.CellOutputKind.Text,
+            text: output.text
+        };
+    }
+
+    // unknown, better to return _something_ than to fail entirely
+    return {
+        outputKind: vscode.CellOutputKind.Rich,
+        data: {}
+    };
+}
+
+export function toNotebookDocument(document: vscode.NotebookDocument): NotebookDocument {
+    return {
+        cells: document.cells.map(toNotebookCell)
+    };
+}
+
+function toNotebookCell(cell: vscode.NotebookCell): NotebookCell {
+    return {
+        language: getSimpleLanguage(cell.language),
+        contents: cell.document.getText(),
+        outputs: cell.outputs.map(toNotebookCellOutput)
+    };
+}
+
+function toNotebookCellOutput(output: vscode.CellOutput): NotebookCellOutput {
+    switch (output.outputKind) {
+        case vscode.CellOutputKind.Error:
+            const error: NotebookCellErrorOutput = {
+                errorName: output.ename,
+                errorValue: output.evalue,
+                stackTrace: output.traceback
+            };
+            return error;
+        case vscode.CellOutputKind.Rich:
+            const rich: NotebookCellDisplayOutput = {
+                data: output.data
+            };
+            return rich;
+        case vscode.CellOutputKind.Text:
+            const text: NotebookCellTextOutput = {
+                text: output.text
+            };
+            return text;
+    }
 }

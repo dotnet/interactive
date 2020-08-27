@@ -60,6 +60,8 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(InputRequested)] = typeof(KernelEventEnvelope<InputRequested>),
                 [nameof(HoverTextProduced)] = typeof(KernelEventEnvelope<HoverTextProduced>),
                 [nameof(KernelReady)] = typeof(KernelEventEnvelope<KernelReady>),
+                [nameof(NotebookParsed)] = typeof(KernelEventEnvelope<NotebookParsed>),
+                [nameof(NotebookSerialized)] = typeof(KernelEventEnvelope<NotebookSerialized>),
                 [nameof(PackageAdded)] = typeof(KernelEventEnvelope<PackageAdded>),
                 [nameof(PasswordRequested)] = typeof(KernelEventEnvelope<PasswordRequested>),
                 [nameof(ReturnValueProduced)] = typeof(KernelEventEnvelope<ReturnValueProduced>),

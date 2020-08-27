@@ -15,6 +15,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.Server;
 
 using Pocket;
@@ -151,11 +152,30 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new FormattedValue("text/html", "<b>hi!</b>")
                 );
 
+                yield return new ParseNotebook("notebook.ipynb", new byte[] { 0x01, 0x02, 0x03, 0x04 });
+
                 yield return new RequestCompletions("Cons", new LinePosition(0, 4), "csharp");
 
                 yield return new RequestDiagnostics("the-code");
 
                 yield return new RequestHoverText("document-contents", new LinePosition(1, 2));
+
+                yield return new SerializeNotebook("notebook.ipynb", new NotebookDocument(new[]
+                {
+                    new NotebookCell("language", "contents", new NotebookCellOutput[]
+                    {
+                        new NotebookCellDisplayOutput(new Dictionary<string, object>()
+                        {
+                            { "text/html", "<b></b>" }
+                        }),
+                        new NotebookCellTextOutput("text"),
+                        new NotebookCellErrorOutput("e-name", "e-value", new[]
+                        {
+                            "at func1()",
+                            "at func2()"
+                        })
+                    })
+                }), "\r\n");
 
                 yield return new SubmitCode("123", "csharp", SubmissionType.Run);
 
@@ -253,6 +273,25 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new LinePositionSpan(new LinePosition(1, 2), new LinePosition(3, 4)));
 
                 yield return new KernelReady();
+
+                yield return new NotebookParsed(new NotebookDocument(new[]
+                {
+                    new NotebookCell("language", "contents", new NotebookCellOutput[]
+                    {
+                        new NotebookCellDisplayOutput(new Dictionary<string, object>()
+                        {
+                            { "text/html", "<b></b>" }
+                        }),
+                        new NotebookCellTextOutput("text"),
+                        new NotebookCellErrorOutput("e-name", "e-value", new[]
+                        {
+                            "at func1()",
+                            "at func2()"
+                        })
+                    })
+                }));
+
+                yield return new NotebookSerialized(new byte[] { 0x01, 0x02, 0x03, 0x04 });
 
                 yield return new PackageAdded(
                     new ResolvedPackageReference(

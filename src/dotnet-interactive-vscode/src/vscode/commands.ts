@@ -6,8 +6,8 @@ import * as cp from 'child_process';
 import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
 import { ClientMapper } from '../clientMapper';
-import { serializeNotebook } from '../interactiveNotebook';
 import { getEol } from './vscodeUtilities';
+import { toNotebookDocument } from './notebookProvider';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, dotnetPath: string) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
@@ -112,7 +112,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     }));
 }
 
-export function registerFileFormatCommands(context: vscode.ExtensionContext) {
+export function registerFileFormatCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
 
     const eol = getEol();
 
@@ -152,8 +152,10 @@ export function registerFileFormatCommands(context: vscode.ExtensionContext) {
             }
 
             const { document } = vscode.notebook.activeNotebookEditor;
-            const contents = serializeNotebook(uri, document, eol);
-            await vscode.workspace.fs.writeFile(uri, Buffer.from(contents));
+            const notebook = toNotebookDocument(document);
+            const client = await clientMapper.getOrAddClient(uri);
+            const buffer = await client.serializeNotebook(uri.fsPath, notebook, eol);
+            await vscode.workspace.fs.writeFile(uri, buffer);
         }
     }));
 }
