@@ -1,8 +1,13 @@
-﻿using System.Text;
+﻿// // Copyright (c) .NET Foundation and contributors. All rights reserved.
+// // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Text;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Formatting;
+
 using XPlot.Plotly;
 
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
@@ -20,12 +25,12 @@ namespace XPlot.DotNet.Interactive.KernelExtensions
 
         public static void RegisterPlotlyFormatters()
         {
-            Formatter<PlotlyChart>.Register(
+            Formatter.Register<PlotlyChart>(
                 (chart, writer) => writer.Write(GetHtml(chart)),
                 HtmlFormatter.MimeType);
         }
 
-        private static IHtmlContent GetHtml( PlotlyChart chart)
+        private static IHtmlContent GetHtml(PlotlyChart chart)
         {
             var divElement = div[style: $"width: {chart.Width}px; height: {chart.Height}px;", id: chart.Id]();
             var jsElement = chart.GetInlineJS().Replace("<script>", string.Empty).Replace("</script>", string.Empty);
