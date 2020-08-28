@@ -1,7 +1,6 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Notebook;
 using Xunit;
@@ -102,6 +101,24 @@ let x = 1");
                 .Match<NotebookCell>(cell =>
                     cell.Language == "fsharp" &&
                     cell.Contents == "#!probably-a-magic-command\nlet x = 1"
+                );
+        }
+
+        [Fact]
+        public void parsed_cells_with_connect_directive_dont_cause_subsequent_cells_to_change_language()
+        {
+            var notebook = ParseDib(@"
+#!csharp
+#!connect named-pipe --kernel-name wpf --pipe-name some-pipe-name
+
+#!csharp
+#!wpf -h
+");
+            notebook.Cells
+                .Should()
+                .SatisfyRespectively(
+                    cell => cell.Should().Match(_ => cell.Language == "csharp" && cell.Contents == "#!connect named-pipe --kernel-name wpf --pipe-name some-pipe-name"),
+                    cell => cell.Should().Match(_ => cell.Language == "csharp" && cell.Contents == "#!wpf -h")
                 );
         }
 
