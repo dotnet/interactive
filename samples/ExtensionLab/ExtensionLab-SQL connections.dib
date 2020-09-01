@@ -14,7 +14,7 @@ This sample demonstrates how to use the `#!connect` extension
 
 #!csharp
 
-#r "nuget:Microsoft.DotNet.Interactive.ExtensionLab" 
+#r "nuget:Microsoft.DotNet.Interactive.ExtensionLab,1.0.0-beta.20426.1" 
 
 #!markdown
 
@@ -28,15 +28,6 @@ KernelInvocationContext.Current.HandlingKernel.Directives.Select(d => d.Name)
 
 #!markdown
 
-# Install the nteract Data Viewer extension
-
-#!csharp
-
-#r "nuget:Microsoft.DotNet.Interactive.nteract"
-using Microsoft.DotNet.Interactive.nteract;
-
-#!markdown
-
 # Now, we're ready to connect to a database
 
 #!csharp
@@ -46,12 +37,6 @@ using Microsoft.DotNet.Interactive.nteract;
 #!csharp
 
 #!adventureworks
-
-SELECT TOP 2000 * FROM Person.Person;
-
-#!csharp
-
-#!mssql
 
 SELECT S.ProductID, p.[Name], S.SpecialOfferID, SO.[Description]
     , COUNT([OrderQty]) AS [Count]
