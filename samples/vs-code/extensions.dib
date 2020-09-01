@@ -1,8 +1,8 @@
-#!powershell
+#!pwsh
 
 pwd
 
-#!powershell
+#!pwsh
 
 #!time
 cd ../extensions/ClockExtension

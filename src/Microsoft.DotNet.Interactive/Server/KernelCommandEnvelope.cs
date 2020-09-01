@@ -58,9 +58,11 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(ChangeWorkingDirectory)] = typeof(KernelCommandEnvelope<ChangeWorkingDirectory>),
                 [nameof(DisplayError)] = typeof(KernelCommandEnvelope<DisplayError>),
                 [nameof(DisplayValue)] = typeof(KernelCommandEnvelope<DisplayValue>),
+                [nameof(ParseNotebook)] = typeof(KernelCommandEnvelope<ParseNotebook>),
                 [nameof(RequestCompletions)] = typeof(KernelCommandEnvelope<RequestCompletions>),
                 [nameof(RequestDiagnostics)] = typeof(KernelCommandEnvelope<RequestDiagnostics>),
                 [nameof(RequestHoverText)] = typeof(KernelCommandEnvelope<RequestHoverText>),
+                [nameof(SerializeNotebook)] = typeof(KernelCommandEnvelope<SerializeNotebook>),
                 [nameof(SubmitCode)] = typeof(KernelCommandEnvelope<SubmitCode>),
                 [nameof(UpdateDisplayedValue)] = typeof(KernelCommandEnvelope<UpdateDisplayedValue>)
             };

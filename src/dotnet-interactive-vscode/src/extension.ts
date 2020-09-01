@@ -53,7 +53,7 @@ export async function activate(context: vscode.ExtensionContext) {
     });
 
     registerKernelCommands(context, clientMapper);
-    registerFileFormatCommands(context);
+    registerFileFormatCommands(context, clientMapper);
 
     const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable
 
