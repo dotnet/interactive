@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
     public class SqlKernelsExtension : IKernelExtension
     {
-        public Task OnLoadAsync(Kernel kernel)
+        public async Task OnLoadAsync(Kernel kernel)
         {
             if (kernel is CompositeKernel compositeKernel)
             {
@@ -20,19 +20,23 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     <IEnumerable /* rows */
                         <IEnumerable /* fields */<(string, object)>>>>((source, writer) =>
                 {
-                    // TODO-JOSEQU: (RegisterFormatters) do all the tables...
+                    // TODO: (RegisterFormatters) do all the tables...
 
                     writer.Write(source.First()
-                        .ToTabularJsonString()
-                        .ToDisplayString(HtmlFormatter.MimeType));
+                                       .ToTabularJsonString()
+                                       .ToDisplayString(HtmlFormatter.MimeType));
                 }, HtmlFormatter.MimeType);
 
                 compositeKernel
                     .UseKernelClientConnection(new SQLiteKernelConnection())
                     .UseKernelClientConnection(new MsSqlKernelConnection());
-            }
 
-            return Task.CompletedTask;
+                // FIX: (OnLoadAsync) 
+                await kernel.SubmitCodeAsync($@"
+#!markdown
+Installed {GetType().Name} featuring `#!connect mssql` and `#!connect sqlite`.
+");
+            }
         }
     }
 }

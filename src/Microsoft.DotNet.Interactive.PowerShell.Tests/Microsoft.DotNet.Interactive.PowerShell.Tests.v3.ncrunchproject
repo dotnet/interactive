@@ -10,6 +10,15 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.TryGetVariable_unwraps_PowerShell_object("$x = New-Object -TypeName System.IO.FileInfo -ArgumentList c:\\temp\\some.txt", "System.IO.FileInfo")</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.GetCorrectProfilePaths</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.PowerShell_get_history_should_work</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.PowerShell.Tests.PowerShellKernelTests.VerifyAllUsersProfileRuns</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

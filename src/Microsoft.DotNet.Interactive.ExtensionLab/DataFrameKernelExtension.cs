@@ -30,10 +30,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     {
                         new Option<bool>("--show-code", "Display the C# code for the generated DataFrame types"),
                         new Argument<string>("variable-name", "The name of the variable to replace")
-                            .AddSuggestions(match => cSharpKernel.ScriptState
-                                                                 .Variables
-                                                                 .Where(v => v.Value is DataFrame)
-                                                                 .Select(v => v.Name))
+                            .AddSuggestions((_,match) => cSharpKernel.ScriptState
+                                                                   .Variables
+                                                                   .Where(v => v.Value is DataFrame)
+                                                                   .Select(v => v.Name))
                     };
 
                     cSharpKernel.AddDirective(command);
@@ -126,7 +126,7 @@ var {variableName} = new {frameTypeName}();
                 string.Join(Environment.NewLine,
                             sourceDataFrame
                                 .Columns
-                                .Select((col, i) => $"    public {col.DataType.FullName} {col.Name} => ({col.DataType.FullName}) _sourceRow[{i}];"));
+                                .Select((col, i) => $"    public {col.DataType.FullName} {col.Name.Dehumanize()} => ({col.DataType.FullName}) _sourceRow[{i}];"));
 
             return sb.ToString();
         }

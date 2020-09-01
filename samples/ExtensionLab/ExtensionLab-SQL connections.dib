@@ -1,0 +1,70 @@
+#!markdown
+
+# .NET Interactive ExtensionLab: SQL Connections
+
+This sample demonstrates how to use the `#!connect` extension
+
+#!csharp
+
+#r "nuget:Microsoft.Data.Sqlite,3.1.7"
+
+#!markdown
+
+## Install our ExtensionLab NuGet package
+
+#!csharp
+
+#r "nuget:Microsoft.DotNet.Interactive.ExtensionLab" 
+
+#!markdown
+
+This brings in a number of new magic commands. You can see the list of available commands using the `#!lsmagic` magic command:
+
+#!csharp
+
+using Microsoft.DotNet.Interactive;
+
+KernelInvocationContext.Current.HandlingKernel.Directives.Select(d => d.Name)
+
+#!markdown
+
+# Install the nteract Data Viewer extension
+
+#!csharp
+
+#r "nuget:Microsoft.DotNet.Interactive.nteract"
+using Microsoft.DotNet.Interactive.nteract;
+
+#!markdown
+
+# Now, we're ready to connect to a database
+
+#!csharp
+
+#!connect mssql --kernel-name adventureworks "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost"
+
+#!csharp
+
+#!adventureworks
+
+SELECT TOP 2000 * FROM Person.Person;
+
+#!csharp
+
+#!mssql
+
+SELECT S.ProductID, p.[Name], S.SpecialOfferID, SO.[Description]
+    , COUNT([OrderQty]) AS [Count]
+    , (AVG(UnitPrice))AS [Average Price]
+    , STR(SUM(LineTotal)) AS SubTotal
+
+FROM Sales.SalesOrderDetail AS S
+
+INNER JOIN [Sales].[SpecialOffer] AS SO
+    ON SO.[SpecialOfferID] = S.SpecialOfferID
+
+INNER JOIN [Production].[Product] AS p ON p.[ProductID] = S.ProductID
+
+GROUP BY S.ProductID, p.[Name], S.SpecialOfferID, SO.[Description]
+
+ORDER BY S.ProductID, [Count] DESC

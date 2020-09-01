@@ -14,6 +14,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public Task OnLoadAsync(Kernel kernel)
         {
             kernel.UseDataExplorer();
+
+            
+
             return Task.CompletedTask;
         }
 

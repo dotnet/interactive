@@ -21,12 +21,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 {
     public class SqlKernelsExtensionTests : IDisposable
     {
-        private readonly ITestOutputHelper _output;
         private readonly Configuration _configuration;
 
         public SqlKernelsExtensionTests(ITestOutputHelper output)
         {
-            _output = output;
             _configuration = new Configuration()
                 .SetInteractive(Debugger.IsAttached)
                 .UsingExtension("json");
