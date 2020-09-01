@@ -15,20 +15,18 @@ echo "Installing .NET..."
 curl -L https://dot.net/v1/dotnet-install.sh | bash -e
 echo ""
 
-echo "Updating PATH, DOTNET_ROOT and LD_LIBRARY_PATH environment variables..."
+echo "Updating PATH, DOTNET_ROOT environment variables..."
 if ! grep -q ".NET Core SDK tools" "/home/pi/.bashrc"; then
   cat << \EOF >> "/home/pi/.bashrc"
 # .NET Core SDK tools
 export PATH=${PATH}:/home/pi/.dotnet
 export PATH=${PATH}:/home/pi/.dotnet/tools
 export DOTNET_ROOT=/home/pi/.dotnet
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
 EOF
 fi
 export PATH=${PATH}:/home/pi/.dotnet
 export PATH=${PATH}:/home/pi/.dotnet/tools
 export DOTNET_ROOT=/home/pi/.dotnet
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
 echo ""
 
 
