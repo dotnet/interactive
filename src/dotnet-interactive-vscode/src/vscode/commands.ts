@@ -3,10 +3,11 @@
 
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
+import * as path from 'path';
 import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
 import { ClientMapper } from '../clientMapper';
-import { getEol } from './vscodeUtilities';
+import { getEol, isUnsavedNotebook } from './vscodeUtilities';
 import { toNotebookDocument, DotNetInteractiveNotebookContentProvider } from './notebookProvider';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, dotnetPath: string) {
@@ -107,7 +108,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     }));
 }
 
-export function registerFileFormatCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
+export function registerFileCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
 
     const eol = getEol();
 
@@ -115,6 +116,32 @@ export function registerFileFormatCommands(context: vscode.ExtensionContext, cli
         'Jupyter Notebooks': ['ipynb'],
         '.NET Interactive Notebooks': ['dib', 'dotnet-interactive']
     };
+
+    function workspaceHasUnsavedNotebookWithName(fileName: string): boolean {
+        return vscode.workspace.textDocuments.findIndex(textDocument => {
+            if (textDocument.notebook) {
+                const notebookUri = textDocument.notebook.uri;
+                return isUnsavedNotebook(notebookUri) && path.basename(notebookUri.fsPath) === fileName;
+            }
+
+            return false;
+        }) >= 0;
+    }
+
+    function getNewNotebookName(): string {
+        let suffix = 1;
+        while (workspaceHasUnsavedNotebookWithName(`Untitled-${suffix}.dib`)) {
+            suffix++;
+        }
+
+        return `Untitled-${suffix}.dib`;
+    }
+
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebook', async () => {
+        const fileName = getNewNotebookName();
+        const newUri = vscode.Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
+        await vscode.commands.executeCommand('vscode.openWith', newUri, 'dotnet-interactive');
+    }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
         // ensure we have a notebook uri
