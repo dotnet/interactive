@@ -98,7 +98,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.142702",
+          "default": "1.0.145102",
           "description": "The minimum required version of the .NET Interactive tool."
         }
       }
