@@ -465,7 +465,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 new HtmlKernel());
 
             compositeKernel.Add(
-                new KeyValueStoreKernel());
+                new KeyValueStoreKernel()
+                    .UseWho());
 
             var kernel = compositeKernel
                          .UseDefaultMagicCommands()
@@ -479,14 +480,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 kernel.LogEventsToPocketLogger();
             }
 
-            SetUpFormatters(frontendEnvironment, startupOptions);
+            SetUpFormatters(frontendEnvironment, startupOptions, TimeSpan.FromSeconds(15));
 
             kernel.DefaultKernelName = defaultKernelName;
 
             return kernel;
         }
 
-        public static void SetUpFormatters(FrontendEnvironment frontendEnvironment, StartupOptions startupOptions)
+        public static void SetUpFormatters(FrontendEnvironment frontendEnvironment, StartupOptions startupOptions, TimeSpan apiUriTimeout)
         {
             switch (frontendEnvironment)
             {
@@ -500,27 +501,36 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     Formatter.SetPreferredMimeTypeFor(typeof(string), PlainTextFormatter.MimeType);
                     Formatter.SetPreferredMimeTypeFor(typeof(ScriptContent), HtmlFormatter.MimeType);
 
-                    Formatter<LaTeXString>.Register((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
-                    Formatter<MathString>.Register((math, writer) => writer.Write(math.ToString()), "text/latex");
+                    Formatter.Register<LaTeXString>((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
+                    Formatter.Register<MathString>((math, writer) => writer.Write(math.ToString()), "text/latex");
                     if (startupOptions.EnableHttpApi && 
                         browserFrontendEnvironment is HtmlNotebookFrontedEnvironment frontedEnvironment)
                     {
-                        Formatter<ScriptContent>.Register((script, writer) =>
+                        Formatter.Register<ScriptContent>((script, writer) =>
                         {
-                            var fullCode = $@"if (typeof window.createDotnetInteractiveClient === typeof Function) {{
-createDotnetInteractiveClient('{frontedEnvironment.DiscoveredUri.AbsoluteUri}').then(function (interactive) {{
-let notebookScope = getDotnetInteractiveScope('{frontedEnvironment.DiscoveredUri.AbsoluteUri}');
+                            if (!Task.Run(async () =>
+                            {
+                                var apiUri = await frontedEnvironment.GetApiUriAsync();
+                                var fullCode =
+                                    $@"if (typeof window.createDotnetInteractiveClient === typeof Function) {{
+createDotnetInteractiveClient('{apiUri.AbsoluteUri}').then(function (interactive) {{
+let notebookScope = getDotnetInteractiveScope('{apiUri.AbsoluteUri}');
 {script.ScriptValue}
 }});
 }}";
-                            IHtmlContent content =
-                                PocketViewTags.script[type: "text/javascript"](fullCode.ToHtmlContent());
-                            content.WriteTo(writer, HtmlEncoder.Default);
+                                IHtmlContent content =
+                                    PocketViewTags.script[type: "text/javascript"](fullCode.ToHtmlContent());
+                                content.WriteTo(writer, HtmlEncoder.Default);
+                            }).Wait(apiUriTimeout))
+                            {
+                                throw new TimeoutException("Timeout resolving the kernel's HTTP endpoint. Please try again.");
+                            }
+
                         }, HtmlFormatter.MimeType);
                     }
                     else
                     {
-                        Formatter<ScriptContent>.Register((script, writer) =>
+                        Formatter.Register<ScriptContent>((script, writer) =>
                         {
                             IHtmlContent content =
                                 PocketViewTags.script[type: "text/javascript"](script.ScriptValue.ToHtmlContent());

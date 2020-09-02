@@ -7,6 +7,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public interface ITypeFormatter<in T> : ITypeFormatter
     {
-        void Format(T instance, TextWriter writer);
+        bool Format(FormatContext context, T instance, TextWriter writer);
     }
 }

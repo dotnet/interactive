@@ -2,21 +2,22 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Recipes;
-using Xunit.Abstractions;
 using Serilog.Sinks.RollingFileAlternate;
+using Xunit.Abstractions;
 using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
-using System.Collections.Generic;
-using Microsoft.DotNet.Interactive.Jupyter;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -75,23 +76,25 @@ namespace Microsoft.DotNet.Interactive.Tests
             _lockReleaser.Dispose();
         }
 
-        protected CompositeKernel CreateCompositeKernel(Language defaultKernelLanguage = Language.CSharp)
+        protected CompositeKernel CreateCompositeKernel(Language defaultKernelLanguage = Language.CSharp,
+            bool openTestingNamespaces = false)
         {
             return CreateCompositeKernel(
                 new[]
                 {
-                    CreateFSharpKernel(),
+                    CreateFSharpKernel(openTestingNamespaces),
                     CreateCSharpKernel(),
-                    CreatePowerShellKernel()
+                    CreatePowerShellKernel(),
                 },
                 defaultKernelLanguage);
         }
 
-        protected CompositeKernel CreateKernel(Language defaultLanguage = Language.CSharp)
+        protected CompositeKernel CreateKernel(Language defaultLanguage = Language.CSharp, 
+            bool openTestingNamespaces = false)
         {
             var languageKernel = defaultLanguage switch
             {
-                Language.FSharp => CreateFSharpKernel(),
+                Language.FSharp => CreateFSharpKernel(openTestingNamespaces),
                 Language.CSharp => CreateCSharpKernel(),
                 Language.PowerShell => CreatePowerShellKernel(),
                 _ => throw new InvalidOperationException($"Unknown language specified: {defaultLanguage}")
@@ -100,12 +103,12 @@ namespace Microsoft.DotNet.Interactive.Tests
             return CreateCompositeKernel(new[] { languageKernel }, defaultLanguage);
         }
 
-        private CompositeKernel CreateCompositeKernel(IEnumerable<Kernel> subkernels, Language defaultKernelLanguage)
+        private CompositeKernel CreateCompositeKernel(IEnumerable<(Kernel, IEnumerable<string>)> subkernelsAndAliases, Language defaultKernelLanguage)
         {
             var kernel = new CompositeKernel().UseDefaultMagicCommands();
-            foreach (var sub in subkernels)
+            foreach (var (subkernel, aliases) in subkernelsAndAliases)
             {
-                kernel.Add(sub.LogEventsToPocketLogger());
+                kernel.Add(subkernel.LogEventsToPocketLogger(), aliases.ToImmutableArray());
             }
 
             kernel.DefaultKernelName = defaultKernelLanguage.LanguageName();
@@ -118,31 +121,66 @@ namespace Microsoft.DotNet.Interactive.Tests
             return kernel;
         }
 
-        private Kernel CreateFSharpKernel()
+        private Kernel UseExtraNamespacesForFSharpTesting(Kernel kernel)
         {
-            return new FSharpKernel()
+
+            var code =
+                 "open " + typeof(System.Threading.Tasks.Task).Namespace + Environment.NewLine +
+                 "open " + typeof(System.Linq.Enumerable).Namespace + Environment.NewLine +
+                 "open " + typeof(Microsoft.AspNetCore.Html.IHtmlContent).Namespace + Environment.NewLine +
+                 "open " + typeof(Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html).FullName + Environment.NewLine +
+                 "open " + typeof(XPlot.Plotly.PlotlyChart).Namespace + Environment.NewLine;
+
+            kernel.DeferCommand(new SubmitCode(code));
+            return kernel;
+        }
+
+        private (Kernel, IEnumerable<string>) CreateFSharpKernel(bool openTestingNamespaces)
+        {
+            Kernel kernel =
+                new FSharpKernel()
                 .UseDefaultFormatting()
                 .UseNugetDirective()
                 .UseKernelHelpers()
                 .UseDotNetVariableSharing()
                 .UseWho()
                 .UseDefaultNamespaces();
+
+            if (openTestingNamespaces)
+            {
+                kernel = UseExtraNamespacesForFSharpTesting(kernel);
+            }
+
+            return (kernel, new[]
+                {
+                    "f#",
+                    "F#"
+                });
         }
 
-        private Kernel CreateCSharpKernel()
+        private (Kernel, IEnumerable<string>) CreateCSharpKernel()
         {
-            return new CSharpKernel()
+            return (new CSharpKernel()
                 .UseDefaultFormatting()
                 .UseNugetDirective()
                 .UseKernelHelpers()
                 .UseDotNetVariableSharing()
-                .UseWho();
+                .UseWho(),
+                new[]
+                {
+                    "c#",
+                    "C#"
+                });
         }
 
-        private Kernel CreatePowerShellKernel()
+        private (Kernel, IEnumerable<string>) CreatePowerShellKernel()
         {
-            return new PowerShellKernel()
-                .UseDotNetVariableSharing();
+            return (new PowerShellKernel()
+                .UseDotNetVariableSharing(),
+                new[]
+                {
+                    "powershell"
+                });
         }
 
         public async Task SubmitCode(Kernel kernel, string[] submissions, SubmissionType submissionType = SubmissionType.Run)

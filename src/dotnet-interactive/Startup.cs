@@ -8,10 +8,8 @@ using Microsoft.DotNet.Interactive.App.Http;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Pocket;
-using Serilog;
 
 namespace Microsoft.DotNet.Interactive.App
 {
@@ -37,10 +35,11 @@ namespace Microsoft.DotNet.Interactive.App
 
         public void ConfigureServices(IServiceCollection services)
         {
-            using var _ = Pocket.Logger.Log.OnEnterAndExit();
+            using var _ = Logger.Log.OnEnterAndExit();
+
             if (StartupOptions.EnableHttpApi)
             {
-                services.AddSingleton((c) => new KernelHubConnection(c.GetRequiredService<CompositeKernel>()));
+                services.AddSingleton(c => new KernelHubConnection(c.GetRequiredService<CompositeKernel>()));
                 services.AddRouting();
                 services.AddCors(options =>
                 {
@@ -63,12 +62,13 @@ namespace Microsoft.DotNet.Interactive.App
             IHostApplicationLifetime lifetime,
             IServiceProvider serviceProvider)
         {
-            var operation = Pocket.Logger.Log.OnEnterAndExit();
+            var operation = Logger.Log.OnEnterAndExit();
             if (StartupOptions.EnableHttpApi)
             {
+                var kernel = serviceProvider.GetRequiredService<Kernel>();
                 app.UseStaticFiles(new StaticFileOptions
                 {
-                    FileProvider = new EmbeddedFileProvider(typeof(Startup).Assembly)
+                    FileProvider = new FileProvider(kernel)
                 });
                 app.UseWebSockets();
                 app.UseCors("default");
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Interactive.App
                         r.Routes.Add(new DiscoveryRouter(frontendEnvironment));
                     }
 
-                    var kernel = serviceProvider.GetRequiredService<Kernel>();
+                   
                     var startupOptions = serviceProvider.GetRequiredService<StartupOptions>();
                     if (startupOptions.EnableHttpApi)
                     {

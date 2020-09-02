@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>preview</LangVersion>
-    <IsPackable>true</IsPackable>
+    <NoWarn>$(NoWarn);8002</NoWarn> <!-- Assent isn't strongly signed -->
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,14 +18,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentAssertions" Version="5.10.0" />
+    <PackageReference Include="FluentAssertions" Version="5.10.2" />
+    <PackageReference Include="Assent" Version="1.3.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.20372.2" />
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.20372.2" />
-    <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.20372.2" />
-    <PackageReference Include="microsoft.data.analysis" Version="0.4.0" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp.Wrapper\Microsoft.DotNet.Interactive.FSharp.Wrapper.csproj" />
   </ItemGroup>
 
   <ItemGroup>

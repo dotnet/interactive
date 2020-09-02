@@ -2,71 +2,25 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Concurrent;
+using System.Collections;
 using System.Collections.Generic;
 using System.CommandLine.Rendering;
 using System.Dynamic;
 using System.Linq;
 using System.Text.Encodings.Web;
+using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.CSharp;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    internal class DefaultPlainTextFormatterSet : FormatterSetBase
+    internal class DefaultPlainTextFormatterSet
     {
-        public DefaultPlainTextFormatterSet() :
-            base(DefaultFormatters())
-        {
-        }
-
-        protected override bool TryInferFormatter(
-            Type type, 
-            out ITypeFormatter formatter)
-        {
-            if (type.IsGenericType &&
-                type.GetGenericTypeDefinition() == typeof(ReadOnlyMemory<>))
+        static internal ITypeFormatter[] DefaultFormatters =
+            new ITypeFormatter[]
             {
-                formatter = Formatter.Create(
-                    type,
-                    (obj, writer) =>
+                new PlainTextFormatter<ExpandoObject>((context, expando, writer) =>
                     {
-                        var toArray = Formatter.FormatReadOnlyMemoryMethod.MakeGenericMethod
-                            (type.GetGenericArguments());
-
-                        var array = toArray.Invoke(null, new[]
-                        {
-                            obj
-                        });
-
-                        writer.Write(array.ToDisplayString());
-                    },
-                    PlainTextFormatter.MimeType);
-                return true;
-            }
-
-            if (typeof(TextSpan).IsAssignableFrom(type))
-            {
-                formatter = new PlainTextFormatter<TextSpan>((span, writer) =>
-                {
-                    writer.Write(span.ToString(OutputMode.Ansi));
-                });
-                return true;
-            }
-
-            formatter = null;
-            return false;
-        }
-
-        private static ConcurrentDictionary<Type, ITypeFormatter> DefaultFormatters()
-        {
-            var singleLineFormatter = new SingleLinePlainTextFormatter();
-
-           
-            return new ConcurrentDictionary<Type, ITypeFormatter>
-            {
-                [typeof(ExpandoObject)] =
-                    new PlainTextFormatter<ExpandoObject>((expando, writer) =>
-                    {
+                        var singleLineFormatter = new SingleLinePlainTextFormatter();
                         singleLineFormatter.WriteStartObject(writer);
                         var pairs = expando.ToArray();
                         var length = pairs.Length;
@@ -75,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                             var pair = pairs[i];
                             writer.Write(pair.Key);
                             singleLineFormatter.WriteNameValueDelimiter(writer);
-                            pair.Value.FormatTo(writer);
+                            pair.Value.FormatTo(context, writer);
 
                             if (i < length - 1)
                             {
@@ -84,41 +38,106 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         }
 
                         singleLineFormatter.WriteEndObject(writer);
+                        return true;
                     }),
 
-                [typeof(PocketView)] = new PlainTextFormatter<PocketView>((view, writer) => view.WriteTo(writer, HtmlEncoder.Default)),
-
-                [typeof(KeyValuePair<string, object>)] = new PlainTextFormatter<KeyValuePair<string, object>>((pair, writer) =>
+                new PlainTextFormatter<IHtmlContent>((context, view, writer) =>
                 {
-                    writer.Write(pair.Key);
-                    singleLineFormatter.WriteNameValueDelimiter(writer);
-                    pair.Value.FormatTo(writer);
+                    view.WriteTo(writer, HtmlEncoder.Default);
+                    return true;
                 }),
 
-                [typeof(ReadOnlyMemory<char>)] = new PlainTextFormatter<ReadOnlyMemory<char>>((memory, writer) => { writer.Write(memory.Span.ToString()); }),
-
-                [typeof(TimeSpan)] = new PlainTextFormatter<TimeSpan>((timespan, writer) => { writer.Write(timespan.ToString()); }),
-
-                [typeof(Type)] = _formatterForSystemType,
-
-                [typeof(Type).GetType()] = _formatterForSystemType,
-
-                [typeof(DateTime)] = new PlainTextFormatter<DateTime>((value, writer) => writer.Write(value.ToString("u"))),
-
-                [typeof(DateTimeOffset)] = new PlainTextFormatter<DateTimeOffset>((value, writer) => writer.Write(value.ToString("u")))
-            };
-        }
-
-        private static readonly PlainTextFormatter<Type> _formatterForSystemType =
-            new PlainTextFormatter<Type>((type, writer) =>
-            {
-                if (type.IsAnonymous())
+                new PlainTextFormatter<KeyValuePair<string, object>>((context, pair, writer) =>
                 {
-                    writer.Write("(anonymous)");
-                    return;
-                }
+                    var singleLineFormatter = new SingleLinePlainTextFormatter();
+                    writer.Write(pair.Key);
+                    singleLineFormatter.WriteNameValueDelimiter(writer);
+                    pair.Value.FormatTo(context, writer);
+                    return true;
+                }),
 
-                type.WriteCSharpDeclarationTo(writer);
-            });
+                new PlainTextFormatter<ReadOnlyMemory<char>>((context, memory, writer) => 
+                { 
+                    writer.Write(memory.Span.ToString()); 
+                    return true;
+                }),
+
+                new PlainTextFormatter<Type>((context, type, writer) =>
+                {
+                    if (type.IsAnonymous())
+                    {
+                        writer.Write("(anonymous)");
+                        return true;
+                    }
+
+                    type.WriteCSharpDeclarationTo(writer);
+                    return true;
+                }),
+
+                new PlainTextFormatter<DateTime>((context, value, writer) =>
+                {
+                    writer.Write(value.ToString("u"));
+                    return true;
+                }),
+
+                new PlainTextFormatter<DateTimeOffset>((context, value, writer) =>
+                {
+                    writer.Write(value.ToString("u"));
+                    return true;
+                }),
+
+                new AnonymousTypeFormatter<object>(type: typeof(ReadOnlyMemory<>),
+                    mimeType: PlainTextFormatter.MimeType,
+                    format: (context, obj, writer) =>
+                    {
+                        var actualType = obj.GetType();
+                        var toArray = Formatter.FormatReadOnlyMemoryMethod.MakeGenericMethod
+                            (actualType.GetGenericArguments());
+
+                        var array = toArray.Invoke(null, new[] { obj });
+
+                        writer.Write(array.ToDisplayString(PlainTextFormatter.MimeType));
+                        return true;
+                    }),
+
+
+                new PlainTextFormatter<TextSpan>((context, span, writer) =>
+                    {
+                        writer.Write(span.ToString(OutputMode.Ansi));
+                        return true;
+                    }),
+
+                new PlainTextFormatter<Newtonsoft.Json.Linq.JToken>((context, obj, writer) =>
+                    {
+                        writer.Write(obj);
+                        return true;
+                    }),
+
+                // Fallback for IEnumerable
+                new PlainTextFormatter<IEnumerable>((context, obj, writer) =>
+                {
+                    if (obj is null)
+                    {
+                        writer.Write(Formatter.NullString);
+                        return true;
+                    }
+                    var type = obj.GetType();
+                    var formatter = PlainTextFormatter.GetDefaultFormatterForAnyEnumerable(type);
+                    return formatter.Format(context, obj, writer);
+                }),
+
+                // Fallback for any object
+                new PlainTextFormatter<object>((context, obj, writer) =>
+                {
+                    if (obj is null)
+                    {
+                        writer.Write(Formatter.NullString);
+                        return true;
+                    }
+                    var type = obj.GetType();
+                    var formatter = PlainTextFormatter.GetDefaultFormatterForAnyObject(type);
+                    return formatter.Format(context, obj, writer);
+                })
+            };
     }
 }

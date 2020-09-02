@@ -16,14 +16,17 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
+using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public sealed class CompositeKernel : 
+    public sealed class CompositeKernel :
         Kernel,
         IExtensibleKernel,
-        IEnumerable<Kernel>
+        IEnumerable<Kernel>,
+        IKernelCommandHandler<ParseNotebook>,
+        IKernelCommandHandler<SerializeNotebook>
     {
         private readonly ConcurrentQueue<PackageAdded> _packagesToCheckForExtensions = new ConcurrentQueue<PackageAdded>();
         private readonly List<Kernel> _childKernels = new List<Kernel>();
@@ -92,6 +95,28 @@ namespace Microsoft.DotNet.Interactive
 
             RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));
             RegisterForDisposal(kernel);
+        }
+
+        public Task HandleAsync(ParseNotebook command, KernelInvocationContext context)
+        {
+            var notebook = ParseNotebook(command.FileName, command.RawData);
+            context.Publish(new NotebookParsed(notebook, command));
+            return Task.CompletedTask;
+        }
+
+        public NotebookDocument ParseNotebook(string fileName, byte[] rawData)
+        {
+            var kernelLanguageAliases = _kernelsByNameOrAlias.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name);
+            kernelLanguageAliases.Remove(Name); // remove `.NET`
+            var notebook = NotebookFileFormatHandler.Parse(fileName, rawData, DefaultKernelName, kernelLanguageAliases);
+            return notebook;
+        }
+
+        public Task HandleAsync(SerializeNotebook command, KernelInvocationContext context)
+        {
+            var rawData = NotebookFileFormatHandler.Serialize(command.FileName, command.Notebook, command.NewLine);
+            context.Publish(new NotebookSerialized(rawData, command));
+            return Task.CompletedTask;
         }
 
         private void AddChooseKernelDirective(

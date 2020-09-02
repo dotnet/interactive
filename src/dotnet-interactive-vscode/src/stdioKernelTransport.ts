@@ -15,6 +15,7 @@ import {
 import { ProcessStart } from './interfaces';
 import { ReportChannel } from './interfaces/vscode';
 import { LineReader } from './lineReader';
+import { parse, stringify } from './utilities';
 
 export class StdioKernelTransport {
     private childProcess: cp.ChildProcessWithoutNullStreams;
@@ -55,7 +56,7 @@ export class StdioKernelTransport {
     }
 
     private handleLine(line: string) {
-        let obj = JSON.parse(line);
+        let obj = parse(line);
         let envelope = <KernelEventEnvelope>obj;
         switch (envelope.eventType) {
             case DiagnosticLogEntryProducedType:
@@ -88,7 +89,7 @@ export class StdioKernelTransport {
                 command
             };
 
-            let str = JSON.stringify(submit);
+            let str = stringify(submit);
             this.childProcess.stdin.write(str);
             this.childProcess.stdin.write('\n');
             resolve();

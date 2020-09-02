@@ -21,7 +21,10 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
         [JsonProperty("transient", NullValueHandling = NullValueHandling.Ignore)]
         public IReadOnlyDictionary<string, object> Transient { get; }
 
-        public DisplayData(string source = null,IReadOnlyDictionary<string, object> data = null, IReadOnlyDictionary<string, object> metaData = null, IReadOnlyDictionary<string, object> transient = null)
+        public DisplayData(string source = null,
+            IReadOnlyDictionary<string, object> data = null,
+            IReadOnlyDictionary<string, object> metaData = null,
+            IReadOnlyDictionary<string, object> transient = null)
         {
             Source = source;
             Data = data ?? new Dictionary<string, object>();

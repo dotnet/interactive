@@ -3,7 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
+using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -13,27 +14,52 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         static HtmlFormatter()
         {
-            Formatter.Clearing += (sender, args) => DefaultFormatters = new DefaultHtmlFormatterSet();
-        }
-
-        public static ITypeFormatter Create(
-            Type type,
-            bool includeInternals = false)
-        {
-            var genericCreateForAllMembers = typeof(HtmlFormatter<>)
-                                             .MakeGenericType(type)
-                                             .GetMethod(nameof(HtmlFormatter<object>.Create), new[]
-                                             {
-                                                 typeof(bool)
-                                             });
-
-            return (ITypeFormatter) genericCreateForAllMembers.Invoke(null, new object[]
+            Formatter.Clearing += (obj, sender) =>
             {
-                includeInternals
-            });
+                MaxProperties = DefaultMaxProperties;
+            };
         }
+
+        /// <summary>
+        ///   Indicates the maximum number of properties to show in the default plaintext display of arbitrary objects.
+        ///   If set to zero no properties are shown.
+        /// </summary>
+        public static int MaxProperties { get; set; } = DefaultMaxProperties;
+
+        internal const int DefaultMaxProperties = 20;
+
+        public static ITypeFormatter GetPreferredFormatterFor(Type type) =>
+            Formatter.GetPreferredFormatterFor(type, MimeType);
+
+        public static ITypeFormatter GetPreferredFormatterFor<T>() =>
+            GetPreferredFormatterFor(typeof(T));
 
         public const string MimeType = "text/html";
+
+        internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
+            FormattersForAnyObject.GetFormatter(type, includeInternals);
+
+        internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
+            FormattersForAnyEnumerable.GetFormatter(type, false);
+
+        internal static void FormatObjectAsPlainText(FormatContext context, object value, TextWriter writer)
+        {
+            using var swriter = Formatter.CreateWriter();
+            Formatter.FormatTo(value, context, swriter, PlainTextFormatter.MimeType);
+            var text = swriter.ToString();
+            FormatStringAsPlainText(text, writer);
+        }
+
+        internal static void FormatStringAsPlainText(string text, TextWriter writer)
+        {
+            if (!string.IsNullOrEmpty(text))
+            {
+                var tag = div;
+                tag.HtmlAttributes["class"] = "dni-plaintext";
+                var html = tag(text.HtmlEncode());
+                html.WriteTo(writer, HtmlEncoder.Default);
+            }
+        }
 
         internal static PocketView Table(
             List<IHtmlContent> headers,
@@ -45,6 +71,22 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 tbody(
                     rows));
 
-        internal static IFormatterSet DefaultFormatters { get; private set; } = new DefaultHtmlFormatterSet();
+        internal class EmbeddedFormat
+        {
+            internal FormatContext Context { get; }
+            internal object Object { get; }
+            internal EmbeddedFormat(FormatContext context, object instance)
+                { Object = instance;  Context = context;  }
+        }
+
+
+        internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultHtmlFormatterSet.DefaultFormatters;
+
+        internal static FormatterTable FormattersForAnyObject =
+            new FormatterTable(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyObject));
+
+        internal static FormatterTable FormattersForAnyEnumerable =
+            new FormatterTable(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyEnumerable));
+
     }
 }

@@ -126,11 +126,32 @@ f();"));
             await context.Done().Timeout(5.Seconds());
 
             JupyterMessageSender.PubSubMessages.Should()
-                .ContainSingle(e => e is Error)
-                .Which.As<Error>()
-                .Traceback
+                .ContainSingle<Stream>()
+                .Which
+                .Text
                 .Should()
-                .BeEquivalentTo("(1,13): error CS1002: ; expected");
+                .BeEquivalentTo(Environment.NewLine + "(1,13): error CS1002: ; expected" + Environment.NewLine + Environment.NewLine);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "(1,4): error CS1733: Expected expression")]
+        [InlineData(Language.FSharp, "input.fsx (1,4)-(1,4) parse error Unexpected end of input in expression")]
+        public async Task shows_diagnostics_on_erroneous_input(Language language, string expected)
+        {
+            var scheduler = CreateScheduler();
+            SetKernelLanguage(language);
+            var request = ZeroMQMessage.Create(new ExecuteRequest("1+!"));
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            await scheduler.Schedule(context);
+
+            await context.Done().Timeout(5.Seconds());
+
+            JupyterMessageSender.PubSubMessages.Should()
+                .ContainSingle<Stream>()
+                .Which
+                .Text
+                .Should()
+                .Contain(expected);
         }
 
         [Fact]
@@ -246,7 +267,7 @@ f();"));
                                 .Which
                                 .Data
                                 .Should()
-                                .ContainSingle(d => d.Key.Equals("text/html") && d.Value.Equals("4"));
+                                .ContainSingle(d => d.Key.Equals("text/html") && d.Value.Equals("<div class=\"dni-plaintext\">4</div>"));
         }
 
         [Fact]
@@ -285,7 +306,7 @@ f();"));
                                 .Which
                                 .Data
                                 .Should()
-                                .ContainSingle(d => d.Key.Equals("text/html") && d.Value.Equals("123"));
+                                .ContainSingle(d => d.Key.Equals("text/html") && d.Value.Equals("<div class=\"dni-plaintext\">123</div>"));
         }
 
         [Theory]
@@ -360,7 +381,7 @@ f();"));
             JupyterMessageSender.PubSubMessages
                 .OfType<ExecuteResult>()
                 .Should()
-                .Contain(dp => dp.Data["text/html"] as string == $"{typeof(PasswordString).FullName}");
+                .Contain(dp => dp.Data["text/html"] as string == $"<div class=\"dni-plaintext\">{typeof(PasswordString).FullName}</div>");
         }
 
         [Theory]

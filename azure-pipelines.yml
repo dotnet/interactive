@@ -1,9 +1,9 @@
 # CI and PR triggers
 trigger:
-- master
+- main
 - feature/*
 pr:
-- master
+- main
 - feature/*
 
 # Variables
@@ -352,4 +352,4 @@ stages:
 - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
   - template: eng/upload/upload-packages.yml
     parameters:
-      branchToUpload: refs/heads/master
+      branchToUpload: refs/heads/main

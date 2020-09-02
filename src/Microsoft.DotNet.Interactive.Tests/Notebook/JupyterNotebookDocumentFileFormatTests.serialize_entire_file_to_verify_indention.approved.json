@@ -1,0 +1,45 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "source": [
+    "// this is csharp"
+   ],
+   "outputs": [
+    {
+     "output_type": "execute_result",
+     "data": {
+      "text/html": "this is html"
+     },
+     "execution_count": 1,
+     "metadata": {}
+    }
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This is `markdown`."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".NET (C#)",
+   "language": "C#",
+   "name": ".net-csharp"
+  },
+  "language_info": {
+   "file_extension": ".cs",
+   "mimetype": "text/x-csharp",
+   "name": "C#",
+   "pygments_lexer": "csharp",
+   "version": "8.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}

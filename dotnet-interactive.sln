@@ -55,6 +55,25 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "interface-generator", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.FSharp.Wrapper", "src\Microsoft.DotNet.Interactive.FSharp.Wrapper\Microsoft.DotNet.Interactive.FSharp.Wrapper.csproj", "{89672116-94E4-4F17-A64A-AA049410F595}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{4DD50BCA-133B-4594-8368-ED56939BAF6B}"
+	ProjectSection(SolutionItems) = preProject
+		docs\CreateBinder.md = docs\CreateBinder.md
+		docs\display-output-csharp.md = docs\display-output-csharp.md
+		docs\extending-dotnet-interactive.md = docs\extending-dotnet-interactive.md
+		docs\formatting.md = docs\formatting.md
+		docs\javascript-overview.md = docs\javascript-overview.md
+		docs\kernels-overview.md = docs\kernels-overview.md
+		docs\magic-commands.md = docs\magic-commands.md
+		docs\NotebooksLocalExperience.md = docs\NotebooksLocalExperience.md
+		docs\NotebooksOnBinder.md = docs\NotebooksOnBinder.md
+		docs\nuget-overview.md = docs\nuget-overview.md
+		docs\pocketview.md = docs\pocketview.md
+		docs\polyglot.md = docs\polyglot.md
+		docs\README.md = docs\README.md
+		docs\small-factor-devices.md = docs\small-factor-devices.md
+		docs\variable-sharing.md = docs\variable-sharing.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

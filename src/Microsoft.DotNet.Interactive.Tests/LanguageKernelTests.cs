@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.DirectoryServices.ActiveDirectory;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -141,8 +141,9 @@ location.EndsWith(""System.Text.Json.dll"")"
 |> List.sum";
 
             await SubmitCode(kernel, source);
+            var events = KernelEvents;
 
-            KernelEvents
+            events
                 .OfType<ReturnValueProduced>()
                 .Last()
                 .Value
@@ -278,6 +279,7 @@ f();"
 
             using var _ = new AssertionScope();
 
+            // The CommandFailed message is populated
             KernelEvents
                 .Should()
                 .ContainSingle<CommandFailed>()
@@ -286,13 +288,72 @@ f();"
                 .Should()
                 .Be(errorMessage);
 
+            // The Diagnostics of DiagnosticsProduced event are populated
             KernelEvents
                 .Should()
                 .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
                 .Which
                 .Diagnostics
                 .Should()
-                .ContainSingle(diag => diag.LinePositionSpan == diagnosticRange && diag.Code == code && diag.Message == diagnosticMessage);
+                .ContainSingle(diag => 
+                    diag.LinePositionSpan == diagnosticRange && 
+                    diag.Code == code && 
+                    diag.Message == diagnosticMessage);
+
+            // The FormattedValues are populated of DiagnosticsProduced event are populated
+            KernelEvents
+                .Should()
+                .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
+                .Which
+                .FormattedDiagnostics
+                .Should()
+                .ContainSingle(fv => true)
+                .Which
+                .Value
+                .Should()
+                .Be(errorMessage);
+
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "'AppDomain.GetCurrentThreadId()' is obsolete: 'AppDomain.GetCurrentThreadId has been deprecated")]
+        [InlineData(Language.FSharp, "This construct is deprecated. AppDomain.GetCurrentThreadId has been deprecated")]
+        public async Task when_code_contains_compile_time_warnings_diagnostics_are_produced(Language language, string diagnosticMessage)
+        {
+            var kernel = CreateKernel(language);
+
+            var source = language switch
+            {
+                Language.FSharp => new[]
+                {
+                    "System.AppDomain.GetCurrentThreadId()"
+                },
+
+                Language.CSharp => new[]
+                {
+                    "System.AppDomain.GetCurrentThreadId()",
+                }
+            };
+
+            await SubmitCode(kernel, source);
+
+            using var _ = new AssertionScope();
+
+            KernelEvents
+                .Should()
+                .ContainSingle<ReturnValueProduced>();
+
+            KernelEvents
+                .Should()
+                .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
+                .Which
+                .Diagnostics
+                .Should()
+                .ContainSingle(diagnostic => true)
+                .Which
+                .Message
+                .Should()
+                .StartWith(diagnosticMessage);
         }
 
         [Fact]
@@ -312,7 +373,22 @@ f();"
                 .Which
                 .Diagnostics
                 .Should()
-                .ContainSingle(d => d.LinePositionSpan == diagnosticRange && d.Code == "ExpectedExpression" && d.Message == "An expression was expected after '('.");
+                .ContainSingle(d =>
+                    d.LinePositionSpan == diagnosticRange &&
+                    d.Code == "ExpectedExpression" && 
+                    d.Message == "An expression was expected after '('.");
+
+            KernelEvents
+                .Should()
+                .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
+                .Which
+                .FormattedDiagnostics
+                .Should()
+                .ContainSingle(fv => true)
+                .Which
+                .Value
+                .Should()
+                .StartWith("At line:1 char:4");
         }
 
         [Theory]
@@ -862,7 +938,7 @@ Console.Write(""value three"");"
         [InlineData(Language.FSharp)]
         public async Task it_returns_a_similarly_shaped_error(Language language)
         {
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
 
             var (source, error) = language switch
             {
@@ -875,9 +951,13 @@ Console.Write(""value three"");"
 
             KernelEvents
                 .Should()
-                .ContainSingle<CommandFailed>()
+                .ContainSingle<DiagnosticsProduced>(d => d.Diagnostics.Count > 0)
                 .Which
-                .Message
+                .FormattedDiagnostics
+                .Should()
+                .ContainSingle(fv => true)
+                .Which
+                .Value
                 .Should()
                 .Be(error);
         }
@@ -1036,7 +1116,7 @@ Console.Write(2);
         [InlineData(Language.PowerShell)]
         public async Task it_returns_completion_list_for_previously_declared_items(Language language)
         {
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
 
             var source = language switch
             {

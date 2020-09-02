@@ -5,6 +5,7 @@ using FluentAssertions;
 using System.Linq;
 using Xunit;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
+using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
@@ -44,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         {
             string output = ul(Enumerable.Range(1, 3).Select(i => li(i))).ToString();
 
-            output.Should().Be("<ul><li>1</li><li>2</li><li>3</li></ul>");
+            output.Should().Be($"<ul><li>{PlainTextBegin}1{PlainTextEnd}</li><li>{PlainTextBegin}2{PlainTextEnd}</li><li>{PlainTextBegin}3{PlainTextEnd}</li></ul>");
         }
 
         [Fact]
@@ -151,10 +152,10 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 (tag, model) =>
                 {
                     tag.Name = "div";
-                    tag.Content = w =>
+                    tag.Content = writer =>
                     {
-                        w.Write(label[@for: model.name](model.name));
-                        w.Write(input[value: model.value, type: "text", name: model.name]);
+                        writer.Write(label[@for: model.name](model.name));
+                        writer.Write(input[value: model.value, type: "text", name: model.name]);
                     };
                 });
 

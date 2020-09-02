@@ -11,10 +11,18 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
+using static Microsoft.DotNet.Interactive.Tests.Tags;
 
 #pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests
 {
+    public class Tags
+    {
+        public const string PlainTextBegin = "<div class=\"dni-plaintext\">";
+        public const string PlainTextEnd = "</div>";
+
+    }
+
     [LogTestNamesToPocketLogger]
     public class LanguageKernelFormattingTests : LanguageKernelTestBase
     {
@@ -24,8 +32,8 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         [Theory]
         // PocketView
-        [InlineData(Language.CSharp, "b(123)", "<b>123</b>")]
-        [InlineData(Language.FSharp, "b.innerHTML(123)", "<b>123</b>")]
+        [InlineData(Language.CSharp, "b(123)", "<b>"+PlainTextBegin+"123"+PlainTextEnd+"</b>")]
+        [InlineData(Language.FSharp, "b [] [str \"123\" ]", "<b>123</b>")]
         // sequence
         [InlineData(Language.CSharp, "new[] { 1, 2, 3, 4 }", "<table>")]
         [InlineData(Language.FSharp, "[1; 2; 3; 4]", "<table>")]
@@ -37,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             string submission,
             string expectedContent)
         {
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
 
             await kernel.SendAsync(new SubmitCode(submission));
 
@@ -53,24 +61,46 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "div(123).ToString()", "<div>123</div>")]
-        [InlineData(Language.FSharp, "div.innerHTML(123).ToString()", "<div>123</div>")]
-        [InlineData(Language.CSharp, "display(div(123).ToString());", "<div>123</div>")]
-        [InlineData(Language.FSharp, "display(div.innerHTML(123).ToString())", "<div>123</div>")]
-        [InlineData(Language.CSharp, "\"hi\"", "hi")]
-        [InlineData(Language.FSharp, "\"hi\"", "hi")]
-        public async Task String_is_rendered_as_plain_text(
+        [InlineData(Language.CSharp, "display(\"<test></test>\")", "<test></test>")]
+        [InlineData(Language.FSharp, "display(\"<test></test>\")", "<test></test>")]
+        public async Task String_is_rendered_as_plain_text_via_display(
             Language language,
             string submission,
             string expectedContent)
         {
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
 
             var result = await kernel.SendAsync(new SubmitCode(submission));
 
             var valueProduced = await result
                                       .KernelEvents
-                                      .OfType<DisplayEvent>()
+                                      .OfType<DisplayedValueProduced>()
+                                      .Timeout(5.Seconds())
+                                      .FirstAsync();
+
+            valueProduced
+                .FormattedValues
+                .Should()
+                .ContainSingle(v =>
+                                   v.MimeType == "text/plain" &&
+                                   v.Value.ToString().Contains(expectedContent));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "\"hi\"", "hi")]
+        [InlineData(Language.FSharp, "\"hi\"", "hi")]
+        public async Task String_is_rendered_as_plain_text_via_implicit_return(
+            Language language,
+            string submission,
+            string expectedContent)
+        {
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
+
+            var result = await kernel.SendAsync(new SubmitCode(submission));
+
+            var valueProduced = await result
+                                      .KernelEvents
+                                      .OfType<ReturnValueProduced>()
                                       .Timeout(5.Seconds())
                                       .FirstAsync();
 
@@ -87,12 +117,12 @@ namespace Microsoft.DotNet.Interactive.Tests
         [InlineData(Language.FSharp)]
         public async Task Display_helper_can_be_called_without_specifying_class_name(Language language)
         {
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
 
             var submission = language switch
             {
                 Language.CSharp => "display(b(\"hi!\"));",
-                Language.FSharp => "display(b.innerHTML(\"hi!\"));",
+                Language.FSharp => "display(b [] [ str \"hi!\" ]);",
             };
 
             await kernel.SendAsync(new SubmitCode(submission));
@@ -103,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Should()
                 .ContainSingle(v =>
                     v.MimeType == "text/html" &&
-                    v.Value.ToString().Contains("<b>hi!</b>"));
+                    v.Value.ToString().Contains("<b>"));
         }
 
         [Theory]
@@ -111,12 +141,12 @@ namespace Microsoft.DotNet.Interactive.Tests
         [InlineData(Language.FSharp)]
         public async Task Displayed_value_can_be_updated(Language language)
         {
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
 
             var submission = language switch
             {
                 Language.CSharp => "var d = display(b(\"hello\")); d.Update(b(\"world\"));",
-                Language.FSharp => "let d = display(b.innerHTML(\"hello\"))\nd.Update(b.innerHTML(\"world\"))",
+                Language.FSharp => "let d = display(b [] [ str \"hello\"])\nd.Update(b [] [str \"world\"])",
             };
 
             await kernel.SendAsync(new SubmitCode(submission));
@@ -144,12 +174,12 @@ namespace Microsoft.DotNet.Interactive.Tests
         [InlineData(Language.FSharp)]
         public async Task Displayed_value_can_be_updated_from_later_submissions(Language language)
         {
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
 
             var submissions = language switch
             {
                 Language.CSharp => new[] { "var d = display(b(\"hello\"));", "d.Update(b(\"world\"));" },
-                Language.FSharp => new[] { "let d = display(b.innerHTML(\"hello\"))", "d.Update(b.innerHTML(\"world\"))" },
+                Language.FSharp => new[] { "let d = display(b [] [ str \"hello\" ])", "d.Update(b [] [ str \"world\" ])" },
             };
 
             await kernel.SubmitCodeAsync(submissions[0]);
@@ -174,12 +204,12 @@ namespace Microsoft.DotNet.Interactive.Tests
         [InlineData(Language.FSharp)]
         public async Task Value_display_and_update_are_in_right_order(Language language)
         {
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
 
             var submission = language switch
             {
                 Language.CSharp => "var d = display(b(\"hello\")); d.Update(b(\"world\"));",
-                Language.FSharp => "let d = display(b.innerHTML(\"hello\"))\nd.Update(b.innerHTML(\"world\"))",
+                Language.FSharp => "let d = display(b [] [ str \"hello\" ])\nd.Update(b [] [ str \"world\" ])",
             };
 
             await kernel.SendAsync(new SubmitCode(submission));
@@ -251,6 +281,36 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
+        public async Task CSS_helper_emits_content_within_a_chunk_of_javascript(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var cssContent = "h1 { background: red; }";
+
+            var submission = language switch
+            {
+                Language.CSharp => $@"CSS(""{cssContent}"");",
+                Language.FSharp => $@"CSS(""{cssContent}"")",
+            };
+
+            await kernel.SendAsync(new SubmitCode(submission));
+
+            var formatted =
+                KernelEvents
+                    .OfType<DisplayedValueProduced>()
+                    .SelectMany(v => v.FormattedValues)
+                    .ToArray();
+
+            formatted
+                .Should()
+                .ContainSingle(v =>
+                                   v.MimeType == "text/html" &&
+                                   v.Value.ToString().Contains($"var css = '{cssContent}'"));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
         public async Task it_displays_detailed_information_for_exceptions_thrown_in_user_code(Language language)
         {
             var kernel = CreateKernel(language);
@@ -314,6 +374,67 @@ f();"
 
             KernelEvents.Should()
                         .NotContain(e => e is ReturnValueProduced);
+        }
+
+        [Fact]
+        public async Task FSharpKernel_opens_System()
+        {
+            var kernel = CreateKernel(Language.FSharp);
+
+            await kernel.SubmitCodeAsync("Console.WriteLine(\"abc.fs\")");
+
+            KernelEvents.Should()
+                        .NotContain(e => e is CommandFailed);
+        }
+        [Fact]
+        public async Task FSharpKernel_opens_System_IO()
+        {
+            var kernel = CreateKernel(Language.FSharp);
+
+            await kernel.SubmitCodeAsync("let t = Path.GetFileNameWithoutExtension(\"abc.fs\")");
+
+            KernelEvents.Should()
+                        .Contain(e => e is CommandSucceeded);
+        }
+        [Fact]
+        public async Task FSharpKernel_opens_System_Text()
+        {
+            var kernel = CreateKernel(Language.FSharp);
+
+            await kernel.SubmitCodeAsync("let t = StringBuilder()");
+
+            KernelEvents.Should()
+                        .Contain(e => e is CommandSucceeded);
+        }
+        [Fact]
+        public async Task FSharpKernel_does_not_open_System_Linq()
+        {
+            var kernel = CreateKernel(Language.FSharp);
+
+            await kernel.SubmitCodeAsync("let t = Enumerable.Range(0,20)");
+
+            KernelEvents.Should()
+                        .Contain(e => e is CommandFailed);
+        }
+        [Fact]
+        public async Task FSharpKernel_does_not_open_System_Threading_Tasks()
+        {
+            var kernel = CreateKernel(Language.FSharp);
+
+            await kernel.SubmitCodeAsync("let t : Task<int> = Unchecked.defaultof<_>");
+
+            KernelEvents.Should()
+                        .Contain(e => e is CommandFailed);
+        }
+        [Fact]
+        public async Task FSharpKernel_does_not_open_HTML_DSL()
+        {
+            var kernel = CreateKernel(Language.FSharp);
+
+            await kernel.SubmitCodeAsync("let x = p [] []");
+
+            KernelEvents.Should()
+                        .Contain(e => e is CommandFailed);
         }
     }
 }
