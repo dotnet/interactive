@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return Task.CompletedTask;
         }
 
-        private async Task Inspect(OptimizationLevel configuration, SourceCodeKind kind, Platform platform, KernelInvocationContext context)
+        private void Inspect(OptimizationLevel configuration, SourceCodeKind kind, Platform platform, KernelInvocationContext context)
         {
             if (!(context.Command is SubmitCode))
                 return;
@@ -92,9 +92,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             var prismScripts = GetPrismJS();
             var prismStyles = GetPrismCSS();
-
-            // TODO: Quite ugly temporary formatting.
-            static IEnumerable<string> SplitWithNewline(string text) => text.Split(Environment.NewLine);
 
             return div[@class: "tab-wrap"](prismStyles, styles,
                 input[type: "radio", name: "tabs", id: "tab1", @checked: "checked"],

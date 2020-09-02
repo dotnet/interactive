@@ -37,7 +37,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector
                 return new InspectionResult
                 {
                     IsSuccess = false,
-                    CompilationDiagnostics = csharpCompilationResult.Diagnostics?.Select(d => d.ToString()) ?? Enumerable.Empty<string>()
+                    CompilationDiagnostics =
+                        csharpCompilationResult.Diagnostics.Select(d => d.ToString())
                 };
             using var dll = csharpCompilationResult.Dll;
             using var pdb = csharpCompilationResult.Pdb;
@@ -56,7 +57,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector
             return new InspectionResult
             {
                 IsSuccess = true,
-                CompilationDiagnostics = csharpCompilationResult.Diagnostics?.Select(d => d.ToString()) ?? Enumerable.Empty<string>(),
+                CompilationDiagnostics = csharpCompilationResult.Diagnostics.Select(d => d.ToString()),
                 CSharpDecompilation = csharpDecompilation,
                 ILDecompilation = ilDecompilation,
                 JitDecompilation = jitDecompilation
