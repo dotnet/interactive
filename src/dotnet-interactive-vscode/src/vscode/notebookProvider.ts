@@ -8,7 +8,7 @@ import { notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage, 
 import { Eol } from '../interfaces';
 import { CellOutput } from '../interfaces/vscode';
 import { Diagnostic, DiagnosticSeverity, NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookCellTextOutput, NotebookDocument } from './../contracts';
-import { getEol, toVsCodeDiagnostic } from './vscodeUtilities';
+import { getEol, isUnsavedNotebook, toVsCodeDiagnostic } from './vscodeUtilities';
 import { getDiagnosticCollection } from './diagnostics';
 import { isDisplayOutput, isErrorOutput, isTextOutput } from '../utilities';
 
@@ -26,20 +26,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     preloads?: vscode.Uri[] | undefined;
 
     provideKernels(document: vscode.NotebookDocument, token: vscode.CancellationToken): vscode.ProviderResult<DotNetInteractiveNotebookContentProvider[]> {
-        if (document.uri.scheme === "untitled")
-        {
-            return [this];
-        }
-
-        const extension = path.extname(document.fileName).toLowerCase();
-        switch (extension) {
-            case '.dib':
-            case '.dotnet-interactive':
-            case '.ipynb':
-                return [this];
-            default:
-                return [];
-        }
+        return [this];
     }
 
     async executeAllCells(document: vscode.NotebookDocument): Promise<void> {
@@ -53,22 +40,35 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     }
 
     async openNotebook(uri: vscode.Uri): Promise<vscode.NotebookData> {
-        let buffer = new Uint8Array();
-        try {
-            buffer = Buffer.from(await vscode.workspace.fs.readFile(uri));
-        } catch {
+        const client = await this.clientMapper.getOrAddClient(uri);
+        let notebookCells: Array<NotebookCell>;
+        if (isUnsavedNotebook(uri)) {
+            // new empty/blank notebook
+            notebookCells = [];
+        } else {
+            // file on disk
+            let buffer = new Uint8Array();
+            try {
+                buffer = Buffer.from(await vscode.workspace.fs.readFile(uri));
+            } catch {
+            }
+
+            const fileName = path.basename(uri.fsPath);
+            const notebook = await client.parseNotebook(fileName, buffer);
+            notebookCells = notebook.cells;
         }
 
-        const client = await this.clientMapper.getOrAddClient(uri);
-        const fileName = path.basename(uri.fsPath);
-        const notebook = await client.parseNotebook(fileName, buffer);
+        const notebookData = this.createNotebookData(notebookCells);
+        return notebookData;
+    }
 
-        let notebookData: vscode.NotebookData = {
+    private createNotebookData(cells: Array<NotebookCell>): vscode.NotebookData {
+        const notebookData: vscode.NotebookData = {
             languages: notebookCellLanguages,
             metadata: {
                 cellHasExecutionOrder: false
             },
-            cells: notebook.cells.map(toVsCodeNotebookCellData)
+            cells: cells.map(toVsCodeNotebookCellData)
         };
 
         return notebookData;
@@ -152,6 +152,9 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     }
 
     private async serializeNotebook(document: vscode.NotebookDocument, uri: vscode.Uri): Promise<Uint8Array> {
+        // might be an unsaved notebook being assigned a filename for the first time
+        this.clientMapper.reassociateClient(document.uri, uri);
+
         const client = await this.clientMapper.getOrAddClient(uri);
         const fileName = path.basename(uri.fsPath);
         const notebook = toNotebookDocument(document);

@@ -27,6 +27,7 @@
     "onNotebookEditor:dotnet-interactive",
     "onNotebookEditor:dotnet-interactive-jupyter",
     "onCommand:dotnet-interactive.acquire",
+    "onCommand:dotnet-interactive.newNotebook",
     "onCommand:dotnet-interactive.openNotebook",
     "onCommand:dotnet-interactive.saveAsNotebook"
   ],
@@ -98,7 +99,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.145103",
+          "default": "1.0.145201",
           "description": "The minimum required version of the .NET Interactive tool."
         }
       }
@@ -117,6 +118,10 @@
         "title": ".NET Interactive: Save notebook as..."
       },
       {
+        "command": "dotnet-interactive.newNotebook",
+        "title": ".NET Interactive: Create new blank notebook"
+      },
+      {
         "command": "dotnet-interactive.restartCurrentNotebookKernel",
         "title": ".NET Interactive: Restart the current notebook's kernel"
       },
@@ -127,6 +132,13 @@
       {
         "command": "dotnet-interactive.stopAllNotebookKernels",
         "title": ".NET Interactive: Stop all notebook kernels"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "dotnet-interactive.newNotebook",
+        "key": "ctrl+alt+shift+n",
+        "mac": "cmd+alt+shift+n"
       }
     ],
     "languages": [

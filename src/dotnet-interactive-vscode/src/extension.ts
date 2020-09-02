@@ -7,7 +7,7 @@ import { ClientMapper } from './clientMapper';
 import { DotNetInteractiveNotebookContentProvider } from './vscode/notebookProvider';
 import { StdioKernelTransport } from './stdioKernelTransport';
 import { registerLanguageProviders } from './vscode/languageProvider';
-import { execute, registerAcquisitionCommands, registerKernelCommands, registerFileFormatCommands } from './vscode/commands';
+import { execute, registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './vscode/commands';
 
 import { IDotnetAcquireResult } from './interfaces/dotnet';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
@@ -53,7 +53,7 @@ export async function activate(context: vscode.ExtensionContext) {
     });
 
     registerKernelCommands(context, clientMapper);
-    registerFileFormatCommands(context, clientMapper);
+    registerFileCommands(context, clientMapper);
 
     const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable
 
