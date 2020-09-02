@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector
         public string ILDecompilation { get; internal set; } = string.Empty;
         public string JitDecompilation { get; internal set; } = string.Empty;
 
-        public override string? ToString() =>
+        public override string ToString() =>
             new StringBuilder()
                 .Append("Diagnostics:\n")
                 .Append(string.Join('\n', this.CompilationDiagnostics))

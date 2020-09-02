@@ -238,7 +238,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
             context.Writer.WriteLine(signature ?? "Unknown Method");
         }
 
-        private HotColdRegions? FindNonEmptyHotColdInfo(ClrMethod? method)
+        private HotColdRegions FindNonEmptyHotColdInfo(ClrMethod method)
         {
             if (method == null)
                 return null;

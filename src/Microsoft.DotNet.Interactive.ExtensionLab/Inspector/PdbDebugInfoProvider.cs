@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector
             return variables;
         }
 
-        public bool TryGetName(MethodDefinitionHandle method, int index, out string? name)
+        public bool TryGetName(MethodDefinitionHandle method, int index, out string name)
         {
             name = null;
             foreach (var local in EnumerateLocals(method))

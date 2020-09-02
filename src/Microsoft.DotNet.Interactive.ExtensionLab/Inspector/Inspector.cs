@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector
         // Pretty simple PoC, types and control flow can be organized better.
         // Specifically, error reporting, by using results, right now it will throw in most of cases if something goes wrong).
         // Now, mostly everything is returned as strings.
-        public InspectionResult Compile(string? source) {
+        public InspectionResult Compile(string source) {
 
             if (string.IsNullOrWhiteSpace(source))
                 throw new ArgumentException("Argument is null or empty.", nameof(source));
