@@ -105,38 +105,40 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         function diagnosticObserver(diags: Array<Diagnostic>) {
             diagnosticCollection.set(cell.uri, diags.filter(d => d.severity !== DiagnosticSeverity.Hidden).map(toVsCodeDiagnostic));
         }
-        return client.execute(source, getSimpleLanguage(cell.language), outputObserver, diagnosticObserver).then(() => {
-            DotNetInteractiveNotebookContentProvider.updateCellMetadata(document, cell, {
+        return client.execute(source, getSimpleLanguage(cell.language), outputObserver, diagnosticObserver).then(async () => {
+            await DotNetInteractiveNotebookContentProvider.updateCellMetadata(document, cell, {
                 runState: vscode.NotebookCellRunState.Success,
                 lastRunDuration: Date.now() - startTime,
             });
-        }).catch(() => {
-            DotNetInteractiveNotebookContentProvider.updateCellMetadata(document, cell, {
+        }).catch(async () => {
+            await DotNetInteractiveNotebookContentProvider.updateCellMetadata(document, cell, {
                 runState: vscode.NotebookCellRunState.Error,
                 lastRunDuration: Date.now() - startTime,
             });
         });
     }
 
-    static updateCellMetadata(document: vscode.NotebookDocument, cell: vscode.NotebookCell, metadata: vscode.NotebookCellMetadata) {
-        cell.metadata = metadata;
-        // const index = document.cells.findIndex(c => c === cell);
-        // if (index >= 0) {
-        //     vscode.notebook.activeNotebookEditor?.edit(editBuilder => {
-        //         editBuilder.replaceMetadata(index, metadata);
-        //     });
-        // }
+    static async updateCellMetadata(document: vscode.NotebookDocument, cell: vscode.NotebookCell, metadata: vscode.NotebookCellMetadata) {
+        // cell.metadata = metadata;
+        // todo: new api when it works
+        const cellIndex = document.cells.findIndex(c => c === cell);
+        if (cellIndex >= 0) {
+            const edit = new vscode.WorkspaceEdit();
+            edit.replaceCellMetadata(document.uri, cellIndex, metadata);
+            await vscode.workspace.applyEdit(edit);
+        }
     }
 
-    static updateCellOutputs(document: vscode.NotebookDocument, cell: vscode.NotebookCell, outputs: vscode.CellOutput[]) {
-        cell.outputs = [];
-        cell.outputs = outputs;
-        // const index = document.cells.findIndex(c => c === cell);
-        // if (index >= 0) {
-        //     vscode.notebook.activeNotebookEditor?.edit(editBuilder => {
-        //         editBuilder.replaceOutput(index, outputs);
-        //     });
-        // }
+    static async updateCellOutputs(document: vscode.NotebookDocument, cell: vscode.NotebookCell, outputs: vscode.CellOutput[]) {
+        // cell.outputs = [];
+        // cell.outputs = outputs;
+        // todo: new api when it works
+        const cellIndex = document.cells.findIndex(c => c === cell);
+        if (cellIndex >= 0) {
+            const edit = new vscode.WorkspaceEdit();
+            edit.replaceCellOutput(document.uri, cellIndex, outputs);
+            await vscode.workspace.applyEdit(edit);
+        }
     }
 
     cancelCellExecution(document: vscode.NotebookDocument, cell: vscode.NotebookCell) {
