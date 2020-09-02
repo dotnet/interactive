@@ -87,7 +87,7 @@ public class A
                     "Tabbed view ",
                     "[assembly: CompilationRelaxations(8)]", "[assembly: RuntimeCompatibility(WrapNonExceptionThrows = true)]",
                     "private auto ansi ", "instance string get_P1 () cil managed",
-                    "Script+A..ctor()", "Script+A.get_P1()");
+                    "ctor()", "get_P1()");
         }
 
         [Theory]
@@ -132,7 +132,7 @@ public class A
                     "Tabbed view ",
                     "[assembly: CompilationRelaxations(8)]", "[assembly: RuntimeCompatibility(WrapNonExceptionThrows = true)]",
                     "private auto ansi ", "instance string get_P1 () cil managed",
-                    "Script+A..ctor()", "Script+A.get_P1()");
+                    "ctor()", "get_P1()");
         }
 
         [Theory]
@@ -181,7 +181,7 @@ public class A
                     "Tabbed view ",
                     "[assembly: CompilationRelaxations(8)]", "[assembly: RuntimeCompatibility(WrapNonExceptionThrows = true)]",
                     "private auto ansi ", "instance string get_P1 () cil managed",
-                    "A..ctor", "A.get_P1()");
+                    "ctor", "get_P1()");
         }
 
             [Fact]
