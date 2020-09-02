@@ -119,8 +119,6 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     }
 
     static async updateCellMetadata(document: vscode.NotebookDocument, cell: vscode.NotebookCell, metadata: vscode.NotebookCellMetadata) {
-        // cell.metadata = metadata;
-        // todo: new api when it works
         const cellIndex = document.cells.findIndex(c => c === cell);
         if (cellIndex >= 0) {
             const edit = new vscode.WorkspaceEdit();
@@ -130,9 +128,6 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     }
 
     static async updateCellOutputs(document: vscode.NotebookDocument, cell: vscode.NotebookCell, outputs: vscode.CellOutput[]) {
-        // cell.outputs = [];
-        // cell.outputs = outputs;
-        // todo: new api when it works
         const cellIndex = document.cells.findIndex(c => c === cell);
         if (cellIndex >= 0) {
             const edit = new vscode.WorkspaceEdit();
