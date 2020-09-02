@@ -14,42 +14,38 @@ This sample demonstrates how to use the `#!connect` extension
 
 #!csharp
 
+#i "nuget:https://dotnet.myget.org/F/fsharp/api/v2/package"
 #r "nuget:Microsoft.DotNet.Interactive.ExtensionLab,1.0.0-beta.20426.1" 
 
 #!markdown
 
-This brings in a number of new magic commands. You can see the list of available commands using the `#!lsmagic` magic command:
+Installing the `ExtensionLab` brings in some new magic commands including two additional verbs for the `#!connect` command, which you can see by running help for it.
 
 #!csharp
 
-using Microsoft.DotNet.Interactive;
+#!connect -h
 
-KernelInvocationContext.Current.HandlingKernel.Directives.Select(d => d.Name)
+#!csharp
+
+#!connect sqlite -h
 
 #!markdown
 
-# Now, we're ready to connect to a database
+# Now, we're ready to work with a SQL database
+
+SQLite allows us to create a database in memory using the `Mode=Memory` parameter in our connection string. This is a quick and convenient approach for the sake of demonstration.
 
 #!csharp
 
-#!connect mssql --kernel-name adventureworks "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost"
+#!connect sqlite --kernel-name fruits "Data Source=InMemorySample;Mode=Memory;Cache=Shared"
 
 #!csharp
 
-#!adventureworks
+#!fruits 
 
-SELECT S.ProductID, p.[Name], S.SpecialOfferID, SO.[Description]
-    , COUNT([OrderQty]) AS [Count]
-    , (AVG(UnitPrice))AS [Average Price]
-    , STR(SUM(LineTotal)) AS SubTotal
-
-FROM Sales.SalesOrderDetail AS S
-
-INNER JOIN [Sales].[SpecialOffer] AS SO
-    ON SO.[SpecialOfferID] = S.SpecialOfferID
-
-INNER JOIN [Production].[Product] AS p ON p.[ProductID] = S.ProductID
-
-GROUP BY S.ProductID, p.[Name], S.SpecialOfferID, SO.[Description]
-
-ORDER BY S.ProductID, [Count] DESC
+CREATE TABLE Fruits(
+  Id    INTEGER PRIMARY KEY, 
+  Name  TEXT NOT NULL,
+  Color TEXT NOT NULL,
+  Deliciousness INTEGER NOT NULL
+);

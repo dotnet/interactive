@@ -37,7 +37,6 @@
   </ItemGroup>
 
  <ItemGroup>
-   <PackageReference Include="humanizer" Version="2.8.26" />
    <PackageReference Include="Microsoft.Data.Analysis" Version="0.4.0" />
    <PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.0" />
    <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.7" />
@@ -51,10 +50,6 @@
 
   <ItemGroup>
     <None Include="$(OutputPath)/Microsoft.DotNet.Interactive.ExtensionLab.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Microsoft.ML\" />
   </ItemGroup>
 
   <Target Name="InstallNodeModules">
