@@ -2076,7 +2076,14 @@ declare module 'vscode' {
 		readonly visible: boolean;
 
 		/**
-		 * Event fired when the visibility of the view changes
+		 * Event fired when the visibility of the view changes.
+		 *
+		 * Actions that trigger a visibility change:
+		 *
+		 * - The view is collapsed or expanded.
+		 * - The user switches to a different view group in the sidebar or panel.
+		 *
+		 * Note that hiding a view using the context menu instead disposes of the view and fires `onDidDispose`.
 		 */
 		readonly onDidChangeVisibility: Event<void>;
 	}
@@ -2085,8 +2092,10 @@ declare module 'vscode' {
 		/**
 		 * Persisted state from the webview content.
 		 *
-		 * To save resources, VS Code normally deallocates webview views that are not visible. For example, if the user
-		 * collapse a view or switching to another top level activity, the underlying webview document is deallocates.
+		 * To save resources, VS Code normally deallocates webview documents (the iframe content) that are not visible.
+		 * For example, when the user collapse a view or switches to another top level activity in the sidebar, the
+		 * `WebviewView` itself is kept alive but the webview's underlying document is deallocated. It is recreated when
+		 * the view becomes visible again.
 		 *
 		 * You can prevent this behavior by setting `retainContextWhenHidden` in the `WebviewOptions`. However this
 		 * increases resource usage and should be avoided wherever possible. Instead, you can use persisted state to

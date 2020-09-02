@@ -7,7 +7,7 @@ import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
 import { ClientMapper } from '../clientMapper';
 import { getEol } from './vscodeUtilities';
-import { toNotebookDocument } from './notebookProvider';
+import { toNotebookDocument, DotNetInteractiveNotebookContentProvider } from './notebookProvider';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, dotnetPath: string) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
@@ -92,15 +92,10 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
             document = vscode.notebook.activeNotebookEditor.document;
         }
 
-        const cellCount = document.cells.length;
-        const notebookEditor = vscode.notebook.activeNotebookEditor;
-        if (notebookEditor) {
-            notebookEditor.edit(editBuilder => {
-                for (let i = 0; i < cellCount; i++) {
-                    editBuilder.replaceMetadata(i, { runState: vscode.NotebookCellRunState.Idle });
-                }
-            });
-        }
+        const d = document;
+        document.cells.forEach(async cell => {
+            await DotNetInteractiveNotebookContentProvider.updateCellMetadata(d, cell, { runState: vscode.NotebookCellRunState.Idle });
+        });
 
         clientMapper.closeClient(document.uri);
     }));
