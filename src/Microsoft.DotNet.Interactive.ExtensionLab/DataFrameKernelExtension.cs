@@ -6,8 +6,10 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Data.Analysis;
+using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -126,12 +128,22 @@ var {variableName} = new {frameTypeName}();
                 string.Join(Environment.NewLine,
                             sourceDataFrame
                                 .Columns
-                                .Select((col, i) => $"    public {col.DataType.FullName} {col.Name.Dehumanize()} => ({col.DataType.FullName}) _sourceRow[{i}];"));
+                                .Select((col, i) => $"    public {col.DataType.FullName} {MakeValidMethodName(col.Name)} => ({col.DataType.FullName}) _sourceRow[{i}];"));
 
             return sb.ToString();
         }
-    }
 
+        private string MakeValidMethodName(string value)
+        {
+            value = Regex.Replace(value, @"^[0-9]", "_");
+            value = Regex.Replace(value, @"([^a-zA-Z]+)", "_");
+            return value;
+        }
+    }
+}
+
+namespace Microsoft.ML
+{
     public static class DataViewExtensions
     {
         public static void Explore(this IDataView source)
