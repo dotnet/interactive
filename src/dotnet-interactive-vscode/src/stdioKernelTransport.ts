@@ -25,13 +25,15 @@ export class StdioKernelTransport {
     private subscribers: Array<KernelEventEnvelopeObserver> = [];
     public httpPort: Number;
     public externalUri: Uri | null;
+    public bootstrapperUri: Uri | null;
 
-    constructor(processStart: ProcessStart, private diagnosticChannel: ReportChannel) {
+    constructor(processStart: ProcessStart, private diagnosticChannel: ReportChannel, private parseUri: (uri:string) => Uri) {
         // prepare root event handler
         this.lineReader = new LineReader();
         this.lineReader.subscribe(line => this.handleLine(line));
         this.childProcess = null;
         this.externalUri = null;
+        this.bootstrapperUri = null;
         this.httpPort = 0;
 
         // prepare one-time ready event
@@ -74,7 +76,7 @@ export class StdioKernelTransport {
     {
         this.externalUri = externalUri;
 
-        await fetch(`http://localhost:${this.httpPort}/apitunnel`, {
+        let response = await fetch(`http://localhost:${this.httpPort}/apitunnel`, {
             method: 'POST',
             cache: 'no-cache',
             mode: 'cors',
@@ -83,6 +85,10 @@ export class StdioKernelTransport {
             },
             body: JSON.stringify( { tunnelUri : externalUri.toString(), frontendType: "vscode" } )
         });
+
+       let reponseObject : any =  await response.json();
+
+       this.bootstrapperUri = this.parseUri(reponseObject["bootstrapperUri"]);
     }
 
     private async configureHttpArgs(args: string[]): Promise<string[]> {

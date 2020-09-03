@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.App.Http
     {
         private readonly HtmlNotebookFrontedEnvironment _frontendEnvironment;
 
-        private ConcurrentDictionary<Uri,string> _bootstrapperScripts = new ConcurrentDictionary<Uri, string>();
+        private readonly ConcurrentDictionary<Uri,string> _bootstrapperScripts = new ConcurrentDictionary<Uri, string>();
 
         public HttpApiTunnelingRouter(HtmlNotebookFrontedEnvironment frontendEnvironment)
         {
