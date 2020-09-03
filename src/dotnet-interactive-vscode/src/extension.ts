@@ -56,13 +56,14 @@ export async function activate(context: vscode.ExtensionContext) {
     registerFileCommands(context, clientMapper);
 
     const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable
-
+    const selector = {
+        viewType: ['dotnet-interactive','dotnet-interactive-jupyter'],
+        filenamePattern: '*.{dib,dotnet-interactive,ipynb}'
+    };
     const notebookProvider = new DotNetInteractiveNotebookContentProvider(clientMapper);
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookProvider));
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive-jupyter', notebookProvider));
-    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider({viewType: 'dotnet-interactive'}, notebookProvider));
-    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider({viewType: 'dotnet-interactive-jupyter'}, notebookProvider));
-    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider({filenamePattern: '*.{dib,dotnet-interactive,ipynb}'}, notebookProvider));
+    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selector, notebookProvider));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(registerLanguageProviders(clientMapper, diagnosticDelay));
 }
