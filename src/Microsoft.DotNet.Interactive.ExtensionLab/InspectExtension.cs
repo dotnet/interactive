@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             var command = context.Command as SubmitCode;
 
             // TODO: Is there a proper way of cleaning up code from the magic commands?
-            var code = Regex.Replace(command.Code, $"#!{INSPECT_COMMAND}(.+)", "");
+            var code = Regex.Replace(command.Code, $"#!{INSPECT_COMMAND}(.*)", "");
 
             var options = new InspectionOptions
             {
