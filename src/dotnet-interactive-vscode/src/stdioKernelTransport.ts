@@ -18,7 +18,7 @@ import { LineReader } from './lineReader';
 import { parse, stringify } from './utilities';
 
 export class StdioKernelTransport {
-    private childProcess: cp.ChildProcessWithoutNullStreams;
+    private childProcess: cp.ChildProcessWithoutNullStreams | null;
     private lineReader: LineReader;
     private readyPromise: Promise<void>;
     private subscribers: Array<KernelEventEnvelopeObserver> = [];
@@ -27,9 +27,34 @@ export class StdioKernelTransport {
         // prepare root event handler
         this.lineReader = new LineReader();
         this.lineReader.subscribe(line => this.handleLine(line));
+        this.childProcess = null;
 
         // prepare one-time ready event
         this.readyPromise = new Promise<void>((resolve, reject) => {
+
+            // launch the process
+            let childProcess = cp.spawn(processStart.command, processStart.args, { cwd: processStart.workingDirectory });
+            let pid = childProcess.pid;
+
+            this.childProcess = childProcess;
+            this.diagnosticChannel.appendLine(`Kernel started with pid ${childProcess.pid}.`);
+
+            childProcess.on('exit', (code: number, signal: string) => {
+
+                let message = `Kernel pid ${childProcess.pid} ended`;
+                let messageCodeSuffix = (code && code !== 0)
+                    ? ` with code ${code}`
+                    : '';
+                let messageSignalSuffix = signal
+                    ? ` with signal ${signal}`
+                    : '';
+                this.diagnosticChannel.appendLine(message + messageCodeSuffix + messageSignalSuffix);
+            });
+
+            childProcess.stdout.on('data', data => this.lineReader.onData(data));
+            childProcess.stderr.on('data', data => diagnosticChannel.appendLine(`kernel (${pid}) stderr: ${data.toString('utf-8')}`));
+
+
             const readySubscriber = this.subscribeToKernelEvents(eventEnvelope => {
                 if (eventEnvelope.eventType === KernelReadyType) {
                     readySubscriber.dispose();
@@ -37,24 +62,10 @@ export class StdioKernelTransport {
                 }
             });
         });
-
-        // launch the process
-        this.childProcess = cp.spawn(processStart.command, processStart.args, { cwd: processStart.workingDirectory });
-        this.diagnosticChannel.appendLine(`Kernel started with pid ${this.childProcess.pid}.`);
-        this.childProcess.on('exit', (code: number, signal: string) => {
-            let message = `Kernel pid ${this.childProcess.pid} ended`;
-            let messageCodeSuffix = (code && code !== 0)
-                ? ` with code ${code}`
-                : '';
-            let messageSignalSuffix = signal
-                ? ` with signal ${signal}`
-                : '';
-            this.diagnosticChannel.appendLine(message + messageCodeSuffix + messageSignalSuffix);
-        });
-        this.childProcess.stdout.on('data', data => this.lineReader.onData(data));
-        this.childProcess.stderr.on('data', data => diagnosticChannel.appendLine(`kernel (${this.childProcess.pid}) stderr: ${data.toString('utf-8')}`));
     }
-
+    private isNotNull<T>(obj: T | null): obj is T {
+        return obj !== undefined;
+    }
     private handleLine(line: string) {
         let obj = parse(line);
         let envelope = <KernelEventEnvelope>obj;
@@ -90,9 +101,15 @@ export class StdioKernelTransport {
             };
 
             let str = stringify(submit);
-            this.childProcess.stdin.write(str);
-            this.childProcess.stdin.write('\n');
-            resolve();
+            if (this.isNotNull(this.childProcess)) {
+                this.childProcess.stdin.write(str);
+                this.childProcess.stdin.write('\n');
+
+                resolve();
+            }
+            else {
+                reject();
+            }
         });
     }
 
@@ -101,6 +118,8 @@ export class StdioKernelTransport {
     }
 
     dispose() {
-        this.childProcess.kill();
+        if (this.isNotNull(this.childProcess)) {
+            this.childProcess.kill();
+        }
     }
 }
