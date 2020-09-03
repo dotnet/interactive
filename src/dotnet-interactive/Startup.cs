@@ -80,6 +80,7 @@ namespace Microsoft.DotNet.Interactive.App
                     if (frontendEnvironment != null)
                     {
                         r.Routes.Add(new DiscoveryRouter(frontendEnvironment));
+                        r.Routes.Add(new HttpApiTunnelingRouter(frontendEnvironment));
                     }
 
                    

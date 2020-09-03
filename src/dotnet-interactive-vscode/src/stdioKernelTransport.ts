@@ -14,7 +14,7 @@ import {
     KernelReadyType
 } from "./contracts";
 import { ProcessStart } from './interfaces';
-import { ReportChannel } from './interfaces/vscode';
+import { ReportChannel, Uri } from './interfaces/vscode';
 import { LineReader } from './lineReader';
 import { parse, stringify } from './utilities';
 
@@ -24,12 +24,14 @@ export class StdioKernelTransport {
     private readyPromise: Promise<void>;
     private subscribers: Array<KernelEventEnvelopeObserver> = [];
     public httpPort: Number;
+    public externalUri: Uri | null;
 
     constructor(processStart: ProcessStart, private diagnosticChannel: ReportChannel) {
         // prepare root event handler
         this.lineReader = new LineReader();
         this.lineReader.subscribe(line => this.handleLine(line));
         this.childProcess = null;
+        this.externalUri = null;
         this.httpPort = 0;
 
         // prepare one-time ready event
@@ -68,6 +70,21 @@ export class StdioKernelTransport {
         });
     }
 
+    public async setExternalUri(externalUri: Uri) : Promise<void>
+    {
+        this.externalUri = externalUri;
+
+        await fetch(`http://localhost:${this.httpPort}/apitunnel`, {
+            method: 'POST',
+            cache: 'no-cache',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify( { tunnelUri : externalUri.toString(), frontendType: "vscode" } )
+        });
+    }
+
     private async configureHttpArgs(args: string[]): Promise<string[]> {
         let newArgs = [...args];
         let index = newArgs.indexOf("--http-port");
@@ -75,6 +92,7 @@ export class StdioKernelTransport {
             index = newArgs.indexOf("--http-port-range");
             this.httpPort = await this.findFreePort();
 
+            //todo: this is a temporary work during transition
             if (index > 0) {
                 this.diagnosticChannel.appendLine("the --http-port-range command option is not supported in vscode extension, remove if from settings. The kernel will start with --http-port option isntead.");
                 newArgs[index] = "--http-port";
