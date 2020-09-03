@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             var command = context.Command as SubmitCode;
 
             // TODO: Is there a proper way of cleaning up code from the magic commands?
-            var code = Regex.Replace(command.Code, @$"#!{INSPECT_COMMAND}(.+)\n", "");
+            var code = Regex.Replace(command.Code, $"#!{INSPECT_COMMAND}(.+)", "");
 
             var options = new InspectionOptions
             {
@@ -66,10 +66,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             if (!result.IsSuccess)
             {
+		var diagnostics = string.Join('\n', result.CompilationDiagnostics);
                 context.Publish(
-                    new ErrorProduced("Uh-oh, something went wrong!", context.Command,
+                    new ErrorProduced($"Uh-oh, something went wrong:\n {diagnostics}", context.Command,
                         new[] {
-                            new FormattedValue(PlainTextFormatter.MimeType, string.Join('\n', result.CompilationDiagnostics))
+                            new FormattedValue(PlainTextFormatter.MimeType, diagnostics)
                         }));
                 return;
             }
