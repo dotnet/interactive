@@ -49,6 +49,10 @@ export async function activate(context: vscode.ExtensionContext) {
         const processStart = processArguments(argsTemplate, notebookPath, dotnetPath, launchOptions!.workingDirectory);
         const transport = new StdioKernelTransport(processStart, diagnosticsChannel);
         await transport.waitForReady();
+
+        let externalUri = await vscode.env.asExternalUri(vscode.Uri.parse(`http://localhost:${transport.httpPort}`));
+        //create tunnel for teh kernel transport
+        await transport.setExternalUri(externalUri);
         return transport;
     });
 

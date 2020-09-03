@@ -6,6 +6,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App.CommandLine;
@@ -73,6 +74,74 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             var apiUri = await frontendEnvironment.GetApiUriAsync();
             apiUri.Should().Be(expectedUri);
+        }
+
+        [Fact]
+        public async Task HttpApiTunneling_configures_frontend_evironment()
+        {
+            var tunnelUri = new Uri("http://choosen.one:1000/");
+            var server = GetServer(servicesSetup: (serviceCollection) =>
+            {
+                serviceCollection.AddSingleton(new HtmlNotebookFrontedEnvironment());
+                serviceCollection.AddSingleton<BrowserFrontendEnvironment>(c => c.GetService<HtmlNotebookFrontedEnvironment>());
+            });
+            var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri =  tunnelUri.AbsoluteUri, frontendType = "vscode"}.SerializeToJson().ToString()));
+            using var scope = new AssertionScope();
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var frontendEnvironment = server.FrontendEnvironment as HtmlNotebookFrontedEnvironment;
+
+            var apiUri = await frontendEnvironment.GetApiUriAsync();
+            apiUri.Should().Be(tunnelUri);
+        }
+
+        [Fact]
+        public async Task HttpApiTunneling_return_bootstrapper_js_url()
+        {
+            var tunnelUri = new Uri("http://choosen.one:1000/");
+            var server = GetServer(servicesSetup: (serviceCollection) =>
+            {
+                serviceCollection.AddSingleton(new HtmlNotebookFrontedEnvironment());
+                serviceCollection.AddSingleton<BrowserFrontendEnvironment>(c => c.GetService<HtmlNotebookFrontedEnvironment>());
+            });
+            var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" }.SerializeToJson().ToString()));
+            
+            using var scope = new AssertionScope();
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Content.Headers.ContentType.MediaType.Should().Be("text/plain");
+
+            var match = $"{tunnelUri.AbsoluteUri}apitunnel/*/bootstrapper.js";
+            var responseBody = JObject.Parse(await response.Content.ReadAsStringAsync());
+            responseBody["bootstrapperUri"].Value<string>()
+                .Should().Match(match);
+        }
+
+        [Fact]
+        public async Task HttpApiTunneling_route_serves_bootstrapper_js()
+        {
+            var tunnelUri = new Uri("http://choosen.one:1000/");
+            var server = GetServer(servicesSetup: (serviceCollection) =>
+            {
+                serviceCollection.AddSingleton(new HtmlNotebookFrontedEnvironment());
+                serviceCollection.AddSingleton<BrowserFrontendEnvironment>(c => c.GetService<HtmlNotebookFrontedEnvironment>());
+            });
+
+            var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" }.SerializeToJson().ToString()));
+            var responseBody = JObject.Parse(await response.Content.ReadAsStringAsync());
+            
+            var boostrapperUri = responseBody["bootstrapperUri"].Value<string>();
+
+
+            response = await server.HttpClient.GetAsync(boostrapperUri);
+            var code = await response.Content.ReadAsStringAsync();
+            using var scope = new AssertionScope();
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Content.Headers.ContentType.MediaType.Should().Be("text/javascript");
+
+            code.Should().Contain(tunnelUri.AbsoluteUri);
+
         }
 
         [Theory]
