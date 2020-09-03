@@ -9,6 +9,7 @@ using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
+using System.Linq;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
@@ -329,6 +330,39 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
                     description: "Specifies the range of ports to use to enable HTTP services");
 
+                var httpPortOption = new Option<HttpPort>(
+                    "--http-port",
+                    description: "Specifies the port on which to enable HTTP services",
+                    parseArgument: result =>
+                    {
+                        if (result.Parent.Parent.Children.FirstOrDefault(c => c.Symbol == httpPortRangeOption) is OptionResult conflictingOption)
+                        {
+                            var parsed = result.Parent as OptionResult;
+                            result.ErrorMessage = $"Cannot specify both {conflictingOption.Token.Value} and {parsed.Token.Value} together";
+                            return null;
+                        }
+
+                        if (result.Tokens.Count == 0)
+                        {
+                            return HttpPort.Auto;
+                        }
+
+                        var source = result.Tokens[0].Value;
+
+                        if (source == "*")
+                        {
+                            return HttpPort.Auto;
+                        }
+
+                        if (!int.TryParse(source, out var portNumber))
+                        {
+                            result.ErrorMessage = "Must specify a port number or *.";
+                            return null;
+                        }
+
+                        return new HttpPort(portNumber);
+                    });
+
                 var workingDirOption = new Option<DirectoryInfo>(
                     "--working-dir",
                     () => new DirectoryInfo(Environment.CurrentDirectory),
@@ -340,6 +374,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 {
                     defaultKernelOption,
                     httpPortRangeOption,
+                    httpPortOption,
                     workingDirOption
                 };
 

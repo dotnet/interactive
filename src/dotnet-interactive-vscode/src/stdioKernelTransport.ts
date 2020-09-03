@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import { AddressInfo, createServer } from "net";
 import * as cp from 'child_process';
 import {
     DisposableSubscription,
@@ -22,18 +23,21 @@ export class StdioKernelTransport {
     private lineReader: LineReader;
     private readyPromise: Promise<void>;
     private subscribers: Array<KernelEventEnvelopeObserver> = [];
+    public httpPort: Number;
 
     constructor(processStart: ProcessStart, private diagnosticChannel: ReportChannel) {
         // prepare root event handler
         this.lineReader = new LineReader();
         this.lineReader.subscribe(line => this.handleLine(line));
         this.childProcess = null;
+        this.httpPort = 0;
 
         // prepare one-time ready event
-        this.readyPromise = new Promise<void>((resolve, reject) => {
+        this.readyPromise = new Promise<void>(async (resolve, reject) => {
 
+            let args = await this.configureHttpArgs(processStart.args);
             // launch the process
-            let childProcess = cp.spawn(processStart.command, processStart.args, { cwd: processStart.workingDirectory });
+            let childProcess = cp.spawn(processStart.command, args, { cwd: processStart.workingDirectory });
             let pid = childProcess.pid;
 
             this.childProcess = childProcess;
@@ -52,7 +56,7 @@ export class StdioKernelTransport {
             });
 
             childProcess.stdout.on('data', data => this.lineReader.onData(data));
-            childProcess.stderr.on('data', data => diagnosticChannel.appendLine(`kernel (${pid}) stderr: ${data.toString('utf-8')}`));
+            childProcess.stderr.on('data', data => this.diagnosticChannel.appendLine(`kernel (${pid}) stderr: ${data.toString('utf-8')}`));
 
 
             const readySubscriber = this.subscribeToKernelEvents(eventEnvelope => {
@@ -63,9 +67,54 @@ export class StdioKernelTransport {
             });
         });
     }
+
+    private async configureHttpArgs(args: string[]): Promise<string[]> {
+        let newArgs = [...args];
+        let index = newArgs.indexOf("--http-port");
+        if (index < 0) {
+            index = newArgs.indexOf("--http-port-range");
+            this.httpPort = await this.findFreePort();
+
+            if (index > 0) {
+                this.diagnosticChannel.appendLine("the --http-port-range command option is not supported in vscode extension, remove if from settings. The kernel will start with --http-port option isntead.");
+                newArgs[index] = "--http-port";
+                newArgs[index + 1] = `${this.httpPort}`;
+            } else {
+                newArgs.push("--http-port");
+                newArgs.push(`${this.httpPort}`);
+            }
+        } else {
+            this.httpPort = parseInt(newArgs[index + 1]);
+        }
+
+        return newArgs;
+    }
+
+    private findFreePort(): Promise<number> {
+        return new Promise<number>((resolve, reject) => {
+            const server = createServer();
+            let port: number;
+            server.once("listening", () => {
+                const address = server.address() as AddressInfo;
+                port = address.port;
+                server.close();
+            });
+            server.once("close", () => {
+                if (typeof port === "undefined") {
+                    reject("Can't get port");
+                    return;
+                }
+                resolve(port);
+            });
+            server.once("error", reject);
+            server.listen(0, "127.0.0.1");
+        });
+    }
+
     private isNotNull<T>(obj: T | null): obj is T {
         return obj !== undefined;
     }
+
     private handleLine(line: string) {
         let obj = parse(line);
         let envelope = <KernelEventEnvelope>obj;

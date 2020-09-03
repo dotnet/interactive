@@ -353,16 +353,27 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 .Be(workingDir);
         }
 
-        [Theory]
-        [InlineData("stdio --http-port 8000", "Unrecognized command or argument '--http-port'")]
-        public void stdio_command_does_not_support_http_options(string commandLine, string expectedError)
+        [Fact]
+        public void stdio_command_does_not_support_http_port_and_http_port_range_options_at_same_time()
         {
-            var result = _parser.Parse(commandLine);
+            var result = _parser.Parse("stdio --http-port 8000 --http-port-range 3000-4000");
 
             result.Errors
                 .Select(e => e.Message)
                 .Should()
-                .Contain(errorMessage => errorMessage == expectedError);
+                .Contain(errorMessage => errorMessage == "Cannot specify both --http-port-range and --http-port together");
+        }
+
+        [Fact]
+        public void stdio_command_parses_http_port_options()
+        {
+            var result = _parser.Parse("stdio --http-port 8000");
+
+            var binder = new ModelBinder<StartupOptions>();
+
+            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+
+            options.HttpPort.PortNumber.Should().Be(8000);
         }
 
         [Fact]
