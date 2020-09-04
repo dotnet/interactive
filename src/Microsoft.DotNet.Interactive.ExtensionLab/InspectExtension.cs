@@ -123,7 +123,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 <script src=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/plugins/autoloader/prism-autoloader.min.js""></script>
 <script src=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/components/prism-csharp.min.js""></script>
 <script src=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/components/prism-cil.min.js""></script>
-<script src=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/components/prism-nasm.min.js""></script>");
+<script src=""https://cdn.jsdelivr.net/npm/prismjs@1.21.0/components/prism-nasm.min.js""></script>
+<script>
+    if (document.readyState === ""complete"" || (document.readyState !== ""loading"" && !document.documentElement.doScroll))
+    {
+        Prism.highlightAll();
+    }
+    document.addEventListener(""DOMContentLoaded"", Prism.highlightAll);
+</script>");
         }
 
         private static IHtmlContent GetPrismCSS()
@@ -154,7 +161,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     width: 100%;
                 }
                 .tab-label-content .tab-content {
-                    width: 100%;
+                    width: 99%;
                     position: absolute;
                     top: 20px;
                     left: 16px;
@@ -182,9 +189,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     display: -webkit-inline-box;
                     display: inline-flex;
                     -webkit-box-align: center;
-                            align-items: center;
+                    align-items: center;
                     -webkit-box-pack: center;
-                            justify-content: center;
+                    justify-content: center;
                     text-align: center;
                     height: 30px;
                     -webkit-transition: color 0.2s ease;
@@ -196,6 +203,13 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     top: 1.5em;
                     left: -1em;
                 }
+                pre[class*=language-]:after, pre[class*=language-]:before {
+                    box-shadow: none !important;
+                }
+                code[class*=language-], pre[class*=language-] {
+                    font-size: 1em !important;
+                }
+
 ");
         }
     }
