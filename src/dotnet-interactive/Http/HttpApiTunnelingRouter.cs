@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.App.Http
                 var bootstrapperUri = new Uri(apiUri, $"apitunnel/{frontendType}/{hash}/bootstrapper.js");
                 _frontendEnvironment.SetApiUri(apiUri);
 
-                _bootstrapperScripts.GetOrAdd(bootstrapperUri, key => GenerateBootstrapperCode(key, frontendType, hash));
+                _bootstrapperScripts.GetOrAdd(bootstrapperUri, key => GenerateBootstrapperCode(apiUri, frontendType, hash));
                 
                 context.Handler = async httpContext =>
                 {
@@ -121,6 +121,57 @@ namespace Microsoft.DotNet.Interactive.App.Http
             string template = @"
 // ensure `require` is available globally
 function bootstrapper_$FRONTENDTYPE$_$HASH$() {
+    let loadDotnetInteractiveApi = function () {
+        // use probing to find host url and api resources
+        // load interactive helpers and language services
+        let dotnetInteractiveRequire = require.config({
+            context: '$HASH$',
+            paths: {
+                'dotnet-interactive': '$EXTERNALURI$resources'
+            },
+            urlArgs: 'cacheBuster=$HASH$'
+        }) || require;
+
+        let dotnetInteractiveExtensionsRequire = require.config({
+            context: '$HASH$',
+            paths: {
+                'dotnet-interactive-extensions': '$EXTERNALURI$extensions'
+            }
+        }) || require;
+
+        if (!window.dotnetInteractiveRequire) {
+            window.dotnetInteractiveRequire = dotnetInteractiveRequire;
+        }
+
+        if (!window.dotnetInteractiveExtensionsRequire) {
+            window.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
+        }
+
+        window.getExtensionRequire = function (extensionName, extensionCacheBuster) {
+            let paths = {};
+            paths[extensionName] = `$EXTERNALURI$extensions/${extensionName}/resources/`;
+
+            let internalRequire = require.config({
+                context: extensionCacheBuster,
+                paths: paths,
+                urlArgs: `cacheBuster=${extensionCacheBuster}`
+            }) || require;
+
+            return internalRequire
+        };
+
+        dotnetInteractiveRequire([
+            'dotnet-interactive/dotnet-interactive'
+        ],
+            function (dotnet) {
+                dotnet.init(window);
+            },
+            function (error) {
+                console.log(error);
+            }
+        );
+    }
+
     if (typeof require !== typeof Function || typeof require.config !== typeof Function) {
         let require_script = document.createElement('script');
         require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
@@ -133,58 +184,6 @@ function bootstrapper_$FRONTENDTYPE$_$HASH$() {
     }
     else {
         loadDotnetInteractiveApi();
-    }
-
-
-function loadDotnetInteractiveApi() {
-    // use probing to find host url and api resources
-    // load interactive helpers and language services
-    let dotnetInteractiveRequire = require.config({
-        context: '$HASH$',
-        paths: {
-            'dotnet-interactive': '$EXTERNALURI$resources'
-        },
-        urlArgs: 'cacheBuster=$HASH$'
-    }) || require;
-
-    let dotnetInteractiveExtensionsRequire = require.config({
-        context: '$HASH$',
-        paths: {
-            'dotnet-interactive-extensions': '$EXTERNALURI$extensions'
-        }
-    }) || require;
-
-    if (!window.dotnetInteractiveRequire) {
-        window.dotnetInteractiveRequire = dotnetInteractiveRequire;
-    }
-
-    if (!window.dotnetInteractiveExtensionsRequire) {
-        window.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
-    }
-
-    window.getExtensionRequire = function(extensionName, extensionCacheBuster) {
-        let paths = {};
-        paths[extensionName] = `$EXTERNALURI$extensions/${extensionName}/resources/`;
-        
-        let internalRequire = require.config({
-            context: extensionCacheBuster,
-            paths: paths,
-            urlArgs: `cacheBuster=${extensionCacheBuster}`
-            }) || require;
-
-        return internalRequire
-    };
-
-    dotnetInteractiveRequire([
-            'dotnet-interactive/dotnet-interactive'
-        ],
-        function (dotnet) {
-            dotnet.init(window);
-        },
-        function (error) {
-            console.log(error);
-        }
-    );
     }
 }
 
