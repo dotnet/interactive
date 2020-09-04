@@ -70,8 +70,6 @@
             "--",
             "[vscode]",
             "stdio",
-            "--http-port-range",
-            "1000-3000",
             "--working-dir",
             "{working_dir}"
           ],
@@ -99,7 +97,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.145201",
+          "default": "1.0.145401",
           "description": "The minimum required version of the .NET Interactive tool."
         }
       }
