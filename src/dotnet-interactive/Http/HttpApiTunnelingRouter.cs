@@ -97,11 +97,11 @@ namespace Microsoft.DotNet.Interactive.App.Http
                 
                 var apiUri = new Uri(requestBody["tunnelUri"].Value<string>());
                 var frontendType = requestBody["frontendType"].Value<string>();
-
-                var bootstrapperUri = new Uri(apiUri, $"apitunnel/{frontendType}/{Guid.NewGuid():N}/bootstrapper.js");
+                var hash = $"{Guid.NewGuid():N}";
+                var bootstrapperUri = new Uri(apiUri, $"apitunnel/{frontendType}/{hash}/bootstrapper.js");
                 _frontendEnvironment.SetApiUri(apiUri);
 
-                _bootstrapperScripts.GetOrAdd(bootstrapperUri, key => GenerateBootstrapperCode(key, frontendType));
+                _bootstrapperScripts.GetOrAdd(bootstrapperUri, key => GenerateBootstrapperCode(key, frontendType, hash));
                 
                 context.Handler = async httpContext =>
                 {
@@ -116,9 +116,85 @@ namespace Microsoft.DotNet.Interactive.App.Http
             }
         }
 
-        private string GenerateBootstrapperCode(Uri key, string frontendType)
+        private string GenerateBootstrapperCode(Uri externalUri, string frontendType, string hash)
         {
-            return "to do";
+            string template = @"
+// ensure `require` is available globally
+function bootstrapper_$FRONTENDTYPE$_$HASH$() {
+    if (typeof require !== typeof Function || typeof require.config !== typeof Function) {
+        let require_script = document.createElement('script');
+        require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
+        require_script.setAttribute('type', 'text/javascript');
+        require_script.onload = function () {
+            loadDotnetInteractiveApi();
+        };
+
+        document.getElementsByTagName('head')[0].appendChild(require_script);
+    }
+    else {
+        loadDotnetInteractiveApi();
+    }
+
+
+function loadDotnetInteractiveApi() {
+    // use probing to find host url and api resources
+    // load interactive helpers and language services
+    let dotnetInteractiveRequire = require.config({
+        context: '$HASH$',
+        paths: {
+            'dotnet-interactive': '$EXTERNALURI$resources'
+        },
+        urlArgs: 'cacheBuster=$HASH$'
+    }) || require;
+
+    let dotnetInteractiveExtensionsRequire = require.config({
+        context: '$HASH$',
+        paths: {
+            'dotnet-interactive-extensions': '$EXTERNALURI$extensions'
+        }
+    }) || require;
+
+    if (!window.dotnetInteractiveRequire) {
+        window.dotnetInteractiveRequire = dotnetInteractiveRequire;
+    }
+
+    if (!window.dotnetInteractiveExtensionsRequire) {
+        window.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
+    }
+
+    window.getExtensionRequire = function(extensionName, extensionCacheBuster) {
+        let paths = {};
+        paths[extensionName] = `$EXTERNALURI$extensions/${extensionName}/resources/`;
+        
+        let internalRequire = require.config({
+            context: extensionCacheBuster,
+            paths: paths,
+            urlArgs: `cacheBuster=${extensionCacheBuster}`
+            }) || require;
+
+        return internalRequire
+    };
+
+    dotnetInteractiveRequire([
+            'dotnet-interactive/dotnet-interactive'
+        ],
+        function (dotnet) {
+            dotnet.init(window);
+        },
+        function (error) {
+            console.log(error);
+        }
+    );
+    }
+}
+
+bootstrapper_$FRONTENDTYPE$_$HASH$();
+";
+
+            return template
+                .Replace("$HASH$", hash)
+                .Replace("$EXTERNALURI$", externalUri.AbsoluteUri)
+                .Replace("$FRONTENDTYPE$", frontendType);
         }
     }
 }

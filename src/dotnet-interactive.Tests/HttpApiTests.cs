@@ -141,6 +141,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             response.Content.Headers.ContentType.MediaType.Should().Be("text/javascript");
 
             code.Should().Contain(tunnelUri.AbsoluteUri);
+            code.Should().Contain("bootstrapper_vscode_");
 
         }
 
