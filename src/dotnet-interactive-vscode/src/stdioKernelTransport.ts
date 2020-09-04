@@ -100,7 +100,7 @@ export class StdioKernelTransport {
 
             //todo: this is a temporary work during transition
             if (index > 0) {
-                this.diagnosticChannel.appendLine("the --http-port-range command option is not supported in vscode extension, remove if from settings. The kernel will start with --http-port option isntead.");
+                this.diagnosticChannel.appendLine("The --http-port-range option is not supported in the VS Code extension. Please use --http-port instead.");
                 newArgs[index] = "--http-port";
                 newArgs[index + 1] = `${this.httpPort}`;
             } else {
