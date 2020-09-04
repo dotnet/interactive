@@ -10,20 +10,20 @@ import { CellOutput } from '../interfaces/vscode';
 import { Diagnostic, DiagnosticSeverity, NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookCellTextOutput, NotebookDocument } from './../contracts';
 import { getEol, isUnsavedNotebook, toVsCodeDiagnostic } from './vscodeUtilities';
 import { getDiagnosticCollection } from './diagnostics';
-import { isDisplayOutput, isErrorOutput, isTextOutput } from '../utilities';
+import { isDisplayOutput, isErrorOutput, isNotNull, isTextOutput } from '../utilities';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider, vscode.NotebookKernel, vscode.NotebookKernelProvider<DotNetInteractiveNotebookContentProvider> {
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
 
     eol: Eol;
     label: string;
+    preloads?: vscode.Uri[] | undefined;
 
     constructor(readonly clientMapper: ClientMapper) {
         this.label = ".NET Interactive";
         this.eol = getEol();
     }
 
-    preloads?: vscode.Uri[] | undefined;
 
     provideKernels(document: vscode.NotebookDocument, token: vscode.CancellationToken): vscode.ProviderResult<DotNetInteractiveNotebookContentProvider[]> {
         return [this];
@@ -41,6 +41,11 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 
     async openNotebook(uri: vscode.Uri): Promise<vscode.NotebookData> {
         const client = await this.clientMapper.getOrAddClient(uri);
+        let boostrapperUri = client.tryGetProperty<vscode.Uri>("bootstrapperUri");
+        if(isNotNull(boostrapperUri)) {
+            this.preloads = [boostrapperUri];
+        }
+
         let notebookCells: Array<NotebookCell>;
         if (isUnsavedNotebook(uri)) {
             // new empty/blank notebook

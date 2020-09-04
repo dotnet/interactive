@@ -16,7 +16,7 @@ import {
 import { ProcessStart } from './interfaces';
 import { ReportChannel, Uri } from './interfaces/vscode';
 import { LineReader } from './lineReader';
-import { parse, stringify } from './utilities';
+import { isNotNull, parse, stringify } from './utilities';
 
 export class StdioKernelTransport {
     private childProcess: cp.ChildProcessWithoutNullStreams | null;
@@ -135,9 +135,7 @@ export class StdioKernelTransport {
         });
     }
 
-    private isNotNull<T>(obj: T | null): obj is T {
-        return obj !== undefined;
-    }
+
 
     private handleLine(line: string) {
         let obj = parse(line);
@@ -174,7 +172,7 @@ export class StdioKernelTransport {
             };
 
             let str = stringify(submit);
-            if (this.isNotNull(this.childProcess)) {
+            if (isNotNull(this.childProcess)) {
                 this.childProcess.stdin.write(str);
                 this.childProcess.stdin.write('\n');
 
@@ -191,7 +189,7 @@ export class StdioKernelTransport {
     }
 
     dispose() {
-        if (this.isNotNull(this.childProcess)) {
+        if (isNotNull(this.childProcess)) {
             this.childProcess.kill();
         }
     }
