@@ -335,7 +335,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     description: "Specifies the port on which to enable HTTP services",
                     parseArgument: result =>
                     {
-                        if (result.Parent.Parent.Children.FirstOrDefault(c => c.Symbol == httpPortRangeOption) is OptionResult conflictingOption)
+                        if (result.FindResultFor(httpPortRangeOption) is { } conflictingOption)
                         {
                             var parsed = result.Parent as OptionResult;
                             result.ErrorMessage = $"Cannot specify both {conflictingOption.Token.Value} and {parsed.Token.Value} together";
