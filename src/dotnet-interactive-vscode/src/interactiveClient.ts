@@ -58,6 +58,14 @@ export class InteractiveClient {
         kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
     }
 
+    public tryGetProperty<T>(propertyName:string) : T| null {
+        try{
+            return <T>((<any>this.kernelTransport)[propertyName]);
+        }
+        catch{
+            return null;
+        }
+    }
     async parseNotebook(fileName: string, rawData: Uint8Array, token?: string | undefined): Promise<NotebookDocument> {
         const command: ParseNotebook = {
             fileName,
@@ -312,7 +320,7 @@ export function displayEventToCellOutput(disp: DisplayEvent): CellDisplayOutput 
                 : formatted.value;
             data[formatted.mimeType] = value;
         }
-    } 
+    }
 
     let output: CellDisplayOutput = {
         outputKind: CellOutputKind.Rich,

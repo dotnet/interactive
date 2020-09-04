@@ -20,6 +20,10 @@ export function processArguments(template: { args: Array<string>, workingDirecto
     };
 }
 
+export function isNotNull<T>(obj: T | null): obj is T {
+    return obj !== undefined;
+}
+
 function performReplacement(template: string, map: { [key: string]: string }): string {
     let result = template;
     for (let key in map) {
