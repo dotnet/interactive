@@ -12,6 +12,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
         public HtmlNotebookFrontedEnvironment()
         {
+            RequiresAutomaticBootstrapping = true;
             _completionSource = new TaskCompletionSource<Uri>();
         }
 
@@ -19,6 +20,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         {
            SetApiUri(apiUri);
         }
+
+        public bool RequiresAutomaticBootstrapping { get; set; }
 
         internal void SetApiUri(Uri apiUri)
         {

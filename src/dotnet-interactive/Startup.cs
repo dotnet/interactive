@@ -76,11 +76,11 @@ namespace Microsoft.DotNet.Interactive.App
                 app.UseRouter(r =>
                 {
                     operation.Info("configuring routing");
-                    var frontendEnvironment = serviceProvider.GetService<HtmlNotebookFrontedEnvironment>();
-                    if (frontendEnvironment != null)
+                    var htmlNotebookFrontedEnvironment = serviceProvider.GetService<HtmlNotebookFrontedEnvironment>();
+                    if (htmlNotebookFrontedEnvironment != null)
                     {
-                        r.Routes.Add(new DiscoveryRouter(frontendEnvironment));
-                        r.Routes.Add(new HttpApiTunnelingRouter(frontendEnvironment));
+                        r.Routes.Add(new DiscoveryRouter(htmlNotebookFrontedEnvironment));
+                        r.Routes.Add(new HttpApiTunnelingRouter(htmlNotebookFrontedEnvironment));
                     }
 
                    
@@ -90,9 +90,13 @@ namespace Microsoft.DotNet.Interactive.App
                         var httpProbingSettings = serviceProvider.GetRequiredService<HttpProbingSettings>();
 
                         kernel = kernel.UseHttpApi(startupOptions, httpProbingSettings);
-                        var enableHttp = new SubmitCode("#!enable-http", kernel.Name);
-                        enableHttp.PublishInternalEvents();
-                        kernel.DeferCommand(enableHttp);
+                      
+                        if (htmlNotebookFrontedEnvironment == null || htmlNotebookFrontedEnvironment.RequiresAutomaticBootstrapping)
+                        {
+                            var enableHttp = new SubmitCode("#!enable-http", kernel.Name);
+                            enableHttp.PublishInternalEvents();
+                            kernel.DeferCommand(enableHttp);
+                        }
                     }
 
                     r.Routes.Add(new VariableRouter(kernel));

@@ -381,6 +381,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext, CancellationToken>(
                     (startupOptions, options, console, context, cancellationToken) =>
                     {
+                      
                         FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi 
                             ? new HtmlNotebookFrontedEnvironment() 
                             : new BrowserFrontendEnvironment();
@@ -394,6 +395,11 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                         if (startupOptions.EnableHttpApi)
                         {
+                            if (context.ParseResult.Directives.Contains("vscode"))
+                            {
+                                ((HtmlNotebookFrontedEnvironment) frontendEnvironment).RequiresAutomaticBootstrapping =
+                                    false;
+                            }
                             services.AddSingleton((HtmlNotebookFrontedEnvironment)frontendEnvironment);
                             services.AddSingleton(frontendEnvironment);
                             services.AddSingleton(kernel);

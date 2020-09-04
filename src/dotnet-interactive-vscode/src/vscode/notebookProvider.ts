@@ -79,8 +79,12 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         return notebookData;
     }
 
-    resolveNotebook(document: vscode.NotebookDocument, webview: vscode.NotebookCommunication): Promise<void> {
-        return Promise.resolve();
+    async resolveNotebook(document: vscode.NotebookDocument, webview: vscode.NotebookCommunication): Promise<void> {
+        const client = await this.clientMapper.getOrAddClient(document.uri);
+        let boostrapperUri = client.tryGetProperty<vscode.Uri>("bootstrapperUri");
+        if(isNotNull(boostrapperUri)) {
+            this.preloads = [boostrapperUri];
+        }
     }
 
     saveNotebook(document: vscode.NotebookDocument, _cancellation: vscode.CancellationToken): Promise<void> {
