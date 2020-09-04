@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Interactive.App.Http
             }
         }
 
-        private async Task HandleGetVerb(RouteContext context)
+        private Task HandleGetVerb(RouteContext context)
         {
             var segments =
                 context.HttpContext
@@ -74,10 +74,8 @@ namespace Microsoft.DotNet.Interactive.App.Http
                 };
 
             }
-          
 
-           
-
+            return Task.CompletedTask;
         }
 
         private async Task HandlePostVerb(RouteContext context)
