@@ -76,8 +76,8 @@ export class StdioKernelTransport {
     public async setExternalUri(externalUri: Uri) : Promise<void>
     {
         this.externalUri = externalUri;
-
-        let response = await fetch(`http://localhost:${this.httpPort}/apitunnel`, {
+        let apitunnelUri = `${externalUri.toString()}apitunnel`;
+        let response = await fetch(apitunnelUri, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
