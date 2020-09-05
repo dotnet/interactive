@@ -17,6 +17,7 @@ import { ProcessStart } from './interfaces';
 import { ReportChannel, Uri } from './interfaces/vscode';
 import { LineReader } from './lineReader';
 import { isNotNull, parse, stringify } from './utilities';
+import fetch from 'node-fetch';
 
 export class StdioKernelTransport {
     private childProcess: cp.ChildProcessWithoutNullStreams | null;
@@ -78,8 +79,6 @@ export class StdioKernelTransport {
 
         let response = await fetch(`http://localhost:${this.httpPort}/apitunnel`, {
             method: 'POST',
-            cache: 'no-cache',
-            mode: 'cors',
             headers: {
                 'Content-Type': 'application/json'
             },
