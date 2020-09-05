@@ -4,6 +4,9 @@
       <Value>..\dotnet-interactive-vscode\src\contracts.ts</Value>
       <Value>..\Microsoft.DotNet.Interactive.Js\src\dotnet-interactive\contracts.ts</Value>
     </AdditionalFilesToIncludeForProject>
+    <HiddenComponentWarnings>
+      <Value>AspNetTestHostCompatibility</Value>
+    </HiddenComponentWarnings>
     <IgnoredTests>
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.CommandLineParserTests.kernel_server_honors_log_path</TestName>

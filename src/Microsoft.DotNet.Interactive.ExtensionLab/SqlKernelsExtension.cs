@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
@@ -32,10 +33,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     .UseKernelClientConnection(new MsSqlKernelConnection());
 
                 // FIX: (OnLoadAsync) 
-                await kernel.SubmitCodeAsync($@"
-#!markdown
-Installed {GetType().Name} featuring `#!connect mssql` and `#!connect sqlite`.
-");
+                await kernel.SendAsync(new DisplayValue(new FormattedValue("text/markdown", $@"
+*Loaded extension {this}*
+
+
+")));
             }
         }
     }

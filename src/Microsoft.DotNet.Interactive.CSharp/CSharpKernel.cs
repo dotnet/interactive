@@ -249,7 +249,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                         .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
                         .ToImmutableArray();
 
-                context.Publish(new DiagnosticsProduced(kernelDiagnostics, submitCode, formattedDiagnostics)); ;
+                context.Publish(new DiagnosticsProduced(kernelDiagnostics, submitCode, formattedDiagnostics));
 
                 // Report the compilation failure or exception
                 if (exception != null)

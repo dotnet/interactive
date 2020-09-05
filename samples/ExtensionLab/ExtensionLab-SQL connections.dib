@@ -14,8 +14,12 @@ This sample demonstrates how to use the `#!connect` extension
 
 #!csharp
 
-#i "nuget:https://dotnet.myget.org/F/fsharp/api/v2/package"
-#r "nuget:Microsoft.DotNet.Interactive.ExtensionLab,1.0.0-beta.20426.1" 
+#i "c:\temp"
+#r "nuget:Microsoft.DotNet.Interactive.ExtensionLab" 
+
+#!csharp
+
+#!lsmagic
 
 #!markdown
 
