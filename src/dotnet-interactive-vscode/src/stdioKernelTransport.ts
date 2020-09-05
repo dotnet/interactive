@@ -75,6 +75,7 @@ export class StdioKernelTransport {
 
     public async setExternalUri(externalUri: Uri) : Promise<void>
     {
+        this.diagnosticChannel.appendLine(`Tunnel uri for Kernel process ${this.childProcess?.pid} is ${externalUri.toString()}`);
         this.externalUri = externalUri;
         let apitunnelUri = `${externalUri.toString()}apitunnel`;
         let response = await fetch(apitunnelUri, {
