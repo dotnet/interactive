@@ -48,8 +48,8 @@ export async function activate(context: vscode.ExtensionContext) {
         };
         const processStart = processArguments(argsTemplate, notebookPath, dotnetPath, launchOptions!.workingDirectory);
         let notification = {
-            displayError: async (message: string) => { await vscode.window.showErrorMessage(message); },
-            displayInfo: async (message: string) => { await vscode.window.showInformationMessage(message); },
+            displayError: async (message: string) => { await vscode.window.showErrorMessage(message, { modal: false }); },
+            displayInfo: async (message: string) => { await vscode.window.showInformationMessage(message, { modal: false }); },
         };
         const transport = new StdioKernelTransport(processStart, diagnosticsChannel, vscode.Uri.parse, notification);
         await transport.waitForReady();
@@ -65,7 +65,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable
     const selector = {
-        viewType: ['dotnet-interactive','dotnet-interactive-jupyter'],
+        viewType: ['dotnet-interactive', 'dotnet-interactive-jupyter'],
         filenamePattern: '*.{dib,dotnet-interactive,ipynb}'
     };
     const notebookProvider = new DotNetInteractiveNotebookContentProvider(clientMapper);
