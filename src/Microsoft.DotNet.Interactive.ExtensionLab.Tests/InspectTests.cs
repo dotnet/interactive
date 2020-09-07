@@ -33,17 +33,12 @@ public class A
 
             var result = await kernel.SendAsync(new SubmitCode(submission, "csharp"));
 
-
             result.KernelEvents
                   .ToSubscribedList()
                   .Should()
-                  .ContainSingle<ErrorProduced>()
+                  .ContainSingle<CommandFailed>()
                   .Which
-                  .FormattedValues
-                  .Should()
-                  .ContainSingle()
-                  .Which
-                  .Value
+                  .Message
                   .Should()
                   .ContainAll(",35): error CS1513: } expected");
         }
