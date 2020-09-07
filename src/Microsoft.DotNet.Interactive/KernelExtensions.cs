@@ -98,7 +98,9 @@ namespace Microsoft.DotNet.Interactive
                     {
                         if (KernelInvocationContext.Current is {} currentContext)
                         {
-                            if (e is DiagnosticEvent || e is DisplayEvent)
+                            if (e is DiagnosticEvent || 
+                                e is DisplayEvent || 
+                                e is DiagnosticsProduced)
                             {
                                 return;
                             }
@@ -134,7 +136,7 @@ namespace Microsoft.DotNet.Interactive
                 "name",
                 "The name of the variable to create in the destination kernel");
 
-            variableNameArg.AddSuggestions(_ =>
+            variableNameArg.AddSuggestions((_,__) =>
             {
                 if (kernel.ParentKernel is { } composite)
                 {
@@ -150,7 +152,7 @@ namespace Microsoft.DotNet.Interactive
                 "--from",
                 "The name of the kernel where the variable has been previously declared");
 
-            fromKernelOption.AddSuggestions(_ =>
+            fromKernelOption.AddSuggestions((_,__) =>
             {
                 if (kernel.ParentKernel is { } composite)
                 {

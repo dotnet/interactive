@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
@@ -20,16 +21,22 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     <IEnumerable /* rows */
                         <IEnumerable /* fields */<(string, object)>>>>((source, writer) =>
                 {
-                    // TODO-JOSEQU: (RegisterFormatters) do all the tables...
+                    // TODO: (RegisterFormatters) do all the tables...
 
                     writer.Write(source.First()
-                        .ToTabularJsonString()
-                        .ToDisplayString(HtmlFormatter.MimeType));
+                                       .ToTabularJsonString()
+                                       .ToDisplayString(HtmlFormatter.MimeType));
                 }, HtmlFormatter.MimeType);
 
                 compositeKernel
                     .UseKernelClientConnection(new SQLiteKernelConnection())
                     .UseKernelClientConnection(new MsSqlKernelConnection());
+
+            KernelInvocationContext.Current?.Display(
+                $@"
+Added `mssql` and `sqlite` to the connection types available using the [`#!connect`](https://github.com/dotnet/interactive/blob/main/docs/connect.md) magic command.",
+                "text/markdown");
+
             }
 
             return Task.CompletedTask;

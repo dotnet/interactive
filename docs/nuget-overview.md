@@ -18,7 +18,7 @@ If you'd like to use a specific version, you can specify it like this:
 
 If your nuget package is not hosted on the main Nuget feed you can specify an alternative nuget source using `#i`. 
 
-### Remote Nuget Source
+### Remote Nuget Sources
 
 It is common for organizations to store packages on a private or pre-release feed. In the following example we are adding the [dotnet project](https://github.com/dotnet) pre-release nuget feed.
 
@@ -26,7 +26,7 @@ It is common for organizations to store packages on a private or pre-release fee
 #i "nuget:https://www.myget.org/F/dotnet/api/v3/index.json"
 ```
 
-### Local Nuget Source
+### Local Nuget Sources
 
 You may also use a local folder as a nuget source:
 

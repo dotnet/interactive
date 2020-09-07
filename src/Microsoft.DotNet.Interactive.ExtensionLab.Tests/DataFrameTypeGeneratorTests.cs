@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 .Completions
                 .Select(c => c.DisplayText)
                 .Should()
-                .Contain(new[] { "name", "is_available", "price" });
+                .Contain(new[] { "name", "is_available", "price_in_credits" });
         }
 
         [Fact]
@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             var kernel = new CSharpKernel()
                 .UseNugetDirective();
 
-            await new DataFrameTypeGeneratorExtension().OnLoadAsync(kernel);
+            await new DataFrameKernelExtension().OnLoadAsync(kernel);
 
             await kernel.SubmitCodeAsync($@"
 #r ""{typeof(DataFrame).Assembly.Location}""
@@ -122,7 +122,7 @@ using Microsoft.Data.Analysis;
             var kernel = new CSharpKernel()
                 .UseNugetDirective();
 
-            await new DataFrameTypeGeneratorExtension().OnLoadAsync(kernel);
+            await new DataFrameKernelExtension().OnLoadAsync(kernel);
 
             await kernel.SubmitCodeAsync($@"
 #r ""{typeof(DataFrame).Assembly.Location}""
@@ -148,7 +148,7 @@ using Microsoft.Data.Analysis;
             var kernel = new CSharpKernel()
                 .UseNugetDirective();
 
-            await new DataFrameTypeGeneratorExtension().OnLoadAsync(kernel);
+            await new DataFrameKernelExtension().OnLoadAsync(kernel);
 
             await kernel.SubmitCodeAsync($@"
 #r ""{typeof(DataFrame).Assembly.Location}""
@@ -168,7 +168,7 @@ using Microsoft.Data.Analysis;
             names[1] = "pineapple";
             names[2] = "durian";
 
-            var prices = new PrimitiveDataFrameColumn<decimal>("price", 3);
+            var prices = new PrimitiveDataFrameColumn<decimal>("price in credits", 3);
             prices[0] = 12.2m;
             prices[1] = 22.12m;
             prices[2] = 3_000_000m;

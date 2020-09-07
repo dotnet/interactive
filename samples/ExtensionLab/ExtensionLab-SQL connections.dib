@@ -1,0 +1,55 @@
+#!markdown
+
+# .NET Interactive ExtensionLab: SQL Connections
+
+This sample demonstrates how to use the `#!connect` extension
+
+#!csharp
+
+#r "nuget:Microsoft.Data.Sqlite,3.1.7"
+
+#!markdown
+
+## Install our ExtensionLab NuGet package
+
+#!csharp
+
+#i "c:\temp"
+#r "nuget:Microsoft.DotNet.Interactive.ExtensionLab" 
+
+#!csharp
+
+#!lsmagic
+
+#!markdown
+
+Installing the `ExtensionLab` brings in some new magic commands including two additional verbs for the `#!connect` command, which you can see by running help for it.
+
+#!csharp
+
+#!connect -h
+
+#!csharp
+
+#!connect sqlite -h
+
+#!markdown
+
+# Now, we're ready to work with a SQL database
+
+SQLite allows us to create a database in memory using the `Mode=Memory` parameter in our connection string. This is a quick and convenient approach for the sake of demonstration.
+
+#!csharp
+
+#!connect sqlite --kernel-name fruits "Data Source=InMemorySample;Mode=Memory;Cache=Shared"
+
+#!csharp
+
+#!fruits 
+
+CREATE TABLE Fruits(
+  Id    INTEGER PRIMARY KEY, 
+  Name  TEXT NOT NULL,
+  Color TEXT NOT NULL,
+  Deliciousness INTEGER NOT NULL
+);

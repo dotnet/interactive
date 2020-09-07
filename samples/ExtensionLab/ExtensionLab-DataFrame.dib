@@ -1,0 +1,112 @@
+#!markdown
+
+# .NET Interactive ExtensionLab: Microsoft.Data.Analysis
+
+This notebook demonstrates some of the experiments in the *ExtensionLab*  relating to the `DataFrame` class from [`Microsoft.Data.Analysis`](https://www.nuget.org/packages/Microsoft.Data.Analysis/).
+
+## The `#!linqify` magic command
+
+The `#!linqify` magic command builds a strongly-typed wrapper class around a `Microsoft.Data.Analysis.DataFrame` instance, which lets you write LINQ code against your data.  (You can learn more about `DataFrame` [here](https://devblogs.microsoft.com/dotnet/an-introduction-to-dataframe/).)
+
+To start, let's load the `Microsoft.Data.Analysis` NuGet package.
+
+#!csharp
+
+#r "nuget:Microsoft.Data.Analysis,0.4.0"
+
+#!markdown
+
+Next, let's load up the `Microsoft.DotNet.Interactive.ExtensionLab` package.
+
+#!csharp
+
+#i "nuget:https://dotnet.myget.org/F/fsharp/api/v2/package"
+#r "nuget:Microsoft.DotNet.Interactive.ExtensionLab,1.0.0-beta.20426.1" 
+
+#!markdown
+
+Next, we'll download a `.csv` containing some interesting housing data.
+
+#!csharp
+
+using System.IO;
+using System.Net.Http;
+
+string housingPath = "housing.csv";
+
+if (!File.Exists(housingPath))
+{
+    var contents = await new HttpClient()
+        .GetStringAsync("https://raw.githubusercontent.com/ageron/handson-ml2/master/datasets/housing/housing.csv");
+        
+    // The default working directory of the notebook is the same directory where the notebook file is located, 
+    // so we'll write the file without fully-qualifying the path.
+    File.WriteAllText("housing.csv", contents);
+}
+
+#!markdown
+
+Using `Microsoft.Data.Analysis.DataFrame`, we can load the data from the `housing.csv` file.
+
+#!csharp
+
+using Microsoft.Data.Analysis;
+
+var housingDataFrame = DataFrame.LoadCsv(@"housing.csv");
+
+housingDataFrame.Columns
+
+#!markdown
+
+After running the previous cell, you can see that the `DataFrame` has columns with a few different data types. But since these are only known once the data is loaded, accessing them in a strongly-typed way isn't normally possible.
+
+The commented line in the next cell won't compile because the `DataFrameRow` indexer returns `object`.
+
+#!csharp
+
+DataFrameRow row = housingDataFrame.Rows[0];
+
+// This next line won't compile because the row indexer returns System.Object
+//Single value = row[0];
+
+#!markdown
+
+But as you can see next, the runtime type is more specific. 
+
+#!csharp
+
+housingDataFrame.Rows[0][0].GetType()
+
+#!markdown
+
+This is where the `#!linqify` magic command we've installed from the ExtensionLab becomes useful. Since we know the column types in the `DataFrame` once it's been loaded, we can create a custom class with this understanding. And with .NET Interactive, we can do this at runtime, compile it, and replace the existing `housingDataFrame` variable with an instance of the new, more specific class.
+
+#!csharp
+
+#!linqify -h
+
+#!csharp
+
+#!linqify --show-code True housingDataFrame
+
+#!markdown
+
+Now, you can write code to traverse the `DataFrame` using LINQ: 
+
+#!csharp
+
+housingDataFrame
+    .OrderBy(row => row.ocean_proximity)
+    .ThenBy(row => row.median_house_value)
+
+#!markdown
+
+## Visualizing the data with the nteract Data Explorer
+
+The [nteract Data Explorer](https://blog.nteract.io/designing-the-nteract-data-explorer-f4476d53f897) is a powerful tool for understanding a dataset. Another experimental extension that we loaded when we installed the ExtensionLab package brings support for visualizing data from a number of types, including `IDataView`, which the `DataFrame` implements. The extension method `Explore` will render your data using the nteract Data Explorer:
+
+#!csharp
+
+using Microsoft.DotNet.Interactive.ExtensionLab.Data;
+
+housingDataFrame.Explore();
