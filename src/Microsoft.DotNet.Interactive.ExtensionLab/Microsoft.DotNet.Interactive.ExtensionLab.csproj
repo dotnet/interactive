@@ -30,6 +30,8 @@
     <TypescriptInputs Include="$(JsApiRoot)rollup.config.js" />
     <TypescriptInputs Include="$(JsApiRoot)tsconfig.json" />
     <TypescriptInputs Include="$(JsApiRoot)src/**/*.ts" />
+    <None Include="Inspector\LICENSE.SharpLab" />
+    <None Include="Inspector\README.md" />
 
     <TypescriptOutputFiles Include="$(JsApiRoot)dist/index.js" />
 
