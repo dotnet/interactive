@@ -10,7 +10,7 @@ We suggest running on a Pi 4 or above as the device provides more computing powe
 
 Open a terminal and type
 ```bash
-curl -L https://raw.githubusercontent.com/dotnet/interactive/master//tools/setup-rapbian.sh | bash -e
+curl -L https://raw.githubusercontent.com/dotnet/interactive/master/tools/setup-rapbian.sh | bash -e
 ```
 
 Now you can activate the jupyter virtual environment using the command

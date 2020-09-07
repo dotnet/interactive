@@ -8,10 +8,8 @@ using Microsoft.DotNet.Interactive.App.Http;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Pocket;
-using Serilog;
 
 namespace Microsoft.DotNet.Interactive.App
 {
@@ -37,10 +35,11 @@ namespace Microsoft.DotNet.Interactive.App
 
         public void ConfigureServices(IServiceCollection services)
         {
-            using var _ = Pocket.Logger.Log.OnEnterAndExit();
+            using var _ = Logger.Log.OnEnterAndExit();
+
             if (StartupOptions.EnableHttpApi)
             {
-                services.AddSingleton((c) => new KernelHubConnection(c.GetRequiredService<CompositeKernel>()));
+                services.AddSingleton(c => new KernelHubConnection(c.GetRequiredService<CompositeKernel>()));
                 services.AddRouting();
                 services.AddCors(options =>
                 {
@@ -63,7 +62,7 @@ namespace Microsoft.DotNet.Interactive.App
             IHostApplicationLifetime lifetime,
             IServiceProvider serviceProvider)
         {
-            var operation = Pocket.Logger.Log.OnEnterAndExit();
+            var operation = Logger.Log.OnEnterAndExit();
             if (StartupOptions.EnableHttpApi)
             {
                 var kernel = serviceProvider.GetRequiredService<Kernel>();
@@ -77,10 +76,11 @@ namespace Microsoft.DotNet.Interactive.App
                 app.UseRouter(r =>
                 {
                     operation.Info("configuring routing");
-                    var frontendEnvironment = serviceProvider.GetService<HtmlNotebookFrontedEnvironment>();
-                    if (frontendEnvironment != null)
+                    var htmlNotebookFrontedEnvironment = serviceProvider.GetService<HtmlNotebookFrontedEnvironment>();
+                    if (htmlNotebookFrontedEnvironment != null)
                     {
-                        r.Routes.Add(new DiscoveryRouter(frontendEnvironment));
+                        r.Routes.Add(new DiscoveryRouter(htmlNotebookFrontedEnvironment));
+                        r.Routes.Add(new HttpApiTunnelingRouter(htmlNotebookFrontedEnvironment));
                     }
 
                    
@@ -90,9 +90,13 @@ namespace Microsoft.DotNet.Interactive.App
                         var httpProbingSettings = serviceProvider.GetRequiredService<HttpProbingSettings>();
 
                         kernel = kernel.UseHttpApi(startupOptions, httpProbingSettings);
-                        var enableHttp = new SubmitCode("#!enable-http", kernel.Name);
-                        enableHttp.PublishInternalEvents();
-                        kernel.DeferCommand(enableHttp);
+                      
+                        if (htmlNotebookFrontedEnvironment == null || htmlNotebookFrontedEnvironment.RequiresAutomaticBootstrapping)
+                        {
+                            var enableHttp = new SubmitCode("#!enable-http", kernel.Name);
+                            enableHttp.PublishInternalEvents();
+                            kernel.DeferCommand(enableHttp);
+                        }
                     }
 
                     r.Routes.Add(new VariableRouter(kernel));

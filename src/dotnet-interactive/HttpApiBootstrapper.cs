@@ -92,6 +92,7 @@ function loadDotnetInteractiveApi() {
                     'dotnet-interactive-extensions': `${root}extensions`
                 }
             }) || require;
+
             if (!window.dotnetInteractiveRequire) {
                 window.dotnetInteractiveRequire = dotnetInteractiveRequire;
             }

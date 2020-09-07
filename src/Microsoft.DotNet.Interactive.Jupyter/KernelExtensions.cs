@@ -152,7 +152,7 @@ using static {typeof(TopLevelMethods).FullName};
                 k.AddDirective(lsmagic(k));
             });
 
-            Formatter<SupportedDirectives>.Register((directives, writer) =>
+            Formatter.Register<SupportedDirectives>((directives, writer) =>
             {
                 var indentLevel = 1.5;
                 PocketView t = div(
@@ -164,12 +164,15 @@ using static {typeof(TopLevelMethods).FullName};
                 IEnumerable<IHtmlContent> Summary(ICommand command, double offset)
                 {
                     yield return new HtmlString("<pre>");
+
                     var level = indentLevel + offset;
-                    foreach (var alias in command.Aliases)
+
+                    for (var i = 0; i < command.Aliases.ToArray().Length; i++)
                     {
+                        var alias = command.Aliases.ToArray()[i];
                         yield return span[style: $"text-indent:{level:##.#}em; color:#512bd4"](alias);
 
-                        if (level < command.Aliases.Count - 1)
+                        if (i < command.Aliases.Count - 1)
                         {
                             yield return span[style: $"text-indent:{level:##.#}em; color:darkgray"](", ");
                         }

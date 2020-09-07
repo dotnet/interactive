@@ -10,7 +10,7 @@ The PR build definition can be found [here](https://dev.azure.com/dnceng/public/
 
 ## MyGet Package Upload
 
-NuGet packages produced from every build of master are auto-published to MyGet via the `eng/upload/scripts/UploadPackages.ps1` script.
+NuGet packages produced from every build of main are auto-published to MyGet via the `eng/upload/scripts/UploadPackages.ps1` script.
 
 ## Publish VS Code Extension
 

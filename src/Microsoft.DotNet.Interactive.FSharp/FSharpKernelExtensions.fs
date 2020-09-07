@@ -1,15 +1,10 @@
 ﻿namespace Microsoft.DotNet.Interactive.FSharp
 
 open System
-open System.CommandLine
-open System.CommandLine.Invocation
-open System.CommandLine.Parsing
 open System.Runtime.CompilerServices
-open System.Threading.Tasks
 open Microsoft.AspNetCore.Html
 open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive.Commands
-open Microsoft.DotNet.Interactive.Events
 open Microsoft.DotNet.Interactive.FSharp
 open Microsoft.DotNet.Interactive.Formatting
 open XPlot.Plotly
@@ -51,9 +46,9 @@ type FSharpKernelExtensions private () =
                 referenceFromType typeof<FSharpKernelHelpers.IMarker>
                 
                 // opens Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers
-                //    note this has some AutoOpen modules inside
+                //    note this has some AutoOpen content inside
                 openNamespaceOrType (typeof<FSharpKernelHelpers.IMarker>.Namespace)
-
+                
             ] |> String.concat Environment.NewLine
 
         kernel.DeferCommand(SubmitCode code)

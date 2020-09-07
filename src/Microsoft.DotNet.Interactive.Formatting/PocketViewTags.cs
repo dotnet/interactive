@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.AspNetCore.Html;
 using System;
 
 namespace Microsoft.DotNet.Interactive.Formatting
@@ -88,10 +89,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static dynamic ul => _.ul;
         public static dynamic video => _.video;
 
-        // This can be used to indicates points
-        // where we are embedding an arbitrary value into the HTML content
-        // and we are explicitly indicating that the value can be either IHtmlContent
-        // or will otherwise be formatted as plaintext.
-        public static object arbitrary(object value) => value;
+        /// <summary>An element that consists of an HtmlString</summary>
+        public static object str(string text)
+        {
+            return new HtmlString(text);
+        }
+        /// <summary>Create an object suitable for delayed expansion to HTML</summary>
+        public static object embed(object obj, FormatContext context)
+        {
+            return new HtmlFormatter.EmbeddedFormat(context, obj);
+        }
+
     }
 }

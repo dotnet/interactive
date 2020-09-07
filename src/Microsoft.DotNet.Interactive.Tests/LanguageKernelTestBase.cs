@@ -2,21 +2,22 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Recipes;
-using Xunit.Abstractions;
 using Serilog.Sinks.RollingFileAlternate;
+using Xunit.Abstractions;
 using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
-using System.Collections.Generic;
-using Microsoft.DotNet.Interactive.Jupyter;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -83,7 +84,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 {
                     CreateFSharpKernel(openTestingNamespaces),
                     CreateCSharpKernel(),
-                    CreatePowerShellKernel()
+                    CreatePowerShellKernel(),
                 },
                 defaultKernelLanguage);
         }
@@ -102,12 +103,12 @@ namespace Microsoft.DotNet.Interactive.Tests
             return CreateCompositeKernel(new[] { languageKernel }, defaultLanguage);
         }
 
-        private CompositeKernel CreateCompositeKernel(IEnumerable<Kernel> subkernels, Language defaultKernelLanguage)
+        private CompositeKernel CreateCompositeKernel(IEnumerable<(Kernel, IEnumerable<string>)> subkernelsAndAliases, Language defaultKernelLanguage)
         {
             var kernel = new CompositeKernel().UseDefaultMagicCommands();
-            foreach (var sub in subkernels)
+            foreach (var (subkernel, aliases) in subkernelsAndAliases)
             {
-                kernel.Add(sub.LogEventsToPocketLogger());
+                kernel.Add(subkernel.LogEventsToPocketLogger(), aliases.ToImmutableArray());
             }
 
             kernel.DefaultKernelName = defaultKernelLanguage.LanguageName();
@@ -134,9 +135,9 @@ namespace Microsoft.DotNet.Interactive.Tests
             return kernel;
         }
 
-        private Kernel CreateFSharpKernel(bool openTestingNamespaces)
+        private (Kernel, IEnumerable<string>) CreateFSharpKernel(bool openTestingNamespaces)
         {
-            var kernel =
+            Kernel kernel =
                 new FSharpKernel()
                 .UseDefaultFormatting()
                 .UseNugetDirective()
@@ -144,26 +145,42 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .UseDotNetVariableSharing()
                 .UseWho()
                 .UseDefaultNamespaces();
+
             if (openTestingNamespaces)
-                return UseExtraNamespacesForFSharpTesting(kernel);
-            else
-                return kernel;
+            {
+                kernel = UseExtraNamespacesForFSharpTesting(kernel);
+            }
+
+            return (kernel, new[]
+                {
+                    "f#",
+                    "F#"
+                });
         }
 
-        private Kernel CreateCSharpKernel()
+        private (Kernel, IEnumerable<string>) CreateCSharpKernel()
         {
-            return new CSharpKernel()
+            return (new CSharpKernel()
                 .UseDefaultFormatting()
                 .UseNugetDirective()
                 .UseKernelHelpers()
                 .UseDotNetVariableSharing()
-                .UseWho();
+                .UseWho(),
+                new[]
+                {
+                    "c#",
+                    "C#"
+                });
         }
 
-        private Kernel CreatePowerShellKernel()
+        private (Kernel, IEnumerable<string>) CreatePowerShellKernel()
         {
-            return new PowerShellKernel()
-                .UseDotNetVariableSharing();
+            return (new PowerShellKernel()
+                .UseDotNetVariableSharing(),
+                new[]
+                {
+                    "powershell"
+                });
         }
 
         public async Task SubmitCode(Kernel kernel, string[] submissions, SubmissionType submissionType = SubmissionType.Run)

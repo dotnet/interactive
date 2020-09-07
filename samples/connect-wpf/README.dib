@@ -1,11 +1,20 @@
 #!markdown
 
 ## Connect to the WPF app
-Before running cell, ensure the WPF app is running. This will connect the notebook to the WPF app. This must be run before any of the other cells.
+
+First, let's start the WPF app and connect to it.
+
+#!powershell
+
+Start-Process -NoNewWindow dotnet run
 
 #!csharp
 
 #!connect named-pipe --kernel-name wpf --pipe-name InteractiveWpf
+
+#!csharp
+
+#!wpf -h
 
 #!markdown
 
@@ -30,7 +39,7 @@ using System.Windows;
 
 
 var grid = (Grid)App.MainWindow.Content;
-grid.Background = new SolidColorBrush(Colors.Blue);
+grid.Background = new SolidColorBrush(Colors.CadetBlue);
 grid
 
 #!markdown

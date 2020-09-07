@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as path from 'path';
+import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from "./contracts";
 import { ProcessStart } from "./interfaces";
 import { Uri } from './interfaces/vscode';
 
@@ -17,6 +18,10 @@ export function processArguments(template: { args: Array<string>, workingDirecto
         args: [...processed.slice(1)],
         workingDirectory: performReplacement(template.workingDirectory, map)
     };
+}
+
+export function isNotNull<T>(obj: T | null): obj is T {
+    return obj !== undefined;
 }
 
 function performReplacement(template: string, map: { [key: string]: string }): string {
@@ -80,4 +85,45 @@ export function createUri(fsPath: string): Uri {
         fsPath,
         toString: () => fsPath
     };
+}
+
+export function parse(text: string): any {
+    return JSON.parse(text, (key, value) => {
+        if (key === 'rawData' && typeof value === 'string') {
+            // this looks suspicously like a base64-encoded byte array; special-case this by interpreting this as a base64-encoded string
+            const buffer = Buffer.from(value, 'base64');
+            return Uint8Array.from(buffer.values());
+        }
+
+        return value;
+    });
+}
+
+export function stringify(value: any): string {
+    return JSON.stringify(value, (key, value) => {
+        if (key === 'rawData' && (typeof value.length === 'number' || value.type === 'Buffer')) {
+            // this looks suspicously like a `Uint8Array` or `Buffer` object; special-case this by returning a base64-encoded string
+            const buffer = Buffer.from(value);
+            return buffer.toString('base64');
+        }
+
+        return value;
+    });
+}
+
+export function isErrorOutput(arg: any): arg is NotebookCellErrorOutput {
+    return arg
+        && typeof arg.errorName === 'string'
+        && typeof arg.errorValue === 'string'
+        && Array.isArray(arg.stackTrace);
+}
+
+export function isDisplayOutput(arg: any): arg is NotebookCellDisplayOutput {
+    return arg
+        && typeof arg.data === 'object';
+}
+
+export function isTextOutput(arg: any): arg is NotebookCellTextOutput {
+    return arg
+        && typeof arg.text === 'string';
 }

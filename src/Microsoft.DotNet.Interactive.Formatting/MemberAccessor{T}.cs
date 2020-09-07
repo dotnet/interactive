@@ -30,11 +30,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     unaryExpression,
                     targetParam);
 
-                GetValue = lambdaExpression.Compile();
+                Getter = lambdaExpression.Compile();
             }
             catch (Exception)
             {
-                GetValue = obj =>
+                Getter = obj =>
                 {
                     if (obj == null)
                     {
@@ -48,8 +48,18 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public MemberInfo Member { get; }
 
-        public bool Ignore { get; set; }
+        public Func<T, object> Getter { get; set; }
 
-        public Func<T, object> GetValue { get; set; }
+        public object GetValueOrException(T instance)
+        {
+            try
+            {
+                return Getter(instance);
+            }
+            catch (Exception exception)
+            {
+                return exception;
+            }
+        }
     }
 }

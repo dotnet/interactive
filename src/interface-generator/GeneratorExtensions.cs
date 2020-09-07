@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 {
@@ -33,6 +34,13 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
         public static bool ShouldBeArray(this Type type)
         {
             return type.IsGenericType && typeof(IEnumerable).IsAssignableFrom(type);
+        }
+
+        public static bool ShouldBeDictionaryOfString(this Type type)
+        {
+            return type.IsGenericType
+                && (type.GetGenericTypeDefinition() == typeof(IDictionary<,>) || type.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>))
+                && type.GenericTypeArguments[0] == typeof(string);
         }
     }
 }

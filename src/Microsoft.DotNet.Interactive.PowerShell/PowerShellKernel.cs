@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Management.Automation.Language;
@@ -13,6 +14,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.PowerShell.Host;
 using Microsoft.PowerShell;
 using Microsoft.PowerShell.Commands;
@@ -170,8 +172,15 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 context.Publish(new IncompleteCodeSubmissionReceived(submitCode));
             }
 
-            var diagnostics = parseErrors.Select(ToDiagnostic);
-            context.Publish(new DiagnosticsProduced(diagnostics, submitCode));
+            var formattedDiagnostics =
+                parseErrors
+                    .Select(d => d.ToString())
+                    .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
+                    .ToImmutableArray();
+
+            var diagnostics = parseErrors.Select(ToDiagnostic).ToImmutableArray();
+
+            context.Publish(new DiagnosticsProduced(diagnostics, submitCode, formattedDiagnostics));
 
             // If there were parse errors, display them and return early.
             if (parseErrors.Length > 0)

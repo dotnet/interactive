@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <returns>The same tag instance, with the contents set to the specified text.</returns>
         public static TTag Containing<TTag>(this TTag tag, IHtmlContent content) where TTag : Tag
         {
-            tag.Content = w => w.Write(content.ToString());
+            tag.Content = writer => writer.Write(content.ToString());
             return tag;
         }
 
@@ -137,11 +137,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static TTag Containing<TTag>(this TTag tag, IEnumerable<ITag> tags) where TTag : Tag
         {
-            tag.Content = w =>
+            tag.Content = writer =>
             {
                 foreach (var childTag in tags)
                 {
-                    childTag.WriteTo(w, HtmlEncoder.Default);
+                    childTag.WriteTo(writer, HtmlEncoder.Default);
                 }
             };
             return tag;

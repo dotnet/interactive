@@ -7,22 +7,57 @@
  <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageDescription>Experimental kernel extensions for dotnet-interactive</PackageDescription>
+    <OutputType>Library</OutputType>
     <PackageTags>dotnet-interactive</PackageTags>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <NoWarn>$(NoWarn);NU5100</NoWarn><!-- dll outside of lib/ folder -->
   </PropertyGroup>
 
+  <PropertyGroup>
+    <JsApiRoot>$(MSBuildThisFileDirectory)/../Microsoft.DotNet.Interactive.nteract.js/</JsApiRoot>
+  </PropertyGroup>
+
  <ItemGroup>
-   <PackageReference Include="Microsoft.Data.Analysis" Version="0.4.0" />
+   <Compile Remove="bin\**" />
+   <EmbeddedResource Remove="bin\**" />
+   <None Remove="bin\**" />
  </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.dotnet.interactive" Version="1.0.0-beta.20372.2" />
-    <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.20372.2" />
+    <TypescriptInputs Include="$(JsApiRoot)package.json" />
+    <TypescriptInputs Include="$(JsApiRoot)package-lock.json" />
+    <TypescriptInputs Include="$(JsApiRoot)rollup.config.js" />
+    <TypescriptInputs Include="$(JsApiRoot)tsconfig.json" />
+    <TypescriptInputs Include="$(JsApiRoot)src/**/*.ts" />
+
+    <TypescriptOutputFiles Include="$(JsApiRoot)dist/index.js" />
+
+    <EmbeddedResource Include="@(TypescriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)" />
+
+  </ItemGroup>
+
+ <ItemGroup>
+   <PackageReference Include="Microsoft.Data.Analysis" Version="0.4.0" />
+   <PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.0" />
+   <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.7" />
+ </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="$(OutputPath)/Microsoft.DotNet.Interactive.ExtensionLab.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
   </ItemGroup>
+
+  <Target Name="InstallNodeModules">
+    <Exec Command="npm i" WorkingDirectory="$(JsApiRoot)" />
+  </Target>
+
+  <Target Name="CompileTypescript" Inputs="@(TypescriptInputs)" Outputs="@(TypescriptOutputFiles)" DependsOnTargets="InstallNodeModules" BeforeTargets="BeforeBuild" Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'">
+    <Exec Command="npm run build" WorkingDirectory="$(JsApiRoot)" />
+  </Target>
 
 </Project>

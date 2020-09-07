@@ -3,11 +3,12 @@
 
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
+import * as path from 'path';
 import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
 import { ClientMapper } from '../clientMapper';
-import { serializeNotebook } from '../interactiveNotebook';
-import { getEol } from './vscodeUtilities';
+import { getEol, isUnsavedNotebook } from './vscodeUtilities';
+import { toNotebookDocument, DotNetInteractiveNotebookContentProvider } from './notebookProvider';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, dotnetPath: string) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
@@ -28,7 +29,7 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, do
             context.globalStoragePath,
             getInteractiveVersion,
             createToolManifest,
-            async (version: string) => { vscode.window.showInformationMessage(`Installing .NET Interactive version ${version}...`); },
+            async (version: string) => { await vscode.window.showInformationMessage(`Installing .NET Interactive version ${version}...`); },
             installInteractiveTool,
             async () => { await vscode.window.showInformationMessage('.NET Interactive installation complete.'); });
         return launchOptions;
@@ -92,9 +93,10 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
             document = vscode.notebook.activeNotebookEditor.document;
         }
 
-        for (const cell of document.cells) {
-            cell.metadata.runState = vscode.NotebookCellRunState.Idle;
-        }
+        const d = document;
+        document.cells.forEach(async cell => {
+            await DotNetInteractiveNotebookContentProvider.updateCellMetadata(d, cell, { runState: vscode.NotebookCellRunState.Idle });
+        });
 
         clientMapper.closeClient(document.uri);
     }));
@@ -106,7 +108,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     }));
 }
 
-export function registerFileFormatCommands(context: vscode.ExtensionContext) {
+export function registerFileCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
 
     const eol = getEol();
 
@@ -114,6 +116,32 @@ export function registerFileFormatCommands(context: vscode.ExtensionContext) {
         'Jupyter Notebooks': ['ipynb'],
         '.NET Interactive Notebooks': ['dib', 'dotnet-interactive']
     };
+
+    function workspaceHasUnsavedNotebookWithName(fileName: string): boolean {
+        return vscode.workspace.textDocuments.findIndex(textDocument => {
+            if (textDocument.notebook) {
+                const notebookUri = textDocument.notebook.uri;
+                return isUnsavedNotebook(notebookUri) && path.basename(notebookUri.fsPath) === fileName;
+            }
+
+            return false;
+        }) >= 0;
+    }
+
+    function getNewNotebookName(): string {
+        let suffix = 1;
+        while (workspaceHasUnsavedNotebookWithName(`Untitled-${suffix}.dib`)) {
+            suffix++;
+        }
+
+        return `Untitled-${suffix}.dib`;
+    }
+
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebook', async () => {
+        const fileName = getNewNotebookName();
+        const newUri = vscode.Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
+        await vscode.commands.executeCommand('vscode.openWith', newUri, 'dotnet-interactive');
+    }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
         // ensure we have a notebook uri
@@ -146,8 +174,10 @@ export function registerFileFormatCommands(context: vscode.ExtensionContext) {
             }
 
             const { document } = vscode.notebook.activeNotebookEditor;
-            const contents = serializeNotebook(uri, document, eol);
-            await vscode.workspace.fs.writeFile(uri, Buffer.from(contents));
+            const notebook = toNotebookDocument(document);
+            const client = await clientMapper.getOrAddClient(uri);
+            const buffer = await client.serializeNotebook(uri.fsPath, notebook, eol);
+            await vscode.workspace.fs.writeFile(uri, buffer);
         }
     }));
 }

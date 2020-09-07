@@ -195,6 +195,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
 
             Exception exception = null;
+            string message = null;
 
             if (!context.CancellationToken.IsCancellationRequested)
             {
@@ -221,27 +222,42 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             if (!context.CancellationToken.IsCancellationRequested)
             {
+                var diagnostics = ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
+
+                // Check for a compilation failure
+                if (exception is CodeSubmissionCompilationErrorException compilationError &&
+                    compilationError.InnerException is CompilationErrorException innerCompilationException)
+                {
+                    diagnostics = innerCompilationException.Diagnostics;
+                    // In the case of an error the diagnostics get attached to both the 
+                    // DiagnosticsProduced and CommandFailed events.
+                    message =
+                        string.Join(Environment.NewLine,
+                                    innerCompilationException.Diagnostics.Select(d => d.ToString()) ?? Enumerable.Empty<string>());
+                }
+                else
+                {
+                    diagnostics = ScriptState?.Script.GetCompilation().GetDiagnostics() ?? ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
+                }
+
+                // Publish the compilation diagnostics. This doesn't include the exception.
+                var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
+
+                var formattedDiagnostics =
+                    diagnostics
+                        .Select(d => d.ToString())
+                        .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
+                        .ToImmutableArray();
+
+                context.Publish(new DiagnosticsProduced(kernelDiagnostics, submitCode, formattedDiagnostics)); ;
+
+                // Report the compilation failure or exception
                 if (exception != null)
                 {
-                    string message = null;
-
-                    if (exception is CodeSubmissionCompilationErrorException compilationError &&
-                        compilationError.InnerException is CompilationErrorException innerCompilationException)
-                    {
-                        message =
-                            string.Join(Environment.NewLine,
-                                        innerCompilationException.Diagnostics.Select(d => d.ToString()) ?? Enumerable.Empty<string>());
-                        var diagnostics = innerCompilationException.Diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic);
-                        context.Publish(new DiagnosticsProduced(diagnostics, submitCode));
-                    }
-
                     context.Fail(exception, message);
                 }
                 else
                 {
-                    var diagnostics = ScriptState?.Script.GetCompilation().GetDiagnostics() ?? ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
-                    context.Publish(new DiagnosticsProduced(diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic), submitCode));
-
                     if (ScriptState != null && HasReturnValue)
                     {
                         var formattedValues = FormattedValue.FromObject(ScriptState.ReturnValue);
@@ -329,6 +345,20 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return items;
         }
 
+        internal DiagnosticsProduced GetDiagnosticsProduced(
+            KernelCommand command,
+            ImmutableArray<CodeAnalysis.Diagnostic> diagnostics)
+        {
+            var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
+            var formattedDiagnostics =
+                diagnostics
+                    .Select(d => d.ToString())
+                    .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
+                    .ToImmutableArray();
+
+            return new DiagnosticsProduced(kernelDiagnostics, command, formattedDiagnostics);
+        }
+
         public async Task HandleAsync(
             RequestDiagnostics command,
             KernelInvocationContext context)
@@ -336,7 +366,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var document = _workspace.UpdateWorkingDocument(command.Code);
             var semanticModel = await document.GetSemanticModelAsync();
             var diagnostics = semanticModel.GetDiagnostics();
-            context.Publish(new DiagnosticsProduced(diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic), command));
+            context.Publish(GetDiagnosticsProduced(command, diagnostics));
         }
 
         public async Task LoadExtensionsFromDirectoryAsync(

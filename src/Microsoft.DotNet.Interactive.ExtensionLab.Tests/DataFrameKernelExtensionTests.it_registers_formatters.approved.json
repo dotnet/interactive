@@ -1,0 +1,43 @@
+{
+  "schema": {
+    "primaryKey": [],
+    "fields": [
+      {
+        "name": "id",
+        "type": "number"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "color",
+        "type": "string"
+      },
+      {
+        "name": "deliciousness",
+        "type": "number"
+      }
+    ]
+  },
+  "data": [
+    {
+      "id": 1.0,
+      "name": "apple",
+      "color": "green",
+      "deliciousness": 10.0
+    },
+    {
+      "id": 2.0,
+      "name": "banana",
+      "color": "yellow",
+      "deliciousness": 11.0
+    },
+    {
+      "id": 3.0,
+      "name": "cherry",
+      "color": "red",
+      "deliciousness": 9000.0
+    }
+  ]
+}

@@ -9,6 +9,7 @@ using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
+using System.Linq;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
@@ -329,6 +330,39 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     parseArgument: result => result.Tokens.Count == 0 ? HttpPortRange.Default : ParsePortRangeOption(result),
                     description: "Specifies the range of ports to use to enable HTTP services");
 
+                var httpPortOption = new Option<HttpPort>(
+                    "--http-port",
+                    description: "Specifies the port on which to enable HTTP services",
+                    parseArgument: result =>
+                    {
+                        if (result.FindResultFor(httpPortRangeOption) is { } conflictingOption)
+                        {
+                            var parsed = result.Parent as OptionResult;
+                            result.ErrorMessage = $"Cannot specify both {conflictingOption.Token.Value} and {parsed.Token.Value} together";
+                            return null;
+                        }
+
+                        if (result.Tokens.Count == 0)
+                        {
+                            return HttpPort.Auto;
+                        }
+
+                        var source = result.Tokens[0].Value;
+
+                        if (source == "*")
+                        {
+                            return HttpPort.Auto;
+                        }
+
+                        if (!int.TryParse(source, out var portNumber))
+                        {
+                            result.ErrorMessage = "Must specify a port number or *.";
+                            return null;
+                        }
+
+                        return new HttpPort(portNumber);
+                    });
+
                 var workingDirOption = new Option<DirectoryInfo>(
                     "--working-dir",
                     () => new DirectoryInfo(Environment.CurrentDirectory),
@@ -340,12 +374,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 {
                     defaultKernelOption,
                     httpPortRangeOption,
+                    httpPortOption,
                     workingDirOption
                 };
 
                 stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext, CancellationToken>(
                     (startupOptions, options, console, context, cancellationToken) =>
                     {
+                      
                         FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi 
                             ? new HtmlNotebookFrontedEnvironment() 
                             : new BrowserFrontendEnvironment();
@@ -359,6 +395,11 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                         if (startupOptions.EnableHttpApi)
                         {
+                            if (context.ParseResult.Directives.Contains("vscode"))
+                            {
+                                ((HtmlNotebookFrontedEnvironment) frontendEnvironment).RequiresAutomaticBootstrapping =
+                                    false;
+                            }
                             services.AddSingleton((HtmlNotebookFrontedEnvironment)frontendEnvironment);
                             services.AddSingleton(frontendEnvironment);
                             services.AddSingleton(kernel);
@@ -501,12 +542,12 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     Formatter.SetPreferredMimeTypeFor(typeof(string), PlainTextFormatter.MimeType);
                     Formatter.SetPreferredMimeTypeFor(typeof(ScriptContent), HtmlFormatter.MimeType);
 
-                    Formatter<LaTeXString>.Register((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
-                    Formatter<MathString>.Register((math, writer) => writer.Write(math.ToString()), "text/latex");
+                    Formatter.Register<LaTeXString>((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
+                    Formatter.Register<MathString>((math, writer) => writer.Write(math.ToString()), "text/latex");
                     if (startupOptions.EnableHttpApi && 
                         browserFrontendEnvironment is HtmlNotebookFrontedEnvironment frontedEnvironment)
                     {
-                        Formatter<ScriptContent>.Register((script, writer) =>
+                        Formatter.Register<ScriptContent>((script, writer) =>
                         {
                             if (!Task.Run(async () =>
                             {
@@ -530,7 +571,7 @@ let notebookScope = getDotnetInteractiveScope('{apiUri.AbsoluteUri}');
                     }
                     else
                     {
-                        Formatter<ScriptContent>.Register((script, writer) =>
+                        Formatter.Register<ScriptContent>((script, writer) =>
                         {
                             IHtmlContent content =
                                 PocketViewTags.script[type: "text/javascript"](script.ScriptValue.ToHtmlContent());

@@ -11,10 +11,18 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
+using static Microsoft.DotNet.Interactive.Tests.Tags;
 
 #pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests
 {
+    public class Tags
+    {
+        public const string PlainTextBegin = "<div class=\"dni-plaintext\">";
+        public const string PlainTextEnd = "</div>";
+
+    }
+
     [LogTestNamesToPocketLogger]
     public class LanguageKernelFormattingTests : LanguageKernelTestBase
     {
@@ -24,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         [Theory]
         // PocketView
-        [InlineData(Language.CSharp, "b(123)", "<b>123</b>")]
+        [InlineData(Language.CSharp, "b(123)", "<b>"+PlainTextBegin+"123"+PlainTextEnd+"</b>")]
         [InlineData(Language.FSharp, "b [] [str \"123\" ]", "<b>123</b>")]
         // sequence
         [InlineData(Language.CSharp, "new[] { 1, 2, 3, 4 }", "<table>")]
@@ -53,13 +61,9 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "div(123).ToString()", "<div>123</div>")]
-        [InlineData(Language.FSharp, "(div [] [ str \"123\" ]).ToString()", "<div>123</div>")]
-        [InlineData(Language.CSharp, "display(div(123).ToString());", "<div>123</div>")]
-        [InlineData(Language.FSharp, "display((div [] [ str \"123\" ]).ToString())", "<div>123</div>")]
-        [InlineData(Language.CSharp, "\"hi\"", "hi")]
-        [InlineData(Language.FSharp, "\"hi\"", "hi")]
-        public async Task String_is_rendered_as_plain_text(
+        [InlineData(Language.CSharp, "display(\"<test></test>\")", "<test></test>")]
+        [InlineData(Language.FSharp, "display(\"<test></test>\")", "<test></test>")]
+        public async Task String_is_rendered_as_plain_text_via_display(
             Language language,
             string submission,
             string expectedContent)
@@ -70,7 +74,33 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var valueProduced = await result
                                       .KernelEvents
-                                      .OfType<DisplayEvent>()
+                                      .OfType<DisplayedValueProduced>()
+                                      .Timeout(5.Seconds())
+                                      .FirstAsync();
+
+            valueProduced
+                .FormattedValues
+                .Should()
+                .ContainSingle(v =>
+                                   v.MimeType == "text/plain" &&
+                                   v.Value.ToString().Contains(expectedContent));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "\"hi\"", "hi")]
+        [InlineData(Language.FSharp, "\"hi\"", "hi")]
+        public async Task String_is_rendered_as_plain_text_via_implicit_return(
+            Language language,
+            string submission,
+            string expectedContent)
+        {
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
+
+            var result = await kernel.SendAsync(new SubmitCode(submission));
+
+            var valueProduced = await result
+                                      .KernelEvents
+                                      .OfType<ReturnValueProduced>()
                                       .Timeout(5.Seconds())
                                       .FirstAsync();
 
@@ -103,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Should()
                 .ContainSingle(v =>
                     v.MimeType == "text/html" &&
-                    v.Value.ToString().Contains("<b>hi!</b>"));
+                    v.Value.ToString().Contains("<b>"));
         }
 
         [Theory]
@@ -246,6 +276,36 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .ContainSingle(v =>
                                    v.MimeType == "text/html" &&
                                    v.Value.ToString().Contains($@"<script type=""text/javascript"">{scriptContent}</script>"));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task CSS_helper_emits_content_within_a_chunk_of_javascript(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var cssContent = "h1 { background: red; }";
+
+            var submission = language switch
+            {
+                Language.CSharp => $@"CSS(""{cssContent}"");",
+                Language.FSharp => $@"CSS(""{cssContent}"")",
+            };
+
+            await kernel.SendAsync(new SubmitCode(submission));
+
+            var formatted =
+                KernelEvents
+                    .OfType<DisplayedValueProduced>()
+                    .SelectMany(v => v.FormattedValues)
+                    .ToArray();
+
+            formatted
+                .Should()
+                .ContainSingle(v =>
+                                   v.MimeType == "text/html" &&
+                                   v.Value.ToString().Contains($"var css = '{cssContent}'"));
         }
 
         [Theory]

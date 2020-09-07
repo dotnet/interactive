@@ -27,6 +27,7 @@
     "onNotebookEditor:dotnet-interactive",
     "onNotebookEditor:dotnet-interactive-jupyter",
     "onCommand:dotnet-interactive.acquire",
+    "onCommand:dotnet-interactive.newNotebook",
     "onCommand:dotnet-interactive.openNotebook",
     "onCommand:dotnet-interactive.saveAsNotebook"
   ],
@@ -69,8 +70,6 @@
             "--",
             "[vscode]",
             "stdio",
-            "--http-port-range",
-            "1000-3000",
             "--working-dir",
             "{working_dir}"
           ],
@@ -98,7 +97,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.137901",
+          "default": "1.0.145401",
           "description": "The minimum required version of the .NET Interactive tool."
         }
       }
@@ -114,7 +113,11 @@
       },
       {
         "command": "dotnet-interactive.saveAsNotebook",
-        "title": ".NET Interactive: Save notebook as specific file format"
+        "title": ".NET Interactive: Save notebook as..."
+      },
+      {
+        "command": "dotnet-interactive.newNotebook",
+        "title": ".NET Interactive: Create new blank notebook"
       },
       {
         "command": "dotnet-interactive.restartCurrentNotebookKernel",
@@ -127,6 +130,13 @@
       {
         "command": "dotnet-interactive.stopAllNotebookKernels",
         "title": ".NET Interactive: Stop all notebook kernels"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "dotnet-interactive.newNotebook",
+        "key": "ctrl+alt+shift+n",
+        "mac": "cmd+alt+shift+n"
       }
     ],
     "languages": [
@@ -173,7 +183,7 @@
         ]
       },
       {
-        "id": "dotnet-interactive.powershell",
+        "id": "dotnet-interactive.pwsh",
         "aliases": [
           "PowerShell (.NET Interactive)"
         ]
@@ -216,7 +226,7 @@
         "path": "./syntaxes/source.dotnet-interactive.markdown.tmGrammar.json"
       },
       {
-        "language": "dotnet-interactive.powershell",
+        "language": "dotnet-interactive.pwsh",
         "scopeName": "source.dotnet-interactive.powershell",
         "path": "./syntaxes/source.dotnet-interactive.powershell.tmGrammar.json"
       }
@@ -240,6 +250,7 @@
     "@types/glob": "7.1.1",
     "@types/mocha": "7.0.2",
     "@types/node": "13.11.0",
+    "@types/node-fetch": "^2.5.7",
     "@types/tmp": "0.2.0",
     "@typescript-eslint/eslint-plugin": "2.26.0",
     "@typescript-eslint/parser": "2.26.0",
@@ -258,6 +269,7 @@
     "vscode-textmate": "5.1.1"
   },
   "dependencies": {
-    "compare-versions": "3.6.0"
+    "compare-versions": "3.6.0",
+    "node-fetch": "^2.6.0"
   }
 }

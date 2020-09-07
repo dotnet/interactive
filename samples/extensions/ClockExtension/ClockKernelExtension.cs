@@ -15,12 +15,12 @@ namespace ClockExtension
     {
         public async Task OnLoadAsync(Kernel kernel)
         {
-            Formatter<DateTime>.Register((date, writer) =>
+            Formatter.Register<DateTime>((date, writer) =>
             {
                 writer.Write(date.DrawSvgClock());
             }, "text/html");
 
-            Formatter<DateTimeOffset>.Register((date, writer) =>
+            Formatter.Register<DateTimeOffset>((date, writer) =>
             {
                 writer.Write(date.DrawSvgClock());
             }, "text/html");
