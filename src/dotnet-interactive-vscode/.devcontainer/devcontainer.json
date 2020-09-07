@@ -43,7 +43,6 @@
 	"extensions": [
 		"GitHub.vscode-pull-request-github",
 		"MS-vsliveshare.vsliveshare",
-		"ms-dotnettools.vscode-dotnet-runtime",
 		"VisualStudioExptTeam.vscodeintellicode"
 	]
 
