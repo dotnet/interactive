@@ -11,7 +11,7 @@
 
 *.NET Interactive IS .NET UNLEASHED*
 
-# Notebooks with .NET Core
+# Notebooks with .NET
 
 ## Jupyter and nteract
 
@@ -38,7 +38,7 @@ You can find additional documentation [here](./docs/README.md).
 
 ## Packages
 
-We provide a number of packages that can be used to write custom extensions for .NET Interactive or to build your own interactive experiences.
+We provide a number of packages that can be used to write custom [extensions](./docs/extending-dotnet-interactive.md) for .NET Interactive or to build your own interactive experiences.
 
 Package                                    | Version                                                                                                                                                         | Description
 :------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------

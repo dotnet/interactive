@@ -15,7 +15,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             kernel.UseDataExplorer();
 
-            
+            KernelInvocationContext.Current?.Display(
+                $@"Added the `Explore` extension method, which you can use with `IEnumerable<T>` and `IDataView` to view data using the [nteract Data Explorer](https://github.com/nteract/data-explorer).",
+                "text/markdown");
 
             return Task.CompletedTask;
         }

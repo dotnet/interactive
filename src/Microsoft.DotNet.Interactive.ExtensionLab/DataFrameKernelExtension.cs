@@ -74,11 +74,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             });
 
             KernelInvocationContext.Current?.Display(
-                $@"
-* Loaded `{this}`
-
-Added the `#!linqify` magic command using KernelInvocationContext.Current.Display
-",
+                $@"Added the `#!linqify` magic command.",
                 "text/markdown");
 
             return Task.CompletedTask;

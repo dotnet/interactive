@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
     public class SqlKernelsExtension : IKernelExtension
     {
-        public async Task OnLoadAsync(Kernel kernel)
+        public Task OnLoadAsync(Kernel kernel)
         {
             if (kernel is CompositeKernel compositeKernel)
             {
@@ -32,13 +32,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     .UseKernelClientConnection(new SQLiteKernelConnection())
                     .UseKernelClientConnection(new MsSqlKernelConnection());
 
-                // FIX: (OnLoadAsync) 
-                await kernel.SendAsync(new DisplayValue(new FormattedValue("text/markdown", $@"
-*Loaded extension {this}*
+            KernelInvocationContext.Current?.Display(
+                $@"
+Added `mssql` and `sqlite` to the connection types available using the [`#!connect`](https://github.com/dotnet/interactive/blob/main/docs/connect.md) magic command.",
+                "text/markdown");
 
-
-")));
             }
+
+            return Task.CompletedTask;
         }
     }
 }
