@@ -1,10 +1,6 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
-using System.Threading;
 
-using ICSharpCode.Decompiler;
-using ICSharpCode.Decompiler.Disassembler;
 using ICSharpCode.Decompiler.Metadata;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector

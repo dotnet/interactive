@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             if (!result.IsSuccess)
             {
-		var diagnostics = string.Join('\n', result.CompilationDiagnostics);
+		        var diagnostics = string.Join('\n', result.CompilationDiagnostics);
                 context.Publish(
                     new ErrorProduced($"Uh-oh, something went wrong:\n {diagnostics}", context.Command,
                         new[] {

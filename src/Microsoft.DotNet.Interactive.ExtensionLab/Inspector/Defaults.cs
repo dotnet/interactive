@@ -24,6 +24,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector
         internal static readonly string[] DefaultCSharpImports =
         {
             "System",
+            "System.IO",
             "System.Text",
             "System.Collections",
             "System.Collections.Generic",

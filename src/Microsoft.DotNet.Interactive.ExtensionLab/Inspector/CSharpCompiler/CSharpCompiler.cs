@@ -37,6 +37,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.CSharpCompiler
                 .AddReferences(
                     MetadataReference.CreateFromFile(typeof(object).GetAssemblyLoadPath()),
                     MetadataReference.CreateFromFile(typeof(Console).GetAssemblyLoadPath()),
+                    MetadataReference.CreateFromFile(typeof(System.Collections.IEnumerable).GetAssemblyLoadPath()),
+                    MetadataReference.CreateFromFile(typeof(System.Collections.Generic.IEnumerable<>).GetAssemblyLoadPath()),
                     MetadataReference.CreateFromFile(TypeExtensions.GetSystemAssemblyPathByName("System.Linq.dll")),
                     MetadataReference.CreateFromFile(TypeExtensions.GetSystemAssemblyPathByName("System.Threading.Tasks.dll")),
                     MetadataReference.CreateFromFile(TypeExtensions.GetSystemAssemblyPathByName("System.Runtime.dll")));

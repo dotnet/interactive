@@ -90,6 +90,63 @@ public class A
                     "ctor()", "get_P1()");
         }
 
+        [Fact]
+        public async Task inspect_with_complex_source_and_release_settings_calls_inspector_and_produces_output()
+        {
+            using var kernel = new CompositeKernel() {
+                new CSharpKernel()
+            };
+
+            await new InspectExtension().OnLoadAsync(kernel);
+
+            var submission = @"
+#!inspect -c Release -k Regular
+
+using System;
+public static class A {
+    public static int Sum(ReadOnlySpan<int> source)
+    {
+        int result = 0;
+
+        for (int i = 0; i < source.Length; i++)
+        {
+            result += source[i];
+        }
+
+        return result;
+    }
+
+    static unsafe void Unsafe() {
+            int var = 20;
+            int* p = &var;
+    }
+}
+";
+
+            var result = await kernel.SendAsync(new SubmitCode(submission, "csharp"));
+
+            result.KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .NotContainErrors();
+
+            var formattedValues = result.KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .ContainSingle<DisplayedValueProduced>()
+                .Which
+                .FormattedValues
+                .Should()
+                .ContainSingle()
+                .Which
+                .Value
+                .Should()
+                .ContainAll(
+                    "Tabbed view ",
+                    "[assembly: CompilationRelaxations(8)]", "[assembly: RuntimeCompatibility(WrapNonExceptionThrows = true)]",
+                    "private auto ansi ", "public static int Sum(ReadOnlySpan", "private static void Unsafe()");
+        }
+
         [Theory]
         [InlineData("Release")]
         [InlineData("Debug")]
