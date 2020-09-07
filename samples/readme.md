@@ -14,4 +14,6 @@ This folder contains a number of samples that you can use to explore features of
 
 ## Running the samples
 
-If you're using Jupyter, the easiest way to run these samples, once you've [installed]() the .NET Interactive Jupyter kernel, 
+If you're using Jupyter, the easiest way to run these samples, once you've [installed](../docs/install-dotnet-interactive.md) the .NET Interactive Jupyter kernel, is to open your Jupyter-enabled terminal, change your working directory to the `samples` folder, and run `jupyter lab`.
+
+If you're using the .NET Interactive Notebooks extension for Visual Studio Code, you can open the sample notebooks directly.
