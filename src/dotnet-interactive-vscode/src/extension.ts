@@ -47,7 +47,11 @@ export async function activate(context: vscode.ExtensionContext) {
             workingDirectory: config.get<string>('kernelTransportWorkingDirectory')!
         };
         const processStart = processArguments(argsTemplate, notebookPath, dotnetPath, launchOptions!.workingDirectory);
-        const transport = new StdioKernelTransport(processStart, diagnosticsChannel, vscode.Uri.parse);
+        let notification = {
+            displayError: async (message: string) => { await vscode.window.showErrorMessage(message); },
+            displayInfo: async (message: string) => { await vscode.window.showInformationMessage(message); },
+        };
+        const transport = new StdioKernelTransport(processStart, diagnosticsChannel, vscode.Uri.parse, notification);
         await transport.waitForReady();
 
         let externalUri = await vscode.env.asExternalUri(vscode.Uri.parse(`http://localhost:${transport.httpPort}`));

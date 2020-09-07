@@ -29,7 +29,7 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, do
             context.globalStoragePath,
             getInteractiveVersion,
             createToolManifest,
-            async (version: string) => { vscode.window.showInformationMessage(`Installing .NET Interactive version ${version}...`); },
+            async (version: string) => { await vscode.window.showInformationMessage(`Installing .NET Interactive version ${version}...`); },
             installInteractiveTool,
             async () => { await vscode.window.showInformationMessage('.NET Interactive installation complete.'); });
         return launchOptions;

@@ -28,7 +28,7 @@ export class StdioKernelTransport {
     public externalUri: Uri | null;
     public bootstrapperUri: Uri | null;
 
-    constructor(processStart: ProcessStart, private diagnosticChannel: ReportChannel, private parseUri: (uri:string) => Uri) {
+    constructor(processStart: ProcessStart, private diagnosticChannel: ReportChannel, private parseUri: (uri:string) => Uri, private notification: { displayError:  (message: string) => Promise<void>, displayInfo:  (message: string) => Promise<void> }) {
         // prepare root event handler
         this.lineReader = new LineReader();
         this.lineReader.subscribe(line => this.handleLine(line));
@@ -73,22 +73,41 @@ export class StdioKernelTransport {
         });
     }
 
-    public async setExternalUri(externalUri: Uri) : Promise<void>
-    {
-        this.diagnosticChannel.appendLine(`Tunnel uri for Kernel process ${this.childProcess?.pid} is ${externalUri.toString()} mappint to Kernel Port ${this.httpPort}`);
+    public async setExternalUri(externalUri: Uri): Promise<void> {
+
         this.externalUri = externalUri;
-        let apitunnelUri = `${externalUri.toString()}apitunnel`;
-        let response = await fetch(apitunnelUri, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify( { tunnelUri : externalUri.toString(), frontendType: "vscode" } )
-        });
+        this.bootstrapperUri = await this.configureTunnel(this.parseUri(`http://localhost:${this.httpPort}`));
+        if (this.bootstrapperUri === null) {
+            this.bootstrapperUri = await this.configureTunnel(externalUri);
+        }
 
-       let reponseObject : any =  await response.json();
+        if (this.bootstrapperUri === null) {
+            let errorMessage = `No valid bootstrapper uri can be found, .NET Interactive http api for Kernel Process ${this.childProcess?.pid} will not work correctly`;
+           this.diagnosticChannel.appendLine(errorMessage);
+           await this.notification.displayError(errorMessage);
+        }
+    }
 
-       this.bootstrapperUri = this.parseUri(reponseObject["bootstrapperUri"]);
+    private async configureTunnel(uri: Uri): Promise<Uri | null> {
+        try {
+            this.diagnosticChannel.appendLine(` Kernel process ${this.childProcess?.pid} Port ${this.httpPort} is using tunnel uri ${uri.toString()}`);
+            let apitunnelUri = `${uri.toString()}apitunnel`;
+            let response = await fetch(apitunnelUri, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ tunnelUri: uri.toString(), frontendType: "vscode" })
+            });
+
+            let reponseObject: any = await response.json();
+            return this.parseUri(reponseObject["bootstrapperUri"]);
+        }
+        catch (error) {
+            this.diagnosticChannel.appendLine(`Failure setting up tunnel confinguration for Kernel process ${this.childProcess?.pid}`);
+            this.diagnosticChannel.appendLine(` Error : ${error.Message}`);
+            return null;
+        }
     }
 
     private async configureHttpArgs(args: string[]): Promise<string[]> {
