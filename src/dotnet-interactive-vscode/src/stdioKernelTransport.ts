@@ -105,7 +105,7 @@ export class StdioKernelTransport {
         }
         catch (error) {
             this.diagnosticChannel.appendLine(`Failure setting up tunnel confinguration for Kernel process ${this.childProcess?.pid}`);
-            this.diagnosticChannel.appendLine(` Error : ${error.Message}`);
+            this.diagnosticChannel.appendLine(` Error : ${error.message}`);
             return null;
         }
     }
