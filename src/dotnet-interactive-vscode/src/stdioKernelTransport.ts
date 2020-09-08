@@ -93,7 +93,7 @@ export class StdioKernelTransport {
 
     private async configureTunnel(uri: Uri): Promise<Uri | null> {
         try {
-            this.diagnosticChannel.appendLine(` Kernel process ${this.childProcess?.pid} Port ${this.httpPort} is using tunnel uri ${uri.toString()}`);
+            this.diagnosticChannel.appendLine(`Kernel process ${this.childProcess?.pid} Port ${this.httpPort} is using tunnel uri ${uri.toString()}`);
             let apitunnelUri = `${uri.toString()}apitunnel`;
             let response = await fetch(apitunnelUri, {
                 method: 'POST',
@@ -108,7 +108,7 @@ export class StdioKernelTransport {
         }
         catch (error) {
             this.diagnosticChannel.appendLine(`Failure setting up tunnel confinguration for Kernel process ${this.childProcess?.pid}`);
-            this.diagnosticChannel.appendLine(` Error : ${error.message}`);
+            this.diagnosticChannel.appendLine(`Error : ${error.message}`);
             return null;
         }
     }
