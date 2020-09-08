@@ -26,7 +26,6 @@ export class StdioKernelTransport {
     private subscribers: Array<KernelEventEnvelopeObserver> = [];
     public httpPort: Number;
     public externalUri: Uri | null;
-    public bootstrapperUri: Uri | null;
 
     constructor(processStart: ProcessStart, private diagnosticChannel: ReportChannel, private parseUri: (uri:string) => Uri, private notification: { displayError:  (message: string) => Promise<void>, displayInfo:  (message: string) => Promise<void> }) {
         // prepare root event handler
@@ -34,7 +33,6 @@ export class StdioKernelTransport {
         this.lineReader.subscribe(line => this.handleLine(line));
         this.childProcess = null;
         this.externalUri = null;
-        this.bootstrapperUri = null;
         this.httpPort = 0;
 
         // prepare one-time ready event
@@ -74,20 +72,16 @@ export class StdioKernelTransport {
     }
 
     public async setExternalUri(externalUri: Uri): Promise<void> {
-
-        await wait(2000);
         this.externalUri = externalUri;
-        this.bootstrapperUri = await this.configureTunnel(this.parseUri(`http://localhost:${this.httpPort}`));
-        if (this.bootstrapperUri === null) {
-            this.bootstrapperUri = await this.configureTunnel(externalUri);
+        let bootstrapperUri = await this.configureTunnel(this.parseUri(`http://localhost:${this.httpPort}`));
+        if (bootstrapperUri === null) {
+            bootstrapperUri = await this.configureTunnel(externalUri);
         }
 
-        if (this.bootstrapperUri === null) {
+        if (bootstrapperUri === null) {
             let errorMessage = `No valid bootstrapper uri can be found, .NET Interactive http api for Kernel Process ${this.childProcess?.pid} will not work correctly`;
             this.diagnosticChannel.appendLine(errorMessage);
             this.notification.displayError(errorMessage);
-        } else {
-            this.diagnosticChannel.appendLine(`kernel process ${this.childProcess?.pid} configured to use bootstrapper uri ${this.bootstrapperUri.toString()}`);
         }
     }
 

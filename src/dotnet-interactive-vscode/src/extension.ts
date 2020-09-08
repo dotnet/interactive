@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { ClientMapper } from './clientMapper';
 
 import { DotNetInteractiveNotebookContentProvider } from './vscode/notebookProvider';
@@ -36,7 +37,7 @@ export async function activate(context: vscode.ExtensionContext) {
         dotnetPath,
     };
     const launchOptions = await vscode.commands.executeCommand<InteractiveLaunchOptions>('dotnet-interactive.acquire', installArgs);
-
+    const apiBootstrapperUri = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'kernelHttpApiBootstrapper.js'));
     // register with VS Code
     const clientMapper = new ClientMapper(async (notebookPath) => {
         // prepare kernel transport launch arguments and working directory using a fresh config item so we don't get cached values
@@ -68,7 +69,7 @@ export async function activate(context: vscode.ExtensionContext) {
         viewType: ['dotnet-interactive', 'dotnet-interactive-jupyter'],
         filenamePattern: '*.{dib,dotnet-interactive,ipynb}'
     };
-    const notebookProvider = new DotNetInteractiveNotebookContentProvider(clientMapper, diagnosticsChannel);
+    const notebookProvider = new DotNetInteractiveNotebookContentProvider(clientMapper, diagnosticsChannel, apiBootstrapperUri);
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookProvider));
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive-jupyter', notebookProvider));
     context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selector, notebookProvider));
