@@ -115,76 +115,84 @@ namespace Microsoft.DotNet.Interactive.App.Http
 
         private string GenerateBootstrapperCode(Uri externalUri, string frontendType, string hash)
         {
-            string template = @"
+            string template = @"// ensure `require` is available globally
 // ensure `require` is available globally
-function bootstrapper_$FRONTENDTYPE$_$HASH$() {
-    let loadDotnetInteractiveApi = function () {
-        // use probing to find host url and api resources
-        // load interactive helpers and language services
-        let dotnetInteractiveRequire = require.config({
-            context: '$HASH$',
-            paths: {
-                'dotnet-interactive': '$EXTERNALURI$resources'
-            },
-            urlArgs: 'cacheBuster=$HASH$'
-        }) || require;
-
-        let dotnetInteractiveExtensionsRequire = require.config({
-            context: '$HASH$',
-            paths: {
-                'dotnet-interactive-extensions': '$EXTERNALURI$extensions'
-            }
-        }) || require;
-
-        if (!window.dotnetInteractiveRequire) {
-            window.dotnetInteractiveRequire = dotnetInteractiveRequire;
-        }
-
-        if (!window.dotnetInteractiveExtensionsRequire) {
-            window.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
-        }
-
-        window.getExtensionRequire = function (extensionName, extensionCacheBuster) {
-            let paths = {};
-            paths[extensionName] = `$EXTERNALURI$extensions/${extensionName}/resources/`;
-
-            let internalRequire = require.config({
-                context: extensionCacheBuster,
-                paths: paths,
-                urlArgs: `cacheBuster=${extensionCacheBuster}`
+(function (global) {
+    if(!global){
+        global = window;
+    }
+    let bootstrapper_$FRONTENDTYPE$_$HASH$ = function () {
+        let loadDotnetInteractiveApi = function () {
+            // use probing to find host url and api resources
+            // load interactive helpers and language services
+            let dotnetInteractiveRequire = require.config({
+                context: '$HASH$',
+                paths: {
+                    'dotnet-interactive': '$EXTERNALURI$resources'
+                },
+                urlArgs: 'cacheBuster=$HASH$'
             }) || require;
 
-            return internalRequire
-        };
+            let dotnetInteractiveExtensionsRequire = require.config({
+                context: '$HASH$',
+                paths: {
+                    'dotnet-interactive-extensions': '$EXTERNALURI$extensions'
+                }
+            }) || require;
 
-        dotnetInteractiveRequire([
-            'dotnet-interactive/dotnet-interactive'
-        ],
-            function (dotnet) {
-                dotnet.init(window);
-            },
-            function (error) {
-                console.log(error);
+            if (!global.dotnetInteractiveRequire) {
+                global.dotnetInteractiveRequire = dotnetInteractiveRequire;
             }
-        );
-    }
 
-    if (typeof require !== typeof Function || typeof require.config !== typeof Function) {
-        let require_script = document.createElement('script');
-        require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
-        require_script.setAttribute('type', 'text/javascript');
-        require_script.onload = function () {
+            if (!global.dotnetInteractiveExtensionsRequire) {
+                global.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
+            }
+
+            global.getExtensionRequire = function (extensionName, extensionCacheBuster) {
+                let paths = {};
+                paths[extensionName] = `$EXTERNALURI$extensions/${extensionName}/resources/`;
+
+                let internalRequire = require.config({
+                    context: extensionCacheBuster,
+                    paths: paths,
+                    urlArgs: `cacheBuster=${extensionCacheBuster}`
+                }) || require;
+
+                return internalRequire
+            };
+
+            dotnetInteractiveRequire([
+                'dotnet-interactive/dotnet-interactive'
+            ],
+                function (dotnet) {
+                    dotnet.init(global);
+                },
+                function (error) {
+                    console.log(error);
+                }
+            );
+
+            console.log('execution of  boostrapper function bootstrapper_$FRONTENDTYPE$_$HASH$ completed');
+        }
+
+        if (typeof require !== typeof Function || typeof require.config !== typeof Function) {
+            let require_script = document.createElement('script');
+            require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
+            require_script.setAttribute('type', 'text/javascript');
+            require_script.onload = function () {
+                loadDotnetInteractiveApi();
+            };
+
+            document.getElementsByTagName('head')[0].appendChild(require_script);
+        }
+        else {
             loadDotnetInteractiveApi();
-        };
+        }
+    };
 
-        document.getElementsByTagName('head')[0].appendChild(require_script);
-    }
-    else {
-        loadDotnetInteractiveApi();
-    }
-}
-
-bootstrapper_$FRONTENDTYPE$_$HASH$();
+    console.log('installed boostrapper function bootstrapper_$FRONTENDTYPE$_$HASH$');
+    bootstrapper_$FRONTENDTYPE$_$HASH$();
+})(window);
 ";
 
             return template

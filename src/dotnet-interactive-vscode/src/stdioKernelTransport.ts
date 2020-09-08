@@ -88,9 +88,6 @@ export class StdioKernelTransport {
             this.notification.displayError(errorMessage);
         } else {
             this.diagnosticChannel.appendLine(`kernel process ${this.childProcess?.pid} configured to use bootstrapper uri ${this.bootstrapperUri.toString()}`);
-            let response = await fetch(this.bootstrapperUri?.toString());
-            let boostrapperCode = await response.text();
-            this.diagnosticChannel.appendLine(boostrapperCode);
         }
     }
 
