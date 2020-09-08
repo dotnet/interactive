@@ -45,7 +45,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
             let boostrapperUri = client.tryGetProperty<vscode.Uri>("bootstrapperUri");
 
             if (isNotNull(boostrapperUri)) {
-                this.diagnosticChannel.appendLine(`Notebook using preloaded bootstrapper ${boostrapperUri.toString()}.`);
+                this.diagnosticChannel.appendLine(`Notebook using preloaded bootstrapper from ${boostrapperUri.toString()}.`);
                 this.preloads = [boostrapperUri];
             } else {
                 this.diagnosticChannel.appendLine(`Notebook not using preloaded bootstrapper.`);
