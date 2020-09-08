@@ -115,10 +115,10 @@ namespace Microsoft.DotNet.Interactive.App.Http
 
         private string GenerateBootstrapperCode(Uri externalUri, string frontendType, string hash)
         {
-            string template = @"// ensure `require` is available globally
+            string template = @"
 // ensure `require` is available globally
 (function (global) {
-    if(!global){
+    if (!global) {
         global = window;
     }
     let bootstrapper_$FRONTENDTYPE$_$HASH$ = function () {
@@ -140,14 +140,8 @@ namespace Microsoft.DotNet.Interactive.App.Http
                 }
             }) || require;
 
-            if (!global.dotnetInteractiveRequire) {
-                global.dotnetInteractiveRequire = dotnetInteractiveRequire;
-            }
-
-            if (!global.dotnetInteractiveExtensionsRequire) {
-                global.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
-            }
-
+            global.dotnetInteractiveRequire = dotnetInteractiveRequire;
+            global.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
             global.getExtensionRequire = function (extensionName, extensionCacheBuster) {
                 let paths = {};
                 paths[extensionName] = `$EXTERNALURI$extensions/${extensionName}/resources/`;
@@ -166,6 +160,7 @@ namespace Microsoft.DotNet.Interactive.App.Http
             ],
                 function (dotnet) {
                     dotnet.init(global);
+                    console.log('dotnet-interactive js api initialised');
                 },
                 function (error) {
                     console.log(error);
