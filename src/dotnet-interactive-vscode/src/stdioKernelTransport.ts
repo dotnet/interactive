@@ -84,10 +84,13 @@ export class StdioKernelTransport {
 
         if (this.bootstrapperUri === null) {
             let errorMessage = `No valid bootstrapper uri can be found, .NET Interactive http api for Kernel Process ${this.childProcess?.pid} will not work correctly`;
-           this.diagnosticChannel.appendLine(errorMessage);
-        this.notification.displayError(errorMessage);
+            this.diagnosticChannel.appendLine(errorMessage);
+            this.notification.displayError(errorMessage);
         } else {
             this.diagnosticChannel.appendLine(`kernel process ${this.childProcess?.pid} configured to use bootstrapper uri ${this.bootstrapperUri.toString()}`);
+            let response = await fetch(this.bootstrapperUri?.toString());
+            let boostrapperCode = await response.text();
+            this.diagnosticChannel.appendLine(boostrapperCode);
         }
     }
 
