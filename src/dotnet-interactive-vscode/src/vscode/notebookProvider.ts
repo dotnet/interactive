@@ -25,7 +25,8 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     }
 
 
-    provideKernels(document: vscode.NotebookDocument, token: vscode.CancellationToken): vscode.ProviderResult<DotNetInteractiveNotebookContentProvider[]> {
+    async provideKernels(document: vscode.NotebookDocument, token: vscode.CancellationToken): Promise<DotNetInteractiveNotebookContentProvider[]> {
+        await this.configurePreloads(document.uri);
         return [this];
     }
 
