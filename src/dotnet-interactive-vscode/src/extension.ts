@@ -68,7 +68,7 @@ export async function activate(context: vscode.ExtensionContext) {
         viewType: ['dotnet-interactive', 'dotnet-interactive-jupyter'],
         filenamePattern: '*.{dib,dotnet-interactive,ipynb}'
     };
-    const notebookProvider = new DotNetInteractiveNotebookContentProvider(clientMapper);
+    const notebookProvider = new DotNetInteractiveNotebookContentProvider(clientMapper, diagnosticsChannel);
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookProvider));
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive-jupyter', notebookProvider));
     context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selector, notebookProvider));
