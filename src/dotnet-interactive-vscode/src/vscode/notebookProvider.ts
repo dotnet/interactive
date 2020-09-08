@@ -10,7 +10,7 @@ import { CellOutput, ReportChannel } from '../interfaces/vscode';
 import { Diagnostic, DiagnosticSeverity, NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookCellTextOutput, NotebookDocument } from './../contracts';
 import { getEol, isUnsavedNotebook, toVsCodeDiagnostic } from './vscodeUtilities';
 import { getDiagnosticCollection } from './diagnostics';
-import { isDisplayOutput, isErrorOutput, isNotNull, isTextOutput } from '../utilities';
+import { isDisplayOutput, isErrorOutput, isNotNull, isTextOutput, stringify } from '../utilities';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider, vscode.NotebookKernel, vscode.NotebookKernelProvider<DotNetInteractiveNotebookContentProvider> {
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
@@ -19,14 +19,15 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     label: string;
     preloads?: vscode.Uri[] | undefined;
 
-    constructor(readonly clientMapper: ClientMapper, private diagnosticChannel: ReportChannel) {
+    constructor(readonly clientMapper: ClientMapper, private diagnosticChannel: ReportChannel, apiBootstrapperUri: vscode.Uri) {
         this.label = ".NET Interactive";
         this.eol = getEol();
+        this.preloads = [apiBootstrapperUri];
     }
 
 
     async provideKernels(document: vscode.NotebookDocument, token: vscode.CancellationToken): Promise<DotNetInteractiveNotebookContentProvider[]> {
-        await this.configurePreloads(document.uri);
+
         return [this];
     }
 
@@ -40,22 +41,8 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         // not supported
     }
 
-    private async configurePreloads(uri: vscode.Uri) : Promise<void> {
-        if (!this.preloads) {
-            let client = await this.clientMapper.getOrAddClient(uri);
-            let boostrapperUri = client.tryGetProperty<vscode.Uri>("bootstrapperUri");
-
-            if (isNotNull(boostrapperUri)) {
-                this.diagnosticChannel.appendLine(`Notebook using preloaded bootstrapper from ${boostrapperUri.toString()}.`);
-                this.preloads = [boostrapperUri];
-            } else {
-                this.diagnosticChannel.appendLine(`Notebook not using preloaded bootstrapper.`);
-            }
-        }
-    }
-
     async openNotebook(uri: vscode.Uri): Promise<vscode.NotebookData> {
-        await this.configurePreloads(uri);
+
         let client = await this.clientMapper.getOrAddClient(uri);
         let notebookCells: Array<NotebookCell>;
         if (isUnsavedNotebook(uri)) {
@@ -91,7 +78,16 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     }
 
     async resolveNotebook(document: vscode.NotebookDocument, webview: vscode.NotebookCommunication): Promise<void> {
-        await this.configurePreloads(document.uri);
+
+        webview.onDidReceiveMessage(async (message) =>{
+            switch(message.command){
+                case "setupHttpApiEndpoint":
+                    let client = await this.clientMapper.getOrAddClient(document.uri);
+                    let uri = client.tryGetProperty<vscode.Uri>("externalUri");
+                    webview.postMessage({command:"configureFactories", endpointUri:uri?.toString() });
+                    break;
+            }
+        });
     }
 
     saveNotebook(document: vscode.NotebookDocument, _cancellation: vscode.CancellationToken): Promise<void> {
