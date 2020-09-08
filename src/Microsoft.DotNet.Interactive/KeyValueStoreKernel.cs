@@ -137,7 +137,7 @@ namespace Microsoft.DotNet.Interactive
             var mimeTypeOption = new Option<string>(
                     "--mime-type",
                     "A mime type for the value. If specified, displays the value immediately as a cell output using the specified mime type.")
-                .AddSuggestions(_ => new[]
+                .AddSuggestions((_,__) => new[]
                 {
                     "application/json",
                     "text/html",

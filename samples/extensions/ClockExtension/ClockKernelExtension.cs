@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Formatting;
+using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace ClockExtension
 {
@@ -44,10 +45,21 @@ namespace ClockExtension
 
             kernel.AddDirective(clockCommand);
 
-
             if (KernelInvocationContext.Current is { } context)
             {
-                await context.DisplayAsync($"`{nameof(ClockExtension)}` is loaded. It adds visualizations for `System.DateTime` and `System.DateTimeOffset`. Try it by running: `display(DateTime.Now);` or `#!clock -h`", "text/markdown");
+                PocketView view = div(
+                    code(nameof(ClockExtension)),
+                    " is loaded. It adds visualizations for ",
+                    code(typeof(System.DateTime)),
+                    " and ",
+                    code(typeof(System.DateTimeOffset)),
+                    ". Try it by running: ",
+                    code("DateTime.Now"),
+                    " or ",
+                    code("#!clock -h")
+                );
+
+                await context.DisplayAsync(view);
             }
         }
     }

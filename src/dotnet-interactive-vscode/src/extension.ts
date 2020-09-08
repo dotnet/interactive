@@ -7,7 +7,7 @@ import { ClientMapper } from './clientMapper';
 import { DotNetInteractiveNotebookContentProvider } from './vscode/notebookProvider';
 import { StdioKernelTransport } from './stdioKernelTransport';
 import { registerLanguageProviders } from './vscode/languageProvider';
-import { execute, registerAcquisitionCommands, registerKernelCommands, registerFileFormatCommands } from './vscode/commands';
+import { execute, registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './vscode/commands';
 
 import { IDotnetAcquireResult } from './interfaces/dotnet';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
@@ -47,22 +47,31 @@ export async function activate(context: vscode.ExtensionContext) {
             workingDirectory: config.get<string>('kernelTransportWorkingDirectory')!
         };
         const processStart = processArguments(argsTemplate, notebookPath, dotnetPath, launchOptions!.workingDirectory);
-        const transport = new StdioKernelTransport(processStart, diagnosticsChannel);
+        let notification = {
+            displayError: async (message: string) => { await vscode.window.showErrorMessage(message, { modal: false }); },
+            displayInfo: async (message: string) => { await vscode.window.showInformationMessage(message, { modal: false }); },
+        };
+        const transport = new StdioKernelTransport(processStart, diagnosticsChannel, vscode.Uri.parse, notification);
         await transport.waitForReady();
+
+        let externalUri = await vscode.env.asExternalUri(vscode.Uri.parse(`http://localhost:${transport.httpPort}`));
+        //create tunnel for teh kernel transport
+        await transport.setExternalUri(externalUri);
         return transport;
     });
 
     registerKernelCommands(context, clientMapper);
-    registerFileFormatCommands(context);
+    registerFileCommands(context, clientMapper);
 
     const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable
-
-    const notebookProvider = new DotNetInteractiveNotebookContentProvider(clientMapper);
+    const selector = {
+        viewType: ['dotnet-interactive', 'dotnet-interactive-jupyter'],
+        filenamePattern: '*.{dib,dotnet-interactive,ipynb}'
+    };
+    const notebookProvider = new DotNetInteractiveNotebookContentProvider(clientMapper, diagnosticsChannel);
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookProvider));
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive-jupyter', notebookProvider));
-    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider({viewType: 'dotnet-interactive'}, notebookProvider));
-    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider({viewType: 'dotnet-interactive-jupyter'}, notebookProvider));
-    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider({filenamePattern: '*.{dib,dotnet-interactive,ipynb}'}, notebookProvider));
+    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selector, notebookProvider));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(registerLanguageProviders(clientMapper, diagnosticDelay));
 }

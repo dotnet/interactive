@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import { ClientMapper } from '../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
 import { CellOutput, CellOutputKind } from '../../interfaces/vscode';
-import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandSucceededType, DisplayedValueProducedType, ReturnValueProducedType, UpdateDisplayedValueType, DisplayedValueUpdatedType } from '../../contracts';
+import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandSucceededType, DisplayedValueProducedType, ReturnValueProducedType, DisplayedValueUpdatedType } from '../../contracts';
 
 describe('InteractiveClient tests', () => {
     it('command execution returns deferred events', async () => {
@@ -326,5 +326,23 @@ describe('InteractiveClient tests', () => {
                 }
             }
         ]);
+    });
+
+    it('clientMapper can reassociate clients', (done) => {
+        let transportCreated = false;
+        const clientMapper = new ClientMapper(async (_notebookPath) => {
+            if (transportCreated) {
+                done('transport already created; this function should not have been called again');
+            }
+
+            transportCreated = true;
+            return new TestKernelTransport({});
+        });
+        clientMapper.getOrAddClient({ fsPath: 'test-path.dib' }).then(_client => {
+            clientMapper.reassociateClient({ fsPath: 'test-path.dib' }, { fsPath: 'updated-path.dib' });
+            clientMapper.getOrAddClient({ fsPath: 'updated-path.dib' }).then(_reassociatedClient => {
+                done();
+            });
+        });
     });
 });

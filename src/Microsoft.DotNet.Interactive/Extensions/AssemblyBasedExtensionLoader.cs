@@ -129,8 +129,7 @@ namespace Microsoft.DotNet.Interactive.Extensions
                     {
                         await extension.OnLoadAsync(kernel);
                         context.Publish(new KernelExtensionLoaded(extension));
-                        displayed.Update(
-                            $"Loaded kernel extension \"{extensionType.Name}\" from assembly {assemblyFile.FullName}");
+                        displayed.Update($"Loaded {extension}");
                     }
                     catch (Exception e)
                     {

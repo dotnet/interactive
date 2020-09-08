@@ -27,6 +27,24 @@ export class ClientMapper {
         return client;
     }
 
+    reassociateClient(oldUri: Uri, newUri: Uri) {
+        const oldKey = ClientMapper.keyFromUri(oldUri);
+        const newKey = ClientMapper.keyFromUri(newUri);
+        if (oldKey === newKey) {
+            // no change
+            return;
+        }
+
+        const client = this.clientMap.get(oldKey);
+        if (!client) {
+            // no old client found, nothing to do
+            return;
+        }
+
+        this.clientMap.set(newKey, client);
+        this.clientMap.delete(oldKey);
+    }
+
     closeClient(uri: Uri) {
         let key = ClientMapper.keyFromUri(uri);
         let client = this.clientMap.get(key);

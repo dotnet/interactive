@@ -41,7 +41,10 @@ namespace Microsoft.DotNet.Interactive
                     new[] { formattedValue },
                     displayId));
 
-            return new DisplayedValue(displayId, mimeType, context);
+            var displayedValue = new DisplayedValue(displayId, mimeType, context);
+
+
+            return displayedValue;
         }
 
         public static void DisplayStandardOut(

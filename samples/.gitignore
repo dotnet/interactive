@@ -1,0 +1,2 @@
+# don't retain data files downloaded by sample notebooks
+*.csv

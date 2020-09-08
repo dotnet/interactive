@@ -23,6 +23,15 @@ import {
     KernelEventEnvelopeObserver,
     KernelEventType,
     KernelTransport,
+    NotebookDocument,
+    NotebookParsed,
+    NotebookParsedType,
+    NotebookSerialized,
+    NotebookSerializedType,
+    ParseNotebook,
+    ParseNotebookType,
+    SerializeNotebook,
+    SerializeNotebookType,
     RequestCompletions,
     RequestCompletionsType,
     RequestHoverText,
@@ -37,6 +46,7 @@ import {
     RequestDiagnosticsType,
 } from './contracts';
 import { CellOutput, CellErrorOutput, CellOutputKind, CellDisplayOutput } from './interfaces/vscode';
+import { Eol } from './interfaces';
 
 export class InteractiveClient {
     private nextToken: number = 1;
@@ -46,6 +56,35 @@ export class InteractiveClient {
 
     constructor(readonly kernelTransport: KernelTransport) {
         kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
+    }
+
+    public tryGetProperty<T>(propertyName:string) : T| null {
+        try{
+            return <T>((<any>this.kernelTransport)[propertyName]);
+        }
+        catch{
+            return null;
+        }
+    }
+    async parseNotebook(fileName: string, rawData: Uint8Array, token?: string | undefined): Promise<NotebookDocument> {
+        const command: ParseNotebook = {
+            fileName,
+            rawData,
+            targetKernelName: '.NET' // this command MUST be handled by the composite kernel
+        };
+        const notebookParsed = await this.submitCommandAndGetResult<NotebookParsed>(command, ParseNotebookType, NotebookParsedType, token);
+        return notebookParsed.notebook;
+    }
+
+    async serializeNotebook(fileName: string, notebook: NotebookDocument, eol: Eol, token?: string | undefined): Promise<Uint8Array> {
+        const command: SerializeNotebook = {
+            fileName,
+            notebook,
+            newLine: eol,
+            targetKernelName: '.NET' // this command MUST be handled by the composite kernel
+        };
+        const serializedNotebook = await this.submitCommandAndGetResult<NotebookSerialized>(command, SerializeNotebookType, NotebookSerializedType, token);
+        return serializedNotebook.rawData;
     }
 
     async execute(source: string, language: string, outputObserver: { (outputs: Array<CellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, token?: string | undefined): Promise<void> {
@@ -281,7 +320,7 @@ export function displayEventToCellOutput(disp: DisplayEvent): CellDisplayOutput 
                 : formatted.value;
             data[formatted.mimeType] = value;
         }
-    } 
+    }
 
     let output: CellDisplayOutput = {
         outputKind: CellOutputKind.Rich,

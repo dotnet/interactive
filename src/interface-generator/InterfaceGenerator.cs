@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             { typeof(int), "number" },
             { typeof(object), "any" },
             { typeof(string), "string" },
+            { typeof(byte[]), "Uint8Array" },
 
             { typeof(DirectoryInfo), "string" },
             { typeof(FileInfo), "string" },
@@ -38,20 +39,18 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             $"{nameof(SubmitCode)}.{nameof(SubmitCode.SubmissionType)}"
         };
 
+        private static IEnumerable<Type> AssemblyTypes = typeof(KernelCommand).Assembly.ExportedTypes;
+
         public static string Generate()
         {
             var builder = new StringBuilder();
 
-            var commandTypes = typeof(KernelCommand)
-                               .Assembly
-                               .ExportedTypes
+            var commandTypes = AssemblyTypes
                                .Where(t => !t.IsAbstract && !t.IsInterface)
                                .Where(t => typeof(KernelCommand).IsAssignableFrom(t))
                                .OrderBy(t => t.Name)
                                .ToList();
-            var eventTypes = typeof(KernelEvent)
-                             .Assembly
-                             .ExportedTypes
+            var eventTypes = AssemblyTypes
                              .Where(t => !t.IsAbstract && !t.IsInterface)
                              .Where(t => typeof(KernelEvent).IsAssignableFrom(t))
                              .OrderBy(t => t.Name)
@@ -144,6 +143,18 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
             foreach (var propertyType in GetProperties(type).Select(p => GetUnderlyingType(p.PropertyType)).OrderBy(t => t.Name))
             {
+                HandlePropertyType(propertyType);
+                if (propertyType.IsAbstract)
+                {
+                    foreach (var derivedPropertyType in AssemblyTypes.Where(t => t.IsSubclassOf(propertyType)))
+                    {
+                        HandlePropertyType(derivedPropertyType);
+                    }
+                }
+            }
+
+            void HandlePropertyType(Type propertyType)
+            {
                 if (requiredTypes != null)
                 {
                     requiredTypes.Add(propertyType);
@@ -195,6 +206,11 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
                 return typeName;
             }
 
+            if (type.ShouldBeDictionaryOfString())
+            {
+                return $"{{ [key: string]: {GetTypeScriptTypeName(type.GenericTypeArguments[1])}; }}";
+            }
+
             if (type.ShouldBeArray())
             {
                 return $"Array<{GetTypeScriptTypeName(type.GenericTypeArguments[0])}>";
@@ -210,6 +226,11 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
         private static Type GetUnderlyingType(Type type)
         {
+            if (type.ShouldBeDictionaryOfString())
+            {
+                return type.GenericTypeArguments[1];
+            }
+
             if (type.ShouldBeArray())
             {
                 return type.GenericTypeArguments[0];

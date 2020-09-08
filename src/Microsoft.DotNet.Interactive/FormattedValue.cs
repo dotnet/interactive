@@ -27,26 +27,54 @@ namespace Microsoft.DotNet.Interactive
 
         public static IReadOnlyCollection<FormattedValue> FromObject(object value)
         {
+            // FIX: (FromObject) consolidate
             var type = value?.GetType();
 
-            var mimeTypes = MimeTypesFor(type);
+            var mimeTypes = MimeTypesFor(type).ToArray();
 
-            return mimeTypes
-                .Select(mimeType =>
-                    new FormattedValue(mimeType, value.ToDisplayString(mimeType)))
-                .ToArray();
+            var preferredMimeType = Formatter.PreferredMimeTypeFor(type ?? typeof(object));
+
+            if (mimeTypes.Length != 1)
+            {
+                
+            }
+            else if (preferredMimeType != mimeTypes[0])
+            {
+
+            }
+
+            var formattedValues = mimeTypes
+                                     .Select(mimeType =>
+                                                 new FormattedValue(mimeType, value.ToDisplayString(mimeType)))
+                                     .ToArray();
+
+            if (formattedValues.Length == 0)
+            {
+                
+            }
+
+            return formattedValues;
         }
 
-        private static IEnumerable<string> MimeTypesFor(Type returnValueType)
+        private static IEnumerable<string> MimeTypesFor(Type type)
         {
             var mimeTypes = new HashSet<string> ();
 
-            if (returnValueType != null)
+            if (type != null)
             {
-                var preferredMimeType = Formatter.PreferredMimeTypeFor(returnValueType) ??
-                      (returnValueType?.IsPrimitive == true
-                          ? PlainTextFormatter.MimeType
-                          : Formatter.DefaultMimeType);
+                var preferredMimeType = Formatter.PreferredMimeTypeFor(type);
+
+                if (preferredMimeType == null)
+                {
+                    if (type?.IsPrimitive == true)
+                    {
+                        preferredMimeType = PlainTextFormatter.MimeType;
+                    }
+                    else
+                    {
+                        preferredMimeType = Formatter.DefaultMimeType;
+                    }
+                }
 
                 if (!string.IsNullOrWhiteSpace(preferredMimeType))
                 {

@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
@@ -34,17 +35,17 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var code = language switch
             {
-                Language.CSharp => @"await kernel.SendAsync(new SubmitCode(""display(\""C# extension installed\"");""));",
-                Language.FSharp => @"await kernel.SendAsync(new SubmitCode(""display(\""F# extension installed\"");""));",
+                Language.CSharp => $@"await kernel.SendAsync(new SubmitCode(""display(\""{language} extension installed\"");""));",
+                Language.FSharp => $@"await kernel.SendAsync(new SubmitCode(""display(\""{language} extension installed\"");""));",
                 _ => throw new NotSupportedException("This test does not support the specified language.")
             };
 
-            var extensionDll = await CreateExtensionAssembly(
-                                   projectDir,
-                                   code,
-                                   dllDir);
+            await CreateExtensionAssembly(
+                projectDir,
+                code,
+                dllDir);
 
-            var kernel = (IExtensibleKernel)CreateKernel(language);
+            var kernel = (IExtensibleKernel) CreateKernel(language);
 
             await using var context = KernelInvocationContext.Establish(new SubmitCode(""));
 
@@ -57,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             events.Should()
                   .NotContain(e => e is CommandFailed)
                   .And
-                  .ContainSingle<DisplayedValueUpdated>(dv => dv.Value.ToString().Contains(extensionDll.FullName));
+                  .ContainSingle<DisplayedValueProduced>(v => v.FormattedValues.Single().Value == $"{language} extension installed");
         }
 
         [Theory]

@@ -59,3 +59,7 @@ export function getEol(): Eol {
             }
     }
 }
+
+export function isUnsavedNotebook(uri: vscode.Uri): boolean {
+    return uri.scheme === 'untitled';
+}

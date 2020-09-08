@@ -353,16 +353,27 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 .Be(workingDir);
         }
 
-        [Theory]
-        [InlineData("stdio --http-port 8000", "Unrecognized command or argument '--http-port'")]
-        public void stdio_command_does_not_support_http_options(string commandLine, string expectedError)
+        [Fact]
+        public void stdio_command_does_not_support_http_port_and_http_port_range_options_at_same_time()
         {
-            var result = _parser.Parse(commandLine);
+            var result = _parser.Parse("stdio --http-port 8000 --http-port-range 3000-4000");
 
             result.Errors
                 .Select(e => e.Message)
                 .Should()
-                .Contain(errorMessage => errorMessage == expectedError);
+                .Contain(errorMessage => errorMessage == "Cannot specify both --http-port-range and --http-port together");
+        }
+
+        [Fact]
+        public void stdio_command_parses_http_port_options()
+        {
+            var result = _parser.Parse("stdio --http-port 8000");
+
+            var binder = new ModelBinder<StartupOptions>();
+
+            var options = (StartupOptions)binder.CreateInstance(new BindingContext(result));
+
+            options.HttpPort.PortNumber.Should().Be(8000);
         }
 
         [Fact]
@@ -377,7 +388,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public async Task stdio_command_does_register_JupyterFrontedEnvironment_when_http_is_enabled()
+        public async Task stdio_command_does_register_HtmlNotebookFrontedEnvironment_when_http_is_enabled()
         {
             await _parser.InvokeAsync("stdio --http-port-range 3000-4000");
 
@@ -385,6 +396,32 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 .FirstOrDefault(s => s.ServiceType == typeof(HtmlNotebookFrontedEnvironment))
                 .Should()
                 .NotBeNull();
+        }
+
+        [Fact]
+        public async Task stdio_command_requires_api_bootstrapping_when_http_is_enabled()
+        {
+            await _parser.InvokeAsync("stdio --http-port-range 3000-4000");
+
+            _serviceCollection
+                .FirstOrDefault(s => s.ServiceType == typeof(HtmlNotebookFrontedEnvironment))
+                .ImplementationInstance.As<HtmlNotebookFrontedEnvironment>()
+                .RequiresAutomaticBootstrapping
+                .Should()
+                .BeTrue();
+        }
+
+        [Fact]
+        public async Task stdio_command_with_vscode_frontend_environment_does_not_require_api_bootstrapping_when_http_is_enabled()
+        {
+            await _parser.InvokeAsync("[vscode] stdio --http-port-range 3000-4000");
+
+            _serviceCollection
+                .FirstOrDefault(s => s.ServiceType == typeof(HtmlNotebookFrontedEnvironment))
+                .ImplementationInstance.As<HtmlNotebookFrontedEnvironment>()
+                .RequiresAutomaticBootstrapping
+                .Should()
+                .BeFalse();
         }
 
         [Fact]

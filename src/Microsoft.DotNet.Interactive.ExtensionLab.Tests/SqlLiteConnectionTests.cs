@@ -61,7 +61,7 @@ SELECT * FROM fruit
                   .ContainSingle(f => f.MimeType == HtmlFormatter.MimeType);
         }
 
-        private static IDisposable CreateInMemorySQLiteDb(out string connectionString)
+        internal static IDisposable CreateInMemorySQLiteDb(out string connectionString)
         {
             connectionString = "Data Source=InMemorySample;Mode=Memory;Cache=Shared";
             var topLevelConnection = new SqliteConnection(connectionString);
