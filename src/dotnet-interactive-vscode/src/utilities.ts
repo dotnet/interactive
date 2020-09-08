@@ -24,6 +24,14 @@ export function isNotNull<T>(obj: T | null): obj is T {
     return obj !== undefined;
 }
 
+export function wait(milliseconds: number): Promise<void> {
+    return new Promise<void>((resolve => {
+        setTimeout(() => {
+            resolve();
+        }, milliseconds);
+    }));
+}
+
 function performReplacement(template: string, map: { [key: string]: string }): string {
     let result = template;
     for (let key in map) {

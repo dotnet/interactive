@@ -16,7 +16,7 @@ import {
 import { ProcessStart } from './interfaces';
 import { ReportChannel, Uri } from './interfaces/vscode';
 import { LineReader } from './lineReader';
-import { isNotNull, parse, stringify } from './utilities';
+import { isNotNull, parse, stringify, wait } from './utilities';
 import fetch from 'node-fetch';
 
 export class StdioKernelTransport {
@@ -75,6 +75,7 @@ export class StdioKernelTransport {
 
     public async setExternalUri(externalUri: Uri): Promise<void> {
 
+        await wait(2000);
         this.externalUri = externalUri;
         this.bootstrapperUri = await this.configureTunnel(this.parseUri(`http://localhost:${this.httpPort}`));
         if (this.bootstrapperUri === null) {
