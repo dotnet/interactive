@@ -10,7 +10,7 @@ import { CellOutput, ReportChannel } from '../interfaces/vscode';
 import { Diagnostic, DiagnosticSeverity, NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookCellTextOutput, NotebookDocument } from './../contracts';
 import { getEol, isUnsavedNotebook, toVsCodeDiagnostic } from './vscodeUtilities';
 import { getDiagnosticCollection } from './diagnostics';
-import { isDisplayOutput, isErrorOutput, isNotNull, isTextOutput, stringify } from '../utilities';
+import { isDisplayOutput, isErrorOutput, isNotNull, isTextOutput } from '../utilities';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider, vscode.NotebookKernel, vscode.NotebookKernelProvider<DotNetInteractiveNotebookContentProvider> {
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
