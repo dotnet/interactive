@@ -130,17 +130,17 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
 
     function getNewNotebookName(): string {
         let suffix = 1;
-        while (workspaceHasUnsavedNotebookWithName(`Untitled-${suffix}.dib`)) {
+        while (workspaceHasUnsavedNotebookWithName(`Untitled-${suffix}.ipynb`)) {
             suffix++;
         }
 
-        return `Untitled-${suffix}.dib`;
+        return `Untitled-${suffix}.ipynb`;
     }
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebook', async () => {
         const fileName = getNewNotebookName();
         const newUri = vscode.Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
-        await vscode.commands.executeCommand('vscode.openWith', newUri, 'dotnet-interactive');
+        await vscode.commands.executeCommand('vscode.openWith', newUri, 'dotnet-interactive-jupyter');
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
