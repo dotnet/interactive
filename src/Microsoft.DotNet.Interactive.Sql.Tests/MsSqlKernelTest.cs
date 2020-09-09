@@ -13,12 +13,13 @@ using Xunit;
 using Xunit.Abstractions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.DotNet.Interactive.ExtensionLab;
 
 namespace Microsoft.DotNet.Interactive.Sql.Tests
 {
-    public class SqlKernelTests : LanguageKernelTestBase
+    public class MsSqlKernelTests : LanguageKernelTestBase
     {
-        public SqlKernelTests(ITestOutputHelper output) : base(output)
+        public MsSqlKernelTests(ITestOutputHelper output) : base(output)
         {
         }
 
@@ -26,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Sql.Tests
         [InlineData(@"SELECT 'HELLO WORLD'", typeof(string))]
         public async Task events_should_contain_hello_worldAsync(string code, Type expectedType)
         {
-            using var kernel = new SqlKernel();
+            using var kernel = new MsSqlKernel("sql", "");
             using var events = kernel.KernelEvents.ToSubscribedList();
 
             // just reading expectedType to avoid error
@@ -45,13 +46,13 @@ namespace Microsoft.DotNet.Interactive.Sql.Tests
         [Fact]
         public async Task CompletionTestAsync()
         {
-            using var kernel = new SqlKernel();
+            var testConnStr = "Server=(localdb)\\MSSQLLocalDB;Database=tempdb;Integrated Security=true;";
+            using var kernel = new MsSqlKernel("sql", testConnStr);
             using var events = kernel.KernelEvents.ToSubscribedList();
 
             var testUri = "connection://test";
-            var testConnStr = "Server=localhost;Database=tempdb;Integrated Security=true;";
 
-            var connectResult = await kernel.ConnectAsync(testUri, testConnStr);
+            var connectResult = await kernel.ConnectAsync(testUri);
             var completionItemsResult = await kernel.ProvideCompletionItemsAsync();
 
             Assert.True(completionItemsResult != null, "Completion list should not be null");
@@ -60,14 +61,14 @@ namespace Microsoft.DotNet.Interactive.Sql.Tests
         [Fact]
         public async Task ConnectionTestAsync()
         {
-            using var kernel = new SqlKernel();
+            var testConnStr = "Server=(localdb)\\MSSQLLocalDB;Database=tempdb;Integrated Security=true;";
+            using var kernel = new MsSqlKernel("sql", testConnStr);
             using var events = kernel.KernelEvents.ToSubscribedList();
 
             var testUri = "connection://test";
-            var testConnStr = "Server=localhost;Database=tempdb;Integrated Security=true;";
             var testQuery = "SELECT 'HELLO WORLD'";
 
-            var connectResult = await kernel.ConnectAsync(testUri, testConnStr);
+            var connectResult = await kernel.ConnectAsync(testUri);
             Assert.True(connectResult, "Connection attempt should succeed");
 
             System.Threading.Thread.Sleep(5000);

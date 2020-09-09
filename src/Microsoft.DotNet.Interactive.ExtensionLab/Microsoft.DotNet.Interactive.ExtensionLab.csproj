@@ -52,6 +52,7 @@
    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
    <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="1.1.132302" />
    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+   <PackageReference Include="StreamJsonRpc" Version="2.5.46" />
  </ItemGroup>
 
   <ItemGroup>

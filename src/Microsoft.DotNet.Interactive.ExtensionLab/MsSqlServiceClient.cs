@@ -13,17 +13,17 @@ using Microsoft.DotNet.Interactive.Utility;
 using Newtonsoft.Json;
 using StreamJsonRpc;
 
-namespace Microsoft.DotNet.Interactive.Sql
+namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
 
-    public class ToolsServiceClient : IDisposable
+    public class MsSqlServiceClient : IDisposable
     {
         private Process process;
         private JsonRpc rpc;
 
-        public void startProcessAndRedirectIO()
+        public void StartProcessAndRedirectIO()
         {
-            var startInfo = new ProcessStartInfo("Enter Path to /MicrosoftSqlToolsServiceLayer")
+            var startInfo = new ProcessStartInfo("C:\\SqlToolsService\\MicrosoftSqlToolsServiceLayer.exe")
             {
                 UseShellExecute = false,
                 RedirectStandardInput = true,
@@ -67,12 +67,14 @@ namespace Microsoft.DotNet.Interactive.Sql
 
         public async Task<CompletionItem[]> ProvideCompletionItemsAsync()
         {
-            TextDocumentIdentifier docId = new TextDocumentIdentifier() { uri = "/Users/vasubhog/Desktop/test.sql" };
-            Position position = new Position() { line = 1, character = 2 };
-            CompletionContext context = new CompletionContext() { triggerKind = 1, triggerCharacter = null };
-            var completionParams = new CompletionParams() { textDocument = docId, position = position, workDoneToken = null, context = context, partialResultToken = null };
-            var result = await rpc.InvokeWithParameterObjectAsync<CompletionItem[]>("textDocument/completion", completionParams);
-            return result;
+            //TextDocumentIdentifier docId = new TextDocumentIdentifier() { uri = "/Users/vasubhog/Desktop/test.sql" };
+            //Position position = new Position() { line = 1, character = 2 };
+            //CompletionContext context = new CompletionContext() { triggerKind = 1, triggerCharacter = null };
+            //var completionParams = new CompletionParams() { textDocument = docId, position = position, workDoneToken = null, context = context, partialResultToken = null };
+            //var result = await rpc.InvokeWithParameterObjectAsync<CompletionItem[]>("textDocument/completion", completionParams);
+            //return result;
+            await Task.CompletedTask;
+            return new CompletionItem[0];
         }
 
         public async Task<ExecuteRequestResult> ExecuteQueryStringAsync(string ownerUri, string queryString)
@@ -160,14 +162,14 @@ namespace Microsoft.DotNet.Interactive.Sql
         TextEdit textEdit;
         TextEdit[] additionalTextEdits;
         string[] commitCharacters;
-        Command command;
+        CommandArgs command;
         public string data;
     }
 
-    public class Command
+    public class CommandArgs
     {
         public string title;
-        public string command;
+        public string Command;
         public string[] arguments; //any
     }
 
