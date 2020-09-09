@@ -10,6 +10,11 @@
         const message = event.data; // The JSON data our extension sent
 
         switch (message.command) {
+            case 'resetFactories':
+                vscode.postMessage({
+                    command: 'getHttpApiEndpoint'
+                });
+                break;
             case 'configureFactories':
                 let uri = message.endpointUri + "";
                 if(!uri.endsWith("/"))
@@ -85,6 +90,6 @@
 
     console.log("request http api endpoint");
     vscode.postMessage({
-        command: 'setupHttpApiEndpoint'
+        command: 'getHttpApiEndpoint'
     });
 })(window);

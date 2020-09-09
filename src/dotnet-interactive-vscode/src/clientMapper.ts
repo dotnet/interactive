@@ -7,6 +7,7 @@ import { Uri } from "./interfaces/vscode";
 
 export class ClientMapper {
     private clientMap: Map<string, InteractiveClient> = new Map();
+    private clientCreationCallbackMap: Map<string, (client:InteractiveClient) => Promise<void>> = new Map();
 
     constructor(readonly kernelTransportCreator: (notebookPath: string) => Promise<KernelTransport>) {
     }
@@ -22,9 +23,21 @@ export class ClientMapper {
             const transport = await this.kernelTransportCreator(uri.fsPath);
             client = new InteractiveClient(transport);
             this.clientMap.set(key, client);
+
+            let onCreate = this.clientCreationCallbackMap.get(key);
+            if(onCreate)
+            {
+                await onCreate(client);
+            }
         }
 
         return client;
+    }
+
+    onClientCreate(uri: Uri, callBack:(client:InteractiveClient) => Promise<void>)
+    {
+        let key = ClientMapper.keyFromUri(uri);
+        this.clientCreationCallbackMap.set(key, callBack);
     }
 
     reassociateClient(oldUri: Uri, newUri: Uri) {
