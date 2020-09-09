@@ -15,6 +15,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         {
             var disposable = Program.StartToolLogging(startupOptions);
             kernelServer.Start();
+            kernelServer.NotifyIsReady();
             await kernelServer.Input.LastOrDefaultAsync();
             return 0;
         }
