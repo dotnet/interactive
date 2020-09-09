@@ -26,8 +26,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     }
 
 
-    async provideKernels(document: vscode.NotebookDocument, token: vscode.CancellationToken): Promise<DotNetInteractiveNotebookContentProvider[]> {
-
+    provideKernels(document: vscode.NotebookDocument, token: vscode.CancellationToken): vscode.ProviderResult<DotNetInteractiveNotebookContentProvider[]> {
         return [this];
     }
 
@@ -81,10 +80,14 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 
         webview.onDidReceiveMessage(async (message) =>{
             switch(message.command){
-                case "setupHttpApiEndpoint":
+                case "getHttpApiEndpoint":
                     let client = await this.clientMapper.getOrAddClient(document.uri);
                     let uri = client.tryGetProperty<vscode.Uri>("externalUri");
                     webview.postMessage({command:"configureFactories", endpointUri:uri?.toString() });
+
+                    this.clientMapper.onClientCreate(document.uri, async (_client) => {
+                        await webview.postMessage({command:"resetFactories", endpointUri:uri?.toString() });
+                    });
                     break;
             }
         });
