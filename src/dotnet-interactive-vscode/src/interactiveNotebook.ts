@@ -13,7 +13,6 @@ export const notebookCellLanguages: Array<string> = [
     'dotnet-interactive.fsharp',
     'dotnet-interactive.html',
     'dotnet-interactive.javascript',
-    'dotnet-interactive.markdown',
     'dotnet-interactive.pwsh'
 ];
 
