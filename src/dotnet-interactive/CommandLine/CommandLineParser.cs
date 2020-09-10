@@ -319,6 +319,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         services.AddSingleton(kernel);
                         services.AddSingleton<Kernel>(kernel);
 
+                        onServerStarted ??= () =>
+                        {
+                            console.Out.WriteLine("Application started. Press Ctrl+C to shut down.");
+                        };
                         return startHttp(startupOptions, console, startServer, context);
                     });
 
