@@ -7,7 +7,7 @@ import { Uri } from "./interfaces/vscode";
 
 export class ClientMapper {
     private clientMap: Map<string, Promise<InteractiveClient>> = new Map();
-    private clientCreationCallbackMap: Map<string, (client:InteractiveClient) => Promise<void>> = new Map();
+    private clientCreationCallbackMap: Map<string, (client: InteractiveClient) => Promise<void>> = new Map();
 
     constructor(readonly kernelTransportCreator: (notebookPath: string) => Promise<KernelTransport>) {
     }
@@ -37,8 +37,7 @@ export class ClientMapper {
         return clientPromise;
     }
 
-    onClientCreate(uri: Uri, callBack:(client:InteractiveClient) => Promise<void>)
-    {
+    onClientCreate(uri: Uri, callBack: (client: InteractiveClient) => Promise<void>) {
         let key = ClientMapper.keyFromUri(uri);
         this.clientCreationCallbackMap.set(key, callBack);
     }

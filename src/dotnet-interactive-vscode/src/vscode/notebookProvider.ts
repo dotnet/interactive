@@ -78,16 +78,16 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 
     async resolveNotebook(document: vscode.NotebookDocument, webview: vscode.NotebookCommunication): Promise<void> {
 
-        webview.onDidReceiveMessage(async (message) =>{
-            switch(message.command){
+        webview.onDidReceiveMessage(async (message) => {
+            switch (message.command) {
                 case "getHttpApiEndpoint":
                     const client = await this.clientMapper.getOrAddClient(document.uri);
                     const uri = client.tryGetProperty<vscode.Uri>("externalUri");
-                    webview.postMessage({command:"configureFactories", endpointUri:uri?.toString() });
+                    webview.postMessage({ command: "configureFactories", endpointUri: uri?.toString() });
 
                     this.clientMapper.onClientCreate(document.uri, async (client) => {
                         const uri = client.tryGetProperty<vscode.Uri>("externalUri");
-                        await webview.postMessage({command:"resetFactories", endpointUri:uri?.toString() });
+                        await webview.postMessage({ command: "resetFactories", endpointUri: uri?.toString() });
                     });
                     break;
             }

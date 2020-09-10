@@ -6,8 +6,9 @@
     "search.exclude": {
         "out": true // set this to false to include "out" folder in search results
     },
+    "debug.allowBreakpointsEverywhere": true,
+    "editor.formatOnSave": true,
+    "files.trimTrailingWhitespace": true,
     // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
     "typescript.tsc.autoDetect": "off",
-    "debug.allowBreakpointsEverywhere": true,
-    "files.trimTrailingWhitespace": true
 }

@@ -27,7 +27,7 @@ export class StdioKernelTransport {
     public httpPort: Number;
     public externalUri: Uri | null;
 
-    constructor(processStart: ProcessStart, private diagnosticChannel: ReportChannel, private parseUri: (uri:string) => Uri, private notification: { displayError:  (message: string) => Promise<void>, displayInfo:  (message: string) => Promise<void> }) {
+    constructor(processStart: ProcessStart, private diagnosticChannel: ReportChannel, private parseUri: (uri: string) => Uri, private notification: { displayError: (message: string) => Promise<void>, displayInfo: (message: string) => Promise<void> }) {
         // prepare root event handler
         this.lineReader = new LineReader();
         this.lineReader.subscribe(line => this.handleLine(line));

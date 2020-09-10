@@ -69,7 +69,7 @@ describe('Notebook tests', () => {
             }));
             let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
             let result: Array<CellOutput> = [];
-            await client.execute(code, language, outputs => result = outputs, _ => {}, token);
+            await client.execute(code, language, outputs => result = outputs, _ => { }, token);
             expect(result).to.deep.equal([
                 {
                     outputKind: CellOutputKind.Rich,
@@ -152,7 +152,7 @@ Console.WriteLine(1);
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -237,7 +237,7 @@ Console.WriteLine(1);
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -295,7 +295,7 @@ Console.WriteLine(1);
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -362,7 +362,7 @@ Console.WriteLine(1);
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let diagnostics: Array<Diagnostic> = [];
-        await client.execute(code, 'csharp', _ => {}, diags => diagnostics = diags, token);
+        await client.execute(code, 'csharp', _ => { }, diags => diagnostics = diags, token);
         expect(diagnostics).to.deep.equal([
             {
                 linePositionSpan: {
@@ -433,7 +433,7 @@ Console.WriteLine(1);
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let diagnostics: Array<Diagnostic> = [];
-        await client.execute(code, 'csharp', _ => {}, diags => diagnostics = diags, token);
+        await client.execute(code, 'csharp', _ => { }, diags => diagnostics = diags, token);
         expect(diagnostics).to.deep.equal([
             {
                 linePositionSpan: {

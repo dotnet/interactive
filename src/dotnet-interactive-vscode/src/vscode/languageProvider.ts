@@ -26,7 +26,7 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
             }
             const completionItems: Array<vscode.CompletionItem> = [];
             for (const item of result.completions) {
-                const vscodeItem : vscode.CompletionItem = {
+                const vscodeItem: vscode.CompletionItem = {
                     label: item.displayText,
                     documentation: item.documentation,
                     filterText: item.filterText,
@@ -97,7 +97,7 @@ function ensureErrorsAreRejected<TInterimResult, TFinalResult>(promise: Promise<
 export function registerLanguageProviders(clientMapper: ClientMapper, diagnosticDelay: number): vscode.Disposable {
     const disposables: Array<vscode.Disposable> = [];
 
-    let languages = [ ... notebookCellLanguages, "dotnet-interactive.magic-commands" ];
+    let languages = [...notebookCellLanguages, "dotnet-interactive.magic-commands"];
     disposables.push(vscode.languages.registerCompletionItemProvider(languages, new CompletionItemProvider(clientMapper), ...CompletionItemProvider.triggerCharacters));
     disposables.push(vscode.languages.registerHoverProvider(languages, new HoverProvider(clientMapper)));
     disposables.push(vscode.workspace.onDidChangeTextDocument(e => {
