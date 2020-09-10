@@ -6,7 +6,6 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -19,32 +18,25 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
         [IntegrationFact]
         public async Task kernel_servers_javascript_api()
         {
-            var addressFilter = new Regex(@"(.*)(Now\slistening\son:)(.*)(?<address>http(s?)://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+)");
-            var listeningAddress = string.Empty;
             var port = GetFreePort();
-            using var listenerStarted = new ManualResetEvent(false);
+            using var listenerReady = new ManualResetEvent(false);
             var kernelServerProcess = ProcessHelper.Start(command:
                 "dotnet",
                 args: $@"interactive http --default-kernel csharp --http-port {port}",
                 new DirectoryInfo(Directory.GetCurrentDirectory()),
                 output: line =>
                 {
-                    var matches = addressFilter.Match(line);
-                    if (matches.Success)
+                    if (line == "Application started. Press Ctrl+C to shut down.")
                     {
-                        listeningAddress = matches.Groups["address"].Value;
-                        listenerStarted.Set();
+                        listenerReady.Set();
                     }
-
                 });
 
-            listenerStarted.WaitOne(timeout: TimeSpan.FromSeconds(20));
+            listenerReady.WaitOne(timeout: TimeSpan.FromSeconds(20));
 
             using var client = new HttpClient();
 
-            listeningAddress.Should().NotBeNullOrWhiteSpace();
-
-            var response = await client.GetAsync($"{listeningAddress}/resources/dotnet-interactive.js");
+            var response = await client.GetAsync($"http://localhost:{port}/resources/dotnet-interactive.js");
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
