@@ -38,43 +38,37 @@ namespace Microsoft.DotNet.Interactive.Sql.Tests
         [Fact]
         public async Task CompletionTestAsync()
         {
-            var testConnStr = "Server=(localdb)\\MSSQLLocalDB;Database=tempdb;Integrated Security=true;";
+            var testConnStr = "Server=(localdb)\\MSSQLLocalDB;Database=master;Integrated Security=true;";
             using var kernel = new MsSqlKernel("sql", testConnStr);
-            using var events = kernel.KernelEvents.ToSubscribedList();
 
-            var testUri = "connection:providerName:MSSQL|applicationName:dotnet|authenticationType:Integrated|database:|server:(localdb)\\MSSQLLocalDB|user:|group:286A0A8F-95DB-492C-96A2-DC1EFE7637AC";
-            var connectResult = await kernel.ConnectAsync(testUri);
+            var connectionUri = "connection:providerName:MSSQL|applicationName:dotnetTest|authenticationType:Integrated|server:(localdb)\\MSSQLLocalDB|group:286A0A8F-95DB-492C-96A2-DC1EFE7637AC";
+            await kernel.ConnectAsync(connectionUri);
 
             var completionItemsResult = await kernel.ProvideCompletionItemsAsync();
             Assert.True(completionItemsResult != null, "Completion list should not be null");
 
-            var disconnectResult = await kernel.DisconnectAsync(testUri);
+            await kernel.DisconnectAsync(connectionUri);
         }
 
         [Fact]
         public async Task ConnectionTestAsync()
         {
-            var testConnStr = "Server=(localdb)\\MSSQLLocalDB;Database=tempdb;Integrated Security=true;";
+            var testConnStr = "Server=(localdb)\\MSSQLLocalDB;Database=master;Integrated Security=true;";
             using var kernel = new MsSqlKernel("sql", testConnStr);
-            using var events = kernel.KernelEvents.ToSubscribedList();
 
-            var testUri = "connection:providerName:MSSQL|applicationName:dotnet|authenticationType:Integrated|database:|server:(localdb)\\MSSQLLocalDB|user:|group:286A0A8F-95DB-492C-96A2-DC1EFE7637AC";
+            var connectionUri = "connection:providerName:MSSQL|applicationName:dotnetTest|authenticationType:Integrated|server:(localdb)\\MSSQLLocalDB|group:286A0A8F-95DB-492C-96A2-DC1EFE7637AC";
             var testQuery = "SELECT 'HELLO WORLD'";
+            await kernel.ConnectAsync(connectionUri);
 
-            var connectResult = await kernel.ConnectAsync(testUri);
-
-            System.Threading.Thread.Sleep(5000);
-
-            var queryResult = await kernel.ExecuteQueryStringAsync(testUri, testQuery);
+            var queryUri = "untitled:ConnectionTestQuery";
+            var queryResult = await kernel.ExecuteQueryStringAsync(queryUri, testQuery);
             Assert.True(queryResult != null, "Query result should not be null");
 
-            System.Threading.Thread.Sleep(5000);
-
-            var subsetResults = await kernel.ExecuteQueryExecuteSubsetAsync(testUri);
+            var subsetResults = await kernel.ExecuteQueryExecuteSubsetAsync(queryUri);
             Assert.True(subsetResults.ResultSubset.RowCount == 1, "Row count should not be 0");
             Assert.True(subsetResults.ResultSubset.Rows[0][0].DisplayValue == "HELLO WORLD", "Display value does not match");
 
-            var disconnectResult = await kernel.DisconnectAsync(testUri);
+            await kernel.DisconnectAsync(connectionUri);
         }
     }
 }
