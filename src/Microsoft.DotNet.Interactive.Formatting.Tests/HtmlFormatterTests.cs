@@ -24,6 +24,22 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
     {
         public class Objects : FormatterTestBase
         {
+
+            [Fact]
+            public void does_not_double_encode_json_string()
+            {
+                var htmlString = "<b>Text</b>";
+                var formatter = HtmlFormatter.GetPreferredFormatterFor<string>();
+                var writer = new StringWriter();
+
+                formatter.Format(htmlString, writer);
+
+                writer
+                    .ToString()
+                    .Should()
+                    .Be(htmlString);
+            }
+
             [Fact]
             public void Formatters_are_generated_on_the_fly_when_HTML_mime_type_is_requested()
             {

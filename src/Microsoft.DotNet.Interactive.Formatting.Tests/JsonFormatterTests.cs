@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using FluentAssertions;
@@ -27,6 +28,21 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 .ToString()
                 .Should()
                 .Be(jtoken.ToString(Newtonsoft.Json.Formatting.None));
+        }
+
+        [Fact]
+        public void does_not_double_encode_json_string()
+        {
+            var jsonString = "{\"property\": 1}";
+            var formatter = JsonFormatter.GetPreferredFormatterFor<string>();
+            var writer = new StringWriter();
+
+            formatter.Format(jsonString, writer);
+
+            writer
+                .ToString()
+                .Should()
+                .Be(jsonString);
         }
 
         public static IEnumerable<object[]> JTokens()
