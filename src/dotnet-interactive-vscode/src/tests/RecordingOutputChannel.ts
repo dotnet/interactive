@@ -3,9 +3,9 @@
 
 import { ReportChannel } from "../interfaces/vscode";
 
-export class RecordingChannel implements ReportChannel{
+export class RecordingChannel implements ReportChannel {
     private name: string;
-    constructor(channelName?:string) {
+    constructor(channelName?: string) {
         this.name = channelName || "testChannel";
     }
     getName(): string {

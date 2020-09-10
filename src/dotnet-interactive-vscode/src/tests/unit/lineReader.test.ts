@@ -15,7 +15,7 @@ describe('line reader tests', () => {
             description: 'CRLF'
         }
     ];
-    for (const {separator, description} of lineSeparators) {
+    for (const { separator, description } of lineSeparators) {
         it(`can separate lines ending with ${description}`, () => {
             let lines: Array<string> = [];
             let lineReader = new LineReader();

@@ -59,10 +59,10 @@ export interface NotebookDocumentBackup {
     delete(): void;
 }
 
-export interface ReportChannel{
+export interface ReportChannel {
     getName(): string;
-    append(value:string) : void;
-    appendLine(value:string) : void;
+    append(value: string): void;
+    appendLine(value: string): void;
     clear(): void;
     show(): void;
     hide(): void;
