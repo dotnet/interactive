@@ -42,16 +42,15 @@ namespace Microsoft.DotNet.Interactive.Sql.Tests
             using var kernel = new MsSqlKernel("sql", testConnStr);
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            var testUri = "connection://test";
+            var testUri = "connection:providerName:MSSQL|applicationName:dotnet|authenticationType:Integrated|database:|server:(localdb)\\MSSQLLocalDB|user:|group:286A0A8F-95DB-492C-96A2-DC1EFE7637AC";
             var connectResult = await kernel.ConnectAsync(testUri);
-            Assert.True(connectResult, "Connect should succeed.");
 
             var completionItemsResult = await kernel.ProvideCompletionItemsAsync();
             Assert.True(completionItemsResult != null, "Completion list should not be null");
 
             var disconnectResult = await kernel.DisconnectAsync(testUri);
-            Assert.True(disconnectResult, "Disconnect should succeed.");
         }
+
         [Fact]
         public async Task ConnectionTestAsync()
         {
@@ -59,11 +58,10 @@ namespace Microsoft.DotNet.Interactive.Sql.Tests
             using var kernel = new MsSqlKernel("sql", testConnStr);
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            var testUri = "connection://test";
+            var testUri = "connection:providerName:MSSQL|applicationName:dotnet|authenticationType:Integrated|database:|server:(localdb)\\MSSQLLocalDB|user:|group:286A0A8F-95DB-492C-96A2-DC1EFE7637AC";
             var testQuery = "SELECT 'HELLO WORLD'";
 
             var connectResult = await kernel.ConnectAsync(testUri);
-            Assert.True(connectResult, "Connection attempt should succeed");
 
             System.Threading.Thread.Sleep(5000);
 
@@ -77,7 +75,6 @@ namespace Microsoft.DotNet.Interactive.Sql.Tests
             Assert.True(subsetResults.ResultSubset.Rows[0][0].DisplayValue == "HELLO WORLD", "Display value does not match");
 
             var disconnectResult = await kernel.DisconnectAsync(testUri);
-            Assert.True(disconnectResult, "Disconnect should succeed.");
         }
     }
 }
