@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import { ClientMapper } from '../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
 import { CellOutput, CellOutputKind } from '../../interfaces/vscode';
-import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandSucceededType, DisplayedValueProducedType, ReturnValueProducedType, DisplayedValueUpdatedType } from '../../contracts';
+import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandSucceededType, DisplayedValueProducedType, ReturnValueProducedType, DisplayedValueUpdatedType, CommandFailedType } from '../../contracts';
 
 describe('InteractiveClient tests', () => {
     it('command execution returns deferred events', async () => {
@@ -326,6 +326,26 @@ describe('InteractiveClient tests', () => {
                 }
             }
         ]);
+    });
+
+    it('CommandFailedEvent rejects the execution promise', (done) => {
+        const token = 'token';
+        const clientMapper = new ClientMapper(async (_notebookPath) => new TestKernelTransport({
+            'SubmitCode': [
+                {
+                    eventType: CommandFailedType,
+                    event: {},
+                    token
+                }
+            ]
+        }));
+        clientMapper.getOrAddClient({ fsPath: 'test/path' }).then(client => {
+            client.execute('bad-code-that-will-fail', 'csharp', _ => { }, _ => { }, token).then(result => {
+                done(`expected execution to fail promise, but passed with: ${result}`);
+            }).catch(_err => {
+                done();
+            });
+        });
     });
 
     it('clientMapper can reassociate clients', (done) => {
