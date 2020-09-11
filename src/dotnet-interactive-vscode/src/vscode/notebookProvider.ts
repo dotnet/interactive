@@ -10,7 +10,7 @@ import { CellOutput, ReportChannel } from '../interfaces/vscode';
 import { Diagnostic, DiagnosticSeverity, NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookCellTextOutput, NotebookDocument } from './../contracts';
 import { getEol, isUnsavedNotebook, toVsCodeDiagnostic } from './vscodeUtilities';
 import { getDiagnosticCollection } from './diagnostics';
-import { isDisplayOutput, isErrorOutput, isNotNull, isTextOutput } from '../utilities';
+import { isDisplayOutput, isErrorOutput, isTextOutput } from '../utilities';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider, vscode.NotebookKernel, vscode.NotebookKernelProvider<DotNetInteractiveNotebookContentProvider> {
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
@@ -40,24 +40,34 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         // not supported
     }
 
-    async openNotebook(uri: vscode.Uri): Promise<vscode.NotebookData> {
+    async openNotebook(uri: vscode.Uri, openContext: vscode.NotebookDocumentOpenContext): Promise<vscode.NotebookData> {
+        let fileUri: vscode.Uri | undefined = isUnsavedNotebook(uri)
+            ? undefined
+            : uri;
+        if (openContext.backupId) {
+            // restoring a backed up notebook
 
-        let client = await this.clientMapper.getOrAddClient(uri);
+            // N.B., when F5 debugging, the `backupId` property is _always_ `undefined`, so to properly test this you'll
+            // have to build and install a VSIX.
+            fileUri = vscode.Uri.file(openContext.backupId);
+        }
+
+        const client = await this.clientMapper.getOrAddClient(uri);
         let notebookCells: Array<NotebookCell>;
-        if (isUnsavedNotebook(uri)) {
-            // new empty/blank notebook
-            notebookCells = [];
-        } else {
+        if (fileUri) {
             // file on disk
             let buffer = new Uint8Array();
             try {
-                buffer = Buffer.from(await vscode.workspace.fs.readFile(uri));
+                buffer = Buffer.from(await vscode.workspace.fs.readFile(fileUri));
             } catch {
             }
 
-            const fileName = path.basename(uri.fsPath);
+            const fileName = path.basename(fileUri.fsPath);
             const notebook = await client.parseNotebook(fileName, buffer);
             notebookCells = notebook.cells;
+        } else {
+            // new empty/blank notebook
+            notebookCells = [];
         }
 
         const notebookData = this.createNotebookData(notebookCells);
@@ -157,8 +167,9 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     }
 
     async backupNotebook(document: vscode.NotebookDocument, context: vscode.NotebookDocumentBackupContext, cancellation: vscode.CancellationToken): Promise<vscode.NotebookDocumentBackup> {
+        const extension = path.extname(document.uri.fsPath);
         const buffer = await this.serializeNotebook(document, document.uri);
-        const documentBackup = await backupNotebook(buffer, context.destination.fsPath);
+        const documentBackup = await backupNotebook(buffer, context.destination.fsPath + extension);
         return documentBackup;
     }
 
