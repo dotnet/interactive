@@ -121,7 +121,7 @@ export class InteractiveClient {
                             };
                             outputs.push(output);
                             reportOutputs();
-                            resolve();
+                            reject(err);
                         }
                         break;
                     case DiagnosticsProducedType:
