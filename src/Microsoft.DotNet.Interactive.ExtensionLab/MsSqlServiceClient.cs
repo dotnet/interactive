@@ -12,10 +12,10 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
 using Newtonsoft.Json;
 using StreamJsonRpc;
+using System.Data.Common;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
-
     public class MsSqlServiceClient : IDisposable
     {
         private Process process;
@@ -77,10 +77,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return new CompletionItem[0];
         }
 
-        public async Task<ExecuteRequestResult> ExecuteQueryStringAsync(string ownerUri, string queryString)
+        public async Task<SimpleExecuteResult> ExecuteQueryStringAsync(string ownerUri, string queryString)
         {
-            var queryParams = new QueryExecuteStringParams() { OwnerUri = ownerUri, Query = queryString };
-            var result = await rpc.InvokeWithParameterObjectAsync<ExecuteRequestResult>("query/executeString", queryParams);
+            var queryParams = new SimpleExecuteParams() { OwnerUri = ownerUri, Query = queryString };
+            var result = await rpc.InvokeWithParameterObjectAsync<SimpleExecuteResult>("query/simpleexecute", queryParams);
             return result;
         }
 
@@ -136,14 +136,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public string OwnerUri;
     }
 
-    public class QueryExecuteStringParams
+    public class SimpleExecuteParams
     {
         public string OwnerUri;
         public string Query;
-
-        public bool GetFullColumnSchema = false;
-
-        public ExecutionPlanOptions ExecutionPlanOptions { get; set; }
     }
 
     public class CompletionItem
@@ -294,9 +290,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public int RowsCount { get; set; }
     }
 
-    public class ExecuteRequestResult
+    public class SimpleExecuteResult
     {
-
+        public int RowCount;
+        public DbColumn[] ColumnInfo;
+        public DbCellValue[][] Rows;
     }
 
     public class QueryExecuteSubsetResult
