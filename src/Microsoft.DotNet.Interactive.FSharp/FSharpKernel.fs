@@ -258,14 +258,14 @@ type FSharpKernelBase () as this =
                 let sp = LinePosition(requestHoverText.LinePosition.Line, startCol)
                 let ep = LinePosition(requestHoverText.LinePosition.Line, endCol)
                 let lps = LinePositionSpan(sp, ep)
-                context.Publish(HoverTextProduced(requestHoverText, results, lps))
+                context.Publish(HoverTextProduced(requestHoverText, results, Nullable lps))
 
             | Result.Error err ->
                 let sp = LinePosition(requestHoverText.LinePosition.Line, col)
                 let ep = LinePosition(requestHoverText.LinePosition.Line, col)
                 let lps = LinePositionSpan(sp, ep)
                 let reply = [| FormattedValue("text/markdown", "") |]
-                context.Publish(HoverTextProduced(requestHoverText, reply, lps))
+                context.Publish(HoverTextProduced(requestHoverText, reply, Nullable lps))
                 ()
         }
 
