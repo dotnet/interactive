@@ -10,55 +10,80 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using System.Data;
+using System.Reactive.Disposables;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
     public class MsSqlKernel :
         Kernel,
-        IKernelCommandHandler<SubmitCode>
+        IKernelCommandHandler<SubmitCode>,
+        IKernelCommandHandler<RequestCompletions>,
+        IAsyncDisposable
     {
+        private bool _connected = false;
+        private readonly string _connectionUri;
         private readonly string _connectionString;
         private readonly MsSqlServiceClient serviceClient;
 
         public MsSqlKernel(string name, string connectionString) : base(name)
         {
+            _connectionUri = $"connection:{Guid.NewGuid()}";
             _connectionString = connectionString;
             serviceClient = new MsSqlServiceClient();
             serviceClient.StartProcessAndRedirectIO();
         }
 
-        public async Task<bool> ConnectAsync(string ownerUri)
+        public ValueTask DisposeAsync()
         {
-            return await serviceClient.ConnectAsync(ownerUri, _connectionString);
-        }
+            if (_connected)
+            {
+                return new ValueTask(serviceClient.DisconnectAsync(_connectionUri));
+            }
 
-        public async Task<bool> DisconnectAsync(string ownerUri)
-        {
-            return await serviceClient.DisconnectAsync(ownerUri);
-        }
-
-        public async Task<CompletionItem[]> ProvideCompletionItemsAsync()
-        {
-            return await serviceClient.ProvideCompletionItemsAsync();
-        }
-
-        public async Task<ExecuteRequestResult> ExecuteQueryStringAsync(string ownerUri, string queryString)
-        {
-            return await serviceClient.ExecuteQueryStringAsync(ownerUri, queryString);
-        }
-
-        public async Task<QueryExecuteSubsetResult> ExecuteQueryExecuteSubsetAsync(string ownerUri)
-        {
-            return await serviceClient.ExecuteQueryExecuteSubsetAsync(ownerUri);
+            return new ValueTask(Task.CompletedTask);
         }
 
         public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
-            // SEND Sql query
-            // await completion
-            // Get results
-            // Display
-            await context.DisplayAsync("HELLO WORLD");
+            if (!_connected)
+            {
+                await serviceClient.ConnectAsync(_connectionUri, _connectionString);
+                _connected = true;
+            }
+
+            var queryResult = await serviceClient.ExecuteQueryStringAsync("", command.Code);
+
+            var processedResults = await context.DisplayAsync(queryResult);
+
+            await context.DisplayAsync(processedResults);
+        }
+
+        private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> Execute(SimpleExecuteResult result)
+        {
+            var values = new object[result.ColumnInfo.Length];
+            var columnNames = Enumerable.Range(0, result.ColumnInfo.Length).Select(i => result.ColumnInfo[i].ColumnName).ToArray();
+
+            // holds the result of a single statement within the query
+            var resultTable = new List<(string, object)[]>();
+
+            foreach (DbCellValue[] cellRow in result.Rows)
+            {
+                var resultRow = new (string, object)[cellRow.Length];
+                for (var i = 0; i < cellRow.Length; i++)
+                {
+                    resultRow[i] = (columnNames[i], cellRow[i]);
+                }
+
+                resultTable.Add(resultRow);
+            }
+
+            yield return resultTable;
+        }
+
+        public Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
+        {
+            throw new NotImplementedException();
         }
     }
 }
