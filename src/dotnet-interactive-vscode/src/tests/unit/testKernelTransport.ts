@@ -8,13 +8,13 @@ export class TestKernelTransport {
     private theObserver: KernelEventEnvelopeObserver | undefined;
     private fakedCommandCounter: Map<string, number> = new Map<string, number>();
 
-    constructor(readonly fakedEventEnvelopes: { [key: string]: {eventType: KernelEventType, event: KernelEvent, token: string}[] }) {
+    constructor(readonly fakedEventEnvelopes: { [key: string]: { eventType: KernelEventType, event: KernelEvent, token: string }[] }) {
     }
 
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
         this.theObserver = observer;
         return {
-            dispose: () => {}
+            dispose: () => { }
         };
     }
 

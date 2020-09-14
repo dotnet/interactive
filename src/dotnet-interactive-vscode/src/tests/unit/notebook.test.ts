@@ -69,7 +69,7 @@ describe('Notebook tests', () => {
             }));
             let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
             let result: Array<CellOutput> = [];
-            await client.execute(code, language, outputs => result = outputs, _ => {}, token);
+            await client.execute(code, language, outputs => result = outputs, _ => { }, token);
             expect(result).to.deep.equal([
                 {
                     outputKind: CellOutputKind.Rich,
@@ -152,7 +152,7 @@ Console.WriteLine(1);
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -237,7 +237,7 @@ Console.WriteLine(1);
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -295,7 +295,7 @@ Console.WriteLine(1);
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute(code, 'csharp', outputs => result = outputs, _ => {}, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, token);
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -309,10 +309,10 @@ Console.WriteLine(1);
         ]);
     });
 
-    it('diagnostics are reported on CommandFailed', async () => {
+    it('diagnostics are reported on CommandFailed', (done) => {
         let token = '123';
         let code = 'Console.WriteLin();';
-        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
+        let clientMapper = new ClientMapper(async (_notebookPath) => new TestKernelTransport({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -360,26 +360,31 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
-        let diagnostics: Array<Diagnostic> = [];
-        await client.execute(code, 'csharp', _ => {}, diags => diagnostics = diags, token);
-        expect(diagnostics).to.deep.equal([
-            {
-                linePositionSpan: {
-                    start: {
-                        line: 0,
-                        character: 8
-                    },
-                    end: {
-                        line: 0,
-                        character: 15
+        clientMapper.getOrAddClient({ fsPath: 'test/path' }).then(client => {
+            let diagnostics: Array<Diagnostic> = [];
+            client.execute(code, 'csharp', _ => { }, diags => diagnostics = diags, token).then(result => {
+                done(`expected execution to fail, but it passed with: ${result}`);
+            }).catch(_err => {
+                expect(diagnostics).to.deep.equal([
+                    {
+                        linePositionSpan: {
+                            start: {
+                                line: 0,
+                                character: 8
+                            },
+                            end: {
+                                line: 0,
+                                character: 15
+                            }
+                        },
+                        severity: DiagnosticSeverity.Error,
+                        code: 'CS0117',
+                        message: "'Console' does not contain a definition for 'WritLin'"
                     }
-                },
-                severity: DiagnosticSeverity.Error,
-                code: 'CS0117',
-                message: "'Console' does not contain a definition for 'WritLin'"
-            }
-        ]);
+                ]);
+                done();
+            });
+        });
     });
 
     it('diagnostics are reported on CommandSucceeded', async () => {
@@ -433,7 +438,7 @@ Console.WriteLine(1);
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let diagnostics: Array<Diagnostic> = [];
-        await client.execute(code, 'csharp', _ => {}, diags => diagnostics = diags, token);
+        await client.execute(code, 'csharp', _ => { }, diags => diagnostics = diags, token);
         expect(diagnostics).to.deep.equal([
             {
                 linePositionSpan: {

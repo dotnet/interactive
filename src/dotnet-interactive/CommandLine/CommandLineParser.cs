@@ -68,6 +68,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             Jupyter jupyter = null,
             StartStdIO startStdIO = null,
             StartHttp startHttp = null,
+            Action onServerStarted = null,
             ITelemetry telemetry = null,
             IFirstTimeUseNoticeSentinel firstTimeUseNoticeSentinel = null)
         {
@@ -78,14 +79,16 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 throw new ArgumentNullException(nameof(services));
             }
             var disposeOnQuit = new CompositeDisposable();
-            
+
             startServer ??= (startupOptions, invocationContext) =>
             {
                 operation.Info("constructing webhost");
                 var webHost = Program.ConstructWebHost(startupOptions);
                 disposeOnQuit.Add(webHost);
                 operation.Info("starting  kestrel server");
-                webHost.Run();
+                webHost.Start();
+                onServerStarted?.Invoke();
+                webHost.WaitForShutdown();
                 operation.Dispose();
             };
 
@@ -259,7 +262,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             .Trace())
                         .AddSingleton<IHostedService, Shell>()
                         .AddSingleton<IHostedService, Heartbeat>();
-
                     return jupyter(startupOptions, console, startServer, context);
                 }
 
@@ -317,6 +319,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         services.AddSingleton(kernel);
                         services.AddSingleton<Kernel>(kernel);
 
+                        onServerStarted ??= () =>
+                        {
+                            console.Out.WriteLine("Application started. Press Ctrl+C to shut down.");
+                        };
                         return startHttp(startupOptions, console, startServer, context);
                     });
 
@@ -406,11 +412,15 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             services.AddSingleton<Kernel>(kernel);
 
                             kernelServer.Start();
+                            onServerStarted ??= () =>
+                            {
+                                kernelServer.NotifyIsReady();
+                            };
                             return startHttp(startupOptions, console, startServer, context);
                         }
                         
                         disposeOnQuit.Add(kernel);
-                        
+
                         return startStdIO(
                             startupOptions,
                             kernelServer,

@@ -13,7 +13,6 @@ export const notebookCellLanguages: Array<string> = [
     'dotnet-interactive.fsharp',
     'dotnet-interactive.html',
     'dotnet-interactive.javascript',
-    'dotnet-interactive.markdown',
     'dotnet-interactive.pwsh'
 ];
 
@@ -48,7 +47,7 @@ export function backupNotebook(rawData: Uint8Array, location: string): Promise<N
     return new Promise<NotebookDocumentBackup>((resolve, reject) => {
         // ensure backup directory exists
         const parsedPath = path.parse(location);
-        fs.mkdir(parsedPath.dir, {recursive: true}, async (err, _path) => {
+        fs.mkdir(parsedPath.dir, { recursive: true }, async (err, _path) => {
             if (err) {
                 reject(err);
                 return;

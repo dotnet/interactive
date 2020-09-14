@@ -6,7 +6,8 @@ import { InteractiveClient } from "./interactiveClient";
 import { Uri } from "./interfaces/vscode";
 
 export class ClientMapper {
-    private clientMap: Map<string, InteractiveClient> = new Map();
+    private clientMap: Map<string, Promise<InteractiveClient>> = new Map();
+    private clientCreationCallbackMap: Map<string, (client: InteractiveClient) => Promise<void>> = new Map();
 
     constructor(readonly kernelTransportCreator: (notebookPath: string) => Promise<KernelTransport>) {
     }
@@ -15,16 +16,30 @@ export class ClientMapper {
         return uri.fsPath;
     }
 
-    async getOrAddClient(uri: Uri): Promise<InteractiveClient> {
+    getOrAddClient(uri: Uri): Promise<InteractiveClient> {
         let key = ClientMapper.keyFromUri(uri);
-        let client = this.clientMap.get(key);
-        if (client === undefined) {
-            const transport = await this.kernelTransportCreator(uri.fsPath);
-            client = new InteractiveClient(transport);
-            this.clientMap.set(key, client);
+        let clientPromise = this.clientMap.get(key);
+        if (clientPromise === undefined) {
+            clientPromise = new Promise<InteractiveClient>(async resolve => {
+                const transport = await this.kernelTransportCreator(uri.fsPath);
+                const client = new InteractiveClient(transport);
+
+                let onCreate = this.clientCreationCallbackMap.get(key);
+                if (onCreate) {
+                    await onCreate(client);
+                }
+
+                resolve(client);
+            });
+            this.clientMap.set(key, clientPromise);
         }
 
-        return client;
+        return clientPromise;
+    }
+
+    onClientCreate(uri: Uri, callBack: (client: InteractiveClient) => Promise<void>) {
+        let key = ClientMapper.keyFromUri(uri);
+        this.clientCreationCallbackMap.set(key, callBack);
     }
 
     reassociateClient(oldUri: Uri, newUri: Uri) {
@@ -47,10 +62,12 @@ export class ClientMapper {
 
     closeClient(uri: Uri) {
         let key = ClientMapper.keyFromUri(uri);
-        let client = this.clientMap.get(key);
-        if (client) {
-            client.dispose();
+        let clientPromise = this.clientMap.get(key);
+        if (clientPromise) {
             this.clientMap.delete(key);
+            clientPromise.then(client => {
+                client.dispose();
+            });
         }
     }
 

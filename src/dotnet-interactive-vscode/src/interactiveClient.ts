@@ -52,17 +52,17 @@ export class InteractiveClient {
     private nextToken: number = 1;
     private tokenEventObservers: Map<string, Array<KernelEventEnvelopeObserver>> = new Map<string, Array<KernelEventEnvelopeObserver>>();
     private deferredOutput: Array<CellOutput> = [];
-    private valueIdMap: Map<string, { idx: number, outputs: Array<CellOutput>, observer: { (outputs: Array<CellOutput>): void }}> = new Map<string, { idx: number, outputs: Array<CellOutput>, observer: { (outputs: Array<CellOutput>): void }}>();
+    private valueIdMap: Map<string, { idx: number, outputs: Array<CellOutput>, observer: { (outputs: Array<CellOutput>): void } }> = new Map<string, { idx: number, outputs: Array<CellOutput>, observer: { (outputs: Array<CellOutput>): void } }>();
 
     constructor(readonly kernelTransport: KernelTransport) {
         kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
     }
 
-    public tryGetProperty<T>(propertyName:string) : T| null {
-        try{
+    public tryGetProperty<T>(propertyName: string): T | null {
+        try {
             return <T>((<any>this.kernelTransport)[propertyName]);
         }
-        catch{
+        catch {
             return null;
         }
     }
@@ -121,7 +121,7 @@ export class InteractiveClient {
                             };
                             outputs.push(output);
                             reportOutputs();
-                            resolve();
+                            reject(err);
                         }
                         break;
                     case DiagnosticsProducedType:
