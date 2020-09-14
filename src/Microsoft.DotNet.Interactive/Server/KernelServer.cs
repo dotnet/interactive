@@ -43,6 +43,10 @@ namespace Microsoft.DotNet.Interactive.Server
             };
 
             Environment.CurrentDirectory = workingDir.FullName;
+        }
+
+        public void NotifyIsReady()
+        {
             WriteEventToOutput(new KernelReady());
         }
 

@@ -48,5 +48,5 @@ export interface ReportInstallationFinished {
 export const WindowsEol = "\r\n";
 export const NonWindowsEol = "\n";
 export type Eol =
-      typeof WindowsEol
+    typeof WindowsEol
     | typeof NonWindowsEol;

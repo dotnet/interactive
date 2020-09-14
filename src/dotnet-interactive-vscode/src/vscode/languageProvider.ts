@@ -16,31 +16,30 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
     }
 
     provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
-        return new Promise<vscode.CompletionList>((resolve, reject) => {
-            provideCompletion(this.clientMapper, getSimpleLanguage(document.languageId), document, position).then(result => {
-                let range: vscode.Range | undefined = undefined;
-                if (result.linePositionSpan) {
-                    range = new vscode.Range(
-                        new vscode.Position(result.linePositionSpan.start.line, result.linePositionSpan.start.character),
-                        new vscode.Position(result.linePositionSpan.end.line, result.linePositionSpan.end.character));
-                }
-                let completionItems: Array<vscode.CompletionItem> = [];
-                for (let item of result.completions) {
-                    let vscodeItem : vscode.CompletionItem = {
-                        // range: new vscode.Range(position, position),
-                        label: item.displayText,
-                        documentation: item.documentation,
-                        filterText: item.filterText,
-                        insertText: item.insertText,
-                        sortText: item.sortText,
-                        range: range,
-                        kind: this.mapCompletionItem(item.kind)
-                    };
-                    completionItems.push(vscodeItem);
-                }
-                let completionList = new vscode.CompletionList(completionItems, false);
-                resolve(completionList);
-            });
+        const completionPromise = provideCompletion(this.clientMapper, getSimpleLanguage(document.languageId), document, position);
+        return ensureErrorsAreRejected(completionPromise, result => {
+            let range: vscode.Range | undefined = undefined;
+            if (result.linePositionSpan) {
+                range = new vscode.Range(
+                    new vscode.Position(result.linePositionSpan.start.line, result.linePositionSpan.start.character),
+                    new vscode.Position(result.linePositionSpan.end.line, result.linePositionSpan.end.character));
+            }
+            const completionItems: Array<vscode.CompletionItem> = [];
+            for (const item of result.completions) {
+                const vscodeItem: vscode.CompletionItem = {
+                    label: item.displayText,
+                    documentation: item.documentation,
+                    filterText: item.filterText,
+                    insertText: item.insertText,
+                    sortText: item.sortText,
+                    range: range,
+                    kind: this.mapCompletionItem(item.kind)
+                };
+                completionItems.push(vscodeItem);
+            }
+
+            const completionList = new vscode.CompletionList(completionItems, false);
+            return completionList;
         });
     }
 
@@ -73,22 +72,32 @@ export class HoverProvider implements vscode.HoverProvider {
     }
 
     provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Hover> {
-        return new Promise<vscode.Hover>((resolve, reject) => {
-            provideHover(this.clientMapper, getSimpleLanguage(document.languageId), document, position).then(result => {
-                let contents = result.isMarkdown
-                    ? new vscode.MarkdownString(result.contents)
-                    : result.contents;
-                let hover = new vscode.Hover(contents, convertToRange(result.range));
-                resolve(hover);
-            });
+        const hoverPromise = provideHover(this.clientMapper, getSimpleLanguage(document.languageId), document, position);
+        return ensureErrorsAreRejected(hoverPromise, result => {
+            const contents = result.isMarkdown
+                ? new vscode.MarkdownString(result.contents)
+                : result.contents;
+            const hover = new vscode.Hover(contents, convertToRange(result.range));
+            return hover;
         });
     }
+}
+
+function ensureErrorsAreRejected<TInterimResult, TFinalResult>(promise: Promise<TInterimResult>, successHandler: { (result: TInterimResult): TFinalResult }): Promise<TFinalResult> {
+    return new Promise<TFinalResult>((resolve, reject) => {
+        promise.then(interimResult => {
+            const finalResult = successHandler(interimResult);
+            resolve(finalResult);
+        }).catch(err => {
+            reject(err);
+        });
+    });
 }
 
 export function registerLanguageProviders(clientMapper: ClientMapper, diagnosticDelay: number): vscode.Disposable {
     const disposables: Array<vscode.Disposable> = [];
 
-    let languages = [ ... notebookCellLanguages, "dotnet-interactive.magic-commands" ];
+    let languages = [...notebookCellLanguages, "dotnet-interactive.magic-commands"];
     disposables.push(vscode.languages.registerCompletionItemProvider(languages, new CompletionItemProvider(clientMapper), ...CompletionItemProvider.triggerCharacters));
     disposables.push(vscode.languages.registerHoverProvider(languages, new HoverProvider(clientMapper)));
     disposables.push(vscode.workspace.onDidChangeTextDocument(e => {

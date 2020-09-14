@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -239,6 +240,26 @@ let d = 567", Language.FSharp.LanguageName()));
             };
 
             responseContent.Should().BeJsonEquivalentTo(expected);
+        }
+
+        [Fact]
+        public async Task get_variables_preserves_property_case()
+        {
+            var server = GetServer();
+            await server.Kernel.SendAsync(new SubmitCode(@"
+var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
+
+
+            var response = await server.HttpClient.GetAsync("/variables/csharp/f");
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            var responseObject = JObject.Parse(responseContent);
+
+            responseObject.Properties()
+                .Select(p => p.Name)
+                .Should()
+                .ContainSingle("Field");
         }
 
         [Fact]
