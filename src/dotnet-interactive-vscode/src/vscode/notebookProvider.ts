@@ -148,7 +148,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         const cellIndex = document.cells.findIndex(c => c === cell);
         if (cellIndex >= 0) {
             const edit = new vscode.WorkspaceEdit();
-            edit.replaceCellMetadata(document.uri, cellIndex, metadata);
+            edit.replaceNotebookCellMetadata(document.uri, cellIndex, metadata);
             await vscode.workspace.applyEdit(edit);
         }
     }
@@ -157,7 +157,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         const cellIndex = document.cells.findIndex(c => c === cell);
         if (cellIndex >= 0) {
             const edit = new vscode.WorkspaceEdit();
-            edit.replaceCellOutput(document.uri, cellIndex, outputs);
+            edit.replaceNotebookCellOutput(document.uri, cellIndex, outputs);
             await vscode.workspace.applyEdit(edit);
         }
     }
