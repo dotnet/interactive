@@ -12,6 +12,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using System.Data;
 using System.Reactive.Disposables;
+using System.Threading;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -23,12 +24,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     {
         private bool _connected = false;
         private readonly string _connectionUri;
+        private readonly string _queryUri;
         private readonly string _connectionString;
         private readonly MsSqlServiceClient serviceClient;
 
         public MsSqlKernel(string name, string connectionString) : base(name)
         {
             _connectionUri = $"connection:{Guid.NewGuid()}";
+            _queryUri = $"untitled:{Guid.NewGuid()}";
             _connectionString = connectionString;
             serviceClient = new MsSqlServiceClient();
             serviceClient.StartProcessAndRedirectIO();
@@ -48,11 +51,16 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             if (!_connected)
             {
-                await serviceClient.ConnectAsync(_connectionUri, _connectionString);
+                var connectResult = await serviceClient.ConnectAsync(_connectionUri, _connectionString);
+                if (!connectResult)
+                {
+                    await context.DisplayAsync("Failed to connect to database.");
+                    return;
+                }
                 _connected = true;
             }
 
-            var queryResult = await serviceClient.ExecuteQueryStringAsync("", command.Code);
+            var queryResult = await serviceClient.ExecuteQueryStringAsync(_connectionUri, command.Code);
 
             var processedResults = await context.DisplayAsync(queryResult);
 
