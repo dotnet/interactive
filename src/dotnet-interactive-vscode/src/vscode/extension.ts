@@ -3,18 +3,18 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { ClientMapper } from './clientMapper';
+import { ClientMapper } from '../clientMapper';
 
-import { DotNetInteractiveNotebookContentProvider } from './vscode/notebookProvider';
-import { StdioKernelTransport } from './stdioKernelTransport';
-import { registerLanguageProviders } from './vscode/languageProvider';
-import { execute, registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './vscode/commands';
+import { DotNetInteractiveNotebookContentProvider } from './notebookProvider';
+import { StdioKernelTransport } from '../stdioKernelTransport';
+import { registerLanguageProviders } from './languageProvider';
+import { execute, registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
 
-import { IDotnetAcquireResult } from './interfaces/dotnet';
-import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
+import { IDotnetAcquireResult } from '../interfaces/dotnet';
+import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
-import compareVersions = require("../node_modules/compare-versions");
-import { processArguments } from './utilities';
+import compareVersions = require("compare-versions");
+import { processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 
 export async function activate(context: vscode.ExtensionContext) {

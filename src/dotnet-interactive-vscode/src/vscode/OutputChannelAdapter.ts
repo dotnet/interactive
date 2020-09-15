@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ReportChannel } from "./interfaces/vscode";
+import { ReportChannel } from "../interfaces/vscode";
 
 export class OutputChannelAdapter implements ReportChannel {
 
