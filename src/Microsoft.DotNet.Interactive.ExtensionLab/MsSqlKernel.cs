@@ -62,14 +62,13 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             var queryResult = await serviceClient.ExecuteQueryStringAsync(_connectionUri, command.Code);
 
-            var processedResults = await context.DisplayAsync(queryResult);
+            var processedResults = ProcessResults(queryResult);
 
             await context.DisplayAsync(processedResults);
         }
 
-        private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> Execute(SimpleExecuteResult result)
+        private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> ProcessResults(SimpleExecuteResult result)
         {
-            var values = new object[result.ColumnInfo.Length];
             var columnNames = Enumerable.Range(0, result.ColumnInfo.Length).Select(i => result.ColumnInfo[i].ColumnName).ToArray();
 
             // holds the result of a single statement within the query
