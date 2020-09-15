@@ -33,7 +33,7 @@
     "onCommand:dotnet-interactive.openNotebook",
     "onCommand:dotnet-interactive.saveAsNotebook"
   ],
-  "main": "./out/extension.js",
+  "main": "./out/vscode/extension.js",
   "extensionDependencies": [
     "ms-dotnettools.vscode-dotnet-runtime"
   ],
@@ -99,7 +99,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.146104",
+          "default": "1.0.146501",
           "description": "The minimum required version of the .NET Interactive tool."
         }
       }
