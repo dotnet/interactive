@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         {
 
             [Fact]
-            public void does_not_double_encode_json_string()
+            public void does_not_double_encode_HTML_string()
             {
                 var htmlString = "<b>Text</b>";
                 var formatter = HtmlFormatter.GetPreferredFormatterFor<string>();
