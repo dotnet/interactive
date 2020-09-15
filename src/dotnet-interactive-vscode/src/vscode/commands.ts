@@ -8,7 +8,8 @@ import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
 import { ClientMapper } from '../clientMapper';
 import { getEol, isUnsavedNotebook } from './vscodeUtilities';
-import { toNotebookDocument, DotNetInteractiveNotebookContentProvider } from './notebookProvider';
+import { toNotebookDocument } from './notebookContentProvider';
+import { updateCellMetadata } from './notebookKernel';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, dotnetPath: string) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
@@ -26,7 +27,7 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, do
         const launchOptions = await acquireDotnetInteractive(
             args,
             minDotNetInteractiveVersion!,
-            context.globalStoragePath,
+            context.globalStorageUri.fsPath,
             getInteractiveVersion,
             createToolManifest,
             async (version: string) => { await vscode.window.showInformationMessage(`Installing .NET Interactive version ${version}...`); },
@@ -95,7 +96,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
 
         const d = document;
         document.cells.forEach(async cell => {
-            await DotNetInteractiveNotebookContentProvider.updateCellMetadata(d, cell, { runState: vscode.NotebookCellRunState.Idle });
+            await updateCellMetadata(d, cell, { runState: vscode.NotebookCellRunState.Idle });
         });
 
         clientMapper.closeClient(document.uri);

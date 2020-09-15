@@ -3,41 +3,21 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ClientMapper } from './../clientMapper';
+import { ClientMapper } from '../clientMapper';
 import { notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook } from '../interactiveNotebook';
 import { Eol } from '../interfaces';
-import { CellOutput, ReportChannel } from '../interfaces/vscode';
-import { Diagnostic, DiagnosticSeverity, NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookCellTextOutput, NotebookDocument } from './../contracts';
-import { getEol, isUnsavedNotebook, toVsCodeDiagnostic } from './vscodeUtilities';
-import { getDiagnosticCollection } from './diagnostics';
+import { NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookCellTextOutput, NotebookDocument } from '../contracts';
+import { getEol, isUnsavedNotebook } from './vscodeUtilities';
+
 import { isDisplayOutput, isErrorOutput, isTextOutput } from '../utilities';
 
-export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider, vscode.NotebookKernel, vscode.NotebookKernelProvider<DotNetInteractiveNotebookContentProvider> {
+export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
+
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
-
     eol: Eol;
-    label: string;
-    preloads?: vscode.Uri[] | undefined;
 
-    constructor(readonly clientMapper: ClientMapper, private diagnosticChannel: ReportChannel, apiBootstrapperUri: vscode.Uri) {
-        this.label = ".NET Interactive";
+    constructor(readonly clientMapper: ClientMapper) {
         this.eol = getEol();
-        this.preloads = [apiBootstrapperUri];
-    }
-
-
-    provideKernels(document: vscode.NotebookDocument, token: vscode.CancellationToken): vscode.ProviderResult<DotNetInteractiveNotebookContentProvider[]> {
-        return [this];
-    }
-
-    async executeAllCells(document: vscode.NotebookDocument): Promise<void> {
-        for (let cell of document.cells) {
-            await this.executeCell(document, cell);
-        }
-    }
-
-    cancelAllCellsExecution(document: vscode.NotebookDocument) {
-        // not supported
     }
 
     async openNotebook(uri: vscode.Uri, openContext: vscode.NotebookDocumentOpenContext): Promise<vscode.NotebookData> {
@@ -87,7 +67,6 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     }
 
     async resolveNotebook(document: vscode.NotebookDocument, webview: vscode.NotebookCommunication): Promise<void> {
-
         webview.onDidReceiveMessage(async (message) => {
             switch (message.command) {
                 case "getHttpApiEndpoint":
@@ -113,58 +92,6 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     }
 
     onDidChangeNotebook: vscode.Event<vscode.NotebookDocumentEditEvent> = this.onDidChangeNotebookEventEmitter.event;
-
-    async executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell): Promise<void> {
-        const startTime = Date.now();
-        DotNetInteractiveNotebookContentProvider.updateCellMetadata(document, cell, {
-            runStartTime: startTime,
-            runState: vscode.NotebookCellRunState.Running,
-        });
-        DotNetInteractiveNotebookContentProvider.updateCellOutputs(document, cell, []);
-        let client = await this.clientMapper.getOrAddClient(document.uri);
-        let source = cell.document.getText();
-        function outputObserver(outputs: Array<CellOutput>) {
-            DotNetInteractiveNotebookContentProvider.updateCellOutputs(document, cell, outputs);
-        }
-
-        let diagnosticCollection = getDiagnosticCollection(cell.uri);
-        function diagnosticObserver(diags: Array<Diagnostic>) {
-            diagnosticCollection.set(cell.uri, diags.filter(d => d.severity !== DiagnosticSeverity.Hidden).map(toVsCodeDiagnostic));
-        }
-        return client.execute(source, getSimpleLanguage(cell.language), outputObserver, diagnosticObserver).then(async () => {
-            await DotNetInteractiveNotebookContentProvider.updateCellMetadata(document, cell, {
-                runState: vscode.NotebookCellRunState.Success,
-                lastRunDuration: Date.now() - startTime,
-            });
-        }).catch(async () => {
-            await DotNetInteractiveNotebookContentProvider.updateCellMetadata(document, cell, {
-                runState: vscode.NotebookCellRunState.Error,
-                lastRunDuration: Date.now() - startTime,
-            });
-        });
-    }
-
-    static async updateCellMetadata(document: vscode.NotebookDocument, cell: vscode.NotebookCell, metadata: vscode.NotebookCellMetadata) {
-        const cellIndex = document.cells.findIndex(c => c === cell);
-        if (cellIndex >= 0) {
-            const edit = new vscode.WorkspaceEdit();
-            edit.replaceNotebookCellMetadata(document.uri, cellIndex, metadata);
-            await vscode.workspace.applyEdit(edit);
-        }
-    }
-
-    static async updateCellOutputs(document: vscode.NotebookDocument, cell: vscode.NotebookCell, outputs: vscode.CellOutput[]) {
-        const cellIndex = document.cells.findIndex(c => c === cell);
-        if (cellIndex >= 0) {
-            const edit = new vscode.WorkspaceEdit();
-            edit.replaceNotebookCellOutput(document.uri, cellIndex, outputs);
-            await vscode.workspace.applyEdit(edit);
-        }
-    }
-
-    cancelCellExecution(document: vscode.NotebookDocument, cell: vscode.NotebookCell) {
-        // not supported
-    }
 
     async backupNotebook(document: vscode.NotebookDocument, context: vscode.NotebookDocumentBackupContext, cancellation: vscode.CancellationToken): Promise<vscode.NotebookDocumentBackup> {
         const extension = path.extname(document.uri.fsPath);
