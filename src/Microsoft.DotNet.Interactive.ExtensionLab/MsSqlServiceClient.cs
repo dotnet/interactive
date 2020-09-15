@@ -91,6 +91,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return result;
         }
 
+        public async void RegisterConnectionCompletionHandler(Action<ConnectionInfoSummary> handler)
+        {
+            await Task.CompletedTask;
+        }
+
         public void Dispose()
         {
             rpc.Dispose();
@@ -98,6 +103,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         }
     }
 
+#region Protocol Objects
     public class ConnectParams
     {
         public string OwnerUri;
@@ -166,7 +172,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     {
         public string title;
         public string Command;
-        public string[] arguments; //any
+        public string[] arguments;
     }
 
     public class TextEdit
@@ -199,28 +205,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public string workDoneToken; //ProgressToken = number | string
         public string partialResultToken; //ProgressToken = number | string
         public CompletionContext context;
-
-    }
-
-    public struct ExecutionPlanOptions
-    {
-
-        /// <summary>
-        /// Setting to return the actual execution plan as XML
-        /// </summary>
-        public bool IncludeActualExecutionPlanXml { get; set; }
-
-        /// <summary>
-        /// Setting to return the estimated execution plan as XML
-        /// </summary>
-        public bool IncludeEstimatedExecutionPlanXml { get; set; }
-    }
-
-    public class ExecuteQueryRequest
-    {
-        public ExecuteQueryRequest()
-        {
-        }
     }
 
     public class ConnectionInfoSummary
@@ -352,4 +336,148 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         /// </summary>
         public long RowId { get; set; }
     }
+
+    public class ServerInfo
+    {
+        /// <summary>
+        /// The major version of the SQL Server instance.
+        /// </summary>
+        public int ServerMajorVersion { get; set; }
+
+        /// <summary>
+        /// The minor version of the SQL Server instance.
+        /// </summary>
+        public int ServerMinorVersion { get; set; }
+
+        /// <summary>
+        /// The build of the SQL Server instance.
+        /// </summary>
+        public int ServerReleaseVersion { get; set; }
+
+        /// <summary>
+        /// The ID of the engine edition of the SQL Server instance.
+        /// </summary>
+        public int EngineEditionId { get; set; }
+
+        /// <summary>
+        /// String containing the full server version text.
+        /// </summary>
+        public string ServerVersion { get; set; }
+
+        /// <summary>
+        /// String describing the product level of the server.
+        /// </summary>
+        public string ServerLevel { get; set; }
+
+        /// <summary>
+        /// The edition of the SQL Server instance.
+        /// </summary>
+        public string ServerEdition { get; set; }
+
+        /// <summary>
+        /// Whether the SQL Server instance is running in the cloud (Azure) or not.
+        /// </summary>
+        public bool IsCloud { get; set; }
+
+        /// <summary>
+        /// The version of Azure that the SQL Server instance is running on, if applicable.
+        /// </summary>
+        public int AzureVersion { get; set; }
+
+        /// <summary>
+        /// The Operating System version string of the machine running the SQL Server instance.
+        /// </summary>
+        public string OsVersion { get; set; }
+
+        /// <summary>
+        /// The Operating System version string of the machine running the SQL Server instance.
+        /// </summary>
+        public string MachineName { get; set; }
+
+        /// <summary>
+        /// Server options
+        /// </summary>
+        public Dictionary<string, object> Options { get; set; }
+    }
+
+    public class ConnectionCompleteParams
+    {
+        /// <summary>
+        /// A URI identifying the owner of the connection. This will most commonly be a file in the workspace
+        /// or a virtual file representing an object in a database.         
+        /// </summary>
+        public string OwnerUri { get; set;  }
+
+        /// <summary>
+        /// A GUID representing a unique connection ID
+        /// </summary>
+        public string ConnectionId { get; set; }
+
+        /// <summary>
+        /// Gets or sets any detailed connection error messages.
+        /// </summary>
+        public string Messages { get; set; }
+
+        /// <summary>
+        /// Error message returned from the engine for a connection failure reason, if any.
+        /// </summary>
+        public string ErrorMessage { get; set; }
+
+        /// <summary>
+        /// Error number returned from the engine for connection failure reason, if any.
+        /// </summary>
+        public int ErrorNumber { get; set; }
+
+        /// <summary>
+        /// Information about the connected server.
+        /// </summary>
+        public ServerInfo ServerInfo { get; set; }
+
+        /// <summary>
+        /// Gets or sets the actual Connection established, including Database Name
+        /// </summary>
+        public ConnectionSummary ConnectionSummary { get; set; }
+
+        /// <summary>
+        /// The type of connection that this notification is for
+        /// </summary>
+        public string Type { get; set; }
+    }
+
+    public interface IConnectionSummary
+    {
+        /// <summary>
+        /// Gets or sets the connection server name
+        /// </summary>
+        string ServerName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the connection database name
+        /// </summary>
+        string DatabaseName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the connection user name
+        /// </summary>
+        string UserName { get; set; }
+    }
+
+    public class ConnectionSummary : IConnectionSummary
+    {
+        /// <summary>
+        /// Gets or sets the connection server name
+        /// </summary>
+        public virtual string ServerName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the connection database name
+        /// </summary>
+        public virtual string DatabaseName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the connection user name
+        /// </summary>
+        public virtual string UserName { get; set; }
+    }
+#endregion
 }

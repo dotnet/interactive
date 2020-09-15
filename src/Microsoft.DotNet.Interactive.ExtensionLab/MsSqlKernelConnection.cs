@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     public class MsSqlKernelConnection : ConnectKernelCommand<SqlConnectionOptions>
     {
         public MsSqlKernelConnection()
-            : base("mssql", "Connects to a Microsoft SQL Server database")
+            : base("mssql", "Connects to a Microsoft SQL Server database - Dev version")
         {
             Add(new Argument<string>("connectionString", "The connection string used to connect to the database"));
         }
