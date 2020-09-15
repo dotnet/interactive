@@ -67,25 +67,20 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             await context.DisplayAsync(processedResults);
         }
 
-        private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> ProcessResults(SimpleExecuteResult result)
+        private List<string[]> ProcessResults(SimpleExecuteResult result)
         {
-            var columnNames = Enumerable.Range(0, result.ColumnInfo.Length).Select(i => result.ColumnInfo[i].ColumnName).ToArray();
+            var resultTable = new List<string[]>();
 
-            // holds the result of a single statement within the query
-            var resultTable = new List<(string, object)[]>();
+            var columnNames = result.ColumnInfo.Select(info => info.ColumnName).ToArray();
+            resultTable.Add(columnNames);
 
             foreach (CellValue[] cellRow in result.Rows)
             {
-                var resultRow = new (string, object)[cellRow.Length];
-                for (var i = 0; i < cellRow.Length; i++)
-                {
-                    resultRow[i] = (columnNames[i], cellRow[i]);
-                }
-
-                resultTable.Add(resultRow);
+                var stringRow = cellRow.Select(row => row.DisplayValue).ToArray();
+                resultTable.Add(stringRow);
             }
 
-            yield return resultTable;
+            return resultTable;
         }
 
         public Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
