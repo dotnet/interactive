@@ -41,16 +41,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public async Task<bool> ConnectAsync(string ownerUri, string connectionStr)
         {
-            var connStrBuilder = new SqlConnectionStringBuilder(connectionStr);
             var connectionOptions = new Dictionary<string, string>();
-            foreach (string optionKey in connStrBuilder.Keys)
-            {
-                object optionValue;
-                if (connStrBuilder.TryGetValue(optionKey, out optionValue))
-                {
-                    connectionOptions.Add(optionKey, optionValue.ToString());
-                }
-            }
+            connectionOptions.Add("ConnectionString", connectionStr);
+
             var connectionDetails = new ConnectionDetails() { Options = connectionOptions };
             var connectionParams = new ConnectParams() { OwnerUri = ownerUri, Connection = connectionDetails };
 
