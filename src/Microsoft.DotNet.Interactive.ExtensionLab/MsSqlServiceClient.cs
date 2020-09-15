@@ -13,6 +13,7 @@ using Microsoft.DotNet.Interactive.Utility;
 using Newtonsoft.Json;
 using StreamJsonRpc;
 using System.Data.Common;
+using System.Data;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -72,7 +73,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public async Task<SimpleExecuteResult> ExecuteQueryStringAsync(string ownerUri, string queryString)
         {
-            var queryParams = new SimpleExecuteParams() { OwnerUri = ownerUri, Query = queryString };
+            var queryParams = new SimpleExecuteParams() { OwnerUri = ownerUri, QueryString = queryString };
             var result = await rpc.InvokeWithParameterObjectAsync<SimpleExecuteResult>("query/simpleexecute", queryParams);
             return result;
         }
@@ -138,7 +139,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     public class SimpleExecuteParams
     {
         public string OwnerUri;
-        public string Query;
+        public string QueryString;
     }
 
     public class CompletionItem
@@ -270,8 +271,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     public class SimpleExecuteResult
     {
         public int RowCount;
-        public DbColumn[] ColumnInfo;
-        public DbCellValue[][] Rows;
+        public ColumnInfo[] ColumnInfo;
+        public CellValue[][] Rows;
     }
 
     public class QueryExecuteSubsetResult
@@ -298,10 +299,43 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         /// <summary>
         /// 2D array of the cell values requested from result set
         /// </summary>
-        public DbCellValue[][] Rows { get; set; }
+        public CellValue[][] Rows { get; set; }
     }
 
-    public class DbCellValue
+    public class ColumnInfo
+    {
+		public bool? AllowDBNull { get; set; }
+		public string BaseCatalogName { get; set; }
+		public string BaseColumnName { get; set; }
+		public string BaseSchemaName { get; set; }
+		public string BaseServerName { get; set; }
+		public string BaseTableName { get; set; }
+		public string ColumnName { get; set; }
+		public int? ColumnOrdinal { get; set; }
+		public int? ColumnSize { get; set; }
+		public bool? IsAliased { get; set; }
+		public bool? IsAutoIncrement { get; set; }
+		public bool? IsExpression { get; set; }
+		public bool? IsHidden { get; set; }
+		public bool? IsIdentity { get; set; }
+		public bool? IsKey { get; set; }
+		public bool? IsBytes { get; set; }
+		public bool? IsChars { get; set; }
+		public bool? IsSqlVariant { get; set; }
+		public bool? IsUdt { get; set; }
+		public string DataType { get; set; }
+		public bool? IsXml { get; set; }
+		public bool? IsJson { get; set; }
+		public bool? IsLong { get; set; }
+		public bool? IsReadOnly { get; set; }
+		public bool? IsUnique { get; set; }
+		public int? NumericPrecision { get; set; }
+		public int? NumericScale { get; set; }
+		public string UdtAssemblyQualifiedName { get; set; }
+		public string DataTypeName { get; set; }
+	}
+
+    public class CellValue
     {
         /// <summary>
         /// Display value for the cell, suitable to be passed back to the client
