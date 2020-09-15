@@ -67,17 +67,15 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             await context.DisplayAsync(processedResults);
         }
 
-        private List<string[]> ProcessResults(SimpleExecuteResult result)
+        private IEnumerable<IEnumerable<(string name, string value)>> ProcessResults(SimpleExecuteResult result)
         {
-            var resultTable = new List<string[]>();
-
             var columnNames = result.ColumnInfo.Select(info => info.ColumnName).ToArray();
-            resultTable.Add(columnNames);
+            var resultTable = new List<(string, string)[]>();
 
             foreach (CellValue[] cellRow in result.Rows)
             {
-                var stringRow = cellRow.Select(row => row.DisplayValue).ToArray();
-                resultTable.Add(stringRow);
+                var resultRow = Enumerable.Range(0, cellRow.Length).Select(i => (columnNames[i], cellRow[i].DisplayValue)).ToArray();
+                resultTable.Add(resultRow);
             }
 
             return resultTable;
