@@ -24,14 +24,12 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     {
         private bool _connected = false;
         private readonly string _connectionUri;
-        private readonly string _queryUri;
         private readonly string _connectionString;
         private readonly MsSqlServiceClient serviceClient;
 
         public MsSqlKernel(string name, string connectionString) : base(name)
         {
             _connectionUri = $"connection:{Guid.NewGuid()}";
-            _queryUri = $"untitled:{Guid.NewGuid()}";
             _connectionString = connectionString;
             serviceClient = new MsSqlServiceClient();
             serviceClient.StartProcessAndRedirectIO();
@@ -60,6 +58,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 _connected = true;
             }
 
+            Thread.Sleep(10000);
+
             var queryResult = await serviceClient.ExecuteQueryStringAsync(_connectionUri, command.Code);
 
             var processedResults = await context.DisplayAsync(queryResult);
@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             // holds the result of a single statement within the query
             var resultTable = new List<(string, object)[]>();
 
-            foreach (DbCellValue[] cellRow in result.Rows)
+            foreach (CellValue[] cellRow in result.Rows)
             {
                 var resultRow = new (string, object)[cellRow.Length];
                 for (var i = 0; i < cellRow.Length; i++)
