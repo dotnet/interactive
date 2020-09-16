@@ -13,6 +13,8 @@ using Microsoft.DotNet.Interactive.Events;
 using System.Data;
 using System.Reactive.Disposables;
 using System.Threading;
+using Microsoft.DotNet.Interactive.Formatting;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -62,23 +64,29 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             var queryResult = await serviceClient.ExecuteQueryStringAsync(_connectionUri, command.Code);
 
-            var processedResults = ProcessResults(queryResult);
+            var tableString = GetTableStringForResult(queryResult);
 
-            await context.DisplayAsync(processedResults);
+            await context.DisplayAsync(tableString, HtmlFormatter.MimeType);
         }
 
-        private IEnumerable<IEnumerable<(string name, string value)>> ProcessResults(SimpleExecuteResult result)
+        private TabularJsonString GetTableStringForResult(SimpleExecuteResult result)
         {
+            var data = new JArray();
             var columnNames = result.ColumnInfo.Select(info => info.ColumnName).ToArray();
-            var resultTable = new List<(string, string)[]>();
-
             foreach (CellValue[] cellRow in result.Rows)
             {
-                var resultRow = Enumerable.Range(0, cellRow.Length).Select(i => (columnNames[i], cellRow[i].DisplayValue)).ToArray();
-                resultTable.Add(resultRow);
+                var rowObj = new JObject();
+                for (int i = 0; i < cellRow.Length; i++)
+                {
+                    var cell = cellRow[i];
+                    var fromObject = JToken.FromObject(cell.DisplayValue);
+                    rowObj.Add(columnNames[i], fromObject);
+                }
+                data.Add(rowObj);
             }
 
-            return resultTable;
+            var fields = result.ColumnInfo.ToDictionary(column => column.ColumnName, column => Type.GetType(column.DataType));
+            return TabularJsonString.Create(fields, data);
         }
 
         public Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
