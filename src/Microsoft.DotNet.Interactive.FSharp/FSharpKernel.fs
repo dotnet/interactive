@@ -16,6 +16,7 @@ open Microsoft.CodeAnalysis
 open Microsoft.CodeAnalysis.Tags
 open Microsoft.CodeAnalysis.Text
 open Microsoft.DotNet.Interactive
+open Microsoft.DotNet.Interactive.Formatting
 open Microsoft.DotNet.Interactive.Commands
 open Microsoft.DotNet.Interactive.Events
 open Microsoft.DotNet.Interactive.Extensions
@@ -24,6 +25,7 @@ open Microsoft.DotNet.Interactive.Formatting
 open FSharp.Compiler.Interactive.Shell
 open FSharp.Compiler.Scripting
 open FSharp.Compiler.SourceCodeServices
+open FsAutoComplete
 
 [<AbstractClass>]
 type FSharpKernelBase () as this =
@@ -152,6 +154,122 @@ type FSharpKernelBase () as this =
             context.Publish(CompletionsProduced(completionItems, requestCompletions))
         }
 
+    let handleRequestHoverText (requestHoverText: RequestHoverText) (context: KernelInvocationContext) =
+        async {
+            let! (parse, check, _ctx) = script.Value.Fsi.ParseAndCheckInteraction(requestHoverText.Code)
+
+            let res = FsAutoComplete.ParseAndCheckResults(parse, check, EntityCache())
+            let text = FSharp.Compiler.Text.SourceText.ofString requestHoverText.Code
+
+            // seem to be off by one
+            let line = requestHoverText.LinePosition.Line + 1
+            let col = requestHoverText.LinePosition.Character + 1
+
+            let fsiAssemblyRx = System.Text.RegularExpressions.Regex @"^\s*Assembly:\s+FSI-ASSEMBLY\s*$"
+
+            let lineContent = text.GetLineString(line - 1)
+            let! value =
+                async {
+                    match! res.TryGetSymbolUse (FSharp.Compiler.Range.mkPos line col) lineContent with
+                    | Ok (mine, _others) ->
+                        let fullName = 
+                            match mine with
+                            | FsAutoComplete.Patterns.SymbolUse.Val sym ->
+                                match sym.DeclaringEntity with
+                                | Some ent when ent.IsFSharpModule ->   
+                                    match ent.TryFullName with
+                                    | Some _ -> Some sym.FullName
+                                    | None -> None
+                                | _ -> None
+                            | _ ->
+                                None
+
+                        match fullName with
+                        | Some name ->
+                            let expr = if name.StartsWith "Stdin." then name.Substring 6 else name
+                            try return script.Value.Fsi.EvalExpression(expr) |> Some
+                            with _ -> return None
+                        | None -> return None
+
+                    | Error _ ->
+                        return None
+                }
+            
+            match! res.TryGetToolTipEnhanced (FSharp.Compiler.Range.mkPos line col) lineContent with
+            | Result.Ok (startCol, endCol, tip, signature, footer, typeDoc) ->
+                let fsiModuleRx = System.Text.RegularExpressions.Regex @"FSI_[0-9]+\."
+                let stdinRx = System.Text.RegularExpressions.Regex @"Stdin\."
+
+                let results = 
+                    FsAutoComplete.TipFormatter.formatTipEnhanced 
+                        tip signature footer typeDoc 
+                        FsAutoComplete.TipFormatter.FormatCommentStyle.Legacy 
+                    |> Seq.concat
+                    |> Seq.map (fun (signature, comment, footer) ->     
+                        // make footer look like in Ionide
+                        let newFooter = 
+                            footer.Split([|'\n'|], StringSplitOptions.RemoveEmptyEntries) 
+                            |> Seq.filter (fsiAssemblyRx.IsMatch >> not)
+                            |> Seq.map (sprintf "*%s*") |> String.concat "\n\n----\n"
+
+                        let markdown = 
+                            String.concat "\n\n----\n" [
+                                if not (String.IsNullOrWhiteSpace signature) then
+                                    let code =
+                                        match value with
+                                        // don't show function-values
+                                        | Some (Some value) when not (Reflection.FSharpType.IsFunction value.ReflectionType) -> 
+                                            let valueString = sprintf "%0A" value.ReflectionValue
+                                            let lines = valueString.Split([|'\n'|], StringSplitOptions.RemoveEmptyEntries) |> Array.toList
+                                            
+                                            match lines with
+                                            | [] -> 
+                                                signature
+                                            | [line] ->
+                                                sprintf "%s // %s" signature line
+                                            | first :: rest ->
+                                                String.concat "\n" [
+                                                    let prefix = sprintf "%s " signature
+                                                    yield sprintf "%s// %s" prefix first
+
+                                                    let ws = String(' ', prefix.Length)
+
+                                                    for line in rest do
+                                                        yield sprintf "%s// %s" ws line
+                                                ]
+                                        | Some None ->
+                                            sprintf "%s // null" signature
+                                        | _ -> 
+                                            signature
+
+                                    sprintf "```fsharp\n%s\n```" code
+
+                                if not (String.IsNullOrWhiteSpace comment) then
+                                    comment
+
+                                if not (String.IsNullOrWhiteSpace newFooter) then
+                                    newFooter
+                            ]
+
+                        FormattedValue("text/markdown", stdinRx.Replace(fsiModuleRx.Replace(markdown, ""), ""))
+                    )
+                    |> Seq.toArray
+                
+                let sp = LinePosition(requestHoverText.LinePosition.Line, startCol)
+                let ep = LinePosition(requestHoverText.LinePosition.Line, endCol)
+                let lps = LinePositionSpan(sp, ep)
+                context.Publish(HoverTextProduced(requestHoverText, results, Nullable lps))
+
+            | Result.Error err ->
+                let sp = LinePosition(requestHoverText.LinePosition.Line, col)
+                let ep = LinePosition(requestHoverText.LinePosition.Line, col)
+                let lps = LinePositionSpan(sp, ep)
+                let reply = [| FormattedValue("text/markdown", "") |]
+                context.Publish(HoverTextProduced(requestHoverText, reply, Nullable lps))
+                ()
+        }
+
+
     let handleRequestDiagnostics (requestDiagnostics: RequestDiagnostics) (context: KernelInvocationContext) =
         async {
             let! (_parseResults, checkFileResults, _checkProjectResults) = script.Value.Fsi.ParseAndCheckInteraction(requestDiagnostics.Code)
@@ -202,6 +320,9 @@ type FSharpKernelBase () as this =
 
     // ideally via IKernelCommandHandler<RequestDiagnostics, but requires https://github.com/dotnet/fsharp/pull/2867
     member _.HandleRequestDiagnosticsAsync(command: RequestDiagnostics, context: KernelInvocationContext) = handleRequestDiagnostics command context |> Async.StartAsTask :> Task
+    
+    // ideally via IKernelCommandHandler<RequestHoverText, but requires https://github.com/dotnet/fsharp/pull/2867
+    member _.HandleRequestHoverText(command: RequestHoverText, context: KernelInvocationContext) = handleRequestHoverText command context |> Async.StartAsTask :> Task
 
     // ideally via IKernelCommandHandler<SubmitCode, but requires https://github.com/dotnet/fsharp/pull/2867
     member _.HandleSubmitCodeAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context |> Async.StartAsTask :> Task
