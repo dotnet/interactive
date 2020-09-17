@@ -63,9 +63,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             Thread.Sleep(10000);
 
             var queryResult = await serviceClient.ExecuteQueryStringAsync(_connectionUri, command.Code);
-
             var tableString = GetTableStringForResult(queryResult);
-
             await context.DisplayAsync(tableString, HtmlFormatter.MimeType);
         }
 
