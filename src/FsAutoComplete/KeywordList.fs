@@ -11,7 +11,7 @@ module KeywordList =
     let keywordTooltips =
       keywordDescriptions
       |> Seq.map (fun kv ->
-        let tip = FSharpToolTipText [FSharpToolTipElement.Single(kv.Key, FSharpXmlDoc.Text kv.Value)]
+        let tip = FSharpToolTipText [FSharpToolTipElement.Single(kv.Key, FSharpXmlDoc.Text ([|kv.Value|], [|""|]))]
         kv.Key, tip)
       |> dict
 
