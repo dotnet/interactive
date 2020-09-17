@@ -105,6 +105,20 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             this.Assent(formattedData, _configuration);
         }
 
+        [Fact]
+        public void can_generate_tabular_json_from_dictionary()
+        {
+            var data = new Dictionary<string,int>
+            {
+                ["one"] = 1,
+                ["two"] = 2
+            };
+
+            var formattedData = data.ToDisplayString(TabularDataFormatter.MimeType);
+
+            this.Assent(formattedData, _configuration);
+        }
+
         public void Dispose()
         {
             Formatter.ResetToDefault();

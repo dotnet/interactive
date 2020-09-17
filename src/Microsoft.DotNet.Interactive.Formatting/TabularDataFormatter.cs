@@ -17,15 +17,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultTabularDataFormatterSet.DefaultFormatters;
 
-
-        public static TabularJsonString ToTabularJsonString<T>(this IEnumerable<T> source)
+        public static TabularJsonString ToTabularJsonString(this IEnumerable source)
         {
             var (schema, data) = Generate(source);
             var tabularDataSet = new TabularDataSet(schema, data);
             return tabularDataSet.ToJson();
         }
 
-        private static (TabularDataSchema schema, JArray data) Generate<T>(IEnumerable<T> source)
+        private static (TabularDataSchema schema, JArray data) Generate(IEnumerable source)
         {
             var schema = new TabularDataSchema();
             var fields = new HashSet<string>();
