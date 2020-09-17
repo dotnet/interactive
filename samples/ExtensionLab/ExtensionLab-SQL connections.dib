@@ -15,7 +15,7 @@ This sample demonstrates how to use the `#!connect` extension
 #!csharp
 
 #i "c:\temp"
-#r "nuget:Microsoft.DotNet.Interactive.ExtensionLab" 
+#r "nuget:Microsoft.DotNet.Interactive.ExtensionLab, *-*"
 
 #!csharp
 
