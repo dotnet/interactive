@@ -102,16 +102,16 @@ namespace Microsoft.DotNet.Interactive
 
         public ResolvedPackageReference GetResolvedPackageReference(string packageName) => _resolvedPackageReferences[packageName];
 
-        private IEnumerable<string> GetPackageManagerLines()
+        private IEnumerable<Tuple<string, string>> GetPackageManagerLines()
         {
             // return restore sources
             foreach( var rs in RestoreSources)
             {
-                yield return $"RestoreSources={rs}";
+                yield return Tuple.Create("i", rs);
             }
             foreach (var pr in RequestedPackageReferences)
             {
-                yield return $"Include={pr.PackageName}, Version={pr.PackageVersion}";
+                yield return Tuple.Create("r", $"Include={pr.PackageName}, Version={pr.PackageVersion}");
             }
         }
 
@@ -196,7 +196,7 @@ namespace Microsoft.DotNet.Interactive
             Log.Info("OnAssemblyLoad: {location}", args.LoadedAssembly.Location);
         }
 
-        private IResolveDependenciesResult Resolve(IEnumerable<string> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
+        private IResolveDependenciesResult Resolve(IEnumerable<Tuple<string, string>> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
         {
             IDependencyManagerProvider iDependencyManager = _dependencies.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
             if (iDependencyManager == null)

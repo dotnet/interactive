@@ -954,9 +954,18 @@ type FormatCommentStyle =
 // --------------------------------------------------------------------------------------
 let private buildFormatComment cmt (formatStyle : FormatCommentStyle) (typeDoc: string option) =
     match cmt with
-    | FSharpXmlDoc.Text s ->
+    | FSharpXmlDoc.Text (rawText, _) ->
         try
             // We create a "fake" XML document in order to use the same parser for both libraries and user code
+            let s =
+                let lines =
+                    seq {
+                        yield "<fake>"
+                        yield! rawText
+                        yield "</fake>"
+                    }
+                String.concat "" lines
+
             let xml = sprintf "<fake>%s</fake>" s
             let doc = XmlDocument()
             doc.LoadXml(xml)
