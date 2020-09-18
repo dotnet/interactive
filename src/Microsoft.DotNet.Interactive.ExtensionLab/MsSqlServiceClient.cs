@@ -37,8 +37,17 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             };
             process.Start();
 
-            rpc = JsonRpc.Attach(process.StandardInput.BaseStream, process.StandardOutput.BaseStream);
+            rpc = new JsonRpc(process.StandardInput.BaseStream, process.StandardOutput.BaseStream);
+
+            var connDelegate = new HandleConnectionDelegate(HandleConnectionCompletion);
+            rpc.AddLocalRpcMethod("connection/complete", connDelegate);
+
+            rpc.StartListening();
         }
+
+        private delegate void HandleConnectionDelegate(ConnectionCompleteParams connParams);
+
+        public event EventHandler<ConnectionCompleteParams> OnConnectionComplete;
 
         public async Task<bool> ConnectAsync(string ownerUri, string connectionStr)
         {
@@ -48,15 +57,13 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             var connectionDetails = new ConnectionDetails() { Options = connectionOptions };
             var connectionParams = new ConnectParams() { OwnerUri = ownerUri, Connection = connectionDetails };
 
-            var result = await rpc.InvokeWithParameterObjectAsync<bool>("connection/connect", connectionParams);
-            return result;
+            return await rpc.InvokeWithParameterObjectAsync<bool>("connection/connect", connectionParams);
         }
 
         public async Task<bool> DisconnectAsync(string ownerUri)
         {
             var disconnectParams = new DisconnectParams() { OwnerUri = ownerUri };
-            var result = await rpc.InvokeWithParameterObjectAsync<bool>("connection/disconnect", disconnectParams);
-            return result;
+            return await rpc.InvokeWithParameterObjectAsync<bool>("connection/disconnect", disconnectParams);
         }
 
         public async Task<CompletionItem[]> ProvideCompletionItemsAsync()
@@ -74,20 +81,18 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public async Task<SimpleExecuteResult> ExecuteQueryStringAsync(string ownerUri, string queryString)
         {
             var queryParams = new SimpleExecuteParams() { OwnerUri = ownerUri, QueryString = queryString };
-            var result = await rpc.InvokeWithParameterObjectAsync<SimpleExecuteResult>("query/simpleexecute", queryParams);
-            return result;
+            return await rpc.InvokeWithParameterObjectAsync<SimpleExecuteResult>("query/simpleexecute", queryParams);
         }
 
         public async Task<QueryExecuteSubsetResult> ExecuteQueryExecuteSubsetAsync(string ownerUri)
         {
             var queryExecuteSubsetParams = new QueryExecuteSubsetParams() { OwnerUri = ownerUri, ResultSetIndex = 0, RowsCount = 1 };
-            var result = await rpc.InvokeWithParameterObjectAsync<QueryExecuteSubsetResult>("query/subset", queryExecuteSubsetParams);
-            return result;
+            return await rpc.InvokeWithParameterObjectAsync<QueryExecuteSubsetResult>("query/subset", queryExecuteSubsetParams);
         }
 
-        public async void RegisterConnectionCompletionHandler(Action<ConnectionInfoSummary> handler)
+        public void HandleConnectionCompletion(ConnectionCompleteParams connectionSummary)
         {
-            await Task.CompletedTask;
+            return;
         }
 
         public void Dispose()
@@ -199,42 +204,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public string workDoneToken; //ProgressToken = number | string
         public string partialResultToken; //ProgressToken = number | string
         public CompletionContext context;
-    }
-
-    public class ConnectionInfoSummary
-    {
-        /**
-		 * URI identifying the owner of the connection
-		 */
-        string ownerUri;
-
-        /**
-		 * connection id returned from service host.
-		 */
-        string connectionId;
-
-        /**
-		 * any diagnostic messages return from the service host.
-		 */
-        string messages;
-
-        /**
-		 * Error message returned from the engine, if any.
-		 */
-        string errorMessage;
-
-        /**
-		 * Error number returned from the engine, if any.
-		 */
-        int errorNumber;
-        /**
-		 * Information about the connected server.
-		 */
-        // serverInfo: ServerInfo;
-        // /**
-        //  * information about the actual connection established
-        //  */
-        // connectionSummary: ConnectionSummary;
     }
 
     public class QueryExecuteSubsetParams
@@ -471,40 +440,22 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public string Type { get; set; }
     }
 
-    public interface IConnectionSummary
+    public class ConnectionSummary
     {
         /// <summary>
         /// Gets or sets the connection server name
         /// </summary>
-        string ServerName { get; set; }
+        public string ServerName { get; set; }
 
         /// <summary>
         /// Gets or sets the connection database name
         /// </summary>
-        string DatabaseName { get; set; }
+        public string DatabaseName { get; set; }
 
         /// <summary>
         /// Gets or sets the connection user name
         /// </summary>
-        string UserName { get; set; }
-    }
-
-    public class ConnectionSummary : IConnectionSummary
-    {
-        /// <summary>
-        /// Gets or sets the connection server name
-        /// </summary>
-        public virtual string ServerName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the connection database name
-        /// </summary>
-        public virtual string DatabaseName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the connection user name
-        /// </summary>
-        public virtual string UserName { get; set; }
+        public string UserName { get; set; }
     }
 #endregion
 }
