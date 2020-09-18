@@ -25,8 +25,11 @@ namespace Microsoft.DotNet.Interactive
 
         public PackageRestoreContext()
         {
-            // By default look in to the package source  "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json"
+            // By default look in to the package sources
+            //    "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json"
+            //    "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json"
             AddRestoreSource("https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json");
+            AddRestoreSource("https://dotnet.myget.org/F/dotnet-try/api/v3/index.json");
             _dependencies = new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots);
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
         }
