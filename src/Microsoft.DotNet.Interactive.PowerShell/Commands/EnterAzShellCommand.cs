@@ -53,6 +53,10 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
                     psKernel.AzShell = azShell;
                     psKernel.RegisterForDisposal(azShell);
                 }
+                else
+                {
+                    azShell.Dispose();
+                }
             }
         }
     }
