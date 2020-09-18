@@ -4,7 +4,7 @@
 ### Install System.Drawing dependencies and virtualenv ###
 ##########################################################
 echo "Installing dependencies..."
-sudo apt install -y libgdiplus virtualenv
+sudo apt install -y libgdiplus virtualenv build-essential libssl-dev libffi-dev python-dev
 echo ""
 
 
