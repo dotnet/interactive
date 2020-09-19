@@ -248,7 +248,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             var userSettings = await ReadCloudShellUserSettings().ConfigureAwait(false);
             if (userSettings?.properties == null || userSettings.properties.storageProfile == null)
             {
-                Console.WriteLine("It seems you haven't setup your cloud shell account yet. Navigate to https://shell.azure.com to complete account setup.");
+                Console.Error.WriteLine("It seems you haven't setup your Azure Cloud Shell account yet. Navigate to https://shell.azure.com to complete account setup.");
                 return false;
             }
 
@@ -729,7 +729,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                     throw new HttpRequestException($"Authentication failed: {authResponsePending.error_description}");
                 }
 
-                Thread.Sleep(deviceCode.interval * 1000);
+                await Task.Delay(deviceCode.interval * 1000);
             }
         }
 
