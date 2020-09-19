@@ -20,8 +20,7 @@ Next, let's load up the `Microsoft.DotNet.Interactive.ExtensionLab` package.
 
 #!csharp
 
-#i "nuget:https://dotnet.myget.org/F/fsharp/api/v2/package"
-#r "nuget:Microsoft.DotNet.Interactive.ExtensionLab,1.0.0-beta.20426.1" 
+#r "nuget:Microsoft.DotNet.Interactive.ExtensionLab,*-*" 
 
 #!markdown
 
