@@ -39,13 +39,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             rpc = new JsonRpc(process.StandardInput.BaseStream, process.StandardOutput.BaseStream);
 
-            var connDelegate = new HandleConnectionDelegate(HandleConnectionCompletion);
-            rpc.AddLocalRpcMethod("connection/complete", connDelegate);
+            rpc.AddLocalRpcMethod("connection/complete", new Action<ConnectionCompleteParams>(connParams => HandleConnectionCompletion(connParams)));
 
             rpc.StartListening();
         }
-
-        private delegate void HandleConnectionDelegate(ConnectionCompleteParams connParams);
 
         public event EventHandler<ConnectionCompleteParams> OnConnectionComplete;
 
@@ -90,9 +87,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return await rpc.InvokeWithParameterObjectAsync<QueryExecuteSubsetResult>("query/subset", queryExecuteSubsetParams);
         }
 
-        public void HandleConnectionCompletion(ConnectionCompleteParams connectionSummary)
+        public void HandleConnectionCompletion(ConnectionCompleteParams connParams)
         {
-            return;
+            Console.WriteLine("Connection ID:" + connParams.ConnectionId);
+            Console.WriteLine("Error message:" + connParams.ErrorMessage);
         }
 
         public void Dispose()
@@ -440,6 +438,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public string Type { get; set; }
     }
 
+    /// <summary>
+    /// Provides high level information about a connection.
+    /// </summary>
     public class ConnectionSummary
     {
         /// <summary>
