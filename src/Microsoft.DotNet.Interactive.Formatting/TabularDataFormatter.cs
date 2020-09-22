@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -16,8 +15,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public const string MimeType = "application/table-schema+json";
 
         internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultTabularDataFormatterSet.DefaultFormatters;
-
-        public static TabularJsonString ToTabularJsonString(this IEnumerable source)
+        
+        public static TabularJsonString ToTabularJsonString<T>(this IEnumerable<T> source)
         {
             var (schema, data) = Generate(source);
             var tabularDataSet = new TabularDataSet(schema, data);
