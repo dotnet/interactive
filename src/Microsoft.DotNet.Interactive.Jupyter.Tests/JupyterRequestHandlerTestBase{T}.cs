@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using Clockwise;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;
@@ -91,10 +90,10 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
         public void Dispose() => _disposables.Dispose();
 
-        protected ICommandScheduler<JupyterRequestContext> CreateScheduler()
+        protected JupyterRequestContextScheduler CreateScheduler()
         {
             var handler = new JupyterRequestContextHandler(Kernel);
-            return CommandScheduler.Create<JupyterRequestContext>(handler.Handle).Trace();
+            return new JupyterRequestContextScheduler(handler.Handle);
         }
     }
 }

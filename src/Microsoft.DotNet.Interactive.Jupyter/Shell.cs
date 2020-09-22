@@ -7,7 +7,6 @@ using System.Reactive.Disposables;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Clockwise;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 using Microsoft.Extensions.Hosting;
@@ -22,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     public class Shell : IHostedService
     {
         private readonly Kernel _kernel;
-        private readonly ICommandScheduler<JupyterRequestContext> _scheduler;
+        private readonly JupyterRequestContextScheduler _scheduler;
         private readonly RouterSocket _shell;
         private readonly PublisherSocket _ioPubSocket;
         private readonly string _shellAddress;
@@ -38,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         public Shell(
             Kernel kernel,
-            ICommandScheduler<JupyterRequestContext> scheduler,
+            JupyterRequestContextScheduler scheduler,
             ConnectionInformation connectionInformation)
         {
             if (connectionInformation == null)

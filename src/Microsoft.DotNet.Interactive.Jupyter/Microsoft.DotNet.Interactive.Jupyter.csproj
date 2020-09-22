@@ -3,10 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <NoWarn>$(NoWarn);8002</NoWarn><!-- Clockwise isn't strongly signed -->
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Clockwise" Version="1.0.261-beta" />
     <PackageReference Include="Markdig.Signed" Version="0.18.3" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.2" />
     <PackageReference Include="NetMQ" Version="4.0.0.207" />

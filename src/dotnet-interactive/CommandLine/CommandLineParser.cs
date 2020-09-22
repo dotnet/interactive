@@ -9,12 +9,9 @@ using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
-using System.Linq;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Clockwise;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
@@ -253,13 +250,11 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
                         .AddSingleton(c =>
                         {
-                            return CommandScheduler.Create<JupyterRequestContext>(delivery => c.GetRequiredService<ICommandHandler<JupyterRequestContext>>()
-                                .Trace()
+                            return new JupyterRequestContextScheduler(delivery => c.GetRequiredService<JupyterRequestContextHandler>()
                                 .Handle(delivery));
                         })
                         .AddSingleton(c => new JupyterRequestContextHandler(
-                                c.GetRequiredService<Kernel>())
-                            .Trace())
+                                c.GetRequiredService<Kernel>()))
                         .AddSingleton<IHostedService, Shell>()
                         .AddSingleton<IHostedService, Heartbeat>();
                     return jupyter(startupOptions, console, startServer, context);

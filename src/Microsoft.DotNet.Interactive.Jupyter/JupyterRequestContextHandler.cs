@@ -4,13 +4,12 @@
 using System.Reactive.Concurrency;
 using System.Threading;
 using System.Threading.Tasks;
-using Clockwise;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
-    public class JupyterRequestContextHandler : ICommandHandler<JupyterRequestContext>
+    public class JupyterRequestContextHandler 
     {
         private readonly ExecuteRequestHandler _executeHandler;
         private readonly CompleteRequestHandler _completeHandler;
@@ -33,31 +32,28 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             _shutdownHandler = new ShutdownRequestHandler(kernel, scheduler);
         }
 
-        public async Task<ICommandDeliveryResult> Handle(
-            ICommandDelivery<JupyterRequestContext> delivery)
+        public async Task Handle(JupyterRequestContext context)
         {
-            switch (delivery.Command.JupyterRequestMessageEnvelope.Content)
+            switch (context.JupyterRequestMessageEnvelope.Content)
             {
                 case ExecuteRequest _:
-                    await _executeHandler.Handle(delivery.Command);
+                    await _executeHandler.Handle(context);
                     break;
                 case CompleteRequest _:
-                    await _completeHandler.Handle(delivery.Command);
+                    await _completeHandler.Handle(context);
                     break;
                 case InterruptRequest _:
-                    await _interruptHandler.Handle(delivery.Command);
+                    await _interruptHandler.Handle(context);
                     break;
                 case IsCompleteRequest _:
-                    await _isCompleteHandler.Handle(delivery.Command);
+                    await _isCompleteHandler.Handle(context);
                     break;
                 case ShutdownRequest _:
-                    await _shutdownHandler.Handle(delivery.Command);
+                    await _shutdownHandler.Handle(context);
                     break;
             }
 
-            delivery.Command.Complete();
-
-            return delivery.Complete();
+            context.Complete();
         }
     }
 }
