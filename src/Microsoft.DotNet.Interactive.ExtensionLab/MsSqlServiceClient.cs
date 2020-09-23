@@ -134,28 +134,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     public class ConnectionDetails
     {
         public Dictionary<string, string> Options;
-
-        // public string Password = "";
-        public string ServerName = "localhost";
-        public string DatabaseName = "tempdb";
-        // public string UserName = "";
-        public string AuthenticationType = "Integrated";
-        // public string ApplicationName = "";
-        // public string WorkstationId = "";
-        // public string ApplicationIntent = "";
-        // public string CurrentLanguage = "";
-        // public string AttachDbFilename = "";
-        // public string FailoverPartner = "";
-        // public string TypeSystemVersion = "";
-        // public string ConnectionString = "";
-        // public string GroupId = "";
-        // public string DatabaseDisplayName = "";
-        // public string AzureAccountToken = "";
-        // public bool IsComparableTo(ConnectionDetails other)
-        // {
-        //     return true;
-        // }
-
     }
 
     public class DisconnectParams
@@ -171,61 +149,61 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
     public class CompletionItem
     {
-        public string label;
-        public int kind;
-        public int[] tags; //CompletionItemTag
-        public string detail;
-        public string documentation; // | MarkupContent
-        public bool deprecated;
-        public bool preselect;
-        public string sortText;
-        public string filterText;
-        public string insertText;
-        int insertTextFormat; //InsertTextFormat
-        TextEdit textEdit;
-        TextEdit[] additionalTextEdits;
-        string[] commitCharacters;
-        CommandArgs command;
-        public string data;
+        public string Label { get; set; }
+        public int Kind { get; set; }
+        public int[] Tags { get; set; }
+        public string Detail { get; set; }
+        public string Documentation { get; set; }
+        public bool Deprecated { get; set; }
+        public bool Preselect { get; set; }
+        public string SortText { get; set; }
+        public string FilterText { get; set; }
+        public string InsertText { get; set; }
+        public int InsertTextFormat { get; set; }
+        public TextEdit TextEdit { get; set; }
+        public TextEdit[] AdditionalTextEdits { get; set; }
+        public string[] CommitCharacters { get; set; }
+        public CommandArgs Command { get; set; }
+        public string Data { get; set; }
     }
 
     public class CommandArgs
     {
-        public string title;
-        public string Command;
-        public string[] arguments;
+        public string Title { get; set; }
+        public string Command { get; set; }
+        public string[] Arguments { get; set; }
     }
 
     public class TextEdit
     {
-        public Range range;
-        public string newText;
+        public Range Range { get; set; }
+        public string NewText { get; set; }
     }
 
 
     public class CompletionContext
     {
-        public int triggerKind; // CompletionTriggerKind
-        public string triggerCharacter;
+        public int TriggerKind { get; set; }
+        public string TriggerCharacter { get; set; }
     }
 
     public class TextDocumentIdentifier
     {
-        public string uri; //DocumentUri
+        public string Uri { get; set; }
     }
 
     public class Position
     {
-        public int line;
-        public int character;
+        public int Line { get; set; }
+        public int Character { get; set; }
     }
     public class CompletionParams
     {
-        public TextDocumentIdentifier textDocument;
-        public Position position;
-        public string workDoneToken; //ProgressToken = number | string
-        public string partialResultToken; //ProgressToken = number | string
-        public CompletionContext context;
+        public TextDocumentIdentifier TextDocument { get; set; }
+        public Position Position { get; set; }
+        public string WorkDoneToken { get; set; }
+        public string PartialResultToken { get; set; }
+        public CompletionContext Context { get; set; }
     }
 
     public class QueryExecuteSubsetParams
