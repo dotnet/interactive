@@ -15,6 +15,7 @@ using System.Reactive.Disposables;
 using System.Threading;
 using Microsoft.DotNet.Interactive.Formatting;
 using Newtonsoft.Json.Linq;
+using System.Collections.Concurrent;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -31,6 +32,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private TaskCompletionSource<ConnectionCompleteParams> _connectionCompleted = new TaskCompletionSource<ConnectionCompleteParams>();
 
+        private ConcurrentDictionary<string, Action<QueryCompleteParams>> _queryHandlers = new ConcurrentDictionary<string, Action<QueryCompleteParams>>();
+
         public MsSqlKernel(string name, string connectionString) : base(name)
         {
             _connectionUri = $"connection:{Guid.NewGuid()}";
@@ -38,6 +41,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             _serviceClient = new MsSqlServiceClient();
 
             _serviceClient.OnConnectionComplete += HandleConnectionComplete;
+            _serviceClient.OnQueryComplete += HandleQueryComplete;
 
             _serviceClient.StartProcessAndRedirectIO();
         }
@@ -54,6 +58,15 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 {
                     _connectionCompleted.SetResult(connParams);
                 }
+            }
+        }
+
+        private void HandleQueryComplete(object sender, QueryCompleteParams queryParams)
+        {
+            Action<QueryCompleteParams> handler;
+            if (_queryHandlers.TryGetValue(queryParams.OwnerUri, out handler))
+            {
+                handler(queryParams);
             }
         }
 
@@ -81,16 +94,16 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 _connected = true;
             }
 
-            var queryResult = await _serviceClient.ExecuteQueryStringAsync(_connectionUri, command.Code);
-            var tableString = GetTableStringForResult(queryResult);
+            var queryResult = await _serviceClient.ExecuteSimpleQueryAsync(_connectionUri, command.Code);
+            var tableString = GetTableStringForSimpleResult(queryResult);
             await context.DisplayAsync(tableString, HtmlFormatter.MimeType);
         }
 
-        private TabularJsonString GetTableStringForResult(SimpleExecuteResult result)
+        private TabularJsonString GetTableStringForSimpleResult(SimpleExecuteResult executeResult)
         {
             var data = new JArray();
-            var columnNames = result.ColumnInfo.Select(info => info.ColumnName).ToArray();
-            foreach (CellValue[] cellRow in result.Rows)
+            var columnNames = executeResult.ColumnInfo.Select(info => info.ColumnName).ToArray();
+            foreach (CellValue[] cellRow in executeResult.Rows)
             {
                 var rowObj = new JObject();
                 for (int i = 0; i < cellRow.Length; i++)
@@ -102,7 +115,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 data.Add(rowObj);
             }
 
-            var fields = result.ColumnInfo.ToDictionary(column => column.ColumnName, column => Type.GetType(column.DataType));
+            var fields = executeResult.ColumnInfo.ToDictionary(column => column.ColumnName, column => Type.GetType(column.DataType));
             return TabularJsonString.Create(fields, data);
         }
 
