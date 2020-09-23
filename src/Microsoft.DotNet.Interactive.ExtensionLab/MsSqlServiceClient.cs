@@ -39,7 +39,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             rpc = new JsonRpc(process.StandardInput.BaseStream, process.StandardOutput.BaseStream);
 
-            rpc.AddLocalRpcMethod("connection/complete", new Action<ConnectionCompleteParams>(connParams => HandleConnectionCompletion(connParams)));
+            var completionMethod = typeof(MsSqlServiceClient).GetMethod(nameof(HandleConnectionCompletion));
+            rpc.AddLocalRpcMethod(
+                handler: completionMethod,
+                target: this,
+                methodRpcSettings: new JsonRpcMethodAttribute("connection/complete")
+                {
+                    UseSingleObjectParameterDeserialization = true
+                });
 
             rpc.StartListening();
         }
