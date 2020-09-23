@@ -46,11 +46,19 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 {
                     UseSingleObjectParameterDeserialization = true
                 });
+            rpc.AddLocalRpcMethod(
+                handler: typeof(MsSqlServiceClient).GetMethod(nameof(HandleQueryCompletion)),
+                target: this,
+                methodRpcSettings: new JsonRpcMethodAttribute("query/complete")
+                {
+                    UseSingleObjectParameterDeserialization = true
+                });
 
             rpc.StartListening();
         }
 
         public event EventHandler<ConnectionCompleteParams> OnConnectionComplete;
+        public event EventHandler<QueryCompleteParams> OnQueryComplete;
 
         public async Task<bool> ConnectAsync(string ownerUri, string connectionStr)
         {
@@ -81,9 +89,15 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return new CompletionItem[0];
         }
 
-        public async Task<SimpleExecuteResult> ExecuteQueryStringAsync(string ownerUri, string queryString)
+        public async Task<ExecuteRequestResult> ExecuteQueryStringAsync(string ownerUri, string queryString)
         {
-            var queryParams = new SimpleExecuteParams() { OwnerUri = ownerUri, QueryString = queryString };
+            var queryParams = new ExecuteStringParams() { OwnerUri = ownerUri, QueryString = queryString };
+            return await rpc.InvokeWithParameterObjectAsync<ExecuteRequestResult>("query/executeString", queryParams);
+        }
+
+        public async Task<SimpleExecuteResult> ExecuteSimpleQueryAsync(string ownerUri, string queryString)
+        {
+            var queryParams = new ExecuteStringParams() { OwnerUri = ownerUri, QueryString = queryString };
             return await rpc.InvokeWithParameterObjectAsync<SimpleExecuteResult>("query/simpleexecute", queryParams);
         }
 
@@ -96,6 +110,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public void HandleConnectionCompletion(ConnectionCompleteParams connParams)
         {
             OnConnectionComplete(this, connParams);
+        }
+
+        public void HandleQueryCompletion(QueryCompleteParams queryParams)
+        {
+            OnQueryComplete(this, queryParams);
         }
 
         public void Dispose()
@@ -144,7 +163,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public string OwnerUri;
     }
 
-    public class SimpleExecuteParams
+    public class ExecuteStringParams
     {
         public string OwnerUri;
         public string QueryString;
@@ -240,11 +259,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public int RowsCount { get; set; }
     }
 
-    public class SimpleExecuteResult
+    public class ExecuteRequestResult
     {
-        public int RowCount;
-        public ColumnInfo[] ColumnInfo;
-        public CellValue[][] Rows;
     }
 
     public class QueryExecuteSubsetResult
@@ -463,5 +479,116 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         /// </summary>
         public string UserName { get; set; }
     }
+
+    /// <summary>
+    /// Parameters to be sent back with a query execution complete event
+    /// </summary>
+    public class QueryCompleteParams
+    {
+        /// <summary>
+        /// URI for the editor that owns the query
+        /// </summary>
+        public string OwnerUri { get; set; }
+
+        /// <summary>
+        /// Summaries of the result sets that were returned with the query
+        /// </summary>
+        public BatchSummary[] BatchSummaries { get; set; }
+    }
+
+    /// <summary>
+    /// Summary of a batch within a query
+    /// </summary>
+    public class BatchSummary
+    {
+        /// <summary>
+        /// Localized timestamp for how long it took for the execution to complete
+        /// </summary>
+        public string ExecutionElapsed { get; set; }
+
+        /// <summary>
+        /// Localized timestamp for when the execution completed.
+        /// </summary>
+        public string ExecutionEnd { get; set; }
+
+        /// <summary>
+        /// Localized timestamp for when the execution started.
+        /// </summary>
+        public string ExecutionStart { get; set; }
+
+        /// <summary>
+        /// Whether or not the batch encountered an error that halted execution
+        /// </summary>
+        public bool HasError { get; set; }
+
+        /// <summary>
+        /// The ID of the result set within the query results
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
+        /// The selection from the file for this batch
+        /// </summary>
+        public SelectionData Selection { get; set; }
+
+        /// <summary>
+        /// The summaries of the result sets inside the batch
+        /// </summary>
+        public ResultSetSummary[] ResultSetSummaries { get; set; }
+    }
+
+    public class SelectionData
+    {
+        public int EndColumn { get; set; }
+
+        public int EndLine { get; set; }
+
+        public int StartColumn { get; set; }
+        public int StartLine { get; set; }
+    }
+
+    /// <summary>
+    /// Represents a summary of information about a result without returning any cells of the results
+    /// </summary>
+    public class ResultSetSummary
+    {
+        /// <summary>
+        /// The ID of the result set within the batch results
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
+        /// The ID of the batch set within the query
+        /// </summary>
+        public int BatchId { get; set; }
+
+        /// <summary>
+        /// The number of rows that are available for the resultset thus far
+        /// </summary>
+        public long RowCount { get; set; }
+
+        /// <summary>
+        /// If true it indicates that all rows have been fetched and the RowCount being sent across is final for this ResultSet
+        /// </summary>
+        public bool Complete { get; set; }
+
+        /// <summary>
+        /// Details about the columns that are provided as solutions
+        /// </summary>
+        public ColumnInfo[] ColumnInfo { get; set; }
+    }
+
+    public class SimpleExecuteParams
+    {
+		public string QueryString { get; set; }
+		public string OwnerUri { get; set; }
+	}
+
+	public class SimpleExecuteResult
+    {
+		public int RowCount;
+		public ColumnInfo[] ColumnInfo;
+		public CellValue[][] Rows;
+	}
 #endregion
 }
