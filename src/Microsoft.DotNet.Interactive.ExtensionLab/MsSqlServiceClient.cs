@@ -39,9 +39,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             rpc = new JsonRpc(process.StandardInput.BaseStream, process.StandardOutput.BaseStream);
 
-            var completionMethod = typeof(MsSqlServiceClient).GetMethod(nameof(HandleConnectionCompletion));
             rpc.AddLocalRpcMethod(
-                handler: completionMethod,
+                handler: typeof(MsSqlServiceClient).GetMethod(nameof(HandleConnectionCompletion)),
                 target: this,
                 methodRpcSettings: new JsonRpcMethodAttribute("connection/complete")
                 {
@@ -96,8 +95,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public void HandleConnectionCompletion(ConnectionCompleteParams connParams)
         {
-            Console.WriteLine("Connection ID:" + connParams.ConnectionId);
-            Console.WriteLine("Error message:" + connParams.ErrorMessage);
+            OnConnectionComplete(this, connParams);
         }
 
         public void Dispose()
