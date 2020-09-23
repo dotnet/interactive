@@ -27,42 +27,61 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         private bool _connected = false;
         private readonly string _connectionUri;
         private readonly string _connectionString;
-        private readonly MsSqlServiceClient serviceClient;
+        private readonly MsSqlServiceClient _serviceClient;
+
+        private TaskCompletionSource<ConnectionCompleteParams> _connectionCompleted = new TaskCompletionSource<ConnectionCompleteParams>();
 
         public MsSqlKernel(string name, string connectionString) : base(name)
         {
             _connectionUri = $"connection:{Guid.NewGuid()}";
             _connectionString = connectionString;
-            serviceClient = new MsSqlServiceClient();
-            serviceClient.StartProcessAndRedirectIO();
+            _serviceClient = new MsSqlServiceClient();
+
+            _serviceClient.OnConnectionComplete += HandleConnectionComplete;
+
+            _serviceClient.StartProcessAndRedirectIO();
+        }
+
+        private void HandleConnectionComplete(object sender, ConnectionCompleteParams connParams)
+        {
+            if (connParams.OwnerUri.Equals(_connectionUri))
+            {
+                if (connParams.ErrorMessage != null)
+                {
+                    _connectionCompleted.SetException(new Exception(connParams.ErrorMessage));
+                }
+                else
+                {
+                    _connectionCompleted.SetResult(connParams);
+                }
+            }
         }
 
         public ValueTask DisposeAsync()
         {
+            _serviceClient.OnConnectionComplete -= HandleConnectionComplete;
+            Task disposeTask;
             if (_connected)
             {
-                return new ValueTask(serviceClient.DisconnectAsync(_connectionUri));
+                disposeTask = _serviceClient.DisconnectAsync(_connectionUri);
             }
-
-            return new ValueTask(Task.CompletedTask);
+            else
+            {
+                disposeTask = Task.CompletedTask;
+            }
+            return new ValueTask(disposeTask);
         }
 
         public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
             if (!_connected)
             {
-                var connectResult = await serviceClient.ConnectAsync(_connectionUri, _connectionString);
-                if (!connectResult)
-                {
-                    await context.DisplayAsync("Failed to connect to database.");
-                    return;
-                }
+                await _serviceClient.ConnectAsync(_connectionUri, _connectionString);
+                await _connectionCompleted.Task;
                 _connected = true;
             }
 
-            Thread.Sleep(10000);
-
-            var queryResult = await serviceClient.ExecuteQueryStringAsync(_connectionUri, command.Code);
+            var queryResult = await _serviceClient.ExecuteQueryStringAsync(_connectionUri, command.Code);
             var tableString = GetTableStringForResult(queryResult);
             await context.DisplayAsync(tableString, HtmlFormatter.MimeType);
         }
