@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return tabularDataSet.ToJson();
         }
 
-        private static (TabularDataSchema schema, JArray data) Generate(IEnumerable source)
+        private static (TabularDataSchema schema, JArray data) Generate<T>(IEnumerable<T> source)
         {
             var schema = new TabularDataSchema();
             var fields = new HashSet<string>();
