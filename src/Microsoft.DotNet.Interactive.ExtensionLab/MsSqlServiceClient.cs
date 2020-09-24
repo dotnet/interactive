@@ -79,12 +79,12 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public async Task<CompletionItem[]> ProvideCompletionItemsAsync()
         {
-            //TextDocumentIdentifier docId = new TextDocumentIdentifier() { uri = "/Users/vasubhog/Desktop/test.sql" };
-            //Position position = new Position() { line = 1, character = 2 };
-            //CompletionContext context = new CompletionContext() { triggerKind = 1, triggerCharacter = null };
-            //var completionParams = new CompletionParams() { textDocument = docId, position = position, workDoneToken = null, context = context, partialResultToken = null };
-            //var result = await rpc.InvokeWithParameterObjectAsync<CompletionItem[]>("textDocument/completion", completionParams);
-            //return result;
+            // TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = "FILENAME" };
+            // Position position = new Position() { Line = 1, Character = 2 };
+            // CompletionContext context = new CompletionContext() { TriggerKind = 1, TriggerCharacter = null };
+            // var completionParams = new CompletionParams() { TextDocument = docId, Position = position, WorkDoneToken = null, Context = context, PartialResultToken = null };
+            // var result = await rpc.InvokeWithParameterObjectAsync<CompletionItem[]>("textDocument/completion", completionParams);
+            // return result;
             await Task.CompletedTask;
             return new CompletionItem[0];
         }
@@ -127,24 +127,24 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 #region Protocol Objects
     public class ConnectParams
     {
-        public string OwnerUri;
-        public ConnectionDetails Connection;
+        public string OwnerUri { get; set; }
+        public ConnectionDetails Connection { get; set; }
     }
 
     public class ConnectionDetails
     {
-        public Dictionary<string, string> Options;
+        public Dictionary<string, string> Options { get; set; }
     }
 
     public class DisconnectParams
     {
-        public string OwnerUri;
+        public string OwnerUri { get; set; }
     }
 
     public class ExecuteStringParams
     {
-        public string OwnerUri;
-        public string QueryString;
+        public string OwnerUri { get; set; }
+        public string QueryString { get; set; }
     }
 
     public class CompletionItem
