@@ -106,6 +106,6 @@ The [nteract Data Explorer](https://blog.nteract.io/designing-the-nteract-data-e
 
 #!csharp
 
-using Microsoft.DotNet.Interactive.ExtensionLab.Data;
+using Microsoft.ML;
 
 housingDataFrame.Explore();

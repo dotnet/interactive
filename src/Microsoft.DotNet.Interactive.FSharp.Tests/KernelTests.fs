@@ -1,47 +1,22 @@
-﻿
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 namespace Microsoft.DotNet.Interactive.FSharp.Tests
 
 open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive.FSharp
-open Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html
 open Xunit
+open FluentAssertions
 open Microsoft.DotNet.Interactive.Commands
-open Microsoft.CodeAnalysis
 open Microsoft.CodeAnalysis.Text
 open Microsoft.DotNet.Interactive.Events
 open System.Collections.Generic
 
-[<AutoOpen>]
-module AssertExtensions =   
-    open System.Text.RegularExpressions
-    
-    let wsRx = Regex @"([a-z_A-Z0-9][ ]+[a-z_A-Z0-9])|([^a-z_A-Z0-9][ ]+[a-z_A-Z0-9])|([a-z_A-Z0-9][ ]+[^a-z_A-Z0-9])|([^a-z_A-Z0-9][ ]+[^a-z_A-Z0-9])"
-    type Assert with
-
-        static member ContainsSubstring(expected : string, actual : seq<string>) =
-            if not (actual |> Seq.exists (fun a -> a.Contains expected)) then
-                raise <| Xunit.Sdk.ContainsException(expected, actual)
-
-        static member ContainsMatching(pattern : string, actual : seq<string>) =
-
-            let expectedPattern = 
-                wsRx.Replace(pattern, fun m ->  
-                    if m.Groups.[1].Success then m.Value.Substring(0, 1) + "[ \t\r\n]+" + m.Value.Substring(2, 1) 
-                    else m.Value.Substring(0, 1) + "[ \t\r\n]*" + m.Value.Substring(2, 1)
-                )
-
-
-
-            let rx = Regex expectedPattern
-            if not (actual |> Seq.exists (fun a -> rx.IsMatch a)) then
-                raise <| Xunit.Sdk.ContainsException(pattern, actual)
-
-
 type KernelTests() =
-    static let withKernel (action : Kernel -> (unit -> seq<KernelEvent>) -> 'a) =
+    let withKernel (action : Kernel -> (unit -> seq<KernelEvent>) -> 'a) =
         use k = new FSharpKernel()
         let mutable all = List<KernelEvent>()
-        use __ = k.KernelEvents.Subscribe(fun e -> lock all (fun () -> all.Add e))
+        k.KernelEvents.Subscribe(fun e -> all.Add e) |> ignore
 
         let getEvents() =
             let evts = all
@@ -50,7 +25,7 @@ type KernelTests() =
 
         action k getEvents
 
-    static let getHoverTexts (line : int) (column : int) (code : #seq<string>)  =
+    let getHoverTexts (line : int) (column : int) (code : #seq<string>)  =
         let code = String.concat "\r\n" code
         withKernel <| fun kernel events ->
             let cmd =
@@ -65,9 +40,9 @@ type KernelTests() =
                 events() 
                 |> Seq.collect (function :? HoverTextProduced as e -> e.Content |> Seq.map (fun v -> v.Value) | _ -> Seq.empty)
                 |> Seq.toArray
+                |> String.concat "\n"
             
             texts
-
 
     [<Fact>]
     member __.``HoverText for Values``() =
@@ -77,7 +52,7 @@ type KernelTests() =
             ]
 
         /// val a : int
-        Assert.ContainsMatching(@"val a : int", texts)
+        texts.Should().Contain(@"val a : int", null)
         
     [<Fact>]
     member __.``HoverText for Keywords``() =
@@ -87,7 +62,7 @@ type KernelTests() =
             ]
 
         /// for
-        Assert.ContainsMatching(@"for", texts)
+        texts.Should().Contain(@"for", null)
         
     [<Fact>]
     member __.``HoverText for Methods``() =
@@ -98,7 +73,7 @@ type KernelTests() =
             ]
 
         // Math.Sin(a: float) : float
-        Assert.ContainsMatching(@"static member Sin: \w+: float \-\> float", texts)
+        texts.Should().ContainAll(@"static member Sin", "a: float", "-> float")
 
     [<Fact>]
     member __.``HoverText for Types``() =
@@ -111,7 +86,7 @@ type KernelTests() =
         // type Math =
         //     static val E : float
         //     ...
-        Assert.ContainsMatching(@"type Math", texts)
+        texts.Should().Contain(@"type Math", null)
         
     [<Fact>]
     member __.``HoverText for Hidden Bindings``() =
@@ -124,7 +99,7 @@ type KernelTests() =
             ]
 
         // val a : float
-        Assert.ContainsMatching(@"val a : float", texts)
+        texts.Should().Contain(@"val a : float", null)
         
         
     [<Fact>]
@@ -135,7 +110,7 @@ type KernelTests() =
             ]
 
         // val int : value:'T -> int (requires member op_Explicit)
-        Assert.ContainsMatching(@"val int: \w+: \^\w+ \( requires static member op_Explicit \) \-\> int", texts)
+        texts.Should().ContainAll("val int:", "^T (requires static member op_Explicit )", "-> int")
         
 
 

@@ -56,8 +56,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
-    <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" PrivateAssets="All"/>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" PrivateAssets="All" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="bin\Debug\netcoreapp3.1\/Microsoft.DotNet.Interactive.ExtensionLab.dll" />
   </ItemGroup>
 
   <ItemGroup>

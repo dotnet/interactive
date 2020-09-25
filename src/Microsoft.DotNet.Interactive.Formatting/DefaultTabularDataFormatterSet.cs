@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -11,9 +12,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 new TabularDataFormatter<IEnumerable>((context, source, writer) =>
                 {
-                    var tabularData = source.ToTabularJsonString();
-                        writer.Write(tabularData.ToString());
-                        return true;
+                    var tabularData = source.Cast<object>().ToTabularJsonString();
+                    writer.Write(tabularData.ToString());
+                    return true;
                 }),
 
                 new TabularDataFormatter<TabularDataSet>((context, source, writer) =>

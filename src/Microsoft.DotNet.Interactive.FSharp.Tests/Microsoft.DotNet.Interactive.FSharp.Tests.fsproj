@@ -11,7 +11,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="ApiTests.fs" />
+    <PackageReference Include="FluentAssertions" Version="5.10.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="HtmlFormatterTests.fs" />
     <Compile Include="KernelTests.fs" />
   </ItemGroup>
 

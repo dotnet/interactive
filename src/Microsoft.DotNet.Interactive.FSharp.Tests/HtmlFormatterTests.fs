@@ -8,7 +8,7 @@ open Microsoft.DotNet.Interactive.Formatting
 open Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html
 open Xunit
 
-type ApiTests() =
+type HtmlFormatterTests() =
 
     let PlainTextBegin = "<div class=\"dni-plaintext\">";
     let PlainTextEnd = "</div>";
