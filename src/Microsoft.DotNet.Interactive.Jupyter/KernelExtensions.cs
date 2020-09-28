@@ -205,7 +205,7 @@ using static {typeof(TopLevelMethods).FullName};
                     supportedDirectives.Commands.AddRange(
                         kernel.Directives.Where(d => !d.IsHidden));
 
-                    await context.DisplayAsync(supportedDirectives);
+                    context.Display(supportedDirectives);
 
                     await kernel.VisitSubkernelsAsync(async k =>
                     {

@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             var results = Execute(dbCommand);
 
-            await context.DisplayAsync(results);
+            context.Display(results);
         }
 
         protected abstract DbConnection OpenConnection();

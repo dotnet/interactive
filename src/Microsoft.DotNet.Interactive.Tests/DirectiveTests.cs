@@ -172,13 +172,15 @@ i");
 
             kernel.AddDirective(new Command("#!wrap")
             {
-                Handler = CommandHandler.Create(async (KernelInvocationContext c) =>
-                {
-                    await c.DisplayAsync("hello!");
+                Handler = CommandHandler.Create((KernelInvocationContext c) =>
+                { 
+                    c.Display("hello!");
 
-                    c.OnComplete(async context =>
+                    c.OnComplete(context =>
                     {
-                        await context.DisplayAsync("goodbye!");
+                        context.Display("goodbye!");
+
+                        return Task.CompletedTask;
                     });
                 })
             });

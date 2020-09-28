@@ -18,11 +18,12 @@ namespace Microsoft.DotNet.Interactive
         {
         }
 
-        public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+        public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
-            await context.DisplayAsync(
+            context.Display(
                 new HtmlString(command.Code),
                 HtmlFormatter.MimeType);
+            return Task.CompletedTask;
         }
     }
 }
