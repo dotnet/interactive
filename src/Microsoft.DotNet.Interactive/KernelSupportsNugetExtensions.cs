@@ -42,15 +42,17 @@ namespace Microsoft.DotNet.Interactive
             };
             iDirective.Handler = CommandHandler.Create<string, KernelInvocationContext>((source, context) =>
             {
-                var kernel = context.HandlingKernel as ISupportNuget;
-                kernel.AddRestoreSource(source.Replace("nuget:", ""));
+                if (context.HandlingKernel is ISupportNuget kernel)
+                {
+                    kernel.AddRestoreSource(source.Replace("nuget:", ""));
 
-                IHtmlContent content = div(
-                    strong("Restore sources"),
-                    ul(kernel.RestoreSources
-                             .Select(s => li(span(s)))));
+                    IHtmlContent content = div(
+                        strong("Restore sources"),
+                        ul(kernel.RestoreSources
+                                 .Select(s => li(span(s)))));
 
-                context.DisplayAsync(content);
+                    context.Display(content);
+                }
             });
             return iDirective;
         }

@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
                             if (showCode)
                             {
-                                await context.DisplayAsync(code);
+                                context.Display(code);
                             }
 
                             cSharpKernel.TryGetVariable(variableName, out DataFrame oldFrame);

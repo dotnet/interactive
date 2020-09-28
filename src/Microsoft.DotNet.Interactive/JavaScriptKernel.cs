@@ -15,13 +15,15 @@ namespace Microsoft.DotNet.Interactive
         public JavaScriptKernel() : base(DefaultKernelName)
         {
         }
-        public async Task HandleAsync(
+        public Task HandleAsync(
             SubmitCode command,
             KernelInvocationContext context)
         {
             var scriptContent = new ScriptContent(command.Code);
 
-            await context.DisplayAsync(scriptContent);
+            context.Display(scriptContent);
+
+            return Task.CompletedTask;
         }
     }
 }

@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.App
             var about = new Command("#!about", "Show version and build information")
             {
                 Handler = CommandHandler.Create<KernelInvocationContext>(
-                    async context => await context.DisplayAsync(VersionSensor.Version()))
+                    context => context.Display(VersionSensor.Version()))
             };
 
             kernel.AddDirective(about);
