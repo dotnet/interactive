@@ -6,8 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 
 using FluentAssertions;
-
-using Microsoft.DotNet.Interactive.App.Http;
+using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
@@ -28,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public void It_loads_content_from_root_provider(Language language)
         {
             var kernel = CreateKernel(language);
-            var provider = new FileProvider(kernel);
+            var provider = new FileProvider(kernel, typeof(Program).Assembly);
 
             var file = provider.GetFileInfo("resources/dotnet-interactive.js");
 
@@ -43,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
 
             var kernel = CreateKernel(language);
-            var provider = new FileProvider(kernel);
+            var provider = new FileProvider(kernel, typeof(Program).Assembly);
 
             var projectDir = DirectoryUtility.CreateDirectory();
 
@@ -75,7 +74,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
 
             var kernel = CreateKernel(language);
-            var provider = new FileProvider(kernel);
+            var provider = new FileProvider(kernel, typeof(Program).Assembly);
 
             var projectDir = DirectoryUtility.CreateDirectory();
             var fileToEmbed = new FileInfo(Path.Combine(projectDir.FullName, "file.txt"));
@@ -109,7 +108,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public void it_cannot_resolve_unregistered_extensions(Language language)
         {
             var kernel = CreateKernel(language);
-            var provider = new FileProvider(kernel);
+            var provider = new FileProvider(kernel, typeof(Program).Assembly);
 
             Action action
                 = () => provider.GetFileInfo("extensions/not_found/resources/file.txt");

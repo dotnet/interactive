@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App.CommandLine;
+using Microsoft.DotNet.Interactive.Http;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.App.Tests

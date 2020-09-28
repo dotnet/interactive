@@ -12,6 +12,7 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.Commands;
+using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.Utility;

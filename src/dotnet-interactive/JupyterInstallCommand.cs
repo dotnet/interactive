@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.App.CommandLine;
+using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Utility;
 using Newtonsoft.Json.Linq;
 

@@ -4,7 +4,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Interactive.App.CommandLine
+namespace Microsoft.DotNet.Interactive.Http
 {
     public class HtmlNotebookFrontedEnvironment : BrowserFrontendEnvironment
     {

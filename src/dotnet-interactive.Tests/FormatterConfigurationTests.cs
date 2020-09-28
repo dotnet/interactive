@@ -7,6 +7,7 @@ using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Newtonsoft.Json.Linq;
 using Pocket;

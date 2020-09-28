@@ -2,13 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.DotNet.Interactive.App.CommandLine;
-using Microsoft.DotNet.Interactive.App.Http;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using Pocket;
 
 namespace Microsoft.DotNet.Interactive.App
@@ -68,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.App
                 var kernel = serviceProvider.GetRequiredService<Kernel>();
                 app.UseStaticFiles(new StaticFileOptions
                 {
-                    FileProvider = new FileProvider(kernel)
+                    FileProvider = new FileProvider(kernel, typeof(Program).Assembly)
                 });
                 app.UseWebSockets();
                 app.UseCors("default");
@@ -83,14 +85,12 @@ namespace Microsoft.DotNet.Interactive.App
                         r.Routes.Add(new HttpApiTunnelingRouter(htmlNotebookFrontedEnvironment));
                     }
 
-                   
-                    var startupOptions = serviceProvider.GetRequiredService<StartupOptions>();
-                    if (startupOptions.EnableHttpApi)
+                    if (StartupOptions.EnableHttpApi)
                     {
                         var httpProbingSettings = serviceProvider.GetRequiredService<HttpProbingSettings>();
 
-                        kernel = kernel.UseHttpApi(startupOptions, httpProbingSettings);
-                      
+                        kernel = kernel.UseHttpApi(StartupOptions.HttpPort, httpProbingSettings);
+
                         if (htmlNotebookFrontedEnvironment == null || htmlNotebookFrontedEnvironment.RequiresAutomaticBootstrapping)
                         {
                             var enableHttp = new SubmitCode("#!enable-http", kernel.Name);

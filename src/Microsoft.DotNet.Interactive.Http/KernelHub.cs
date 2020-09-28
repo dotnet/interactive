@@ -2,16 +2,17 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.DotNet.Interactive.Server;
 
-namespace Microsoft.DotNet.Interactive.App.Http
+namespace Microsoft.DotNet.Interactive.Http
 {
     public class KernelHub : Hub
     {
         private readonly KernelHubConnection _connection;
 
-        public KernelHub(KernelHubConnection connection,  IHubContext<KernelHub> hubContext)
+        public KernelHub(KernelHubConnection connection, IHubContext<KernelHub> hubContext)
         {
             _connection = connection;
             _connection.RegisterContext(hubContext);
@@ -24,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.App.Http
             await _connection.Kernel.SendAsync(command);
         }
 
-        public async  Task Connect()
+        public async Task Connect()
         {
             await Clients.Caller.SendAsync("connected");
         }

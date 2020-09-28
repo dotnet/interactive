@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.AspNetCore.Html;
 
-namespace Microsoft.DotNet.Interactive.App
+namespace Microsoft.DotNet.Interactive.Http
 {
     internal static class HttpApiBootstrapper
     {

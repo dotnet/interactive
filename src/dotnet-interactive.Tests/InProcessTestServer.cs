@@ -9,6 +9,7 @@ using System.Net.Http;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.DotNet.Interactive.App.CommandLine;
+using Microsoft.DotNet.Interactive.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Pocket;
 

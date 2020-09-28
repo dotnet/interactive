@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Microsoft.DotNet.Interactive.App.Http
+namespace Microsoft.DotNet.Interactive.Http
 {
     public class StaticContentSourceNotFoundException : Exception
     {
