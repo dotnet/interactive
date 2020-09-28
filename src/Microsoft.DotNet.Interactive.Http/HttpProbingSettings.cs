@@ -7,7 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 
-namespace Microsoft.DotNet.Interactive.App
+namespace Microsoft.DotNet.Interactive.Http
 {
     public class HttpProbingSettings
     {

@@ -4,16 +4,16 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.DotNet.Interactive.App.CommandLine;
 
-namespace Microsoft.DotNet.Interactive.App.Http
+namespace Microsoft.DotNet.Interactive.Http
 {
     public class DiscoveryRouter : IRouter
     {
         private readonly HtmlNotebookFrontedEnvironment _frontendEnvironment;
-      
+
         public DiscoveryRouter(HtmlNotebookFrontedEnvironment frontendEnvironment)
         {
             _frontendEnvironment = frontendEnvironment;
@@ -33,17 +33,17 @@ namespace Microsoft.DotNet.Interactive.App.Http
                         .Request
                         .Path
                         .Value
-                        .Split(new[] {'/'}, StringSplitOptions.RemoveEmptyEntries);
+                        .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
                 if (segments[0] == "discovery")
                 {
                     using var reader = new StreamReader(context.HttpContext.Request.Body);
                     var source = await reader.ReadToEndAsync();
-                    var apiUri = new Uri( source);
+                    var apiUri = new Uri(source);
                     _frontendEnvironment.SetApiUri(apiUri);
 
                     context.Handler = async httpContext =>
                     {
-                        await httpContext.Response.CompleteAsync(); 
+                        await httpContext.Response.CompleteAsync();
                     };
                 }
             }

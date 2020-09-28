@@ -6,19 +6,20 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.DotNet.Interactive.App.CommandLine;
+
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.DotNet.Interactive.App.Http
+namespace Microsoft.DotNet.Interactive.Http
 {
     public class HttpApiTunnelingRouter : IRouter
     {
         private readonly HtmlNotebookFrontedEnvironment _frontendEnvironment;
 
-        private readonly ConcurrentDictionary<Uri,string> _bootstrapperScripts = new ConcurrentDictionary<Uri, string>();
+        private readonly ConcurrentDictionary<Uri, string> _bootstrapperScripts = new ConcurrentDictionary<Uri, string>();
 
         public HttpApiTunnelingRouter(HtmlNotebookFrontedEnvironment frontendEnvironment)
         {
@@ -67,9 +68,9 @@ namespace Microsoft.DotNet.Interactive.App.Http
                     {
                         httpContext.Response.StatusCode = 404;
                     }
-                   
+
                     await httpContext.Response.CompleteAsync();
- 
+
                 };
 
             }
@@ -91,7 +92,7 @@ namespace Microsoft.DotNet.Interactive.App.Http
                 var source = await reader.ReadToEndAsync();
 
                 var requestBody = JObject.Parse(source);
-                
+
                 var apiUri = new Uri(requestBody["tunnelUri"].Value<string>());
                 var frontendType = requestBody["frontendType"].Value<string>();
                 var hash = $"{Guid.NewGuid():N}";
@@ -99,7 +100,7 @@ namespace Microsoft.DotNet.Interactive.App.Http
                 _frontendEnvironment.SetApiUri(apiUri);
 
                 _bootstrapperScripts.GetOrAdd(bootstrapperUri, key => GenerateBootstrapperCode(apiUri, frontendType, hash));
-                
+
                 context.Handler = async httpContext =>
                 {
                     httpContext.Response.ContentType = "text/plain";
