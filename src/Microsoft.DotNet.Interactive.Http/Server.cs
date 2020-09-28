@@ -13,6 +13,16 @@ namespace Microsoft.DotNet.Interactive.Http
         {
             _kernel = kernel;
         }
+
+        public void Start()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WaitForShutdown()
+        {
+            throw new NotImplementedException();
+        }
         public void Dispose()
         {
             throw new NotImplementedException();
