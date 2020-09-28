@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         private InProcessTestServer()
         {
         }
-        public BrowserFrontendEnvironment FrontendEnvironment => _host.Services.GetService<BrowserFrontendEnvironment>();
+        public FrontendEnvironment FrontendEnvironment => _host.Services.GetRequiredService<Kernel>().FrontendEnvironment;
 
         public IConsole Console { get; } = new TestConsole();
 

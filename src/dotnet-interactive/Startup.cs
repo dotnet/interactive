@@ -78,29 +78,26 @@ namespace Microsoft.DotNet.Interactive.App
                 app.UseRouter(r =>
                 {
                     operation.Info("configuring routing");
-                    var htmlNotebookFrontedEnvironment = serviceProvider.GetService<HtmlNotebookFrontedEnvironment>();
+                    r.Routes.Add(new VariableRouter(kernel));
+                    r.Routes.Add(new KernelsRouter(kernel));
+                    var htmlNotebookFrontedEnvironment = kernel.FrontendEnvironment as HtmlNotebookFrontedEnvironment;
+                    
                     if (htmlNotebookFrontedEnvironment != null)
                     {
                         r.Routes.Add(new DiscoveryRouter(htmlNotebookFrontedEnvironment));
                         r.Routes.Add(new HttpApiTunnelingRouter(htmlNotebookFrontedEnvironment));
                     }
 
-                    if (StartupOptions.EnableHttpApi)
+                    if (htmlNotebookFrontedEnvironment == null || htmlNotebookFrontedEnvironment.RequiresAutomaticBootstrapping)
                     {
-                        var httpProbingSettings = serviceProvider.GetRequiredService<HttpProbingSettings>();
-
-                        kernel = kernel.UseHttpApi(StartupOptions.HttpPort, httpProbingSettings);
-
-                        if (htmlNotebookFrontedEnvironment == null || htmlNotebookFrontedEnvironment.RequiresAutomaticBootstrapping)
-                        {
-                            var enableHttp = new SubmitCode("#!enable-http", kernel.Name);
-                            enableHttp.PublishInternalEvents();
-                            kernel.DeferCommand(enableHttp);
-                        }
+                        var enableHttp = new SubmitCode("#!enable-http", kernel.Name);
+                        enableHttp.PublishInternalEvents();
+                        kernel.DeferCommand(enableHttp);
                     }
 
-                    r.Routes.Add(new VariableRouter(kernel));
-                    r.Routes.Add(new KernelsRouter(kernel));
+                    var httpProbingSettings = serviceProvider.GetRequiredService<HttpProbingSettings>();
+                    kernel = kernel.UseHttpApi(StartupOptions.HttpPort, httpProbingSettings);
+
                 });
                 app.UseEndpoints(endpoints =>
                 {

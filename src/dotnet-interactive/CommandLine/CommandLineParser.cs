@@ -243,8 +243,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     var frontendEnvironment = new HtmlNotebookFrontedEnvironment();
                     var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
 
-                    services.AddSingleton(frontendEnvironment);
-                    services.AddSingleton<FrontendEnvironment>(frontendEnvironment);
                     services.AddSingleton(kernel);
                     services.AddSingleton<Kernel>(kernel);
 
@@ -309,9 +307,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                         var frontendEnvironment = new BrowserFrontendEnvironment();
                         var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
-
-                        services.AddSingleton(frontendEnvironment);
-                        services.AddSingleton<FrontendEnvironment>(frontendEnvironment);
+                        
                         services.AddSingleton(kernel);
                         services.AddSingleton<Kernel>(kernel);
 
@@ -402,8 +398,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                 ((HtmlNotebookFrontedEnvironment) frontendEnvironment).RequiresAutomaticBootstrapping =
                                     false;
                             }
-                            services.AddSingleton((HtmlNotebookFrontedEnvironment)frontendEnvironment);
-                            services.AddSingleton(frontendEnvironment);
+
                             services.AddSingleton(kernel);
                             services.AddSingleton<Kernel>(kernel);
 

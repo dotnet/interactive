@@ -35,11 +35,11 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             _disposables.Dispose();
         }
 
-        private InProcessTestServer GetServer(Language defaultLanguage = Language.CSharp, Action<IServiceCollection> servicesSetup = null)
+        private InProcessTestServer GetServer(Language defaultLanguage = Language.CSharp, Action<IServiceCollection> servicesSetup = null, string command="http")
         {
             var newServer =
                 InProcessTestServer.StartServer(
-                    $"http --default-kernel {defaultLanguage.LanguageName()} --http-port 4242", servicesSetup);
+                    $"{command} --default-kernel {defaultLanguage.LanguageName()} --http-port 4242", servicesSetup);
 
             _disposables.Add(newServer);
 
@@ -62,12 +62,8 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         [Fact]
         public async Task FrontendEnvironment_host_is_set_via_handshake()
         {
-            var expectedUri = new Uri("http://choosen.one:1000/");
-            var server = GetServer(servicesSetup: (serviceCollection) =>
-             {
-                 serviceCollection.AddSingleton(new HtmlNotebookFrontedEnvironment());
-                 serviceCollection.AddSingleton<BrowserFrontendEnvironment>(c => c.GetService<HtmlNotebookFrontedEnvironment>());
-             });
+            var expectedUri = new Uri("http://choosen.one:4242/");
+            var server = GetServer(command:"stdio");
             var response = await server.HttpClient.PostAsync("/discovery", new StringContent(expectedUri.AbsoluteUri));
             using var scope = new AssertionScope();
             
@@ -79,14 +75,11 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         }
 
         [Fact]
-        public async Task HttpApiTunneling_configures_frontend_evironment()
+        public async Task HttpApiTunneling_configures_frontend_environment()
         {
-            var tunnelUri = new Uri("http://choosen.one:1000/");
-            var server = GetServer(servicesSetup: (serviceCollection) =>
-            {
-                serviceCollection.AddSingleton(new HtmlNotebookFrontedEnvironment());
-                serviceCollection.AddSingleton<BrowserFrontendEnvironment>(c => c.GetService<HtmlNotebookFrontedEnvironment>());
-            });
+            var tunnelUri = new Uri("http://choosen.one:4242/");
+            var server = GetServer(command: "stdio");
+
             var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri =  tunnelUri.AbsoluteUri, frontendType = "vscode"}.SerializeToJson().ToString()));
             using var scope = new AssertionScope();
 
@@ -100,12 +93,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         [Fact]
         public async Task HttpApiTunneling_return_bootstrapper_js_url()
         {
-            var tunnelUri = new Uri("http://choosen.one:1000/");
-            var server = GetServer(servicesSetup: (serviceCollection) =>
-            {
-                serviceCollection.AddSingleton(new HtmlNotebookFrontedEnvironment());
-                serviceCollection.AddSingleton<BrowserFrontendEnvironment>(c => c.GetService<HtmlNotebookFrontedEnvironment>());
-            });
+            var tunnelUri = new Uri("http://choosen.one:4242/");
+            var server = GetServer(command: "stdio");
+
             var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" }.SerializeToJson().ToString()));
             
             using var scope = new AssertionScope();
@@ -123,11 +113,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public async Task HttpApiTunneling_route_serves_bootstrapper_js()
         {
             var tunnelUri = new Uri("http://choosen.one:1000/");
-            var server = GetServer(servicesSetup: (serviceCollection) =>
-            {
-                serviceCollection.AddSingleton(new HtmlNotebookFrontedEnvironment());
-                serviceCollection.AddSingleton<BrowserFrontendEnvironment>(c => c.GetService<HtmlNotebookFrontedEnvironment>());
-            });
+            var server = GetServer(command: "stdio");
 
             var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" }.SerializeToJson().ToString()));
             var responseBody = JObject.Parse(await response.Content.ReadAsStringAsync());
