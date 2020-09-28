@@ -45,10 +45,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         public Func<string, PasswordString> ReadPassword { get; set; }
 
         internal AzShellConnectionUtils AzShell { get; set; }
-        internal int DefaultRunspaceId
-        {
-            get { return _lazyPwsh.IsValueCreated ? pwsh.Runspace.Id : -1; }
-        }
+        internal int DefaultRunspaceId => _lazyPwsh.IsValueCreated ? pwsh.Runspace.Id : -1;
 
         static PowerShellKernel()
         {
@@ -124,7 +121,13 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         public override IReadOnlyCollection<string> GetVariableNames()
         {
-            // FIX: (GetVariableNames) 
+            var psObject = pwsh.Runspace.SessionStateProxy.InvokeProvider.Item.Get("variable:")?.FirstOrDefault();
+
+            if (psObject?.BaseObject is Dictionary<string, PSVariable>.ValueCollection valueCollection)
+            {
+                return valueCollection.Select(v => v.Name).ToArray();
+            }
+
             return Array.Empty<string>();
         }
 

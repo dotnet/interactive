@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Linq;
@@ -94,7 +93,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         [Theory]
         [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp, Skip = "Issue #695 - dotnet-interactive with an F# notebook does not load System.Text.Json")]
+        [InlineData(Language.FSharp)]
         public async Task it_can_reference_system_text_json(Language language)
         {
             var source = language switch
@@ -1184,7 +1183,29 @@ Console.Write(2);
 
         [Theory]
         [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp, Skip = "Requires FSI API changes")]
+        [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell)]
+        public async Task GetVariableNames_returns_the_names_of_defined_variables(Language language)
+        {
+            var codeToSetVariable = language switch
+            {
+                Language.CSharp => "var x = 123;",
+                Language.FSharp => "let x = 123",
+                Language.PowerShell => "$x = 123"
+            };
+
+            var kernel = CreateKernel(language);
+
+            await kernel.SubmitCodeAsync(codeToSetVariable);
+
+            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
+
+            languageKernel.GetVariableNames().Should().Contain("x");
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
         [InlineData(Language.PowerShell)]
         public async Task SetVariableAsync_declares_the_specified_variable(Language language)
         {
@@ -1204,7 +1225,7 @@ Console.Write(2);
         
         [Theory]
         [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp, Skip = "Requires FSI API changes")]
+        [InlineData(Language.FSharp)]
         [InlineData(Language.PowerShell)]
         public async Task SetVariableAsync_overwrites_an_existing_variable_of_the_same_type(Language language)
         {
@@ -1225,7 +1246,7 @@ Console.Write(2);
 
         [Theory]
         [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp, Skip = "Requires FSI API changes")]
+        [InlineData(Language.FSharp)]
         [InlineData(Language.PowerShell)]
         public async Task SetVariableAsync_can_redeclare_an_existing_variable_and_change_its_type(Language language)
         {
