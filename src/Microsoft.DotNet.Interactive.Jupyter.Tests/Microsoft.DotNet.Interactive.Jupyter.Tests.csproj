@@ -16,7 +16,6 @@
     <PackageReference Include="Assent" Version="1.3.1" />
     <PackageReference Include="FluentAssertions" Version="5.10.2" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.17" />
-    <PackageReference Include="System.Reactive" Version="4.3.2" />
     <PackageReference Include="JsonSerializationExtensions" Version="0.1.8580001">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -35,7 +34,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Reactive" Version="4.3.2" />
     <PackageReference Include="TaskExtensions" Version="0.1.8580001">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>

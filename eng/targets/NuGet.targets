@@ -8,7 +8,6 @@
     <NuspecProperty Include="PocketLoggerVersion=$(PocketLoggerVersion)" />
     <NuspecProperty Include="SystemDiagnosticsProcessVersion=$(SystemDiagnosticsProcessVersion)" />
     <NuspecProperty Include="MicrosoftCodeAnalysisCommonVersion=$(MicrosoftCodeAnalysisCommonVersion)" />
-    <NuspecProperty Include="MicrosoftCodeAnalysisWorkspacesCommonVersion=$(MicrosoftCodeAnalysisWorkspacesCommonVersion)" />
     <NuspecProperty Include="TaskExtensionsVersion=$(TaskExtensionsVersion)" />
     <NuspecProperty Include="SystemRuntimeExtensionsVersion=$(SystemRuntimeExtensionsVersion)" />
   </ItemGroup>

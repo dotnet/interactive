@@ -42,14 +42,14 @@
  <ItemGroup>
    <PackageReference Include="Microsoft.Data.Analysis" Version="0.4.0" />
    <PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.0" />
-   <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.7" />
+   <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.8" />
  </ItemGroup>
 
  <ItemGroup>
    <PackageReference Include="Iced" Version="1.8.0" />
    <PackageReference Include="ICSharpCode.Decompiler" Version="6.1.0.5902" />
-   <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="3.7.0-1.final" />
-   <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.7.0-1.final" />
+   <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
+   <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
    <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="1.1.132302" />
    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
  </ItemGroup>
