@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.CommandLine;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.Net.Http;
@@ -10,9 +9,8 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.DotNet.Interactive.App.CommandLine;
+using Microsoft.DotNet.Interactive.Server;
 using Microsoft.Extensions.DependencyInjection;
-
-using Pocket;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
@@ -21,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         private Lazy<TestServer> _host;
         private readonly ServiceCollection _serviceCollection = new ServiceCollection();
 
-        public static async  Task<InProcessTestServer> StartServer(string args, Action<IServiceCollection> servicesSetup = null)
+        public static async Task<InProcessTestServer> StartServer(string args, Action<IServiceCollection> servicesSetup = null)
         {
             var server = new InProcessTestServer();
 
@@ -48,13 +46,15 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
         }
         public FrontendEnvironment FrontendEnvironment => _host.Value.Services.GetRequiredService<Kernel>().FrontendEnvironment;
-        
+
         public HttpClient HttpClient => _host.Value.CreateClient();
 
         public Kernel Kernel => _host.Value.Services.GetService<Kernel>();
 
         public void Dispose()
         {
+            KernelCommandEnvelope.ResetToDefaults();
+            KernelEventEnvelope.ResetToDefaults();
             _host.Value.Dispose();
             _host = null;
         }
