@@ -301,7 +301,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     (startupOptions, options, console, context) =>
                     {
                         var frontendEnvironment = new BrowserFrontendEnvironment();
-                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, services);
+                        CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, services);
 
                         onServerStarted ??= () =>
                         {
