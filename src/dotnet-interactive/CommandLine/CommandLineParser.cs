@@ -252,8 +252,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             return new JupyterRequestContextScheduler(delivery => c.GetRequiredService<JupyterRequestContextHandler>()
                                 .Handle(delivery));
                         })
-                        .AddSingleton(c => new JupyterRequestContextHandler(
-                                c.GetRequiredService<Kernel>()))
+                        .AddSingleton(c => new JupyterRequestContextHandler(kernel))
                         .AddSingleton<IHostedService, Shell>()
                         .AddSingleton<IHostedService, Heartbeat>();
                     return jupyter(startupOptions, console, startServer, context);

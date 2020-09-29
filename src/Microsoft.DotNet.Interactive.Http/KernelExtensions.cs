@@ -4,7 +4,6 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-
 using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Http

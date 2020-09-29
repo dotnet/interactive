@@ -4,8 +4,6 @@
 using System;
 
 using Microsoft.AspNetCore.Builder;
-using Microsoft.DotNet.Interactive.App.CommandLine;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,14 +13,15 @@ using Pocket;
 
 namespace Microsoft.DotNet.Interactive.App
 {
+
     public class Startup
     {
         public Startup(
             IHostEnvironment env,
-            StartupOptions startupOptions)
+            HttpOptions httpOptions)
         {
             Environment = env;
-            StartupOptions = startupOptions;
+            HttpOptions = httpOptions;
 
             var configurationBuilder = new ConfigurationBuilder();
 
@@ -33,29 +32,15 @@ namespace Microsoft.DotNet.Interactive.App
 
         protected IHostEnvironment Environment { get; }
 
-        public StartupOptions StartupOptions { get; }
+        public HttpOptions HttpOptions { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
             using var _ = Logger.Log.OnEnterAndExit();
 
-            if (StartupOptions.EnableHttpApi)
+            if (HttpOptions.EnableHttpApi)
             {
-                services.AddSingleton(c => new KernelHubConnection(c.GetRequiredService<CompositeKernel>()));
-                services.AddRouting();
-                services.AddCors(options =>
-                {
-                    options.AddPolicy("default", builder =>
-                    {
-                        builder
-                            .AllowAnyMethod()
-                            .AllowAnyHeader()
-                            .AllowCredentials()
-                            .SetIsOriginAllowed((host) => true);
-
-                    });
-                });
-                services.AddSignalR();
+                services.AddDotnetInteractive();
             }
         }
 
@@ -65,44 +50,14 @@ namespace Microsoft.DotNet.Interactive.App
             IServiceProvider serviceProvider)
         {
             var operation = Logger.Log.OnEnterAndExit();
-            if (StartupOptions.EnableHttpApi)
+            if (HttpOptions.EnableHttpApi)
             {
-                var kernel = serviceProvider.GetRequiredService<Kernel>();
-                app.UseStaticFiles(new StaticFileOptions
-                {
-                    FileProvider = new FileProvider(kernel, typeof(Program).Assembly)
-                });
-                app.UseWebSockets();
-                app.UseCors("default");
-                app.UseRouting();
-                app.UseRouter(r =>
-                {
-                    operation.Info("configuring routing");
-                    r.Routes.Add(new VariableRouter(kernel));
-                    r.Routes.Add(new KernelsRouter(kernel));
-                    var htmlNotebookFrontedEnvironment = kernel.FrontendEnvironment as HtmlNotebookFrontedEnvironment;
-                    
-                    if (htmlNotebookFrontedEnvironment != null)
-                    {
-                        r.Routes.Add(new DiscoveryRouter(htmlNotebookFrontedEnvironment));
-                        r.Routes.Add(new HttpApiTunnelingRouter(htmlNotebookFrontedEnvironment));
-                    }
-
-                    if (htmlNotebookFrontedEnvironment == null || htmlNotebookFrontedEnvironment.RequiresAutomaticBootstrapping)
-                    {
-                        var enableHttp = new SubmitCode("#!enable-http", kernel.Name);
-                        enableHttp.PublishInternalEvents();
-                        kernel.DeferCommand(enableHttp);
-                    }
-
-                    var httpProbingSettings = serviceProvider.GetRequiredService<HttpProbingSettings>();
-                    kernel = kernel.UseHttpApi(StartupOptions.HttpPort, httpProbingSettings);
-
-                });
-                app.UseEndpoints(endpoints =>
-                {
-                    endpoints.MapHub<KernelHub>("/kernelhub");
-                });
+                operation.Info("configuring routing");
+                app.UseDotNetInteractive(
+                    serviceProvider.GetRequiredService<Kernel>(), 
+                    typeof(Program).Assembly,
+                    serviceProvider.GetRequiredService<HttpProbingSettings>(),
+                    HttpOptions.HttpPort);
             }
         }
     }

@@ -11,6 +11,13 @@ namespace Microsoft.DotNet.Interactive
     public static class KernelCommandExtensions
     {
         internal const string TokenKey = "token";
+        internal const string PublishInternalEventsKey = "publish-internal-events";
+
+        public static void PublishInternalEvents(
+            this KernelCommand command)
+        {
+            command.Properties[PublishInternalEventsKey] = true;
+        }
 
         public static void SetToken(
             this KernelCommand command,

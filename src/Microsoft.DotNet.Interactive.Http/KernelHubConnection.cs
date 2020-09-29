@@ -15,9 +15,9 @@ namespace Microsoft.DotNet.Interactive.Http
     {
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private bool _registered;
-        public CompositeKernel Kernel { get; }
+        public Kernel Kernel { get; }
 
-        public KernelHubConnection(CompositeKernel kernel)
+        public KernelHubConnection(Kernel kernel)
         {
             Kernel = kernel;
         }
