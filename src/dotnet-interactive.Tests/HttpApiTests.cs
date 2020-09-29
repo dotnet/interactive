@@ -35,10 +35,10 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             _disposables.Dispose();
         }
 
-        private InProcessTestServer GetServer(Language defaultLanguage = Language.CSharp, Action<IServiceCollection> servicesSetup = null, string command="http")
+        private async Task<InProcessTestServer> GetServer(Language defaultLanguage = Language.CSharp, Action<IServiceCollection> servicesSetup = null, string command="http")
         {
             var newServer =
-                InProcessTestServer.StartServer(
+                await InProcessTestServer.StartServer(
                     $"{command} --default-kernel {defaultLanguage.LanguageName()} --http-port 4242", servicesSetup);
 
             _disposables.Add(newServer);
@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         [Fact]
         public async Task discovery_route_is_not_registered_without_JupyterFrontedEnvironment()
         {
-            var server = GetServer();
+            var server = await GetServer();
             var response = await server.HttpClient.PostAsync("/discovery", new StringContent("http://choosen.one:1000/"));
 
             using var scope = new AssertionScope();
@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public async Task FrontendEnvironment_host_is_set_via_handshake()
         {
             var expectedUri = new Uri("http://choosen.one:4242/");
-            var server = GetServer(command:"stdio");
+            var server = await GetServer(command:"stdio");
             var response = await server.HttpClient.PostAsync("/discovery", new StringContent(expectedUri.AbsoluteUri));
             using var scope = new AssertionScope();
             
@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public async Task HttpApiTunneling_configures_frontend_environment()
         {
             var tunnelUri = new Uri("http://choosen.one:4242/");
-            var server = GetServer(command: "stdio");
+            var server = await GetServer(command: "stdio");
 
             var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri =  tunnelUri.AbsoluteUri, frontendType = "vscode"}.SerializeToJson().ToString()));
             using var scope = new AssertionScope();
@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public async Task HttpApiTunneling_return_bootstrapper_js_url()
         {
             var tunnelUri = new Uri("http://choosen.one:4242/");
-            var server = GetServer(command: "stdio");
+            var server = await GetServer(command: "stdio");
 
             var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" }.SerializeToJson().ToString()));
             
@@ -113,7 +113,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public async Task HttpApiTunneling_route_serves_bootstrapper_js()
         {
             var tunnelUri = new Uri("http://choosen.one:1000/");
-            var server = GetServer(command: "stdio");
+            var server = await GetServer(command: "stdio");
 
             var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" }.SerializeToJson().ToString()));
             var responseBody = JObject.Parse(await response.Content.ReadAsStringAsync());
@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         [InlineData(Language.FSharp, "let a = 123")]
         public async Task can_get_variable_value(Language language, string code)
         {
-            var server = GetServer();
+            var server = await GetServer();
             await server.Kernel.SendAsync(new SubmitCode(code, language.LanguageName()));
 
             var response = await server.HttpClient.GetAsync($"/variables/{language.LanguageName()}/a");
@@ -155,7 +155,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         [InlineData(Language.FSharp, "let a = \"Code value\"")]
         public async Task can_get_variable_value_when_variable_is_string(Language language, string code)
         {
-            var server = GetServer(language);
+            var server = await GetServer(language);
 
             await server.Kernel.SendAsync(new SubmitCode(code, language.LanguageName()));
 
@@ -171,7 +171,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         [InlineData(Language.FSharp, "let a = \"Code value\"")]
         public async Task deferred_command_produce_html_bootstrap_code(Language language, string code)
         {
-            var server = GetServer(language);
+            var server = await GetServer(language);
             var events = server.Kernel.KernelEvents.ToSubscribedList();
             await server.Kernel.SendAsync(new SubmitCode(code, language.LanguageName()));
 
@@ -192,7 +192,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         [Fact]
         public async Task can_get_variables_with_bulk_request()
         {
-            var server = GetServer();
+            var server = await GetServer();
             await server.Kernel.SendAsync(new SubmitCode(@"
 var a = 123;
 var b = ""1/2/3"";
@@ -232,7 +232,7 @@ let d = 567", Language.FSharp.LanguageName()));
         [Fact]
         public async Task get_variables_preserves_property_case()
         {
-            var server = GetServer();
+            var server = await GetServer();
             await server.Kernel.SendAsync(new SubmitCode(@"
 var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
 
@@ -252,7 +252,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         [Fact]
         public async Task bulk_variable_request_is_returned_with_application_json_content_type()
         {
-            var server = GetServer();
+            var server = await GetServer();
             await server.Kernel.SendAsync(new SubmitCode(@"
 var a = 123;
 var b = ""1/2/3"";
@@ -277,7 +277,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
                 info => new { TheName = info.Name }.SerializeToJson().Value,
                 JsonFormatter.MimeType);
             
-            var server = GetServer();
+            var server = await GetServer();
             
             await server.Kernel.SendAsync(new SubmitCode("var theFile = new System.IO.FileInfo(\"the-file.txt\");"));
 
@@ -295,7 +295,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         [InlineData(Language.FSharp, "let a = 123")]
         public async Task variable_is_returned_with_application_json_content_type(Language language, string code)
         {
-            var server = GetServer();
+            var server = await GetServer();
 
             await server.Kernel.SendAsync(new SubmitCode(code, language.LanguageName()));
 
@@ -311,7 +311,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         [InlineData(Language.FSharp)]
         public async Task When_variable_does_not_exist_then_it_returns_404(Language language)
         {
-            var server = GetServer();
+            var server = await GetServer();
             var response = await server.HttpClient.GetAsync($"/variables/{language.LanguageName()}/does_not_exist");
 
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -320,7 +320,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         [Fact]
         public async Task When_subkernel_does_not_exist_then_it_returns_404()
         {
-            var server = GetServer();
+            var server = await GetServer();
             var response = await server.HttpClient.GetAsync("/variables/does_not_exist/does_not_exist");
 
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -329,7 +329,8 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         [Fact]
         public async Task can_get_static_content()
         {
-            var response = await GetServer().HttpClient.GetAsync("/resources/logo-32x32.png");
+            var server = await GetServer();
+            var response = await server.HttpClient.GetAsync("/resources/logo-32x32.png");
 
             await response.ShouldSucceed();
 
@@ -339,7 +340,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         [Fact]
         public async Task can_get_static_content_from_extensions()
         {
-            var server = GetServer();
+            var server = await GetServer();
             var kernel = server.Kernel;
             var projectDir = DirectoryUtility.CreateDirectory();
             var fileToEmbed = new FileInfo(Path.Combine(projectDir.FullName, "file.txt"));
@@ -371,7 +372,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         [Fact]
         public async Task can_get_kernel_names()
         {
-            var server = GetServer();
+            var server = await GetServer();
             var response = await server.HttpClient.GetAsync("/kernels");
 
             await response.ShouldSucceed();

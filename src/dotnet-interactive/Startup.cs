@@ -13,7 +13,6 @@ using Pocket;
 
 namespace Microsoft.DotNet.Interactive.App
 {
-
     public class Startup
     {
         public Startup(

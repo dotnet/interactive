@@ -6,11 +6,12 @@ using System.CommandLine;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.Net.Http;
-using Microsoft.AspNetCore.Hosting;
+using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.DotNet.Interactive.App.CommandLine;
-using Microsoft.DotNet.Interactive.Http;
 using Microsoft.Extensions.DependencyInjection;
+
 using Pocket;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
@@ -21,27 +22,29 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly ServiceCollection _serviceCollection = new ServiceCollection();
 
-        public static InProcessTestServer StartServer(string args, Action<IServiceCollection> servicesSetup = null)
+        public static Task<InProcessTestServer> StartServer(string args, Action<IServiceCollection> servicesSetup = null)
         {
             var server = new InProcessTestServer();
 
-            IWebHostBuilder builder = null;
-
+            var completionSource = new TaskCompletionSource<InProcessTestServer>();
             var parser = CommandLineParser.Create(
                 server._serviceCollection,
                 (startupOptions, invocationContext) =>
                 {
                     servicesSetup?.Invoke(server._serviceCollection);
-                    builder = Program.ConstructWebHostBuilder(
+                    var builder = Program.ConstructWebHostBuilder(
                         startupOptions,
                         server._serviceCollection);
+
+                    server._host = new TestServer(builder);
+                    completionSource.SetResult(server);
                 });
 
             parser.Invoke(args, server.Console);
 
-            server._host = new TestServer(builder);
 
-            return server;
+
+            return completionSource.Task;
         }
 
         private InProcessTestServer()
