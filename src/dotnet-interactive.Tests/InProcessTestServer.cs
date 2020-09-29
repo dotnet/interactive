@@ -19,7 +19,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
     internal class InProcessTestServer : IDisposable
     {
         private Lazy<TestServer> _host;
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly ServiceCollection _serviceCollection = new ServiceCollection();
 
         public static async  Task<InProcessTestServer> StartServer(string args, Action<IServiceCollection> servicesSetup = null)
@@ -58,8 +57,8 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
         public void Dispose()
         {
-            _disposables.Dispose();
             _host.Value.Dispose();
+            _host = null;
         }
     }
 }

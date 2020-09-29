@@ -7,10 +7,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -35,11 +33,11 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             _disposables.Dispose();
         }
 
-        private async Task<InProcessTestServer> GetServer(Language defaultLanguage = Language.CSharp, Action<IServiceCollection> servicesSetup = null, string command="http")
+        private async Task<InProcessTestServer> GetServer(Language defaultLanguage = Language.CSharp, Action<IServiceCollection> servicesSetup = null, string command="http", int port = 4242)
         {
             var newServer =
                 await InProcessTestServer.StartServer(
-                    $"{command} --default-kernel {defaultLanguage.LanguageName()} --http-port 4242", servicesSetup);
+                    $"{command} --default-kernel {defaultLanguage.LanguageName()} --http-port {port}", servicesSetup);
 
             _disposables.Add(newServer);
 
@@ -62,8 +60,8 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         [Fact]
         public async Task FrontendEnvironment_host_is_set_via_handshake()
         {
-            var expectedUri = new Uri("http://choosen.one:4242/");
-            var server = await GetServer(command:"stdio");
+            var expectedUri = new Uri("http://choosen.one:4243/");
+            var server = await GetServer(command:"stdio", port:4243);
             var response = await server.HttpClient.PostAsync("/discovery", new StringContent(expectedUri.AbsoluteUri));
             using var scope = new AssertionScope();
             
@@ -77,8 +75,8 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         [Fact]
         public async Task HttpApiTunneling_configures_frontend_environment()
         {
-            var tunnelUri = new Uri("http://choosen.one:4242/");
-            var server = await GetServer(command: "stdio");
+            var tunnelUri = new Uri("http://choosen.one:4244/");
+            var server = await GetServer(command: "stdio", port: 4244);
 
             var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri =  tunnelUri.AbsoluteUri, frontendType = "vscode"}.SerializeToJson().ToString()));
             using var scope = new AssertionScope();
@@ -93,8 +91,8 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         [Fact]
         public async Task HttpApiTunneling_return_bootstrapper_js_url()
         {
-            var tunnelUri = new Uri("http://choosen.one:4242/");
-            var server = await GetServer(command: "stdio");
+            var tunnelUri = new Uri("http://choosen.one:4246/");
+            var server = await GetServer(command: "stdio", port: 4246);
 
             var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" }.SerializeToJson().ToString()));
             
@@ -113,7 +111,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public async Task HttpApiTunneling_route_serves_bootstrapper_js()
         {
             var tunnelUri = new Uri("http://choosen.one:1000/");
-            var server = await GetServer(command: "stdio");
+            var server = await GetServer(command: "stdio", port:1000);
 
             var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" }.SerializeToJson().ToString()));
             var responseBody = JObject.Parse(await response.Content.ReadAsStringAsync());
