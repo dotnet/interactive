@@ -40,7 +40,7 @@
 
   <ItemGroup>
     <PackageReference Include="FSharp.Compiler.Private.Scripting" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(MicrosoftCodeAnalysisWorkspacesCommonVersion)" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="XPlot.Plotly" Version="3.0.1" />
   </ItemGroup>
 
