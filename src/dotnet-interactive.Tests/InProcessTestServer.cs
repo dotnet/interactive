@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                     completionSource.SetResult(true);
                 });
 
-            await parser.InvokeAsync(args, server.Console);
+            await parser.InvokeAsync(args, new TestConsole());
             await completionSource.Task;
             return server;
         }
@@ -48,9 +48,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
         }
         public FrontendEnvironment FrontendEnvironment => _host.Value.Services.GetRequiredService<Kernel>().FrontendEnvironment;
-
-        public IConsole Console { get; } = new TestConsole();
-
+        
         public HttpClient HttpClient => _host.Value.CreateClient();
 
         public Kernel Kernel => _host.Value.Services.GetService<Kernel>();

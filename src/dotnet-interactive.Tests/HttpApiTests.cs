@@ -7,8 +7,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+
 using FluentAssertions;
 using FluentAssertions.Execution;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -16,9 +18,12 @@ using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.Extensions.DependencyInjection;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using Pocket;
+
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
@@ -33,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             _disposables.Dispose();
         }
 
-        private async Task<InProcessTestServer> GetServer(Language defaultLanguage = Language.CSharp, Action<IServiceCollection> servicesSetup = null, string command="http", int port = 4242)
+        private async Task<InProcessTestServer> GetServer(Language defaultLanguage = Language.CSharp, Action<IServiceCollection> servicesSetup = null, string command = "http", int port = 4242)
         {
             var newServer =
                 await InProcessTestServer.StartServer(
@@ -60,29 +65,29 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         [Fact]
         public async Task FrontendEnvironment_host_is_set_via_handshake()
         {
-            var expectedUri = new Uri("http://choosen.one:4243/");
-            var server = await GetServer(command:"stdio", port:4243);
-            var response = await server.HttpClient.PostAsync("/discovery", new StringContent(expectedUri.AbsoluteUri));
+            var tunnelUri = new Uri("http://choosen.one:1000/");
+            var server = await GetServer(command: "stdio", port: 1000);
+            var response = await server.HttpClient.PostAsync("/discovery", new StringContent(tunnelUri.AbsoluteUri));
             using var scope = new AssertionScope();
-            
+
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var frontendEnvironment = server.FrontendEnvironment as HtmlNotebookFrontedEnvironment;
+            var frontendEnvironment = (HtmlNotebookFrontedEnvironment)server.FrontendEnvironment;
 
             var apiUri = await frontendEnvironment.GetApiUriAsync();
-            apiUri.Should().Be(expectedUri);
+            apiUri.Should().Be(tunnelUri);
         }
 
         [Fact]
         public async Task HttpApiTunneling_configures_frontend_environment()
         {
-            var tunnelUri = new Uri("http://choosen.one:4244/");
-            var server = await GetServer(command: "stdio", port: 4244);
+            var tunnelUri = new Uri("http://choosen.one:1000/");
+            var server = await GetServer(command: "stdio", port: 1000);
 
-            var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri =  tunnelUri.AbsoluteUri, frontendType = "vscode"}.SerializeToJson().ToString()));
+            var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" }.SerializeToJson().ToString()));
             using var scope = new AssertionScope();
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var frontendEnvironment = server.FrontendEnvironment as HtmlNotebookFrontedEnvironment;
+            var frontendEnvironment = (HtmlNotebookFrontedEnvironment)server.FrontendEnvironment;
 
             var apiUri = await frontendEnvironment.GetApiUriAsync();
             apiUri.Should().Be(tunnelUri);
@@ -91,11 +96,11 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         [Fact]
         public async Task HttpApiTunneling_return_bootstrapper_js_url()
         {
-            var tunnelUri = new Uri("http://choosen.one:4246/");
-            var server = await GetServer(command: "stdio", port: 4246);
+            var tunnelUri = new Uri("http://choosen.one:1000/");
+            var server = await GetServer(command: "stdio", port: 1000);
 
             var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" }.SerializeToJson().ToString()));
-            
+
             using var scope = new AssertionScope();
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -111,11 +116,11 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public async Task HttpApiTunneling_route_serves_bootstrapper_js()
         {
             var tunnelUri = new Uri("http://choosen.one:1000/");
-            var server = await GetServer(command: "stdio", port:1000);
+            var server = await GetServer(command: "stdio", port: 1000);
 
             var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" }.SerializeToJson().ToString()));
             var responseBody = JObject.Parse(await response.Content.ReadAsStringAsync());
-            
+
             var boostrapperUri = responseBody["bootstrapperUri"].Value<string>();
 
 
@@ -274,9 +279,9 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
             Formatting.Formatter.Register<FileInfo>(
                 info => new { TheName = info.Name }.SerializeToJson().Value,
                 JsonFormatter.MimeType);
-            
+
             var server = await GetServer();
-            
+
             await server.Kernel.SendAsync(new SubmitCode("var theFile = new System.IO.FileInfo(\"the-file.txt\");"));
 
             var response = await server.HttpClient.GetAsync("/variables/csharp/theFile");
@@ -382,9 +387,9 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
 
             kernels.Should()
                    .BeEquivalentTo(
-                       ".NET", 
-                       "csharp", 
-                       "fsharp", 
+                       ".NET",
+                       "csharp",
+                       "fsharp",
                        "pwsh",
                        "html",
                        "javascript",
