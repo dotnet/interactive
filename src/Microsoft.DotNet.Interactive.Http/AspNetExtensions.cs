@@ -11,6 +11,14 @@ namespace Microsoft.DotNet.Interactive.Http
 {
     public static class AspNetExtensions
     {
+        public static IServiceCollection AddKernel<T>(this IServiceCollection services, T kernel) where T : Kernel
+        {
+            services.AddSingleton(kernel);
+            services.AddSingleton<Kernel>(kernel);
+
+            return services;
+        }
+
         public static IWebHostBuilder UseDotNetInteractive(this IWebHostBuilder builder, bool enableHttpApi,
             HttpPort httpPort, HttpProbingSettings httpProbingSettings, IServiceCollection services)
         {
