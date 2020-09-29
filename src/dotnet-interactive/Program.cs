@@ -86,20 +86,10 @@ namespace Microsoft.DotNet.Interactive.App
                 probingSettings = HttpProbingSettings.Create(httpPort.PortNumber);
             }
 
+            var httpStartupOptions = new HttpOptions(options.EnableHttpApi, options.HttpPort);
             var webHost = new WebHostBuilder()
                           .UseKestrel()
-                          .ConfigureServices(c =>
-                          {
-                              if (options.EnableHttpApi && probingSettings != null)
-                              {
-                                  c.AddSingleton(probingSettings);
-                              }
-                              c.AddSingleton(options);
-                              foreach (var serviceDescriptor in serviceCollection)
-                              {
-                                  c.Add(serviceDescriptor);
-                              }
-                          })
+                          .UseDotNetInteractive(options.EnableHttpApi, options.HttpPort, probingSettings, serviceCollection)
                           .UseStartup<Startup>();
 
             if (options.EnableHttpApi && probingSettings != null)
