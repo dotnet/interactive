@@ -18,15 +18,15 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 {
     internal class InProcessTestServer : IDisposable
     {
-        private TestServer _host;
+        private Lazy<TestServer> _host;
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly ServiceCollection _serviceCollection = new ServiceCollection();
 
-        public static Task<InProcessTestServer> StartServer(string args, Action<IServiceCollection> servicesSetup = null)
+        public static async  Task<InProcessTestServer> StartServer(string args, Action<IServiceCollection> servicesSetup = null)
         {
             var server = new InProcessTestServer();
 
-            var completionSource = new TaskCompletionSource<InProcessTestServer>();
+            var completionSource = new TaskCompletionSource<bool>();
             var parser = CommandLineParser.Create(
                 server._serviceCollection,
                 (startupOptions, invocationContext) =>
@@ -36,33 +36,30 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                         startupOptions,
                         server._serviceCollection);
 
-                    completionSource.SetResult(server);
-                    server._host = new TestServer(builder);
-                   
+                    server._host = new Lazy<TestServer>(() => new TestServer(builder));
+                    completionSource.SetResult(true);
                 });
 
-            parser.Invoke(args, server.Console);
-
-
-
-            return completionSource.Task;
+            await parser.InvokeAsync(args, server.Console);
+            await completionSource.Task;
+            return server;
         }
 
         private InProcessTestServer()
         {
         }
-        public FrontendEnvironment FrontendEnvironment => _host.Services.GetRequiredService<Kernel>().FrontendEnvironment;
+        public FrontendEnvironment FrontendEnvironment => _host.Value.Services.GetRequiredService<Kernel>().FrontendEnvironment;
 
         public IConsole Console { get; } = new TestConsole();
 
-        public HttpClient HttpClient => _host.CreateClient();
+        public HttpClient HttpClient => _host.Value.CreateClient();
 
-        public Kernel Kernel => _host.Services.GetService<Kernel>();
+        public Kernel Kernel => _host.Value.Services.GetService<Kernel>();
 
         public void Dispose()
         {
             _disposables.Dispose();
-            _host.Dispose();
+            _host.Value.Dispose();
         }
     }
 }
