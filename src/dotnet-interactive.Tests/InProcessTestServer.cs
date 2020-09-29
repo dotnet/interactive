@@ -36,8 +36,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                         startupOptions,
                         server._serviceCollection);
 
-                    server._host = new TestServer(builder);
                     completionSource.SetResult(server);
+                    server._host = new TestServer(builder);
+                   
                 });
 
             parser.Invoke(args, server.Console);
