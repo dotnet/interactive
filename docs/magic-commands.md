@@ -31,6 +31,7 @@ The following magic commands are available globally.
 | `#!log`                                 | Enables logging for the session. Once it has been run, detailed log information from .NET Interactive will be published along with other code outputs. 
 | `#!about`                               | Displays information about the current version of .NET Interactive:<br />![image](https://user-images.githubusercontent.com/547415/81481060-42f1ca00-91e2-11ea-92f7-c4ffae904961.png)
 | `#!time`                                | Measures the execution time of the code submission.
+| `#!value`                               | Stores a value (from entered text, a file, or a URL), which can be accessed using `#!share`.
 
 ## C# Kernel
 
@@ -40,8 +41,9 @@ The following magic commands are available within a C# language context.
 |-----------------------------------------|----------------------------------------------------------------------
 | `#i`                                    | Adds a NuGet source to the session. Subsequent `#r nuget` commands will include the specified source when resolving packages.
 | `#r`                                    | In C# Interactive, the `#r` directive adds a reference to a specified assembly, e.g. `#r "/path/to/a.dll"`.  In .NET Interactive, this capability has been expanded to provide the ability to reference NuGet packages.<br />![image](https://user-images.githubusercontent.com/547415/81502691-362dae80-9294-11ea-94a4-266f4edc0d5e.png)<br />You cannot reference two different versions of the same package. If you try to do so, you'll receive an error:<br />![image](https://user-images.githubusercontent.com/547415/81502694-3cbc2600-9294-11ea-92d4-9151ad1bc805.png)
-| `#!who`                                 | The `#!who` command displays the names of the top-level variables within the C# subkernel.
-| `#!whos`                                | The `#!whos` command displays the top-level variables within the C# subkernel, including their name, type, and value.<br />![image](https://user-images.githubusercontent.com/547415/81481511-87329980-91e5-11ea-9a4b-b025435553ff.png)
+| `#!share`                               | Shares a variable from another specified subkernel (including one stored using `#!value`).
+| `#!who`                                 | Displays the names of the top-level variables within the C# subkernel.
+| `#!whos`                                | Displays the top-level variables within the C# subkernel, including their name, type, and value.<br />![image](https://user-images.githubusercontent.com/547415/81481511-87329980-91e5-11ea-9a4b-b025435553ff.png)
 
 ## F# Kernel
 
@@ -51,8 +53,9 @@ The following magic commands are available within an F# language context.
 |-----------------------------------------|----------------------------------------------------------------------
 | `#i`                                    | Adds a NuGet source to the session. Subsequent `#r nuget` commands will include the specified source when resolving packages.
 | `#r`                                    | In F# Interactive, the `#r` directive adds a reference to a specified assembly, e.g. `#r "/path/to/a.dll"`.  In F# 5, which is used by .NET Interactive, this capability has been expanded to provide the ability to reference NuGet packages.<br />![image](https://user-images.githubusercontent.com/547415/81502691-362dae80-9294-11ea-94a4-266f4edc0d5e.png)<br />You cannot reference two different versions of the same package. If you try to do so, you'll receive an error:<br />![image](https://user-images.githubusercontent.com/547415/81502694-3cbc2600-9294-11ea-92d4-9151ad1bc805.png)
-| `#!who`                                 | The `#!who` command displays the names of the top-level variables within the F# subkernel.
-| `#!whos`                                | The `#!whos` command displays the top-level variables within the F# subkernel, including their name, type, and value.<br />![image](https://user-images.githubusercontent.com/547415/81481474-636f5380-91e5-11ea-92ce-07336b201db0.png)
+| `#!share`                               | Shares a variable from another specified subkernel (including one stored using `#!value`).
+| `#!who`                                 | Displays the names of the top-level variables within the F# subkernel.
+| `#!whos`                                | Displays the top-level variables within the F# subkernel, including their name, type, and value.<br />![image](https://user-images.githubusercontent.com/547415/81481474-636f5380-91e5-11ea-92ce-07336b201db0.png)
 
 ## Extensibility
 

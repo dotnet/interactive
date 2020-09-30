@@ -1,8 +1,6 @@
 # Using .NET Interactive on small factor devices
 
-We support running .NET Interactive on small factor devices like [Raspberry Pi](https://www.raspberrypi.org/) and [piTop4](https://www.pi-top.com/products/pi-top-4).
-
-
+We support running .NET Interactive on small factor devices like [Raspberry Pi](https://www.raspberrypi.org/) and [pi-top [4]](https://github.com/pi-top/pi-top-4-.NET-Core-API).
 
 ## Installing .NET Interactive on a Raspberry Pi
 

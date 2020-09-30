@@ -70,7 +70,7 @@ After installing the extension, we get the much more appealing clock drawing, wi
 The code that does this is also found in the sample's `OnLoadAsync` method:
 
 ```csharp
-Formatter<DateTime>.Register((date, writer) =>
+Formatter.Register<DateTime>((date, writer) =>
 {
     writer.Write(date.DrawSvgClock());
 }, "text/html");
