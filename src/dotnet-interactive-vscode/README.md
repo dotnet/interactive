@@ -14,7 +14,7 @@ This extension adds support for using .NET Interactive in a Visual Studio Code n
 
 3.  Install the .NET Interactive Notebooks extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
 
-## Creating and Opening notebooks
+## Opening and Creating notebooks
 
 To open an existing .NET notebook, bring up the Command Palette and select **Open notebook**.  Now, navigate to a local `.ipynb` file. 
 
