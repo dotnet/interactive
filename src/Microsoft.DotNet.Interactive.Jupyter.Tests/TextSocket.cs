@@ -3,6 +3,7 @@
 
 using System;
 using System.Text;
+
 using NetMQ;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
@@ -13,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
         public bool TrySend(ref Msg msg, TimeSpan timeout, bool more)
         {
-            var decoded = SendReceiveConstants.DefaultEncoding.GetString(msg.Data);
+            var decoded = SendReceiveConstants.DefaultEncoding.GetString(msg);
             _buffer.AppendLine($"data: {decoded} more: {more}");
             return true;
         }
