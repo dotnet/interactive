@@ -63,13 +63,14 @@ SELECT * FROM fruit
 
         internal static IDisposable CreateInMemorySQLiteDb(out string connectionString)
         {
-            connectionString = "Data Source=InMemorySample;Mode=Memory;Cache=Shared";
+            connectionString = $"Data Source=InMemorySample_{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
             var topLevelConnection = new SqliteConnection(connectionString);
             topLevelConnection.Open();
 
             var createCommand = topLevelConnection.CreateCommand();
             createCommand.CommandText =
                 @"
+DROP TABLE IF EXISTS fruit;  
 CREATE TABLE fruit (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
