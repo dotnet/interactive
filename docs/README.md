@@ -18,7 +18,7 @@ Work is underway to add support for the new Visual Studio Code [native notebook 
 
 ### Small factor devices
 
-We support running on devices like Raspberry Pi and PiTop, you can find instructions [here](small-factor-devices.md)
+We support running on devices like Raspberry Pi and [pi-top [4]](https://github.com/pi-top/pi-top-4-.NET-Core-API). You can find instructions [here](small-factor-devices.md)
 
 ### Telemetry
 
@@ -26,6 +26,7 @@ Telemetry is collected when various .NET Interactive command lines are run. Once
 
 * `dotnet interactive jupyter`
 * `dotnet interactive jupyter install`
+* `dotnet interactive http`
 * `dotnet interactive stdio`
 
 #### How to opt out
@@ -63,12 +64,12 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
         * [PowerShell host support](../samples/notebooks/powershell/Docs/Interactive-Host-Experience.ipynb)
         * [AzShell support](../samples/notebooks/powershell/Docs/Interact-With-Azure-Cloud-Shell.ipynb)
 * Getting input from the user
-* Multi-language notebooks
+* [Multi-language notebooks](polyglot.md)
     * Switching between languages
         * Per-cell
         * Within a single cell
     * [.NET variable sharing](variable-sharing.md)
-    * Accessing kernel variables from the client with JavaScript 
+    * [Accessing kernel variables from the client with JavaScript](javascript-overview.md) 
 
 ## Technical details
 

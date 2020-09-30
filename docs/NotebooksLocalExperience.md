@@ -1,6 +1,16 @@
-# Using .NET notebooks with Jupyter on your machine
+# Using .NET notebooks on your machine
 
-## Installing the .NET Interactive Jupyter kernel
+There are two ways to use .NET notebooks on your machine with .NET Interactive:
+
+* Install .NET Interactive as a Jupyter kernel for use with Jupyter Notebook, JupyterLab, nteract, Azure Data Studio, and others.
+
+or 
+
+* Install the [.NET Interactive Notebooks extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode)
+
+Both of these methods can read and write `.ipynb` files, which are fully portable between them.
+
+## Installing .NET Interactive as a Jupyter kernel
 
 First, make sure you have the following installed:
 
