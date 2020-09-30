@@ -9,17 +9,17 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 {
     public sealed class MSSQLFact : FactAttribute
     {
-        public MSSQLFact(string connectionString)
+        public MSSQLFact(string requiredConnectionString)
         {
             try
             {
-                var connection = new SqlConnection(connectionString);
+                var connection = new SqlConnection(requiredConnectionString);
                 connection.Open();
                 connection.Dispose();
             }
             catch
             {
-                Skip = "Required connection cannot be found or established";
+                Skip = "Required db connection cannot be found or established";
             }
         }
     }
