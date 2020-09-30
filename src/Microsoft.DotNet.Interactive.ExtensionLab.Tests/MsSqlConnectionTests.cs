@@ -1,16 +1,13 @@
-﻿// // Copyright (c) .NET Foundation and contributors. All rights reserved.
-// // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Threading.Tasks;
 
 using FluentAssertions;
-
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-
-using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
@@ -24,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             _output = output;
         }
 
-        [Fact]
+        [MSSQLFact("Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost")]
         public async Task It_can_connect_and_query_data()
         {
             using var kernel = new CompositeKernel
@@ -62,7 +59,7 @@ SELECT TOP 100 * FROM Person.Person
                   .ContainSingle(f => f.MimeType == HtmlFormatter.MimeType);
         }
 
-        [Fact]
+        [MSSQLFact("Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost")]
         public async Task It_can_scaffold_a_DbContext_in_a_CSharpKernel()
         {
             using var kernel = new CompositeKernel
