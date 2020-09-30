@@ -7,9 +7,9 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 {
-    public sealed class MSSQLFact : FactAttribute
+    public sealed class MsSqlFact : FactAttribute
     {
-        public MSSQLFact(string requiredConnectionString)
+        public MsSqlFact(string requiredConnectionString)
         {
             try
             {
