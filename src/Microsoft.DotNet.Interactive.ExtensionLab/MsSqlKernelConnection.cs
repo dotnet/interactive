@@ -107,8 +107,6 @@ foreach (var file in  new[] {{ model.ContextFile.Code }}.Concat(model.Additional
                       
     code += fileCode;
 }}
-
-code
 ";
 
             await csharpKernel.SubmitCodeAsync(submission1);
