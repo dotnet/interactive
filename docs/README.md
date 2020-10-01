@@ -85,7 +85,7 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 
 * Using the .NET Interactive [command-line interface](../src/dotnet-interactive/CommandLine/readme.md)
 
-### .NET API Guide
+### .NET API Guide ([TODO](https://github.com/dotnet/interactive/issues/815))
 
 * Commands and events
 * Formatter APIs
