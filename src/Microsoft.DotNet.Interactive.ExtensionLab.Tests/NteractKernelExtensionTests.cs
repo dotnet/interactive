@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var formatted = data.ToTabularJsonString().ToDisplayString(HtmlFormatter.MimeType);
 
-            formatted.Should().Match("*getExtensionRequire('nteract','1.0.0')(['nteract/index'], (nteract) => {*");
+            formatted.Should().Contain("getExtensionRequire('nteract','1.0.0')(['nteract/index'], (nteract) => {");
         }
 
         [Fact]
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var formatted = data.ToTabularJsonString().ToDisplayString(HtmlFormatter.MimeType);
 
-            formatted.Should().Match("*getExtensionRequire*");
+            formatted.Should().Contain("getExtensionRequire");
         }
 
         [Fact]
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var formatted = data.ToTabularJsonString().ToDisplayString(HtmlFormatter.MimeType);
 
-            formatted.Should().Match("*getJsLoader*");
+            formatted.Should().Contain("getJsLoader");
         }
 
         [Fact]
@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var formatted = data.ToTabularJsonString().ToDisplayString(HtmlFormatter.MimeType);
 
-            formatted.Should().Match("*'context': '2.2.2'*");
+            formatted.Should().Contain("'context': '2.2.2'");
         }
 
         [Fact]
@@ -134,7 +134,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var formatted = data.ToTabularJsonString().ToDisplayString(HtmlFormatter.MimeType);
 
-            formatted.Should().Match("*'https://a.cdn.url/script'*");
+            formatted.Should().Contain("'https://a.cdn.url/script'");
         }
 
         [Fact]
