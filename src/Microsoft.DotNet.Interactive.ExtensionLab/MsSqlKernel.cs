@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             var queryResult = await _serviceClient.ExecuteSimpleQueryAsync(_connectionUri, command.Code);
             var tableString = GetTableStringForSimpleResult(queryResult);
-            await context.DisplayAsync(tableString, HtmlFormatter.MimeType);
+            context.Display(tableString, HtmlFormatter.MimeType);
         }
 
         private TabularJsonString GetTableStringForSimpleResult(SimpleExecuteResult executeResult)

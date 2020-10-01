@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             var results = Execute(dbCommand);
 
-            await context.DisplayAsync(results);
+            context.Display(results);
         }
 
         private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> Execute(IDbCommand command)
