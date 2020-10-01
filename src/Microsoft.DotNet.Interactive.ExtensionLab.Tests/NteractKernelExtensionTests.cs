@@ -72,6 +72,31 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         }
 
         [Fact]
+        public async Task it_checks_and_load_require()
+        {
+            using var kernel = new CompositeKernel();
+
+            var kernelExtension = new NteractKernelExtension();
+            DataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
+            await kernelExtension.OnLoadAsync(kernel);
+
+            var data = new[]
+            {
+                new {Type="orange", Price=1.2},
+                new {Type="apple" , Price=1.3},
+                new {Type="grape" , Price=1.4}
+            };
+
+
+            var formatted = data.ToTabularJsonString().ToDisplayString(HtmlFormatter.MimeType);
+
+            formatted.Should()
+                .Contain("if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function)))")
+                .And
+                .Contain("script.onload = function()");
+        }
+
+        [Fact]
         public async Task it_can_loads_script_from_uri()
         {
             using var kernel = new CompositeKernel();
@@ -165,7 +190,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new NteractKernelExtension();
-            DataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js", cacheBuster:"XYZ");
+            DataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js", cacheBuster: "XYZ");
             await kernelExtension.OnLoadAsync(kernel);
 
             var data = new[]
