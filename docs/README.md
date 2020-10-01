@@ -96,16 +96,18 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
     * Variable sharing
 * JSON API for Standard I/O and HTTP modes ([TODO](https://github.com/dotnet/interactive/issues/813))
 
-### JavaScript API Guide
+### JavaScript API Guide ([TODO](https://github.com/dotnet/interactive/issues/814))
 
 * Variable access from the client
 * RequireJS support
+* Accessing static resources
+* Sending kernel commands and consuming kernel events
  
 ## Extending .NET Interactive
 
 * [Overview](extending-dotnet-interactive.md)
-* [Adding magic commands](extending-dotnet-interactive.md#adding-magic-commands)
-* Building your own extension
+* [Building your own extension](extending-dotnet-interactive.md)
+  * [Adding magic commands](extending-dotnet-interactive.md#adding-magic-commands)
 * Publishing your extension using NuGet
 
 
