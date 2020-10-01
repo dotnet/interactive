@@ -161,8 +161,13 @@ export function toNotebookDocument(document: vscode.NotebookDocument): NotebookD
 }
 
 function toNotebookCell(cell: vscode.NotebookCell): NotebookCell {
+    // `cell.language` doesn't always specify a value.  Using this workaround until
+    // issue https://github.com/microsoft/vscode/issues/107917 has been fixed.
+    const cellLanguage = !cell.language && cell.cellKind === vscode.CellKind.Markdown
+        ? "markdown"
+        : cell.language;
     return {
-        language: getSimpleLanguage(cell.language),
+        language: getSimpleLanguage(cellLanguage),
         contents: cell.document.getText(),
         outputs: cell.outputs.map(toNotebookCellOutput)
     };
