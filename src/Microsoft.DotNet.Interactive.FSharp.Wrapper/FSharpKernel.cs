@@ -12,12 +12,15 @@ namespace Microsoft.DotNet.Interactive.FSharp
         FSharpKernelBase,
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestDiagnostics>,
-        IKernelCommandHandler<SubmitCode>
+        IKernelCommandHandler<SubmitCode>,
+        IKernelCommandHandler<RequestHoverText>
     {
         public Task HandleAsync(RequestCompletions command, KernelInvocationContext context) => HandleRequestCompletionAsync(command, context);
 
         public Task HandleAsync(RequestDiagnostics command, KernelInvocationContext context) => HandleRequestDiagnosticsAsync(command, context);
 
         public Task HandleAsync(SubmitCode command, KernelInvocationContext context) => HandleSubmitCodeAsync(command, context);
+
+        public Task HandleAsync(RequestHoverText command, KernelInvocationContext context) => HandleRequestHoverText(command, context);
     }
 }

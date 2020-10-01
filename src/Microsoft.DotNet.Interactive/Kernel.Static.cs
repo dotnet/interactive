@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive
             object value,
             string mimeType = null)
         {
-            return Task.Run(() => KernelInvocationContext.Current.DisplayAsync(value, mimeType)).Result;
+            return KernelInvocationContext.Current.Display(value, mimeType);
         }
 
         public static IHtmlContent HTML(string content) => content.ToHtmlContent();

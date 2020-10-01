@@ -3,19 +3,21 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { ClientMapper } from './clientMapper';
+import { ClientMapper } from '../clientMapper';
 
-import { DotNetInteractiveNotebookContentProvider } from './vscode/notebookProvider';
-import { StdioKernelTransport } from './stdioKernelTransport';
-import { registerLanguageProviders } from './vscode/languageProvider';
-import { execute, registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './vscode/commands';
+import { DotNetInteractiveNotebookContentProvider } from './notebookContentProvider';
+import { StdioKernelTransport } from '../stdioKernelTransport';
+import { registerLanguageProviders } from './languageProvider';
+import { execute, registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
 
-import { IDotnetAcquireResult } from './interfaces/dotnet';
-import { InteractiveLaunchOptions, InstallInteractiveArgs } from './interfaces';
+import { IDotnetAcquireResult } from '../interfaces/dotnet';
+import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
-import compareVersions = require("../node_modules/compare-versions");
-import { processArguments } from './utilities';
+import compareVersions = require("compare-versions");
+import { processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
+import { DotNetInteractiveNotebookKernel } from './notebookKernel';
+import { DotNetInteractiveNotebookKernelProvider } from './notebookKernelProvider';
 
 export async function activate(context: vscode.ExtensionContext) {
     // install dotnet or use global
@@ -69,10 +71,12 @@ export async function activate(context: vscode.ExtensionContext) {
         viewType: ['dotnet-interactive', 'dotnet-interactive-jupyter'],
         filenamePattern: '*.{dib,dotnet-interactive,ipynb}'
     };
-    const notebookProvider = new DotNetInteractiveNotebookContentProvider(clientMapper, diagnosticsChannel, apiBootstrapperUri);
-    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookProvider));
-    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive-jupyter', notebookProvider));
-    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selector, notebookProvider));
+    const notebookContentProvider = new DotNetInteractiveNotebookContentProvider(clientMapper);
+    const notebookKernel = new DotNetInteractiveNotebookKernel(clientMapper, apiBootstrapperUri);
+    const notebookKernelProvider = new DotNetInteractiveNotebookKernelProvider(notebookKernel);
+    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookContentProvider));
+    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive-jupyter', notebookContentProvider));
+    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selector, notebookKernelProvider));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(registerLanguageProviders(clientMapper, diagnosticDelay));
 }

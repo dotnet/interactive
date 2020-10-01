@@ -18,7 +18,7 @@ Work is underway to add support for the new Visual Studio Code [native notebook 
 
 ### Small factor devices
 
-We support running on devices like Raspberry Pi and PiTop, you can find instructions [here](small-factor-devices.md)
+We support running on devices like Raspberry Pi and [pi-top [4]](https://github.com/pi-top/pi-top-4-.NET-Core-API). You can find instructions [here](small-factor-devices.md)
 
 ### Telemetry
 
@@ -26,6 +26,7 @@ Telemetry is collected when various .NET Interactive command lines are run. Once
 
 * `dotnet interactive jupyter`
 * `dotnet interactive jupyter install`
+* `dotnet interactive http`
 * `dotnet interactive stdio`
 
 #### How to opt out
@@ -63,12 +64,12 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
         * [PowerShell host support](../samples/notebooks/powershell/Docs/Interactive-Host-Experience.ipynb)
         * [AzShell support](../samples/notebooks/powershell/Docs/Interact-With-Azure-Cloud-Shell.ipynb)
 * Getting input from the user
-* Multi-language notebooks
+* [Multi-language notebooks](polyglot.md)
     * Switching between languages
         * Per-cell
         * Within a single cell
     * [.NET variable sharing](variable-sharing.md)
-    * Accessing kernel variables from the client with JavaScript 
+    * [Accessing kernel variables from the client with JavaScript](javascript-overview.md) 
 
 ## Technical details
 
@@ -84,7 +85,7 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 
 * Using the .NET Interactive [command-line interface](../src/dotnet-interactive/CommandLine/readme.md)
 
-### .NET API Guide
+### .NET API Guide ([TODO](https://github.com/dotnet/interactive/issues/815))
 
 * Commands and events
 * Formatter APIs
@@ -93,18 +94,20 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 * Magic commands
 * Kernel APIs
     * Variable sharing
-* JSON API for Standard I/O and HTTP modes
+* JSON API for Standard I/O and HTTP modes ([TODO](https://github.com/dotnet/interactive/issues/813))
 
-### JavaScript API Guide
+### JavaScript API Guide ([TODO](https://github.com/dotnet/interactive/issues/814))
 
 * Variable access from the client
 * RequireJS support
+* Accessing static resources
+* Sending kernel commands and consuming kernel events
  
 ## Extending .NET Interactive
 
 * [Overview](extending-dotnet-interactive.md)
-* [Adding magic commands](extending-dotnet-interactive.md#adding-magic-commands)
-* Building your own extension
+* [Building your own extension](extending-dotnet-interactive.md)
+  * [Adding magic commands](extending-dotnet-interactive.md#adding-magic-commands)
 * Publishing your extension using NuGet
 
 

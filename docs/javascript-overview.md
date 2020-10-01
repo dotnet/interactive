@@ -47,3 +47,4 @@ The `interactive` object contains the following properties, corresponding to the
 * `interactive.csharp`
 * `interactive.fsharp`
 * `interactive.pwsh`
+* `interactive.value`

@@ -13,6 +13,7 @@
     <FileSignInfo Include="Serilog.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Serilog.Sinks.RollingFileAlternate.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="XPlot.Plotly.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="NaCl.dll" CertificateName="3PartySHA2" />
 
     <!-- PowerShell Modules that are shipped with the PowerShell subkernel -->
 

@@ -11,6 +11,7 @@
     <PackageTags>dotnet-interactive</PackageTags>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <NoWarn>$(NoWarn);NU5100</NoWarn><!-- dll outside of lib/ folder -->
+     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -29,6 +30,8 @@
     <TypescriptInputs Include="$(JsApiRoot)rollup.config.js" />
     <TypescriptInputs Include="$(JsApiRoot)tsconfig.json" />
     <TypescriptInputs Include="$(JsApiRoot)src/**/*.ts" />
+    <None Include="Inspector\LICENSE.SharpLab" />
+    <None Include="Inspector\README.md" />
 
     <TypescriptOutputFiles Include="$(JsApiRoot)dist/index.js" />
 
@@ -39,14 +42,27 @@
  <ItemGroup>
    <PackageReference Include="Microsoft.Data.Analysis" Version="0.4.0" />
    <PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.0" />
-   <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.7" />
    <PackageReference Include="StreamJsonRpc" Version="2.6.99-rc" />
+   <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.8" />
+ </ItemGroup>
+
+ <ItemGroup>
+   <PackageReference Include="Iced" Version="1.8.0" />
+   <PackageReference Include="ICSharpCode.Decompiler" Version="6.1.0.5902" />
+   <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
+   <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
+   <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="1.1.132302" />
+   <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
-    <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" PrivateAssets="All" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="bin\Debug\netcoreapp3.1\/Microsoft.DotNet.Interactive.ExtensionLab.dll" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <DefineConstants>NO_EXTENSIONTYPING;$(DefineConstants);DOTNET_SPAWN;NETCORE_FSI</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Utils.fs" />
+    <Compile Include="TypedAstUtils.fs" />
+    <Compile Include="TypedAstPatterns.fs" />
+    <Compile Include="Lexer.fs" />
+    <Compile Include="SignatureFormatter.fs" />
+    <Compile Include="TipFormatter.fs" />
+    <Compile Include="DocumentationFormatter.fs" />
+    <Compile Include="KeywordList.fs" />
+    <Compile Include="InteractiveDirectives.fs" />
+    <Compile Include="ParseAndCheckResults.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharp.Compiler.Private.Scripting" />
+  </ItemGroup>
+</Project>

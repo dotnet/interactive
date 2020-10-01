@@ -8,12 +8,13 @@ When a notebook is opened in JupyterLab, its default language is displayed in th
 
 <img src="https://user-images.githubusercontent.com/547415/81724518-59459300-9439-11ea-8938-ce152640cf1a.png" width="70%">
 
-You can specify the language for a cell using one of a number of [magic commands](./magic-commands.md). For example, though the default language of the following notebook is F#, it's possible to run code in C# using the `#!csharp` magic command and in PowerShell using the `#!pwsh` magic command:
+But every .NET Interactive notebook is capable of running multiple languages. You can specify the language for a cell using one of a number of [magic commands](./magic-commands.md). For example, though the default language of the following notebook is F#, it's possible to run code in C# using the `#!csharp` magic command and in PowerShell using the `#!pwsh` magic command:
 
 <img src="https://user-images.githubusercontent.com/547415/81730391-4f745d80-9442-11ea-9f17-244471f6af83.png" width="70%">
 
 If you're editing a notebook in Visual Studio Code, you can also choose the language for a submission by clicking the language selector in a cell's lower right corner.
 
-<img src="https://user-images.githubusercontent.com/547415/82159474-276e6b00-9843-11ea-8ec0-f3f5bcee7547.png" width="60%">
+<img src="https://user-images.githubusercontent.com/547415/94707927-dd20ee80-02f8-11eb-89da-7772235e20db.png" width="60%">
 
 The language-selection magic commands will still work in Visual Studio Code as well.
+

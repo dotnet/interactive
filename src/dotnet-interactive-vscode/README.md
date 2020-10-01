@@ -14,12 +14,12 @@ This extension adds support for using .NET Interactive in a Visual Studio Code n
 
 3.  Install the .NET Interactive Notebooks extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode).
 
-## Creating and editing notebooks
+## Opening and Creating notebooks
 
-To open an existing Jupyter notebook (`.ipynb`), run the VS Code command `.NET Interactive: Open notebook` and select the file you would like to open.
+To open an existing .NET notebook, bring up the Command Palette(`Ctrl+Shift+P`) and select **Open notebook**.  Now, navigate to a local `.ipynb` file. 
 
-You can create a notebook by creating a new file with the `.dib` extension and opening it. 
+![opennotebook](https://user-images.githubusercontent.com/2546640/94441970-67d6e180-0171-11eb-8319-c12ba82c3d30.gif)
 
-Currently, to create a new `.ipynb` notebook, you must first create a `.dib` and open it, then run the VS Code command `.NET Interactive: Save notebook as specific file format`.
+To create a new notebook, open the Command Palette(`Ctrl+Shift+P`), and select **Create new blank notebook**. You can also create a new notebook with `Ctrl+Shift+Alt+N` key combination. 
 
-**_A note on the `.dib` file format:_** _Improved support for reading and writing Jupyter notebooks (`.ipynb`) is coming soon. For more information, please see https://github.com/dotnet/interactive/issues/467_.
+![newnotebook](https://user-images.githubusercontent.com/2546640/94438730-833fed80-016d-11eb-94e6-da7b51abf58a.gif)

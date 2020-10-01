@@ -185,10 +185,11 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task Can_add_to_list_of_added_sources()
         {
             using var restoreContext = new PackageRestoreContext();
+
+            var savedRestoreSources = restoreContext.RestoreSources.ToArray();
             restoreContext.AddRestoreSource("https://completely FakerestoreSource");
             await restoreContext.RestoreAsync();
-
-            var restoreSources = restoreContext.RestoreSources;
+            var restoreSources = restoreContext.RestoreSources.Where(p => !savedRestoreSources.Contains(p));
             restoreSources.Should()
                           .ContainSingle("https://completely FakerestoreSource");
         }
@@ -197,11 +198,12 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task Can_add_same_source_to_list_of_added_sources_without_error()
         {
             using var restoreContext = new PackageRestoreContext();
-            restoreContext.AddRestoreSource("https://completely FakerestoreSource");
-            restoreContext.AddRestoreSource("https://completely FakerestoreSource");
 
+            var savedRestoreSources = restoreContext.RestoreSources.ToArray();
+            restoreContext.AddRestoreSource("https://completely FakerestoreSource");
+            restoreContext.AddRestoreSource("https://completely FakerestoreSource");
             await restoreContext.RestoreAsync();
-            var restoreSources = restoreContext.RestoreSources;
+            var restoreSources = restoreContext.RestoreSources.Where(p => !savedRestoreSources.Contains(p));
             restoreSources.Should()
                           .ContainSingle("https://completely FakerestoreSource");
         }

@@ -25,6 +25,11 @@ namespace Microsoft.DotNet.Interactive
 
         public PackageRestoreContext()
         {
+            // By default look in to the package sources
+            //    "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json"
+            //    "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json"
+            AddRestoreSource("https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json");
+            AddRestoreSource("https://dotnet.myget.org/F/dotnet-try/api/v3/index.json");
             _dependencies = new DependencyProvider(AssemblyProbingPaths, NativeProbingRoots);
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
         }
@@ -102,16 +107,16 @@ namespace Microsoft.DotNet.Interactive
 
         public ResolvedPackageReference GetResolvedPackageReference(string packageName) => _resolvedPackageReferences[packageName];
 
-        private IEnumerable<string> GetPackageManagerLines()
+        private IEnumerable<Tuple<string, string>> GetPackageManagerLines()
         {
             // return restore sources
             foreach( var rs in RestoreSources)
             {
-                yield return $"RestoreSources={rs}";
+                yield return Tuple.Create("i", rs);
             }
             foreach (var pr in RequestedPackageReferences)
             {
-                yield return $"Include={pr.PackageName}, Version={pr.PackageVersion}";
+                yield return Tuple.Create("r", $"Include={pr.PackageName}, Version={pr.PackageVersion}");
             }
         }
 
@@ -196,7 +201,7 @@ namespace Microsoft.DotNet.Interactive
             Log.Info("OnAssemblyLoad: {location}", args.LoadedAssembly.Location);
         }
 
-        private IResolveDependenciesResult Resolve(IEnumerable<string> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
+        private IResolveDependenciesResult Resolve(IEnumerable<Tuple<string, string>> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
         {
             IDependencyManagerProvider iDependencyManager = _dependencies.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
             if (iDependencyManager == null)

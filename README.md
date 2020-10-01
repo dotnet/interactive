@@ -4,8 +4,9 @@
 
 .NET Interactive takes the power of .NET and embeds it into *your* interactive experiences. Share code, explore data, write, and learn across your apps in ways you couldn't before.
 
-* [Notebooks](#notebooks-with-net-core): Jupyter, nteract, and Visual Studio Code 
+* [Notebooks](#notebooks-with-net): Jupyter, nteract, and Visual Studio Code 
 * [Code bots](https://github.com/CodeConversations/CodeConversations)
+* Devices like [Raspberry Pi]()
 * Embeddable script engines
 * REPLs
 
@@ -26,11 +27,13 @@ There are several ways to get started using .NET with Jupyter, including Jupyter
 - [Install .NET Interactive](docs/NotebooksLocalExperience.md) to create and run .NET notebooks on your machine.
 - [Share your own .NET notebooks with others online using Binder](docs/CreateBinder.md).
 - [Use .NET Interactive with nteract](https://nteract.io/kernels/dotnet)
-- [Use .NET Interactive on Raspberry Pi and piTop](docs/small-factor-devices.md)
+- [Use .NET Interactive on Raspberry Pi and pi-top](docs/small-factor-devices.md)
 
 ## Visual Studio Code
 
-Work is underway on a [Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) to add support for .NET Interactive using the new Visual Studio Code [native notebook feature](https://code.visualstudio.com/updates/v1_45#_github-issue-notebook). While we are still in the early stages of this effort, if you'd like to experiment with it you can find instructions [here](./src/dotnet-interactive-vscode/README.md). If you'd like to contribute, start [here](CONTRIBUTING.md). 
+We have recently introduced the [.NET Interactive Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) extension for Visual Studio Code Insiders, which adds support for .NET Interactive using the new Visual Studio Code [native notebook feature](https://code.visualstudio.com/updates/v1_45#_github-issue-notebook). While we are still in the early stages of this effort, we encourage you to [try it out](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode). If you'd like to contribute, you can start [here](CONTRIBUTING.md). 
+
+![newnotebook](https://user-images.githubusercontent.com/2546640/94438730-833fed80-016d-11eb-94e6-da7b51abf58a.gif)
 
 ## Documentation
 

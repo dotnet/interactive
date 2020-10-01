@@ -26,12 +26,14 @@
   "activationEvents": [
     "onNotebookEditor:dotnet-interactive",
     "onNotebookEditor:dotnet-interactive-jupyter",
+    "onNotebook:dotnet-interactive",
+    "onNotebook:dotnet-interactive-jupyter",
     "onCommand:dotnet-interactive.acquire",
     "onCommand:dotnet-interactive.newNotebook",
     "onCommand:dotnet-interactive.openNotebook",
     "onCommand:dotnet-interactive.saveAsNotebook"
   ],
-  "main": "./out/extension.js",
+  "main": "./out/vscode/extension.js",
   "extensionDependencies": [
     "ms-dotnettools.vscode-dotnet-runtime"
   ],
@@ -97,7 +99,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.146001",
+          "default": "1.0.147303",
           "description": "The minimum required version of the .NET Interactive tool."
         }
       }
@@ -270,6 +272,6 @@
   },
   "dependencies": {
     "compare-versions": "3.6.0",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.1"
   }
 }

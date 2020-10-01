@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.App
             var about = new Command("#!about", "Show version and build information")
             {
                 Handler = CommandHandler.Create<KernelInvocationContext>(
-                    async context => await context.DisplayAsync(VersionSensor.Version()))
+                    context => context.Display(VersionSensor.Version()))
             };
 
             kernel.AddDirective(about);
@@ -78,15 +78,7 @@ namespace Microsoft.DotNet.Interactive.App
             return kernel;
         }
 
-        public static T UseXplot<T>(this T kernel)
-            where T : Kernel
-        {
-            Formatter.Register<PlotlyChart>(
-                (chart, writer) => writer.Write(PlotlyChartExtensions.GetHtml(chart)),
-                HtmlFormatter.MimeType);
 
-            return kernel;
-        }
 
         public static T UseHttpApi<T>(this T kernel, StartupOptions startupOptions, HttpProbingSettings httpProbingSettings)
             where T : Kernel

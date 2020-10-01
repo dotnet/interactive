@@ -40,6 +40,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 
         [Theory]
         [InlineData(Language.CSharp, "var x = 12$$34;", "text/markdown", "readonly struct System.Int32")]
+        [InlineData(Language.FSharp, "let f$$oo = 12", "text/markdown", "```fsharp\nval foo : int\n```\n\n----\n*Full name: foo*")]
         public async Task hover_request_returns_expected_result(Language language, string markupCode, string expectedMimeType, string expectedContent)
         {
             using var kernel = CreateKernel(language);
@@ -60,6 +61,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 
         [Theory]
         [InlineData(Language.CSharp, "var x = 1; // hovering$$ in a comment")]
+        [InlineData(Language.FSharp, "let x = 1 // hovering$$ in a comment")]
         public async Task invalid_hover_request_returns_no_result(Language language, string markupCode)
         {
             using var kernel = CreateKernel(language);
@@ -77,6 +79,8 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         [Theory]
         [InlineData(Language.CSharp, "var x = 1; // hovering past the end of the line", 0, 200)]
         [InlineData(Language.CSharp, "var x = 1; // hovering on a non-existent line", 10, 2)]
+        [InlineData(Language.FSharp, "let x = 1 // hovering past the end of the line", 0, 200)]
+        [InlineData(Language.FSharp, "let x = 1 // hovering on a non-existent line", 10, 2)]
         public async Task out_of_bounds_hover_request_returns_no_result(Language language, string code, int line, int character)
         {
             using var kernel = CreateKernel(language);
@@ -92,6 +96,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 
         [Theory]
         [InlineData(Language.CSharp, "var one = 1;", "Console.WriteLine(o$$ne)", "text/markdown", "(field) int one")]
+        [InlineData(Language.FSharp, "let one = 1", "printfn \"%a\" o$$ne", "text/markdown", "```fsharp\nval one : int\n```\n\n----\n*Full name: one*")]
         public async Task language_service_methods_run_deferred_commands(Language language, string deferredCode, string markupCode, string expectedMimeType, string expectedContent)
         {
             // declare a variable in deferred code
@@ -115,6 +120,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 
         [Theory]
         [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 17 overloads)")]
+        [InlineData(Language.FSharp, "ex$$it 0", "text/markdown", "```fsharp\nval exit: \n   exitcode: int \n          -> 'T\n```\n\n----\n\n\n**Generic parameters**\n\n* `'T` is `obj`\n\n----\n*Full name: Microsoft.FSharp.Core.Operators.exit*\n\n----\n*Assembly: FSharp.Core*")]
         public async Task hover_text_commands_have_offsets_normalized_after_magic_commands(Language language, string markupCode, string expectedMimeType, string expectedContent)
         {
             using var kernel = CreateKernel(language);
@@ -142,6 +148,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 
         [Theory]
         [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 17 overloads)")]
+        [InlineData(Language.FSharp, "ex$$it 0", "text/markdown", "```fsharp\nval exit: \n   exitcode: int \n          -> 'T\n```\n\n----\n\n\n**Generic parameters**\n\n* `'T` is `obj`\n\n----\n*Full name: Microsoft.FSharp.Core.Operators.exit*\n\n----\n*Assembly: FSharp.Core*")]
         public async Task hover_text_commands_have_offsets_normalized_after_switching_to_the_same_language(Language language, string markupCode, string expectedMimeType, string expectedContent)
         {
             using var kernel = CreateKernel(language);
@@ -195,21 +202,24 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 
         [Theory]
         [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp, Skip = "not implemented in fsharp")]
+        [InlineData(Language.FSharp)]
         public async Task csharp_hover_text_is_returned_for_shadowing_variables(Language language)
         {
             SubmitCode declaration = null;
             SubmitCode shadowingDeclaration = null;
             using var kernel = CreateKernel(language);
+            string expected = "";
             switch (language)
             {
                 case Language.CSharp:
                     declaration = new SubmitCode("var identifier = 1234;");
                     shadowingDeclaration = new SubmitCode("var identifier = \"one-two-three-four\";");
+                    expected = "(field) string identifier";
                     break;
                 case Language.FSharp:
                     declaration = new SubmitCode("let identifier = 1234");
                     shadowingDeclaration = new SubmitCode("let identifier = \"one-two-three-four\"");
+                    expected = "```fsharp\nval identifier : string\n```\n\n----\n*Full name: identifier*";
                     break;
 
             }
@@ -223,6 +233,8 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 
             var commandResult = await SendHoverRequest(kernel, code, line, column);
 
+
+
             commandResult
                 .KernelEvents
                 .ToSubscribedList()
@@ -231,7 +243,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .Which
                 .Content
                 .Should()
-                .ContainSingle(fv => fv.Value == "(field) string identifier");
+                .ContainSingle(fv => fv.Value == expected);
         }
     }
 }

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -12,15 +11,6 @@ namespace Microsoft.DotNet.Interactive
 {
     public static class KernelInvocationContextExtensions
     {
-        public static Task<DisplayedValue> DisplayAsync(
-            this KernelInvocationContext context,
-            object value,
-            string mimeType = null)
-        {
-            DisplayedValue result = Display(context, value, mimeType);
-            return Task.FromResult(result);
-        }
-
         public static DisplayedValue Display(
             this KernelInvocationContext context,
             object value,

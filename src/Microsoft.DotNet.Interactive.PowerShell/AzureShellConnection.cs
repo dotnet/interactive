@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
@@ -118,6 +119,36 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         public AzureTenant[] value { get; set; }
     }
 
+    internal class CloudShellSettings
+    {
+        public CloudShellSettingProperties properties { get; set; }
+    }
+
+    internal class CloudShellSettingProperties
+    {
+        public string preferredLocation { get; set; }
+        public StorageProfile storageProfile { get; set; }
+        public string preferredShellType { get; set; }
+    }
+
+    internal class StorageProfile
+    {
+        public string storageAccountResourceId { get; set; }
+        public string fileShareName { get; set; }
+        public int diskSizeInGB { get; set; }
+    }
+
+    internal class FailedRequest
+    {
+        public FailedRequestError error { get; set; }
+    }
+
+    internal class FailedRequestError
+    {
+        public string code { get; set; }
+        public string message { get; set; }
+    }
+
     #endregion
 
     internal class AzShellConnectionUtils : IDisposable
@@ -184,7 +215,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
         }
 
-        internal async Task ConnectAndInitializeAzShell(int terminalWidth, int terminalHeight)
+        internal async Task<bool> ConnectAndInitializeAzShell(int terminalWidth, int terminalHeight)
         {
             if (_sessionInitialized)
             {
@@ -214,6 +245,13 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 await RefreshToken().ConfigureAwait(false);
             }
 
+            var userSettings = await ReadCloudShellUserSettings().ConfigureAwait(false);
+            if (userSettings?.properties == null || userSettings.properties.storageProfile == null)
+            {
+                Console.Error.WriteLine("It seems you haven't setup your Azure Cloud Shell account yet. Navigate to https://shell.azure.com to complete account setup.");
+                return false;
+            }
+
             Console.Write("Requesting Cloud Shell...");
             string cloudShellUri = await RequestCloudShell().ConfigureAwait(false);
             Console.WriteLine("Succeeded.");
@@ -231,6 +269,8 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             // Wait for 2 seconds for the initialization to finish, e.g. the profile.
             await Task.Delay(2000).ConfigureAwait(false);
             await SendCommand(CommandToSetPrompt).ConfigureAwait(false);
+
+            return true;
         }
 
         internal async Task ExitSession()
@@ -495,15 +535,21 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             string encodedResource = Uri.EscapeDataString(resource);
             string body = $"client_id={ClientId}&resource={encodedResource}&grant_type=refresh_token&refresh_token={_cachedRefreshToken}";
 
-            byte[] response = await SendWebRequest(
+            HttpResponseMessage response = await SendWebRequest(
                 resourceUri: resourceUri,
                 body: body,
                 contentType: "application/x-www-form-urlencoded",
-                method: HttpMethod.Post,
-                ignoreError: true
+                token: null,
+                method: HttpMethod.Post
             );
 
-            var authResponse = JsonSerializer.Deserialize<AuthResponse>(response);
+            if (!response.IsSuccessStatusCode)
+            {
+                await ThrowForFailedRequest(response, "Failed to refresh the access token. {0}.");
+            }
+
+            byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+            var authResponse = JsonSerializer.Deserialize<AuthResponse>(bytes);
             _cachedAccessToken = authResponse.access_token;
             _cachedRefreshToken = authResponse.refresh_token;
 
@@ -516,7 +562,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         private async Task<string> RequestTerminal(string uri, int width, int height)
         {
             string resourceUri = $"{uri}/terminals?cols={width}&rows={height}&version=2019-01-01&shell=bash";
-            byte[] response = await SendWebRequest(
+            HttpResponseMessage response = await SendWebRequest(
                 resourceUri: resourceUri,
                 body: string.Empty,
                 contentType: "application/json",
@@ -524,14 +570,20 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 method: HttpMethod.Post
             );
 
-            var terminal = JsonSerializer.Deserialize<CloudShellTerminal>(response);
+            if (!response.IsSuccessStatusCode)
+            {
+                await ThrowForFailedRequest(response, "Failed to request a cloud shell terminal. {0}.");
+            }
+
+            byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+            var terminal = JsonSerializer.Deserialize<CloudShellTerminal>(bytes);
             return terminal.socketUri;
         }
 
         private async Task<string> GetTenantId()
         {
             const string resourceUri = "https://management.azure.com/tenants?api-version=2018-01-01";
-            byte[] response = await SendWebRequest(
+            HttpResponseMessage response = await SendWebRequest(
                 resourceUri: resourceUri,
                 body: null,
                 contentType: null,
@@ -539,13 +591,46 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 method: HttpMethod.Get
             );
 
-            var tenant = JsonSerializer.Deserialize<AzureTenantResponse>(response);
+            if (!response.IsSuccessStatusCode)
+            {
+                await ThrowForFailedRequest(response, "Failed to get the tenant Id. {0}.");
+            }
+
+            byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+            var tenant = JsonSerializer.Deserialize<AzureTenantResponse>(bytes);
             if (tenant.value.Length == 0)
             {
                 throw new Exception("No tenants found!");
             }
 
             return tenant.value[0].tenantId;
+        }
+
+        private async Task<CloudShellSettings> ReadCloudShellUserSettings()
+        {
+            const string settingsUri = "https://management.azure.com/providers/Microsoft.Portal/userSettings/cloudconsole?api-version=2018-10-01";
+
+            HttpResponseMessage response = await SendWebRequest(
+                resourceUri: settingsUri,
+                body: null,
+                contentType: null,
+                token: _cachedAccessToken,
+                method: HttpMethod.Get
+            );
+
+            if (response.IsSuccessStatusCode)
+            {
+                byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+                return JsonSerializer.Deserialize<CloudShellSettings>(bytes);
+            }
+
+            if (response.StatusCode != HttpStatusCode.NotFound)
+            {
+                await ThrowForFailedRequest(response, "Failed to get the cloud shell user settings. {0}.");
+            }
+
+            // The user setting cannot be found.
+            return null;
         }
 
         private async Task<string> RequestCloudShell()
@@ -561,7 +646,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 }
                 ";
 
-            byte[] response = await SendWebRequest(
+            HttpResponseMessage response = await SendWebRequest(
                 resourceUri: resourceUri,
                 body: body,
                 contentType: "application/json",
@@ -569,7 +654,13 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 method: HttpMethod.Put
             );
 
-            var cloudShellResponse = JsonSerializer.Deserialize<CloudShellResponse>(response);
+            if (!response.IsSuccessStatusCode)
+            {
+                await ThrowForFailedRequest(response, "Failed to request for the cloud shell URI. {0}.");
+            }
+
+            byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+            var cloudShellResponse = JsonSerializer.Deserialize<CloudShellResponse>(bytes);
             return cloudShellResponse.properties["uri"];
         }
 
@@ -579,14 +670,22 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             string resourceUri = "https://login.microsoftonline.com/common/oauth2/devicecode";
             string encodedResource = Uri.EscapeDataString(resource);
             string body = $"client_id={ClientId}&resource={encodedResource}";
-            byte[] response = await SendWebRequest(
+
+            HttpResponseMessage response = await SendWebRequest(
                 resourceUri: resourceUri,
                 body: body,
                 contentType: "application/x-www-form-urlencoded",
+                token: null,
                 method: HttpMethod.Post
             );
 
-            var deviceCode = JsonSerializer.Deserialize<DeviceCodeResponse>(response);
+            if (!response.IsSuccessStatusCode)
+            {
+                await ThrowForFailedRequest(response, "Failed to get the device code for authentication. {0}.");
+            }
+
+            byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+            var deviceCode = JsonSerializer.Deserialize<DeviceCodeResponse>(bytes);
             Console.WriteLine(deviceCode.message);
 
             resourceUri = "https://login.microsoftonline.com/common/oauth2/token";
@@ -599,35 +698,47 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                     resourceUri: resourceUri,
                     body: body,
                     contentType: "application/x-www-form-urlencoded",
-                    method: HttpMethod.Post,
-                    ignoreError: true
+                    token: null,
+                    method: HttpMethod.Post
                 );
 
-                var authResponsePending = JsonSerializer.Deserialize<AuthResponsePending>(response);
-                if (authResponsePending.error == null)
+                if (response.IsSuccessStatusCode)
                 {
-                    var authResponse = JsonSerializer.Deserialize<AuthResponse>(response);
+                    // Authentication was successful.
+                    bytes = await response.Content.ReadAsByteArrayAsync();
+                    var authResponse = JsonSerializer.Deserialize<AuthResponse>(bytes);
+
                     _cachedAccessToken = authResponse.access_token;
                     _cachedRefreshToken = authResponse.refresh_token;
-                    return;
+
+                    break;
                 }
 
-                if (!authResponsePending.error.Equals("authorization_pending"))
+                if (response.StatusCode != HttpStatusCode.BadRequest)
                 {
-                    throw new Exception($"Authentication failed: {authResponsePending.error_description}");
+                    // Unexpected request failure.
+                    await ThrowForFailedRequest(response, "Failed to poll for authentication. {0}.");
                 }
 
-                Thread.Sleep(deviceCode.interval * 1000);
+                // Status code was 'Bad Request'. It's possible we are still pending on authentication.
+                bytes = await response.Content.ReadAsByteArrayAsync();
+                var authResponsePending = JsonSerializer.Deserialize<AuthResponsePending>(bytes);
+
+                if (!authResponsePending.error.Equals("authorization_pending", StringComparison.Ordinal))
+                {
+                    throw new HttpRequestException($"Authentication failed: {authResponsePending.error_description}");
+                }
+
+                await Task.Delay(deviceCode.interval * 1000);
             }
         }
 
-        private async Task<byte[]> SendWebRequest(
+        private async Task<HttpResponseMessage> SendWebRequest(
             string resourceUri,
             string body,
             string contentType,
-            HttpMethod method,
-            string token = null,
-            bool ignoreError = false)
+            string token,
+            HttpMethod method)
         {
             _httpClient.DefaultRequestHeaders.Clear();
             _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
@@ -650,13 +761,19 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            HttpResponseMessage result = await _httpClient.SendAsync(request);
-            if (!ignoreError && !result.IsSuccessStatusCode)
-            {
-                throw new Exception(result.ToString());
-            }
+            return await _httpClient.SendAsync(request);
+        }
 
-            return await result.Content.ReadAsByteArrayAsync();
+        private async Task ThrowForFailedRequest(HttpResponseMessage response, string parentErrorTemplate)
+        {
+            byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+            var badRequest = JsonSerializer.Deserialize<FailedRequest>(bytes);
+
+            string detailedError = badRequest?.error == null
+                ? response.ReasonPhrase
+                : $"{response.ReasonPhrase}: {badRequest.error.code}. {badRequest.error.message}.";
+
+            throw new HttpRequestException(string.Format(parentErrorTemplate, detailedError));
         }
     }
 }

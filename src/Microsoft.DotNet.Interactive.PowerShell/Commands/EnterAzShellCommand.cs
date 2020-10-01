@@ -45,11 +45,18 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
                     ? new AzShellConnectionUtils(TenantId != Guid.Empty ? TenantId.ToString() : null)
                     : new AzShellConnectionUtils(Reset.IsPresent);
 
-                psKernel.AzShell = azShell;
-                psKernel.RegisterForDisposal(azShell);
-
                 var windowSize = Host.UI.RawUI.WindowSize;
-                psKernel.AzShell.ConnectAndInitializeAzShell(windowSize.Width, windowSize.Height).Wait();
+                bool success = azShell.ConnectAndInitializeAzShell(windowSize.Width, windowSize.Height).GetAwaiter().GetResult();
+
+                if (success)
+                {
+                    psKernel.AzShell = azShell;
+                    psKernel.RegisterForDisposal(azShell);
+                }
+                else
+                {
+                    azShell.Dispose();
+                }
             }
         }
     }

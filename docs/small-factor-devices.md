@@ -1,8 +1,6 @@
 # Using .NET Interactive on small factor devices
 
-We support running .NET Interactive on small factor devices like [Raspberry Pi](https://www.raspberrypi.org/) and [piTop4](https://www.pi-top.com/products/pi-top-4).
-
-
+We support running .NET Interactive on small factor devices like [Raspberry Pi](https://www.raspberrypi.org/) and [pi-top [4]](https://github.com/pi-top/pi-top-4-.NET-Core-API).
 
 ## Installing .NET Interactive on a Raspberry Pi
 
@@ -10,7 +8,7 @@ We suggest running on a Pi 4 or above as the device provides more computing powe
 
 Open a terminal and type
 ```bash
-curl -L https://raw.githubusercontent.com/dotnet/interactive/master/tools/setup-rapbian.sh | bash -e
+curl -L https://raw.githubusercontent.com/dotnet/interactive/master/tools/setup-raspbian.sh | bash -e
 ```
 
 Now you can activate the jupyter virtual environment using the command

@@ -11,18 +11,16 @@
     <IsPackable>true</IsPackable>
     <PackageDescription>Core types for building applications providing interactive programming for .NET.</PackageDescription>
     <PackageTags>interactive</PackageTags>
-
   </PropertyGroup>
 
   <PropertyGroup>
     <MicrosoftCodeAnalysisAnalyzersVersion>2.9.6</MicrosoftCodeAnalysisAnalyzersVersion>	
     <SystemRuntimeLoaderVersion>4.3.0</SystemRuntimeLoaderVersion>	
-    <SystemReactiveVersion>4.3.2</SystemReactiveVersion>	
-    <SystemCommandLineVersion>2.0.0-beta1.20427.1</SystemCommandLineVersion>	
+    <SystemCommandLineVersion>2.0.0-beta1.20478.1</SystemCommandLineVersion>	
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="3.1.5" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="3.1.8" />
     <PackageReference Include="System.Runtime.Loader" Version="$(SystemRuntimeLoaderVersion)" />
     <PackageReference Include="System.Reactive" Version="$(SystemReactiveVersion)" />
     <PackageReference Include="System.CommandLine" Version="$(SystemCommandLineVersion)" />

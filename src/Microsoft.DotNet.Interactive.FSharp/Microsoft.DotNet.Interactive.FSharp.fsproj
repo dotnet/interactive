@@ -33,13 +33,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FsAutoComplete\FsAutoComplete.Core.fsproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FSharp.Compiler.Private.Scripting" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(MicrosoftCodeAnalysisWorkspacesCommonVersion)" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="XPlot.Plotly" Version="3.0.1" />
   </ItemGroup>
 

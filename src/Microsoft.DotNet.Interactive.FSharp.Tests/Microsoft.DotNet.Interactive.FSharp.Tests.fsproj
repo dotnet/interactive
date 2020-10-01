@@ -11,12 +11,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="ApiTests.fs" />
+    <PackageReference Include="FluentAssertions" Version="5.10.2" />
   </ItemGroup>
 
-  <ItemGroup />
+  <ItemGroup>
+    <Compile Include="HtmlFormatterTests.fs" />
+    <Compile Include="KernelTests.fs" />
+  </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp.Wrapper\Microsoft.DotNet.Interactive.FSharp.Wrapper.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp\Microsoft.DotNet.Interactive.FSharp.fsproj" />
   </ItemGroup>
 
