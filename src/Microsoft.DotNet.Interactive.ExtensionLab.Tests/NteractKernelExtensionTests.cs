@@ -158,6 +158,29 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             formatted.Should().NotContain("'https://a.cdn.url/script.js'");
         }
+
+        [Fact]
+        public async Task can_specify_cacheBuster()
+        {
+            using var kernel = new CompositeKernel();
+
+            var kernelExtension = new NteractKernelExtension();
+            DataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js", cacheBuster:"XYZ");
+            await kernelExtension.OnLoadAsync(kernel);
+
+            var data = new[]
+            {
+                new {Type="orange", Price=1.2},
+                new {Type="apple" , Price=1.3},
+                new {Type="grape" , Price=1.4}
+            };
+
+
+            var formatted = data.ToTabularJsonString().ToDisplayString(HtmlFormatter.MimeType);
+
+            formatted.Should().Contain("'urlArgs': 'cacheBuster=XYZ'");
+        }
+
         public void Dispose()
         {
             DataExplorerExtensions.Settings.RestoreDefault();

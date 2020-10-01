@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 var path = Settings.Uri.AbsoluteUri.Replace(".js", string.Empty);
                 var cacheBuster = Settings.CacheBuster ?? path.GetHashCode().ToString("0");
 
-                code.AppendLine($@"getJsLoader({{ 'paths': {{ 'context': '{context}', 'nteractUri' : '{path}', urlArgs: 'cacheBuster={cacheBuster}' }}}})(['nteractUri'], (nteract) => {{");
+                code.AppendLine($@"getJsLoader({{ 'paths': {{ 'context': '{context}', 'nteractUri' : '{path}', 'urlArgs': 'cacheBuster={cacheBuster}' }}}})(['nteractUri'], (nteract) => {{");
             }
             else
             {
