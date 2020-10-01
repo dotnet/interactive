@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             var frameRowTypeName = $"DataFrameRow_From_{variableName}";
 
             sb.Append($@"
-public class {frameTypeName} : DataFrame, IEnumerable<{frameRowTypeName}>
+public class {frameTypeName} : Microsoft.Data.Analysis.DataFrame, IEnumerable<{frameRowTypeName}>
 {{
     public {frameTypeName}()
     {{
@@ -114,9 +114,9 @@ public class {frameTypeName} : DataFrame, IEnumerable<{frameRowTypeName}>
 
 public class {frameRowTypeName}
 {{
-    private readonly DataFrameRow _sourceRow;
+    private readonly Microsoft.Data.Analysis.DataFrameRow _sourceRow;
     
-    public {frameRowTypeName}(DataFrameRow sourceRow)
+    public {frameRowTypeName}(Microsoft.Data.Analysis.DataFrameRow sourceRow)
     {{
         _sourceRow = sourceRow;
     }}

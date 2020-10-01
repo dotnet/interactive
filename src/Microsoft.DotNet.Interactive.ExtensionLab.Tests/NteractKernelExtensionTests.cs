@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var formatted = data.ToTabularJsonString().ToDisplayString(HtmlFormatter.MimeType);
 
-            formatted.Should().Contain("getJsLoader");
+            formatted.Should().Contain("require.config(");
         }
 
         [Fact]
