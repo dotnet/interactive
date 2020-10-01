@@ -5,9 +5,12 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+
 using Assent;
+
 using Microsoft.Data.Analysis;
 using Microsoft.DotNet.Interactive.Formatting;
+
 using Xunit;
 using Xunit.Abstractions;
 
@@ -24,6 +27,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 .SetInteractive(Debugger.IsAttached)
                 .UsingExtension("json");
         }
+
         [Fact]
         public async Task it_registers_formatters()
         {
