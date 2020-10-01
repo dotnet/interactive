@@ -94,7 +94,7 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 * Magic commands
 * Kernel APIs
     * Variable sharing
-* JSON API for Standard I/O and HTTP modes
+* JSON API for Standard I/O and HTTP modes (TODO: #813)
 
 ### JavaScript API Guide
 
