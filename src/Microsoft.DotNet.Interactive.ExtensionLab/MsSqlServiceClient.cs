@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Events;
@@ -72,7 +73,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return await rpc.InvokeWithParameterObjectAsync<bool>("connection/disconnect", disconnectParams);
         }
 
-        public async Task<CompletionItem[]> ProvideCompletionItemsAsync(string code, int linePosition, int charPosition)
+        public async Task<IEnumerable<CompletionItem>> ProvideCompletionItemsAsync(string code, int linePosition, int charPosition)
         {
             var tempFileName = Path.GetTempFileName();
             var tempFileStream = File.Create(tempFileName);
@@ -87,9 +88,18 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 Position position = new Position() { Line = linePosition, Character = charPosition };
                 CompletionContext context = new CompletionContext() { TriggerKind = (int)CompletionTriggerKind.Invoke };
                 var completionParams = new CompletionParams() { TextDocument = docId, Position = position, Context = context };
-                var completionItems = await rpc.InvokeWithParameterObjectAsync<SqlCompletionItem[]>("textDocument/completion", completionParams);
+                var sqlCompletionItems = await rpc.InvokeWithParameterObjectAsync<SqlCompletionItem[]>("textDocument/completion", completionParams);
 
-                return new CompletionItem[0];
+                return sqlCompletionItems.Select(item =>
+                {
+                    return new CompletionItem(
+                        item.Label,
+                        item.Kind != null ? Enum.GetName(typeof(SqlCompletionItemKind), item.Kind) : string.Empty,
+                        item.FilterText,
+                        item.SortText,
+                        item.InsertText,
+                        item.Documentation);
+                });
             }
             finally
             {
