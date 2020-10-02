@@ -35,20 +35,20 @@ namespace Microsoft.DotNet.Interactive.Sql.Tests
             events.Should().ContainSingle<DisplayedValueProduced>().Which.Value.Should().BeOfType(expectedType).And.Subject.Should().Be("HELLO WORLD");
         }
         
-        [Fact]
-        public async Task CompletionTest()
-        {
-            var testConnStr = "Server=(localdb)\\MSSQLLocalDB;Database=master;Integrated Security=true;";
-            using var service = new MsSqlServiceClient();
+        // [Fact]
+        // public async Task CompletionTest()
+        // {
+        //     var testConnStr = "Server=(localdb)\\MSSQLLocalDB;Database=master;Integrated Security=true;";
+        //     using var service = new MsSqlServiceClient();
 
-            var connectionUri = "connection:providerName:MSSQL|applicationName:dotnetTest|authenticationType:Integrated|server:(localdb)\\MSSQLLocalDB|group:286A0A8F-95DB-492C-96A2-DC1EFE7637AC";
-            await service.ConnectAsync(connectionUri, testConnStr);
+        //     var connectionUri = "connection:providerName:MSSQL|applicationName:dotnetTest|authenticationType:Integrated|server:(localdb)\\MSSQLLocalDB|group:286A0A8F-95DB-492C-96A2-DC1EFE7637AC";
+        //     await service.ConnectAsync(connectionUri, testConnStr);
 
-            var completionItemsResult = await service.ProvideCompletionItemsAsync();
-            Assert.True(completionItemsResult != null, "Completion list should not be null");
+        //     var completionItemsResult = await service.ProvideCompletionItemsAsync();
+        //     Assert.True(completionItemsResult != null, "Completion list should not be null");
 
-            await service.DisconnectAsync(connectionUri);
-        }
+        //     await service.DisconnectAsync(connectionUri);
+        // }
 
         [Fact]
         public async Task ConnectionTest()

@@ -28,26 +28,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public string QueryString { get; set; }
     }
 
-    public class CompletionItem
-    {
-        public string Label { get; set; }
-        public int Kind { get; set; }
-        public int[] Tags { get; set; }
-        public string Detail { get; set; }
-        public string Documentation { get; set; }
-        public bool Deprecated { get; set; }
-        public bool Preselect { get; set; }
-        public string SortText { get; set; }
-        public string FilterText { get; set; }
-        public string InsertText { get; set; }
-        public int InsertTextFormat { get; set; }
-        public TextEdit TextEdit { get; set; }
-        public TextEdit[] AdditionalTextEdits { get; set; }
-        public string[] CommitCharacters { get; set; }
-        public CommandArgs Command { get; set; }
-        public string Data { get; set; }
-    }
-
     public class CommandArgs
     {
         public string Title { get; set; }

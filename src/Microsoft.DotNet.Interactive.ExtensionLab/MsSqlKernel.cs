@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         Kernel,
         IKernelCommandHandler<SubmitCode>,
         IKernelCommandHandler<RequestCompletions>,
+        IKernelCommandHandler<RequestHoverText>,
         IAsyncDisposable
     {
         private bool _connected = false;
@@ -119,7 +120,13 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return TabularJsonString.Create(fields, data);
         }
 
-        public Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
+        public async Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
+        {
+            var completionItems = await _serviceClient.ProvideCompletionItemsAsync(command.Code, command.LinePosition.Line, command.LinePosition.Character);
+            context.Publish(new CompletionsProduced(completionItems, command));
+        }
+
+        public Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
             throw new NotImplementedException();
         }
