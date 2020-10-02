@@ -4,7 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.DotNet.Interactive.Events;
 using StreamJsonRpc;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
@@ -69,16 +72,19 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return await rpc.InvokeWithParameterObjectAsync<bool>("connection/disconnect", disconnectParams);
         }
 
-        public async Task<CompletionItem[]> ProvideCompletionItemsAsync()
+        public async Task<CompletionItem[]> ProvideCompletionItemsAsync(string code, int linePosition, int charPosition)
         {
-            // TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = "FILENAME" };
-            // Position position = new Position() { Line = 1, Character = 2 };
-            // CompletionContext context = new CompletionContext() { TriggerKind = 1, TriggerCharacter = null };
-            // var completionParams = new CompletionParams() { TextDocument = docId, Position = position, WorkDoneToken = null, Context = context, PartialResultToken = null };
-            // var result = await rpc.InvokeWithParameterObjectAsync<CompletionItem[]>("textDocument/completion", completionParams);
-            // return result;
-            await Task.CompletedTask;
-            return new CompletionItem[0];
+            var tempFileName = Path.GetTempFileName();
+            var tempFileStream = File.Create(tempFileName, 4096, FileOptions.DeleteOnClose);
+
+            using var writer = new StreamWriter(tempFileStream);
+            writer.WriteLine(code);
+
+            TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = tempFileName };
+            Position position = new Position() { Line = linePosition, Character = charPosition };
+            CompletionContext context = new CompletionContext() { TriggerKind = 1 };
+            var completionParams = new CompletionParams() { TextDocument = docId, Position = position, Context = context };
+            return await rpc.InvokeWithParameterObjectAsync<CompletionItem[]>("textDocument/completion", completionParams);
         }
 
         public async Task<ExecuteRequestResult> ExecuteQueryStringAsync(string ownerUri, string queryString)
