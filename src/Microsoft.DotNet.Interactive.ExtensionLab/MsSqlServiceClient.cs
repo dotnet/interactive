@@ -75,16 +75,48 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public async Task<CompletionItem[]> ProvideCompletionItemsAsync(string code, int linePosition, int charPosition)
         {
             var tempFileName = Path.GetTempFileName();
-            var tempFileStream = File.Create(tempFileName, 4096, FileOptions.DeleteOnClose);
+            var tempFileStream = File.Create(tempFileName);
+            try
+            {
+                using (var writer = new StreamWriter(tempFileStream))
+                {
+                    writer.WriteLine(code);
+                }
 
-            using var writer = new StreamWriter(tempFileStream);
-            writer.WriteLine(code);
+                TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = tempFileName };
+                Position position = new Position() { Line = linePosition, Character = charPosition };
+                CompletionContext context = new CompletionContext() { TriggerKind = (int)CompletionTriggerKind.Invoke };
+                var completionParams = new CompletionParams() { TextDocument = docId, Position = position, Context = context };
+                var completionItems = await rpc.InvokeWithParameterObjectAsync<SqlCompletionItem[]>("textDocument/completion", completionParams);
 
-            TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = tempFileName };
-            Position position = new Position() { Line = linePosition, Character = charPosition };
-            CompletionContext context = new CompletionContext() { TriggerKind = 1 };
-            var completionParams = new CompletionParams() { TextDocument = docId, Position = position, Context = context };
-            return await rpc.InvokeWithParameterObjectAsync<CompletionItem[]>("textDocument/completion", completionParams);
+                return new CompletionItem[0];
+            }
+            finally
+            {
+                File.Delete(tempFileName);
+            }
+        }
+
+        public async Task<Hover> ProvideHoverAsync(string code, int linePosition, int charPosition)
+        {
+            var tempFileName = Path.GetTempFileName();
+            var tempFileStream = File.Create(tempFileName);
+            try
+            {
+                using (var writer = new StreamWriter(tempFileStream))
+                {
+                    writer.WriteLine(code);
+                }
+
+                TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = tempFileName };
+                Position position = new Position() { Line = linePosition, Character = charPosition };
+                var positionParams = new TextDocumentPositionParams() { TextDocument = docId, Position = position };
+                return await rpc.InvokeWithParameterObjectAsync<Hover>("textDocument/hover", positionParams);
+            }
+            finally
+            {
+                File.Delete(tempFileName);
+            }
         }
 
         public async Task<ExecuteRequestResult> ExecuteQueryStringAsync(string ownerUri, string queryString)
