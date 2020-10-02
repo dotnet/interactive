@@ -16,6 +16,7 @@ using System.Threading;
 using Microsoft.DotNet.Interactive.Formatting;
 using Newtonsoft.Json.Linq;
 using System.Collections.Concurrent;
+using System.Text;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -122,13 +123,40 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public async Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
         {
-            var completionItems = await _serviceClient.ProvideCompletionItemsAsync(command.Code, command.LinePosition.Line, command.LinePosition.Character);
-            context.Publish(new CompletionsProduced(completionItems, command));
+            try
+            {
+                var completionItems = await _serviceClient.ProvideCompletionItemsAsync(command.Code, command.LinePosition.Line, command.LinePosition.Character);
+                context.Publish(new CompletionsProduced(completionItems, command));
+            }
+            catch (Exception e)
+            {
+                context.Fail(e);
+            }
         }
 
-        public Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
+        public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var hoverItem = await _serviceClient.ProvideHoverAsync(command.Code, command.LinePosition.Line, command.LinePosition.Character);
+
+                var stringBuilder = new StringBuilder();
+                foreach (var markedString in hoverItem.Contents)
+                {
+                    stringBuilder.AppendLine(markedString.Value);
+                }
+
+                context.Publish(new HoverTextProduced(
+                    command,
+                    new[]
+                    {
+                        new FormattedValue("text/markdown", stringBuilder.ToString())
+                    }));
+            }
+            catch (Exception e)
+            {
+                context.Fail(e);
+            }
         }
     }
 }

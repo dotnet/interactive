@@ -6,6 +6,106 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
+    public enum CompletionTriggerKind {
+        /**
+         * Completion was triggered normally.
+         */
+        Invoke = 0,
+        /**
+         * Completion was triggered by a trigger character.
+         */
+        TriggerCharacter = 1,
+        /**
+         * Completion was re-triggered as current completion list is incomplete
+         */
+        TriggerForIncompleteCompletions = 2
+    }
+
+    public enum SqlCompletionItemKind
+    {
+        Text = 1,
+        Method = 2,
+        Function = 3,
+        Constructor = 4,
+        Field = 5,
+        Variable = 6,
+        Class = 7,
+        Interface = 8,
+        Module = 9,
+        Property = 10,
+        Unit = 11,
+        Value = 12,
+        Enum = 13,
+        Keyword = 14,
+        Snippet = 15,
+        Color = 16,
+        File = 17,
+        Reference = 18
+    }
+
+    public class SqlCompletionItem
+    {
+        public string Label { get; set; }
+
+        public SqlCompletionItemKind? Kind { get; set; }
+
+        public string Detail { get; set; }
+
+        /// <summary>
+        /// Gets or sets the documentation string for the completion item.
+        /// </summary>
+        public string Documentation { get; set; }
+
+        public string SortText { get; set; }
+
+        public string FilterText { get; set; }
+
+        public string InsertText { get; set; }
+
+        public TextEdit TextEdit { get; set; }
+
+        /// <summary>
+        /// Gets or sets a custom data field that allows the server to mark
+        /// each completion item with an identifier that will help correlate
+        /// the item to the previous completion request during a completion
+        /// resolve request.
+        /// </summary>
+        public object Data { get; set; }
+
+        /// <summary>
+        /// Exposing a command field for a completion item for passing telemetry
+        /// </summary>
+        public CompletionCommand Command { get; set; }
+
+        /// <summary>
+        /// Whether this completion item is preselected or not
+        /// </summary>
+        public bool? Preselect { get; set; }
+    }
+
+    public class CompletionCommand
+    {
+        /// <summary>
+        /// Title of the command.
+        /// </summary>
+        public string Title { get; set; }
+
+        /// <summary>
+        /// The identifier of the actual command handler, like `vsintellicode.completionItemSelected`.
+        /// </summary>
+        public string command { get; set; }
+
+        /// <summary>
+        /// A tooltip for the command, when represented in the UI.
+        /// </summary>
+        public string Tooltip { get; set; }
+
+        /// <summary>
+        /// Arguments that the command handler should be invoked with.
+        /// </summary>
+        public object[] Arguments { get; set; }
+    }
+
     public class ConnectParams
     {
         public string OwnerUri { get; set; }
@@ -62,9 +162,27 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     {
         public TextDocumentIdentifier TextDocument { get; set; }
         public Position Position { get; set; }
-        public string WorkDoneToken { get; set; }
-        public string PartialResultToken { get; set; }
         public CompletionContext Context { get; set; }
+    }
+
+    public class TextDocumentPositionParams
+    {
+        public TextDocumentIdentifier TextDocument { get; set; }
+        public Position Position { get; set; }
+    }
+
+    public class MarkedString
+    {
+        public string Language { get; set; }
+
+        public string Value { get; set; }
+    }
+
+    public class Hover
+    {
+        public MarkedString[] Contents { get; set; }
+
+        public Range? Range { get; set; }
     }
 
     public class QueryExecuteSubsetParams
