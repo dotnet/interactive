@@ -81,12 +81,12 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             {
                 using (var writer = new StreamWriter(tempFileStream))
                 {
-                    writer.WriteLine(code);
+                    await writer.WriteLineAsync(code);
                 }
 
                 TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = tempFileName };
                 Position position = new Position() { Line = linePosition, Character = charPosition };
-                CompletionContext context = new CompletionContext() { TriggerKind = (int)CompletionTriggerKind.Invoke };
+                CompletionContext context = new CompletionContext() { TriggerKind = (int)CompletionTriggerKind.Invoked };
                 var completionParams = new CompletionParams() { TextDocument = docId, Position = position, Context = context };
                 var sqlCompletionItems = await rpc.InvokeWithParameterObjectAsync<SqlCompletionItem[]>("textDocument/completion", completionParams);
 
@@ -115,7 +115,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             {
                 using (var writer = new StreamWriter(tempFileStream))
                 {
-                    writer.WriteLine(code);
+                    await writer.WriteLineAsync(code);
                 }
 
                 TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = tempFileName };

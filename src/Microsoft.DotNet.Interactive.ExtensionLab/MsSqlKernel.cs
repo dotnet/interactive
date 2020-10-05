@@ -17,6 +17,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Newtonsoft.Json.Linq;
 using System.Collections.Concurrent;
 using System.Text;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -123,23 +124,15 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public async Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
         {
-            try
-            {
-                var completionItems = await _serviceClient.ProvideCompletionItemsAsync(command.Code, command.LinePosition.Line, command.LinePosition.Character);
-                context.Publish(new CompletionsProduced(completionItems, command));
-            }
-            catch (Exception e)
-            {
-                context.Fail(e);
-            }
+            var completionItems = await _serviceClient.ProvideCompletionItemsAsync(command.Code, command.LinePosition.Line, command.LinePosition.Character);
+            context.Publish(new CompletionsProduced(completionItems, command));
         }
 
         public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
-            try
+            var hoverItem = await _serviceClient.ProvideHoverAsync(command.Code, command.LinePosition.Line, command.LinePosition.Character);
+            if (hoverItem != null)
             {
-                var hoverItem = await _serviceClient.ProvideHoverAsync(command.Code, command.LinePosition.Line, command.LinePosition.Character);
-
                 var stringBuilder = new StringBuilder();
                 foreach (var markedString in hoverItem.Contents)
                 {
@@ -152,10 +145,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     {
                         new FormattedValue("text/markdown", stringBuilder.ToString())
                     }));
-            }
-            catch (Exception e)
-            {
-                context.Fail(e);
             }
         }
     }
