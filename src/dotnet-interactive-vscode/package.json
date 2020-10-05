@@ -21,7 +21,23 @@
     "url": "https://github.com/dotnet/interactive"
   },
   "categories": [
-    "Other"
+    "Data Science",
+    "Machine Learning",
+    "Notebooks",
+    "Visualization"
+  ],
+  "keywords": [
+    ".NET Core",
+    ".NET",
+    "C#",
+    "data science",
+    "dotnet",
+    "F#",
+    "interactive programming",
+    "ipynb",
+    "Jupyter",
+    "notebooks",
+    "PowerShell"
   ],
   "activationEvents": [
     "onNotebookEditor:dotnet-interactive",
