@@ -23,7 +23,7 @@ If your nuget package is not hosted on the main Nuget feed you can specify an al
 It is common for organizations to store packages on a private or pre-release feed. In the following example we are adding the [dotnet project](https://github.com/dotnet) pre-release nuget feed.
 
 ```csharp
-#i "nuget:https://www.myget.org/F/dotnet/api/v3/index.json"
+#i "nuget:https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json"
 ```
 
 ### Local Nuget Sources
