@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var formatted = data.ToTabularJsonString().ToDisplayString(HtmlFormatter.MimeType);
 
-            formatted.Should().Contain("getExtensionRequire('nteract','1.0.0')(['nteract/index'], (nteract) => {");
+            formatted.Should().Contain("configureRequireFromExtension('nteract','1.0.0')(['nteract/index'], (nteract) => {");
         }
 
         [Fact]
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var formatted = data.ToTabularJsonString().ToDisplayString(HtmlFormatter.MimeType);
 
-            formatted.Should().Contain("getExtensionRequire");
+            formatted.Should().Contain("configureRequireFromExtension");
         }
 
         [Fact]
