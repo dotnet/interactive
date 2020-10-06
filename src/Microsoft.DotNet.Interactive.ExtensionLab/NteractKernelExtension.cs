@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Http;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -68,18 +69,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private static void GenerateRequireLoader(StringBuilder code, string functionName, string requireUri)
         {
-            code.AppendLine($@"
-if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function))) {{
-    var script = document.createElement(""script""); 
-    script.setAttribute(""src"", ""{requireUri}"");
-    script.onload = function(){{
-        {functionName}();
-    }};
-    document.getElementsByTagName(""head"")[0].appendChild(script); 
-}}
-else {{
-    {functionName}();
-}}");
+            code.AppendLine(JavascriptUtilities.EnsureRequireJs(new Uri(requireUri), functionName));
         }
 
 
@@ -90,10 +80,10 @@ else {{
 let {functionName} = () => {{");
             if (Settings.Uri != null)
             {
-                var path = Settings.Uri.AbsoluteUri.Replace(".js", string.Empty);
-                var cacheBuster = Settings.CacheBuster ?? path.GetHashCode().ToString("0");
+                var absoluteUri = Settings.Uri.AbsoluteUri.Replace(".js", string.Empty);
+                var cacheBuster = Settings.CacheBuster ?? absoluteUri.GetHashCode().ToString("0");
                 code.AppendLine($@"
-    (require.config({{ 'paths': {{ 'context': '{context}', 'nteractUri' : '{path}', 'urlArgs': 'cacheBuster={cacheBuster}' }}}}) || require)(['nteractUri'], (nteract) => {{");
+    (require.config({{ 'paths': {{ 'context': '{context}', 'nteractUri' : '{absoluteUri}', 'urlArgs': 'cacheBuster={cacheBuster}' }}}}) || require)(['nteractUri'], (nteract) => {{");
             }
             else
             {

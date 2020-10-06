@@ -13,114 +13,104 @@ namespace Microsoft.DotNet.Interactive.Http
         public static IHtmlContent GetHtmlInjection(Uri[] probingUris, string seed)
         {
             var apiCacheBuster = $"{Process.GetCurrentProcess().Id}.{seed}";
-            var template = @"
+            var template = 
+                $@"
 <div>
     <div id='dotnet-interactive-this-cell-$CACHE_BUSTER$' style='display: none'>
         The below script needs to be able to find the current output cell; this is an easy method to get it.
     </div>
     <script type='text/javascript'>
-// ensure `require` is available globally
-if (typeof require !== typeof Function || typeof require.config !== typeof Function) {
-    let require_script = document.createElement('script');
-    require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
-    require_script.setAttribute('type', 'text/javascript');
-    require_script.onload = function () {
-        loadDotnetInteractiveApi();
-    };
-
-    document.getElementsByTagName('head')[0].appendChild(require_script);
-}
-else {
-    loadDotnetInteractiveApi();
-}
-
-async function probeAddresses(probingAddresses) {
-    function timeout(ms, promise) {
-        return new Promise(function (resolve, reject) {
-            setTimeout(function () {
+async function probeAddresses(probingAddresses) {{
+    function timeout(ms, promise) {{
+        return new Promise(function (resolve, reject) {{
+            setTimeout(function () {{
                 reject(new Error('timeout'))
-            }, ms)
+            }}, ms)
             promise.then(resolve, reject)
-        })
-    }
+        }})
+    }}
 
-    if (Array.isArray(probingAddresses)) {
-        for (let i = 0; i < probingAddresses.length; i++) {
+    if (Array.isArray(probingAddresses)) {{
+        for (let i = 0; i < probingAddresses.length; i++) {{
 
             let rootUrl = probingAddresses[i];
 
-            if (!rootUrl.endsWith('/')) {
-                rootUrl = `${rootUrl}/`;
-            }
+            if (!rootUrl.endsWith('/')) {{
+                rootUrl = `${{rootUrl}}/`;
+            }}
 
-            try {
-                let response = await timeout(1000, fetch(`${rootUrl}discovery`, {
+            try {{
+                let response = await timeout(1000, fetch(`${{rootUrl}}discovery`, {{
                     method: 'POST',
                     cache: 'no-cache',
                     mode: 'cors',
                     timeout: 1000,
-                    headers: {
+                    headers: {{
                         'Content-Type': 'text/plain'
-                    },
+                    }},
                     body: probingAddresses[i]
-                }));
+                }}));
 
-                if (response.status == 200) {
+                if (response.status == 200) {{
                     return rootUrl;
-                }
-            }
-            catch (e) { }
-        }
-    }
-}
+                }}
+            }}
+            catch (e) {{ }}
+        }}
+    }}
+}}
 
-function loadDotnetInteractiveApi() {
+function loadDotnetInteractiveApi() {{
     probeAddresses($ADDRESSES$)
-        .then((root) => {
-            // use probing to find host url and api resources
-            // load interactive helpers and language services
-            let dotnetInteractiveRequire = require.config({
-                context: '$CACHE_BUSTER$',
-                paths: {
-                    'dotnet-interactive': `${root}resources`
-                }
-            }) || require;
+        .then((root) => {{
+        // use probing to find host url and api resources
+        // load interactive helpers and language services
+        let dotnetInteractiveRequire = require.config({{
+        context: '$CACHE_BUSTER$',
+                paths:
+            {{
+                'dotnet-interactive': `${{root}}
+                resources`
+                }}
+        }}) || require;
 
-            let dotnetInteractiveExtensionsRequire = require.config({
+            let dotnetInteractiveExtensionsRequire = require.config({{
                 context: '$CACHE_BUSTER$',
-                paths: {
-                    'dotnet-interactive-extensions': `${root}extensions`
-                }
-            }) || require;
+                paths: {{
+                    'dotnet-interactive-extensions': `${{root}}extensions`
+                }}
+            }}) || require;
 
             window.dotnetInteractiveRequire = dotnetInteractiveRequire;
             window.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
-            window.getExtensionRequire = function(extensionName, extensionCacheBuster) {
-                let paths = {};
-                paths[extensionName] = `${root}extensions/${extensionName}/resources/`;
+            window.getExtensionRequire = function(extensionName, extensionCacheBuster) {{
+                let paths = {{}};
+                paths[extensionName] = `${{root}}extensions/${{extensionName}}/resources/`;
                 
-                let internalRequire = require.config({
+                let internalRequire = require.config({{
                     context: extensionCacheBuster,
                     paths: paths,
-                    urlArgs: `cacheBuster=${extensionCacheBuster}`
-                    }) || require;
+                    urlArgs: `cacheBuster=${{extensionCacheBuster}}`
+                    }}) || require;
 
                 return internalRequire
-            };
+            }};
         
             dotnetInteractiveRequire([
                     'dotnet-interactive/dotnet-interactive'
                 ],
-                function (dotnet) {
+                function (dotnet) {{
                     dotnet.init(window);
-                },
-                function (error) {
+                }},
+                function (error) {{
                     console.log(error);
-                }
+                }}
             );
-        })
-        .catch(error => {console.log(error);});
-    }
+        }})
+        .catch(error => {{console.log(error);}});
+    }}
+
+{JavascriptUtilities.EnsureRequireJs(callBackName: "loadDotnetInteractiveApi")}
     </script>
 </div>";
             
