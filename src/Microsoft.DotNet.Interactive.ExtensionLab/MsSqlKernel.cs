@@ -25,8 +25,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         Kernel,
         IKernelCommandHandler<SubmitCode>,
         IKernelCommandHandler<RequestCompletions>,
-        IKernelCommandHandler<RequestHoverText>,
-        IAsyncDisposable
+        IKernelCommandHandler<RequestHoverText>
     {
         private bool _connected = false;
         private readonly string _connectionUri;
@@ -47,6 +46,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             _serviceClient.OnQueryComplete += HandleQueryComplete;
 
             _serviceClient.StartProcessAndRedirectIO();
+
+            RegisterForDisposal(_serviceClient);
         }
 
         private void HandleConnectionComplete(object sender, ConnectionCompleteParams connParams)
@@ -71,21 +72,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             {
                 handler(queryParams);
             }
-        }
-
-        public ValueTask DisposeAsync()
-        {
-            _serviceClient.OnConnectionComplete -= HandleConnectionComplete;
-            Task disposeTask;
-            if (_connected)
-            {
-                disposeTask = _serviceClient.DisconnectAsync(_connectionUri);
-            }
-            else
-            {
-                disposeTask = Task.CompletedTask;
-            }
-            return new ValueTask(disposeTask);
         }
 
         public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
