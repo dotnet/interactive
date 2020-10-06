@@ -48,7 +48,6 @@ mkdir -p "/home/pi/localNuget"
 add_nuget_src "/home/pi/localNuget" local
 add_nuget_src https://api.nuget.org/v3/index.json nuget.org
 add_nuget_src https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json dotnet-tools
-add_nuget_src https://dotnet.myget.org/F/dotnet-corefxlab/api/v3/index.json dotnet-corefxlab
 add_nuget_src https://www.powershellgallery.com/api/v2/ PSGallery
 echo ""
 
