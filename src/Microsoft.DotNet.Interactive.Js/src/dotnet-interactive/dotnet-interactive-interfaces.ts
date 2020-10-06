@@ -31,6 +31,7 @@ export interface DotnetInteractiveClient {
     loadKernels(): Promise<void>;
     submitCode(code: string, targetKernelName?: string): Promise<string>;
     submitCommand(commandType: string, command?: any, targetKernelName?: string): Promise<string>;
+    configureRequire(config: any): any;
 }
 
 export interface KernelClientContainer {
