@@ -88,7 +88,7 @@ let {functionName} = () => {{");
             else
             {
                 code.AppendLine($@"
-    getExtensionRequire('nteract','{context}')(['nteract/index'], (nteract) => {{");
+    configureRequireFromExtension('nteract','{context}')(['nteract/index'], (nteract) => {{");
             }
 
             code.AppendLine($@"
