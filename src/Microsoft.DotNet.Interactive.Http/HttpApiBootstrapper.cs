@@ -74,16 +74,9 @@ function loadDotnetInteractiveApi() {{
                 }}
         }}) || require;
 
-            let dotnetInteractiveExtensionsRequire = require.config({{
-                context: '$CACHE_BUSTER$',
-                paths: {{
-                    'dotnet-interactive-extensions': `${{root}}extensions`
-                }}
-            }}) || require;
-
             window.dotnetInteractiveRequire = dotnetInteractiveRequire;
-            window.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
-            window.getExtensionRequire = function(extensionName, extensionCacheBuster) {{
+
+            window.configureRequireFromExtension = function(extensionName, extensionCacheBuster) {{
                 let paths = {{}};
                 paths[extensionName] = `${{root}}extensions/${{extensionName}}/resources/`;
                 

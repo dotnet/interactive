@@ -134,16 +134,9 @@ namespace Microsoft.DotNet.Interactive.Http
                 urlArgs: 'cacheBuster=$HASH$'
             }}) || require;
 
-            let dotnetInteractiveExtensionsRequire = require.config({{
-                context: '$HASH$',
-                paths: {{
-                    'dotnet-interactive-extensions': '$EXTERNALURI$extensions'
-                }}
-            }}) || require;
-
             global.dotnetInteractiveRequire = dotnetInteractiveRequire;
-            global.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
-            global.getExtensionRequire = function (extensionName, extensionCacheBuster) {{
+
+            global.configureRequireFromExtension = function (extensionName, extensionCacheBuster) {{
                 let paths = {{}};
                 paths[extensionName] = `$EXTERNALURI$extensions/${{extensionName}}/resources/`;
 
