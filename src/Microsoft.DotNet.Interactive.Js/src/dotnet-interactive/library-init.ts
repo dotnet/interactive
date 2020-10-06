@@ -17,7 +17,7 @@ export function init(global: any) {
         return global.interactiveScopes[key];
     }
 
-    global.getJsLoader = (config: any) =>{        
+    global.configureRequire = (config: any) =>{        
         return (<any>require).config(config) || require;
     }
 
