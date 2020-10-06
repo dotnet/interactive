@@ -93,7 +93,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             formatted.Should()
                 .Contain("if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function)))")
                 .And
-                .Contain("script.onload = function()");
+                .Contain("require_script.onload = function()");
         }
 
         [Fact]
