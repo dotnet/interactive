@@ -160,6 +160,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public void Dispose()
         {
             rpc.Dispose();
+            process.Kill(true);
             process.Dispose();
         }
     }
