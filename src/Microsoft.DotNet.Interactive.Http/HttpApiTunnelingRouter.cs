@@ -163,7 +163,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
             console.log('execution of  boostrapper function bootstrapper_$FRONTENDTYPE$_$HASH$ completed');
         }}
-{JavascriptUtilities.EnsureRequireJs(new Uri("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"), "loadDotnetInteractiveApi")}
+{JavascriptUtilities.GetEnsureRequireJs(new Uri("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"), "loadDotnetInteractiveApi")}
     }};
 
     console.log('installed boostrapper function bootstrapper_$FRONTENDTYPE$_$HASH$');

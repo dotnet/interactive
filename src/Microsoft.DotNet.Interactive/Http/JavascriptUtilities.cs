@@ -7,25 +7,25 @@ namespace Microsoft.DotNet.Interactive.Http
 {
     public static class JavascriptUtilities
     {
-        public static string EnsureRequireJs(Uri requireJsUri = null, string callBackName = null)
+        public static string GetEnsureRequireJs(Uri requireJsUri = null, string onRequirejsLoadedCallBackName = null)
         {
             requireJsUri??= new Uri("https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js");
 
             string GenerateOnload()
             {
-                return !string.IsNullOrWhiteSpace(callBackName) 
+                return !string.IsNullOrWhiteSpace(onRequirejsLoadedCallBackName) 
                     ? $@"
     require_script.onload = function() {{
-        {callBackName}();
+        {onRequirejsLoadedCallBackName}();
     }};" 
                     : string.Empty;
             }
 
             string GenerateElseBranch()
             {
-                return !string.IsNullOrWhiteSpace(callBackName) 
+                return !string.IsNullOrWhiteSpace(onRequirejsLoadedCallBackName) 
                     ? $@"else {{
-    {callBackName}();
+    {onRequirejsLoadedCallBackName}();
 }}" 
                     : string.Empty;
             }
