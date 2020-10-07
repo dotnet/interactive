@@ -18,11 +18,11 @@ namespace Microsoft.DotNet.Interactive.Http
         private readonly IDisposable _eventSubscription;
         private readonly ConcurrentDictionary<string, EmbeddedFileProvider> _providers = new ConcurrentDictionary<string, EmbeddedFileProvider>();
 
-        public FileProvider(Kernel kernel, Assembly rootProvider)
+        public FileProvider(Kernel kernel, Assembly rootProviderAssembly)
         {
             if (kernel == null) throw new ArgumentNullException(nameof(kernel));
 
-            _root = new EmbeddedFileProvider(rootProvider ?? typeof(FileProvider).Assembly);
+            _root = new EmbeddedFileProvider(rootProviderAssembly ?? typeof(FileProvider).Assembly);
             _eventSubscription = kernel.KernelEvents
                 .OfType<KernelExtensionLoaded>()
                 .Subscribe(@event => RegisterExtension(@event.KernelExtension));
