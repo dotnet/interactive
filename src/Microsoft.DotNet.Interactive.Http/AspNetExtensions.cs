@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.Http
                     r.Routes.Add(new HttpApiTunnelingRouter(htmlNotebookFrontedEnvironment));
                 }
 
-                if (htmlNotebookFrontedEnvironment == null || htmlNotebookFrontedEnvironment.RequiresAutomaticBootstrapping)
+                if (htmlNotebookFrontedEnvironment is null || htmlNotebookFrontedEnvironment.RequiresAutomaticBootstrapping)
                 {
                     var enableHttp = new SubmitCode("#!enable-http", kernel.Name);
                     enableHttp.PublishInternalEvents();
