@@ -17,8 +17,7 @@
                 break;
             case 'configureFactories':
                 let uri = message.endpointUri + "";
-                if(!uri.endsWith("/"))
-                {
+                if (!uri.endsWith("/")) {
                     uri += "/";
                 }
                 console.log(`setting up factories using ${uri}`);
@@ -35,16 +34,10 @@
                         urlArgs: `cacheBuster=${hash}`
                     }) || require;
 
-                    let dotnetInteractiveExtensionsRequire = require.config({
-                        context: hash,
-                        paths: {
-                            'dotnet-interactive-extensions': `${uri}extensions`
-                        }
-                    }) || require;
 
                     global.dotnetInteractiveRequire = dotnetInteractiveRequire;
                     global.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
-                    global.getExtensionRequire = function (extensionName, extensionCacheBuster) {
+                    global.configureRequireFromExtension = function (extensionName, extensionCacheBuster) {
                         let paths = {};
                         paths[extensionName] = `${uri}extensions/${extensionName}/resources/`;
 
