@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private static void GenerateRequireLoader(StringBuilder code, string functionName, string requireUri)
         {
-            code.AppendLine(JavascriptUtilities.GetEnsureRequireJs(new Uri(requireUri), functionName));
+            code.AppendLine(JavascriptUtilities.GetCodeForEnsureRequireJs(new Uri(requireUri), functionName));
         }
 
 

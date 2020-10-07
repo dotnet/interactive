@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Interactive.App
 
             if (HttpOptions.EnableHttpApi)
             {
-                services.AddDotnetInteractive();
+                services.AddDotnetInteractiveHttpApi();
             }
         }
 
@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.App
             if (HttpOptions.EnableHttpApi)
             {
                 operation.Info("configuring routing");
-                app.UseDotNetInteractive(
+                app.UseDotNetInteractiveHttpApi(
                     serviceProvider.GetRequiredService<Kernel>(), 
                     typeof(Program).Assembly,
                     serviceProvider.GetRequiredService<HttpProbingSettings>(),

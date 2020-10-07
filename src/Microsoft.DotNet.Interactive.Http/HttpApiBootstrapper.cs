@@ -103,7 +103,7 @@ function loadDotnetInteractiveApi() {{
         .catch(error => {{console.log(error);}});
     }}
 
-{JavascriptUtilities.GetEnsureRequireJs(onRequirejsLoadedCallBackName: "loadDotnetInteractiveApi")}
+{JavascriptUtilities.GetCodeForEnsureRequireJs(onRequirejsLoadedCallBackName: "loadDotnetInteractiveApi")}
     </script>
 </div>";
             

@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.Interactive.App
             var httpStartupOptions = new HttpOptions(options.EnableHttpApi, options.HttpPort);
             var webHost = new WebHostBuilder()
                           .UseKestrel()
-                          .UseDotNetInteractive(options.EnableHttpApi, options.HttpPort, probingSettings, serviceCollection)
+                          .UseDotNetInteractiveHttpApi(options.EnableHttpApi, options.HttpPort, probingSettings, serviceCollection)
                           .UseStartup<Startup>();
 
             if (options.EnableHttpApi && probingSettings != null)
