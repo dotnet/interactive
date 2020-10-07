@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.Interactive.Http
                 r.Routes.Add(new KernelsRouter(kernel));
                 var htmlNotebookFrontedEnvironment = kernel.FrontendEnvironment as HtmlNotebookFrontedEnvironment;
 
-                if (htmlNotebookFrontedEnvironment != null)
+                if (htmlNotebookFrontedEnvironment is { } )
                 {
                     r.Routes.Add(new DiscoveryRouter(htmlNotebookFrontedEnvironment));
                     r.Routes.Add(new HttpApiTunnelingRouter(htmlNotebookFrontedEnvironment));
