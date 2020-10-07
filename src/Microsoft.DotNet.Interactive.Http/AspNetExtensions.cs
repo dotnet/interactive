@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Http
             return services;
         }
 
-        public static IWebHostBuilder UseDotNetInteractive(this IWebHostBuilder builder, bool enableHttpApi,
+        public static IWebHostBuilder UseDotNetInteractiveHttpApi(this IWebHostBuilder builder, bool enableHttpApi,
             HttpPort httpPort, HttpProbingSettings httpProbingSettings, IServiceCollection services)
         {
             var httpStartupOptions = new HttpOptions(enableHttpApi, httpPort);
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.Http
                 });
             return builder;
         }
-        public static IServiceCollection AddDotnetInteractive(this IServiceCollection services)
+        public static IServiceCollection AddDotnetInteractiveHttpApi(this IServiceCollection services)
         {
             services.AddSingleton(c => new KernelHubConnection(c.GetRequiredService<Kernel>()));
             services.AddRouting();
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
             return services;
         }
-        public static IApplicationBuilder UseDotNetInteractive<T>(this IApplicationBuilder app, T kernel, Assembly staticResourceRoot, HttpProbingSettings httpProbingSettings, HttpPort httpPort) where T : Kernel
+        public static IApplicationBuilder UseDotNetInteractiveHttpApi<T>(this IApplicationBuilder app, T kernel, Assembly staticResourceRoot, HttpProbingSettings httpProbingSettings, HttpPort httpPort) where T : Kernel
         {
             app.UseStaticFiles(new StaticFileOptions
             {
