@@ -27,10 +27,16 @@ First, make sure you have the following installed:
 * Next, in an **ordinary console**, install the `dotnet interactive` global tool:
 
 ```console
-> dotnet tool install -g --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json" Microsoft.dotnet-interactive
+> dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
 ```
 
-*Note: The [MyGet](https://dotnet.myget.org) feed is where the most up-to-date version will be published. Older, more stable versions will be made available on [NuGet.org](https://nuget.org).*
+*Note: The Azure feed is where the most up-to-date version will be published:*
+
+```
+https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
+```
+
+Older, more stable versions will be made available on [NuGet.org](https://nuget.org).
 
 * **Switch back to your Anaconda prompt** and install the .NET kernel by running the following:
 

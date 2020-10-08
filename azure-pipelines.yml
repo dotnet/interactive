@@ -333,11 +333,3 @@ stages:
       enableSymbolValidation: false
       # SourceLink improperly looks for generated files.  See https://github.com/dotnet/arcade/issues/3069
       enableSourceLinkValidation: false
-
-#---------------------------------------------------------------------------------------------------------------------#
-#                                                  Package upload                                                     #
-#---------------------------------------------------------------------------------------------------------------------#
-- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  - template: eng/upload/upload-packages.yml
-    parameters:
-      branchToUpload: refs/heads/main

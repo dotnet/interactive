@@ -105,7 +105,7 @@
         },
         "dotnet-interactive.interactiveToolSource": {
           "type": "string",
-          "default": "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json",
+          "default": "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json",
           "description": "The NuGet source to use when acquiring the .NET Interactive tool."
         },
         "dotnet-interactive.minimumDotNetSdkVersion": {
@@ -115,7 +115,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.147303",
+          "default": "1.0.150201",
           "description": "The minimum required version of the .NET Interactive tool."
         }
       }
