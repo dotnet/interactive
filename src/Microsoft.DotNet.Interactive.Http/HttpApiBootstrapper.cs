@@ -69,8 +69,7 @@ function loadDotnetInteractiveApi() {{
         context: '$CACHE_BUSTER$',
                 paths:
             {{
-                'dotnet-interactive': `${{root}}
-                resources`
+                'dotnet-interactive': `${{root}}resources`
                 }}
         }}) || require;
 
