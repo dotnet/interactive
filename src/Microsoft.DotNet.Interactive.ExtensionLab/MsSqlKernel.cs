@@ -28,7 +28,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         IKernelCommandHandler<RequestHoverText>
     {
         private bool _connected = false;
-        private readonly string _connectionUri;
+        private readonly string _tempFilePath;
+        private readonly string _tempFileUri;
         private readonly string _connectionString;
         private readonly MsSqlServiceClient _serviceClient;
 
@@ -38,7 +39,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public MsSqlKernel(string name, string connectionString) : base(name)
         {
-            _connectionUri = $"connection:{Guid.NewGuid()}";
+            _tempFilePath = Path.GetTempFileName();
+            _tempFileUri = MsSqlServiceClient.GetUriForFilePath(_tempFilePath);
             _connectionString = connectionString;
             _serviceClient = new MsSqlServiceClient();
 
@@ -52,7 +54,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private void HandleConnectionComplete(object sender, ConnectionCompleteParams connParams)
         {
-            if (connParams.OwnerUri.Equals(_connectionUri))
+            if (connParams.OwnerUri.Equals(_tempFileUri))
             {
                 if (connParams.ErrorMessage != null)
                 {
@@ -78,12 +80,12 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             if (!_connected)
             {
-                await _serviceClient.ConnectAsync(_connectionUri, _connectionString);
+                await _serviceClient.ConnectAsync(_tempFileUri, _connectionString);
                 await _connectionCompleted.Task;
                 _connected = true;
             }
 
-            var queryResult = await _serviceClient.ExecuteSimpleQueryAsync(_connectionUri, command.Code);
+            var queryResult = await _serviceClient.ExecuteSimpleQueryAsync(_tempFileUri, command.Code);
             var tableString = GetTableStringForSimpleResult(queryResult);
             context.Display(tableString, HtmlFormatter.MimeType);
         }
@@ -110,13 +112,13 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public async Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
         {
-            var completionItems = await _serviceClient.ProvideCompletionItemsAsync(command.Code, command.LinePosition.Line, command.LinePosition.Character);
+            var completionItems = await _serviceClient.ProvideCompletionItemsAsync(_tempFilePath, command);
             context.Publish(new CompletionsProduced(completionItems, command));
         }
 
         public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
-            var hoverItem = await _serviceClient.ProvideHoverAsync(command.Code, command.LinePosition.Line, command.LinePosition.Character);
+            var hoverItem = await _serviceClient.ProvideHoverAsync(_tempFilePath, command);
             if (hoverItem != null)
             {
                 var stringBuilder = new StringBuilder();
