@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using StreamJsonRpc;
 
@@ -73,19 +74,19 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return await rpc.InvokeWithParameterObjectAsync<bool>("connection/disconnect", disconnectParams);
         }
 
-        public async Task<IEnumerable<CompletionItem>> ProvideCompletionItemsAsync(string code, int linePosition, int charPosition)
+        public async Task<IEnumerable<CompletionItem>> ProvideCompletionItemsAsync(string filePath, RequestCompletions command)
         {
-            var tempFileName = Path.GetTempFileName();
-            var tempFileStream = File.Create(tempFileName);
+            var tempFileStream = File.Open(filePath, FileMode.OpenOrCreate);
             try
             {
                 using (var writer = new StreamWriter(tempFileStream))
                 {
-                    await writer.WriteLineAsync(code);
+                    await writer.WriteLineAsync(command.Code);
                 }
 
-                TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = tempFileName };
-                Position position = new Position() { Line = linePosition, Character = charPosition };
+                var fileUri = GetUriForFilePath(filePath);
+                TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = fileUri };
+                Position position = new Position() { Line = command.LinePosition.Line, Character = command.LinePosition.Character };
                 CompletionContext context = new CompletionContext() { TriggerKind = (int)CompletionTriggerKind.Invoked };
                 var completionParams = new CompletionParams() { TextDocument = docId, Position = position, Context = context };
                 var sqlCompletionItems = await rpc.InvokeWithParameterObjectAsync<SqlCompletionItem[]>("textDocument/completion", completionParams);
@@ -103,29 +104,29 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             }
             finally
             {
-                File.Delete(tempFileName);
+                File.Delete(filePath);
             }
         }
 
-        public async Task<Hover> ProvideHoverAsync(string code, int linePosition, int charPosition)
+        public async Task<Hover> ProvideHoverAsync(string filePath, RequestHoverText command)
         {
-            var tempFileName = Path.GetTempFileName();
-            var tempFileStream = File.Create(tempFileName);
+            var tempFileStream = File.Open(filePath, FileMode.OpenOrCreate);
             try
             {
                 using (var writer = new StreamWriter(tempFileStream))
                 {
-                    await writer.WriteLineAsync(code);
+                    await writer.WriteLineAsync(command.Code);
                 }
 
-                TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = tempFileName };
-                Position position = new Position() { Line = linePosition, Character = charPosition };
+                var fileUri = GetUriForFilePath(filePath);
+                TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = fileUri };
+                Position position = new Position() { Line = command.LinePosition.Line, Character = command.LinePosition.Character };
                 var positionParams = new TextDocumentPositionParams() { TextDocument = docId, Position = position };
                 return await rpc.InvokeWithParameterObjectAsync<Hover>("textDocument/hover", positionParams);
             }
             finally
             {
-                File.Delete(tempFileName);
+                File.Delete(filePath);
             }
         }
 
@@ -162,6 +163,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             rpc.Dispose();
             process.Kill(true);
             process.Dispose();
+        }
+
+        public static string GetUriForFilePath(string filePath)
+        {
+            return $"file:///{filePath.Replace('\\', '/')}";
         }
     }
 }
