@@ -34,8 +34,6 @@ stages:
       enablePublishTestResults: true
       enablePublishBuildAssets: true
       enablePublishUsingPipelines: $(_PublishUsingPipelines)
-      enableTelemetry: true
-      helixRepo: dotnet/interactive
       jobs:
       - job: Windows_NT
         pool:
@@ -164,8 +162,6 @@ stages:
       enablePublishTestResults: true
       enablePublishBuildAssets: false
       enablePublishUsingPipelines: false
-      enableTelemetry: true
-      helixRepo: dotnet/interactive
       jobs:
       - job: Linux
         pool:
@@ -226,8 +222,6 @@ stages:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
-      enableTelemetry: true
-      helixRepo: dotnet/interactive
       jobs:
       - job: Dockerfile_official_image
         pool:
@@ -244,8 +238,6 @@ stages:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
-      enableTelemetry: true
-      helixRepo: dotnet/interactive
       jobs:
       - job: Dockerfile_Main
         pool:
@@ -262,8 +254,6 @@ stages:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
-      enableTelemetry: true
-      helixRepo: dotnet/interactive
       jobs:
       - job: Dockerfile_Binder_Dependency
         pool:
@@ -280,8 +270,6 @@ stages:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
-      enableTelemetry: true
-      helixRepo: dotnet/interactive
       jobs:
       - job: IntegrationTest
         dependsOn: Windows_NT
@@ -345,11 +333,3 @@ stages:
       enableSymbolValidation: false
       # SourceLink improperly looks for generated files.  See https://github.com/dotnet/arcade/issues/3069
       enableSourceLinkValidation: false
-
-#---------------------------------------------------------------------------------------------------------------------#
-#                                                  Package upload                                                     #
-#---------------------------------------------------------------------------------------------------------------------#
-- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  - template: eng/upload/upload-packages.yml
-    parameters:
-      branchToUpload: refs/heads/main

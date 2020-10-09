@@ -8,12 +8,14 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+
 using Microsoft.Data.Analysis;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.ML;
+
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
@@ -99,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             var frameRowTypeName = $"DataFrameRow_From_{variableName}";
 
             sb.Append($@"
-public class {frameTypeName} : DataFrame, IEnumerable<{frameRowTypeName}>
+public class {frameTypeName} : {typeof(DataFrame).FullName}, IEnumerable<{frameRowTypeName}>
 {{
     public {frameTypeName}()
     {{
@@ -114,9 +116,9 @@ public class {frameTypeName} : DataFrame, IEnumerable<{frameRowTypeName}>
 
 public class {frameRowTypeName}
 {{
-    private readonly DataFrameRow _sourceRow;
+    private readonly {typeof(DataFrameRow).FullName} _sourceRow;
     
-    public {frameRowTypeName}(DataFrameRow sourceRow)
+    public {frameRowTypeName}({typeof(DataFrameRow).FullName} sourceRow)
     {{
         _sourceRow = sourceRow;
     }}
@@ -184,7 +186,7 @@ namespace Microsoft.ML
 
                     var valueGetter = getGetterMethod.Invoke(cursor, new object[] { column });
 
-                    object value = GetValue((dynamic) valueGetter);
+                    object value = GetValue((dynamic)valueGetter);
 
                     if (value is ReadOnlyMemory<char>)
                     {

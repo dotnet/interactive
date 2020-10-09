@@ -311,13 +311,12 @@ catch (Exception e)
             using var events = kernel.KernelEvents.ToSubscribedList();
 
             await kernel.SubmitCodeAsync(@"#!time
-#i ""nuget:https://dotnet.myget.org/F/dotnet-corefxlab/api/v3/index.json""
 #r ""nuget:Microsoft.ML.AutoML,0.16.0-preview""
-#r ""nuget:Microsoft.Data.DataFrame,1.0.0-e190910-1""
+#r ""nuget:Microsoft.Data.Analysis,0.4.0""
 ");
 
             await kernel.SubmitCodeAsync(@"
-using Microsoft.Data;
+using Microsoft.Data.Analysis;
 using XPlot.Plotly;");
 
             await kernel.SubmitCodeAsync(@"
@@ -329,11 +328,11 @@ Formatter.Register<DataFrame>((df, writer) =>
     headers.AddRange(df.Columns.Select(c => (IHtmlContent) th(c)));
     var rows = new List<List<IHtmlContent>>();
     var take = 20;
-    for (var i = 0; i < Math.Min(take, df.RowCount); i++)
+    for (var i = 0; i < Math.Min(take, df.Rows.Count); i++)
     {
         var cells = new List<IHtmlContent>();
         cells.Add(td(i));
-        foreach (var obj in df[i])
+        foreach (var obj in df.Rows[i])
         {
             cells.Add(td(obj));
         }

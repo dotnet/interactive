@@ -1,10 +1,10 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
@@ -50,6 +50,23 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
                 .Should()
                 .EventuallyContainSingle<DisplayEvent>(
                     where: d => d.FormattedValues.Any(fv => fv.Value.Trim() == expected),
+                    timeout: 10_000);
+        }
+
+        [IntegrationFact]
+        public async Task stdio_server_encoding_is_utf_8()
+        {
+            using var client = await CreateClient();
+
+            var events = client.Events.ToSubscribedList();
+
+            client.SubmitCommand(new SubmitCode("System.Console.InputEncoding.EncodingName + \"/\" + System.Console.OutputEncoding.EncodingName"));
+            var expected = Encoding.UTF8.EncodingName + "/" + Encoding.UTF8.EncodingName;
+
+            events
+                .Should()
+                .EventuallyContainSingle<DisplayEvent>(
+                    where: d => d.FormattedValues.Any(FormattedValue => FormattedValue.Value == expected),
                     timeout: 10_000);
         }
     }

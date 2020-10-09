@@ -4,6 +4,7 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Formatting;
 
@@ -14,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public Task OnLoadAsync(Kernel kernel)
         {
             kernel.UseDataExplorer();
-
+            kernel.RegisterForDisposal(() => DataExplorerExtensions.Settings.RestoreDefault());
             KernelInvocationContext.Current?.Display(
                 $@"Added the `Explore` extension method, which you can use with `IEnumerable<T>` and `IDataView` to view data using the [nteract Data Explorer](https://github.com/nteract/data-explorer).",
                 "text/markdown");
@@ -27,6 +28,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
     public static class DataExplorerExtensions
     {
+        public static DataExplorerSettings Settings { get; } = new DataExplorerSettings();
+
         public static T UseDataExplorer<T>(this T kernel) where T : Kernel
         {
             RegisterFormatters();
@@ -49,19 +52,65 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             code.AppendLine("<div>");
             code.AppendLine($"<div id=\"{divId}\" style=\"height: 100ch ;margin: 2px;\">");
             code.AppendLine("</div>");
-            code.AppendLine(@"<script type=""text/javascript"">
-getExtensionRequire('nteract','1.0.0')(['nteract/index'], (nteract) => {");
-            code.AppendLine($@" nteract.createDataExplorer({{
-        data: {data},
-        container: document.getElementById(""{divId}"")
-    }});
-}},
-(error) => {{ 
-    console.log(error); 
-}});");
+            code.AppendLine(@"<script type=""text/javascript"">");
+            GenerateCode(data, code, divId, "https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js");
             code.AppendLine(" </script>");
             code.AppendLine("</div>");
             return new HtmlString(code.ToString());
+        }
+
+        private static void GenerateCode(TabularJsonString data, StringBuilder code, string divId, string requireUri)
+        {
+            var functionName = $"renderDataExplorer_{divId}";
+            GenerateFunctionCode(data, code, divId, functionName);
+            GenerateRequireLoader(code, functionName, requireUri);
+        }
+
+        private static void GenerateRequireLoader(StringBuilder code, string functionName, string requireUri)
+        {
+            code.AppendLine($@"
+if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function))) {{
+    var script = document.createElement(""script""); 
+    script.setAttribute(""src"", ""{requireUri}"");
+    script.onload = function(){{
+        {functionName}();
+    }};
+    document.getElementsByTagName(""head"")[0].appendChild(script); 
+}}
+else {{
+    {functionName}();
+}}");
+        }
+
+
+        private static void GenerateFunctionCode(TabularJsonString data, StringBuilder code, string divId, string functionName)
+        {
+            var context = Settings.Context ?? "1.0.0";
+            code.AppendLine($@"
+let {functionName} = () => {{");
+            if (Settings.Uri != null)
+            {
+                var path = Settings.Uri.AbsoluteUri.Replace(".js", string.Empty);
+                var cacheBuster = Settings.CacheBuster ?? path.GetHashCode().ToString("0");
+                code.AppendLine($@"
+    (require.config({{ 'paths': {{ 'context': '{context}', 'nteractUri' : '{path}', 'urlArgs': 'cacheBuster={cacheBuster}' }}}}) || require)(['nteractUri'], (nteract) => {{");
+            }
+            else
+            {
+                code.AppendLine($@"
+    getExtensionRequire('nteract','{context}')(['nteract/index'], (nteract) => {{");
+            }
+
+            code.AppendLine($@"
+        nteract.createDataExplorer({{
+            data: {data},
+            container: document.getElementById(""{divId}"")
+        }});
+    }},
+    (error) => {{
+        console.log(error);
+    }});
+}};");
         }
     }
 }

@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
 
@@ -14,6 +15,8 @@ namespace Microsoft.DotNet.Interactive.Server
     {
         public static  KernelServer CreateKernelServer(this Kernel kernel, DirectoryInfo workingDir)
         {
+            Console.InputEncoding = Encoding.UTF8;
+            Console.OutputEncoding = Encoding.UTF8;
             return kernel.CreateKernelServer(Console.In, Console.Out, workingDir);
         }
 

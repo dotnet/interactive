@@ -93,14 +93,8 @@ function loadDotnetInteractiveApi() {
                 }
             }) || require;
 
-            if (!window.dotnetInteractiveRequire) {
-                window.dotnetInteractiveRequire = dotnetInteractiveRequire;
-            }
-
-            if (!window.dotnetInteractiveExtensionsRequire) {
-                window.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
-            }
-
+            window.dotnetInteractiveRequire = dotnetInteractiveRequire;
+            window.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
             window.getExtensionRequire = function(extensionName, extensionCacheBuster) {
                 let paths = {};
                 paths[extensionName] = `${root}extensions/${extensionName}/resources/`;

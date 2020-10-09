@@ -47,9 +47,7 @@ add_nuget_src() {
 mkdir -p "/home/pi/localNuget"
 add_nuget_src "/home/pi/localNuget" local
 add_nuget_src https://api.nuget.org/v3/index.json nuget.org
-add_nuget_src https://dotnet.myget.org/F/dotnet-try/api/v3/index.json dotnet-try
-add_nuget_src https://dotnet.myget.org/F/roslyn/api/v3/index.json roslyn
-add_nuget_src https://dotnet.myget.org/F/dotnet-corefxlab/api/v3/index.json dotnet-corefxlab
+add_nuget_src https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json dotnet-tools
 add_nuget_src https://www.powershellgallery.com/api/v2/ PSGallery
 echo ""
 
@@ -62,10 +60,10 @@ dotnetToolList="$(dotnet tool list -g)"
 
 if echo "${dotnetToolList}" | grep -q "microsoft.dotnet-interactive"; then
   echo ".NET Interactive installation found - updating..."
-  dotnet tool update -g --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json" Microsoft.dotnet-interactive
+  dotnet tool update -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
 else
   echo ".NET Interactive installation not found - installing..."
-  dotnet tool install -g --add-source "https://dotnet.myget.org/F/dotnet-try/api/v3/index.json" Microsoft.dotnet-interactive
+  dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
 fi
 echo ""
 
