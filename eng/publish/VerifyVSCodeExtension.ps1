@@ -22,7 +22,7 @@ try {
     # get package feed url
     $toolFeed = $packageJsonContents."contributes"."configuration"."properties"."dotnet-interactive.interactiveToolSource"."default"
     $serviceDefinition = Invoke-RestMethod -Uri $toolFeed
-    $queryUrl = ($serviceDefinition."resources" | Where-Object -Property "@type" -eq "SearchQueryService" | Select-Object -First 1)."@id"
+    $queryUrl = ($serviceDefinition."resources" | Where-Object -Property "@type" -Match ".*SearchQueryService.*" | Select-Object -First 1)."@id"
     $packageQuery = $queryUrl + "?q=Microsoft.dotnet-interactive"
     $packageQueryResults = Invoke-RestMethod -Uri $packageQuery
     $availableVersions = ($packageQueryResults."data" | Select-Object -First 1)."versions" | ForEach-Object { $_."version" }
