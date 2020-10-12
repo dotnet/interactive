@@ -53,7 +53,39 @@ The `interactive` object contains the following properties, corresponding to the
 
 Sometimes you might need to import JavaScript modules in your notebook. You can use the `interactive` object to do so.
 
-Here is an example.
-![image](https://user-images.githubusercontent.com/375556/95768858-e6be3500-0cae-11eb-925c-53d46670bd09.png)
+Here is an example that configures requirejs to load d3.js from cdn.
+
+```js
+#!js
+dtreeRequire = interactive.configureRequire({
+    paths: {
+        d3: "https://d3js.org/d3.v5.min"
+    }
+});
+```
+
+Now you can require the module and use it. Using `#!html` to inject an `svg` element and then `#!js` to load the `d3.js` library and append a circle to the dom
+
+
+```
+#!html
+<sgv id"renderTarget"></svg>
+
+#!js
+#!html
+<svg id="renderTarget" width=300 height=300></svg>
+
+#!js
+dtreeRequire(["d3"], d3 => {
+    d3.select("svg#renderTarget")
+    .append('circle')
+    .attr('cx', 100)
+    .attr('cy', 100)
+    .attr('r', 50)
+    .attr('stroke', 'black')
+    .attr('fill', '#69a3b2');    
+});
+```
+
 The `interactive.configureRequire` takes as input a [requirejs configuration object](https://www.tutorialspoint.com/requirejs/requirejs_configuration.htm) and returns a function that you can now use to load the dependecies.
 
