@@ -69,10 +69,6 @@ Now you can require the module and use it. Using `#!html` to inject an `svg` ele
 
 ```
 #!html
-<sgv id"renderTarget"></svg>
-
-#!js
-#!html
 <svg id="renderTarget" width=300 height=300></svg>
 
 #!js
