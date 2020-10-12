@@ -53,7 +53,7 @@ The `interactive` object contains the following properties, corresponding to the
 
 Sometimes you might need to import JavaScript modules in your notebook. You can use the `interactive` object to do so.
 
-Here is an example that configures requirejs to load d3.js from cdn.
+Here is an example that configures RequireJS to load D3.js from a CDN.
 
 ```js
 #!js
@@ -88,4 +88,3 @@ dtreeRequire(["d3"], d3 => {
 ```
 
 The `interactive.configureRequire` takes as input a [requirejs configuration object](https://www.tutorialspoint.com/requirejs/requirejs_configuration.htm) and returns a function that you can now use to load the dependecies.
-
