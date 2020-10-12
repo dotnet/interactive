@@ -48,3 +48,12 @@ The `interactive` object contains the following properties, corresponding to the
 * `interactive.fsharp`
 * `interactive.pwsh`
 * `interactive.value`
+
+## Loading external JavaScript modules at runtime
+
+Sometimes you might need to import JavaScript modules in your notebook. You can use the `interactive` object to do so.
+
+Here is an example.
+![image](https://user-images.githubusercontent.com/375556/95768858-e6be3500-0cae-11eb-925c-53d46670bd09.png)
+The `interactive.configureRequire` takes as input a [requirejs configuration object](https://www.tutorialspoint.com/requirejs/requirejs_configuration.htm) and returns a function that you can now use to load the dependecies.
+
