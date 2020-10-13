@@ -28,6 +28,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         IKernelCommandHandler<RequestHoverText>
     {
         private bool _connected = false;
+        private bool _intellisenseReady = false;
         private readonly string _tempFilePath;
         private readonly string _tempFileUri;
         private readonly string _connectionString;
@@ -46,6 +47,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             _serviceClient.OnConnectionComplete += HandleConnectionComplete;
             _serviceClient.OnQueryComplete += HandleQueryComplete;
+            _serviceClient.OnIntellisenseReady += HandleIntellisenseReady;
 
             _serviceClient.StartProcessAndRedirectIO();
 
@@ -73,6 +75,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             if (_queryHandlers.TryGetValue(queryParams.OwnerUri, out handler))
             {
                 handler(queryParams);
+            }
+        }
+
+        private void HandleIntellisenseReady(object sender, IntelliSenseReadyParams readyParams)
+        {
+            if (readyParams.OwnerUri.Equals(this._tempFileUri))
+            {
+                this._intellisenseReady = true;
             }
         }
 
@@ -112,12 +122,20 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public async Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
         {
+            if (!_intellisenseReady)
+            {
+                return;
+            }
             var completionItems = await _serviceClient.ProvideCompletionItemsAsync(_tempFilePath, command);
             context.Publish(new CompletionsProduced(completionItems, command));
         }
 
         public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
+            if (!_intellisenseReady)
+            {
+                return;
+            }
             var hoverItem = await _serviceClient.ProvideHoverAsync(_tempFilePath, command);
             if (hoverItem != null)
             {
