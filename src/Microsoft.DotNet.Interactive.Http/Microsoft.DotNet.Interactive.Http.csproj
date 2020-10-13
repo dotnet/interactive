@@ -6,8 +6,8 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <PackageDescription>Http protocol and api to integrate .NET Interactive with WebHosts</PackageDescription>
-    <PackageTags>interactive connect</PackageTags>
+    <PackageDescription>Enables connections over HTTP to application-embedded .NET Interactive kernels, letting you send code to the kernel from Visual Studio Code, access kernel APIs with JavaScript, render data, and access packaged resources.</PackageDescription>
+    <PackageTags>interactive connect http signalr</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
