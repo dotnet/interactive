@@ -549,4 +549,12 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 		public ColumnInfo[] ColumnInfo;
 		public CellValue[][] Rows;
 	}
+
+    public class IntelliSenseReadyParams
+    {
+        /// <summary>
+        /// URI identifying the text document
+        /// </summary>
+        public string OwnerUri { get; set; }
+    }
 }

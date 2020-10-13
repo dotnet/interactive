@@ -50,12 +50,20 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 {
                     UseSingleObjectParameterDeserialization = true
                 });
+            rpc.AddLocalRpcMethod(
+                handler: typeof(MsSqlServiceClient).GetMethod(nameof(HandleIntellisenseReady)),
+                target: this,
+                methodRpcSettings: new JsonRpcMethodAttribute("textDocument/intelliSenseReady")
+                {
+                    UseSingleObjectParameterDeserialization = true
+                });
 
             rpc.StartListening();
         }
 
         public event EventHandler<ConnectionCompleteParams> OnConnectionComplete;
         public event EventHandler<QueryCompleteParams> OnQueryComplete;
+        public event EventHandler<IntelliSenseReadyParams> OnIntellisenseReady;
 
         public async Task<bool> ConnectAsync(string ownerUri, string connectionStr)
         {
@@ -156,6 +164,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public void HandleQueryCompletion(QueryCompleteParams queryParams)
         {
             OnQueryComplete(this, queryParams);
+        }
+
+        public void HandleIntellisenseReady(IntelliSenseReadyParams readyParams)
+        {
+            OnIntellisenseReady(this, readyParams);
         }
 
         public void Dispose()
