@@ -8,9 +8,9 @@ The PR build definition can be found [here](https://dev.azure.com/dnceng/public/
 
 [Signed build definition](https://dev.azure.com/dnceng/internal/_build?definitionId=743&_a=summary)
 
-## MyGet Package Upload
+## NuGet Package Upload
 
-NuGet packages produced from every build of main are auto-published to MyGet via the `eng/upload/scripts/UploadPackages.ps1` script.
+NuGet packages produced from every build of `main` are auto-published to the NuGet feed `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json`
 
 ## Publish VS Code Extension
 
