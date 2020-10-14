@@ -51,9 +51,9 @@ The `interactive` object contains the following properties, corresponding to the
 
 ## Loading external JavaScript modules at runtime
 
-Sometimes you might need to import JavaScript modules in your notebook. You can use the `interactive` object to do so.
+Sometimes you might need to import JavaScript modules into your notebook. You can use the `interactive` object to do so.
 
-Here is an example that configures RequireJS to load D3.js from a CDN.
+Here is an example that configures RequireJS to load [D3.js](https://d3js.org/) from a CDN. `configureRequire` returns a function that can be used to load the module.
 
 ```js
 #!js
@@ -64,7 +64,7 @@ dtreeRequire = interactive.configureRequire({
 });
 ```
 
-Now you can require the module and use it. Using `#!html` to inject an `svg` element and then `#!js` to load the `d3.js` library and append a circle to the dom
+You can require the module by invoking `dtreeRequire`. Then, you can use `#!html` to inject an `svg` element and then `#!js` to load and call the `d3.v5.min.js` library.
 
 
 ```
@@ -83,4 +83,33 @@ dtreeRequire(["d3"], d3 => {
 });
 ```
 
-The `interactive.configureRequire` takes as input a [requirejs configuration object](https://www.tutorialspoint.com/requirejs/requirejs_configuration.htm) and returns a function that you can now use to load the dependecies.
+The `interactive.configureRequire` is equivalent to [`require.config`](https://www.tutorialspoint.com/requirejs/requirejs_quick_guide.htm).
+
+Doing this in .NET Interactive:
+
+```js
+#!js
+dtreeRequire = interactive.configureRequire({
+    paths: {
+        d3: "https://d3js.org/d3.v5.min"
+    }
+});
+
+dtreeRequire(["d3"], d3 => { 
+    console.log(d3);
+});
+```
+
+is equivalent to doing this with RequireJS:
+
+```js
+requirejs.config({
+    paths: {
+        d3: "https://d3js.org/d3.v5.min"
+    }
+});
+
+require(["d3"], d3 => { 
+    console.log(d3);
+});
+```
