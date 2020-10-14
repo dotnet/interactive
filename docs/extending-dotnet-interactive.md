@@ -2,7 +2,7 @@
 
 You can create extensions for .NET Interactive in order to create custom experiences including custom visualizations, new magic commands, new subkernels supporting additional languages, and more. Extensions can be distributed using NuGet packages installed using [`#r nuget`](nuget-overview.md).
 
-If you want to look at some example code first, a great place to start is the [ClockExtension](../samples/extensions/ClockExtension/ClockExtension.ipynb) sample. And we have a walkthrough that shows you how to build and install it [in the form of a notebook](../samples/notebooks/Extensions.ipynb).
+If you want to look at some example code first, a great place to start is the [ClockExtension](../samples/extensions/ClockExtension) sample. And we have a walkthrough that shows you how to build and install it [in the form of a notebook](../samples/extensions/ClockExtension.ipynb).
 
 Let's walk through the steps involved.
 
