@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     public class MsSqlKernelConnection : ConnectKernelCommand<MsSqlConnectionOptions>
     {
         public MsSqlKernelConnection()
-            : base("mssql", "Connects to a Microsoft SQL Server database - Dev version")
+            : base("mssql", "Connects to a Microsoft SQL Server database")
         {
             Add(new Argument<string>("connectionString", "The connection string used to connect to the database"));
             Add(new Option<bool>("--create-dbcontext", "Scaffold a DbContext in the C# kernel."));
