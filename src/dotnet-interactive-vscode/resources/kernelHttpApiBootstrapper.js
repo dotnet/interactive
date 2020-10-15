@@ -36,7 +36,6 @@
 
 
                     global.dotnetInteractiveRequire = dotnetInteractiveRequire;
-                    global.dotnetInteractiveExtensionsRequire = dotnetInteractiveExtensionsRequire;
                     global.configureRequireFromExtension = function (extensionName, extensionCacheBuster) {
                         let paths = {};
                         paths[extensionName] = `${uri}extensions/${extensionName}/resources/`;
