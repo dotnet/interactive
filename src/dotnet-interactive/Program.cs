@@ -78,24 +78,17 @@ namespace Microsoft.DotNet.Interactive.App
                 StartToolLogging(options)
             };
 
-            HttpProbingSettings probingSettings = null;
+            var httpPort = GetFreePort(options);
+            var probingSettings = HttpProbingSettings.Create(httpPort.PortNumber);
+            options.HttpPort = httpPort;
 
-            if (options.EnableHttpApi)
-            {
-                var httpPort = GetFreePort(options);
-                probingSettings = HttpProbingSettings.Create(httpPort.PortNumber);
-            }
 
-            var httpStartupOptions = new HttpOptions(options.EnableHttpApi, options.HttpPort);
             var webHost = new WebHostBuilder()
                           .UseKestrel()
                           .UseDotNetInteractiveHttpApi(options.EnableHttpApi, options.HttpPort, probingSettings, serviceCollection)
+                          .UseUrls(probingSettings.AddressList.Select(a => a.AbsoluteUri).ToArray())
                           .UseStartup<Startup>();
 
-            if (options.EnableHttpApi && probingSettings != null)
-            {
-                webHost = webHost.UseUrls(probingSettings.AddressList.Select(a => a.AbsoluteUri).ToArray());
-            }
 
             return webHost;
 
