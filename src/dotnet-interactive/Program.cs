@@ -83,10 +83,10 @@ namespace Microsoft.DotNet.Interactive.App
             if (options.EnableHttpApi)
             {
                 var httpPort = GetFreePort(options);
+                options.HttpPort = httpPort;
                 probingSettings = HttpProbingSettings.Create(httpPort.PortNumber);
             }
 
-            var httpStartupOptions = new HttpOptions(options.EnableHttpApi, options.HttpPort);
             var webHost = new WebHostBuilder()
                           .UseKestrel()
                           .UseDotNetInteractiveHttpApi(options.EnableHttpApi, options.HttpPort, probingSettings, serviceCollection)
