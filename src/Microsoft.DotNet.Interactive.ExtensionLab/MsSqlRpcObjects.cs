@@ -184,7 +184,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     {
         public MarkedString[] Contents { get; set; }
 
-        public Range? Range { get; set; }
+        public Range Range { get; set; }
     }
 
     public class QueryExecuteSubsetParams
@@ -211,7 +211,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public int RowsStartIndex { get; set; }
 
         /// <summary>
-        /// Number of rows to include in the result of this request. If the number of the rows 
+        /// Number of rows to include in the result of this request. If the number of the rows
         /// exceeds the number of rows available after the start index, all available rows after
         /// the start index will be returned.
         /// </summary>
@@ -251,36 +251,36 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
     public class ColumnInfo
     {
-		public bool? AllowDBNull { get; set; }
-		public string BaseCatalogName { get; set; }
-		public string BaseColumnName { get; set; }
-		public string BaseSchemaName { get; set; }
-		public string BaseServerName { get; set; }
-		public string BaseTableName { get; set; }
-		public string ColumnName { get; set; }
-		public int? ColumnOrdinal { get; set; }
-		public int? ColumnSize { get; set; }
-		public bool? IsAliased { get; set; }
-		public bool? IsAutoIncrement { get; set; }
-		public bool? IsExpression { get; set; }
-		public bool? IsHidden { get; set; }
-		public bool? IsIdentity { get; set; }
-		public bool? IsKey { get; set; }
-		public bool? IsBytes { get; set; }
-		public bool? IsChars { get; set; }
-		public bool? IsSqlVariant { get; set; }
-		public bool? IsUdt { get; set; }
-		public string DataType { get; set; }
-		public bool? IsXml { get; set; }
-		public bool? IsJson { get; set; }
-		public bool? IsLong { get; set; }
-		public bool? IsReadOnly { get; set; }
-		public bool? IsUnique { get; set; }
-		public int? NumericPrecision { get; set; }
-		public int? NumericScale { get; set; }
-		public string UdtAssemblyQualifiedName { get; set; }
-		public string DataTypeName { get; set; }
-	}
+        public bool? AllowDBNull { get; set; }
+        public string BaseCatalogName { get; set; }
+        public string BaseColumnName { get; set; }
+        public string BaseSchemaName { get; set; }
+        public string BaseServerName { get; set; }
+        public string BaseTableName { get; set; }
+        public string ColumnName { get; set; }
+        public int? ColumnOrdinal { get; set; }
+        public int? ColumnSize { get; set; }
+        public bool? IsAliased { get; set; }
+        public bool? IsAutoIncrement { get; set; }
+        public bool? IsExpression { get; set; }
+        public bool? IsHidden { get; set; }
+        public bool? IsIdentity { get; set; }
+        public bool? IsKey { get; set; }
+        public bool? IsBytes { get; set; }
+        public bool? IsChars { get; set; }
+        public bool? IsSqlVariant { get; set; }
+        public bool? IsUdt { get; set; }
+        public string DataType { get; set; }
+        public bool? IsXml { get; set; }
+        public bool? IsJson { get; set; }
+        public bool? IsLong { get; set; }
+        public bool? IsReadOnly { get; set; }
+        public bool? IsUnique { get; set; }
+        public int? NumericPrecision { get; set; }
+        public int? NumericScale { get; set; }
+        public string UdtAssemblyQualifiedName { get; set; }
+        public string DataTypeName { get; set; }
+    }
 
     public class CellValue
     {
@@ -378,7 +378,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     {
         /// <summary>
         /// A URI identifying the owner of the connection. This will most commonly be a file in the workspace
-        /// or a virtual file representing an object in a database.         
+        /// or a virtual file representing an object in a database.
         /// </summary>
         public string OwnerUri { get; set;  }
 
@@ -539,16 +539,16 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
     public class SimpleExecuteParams
     {
-		public string QueryString { get; set; }
-		public string OwnerUri { get; set; }
-	}
+        public string QueryString { get; set; }
+        public string OwnerUri { get; set; }
+    }
 
-	public class SimpleExecuteResult
+    public class SimpleExecuteResult
     {
-		public int RowCount;
-		public ColumnInfo[] ColumnInfo;
-		public CellValue[][] Rows;
-	}
+        public int RowCount;
+        public ColumnInfo[] ColumnInfo;
+        public CellValue[][] Rows;
+    }
 
     public class IntelliSenseReadyParams
     {
@@ -556,5 +556,60 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         /// URI identifying the text document
         /// </summary>
         public string OwnerUri { get; set; }
+    }
+
+    public class DidChangeTextDocumentParams
+    {
+        /// <summary>
+        /// Gets or sets the changed document.
+        /// </summary>
+        public VersionedTextDocumentIdentifier TextDocument { get; set; }
+
+        /// <summary>
+        /// Gets or sets the list of changes to the document content.
+        /// </summary>
+        public TextDocumentChangeEvent[] ContentChanges { get; set; }
+    }
+
+    public class VersionedTextDocumentIdentifier : TextDocumentIdentifier
+    {
+        /// <summary>
+        /// Gets or sets the Version of the changed text document
+        /// </summary>
+        public int Version { get; set; }
+    }
+
+    public class TextDocumentChangeEvent
+    {
+        /// <summary>
+        /// Gets or sets the Range where the document was changed.  Will
+        /// be null if the server's TextDocumentSyncKind is Full.
+        /// </summary>
+        public Range Range { get; set; }
+
+        /// <summary>
+        /// Gets or sets the length of the Range being replaced in the
+        /// document.  Will be null if the server's TextDocumentSyncKind is
+        /// Full.
+        /// </summary>
+        public int? RangeLength { get; set; }
+
+        /// <summary>
+        /// Gets or sets the new text of the document.
+        /// </summary>
+        public string Text { get; set; }
+    }
+
+    public class Range
+    {
+        /// <summary>
+        /// Gets or sets the starting position of the range.
+        /// </summary>
+        public Position Start { get; set; }
+
+        /// <summary>
+        /// Gets or sets the ending position of the range.
+        /// </summary>
+        public Position End { get; set; }
     }
 }
