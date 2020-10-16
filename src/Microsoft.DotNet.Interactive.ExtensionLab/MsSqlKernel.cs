@@ -52,6 +52,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             _serviceClient.StartProcessAndRedirectIO();
 
             RegisterForDisposal(_serviceClient);
+            RegisterForDisposal(() => File.Delete(_tempFilePath));
         }
 
         private void HandleConnectionComplete(object sender, ConnectionCompleteParams connParams)
