@@ -6,8 +6,10 @@ namespace Microsoft.DotNet.Interactive.FSharp
 open System
 open System.Collections.Generic
 open System.Collections.Immutable
+open System.Collections.Concurrent
 open System.IO
 open System.Runtime.InteropServices
+open System.Xml
 open System.Text
 open System.Threading
 open System.Threading.Tasks
@@ -43,6 +45,8 @@ type FSharpKernelBase () as this =
 
     let mutable cancellationTokenSource = new CancellationTokenSource()
 
+    let xmlDocuments = ConcurrentDictionary<string, XmlDocument>(StringComparer.OrdinalIgnoreCase)
+
     let getKindString (glyph: FSharpGlyph) =
         match glyph with
         | FSharpGlyph.Class -> WellKnownTags.Class
@@ -75,15 +79,77 @@ type FSharpKernelBase () as this =
         // We are passing last part of long ident as FilterText.
         | _, idents -> Array.last idents
 
+    let tryGetXmlDocument xmlFile =
+        match xmlDocuments.TryGetValue(xmlFile) with
+        | true, doc -> Some doc
+        | _ ->
+            if not (File.Exists(xmlFile)) || 
+               not (String.Equals(Path.GetExtension(xmlFile), "xml", StringComparison.OrdinalIgnoreCase)) then
+                None
+            else
+                try
+                    let doc = System.Xml.XmlDocument()
+                    use xmlStream = File.OpenRead(xmlFile)
+                    doc.Load(xmlStream)
+                    xmlDocuments.[xmlFile] <- doc
+                    Some doc
+                with
+                | _ ->
+                    None
+
+    let tryGetDocumentationByXmlFileAndKey xmlFile key =
+        tryGetXmlDocument xmlFile
+        |> Option.bind (fun doc ->
+            match doc.SelectSingleNode(sprintf "doc/members/member[@name='%s']" key) with
+            | null -> None
+            | node ->
+                match node.SelectSingleNode("summary") with
+                | null -> None
+                | summaryNode -> Some summaryNode.InnerText)
+
     let getDocumentation (declarationItem: FSharpDeclarationListItem) =
-        let result = declarationItem.DescriptionTextAsync
-        result.ToString()
+        async {
+            match! declarationItem.DescriptionTextAsync with
+            | FSharpToolTipText(elements) ->
+                return
+                    elements
+                    |> List.choose (fun element ->
+                        match element with
+                        | FSharpToolTipElement.Group(dataList) ->
+                            let text =
+                                let xmlData =
+                                    dataList
+                                    |> List.choose (fun data ->
+                                        match data.XmlDoc with
+                                        | FSharpXmlDoc.Text(_, xmlLines) when xmlLines.Length > 0 ->
+                                            Some xmlLines
+                                        | FSharpXmlDoc.XmlDocFileSignature(file, key) ->
+                                            let xmlFile = Path.ChangeExtension(file, "xml")
+                                            tryGetDocumentationByXmlFileAndKey xmlFile key
+                                            |> Option.map (fun x -> [|x|])
+                                        | _ ->
+                                            None
+                                    )
+                                if xmlData.IsEmpty then String.Empty
+                                else
+                                    xmlData
+                                    |> List.reduce Array.append
+                                    |> String.concat ""
+                            if String.IsNullOrWhiteSpace(text) then None
+                            else Some text
+                        | _ ->
+                            None
+                    )
+                    |> String.concat ""
+        }
 
     let getCompletionItem (declarationItem: FSharpDeclarationListItem) =
-        let kind = getKindString declarationItem.Glyph
-        let filterText = getFilterText declarationItem
-        let documentation = getDocumentation declarationItem
-        CompletionItem(declarationItem.Name, kind, filterText=filterText, documentation=documentation)
+        async {
+            let kind = getKindString declarationItem.Glyph
+            let filterText = getFilterText declarationItem
+            let! documentation = getDocumentation declarationItem
+            return CompletionItem(declarationItem.Name, kind, filterText=filterText, documentation=documentation)
+        }
 
     let getDiagnostic (error: FSharpErrorInfo) =
         // F# errors are 1-based but should be 0-based for diagnostics, however, 0-based errors are still valid to report
@@ -148,9 +214,10 @@ type FSharpKernelBase () as this =
     let handleRequestCompletions (requestCompletions: RequestCompletions) (context: KernelInvocationContext) =
         async {
             let! declarationItems = script.Value.GetCompletionItems(requestCompletions.Code, requestCompletions.LinePosition.Line + 1, requestCompletions.LinePosition.Character)
-            let completionItems =
+            let! completionItems =
                 declarationItems
                 |> Array.map getCompletionItem
+                |> Async.Sequential
             context.Publish(CompletionsProduced(completionItems, requestCompletions))
         }
 
