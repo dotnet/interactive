@@ -84,7 +84,7 @@ type FSharpKernelBase () as this =
         | true, doc -> Some doc
         | _ ->
             if not (File.Exists(xmlFile)) || 
-               not (String.Equals(Path.GetExtension(xmlFile), "xml", StringComparison.OrdinalIgnoreCase)) then
+               not (String.Equals(Path.GetExtension(xmlFile), ".xml", StringComparison.OrdinalIgnoreCase)) then
                 None
             else
                 try
