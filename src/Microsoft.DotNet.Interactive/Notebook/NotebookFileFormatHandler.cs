@@ -331,11 +331,11 @@ namespace Microsoft.DotNet.Interactive.Notebook
         }
 
         /// <summary>
-        /// Ensures each line _except the last_ ends with '\r\n'.
+        /// Ensures each line _except the last_ ends with '\n'.
         /// </summary>
         private static IEnumerable<string> AddTrailingNewlinesToAllButLast(IEnumerable<string> lines)
         {
-            var result = lines.Select(l => l.EndsWith("\r\n") ? l : l + "\r\n").ToList();
+            var result = lines.Select(l => l.EndsWith("\n") ? l : l + "\n").ToList();
             if (result.Count > 0)
             {
                 result[^1] = lines.Last();
