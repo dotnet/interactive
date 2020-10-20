@@ -44,10 +44,10 @@ namespace Microsoft.DotNet.Interactive.App
                         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Continuum", "anaconda3", "share", "jupyter", "kernels"));
                     break;
                 case PlatformID.Unix:
-                    directory = new DirectoryInfo("~/anaconda3/share/jupyter/kernels");
+                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "anaconda3","share","jupyter","kernels"));
                     break;
                 case PlatformID.MacOSX:
-                    directory = new DirectoryInfo("~/opt/anaconda3/share/jupyter/kernels");
+                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "opt","anaconda3","share","jupyter","kernels"));
                     break;
                 default:
                     throw new PlatformNotSupportedException();
@@ -68,10 +68,10 @@ namespace Microsoft.DotNet.Interactive.App
                         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "jupyter", "kernels"));
                     break;
                 case PlatformID.Unix:
-                    directory = new DirectoryInfo("~/.local/share/jupyter/kernels");
+                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local","share","jupyter","kernels"));
                     break;
                 case PlatformID.MacOSX:
-                    directory = new DirectoryInfo("~/Library/Jupyter/kernels");
+                    directory = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library","Jupyter","kernels"));
                     break;
                 default:
                     throw new PlatformNotSupportedException();
