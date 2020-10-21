@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private TaskCompletionSource<ConnectionCompleteParams> _connectionCompleted = new TaskCompletionSource<ConnectionCompleteParams>();
 
-        private Dictionary<string, Func<QueryCompleteParams, Task>> _queryHandlers = new Dictionary<string, Func<QueryCompleteParams, Task>>();
+        private Func<QueryCompleteParams, Task> _queryCompletionHandler = null;
 
         public MsSqlKernel(string name, string connectionString) : base(name)
         {
@@ -78,10 +78,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private async void HandleQueryCompleteAsync(object sender, QueryCompleteParams queryParams)
         {
-            Func<QueryCompleteParams, Task> handler;
-            if (_queryHandlers.TryGetValue(queryParams.OwnerUri, out handler))
+            if (_queryCompletionHandler != null)
             {
-                await handler(queryParams);
+                await _queryCompletionHandler(queryParams);
             }
         }
 
@@ -110,49 +109,59 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 return;
             }
 
-            var completion = new TaskCompletionSource<bool>();
-            Func<QueryCompleteParams, Task> handler = async queryParams =>
+            if (_queryCompletionHandler != null)
             {
-                foreach (var batchSummary in queryParams.BatchSummaries)
-                {
-                    foreach (var resultSummary in batchSummary.ResultSetSummaries)
-                    {
-                        var subsetParams = new QueryExecuteSubsetParams()
-                        {
-                            OwnerUri = _tempFileUri,
-                            BatchIndex = batchSummary.Id,
-                            ResultSetIndex = resultSummary.Id,
-                            RowsStartIndex = 0,
-                            RowsCount = Convert.ToInt32(resultSummary.RowCount)
-                        };
-                        var subsetResult = await _serviceClient.ExecuteQueryExecuteSubsetAsync(subsetParams);
+                context.Display("Error: Another query is currently running. Please wait for that query to complete before re-running this cell.");
+                return;
+            }
 
-                        if (subsetResult.Message != null)
+            var completion = new TaskCompletionSource<bool>();
+            _queryCompletionHandler = async queryParams =>
+            {
+                try
+                {
+                    foreach (var batchSummary in queryParams.BatchSummaries)
+                    {
+                        foreach (var resultSummary in batchSummary.ResultSetSummaries)
                         {
-                            context.Display(subsetResult.Message);
-                        }
-                        else
-                        {
-                            var tableString = GetTableStringForResult(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
-                            context.Display(tableString);
+                            var subsetParams = new QueryExecuteSubsetParams()
+                            {
+                                OwnerUri = _tempFileUri,
+                                BatchIndex = batchSummary.Id,
+                                ResultSetIndex = resultSummary.Id,
+                                RowsStartIndex = 0,
+                                RowsCount = Convert.ToInt32(resultSummary.RowCount)
+                            };
+                            var subsetResult = await _serviceClient.ExecuteQueryExecuteSubsetAsync(subsetParams);
+
+                            if (subsetResult.Message != null)
+                            {
+                                context.Display(subsetResult.Message);
+                            }
+                            else
+                            {
+                                var tableString = GetTableStringForResult(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
+                                context.Display(tableString);
+                            }
                         }
                     }
+                    completion.SetResult(true);
                 }
-                completion.SetResult(true);
+                catch (Exception e)
+                {
+                    completion.SetException(e);
+                }
             };
-            _queryHandlers.Add(_tempFileUri, handler);
 
             try
             {
                 var queryResult = await _serviceClient.ExecuteQueryStringAsync(_tempFileUri, command.Code);
+                await completion.Task;
             }
-            catch
+            finally
             {
-                _queryHandlers.Remove(_tempFileUri);
-                throw;
+                _queryCompletionHandler = null;
             }
-
-            await completion.Task;
         }
 
         private TabularJsonString GetTableStringForResult(ColumnInfo[] columnInfo, CellValue[][] rows)
