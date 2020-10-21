@@ -50,25 +50,25 @@ namespace Microsoft.DotNet.Interactive.Sql.Tests
         //     await service.DisconnectAsync(connectionUri);
         // }
 
-        [Fact]
-        public async Task ConnectionTest()
-        {
-            var testConnStr = "Server=(localdb)\\MSSQLLocalDB;Database=master;Integrated Security=true;";
-            using var service = new MsSqlServiceClient();
+        // [Fact]
+        // public async Task ConnectionTest()
+        // {
+        //     var testConnStr = "Server=(localdb)\\MSSQLLocalDB;Database=master;Integrated Security=true;";
+        //     using var service = new MsSqlServiceClient();
 
-            var connectionUri = "connection:providerName:MSSQL|applicationName:dotnetTest|authenticationType:Integrated|server:(localdb)\\MSSQLLocalDB|group:286A0A8F-95DB-492C-96A2-DC1EFE7637AC";
-            var testQuery = "SELECT 'HELLO WORLD'";
-            await service.ConnectAsync(connectionUri, testConnStr);
+        //     var connectionUri = "connection:providerName:MSSQL|applicationName:dotnetTest|authenticationType:Integrated|server:(localdb)\\MSSQLLocalDB|group:286A0A8F-95DB-492C-96A2-DC1EFE7637AC";
+        //     var testQuery = "SELECT 'HELLO WORLD'";
+        //     await service.ConnectAsync(connectionUri, testConnStr);
 
-            var queryUri = "untitled:ConnectionTestQuery";
-            var queryResult = await service.ExecuteQueryStringAsync(queryUri, testQuery);
-            Assert.True(queryResult != null, "Query result should not be null");
+        //     var queryUri = "untitled:ConnectionTestQuery";
+        //     var queryResult = await service.ExecuteQueryStringAsync(queryUri, testQuery);
+        //     Assert.True(queryResult != null, "Query result should not be null");
 
-            var subsetResults = await service.ExecuteQueryExecuteSubsetAsync(queryUri);
-            Assert.True(subsetResults.ResultSubset.RowCount == 1, "Row count should not be 0");
-            Assert.True(subsetResults.ResultSubset.Rows[0][0].DisplayValue == "HELLO WORLD", "Display value does not match");
+        //     var subsetResults = await service.ExecuteQueryExecuteSubsetAsync(queryUri);
+        //     Assert.True(subsetResults.ResultSubset.RowCount == 1, "Row count should not be 0");
+        //     Assert.True(subsetResults.ResultSubset.Rows[0][0].DisplayValue == "HELLO WORLD", "Display value does not match");
 
-            await service.DisconnectAsync(connectionUri);
-        }
+        //     await service.DisconnectAsync(connectionUri);
+        // }
     }
 }

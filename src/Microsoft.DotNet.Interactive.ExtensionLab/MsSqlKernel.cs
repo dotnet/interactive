@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private TaskCompletionSource<ConnectionCompleteParams> _connectionCompleted = new TaskCompletionSource<ConnectionCompleteParams>();
 
-        private ConcurrentDictionary<string, Action<QueryCompleteParams>> _queryHandlers = new ConcurrentDictionary<string, Action<QueryCompleteParams>>();
+        private Dictionary<string, Func<QueryCompleteParams, Task>> _queryHandlers = new Dictionary<string, Func<QueryCompleteParams, Task>>();
 
         public MsSqlKernel(string name, string connectionString) : base(name)
         {
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             _serviceClient = new MsSqlServiceClient();
 
             _serviceClient.OnConnectionComplete += HandleConnectionComplete;
-            _serviceClient.OnQueryComplete += HandleQueryComplete;
+            _serviceClient.OnQueryComplete += HandleQueryCompleteAsync;
             _serviceClient.OnIntellisenseReady += HandleIntellisenseReady;
 
             _serviceClient.StartProcessAndRedirectIO();
@@ -70,12 +70,12 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             }
         }
 
-        private void HandleQueryComplete(object sender, QueryCompleteParams queryParams)
+        private async void HandleQueryCompleteAsync(object sender, QueryCompleteParams queryParams)
         {
-            Action<QueryCompleteParams> handler;
+            Func<QueryCompleteParams, Task> handler;
             if (_queryHandlers.TryGetValue(queryParams.OwnerUri, out handler))
             {
-                handler(queryParams);
+                await handler(queryParams);
             }
         }
 
@@ -96,16 +96,56 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 _connected = true;
             }
 
-            var queryResult = await _serviceClient.ExecuteSimpleQueryAsync(_tempFileUri, command.Code);
-            var tableString = GetTableStringForSimpleResult(queryResult);
-            context.Display(tableString, HtmlFormatter.MimeType);
+            var completion = new TaskCompletionSource<bool>();
+            Func<QueryCompleteParams, Task> handler = async queryParams =>
+            {
+                foreach (var batchSummary in queryParams.BatchSummaries)
+                {
+                    foreach (var resultSummary in batchSummary.ResultSetSummaries)
+                    {
+                        var subsetParams = new QueryExecuteSubsetParams()
+                        {
+                            OwnerUri = _tempFileUri,
+                            BatchIndex = batchSummary.Id,
+                            ResultSetIndex = resultSummary.Id,
+                            RowsStartIndex = 0,
+                            RowsCount = Convert.ToInt32(resultSummary.RowCount)
+                        };
+                        var subsetResult = await _serviceClient.ExecuteQueryExecuteSubsetAsync(subsetParams);
+
+                        if (subsetResult.Message != null)
+                        {
+                            context.Display(subsetResult.Message);
+                        }
+                        else
+                        {
+                            var tableString = GetTableStringForResult(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
+                            context.Display(tableString);
+                        }
+                    }
+                }
+                completion.SetResult(true);
+            };
+            _queryHandlers.Add(_tempFileUri, handler);
+
+            try
+            {
+                var queryResult = await _serviceClient.ExecuteQueryStringAsync(_tempFileUri, command.Code);
+            }
+            catch
+            {
+                _queryHandlers.Remove(_tempFileUri);
+                throw;
+            }
+
+            await completion.Task;
         }
 
-        private TabularJsonString GetTableStringForSimpleResult(SimpleExecuteResult executeResult)
+        private TabularJsonString GetTableStringForResult(ColumnInfo[] columnInfo, CellValue[][] rows)
         {
             var data = new JArray();
-            var columnNames = executeResult.ColumnInfo.Select(info => info.ColumnName).ToArray();
-            foreach (CellValue[] cellRow in executeResult.Rows)
+            var columnNames = columnInfo.Select(info => info.ColumnName).ToArray();
+            foreach (CellValue[] cellRow in rows)
             {
                 var rowObj = new JObject();
                 for (int i = 0; i < cellRow.Length; i++)
@@ -117,7 +157,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 data.Add(rowObj);
             }
 
-            var fields = executeResult.ColumnInfo.ToDictionary(column => column.ColumnName, column => Type.GetType(column.DataType));
+            var fields = columnInfo.ToDictionary(column => column.ColumnName, column => Type.GetType(column.DataType));
             return TabularJsonString.Create(fields, data);
         }
 

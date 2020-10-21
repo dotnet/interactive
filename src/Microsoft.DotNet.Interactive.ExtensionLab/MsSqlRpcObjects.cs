@@ -124,12 +124,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public string OwnerUri { get; set; }
     }
 
-    public class ExecuteStringParams
-    {
-        public string OwnerUri { get; set; }
-        public string QueryString { get; set; }
-    }
-
     public class CommandArgs
     {
         public string Title { get; set; }
@@ -218,7 +212,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public int RowsCount { get; set; }
     }
 
-    public class ExecuteRequestResult
+    public class QueryExecuteResult
     {
     }
 
@@ -611,5 +605,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         /// Gets or sets the ending position of the range.
         /// </summary>
         public Position End { get; set; }
+    }
+
+    public class QueryExecuteStringParams
+    {
+        public string Query { get; set; }
+        public string OwnerUri { get; set; }
     }
 }
