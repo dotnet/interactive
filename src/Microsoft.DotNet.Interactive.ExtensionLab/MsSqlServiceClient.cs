@@ -149,22 +149,21 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return await rpc.InvokeWithParameterObjectAsync<Hover>("textDocument/hover", positionParams);
         }
 
-        public async Task<ExecuteRequestResult> ExecuteQueryStringAsync(string ownerUri, string queryString)
+        public async Task<QueryExecuteResult> ExecuteQueryStringAsync(string ownerUri, string queryString)
         {
-            var queryParams = new ExecuteStringParams() { OwnerUri = ownerUri, QueryString = queryString };
-            return await rpc.InvokeWithParameterObjectAsync<ExecuteRequestResult>("query/executeString", queryParams);
+            var queryParams = new QueryExecuteStringParams() { Query = queryString, OwnerUri = ownerUri };
+            return await rpc.InvokeWithParameterObjectAsync<QueryExecuteResult>("query/executeString", queryParams);
         }
 
         public async Task<SimpleExecuteResult> ExecuteSimpleQueryAsync(string ownerUri, string queryString)
         {
-            var queryParams = new ExecuteStringParams() { OwnerUri = ownerUri, QueryString = queryString };
+            var queryParams = new SimpleExecuteParams() { QueryString = queryString, OwnerUri = ownerUri };
             return await rpc.InvokeWithParameterObjectAsync<SimpleExecuteResult>("query/simpleexecute", queryParams);
         }
 
-        public async Task<QueryExecuteSubsetResult> ExecuteQueryExecuteSubsetAsync(string ownerUri)
+        public async Task<QueryExecuteSubsetResult> ExecuteQueryExecuteSubsetAsync(QueryExecuteSubsetParams subsetParams)
         {
-            var queryExecuteSubsetParams = new QueryExecuteSubsetParams() { OwnerUri = ownerUri, ResultSetIndex = 0, RowsCount = 1 };
-            return await rpc.InvokeWithParameterObjectAsync<QueryExecuteSubsetResult>("query/subset", queryExecuteSubsetParams);
+            return await rpc.InvokeWithParameterObjectAsync<QueryExecuteSubsetResult>("query/subset", subsetParams);
         }
 
         public async Task SendTextChangeNotification(string ownerUri, string newText, string oldText)
