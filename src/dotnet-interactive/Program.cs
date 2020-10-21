@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.Interactive.App.CommandLine;
+using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.Extensions.DependencyInjection;
 using Pocket;
@@ -82,23 +83,13 @@ namespace Microsoft.DotNet.Interactive.App
             if (options.EnableHttpApi)
             {
                 var httpPort = GetFreePort(options);
+                options.HttpPort = httpPort;
                 probingSettings = HttpProbingSettings.Create(httpPort.PortNumber);
             }
 
             var webHost = new WebHostBuilder()
                           .UseKestrel()
-                          .ConfigureServices(c =>
-                          {
-                              if (options.EnableHttpApi && probingSettings != null)
-                              {
-                                  c.AddSingleton(probingSettings);
-                              }
-                              c.AddSingleton(options);
-                              foreach (var serviceDescriptor in serviceCollection)
-                              {
-                                  c.Add(serviceDescriptor);
-                              }
-                          })
+                          .UseDotNetInteractiveHttpApi(options.EnableHttpApi, options.HttpPort, probingSettings, serviceCollection)
                           .UseStartup<Startup>();
 
             if (options.EnableHttpApi && probingSettings != null)

@@ -3,10 +3,11 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using Microsoft.DotNet.Interactive.Commands;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -17,11 +18,11 @@ namespace Microsoft.DotNet.Interactive.Server
         private static readonly ConcurrentDictionary<Type, Func<KernelCommand, IKernelCommandEnvelope>> _envelopeFactories =
             new ConcurrentDictionary<Type, Func<KernelCommand, IKernelCommandEnvelope>>();
 
-        private static Dictionary<string, Type> _envelopeTypesByCommandTypeName;
+        private static ConcurrentDictionary<string, Type> _envelopeTypesByCommandTypeName;
 
-        private static Dictionary<string, Type> _commandTypesByCommandTypeName;
+        private static ConcurrentDictionary<string, Type> _commandTypesByCommandTypeName;
 
-      
+
         static KernelCommandEnvelope()
         {
             ResetToDefaults();
@@ -47,12 +48,12 @@ namespace Microsoft.DotNet.Interactive.Server
             var commandEnvelopeType = typeof(KernelCommandEnvelope<T>);
             var commandType = typeof(T);
 
-            _envelopeTypesByCommandTypeName.Add(commandTypeName, commandEnvelopeType);
-            _commandTypesByCommandTypeName.Add(commandTypeName, commandType);
+            _envelopeTypesByCommandTypeName.TryAdd(commandTypeName, commandEnvelopeType);
+            _commandTypesByCommandTypeName.TryAdd(commandTypeName, commandType);
         }
         public static void ResetToDefaults()
         {
-            _envelopeTypesByCommandTypeName = new Dictionary<string, Type>
+            _envelopeTypesByCommandTypeName = new ConcurrentDictionary<string, Type>
             {
                 [nameof(AddPackage)] = typeof(KernelCommandEnvelope<AddPackage>),
                 [nameof(ChangeWorkingDirectory)] = typeof(KernelCommandEnvelope<ChangeWorkingDirectory>),
@@ -67,10 +68,10 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(UpdateDisplayedValue)] = typeof(KernelCommandEnvelope<UpdateDisplayedValue>)
             };
 
-            _commandTypesByCommandTypeName = _envelopeTypesByCommandTypeName
+            _commandTypesByCommandTypeName = new ConcurrentDictionary<string, Type>(_envelopeTypesByCommandTypeName
                 .ToDictionary(
                     pair => pair.Key,
-                    pair => pair.Value.GetGenericArguments()[0]);
+                    pair => pair.Value.GetGenericArguments()[0]));
         }
 
         public static IKernelCommandEnvelope Create(KernelCommand command)
@@ -126,7 +127,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
             var commandType = CommandTypeByName(commandTypeJson.Value<string>());
             var commandJson = json["command"];
-            var command = (KernelCommand) commandJson?.ToObject(commandType, Serializer.JsonSerializer);
+            var command = (KernelCommand)commandJson?.ToObject(commandType, Serializer.JsonSerializer);
 
             var token = json["token"]?.Value<string>();
 

@@ -12,6 +12,7 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.Commands;
+using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.Utility;
@@ -64,6 +65,13 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
 
             _connectionFile = new FileInfo(Path.GetTempFileName());
             _kernelSpecInstallPath = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()));
+        }
+
+        private Kernel GetKernel()
+        {
+            return _serviceCollection
+                .FirstOrDefault(s => s.ServiceType == typeof(Kernel))
+                .ImplementationInstance.As<Kernel>();
         }
 
         public void Dispose()
@@ -170,28 +178,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             _startOptions.HttpPort.IsAuto.Should().BeTrue();
         }
 
-        [Fact]
-        public async Task http_command_registers_BrowserFrontedEnvironment()
-        {
-            await _parser.InvokeAsync("http");
 
-            _serviceCollection
-                .FirstOrDefault(s => s.ServiceType == typeof(BrowserFrontendEnvironment))
-                .Should()
-                .NotBeNull();
-
-        }
-
-        [Fact]
-        public async Task http_command_does_not_register_JupyterFrontedEnvironment()
-        {
-            await _parser.InvokeAsync("http");
-
-            _serviceCollection
-                .FirstOrDefault(s => s.ServiceType == typeof(HtmlNotebookFrontedEnvironment))
-                .Should()
-                .BeNull();
-        }
 
         [Fact]
         public void http_command__does_not_parse_http_port_range_option()
@@ -202,24 +189,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
                 .Select(e => e.Message)
                  .Should()
                  .Contain(errorMessage => errorMessage == "Unrecognized command or argument '--http-port-range'");
-        }
-
-        [Fact]
-        public async Task jupyter_command_registers_BrowserFrontedEnvironment()
-        {
-           await _parser.InvokeAsync($"jupyter {_connectionFile}");
-
-            using var scope = new AssertionScope();
-            _serviceCollection
-                .FirstOrDefault(s => s.ServiceType == typeof(HtmlNotebookFrontedEnvironment))
-                .Should()
-                .NotBeNull();
-
-            _serviceCollection
-                .FirstOrDefault(s => s.ServiceType == typeof(FrontendEnvironment))
-                .Should()
-                .NotBeNull();
-
         }
 
         [Fact]
@@ -388,27 +357,16 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
-        public async Task stdio_command_does_register_HtmlNotebookFrontedEnvironment_when_http_is_enabled()
-        {
-            await _parser.InvokeAsync("stdio --http-port-range 3000-4000");
-
-            _serviceCollection
-                .FirstOrDefault(s => s.ServiceType == typeof(HtmlNotebookFrontedEnvironment))
-                .Should()
-                .NotBeNull();
-        }
-
-        [Fact]
         public async Task stdio_command_requires_api_bootstrapping_when_http_is_enabled()
         {
             await _parser.InvokeAsync("stdio --http-port-range 3000-4000");
+            
+            var kernel = GetKernel();
 
-            _serviceCollection
-                .FirstOrDefault(s => s.ServiceType == typeof(HtmlNotebookFrontedEnvironment))
-                .ImplementationInstance.As<HtmlNotebookFrontedEnvironment>()
-                .RequiresAutomaticBootstrapping
-                .Should()
-                .BeTrue();
+            kernel.FrontendEnvironment.As<HtmlNotebookFrontedEnvironment>()
+                 .RequiresAutomaticBootstrapping
+                 .Should()
+                 .BeTrue();
         }
 
         [Fact]
@@ -416,9 +374,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         {
             await _parser.InvokeAsync("[vscode] stdio --http-port-range 3000-4000");
 
-            _serviceCollection
-                .FirstOrDefault(s => s.ServiceType == typeof(HtmlNotebookFrontedEnvironment))
-                .ImplementationInstance.As<HtmlNotebookFrontedEnvironment>()
+            var kernel = GetKernel();
+
+            kernel.FrontendEnvironment.As<HtmlNotebookFrontedEnvironment>()
                 .RequiresAutomaticBootstrapping
                 .Should()
                 .BeFalse();

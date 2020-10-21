@@ -19,6 +19,7 @@ using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
+using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Microsoft.DotNet.Interactive.PowerShell;
@@ -241,11 +242,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 {
                     var frontendEnvironment = new HtmlNotebookFrontedEnvironment();
                     var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
-
-                    services.AddSingleton(frontendEnvironment);
-                    services.AddSingleton<FrontendEnvironment>(frontendEnvironment);
-                    services.AddSingleton(kernel);
-                    services.AddSingleton<Kernel>(kernel);
+                    services.AddKernel(kernel);
 
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
                         .AddSingleton(c =>
@@ -253,8 +250,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             return new JupyterRequestContextScheduler(delivery => c.GetRequiredService<JupyterRequestContextHandler>()
                                 .Handle(delivery));
                         })
-                        .AddSingleton(c => new JupyterRequestContextHandler(
-                                c.GetRequiredService<Kernel>()))
+                        .AddSingleton(c => new JupyterRequestContextHandler(kernel))
                         .AddSingleton<IHostedService, Shell>()
                         .AddSingleton<IHostedService, Heartbeat>();
                     return jupyter(startupOptions, console, startServer, context);
@@ -305,14 +301,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 httpCommand.Handler = CommandHandler.Create<StartupOptions, KernelHttpOptions, IConsole, InvocationContext>(
                     (startupOptions, options, console, context) =>
                     {
-
                         var frontendEnvironment = new BrowserFrontendEnvironment();
                         var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
-
-                        services.AddSingleton(frontendEnvironment);
-                        services.AddSingleton<FrontendEnvironment>(frontendEnvironment);
-                        services.AddSingleton(kernel);
-                        services.AddSingleton<Kernel>(kernel);
+                        services.AddKernel(kernel);
 
                         onServerStarted ??= () =>
                         {
@@ -387,8 +378,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             ? new HtmlNotebookFrontedEnvironment() 
                             : new BrowserFrontendEnvironment();
                         
-                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment,
-                            startupOptions);
+                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
+                        services.AddKernel(kernel);
 
                         kernel.UseQuitCommand(disposeOnQuit, cancellationToken);
                         
@@ -401,10 +392,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                 ((HtmlNotebookFrontedEnvironment) frontendEnvironment).RequiresAutomaticBootstrapping =
                                     false;
                             }
-                            services.AddSingleton((HtmlNotebookFrontedEnvironment)frontendEnvironment);
-                            services.AddSingleton(frontendEnvironment);
-                            services.AddSingleton(kernel);
-                            services.AddSingleton<Kernel>(kernel);
 
                             kernelServer.Start();
                             onServerStarted ??= () =>
@@ -529,7 +516,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             SetUpFormatters(frontendEnvironment, startupOptions, TimeSpan.FromSeconds(15));
 
             kernel.DefaultKernelName = defaultKernelName;
-
+         
             return kernel;
         }
 

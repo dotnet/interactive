@@ -10,7 +10,8 @@ import { createDefaultClientFetch } from "./clientFetch";
 export interface KernelClientImplParameteres {
     clientFetch: (input: RequestInfo, init: RequestInit) => Promise<Response>;
     rootUrl: string;
-    kernelTransport: KernelTransport
+    kernelTransport: KernelTransport,
+    configureRequire: (config: any) => any
 }
 export class KernelClientImpl implements DotnetInteractiveClient {
 
@@ -18,12 +19,16 @@ export class KernelClientImpl implements DotnetInteractiveClient {
     private _rootUrl: string;
     private _kernelTransport: KernelTransport;
     private _tokenGenerator: TokenGenerator;
-
+    private _configureRequire:(confing:any) => any;
     constructor(parameters: KernelClientImplParameteres) {
         this._clientFetch = parameters.clientFetch;
         this._rootUrl = parameters.rootUrl;
         this._kernelTransport = parameters.kernelTransport;
         this._tokenGenerator = new TokenGenerator();
+        this._configureRequire = parameters.configureRequire;
+    }
+    public configureRequire(config: any) {
+        return this._configureRequire(config);
     }
 
     public subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
@@ -171,7 +176,10 @@ export async function createDotnetInteractiveClient(configuration: string | Dotn
     let client = new KernelClientImpl({
         clientFetch: clientFetch,
         rootUrl,
-        kernelTransport: transport
+        kernelTransport: transport,
+        configureRequire: (config: any) =>{        
+            return (<any>require).config(config) || require;
+        }
     });
 
     await client.loadKernels();

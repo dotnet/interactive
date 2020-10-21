@@ -5,13 +5,15 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.Formatting;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.DotNet.Interactive.App.Http
+namespace Microsoft.DotNet.Interactive.Http
 {
     public class VariableRouter : IRouter
     {

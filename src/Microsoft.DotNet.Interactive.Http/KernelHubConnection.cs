@@ -4,19 +4,20 @@
 using System;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Server;
 
-namespace Microsoft.DotNet.Interactive.App.Http
+namespace Microsoft.DotNet.Interactive.Http
 {
     public class KernelHubConnection : IDisposable
     {
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private bool _registered;
-        public CompositeKernel Kernel { get; }
+        public Kernel Kernel { get; }
 
-        public KernelHubConnection(CompositeKernel kernel)
+        public KernelHubConnection(Kernel kernel)
         {
             Kernel = kernel;
         }

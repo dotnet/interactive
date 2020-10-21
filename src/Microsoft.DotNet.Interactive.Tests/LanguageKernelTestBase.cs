@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -13,10 +14,15 @@ using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+
 using Pocket;
+
 using Recipes;
+
 using Serilog.Sinks.RollingFileAlternate;
+
 using Xunit.Abstractions;
+
 using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
 
 namespace Microsoft.DotNet.Interactive.Tests
@@ -58,7 +64,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
-        
+
         private static readonly AsyncLock _lock = new AsyncLock();
         private readonly AsyncLock.Releaser _lockReleaser;
 
@@ -68,7 +74,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             DisposeAfterTest(output.SubscribeToPocketLogger());
         }
-        
+
         public void Dispose()
         {
             _disposables?.Dispose();
@@ -89,7 +95,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 defaultKernelLanguage);
         }
 
-        protected CompositeKernel CreateKernel(Language defaultLanguage = Language.CSharp, 
+        protected CompositeKernel CreateKernel(Language defaultLanguage = Language.CSharp,
             bool openTestingNamespaces = false)
         {
             var languageKernel = defaultLanguage switch
@@ -204,7 +210,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             _disposables.Add(disposable);
         }
-        
+
         protected void DisposeAfterTest(Action action)
         {
             _disposables.Add(action);

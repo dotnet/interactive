@@ -5,12 +5,12 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Reactive.Linq;
-
+using System.Reflection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
 
-namespace Microsoft.DotNet.Interactive.App.Http
+namespace Microsoft.DotNet.Interactive.Http
 {
     public class FileProvider : IFileProvider, IDisposable
     {
@@ -18,11 +18,11 @@ namespace Microsoft.DotNet.Interactive.App.Http
         private readonly IDisposable _eventSubscription;
         private readonly ConcurrentDictionary<string, EmbeddedFileProvider> _providers = new ConcurrentDictionary<string, EmbeddedFileProvider>();
 
-        public FileProvider(Kernel kernel)
+        public FileProvider(Kernel kernel, Assembly rootProviderAssembly)
         {
             if (kernel == null) throw new ArgumentNullException(nameof(kernel));
 
-            _root = new EmbeddedFileProvider(typeof(FileProvider).Assembly);
+            _root = new EmbeddedFileProvider(rootProviderAssembly ?? typeof(FileProvider).Assembly);
             _eventSubscription = kernel.KernelEvents
                 .OfType<KernelExtensionLoaded>()
                 .Subscribe(@event => RegisterExtension(@event.KernelExtension));

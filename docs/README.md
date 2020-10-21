@@ -18,7 +18,7 @@ Work is underway to add support for the new Visual Studio Code [native notebook 
 
 ### Small factor devices
 
-We support running on devices like Raspberry Pi and [pi-top [4]](https://github.com/pi-top/pi-top-4-.NET-Core-API). You can find instructions [here](small-factor-devices.md)
+We support running on devices like Raspberry Pi and [pi-top [4]](https://github.com/pi-top/pi-top-4-.NET-Core-API). You can find instructions [here](small-factor-devices.md).
 
 ### Telemetry
 
@@ -88,7 +88,7 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 ### .NET API Guide ([TODO](https://github.com/dotnet/interactive/issues/815))
 
 * Commands and events
-* Formatter APIs
+* [Formatter APIs](formatting.md)
     * Working with MIME types 
 * PocketView
 * Magic commands
@@ -98,8 +98,8 @@ To disable this message and the .NET Core welcome message, set the `DOTNET_TRY_S
 
 ### JavaScript API Guide ([TODO](https://github.com/dotnet/interactive/issues/814))
 
-* Variable access from the client
-* RequireJS support
+* [Accessing kernel data from client-side JavaScript](javascript-overview.md#accessing-kernel-data-from-client-side-javascript-code)
+* [Loading modules / RequireJS support](javascript-overview.md#loading-external-javascript-modules-at-runtime)
 * Accessing static resources
 * Sending kernel commands and consuming kernel events
  

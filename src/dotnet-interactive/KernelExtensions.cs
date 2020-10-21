@@ -4,16 +4,11 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.IO;
 using System.Threading;
-using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.App.Commands;
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Server;
 using Recipes;
-using XPlot.DotNet.Interactive.KernelExtensions;
-using XPlot.Plotly;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.App
@@ -74,38 +69,6 @@ namespace Microsoft.DotNet.Interactive.App
 
                 writer.Write(html);
             }, HtmlFormatter.MimeType);
-
-            return kernel;
-        }
-
-
-
-        public static T UseHttpApi<T>(this T kernel, StartupOptions startupOptions, HttpProbingSettings httpProbingSettings)
-            where T : Kernel
-        {
-
-            var initApiCommand = new Command("#!enable-http")
-            {
-                IsHidden = true,
-                Handler = CommandHandler.Create((KernelInvocationContext context) =>
-                {
-                    if (context.Command is SubmitCode submitCode)
-                    {
-                        var probingUrls = httpProbingSettings != null
-                            ? httpProbingSettings.AddressList
-                            : new[]
-                            {
-                                new Uri($"http://localhost:{startupOptions.HttpPort}")
-                            };
-                        var html =
-                            HttpApiBootstrapper.GetHtmlInjection(probingUrls, startupOptions.HttpPort?.ToString() ?? Guid.NewGuid().ToString("N"));
-                        context.Display(html, "text/html");
-                        context.Complete(submitCode);
-                    }
-                })
-            };
-
-            kernel.AddDirective(initApiCommand);
 
             return kernel;
         }

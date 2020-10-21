@@ -7,6 +7,7 @@ using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
 using Newtonsoft.Json.Linq;
 using Pocket;
@@ -99,7 +100,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
             var frontendEnvironment = new HtmlNotebookFrontedEnvironment(new Uri("http://12.12.12.12:4242"));
 
-            CommandLineParser.SetUpFormatters(frontendEnvironment, new StartupOptions(httpPort: new HttpPort(4242)), 5.Seconds());
+            CommandLineParser.SetUpFormatters(frontendEnvironment, new StartupOptions(httpPort: new HttpPort(4242)), 10.Seconds());
             var script = new ScriptContent("alert('hello');");
             var mimeType = Formatter.PreferredMimeTypeFor(script.GetType());
 

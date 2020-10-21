@@ -95,7 +95,7 @@ We'll use [Plotly](https://plot.ly/).
 #!javascript
 
 notebookScope.plot = function (plotTarget) {
-    let loadPlotly = getJsLoader({
+    let loadPlotly = interactive.configureRequire({
         context: "COVID",
         paths: {
             plotly: "https://cdn.plot.ly/plotly-latest.min"
