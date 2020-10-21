@@ -16,10 +16,22 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
     public class MsSqlServiceClient : IDisposable
     {
+        public static readonly MsSqlServiceClient Instance = new MsSqlServiceClient();
+
         private Process process;
         private JsonRpc rpc;
+        private bool _initialized = false;
 
-        public void StartProcessAndRedirectIO()
+        public void Initialize()
+        {
+            if (!_initialized)
+            {
+                StartProcessAndRedirectIO();
+                _initialized = true;
+            }
+        }
+
+        private void StartProcessAndRedirectIO()
         {
             var startInfo = new ProcessStartInfo("C:\\SqlToolsService\\MicrosoftSqlToolsServiceLayer.exe")
             {
