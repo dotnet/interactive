@@ -87,13 +87,21 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             }
         }
 
-        public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+        public async Task ConnectAsync()
         {
             if (!_connected)
             {
                 await _serviceClient.ConnectAsync(_tempFileUri, _connectionString);
                 await _connectionCompleted.Task;
                 _connected = true;
+            }
+        }
+
+        public async Task HandleAsync(SubmitCode command, KernelInvocationContext context)
+        {
+            if (!_connected)
+            {
+                return;
             }
 
             var completion = new TaskCompletionSource<bool>();
