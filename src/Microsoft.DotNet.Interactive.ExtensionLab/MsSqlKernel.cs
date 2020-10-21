@@ -43,15 +43,21 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             _tempFilePath = Path.GetTempFileName();
             _tempFileUri = MsSqlServiceClient.GetUriForFilePath(_tempFilePath);
             _connectionString = connectionString;
-            _serviceClient = new MsSqlServiceClient();
+
+            _serviceClient = MsSqlServiceClient.Instance;
+            _serviceClient.Initialize();
 
             _serviceClient.OnConnectionComplete += HandleConnectionComplete;
             _serviceClient.OnQueryComplete += HandleQueryCompleteAsync;
             _serviceClient.OnIntellisenseReady += HandleIntellisenseReady;
 
-            _serviceClient.StartProcessAndRedirectIO();
-
-            RegisterForDisposal(_serviceClient);
+            RegisterForDisposal(() =>
+            {
+                if (_connected)
+                {
+                    _serviceClient.DisconnectAsync(_tempFileUri).Wait();
+                }
+            });
             RegisterForDisposal(() => File.Delete(_tempFilePath));
         }
 
