@@ -10,12 +10,12 @@ open FSharp.Compiler.Text
 open FsAutoComplete.Utils
 
 [<RequireQualifiedAccess>]
-type FindDeclarationResult =
+type internal FindDeclarationResult =
     | Range of FSharp.Compiler.Range.range
     /// The declaration refers to a file.
     | File of string
 
-type ParseAndCheckResults
+type internal ParseAndCheckResults
     (
         parseResults: FSharpParseFileResults,
         checkResults: FSharpCheckFileResults,

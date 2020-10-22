@@ -2,7 +2,7 @@ namespace FsAutoComplete
 
 open FSharp.Compiler.SourceCodeServices
 
-type SymbolKind =
+type internal SymbolKind =
     | Ident
     | Operator
     | GenericTypeParameter
@@ -12,7 +12,7 @@ type SymbolKind =
     | Dot
     | Other
 
-type LexerSymbol =
+type internal LexerSymbol =
     { Kind: SymbolKind
       Line: int
       LeftColumn: int
@@ -20,7 +20,7 @@ type LexerSymbol =
       Text: string }
 
 [<RequireQualifiedAccess>]
-type SymbolLookupKind =
+type internal SymbolLookupKind =
     | Fuzzy
     | ByRightColumn
     | ByLongIdent
@@ -33,7 +33,7 @@ type private DraftToken =
     static member inline Create kind token =
         { Kind = kind; Token = token; RightColumn = token.LeftColumn + token.FullMatchedLength - 1 }
 
-module Lexer =
+module internal Lexer =
     /// Return all tokens of current line
     let tokenizeLine (args: string[]) lineStr =
         let defines =

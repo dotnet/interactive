@@ -943,7 +943,7 @@ let private getXmlDoc dllFile =
           None  // TODO: Remove the empty map from cache to try again in the next request?
 
 [<RequireQualifiedAccess>]
-type FormatCommentStyle =
+type internal FormatCommentStyle =
     | Legacy
     | FullEnhanced
     | SummaryOnly
@@ -1049,7 +1049,7 @@ let formatTip (FSharpToolTipText tips) : (string * string) list list =
         | FSharpToolTipElement.CompositionError (error) -> Some [("<Note>", error)]
         | _ -> None)
 
-let formatTipEnhanced (FSharpToolTipText tips) (signature : string) (footer : string) (typeDoc: string option) (formatCommentStyle : FormatCommentStyle) : (string * string * string) list list =
+let internal formatTipEnhanced (FSharpToolTipText tips) (signature : string) (footer : string) (typeDoc: string option) (formatCommentStyle : FormatCommentStyle) : (string * string * string) list list =
     tips
     |> List.choose (function
         | FSharpToolTipElement.Group items ->
