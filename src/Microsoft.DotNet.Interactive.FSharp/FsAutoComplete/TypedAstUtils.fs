@@ -7,7 +7,7 @@ open FSharp.Compiler.SourceCodeServices
 
 
 [<AutoOpen>]
-module TypedAstUtils =
+module internal TypedAstUtils =
     let isSymbolLocalForProject (symbol: FSharpSymbol) =
         match symbol with
         | :? FSharpParameter -> true
@@ -64,7 +64,7 @@ module TypedAstUtils =
     let isUnnamedUnionCaseField (field: FSharpField) = UnnamedUnionFieldRegex.IsMatch(field.Name)
 
 [<AutoOpen>]
-module TypedAstExtensionHelpers =
+module internal TypedAstExtensionHelpers =
     type FSharpEntity with
         member x.TryGetFullName() =
             x.TryFullName

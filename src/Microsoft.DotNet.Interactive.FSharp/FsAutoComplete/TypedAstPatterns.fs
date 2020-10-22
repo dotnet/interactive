@@ -6,7 +6,7 @@ open System
 
 
 /// Active patterns over `FSharpSymbolUse`.
-module SymbolUse =
+module internal SymbolUse =
 
     let (|ActivePatternCase|_|) (symbol : FSharpSymbolUse) =
         match symbol.Symbol with
@@ -223,7 +223,7 @@ module SymbolUse =
 
 [<AutoOpen>]
 /// Active patterns over `FSharpSymbol`.
-module SymbolPatterns =
+module internal SymbolPatterns =
 
     let private attributeSuffixLength = "Attribute".Length
 
