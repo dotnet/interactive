@@ -5,6 +5,7 @@ using System;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Html;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -34,5 +35,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public static JsonSerializerOptions SerializerOptions { get; }
 
+        public static JsonString SerializeToJson<T>(this T source) =>
+            new JsonString(JsonConvert.SerializeObject(source));
+
+        public static IHtmlContent JsonEncode(this string source) =>
+            new JsonString(JsonConvert.ToString(source));
     }
 }

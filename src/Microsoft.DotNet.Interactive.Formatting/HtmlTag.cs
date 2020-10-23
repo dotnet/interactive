@@ -13,35 +13,35 @@ namespace Microsoft.DotNet.Interactive.Formatting
     /// <summary>
     ///   Represents an HTML tag.
     /// </summary>
-    public class Tag : ITag
+    public class HtmlTag : IHtmlTag
     {
         private HtmlAttributes _htmlAttributes;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Tag"/> class.
+        /// Initializes a new instance of the <see cref="HtmlTag"/> class.
         /// </summary>
         /// <param name="name">The name of the tag.</param>
-        public Tag(string name)
+        public HtmlTag(string name)
         {
             Name = name;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Tag"/> class.
+        /// Initializes a new instance of the <see cref="HtmlTag"/> class.
         /// </summary>
         /// <param name="name">The name of the tag.</param>
         /// <param name="text">The text contained by the tag.</param>
-        public Tag(string name, string text) : this(name)
+        public HtmlTag(string name, string text) : this(name)
         {
             Content = writer => writer.Write(text);
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Tag"/> class.
+        /// Initializes a new instance of the <see cref="HtmlTag"/> class.
         /// </summary>
         /// <param name="name">Name of the tag.</param>
         /// <param name="content">The content.</param>
-        public Tag(string name, Action<TextWriter> content) : this(name)
+        public HtmlTag(string name, Action<TextWriter> content) : this(name)
         {
             Content = content;
         }

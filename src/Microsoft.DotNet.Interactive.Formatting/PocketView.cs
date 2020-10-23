@@ -14,10 +14,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
     /// <summary>
     /// Writes HTML using a C# DSL, bypassing the need for specialized parser and compiler infrastructure such as Razor.
     /// </summary>
-    public class PocketView : DynamicObject, ITag
+    public class PocketView : DynamicObject, IHtmlTag
     {
         private readonly Dictionary<string, TagTransform> _transforms = new Dictionary<string, TagTransform>();
-        private readonly Tag _tag;
+        private readonly HtmlTag _htmlTag;
         private TagTransform _transform;
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="nested">A nested instance.</param>
         public PocketView(string tagName, PocketView nested = null) : this(nested)
         {
-            _tag = tagName.Tag();
+            _htmlTag = tagName.Tag();
         }
 
         private void AddDefaultTransforms()
@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 var content = ComposeContent(binder.CallInfo.ArgumentNames, args);
 
-                transform(pocketView._tag, content);
+                transform(pocketView._htmlTag, content);
             }
 
             result = pocketView;
@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     binder?.CallInfo?.ArgumentNames,
                     args);
 
-                _transform(_tag, content);
+                _transform(_htmlTag, content);
 
                 // null out _transform so that it will only be applied once
                 _transform = null;
@@ -179,7 +179,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return;
             }
 
-            _tag.Content = writer => Write(args, writer);
+            _htmlTag.Content = writer => Write(args, writer);
         }
 
         private void Write(IReadOnlyList<object> args, TextWriter writer)
@@ -235,14 +235,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </returns>
         public override string ToString()
         {
-            if (_tag is null)
+            if (_htmlTag is null)
             {
                 return "";
             }
             else
             {
                 ApplyTransform(null, null);
-                return _tag.ToString();
+                return _htmlTag.ToString();
             }
         }
 
@@ -254,12 +254,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             get
             {
-                if (_tag is null)
+                if (_htmlTag is null)
                 {
                     return "";
                 }
 
-                return _tag.Name;
+                return _htmlTag.Name;
             }
         }
 
@@ -267,7 +267,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         ///   Gets the HTML attributes to be rendered into the tag.
         /// </summary>
         /// <value>The HTML attributes.</value>
-        public HtmlAttributes HtmlAttributes => _tag.HtmlAttributes;
+        public HtmlAttributes HtmlAttributes => _htmlTag.HtmlAttributes;
 
         /// <summary>
         ///   Renders the tag to the specified <see cref = "TextWriter" />.
@@ -275,7 +275,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name = "writer">The writer.</param>
         public void WriteTo(TextWriter writer, HtmlEncoder encoder)
         {
-            _tag?.WriteTo(writer, encoder);
+            _htmlTag?.WriteTo(writer, encoder);
         }
 
         /// <summary>
@@ -283,7 +283,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </summary>
         /// <param name="transform">The transform.</param>
         /// <example>
-        ///     _.textbox = Underscore.Transform(
+        ///     _.textbox = PocketView.Transform(
         ///     (tag, model) =>
         ///     {
         ///        tag.TagName = "div";
@@ -307,12 +307,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
         ///         </div>
         ///     </code>
         /// </example>
-        public static object Transform(Action<Tag, dynamic> transform)
+        public static object Transform(Action<HtmlTag, dynamic> transform)
         {
             return new TagTransform(transform);
         }
 
-        private delegate void TagTransform(Tag tag, object contents);
+        private delegate void TagTransform(HtmlTag tag, object contents);
 
         private dynamic ComposeContent(
             IReadOnlyCollection<string> argumentNames,
