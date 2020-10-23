@@ -255,7 +255,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             if (!context.CancellationToken.IsCancellationRequested)
             {
-                var diagnostics = ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
+                ImmutableArray<CodeAnalysis.Diagnostic> diagnostics;
 
                 // Check for a compilation failure
                 if (exception is CodeSubmissionCompilationErrorException { InnerException: CompilationErrorException innerCompilationException })

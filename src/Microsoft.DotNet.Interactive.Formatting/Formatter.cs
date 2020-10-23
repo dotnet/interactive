@@ -65,7 +65,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-
         /// <summary>
         /// Gets or sets the string that will be written out for null items.
         /// </summary>
@@ -246,6 +245,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
             var context = new FormatContext();
             formatter.Format(context, obj, writer);
             return writer.ToString();
+        }
+
+        public static void Format(this ITypeFormatter formatter, object instance, TextWriter writer)
+        {
+            formatter.Format(new FormatContext(), instance, writer);
         }
 
         /// <summary>Invoke the formatter, creating a new format context</summary>

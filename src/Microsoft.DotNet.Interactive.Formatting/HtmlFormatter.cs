@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         }
 
         /// <summary>
-        ///   Indicates the maximum number of properties to show in the default plaintext display of arbitrary objects.
+        ///   Indicates the maximum number of properties to show in the default HTML display of arbitrary objects.
         ///   If set to zero no properties are shown.
         /// </summary>
         public static int MaxProperties { get; set; } = DefaultMaxProperties;

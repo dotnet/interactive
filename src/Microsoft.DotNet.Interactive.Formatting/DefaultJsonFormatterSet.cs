@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    internal class DefaultJsonFormatterSet 
+    internal class DefaultJsonFormatterSet
     {
         internal static readonly ITypeFormatter[] DefaultFormatters =
             new ITypeFormatter[]
