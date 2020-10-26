@@ -76,8 +76,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{4DD50BCA-1
 		docs\variable-sharing.md = docs\variable-sharing.md
 	EndProjectSection
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "FsAutoComplete.Core", "src\FsAutoComplete\FsAutoComplete.Core.fsproj", "{9C68BBE5-145F-4E6A-968E-E58F53EABA8C}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Interactive.Http", "src\Microsoft.DotNet.Interactive.Http\Microsoft.DotNet.Interactive.Http.csproj", "{DE942DC3-B41B-45C5-9E01-3C4F042D3916}"
 EndProject
 Global

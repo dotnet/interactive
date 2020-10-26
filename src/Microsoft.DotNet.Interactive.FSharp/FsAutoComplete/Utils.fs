@@ -1,7 +1,7 @@
 [<AutoOpen>]
-module FsAutoComplete.Utils
+module internal FsAutoComplete.Utils
 
-module Map =
+module internal Map =
     /// Combine two maps of identical types by starting with the first map and overlaying the second one.
     /// Because map updates shadow, any keys in the second map will have priority.
     let merge (first: Map<'a, 'b>) (second: Map<'a, 'b>) =
@@ -28,7 +28,7 @@ module Map =
 open System.Diagnostics
 open System.Threading.Tasks
 
-module ProcessHelper =
+module internal ProcessHelper =
     let WaitForExitAsync(p: Process) = async {
         let tcs = new TaskCompletionSource<obj>()
         p.EnableRaisingEvents <- true
@@ -45,10 +45,10 @@ open System.Collections.Concurrent
 open System
 open FSharp.Compiler.SourceCodeServices
 
-type ResultOrString<'a> = Result<'a, string>
+type internal ResultOrString<'a> = Result<'a, string>
 
 
-type Document =
+type internal Document =
     { FullName : string
       LineCount : int
       GetText : unit -> string
@@ -56,11 +56,11 @@ type Document =
       GetLineText1 : int -> string}
 
 
-type Serializer = obj -> string
-type ProjectFilePath = string
-type SourceFilePath = string
-type FilePath = string
-type LineStr = string
+type internal Serializer = obj -> string
+type internal ProjectFilePath = string
+type internal SourceFilePath = string
+type internal FilePath = string
+type internal LineStr = string
 
 let isAScript (fileName: string) =
     let ext = Path.GetExtension(fileName)
@@ -87,12 +87,12 @@ let projectOptionsToParseOptions (checkOptions: FSharpProjectOptions) =
   { FSharpParsingOptions.Default with SourceFiles = files}
 
 [<RequireQualifiedAccess>]
-module Option =
+module internal Option =
 
   let inline attempt (f: unit -> 'T) = try Some <| f() with _ -> None
 
 [<RequireQualifiedAccess>]
-module Async =
+module internal Async =
     /// Transforms an Async value using the specified function.
     [<CompiledName("Map")>]
     let map (mapping : 'a -> 'b) (value : Async<'a>) : Async<'b> =
@@ -141,7 +141,7 @@ module Async =
 // Maybe computation expression builder, copied from ExtCore library
 /// https://github.com/jack-pappas/ExtCore/blob/master/ExtCore/Control.fs
 [<Sealed>]
-type MaybeBuilder () =
+type internal MaybeBuilder () =
     // 'T -> M<'T>
     [<DebuggerStepThrough>]
     member inline __.Return value: 'T option =
@@ -208,7 +208,7 @@ type MaybeBuilder () =
                 body enum.Current)))
 
 [<Sealed>]
-type AsyncMaybeBuilder () =
+type internal AsyncMaybeBuilder () =
     [<DebuggerStepThrough>]
     member __.Return value : Async<'T option> = Some value |> async.Return
 
@@ -278,14 +278,14 @@ type AsyncMaybeBuilder () =
             async.TryFinally (computation, compensation)
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module AsyncMaybe =
+module internal AsyncMaybe =
     let inline liftAsync (async : Async<'T>) : Async<_ option> =
         async |> Async.map Some
 
 
 [<RequireQualifiedAccess>]
 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
-module Array =
+module internal Array =
     let inline private checkNonNull argName arg =
         match box arg with
         | null -> nullArg argName
@@ -378,7 +378,7 @@ module Array =
         | _ when n >= xs.Length || n < 0 -> xs, [||]
         | _ -> xs.[0..n-1], xs.[n..]
 
-module List =
+module internal List =
 
     ///Returns the greatest of all elements in the list that is less than the threshold
     let maxUnderThreshold nmax =
@@ -389,7 +389,7 @@ module List =
 
 [<RequireQualifiedAccess>]
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module String =
+module internal String =
     let inline toCharArray (str:string) = str.ToCharArray()
 
     let lowerCaseFirstChar (str: string) =
@@ -448,13 +448,13 @@ module String =
         | -1 -> NoMatch
         | n -> Split(s.[0..n-1], s.Substring(n+1))
 
-type ConcurrentDictionary<'key, 'value> with
+type internal ConcurrentDictionary<'key, 'value> with
     member x.TryFind key =
         match x.TryGetValue key with
         | true, value -> Some value
         | _ -> None
 
-type Path with
+type internal Path with
     static member GetFullPathSafe (path: string) =
         try Path.GetFullPath path
         with _ -> path
@@ -542,7 +542,7 @@ let splitByPrefix2 prefixes (s: string) =
     |> List.tryPick (fun prefix -> splitByPrefix prefix s)
 
 [<AutoOpen>]
-module Patterns =
+module internal Patterns =
 
     let (|StartsWith|_|) (pat : string) (str : string)  =
         match str with
@@ -557,7 +557,7 @@ module Patterns =
         | _ -> None
 
 
-module Version =
+module internal Version =
 
   open System.Reflection
 
@@ -586,7 +586,7 @@ module Version =
     { VersionInfo.Version = version; GitSha = sha }
 
 //source: https://nbevans.wordpress.com/2014/08/09/a-simple-stereotypical-javascript-like-debounce-service-for-f/
-type Debounce<'a>(timeout, fn) =
+type internal Debounce<'a>(timeout, fn) =
     let debounce fn timeout = MailboxProcessor<'a>.Start(fun agent ->
         let rec loop ida idb arg = async {
             let! r = agent.TryReceive(timeout)
@@ -603,10 +603,10 @@ type Debounce<'a>(timeout, fn) =
     member __.Bounce(arg) = mailbox.Post(arg)
 
 /// OS-local, normalized path
-type [<Measure>] LocalPath
+type [<Measure>] internal LocalPath
 /// An HTTP url
-type [<Measure>] Url
+type [<Measure>] internal Url
 /// OS-Sensitive path segment from some repository root
-type [<Measure>] RepoPathSegment
+type [<Measure>] internal RepoPathSegment
 // OS-agnostic path segment from some repository root
-type [<Measure>] NormalizedRepoPathSegment
+type [<Measure>] internal NormalizedRepoPathSegment

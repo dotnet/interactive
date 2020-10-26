@@ -168,13 +168,15 @@
         "id": "dotnet-interactive.csharp",
         "aliases": [
           "C# (.NET Interactive)"
-        ]
+        ],
+        "configuration": "./syntaxes/csharp.language-configuration.json"
       },
       {
         "id": "dotnet-interactive.fsharp",
         "aliases": [
           "F# (.NET Interactive)"
-        ]
+        ],
+        "configuration": "./syntaxes/fsharp.language-configuration.json"
       },
       {
         "id": "dotnet-interactive.html",
@@ -186,13 +188,15 @@
         "id": "dotnet-interactive.javascript",
         "aliases": [
           "JavaScript (.NET Interactive)"
-        ]
+        ],
+        "configuration": "./syntaxes/javascript.language-configuration.json"
       },
       {
         "id": "dotnet-interactive.magic-commands",
         "aliases": [
           "Magic Commands (.NET Interactive)"
-        ]
+        ],
+        "configuration": "./syntaxes/magic-commands.language-configuration.json"
       },
       {
         "id": "dotnet-interactive.markdown",
@@ -204,7 +208,8 @@
         "id": "dotnet-interactive.pwsh",
         "aliases": [
           "PowerShell (.NET Interactive)"
-        ]
+        ],
+        "configuration": "./syntaxes/powershell.language-configuration.json"
       }
     ],
     "grammars": [
