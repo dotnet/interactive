@@ -48,29 +48,22 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             rpc = new JsonRpc(process.StandardInput.BaseStream, process.StandardOutput.BaseStream);
 
-            rpc.AddLocalRpcMethod(
-                handler: typeof(MsSqlServiceClient).GetMethod(nameof(HandleConnectionCompletion)),
-                target: this,
-                methodRpcSettings: new JsonRpcMethodAttribute("connection/complete")
-                {
-                    UseSingleObjectParameterDeserialization = true
-                });
-            rpc.AddLocalRpcMethod(
-                handler: typeof(MsSqlServiceClient).GetMethod(nameof(HandleQueryCompletion)),
-                target: this,
-                methodRpcSettings: new JsonRpcMethodAttribute("query/complete")
-                {
-                    UseSingleObjectParameterDeserialization = true
-                });
-            rpc.AddLocalRpcMethod(
-                handler: typeof(MsSqlServiceClient).GetMethod(nameof(HandleIntellisenseReady)),
-                target: this,
-                methodRpcSettings: new JsonRpcMethodAttribute("textDocument/intelliSenseReady")
-                {
-                    UseSingleObjectParameterDeserialization = true
-                });
+            AddLocalRpcMethod(nameof(HandleConnectionCompletion), "connection/complete");
+            AddLocalRpcMethod(nameof(HandleQueryCompletion), "query/complete");
+            AddLocalRpcMethod(nameof(HandleIntellisenseReady), "textDocument/intelliSenseReady");
 
             rpc.StartListening();
+        }
+
+        private void AddLocalRpcMethod(string localMethodName, string rpcMethodName)
+        {
+            rpc.AddLocalRpcMethod(
+                handler: typeof(MsSqlServiceClient).GetMethod(localMethodName),
+                target: this,
+                methodRpcSettings: new JsonRpcMethodAttribute(rpcMethodName)
+                {
+                    UseSingleObjectParameterDeserialization = true
+                });
         }
 
         public event EventHandler<ConnectionCompleteParams> OnConnectionComplete;
