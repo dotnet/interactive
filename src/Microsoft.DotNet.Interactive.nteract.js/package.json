@@ -10,7 +10,7 @@
     "css/*.css"
   ],
   "scripts": {
-    "build:lib": "tsc -b",
+    "build:lib": "tsc",
     "build:extension": "webpack -p",
     "build": "npm run build:extension",
     "clean:lib": "rimraf lib",
