@@ -38,7 +38,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 UseShellExecute = false,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
-                RedirectStandardError = true
+                RedirectStandardError = true,
+                Arguments = $"--parent-pid {Process.GetCurrentProcess().Id}"
             };
             process = new Process
             {
