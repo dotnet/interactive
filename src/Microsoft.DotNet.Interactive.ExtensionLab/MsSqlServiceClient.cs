@@ -33,7 +33,13 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private void StartProcessAndRedirectIO()
         {
-            var startInfo = new ProcessStartInfo("C:\\SqlToolsService\\MicrosoftSqlToolsServiceLayer.exe")
+            var serviceExePath = Environment.GetEnvironmentVariable("DOTNET_SQLTOOLSSERVICE");
+            if (serviceExePath == null)
+            {
+                throw new InvalidOperationException("Path to SQL Tools Service executable was not provided.");
+            }
+
+            var startInfo = new ProcessStartInfo(serviceExePath)
             {
                 UseShellExecute = false,
                 RedirectStandardInput = true,
