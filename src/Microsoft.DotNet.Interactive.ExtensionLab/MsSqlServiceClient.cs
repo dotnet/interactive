@@ -158,12 +158,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return await rpc.InvokeWithParameterObjectAsync<QueryExecuteResult>("query/executeString", queryParams);
         }
 
-        public async Task<SimpleExecuteResult> ExecuteSimpleQueryAsync(string ownerUri, string queryString)
-        {
-            var queryParams = new SimpleExecuteParams() { QueryString = queryString, OwnerUri = ownerUri };
-            return await rpc.InvokeWithParameterObjectAsync<SimpleExecuteResult>("query/simpleexecute", queryParams);
-        }
-
         public async Task<QueryExecuteSubsetResult> ExecuteQueryExecuteSubsetAsync(QueryExecuteSubsetParams subsetParams)
         {
             return await rpc.InvokeWithParameterObjectAsync<QueryExecuteSubsetResult>("query/subset", subsetParams);

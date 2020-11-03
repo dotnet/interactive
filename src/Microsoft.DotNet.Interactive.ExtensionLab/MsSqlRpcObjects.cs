@@ -124,13 +124,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public string OwnerUri { get; set; }
     }
 
-    public class CommandArgs
-    {
-        public string Title { get; set; }
-        public string Command { get; set; }
-        public string[] Arguments { get; set; }
-    }
-
     public class TextEdit
     {
         public Range Range { get; set; }
@@ -154,6 +147,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public int Line { get; set; }
         public int Character { get; set; }
     }
+
     public class CompletionParams
     {
         public TextDocumentIdentifier TextDocument { get; set; }
@@ -529,19 +523,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         /// Details about the columns that are provided as solutions
         /// </summary>
         public ColumnInfo[] ColumnInfo { get; set; }
-    }
-
-    public class SimpleExecuteParams
-    {
-        public string QueryString { get; set; }
-        public string OwnerUri { get; set; }
-    }
-
-    public class SimpleExecuteResult
-    {
-        public int RowCount;
-        public ColumnInfo[] ColumnInfo;
-        public CellValue[][] Rows;
     }
 
     public class IntelliSenseReadyParams
