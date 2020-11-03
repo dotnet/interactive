@@ -159,12 +159,13 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public async Task SendTextChangeNotification(string ownerUri, string newText, string oldText)
         {
-            var oldLines = oldText.Split('\n');
-            var endLineNum = Math.Max(0, oldLines.Length - 1);
-            var endCharacterNum = Math.Max(0, oldLines[endLineNum].Length - 1);
+            var oldTextLines = oldText.Split('\n');
+            var lastLineNum = Math.Max(0, oldTextLines.Length - 1);
+            var lastLine = oldTextLines[lastLineNum];
+            var lastCharacterNum = Math.Max(0, lastLine.Length - 1);
 
             var startPosition = new Position() { Line = 0, Character = 0 };
-            var endPosition = new Position() { Line = endLineNum, Character = endCharacterNum };
+            var endPosition = new Position() { Line = lastLineNum, Character = lastCharacterNum };
 
             var textDoc = new VersionedTextDocumentIdentifier() { Uri = ownerUri, Version = 1 };
             var changeRange = new Range() { Start = startPosition, End = endPosition };
