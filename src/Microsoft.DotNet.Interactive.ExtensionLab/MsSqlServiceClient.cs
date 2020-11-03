@@ -145,11 +145,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             var fileUri = GetUriForFilePath(filePath);
             if (!oldFileContents.Equals(command.Code))
             {
-                using (var tempFileStream = File.Open(filePath, FileMode.OpenOrCreate))
-                using (var writer = new StreamWriter(tempFileStream))
-                {
-                    await writer.WriteLineAsync(command.Code);
-                }
+                await File.WriteAllTextAsync(filePath, command.Code);
                 await SendTextChangeNotification(fileUri, command.Code, oldFileContents);
             }
 
