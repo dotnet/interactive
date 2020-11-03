@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public async Task<IEnumerable<CompletionItem>> ProvideCompletionItemsAsync(string filePath, RequestCompletions command)
         {
-            string oldFileContents = await UpdateFileContents(filePath, command.Code);
+            string oldFileContents = await UpdateFileContentsAsync(filePath, command.Code);
 
             TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = GetUriForFilePath(filePath) };
             Position position = new Position() { Line = command.LinePosition.Line, Character = command.LinePosition.Character };
@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public async Task<Hover> ProvideHoverAsync(string filePath, RequestHoverText command)
         {
-            string oldFileContents = await UpdateFileContents(filePath, command.Code);
+            string oldFileContents = await UpdateFileContentsAsync(filePath, command.Code);
 
             TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = GetUriForFilePath(filePath) };
             Position position = new Position() { Line = command.LinePosition.Line, Character = command.LinePosition.Character };
@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         /// and then returns the old file contents as a string. If the file contents have
         /// changed, then a text change notification is also sent to the tools service.
         /// </summary>
-        private async Task<string> UpdateFileContents(string filePath, string newContents)
+        private async Task<string> UpdateFileContentsAsync(string filePath, string newContents)
         {
             string oldFileContents = await File.ReadAllTextAsync(filePath);
             if (!oldFileContents.Equals(newContents))
@@ -141,7 +141,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 await File.WriteAllTextAsync(filePath, newContents);
 
                 var fileUri = GetUriForFilePath(filePath);
-                await SendTextChangeNotification(fileUri, newContents, oldFileContents);
+                await SendTextChangeNotificationAsync(fileUri, newContents, oldFileContents);
             }
             return oldFileContents;
         }
@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return await rpc.InvokeWithParameterObjectAsync<QueryExecuteSubsetResult>("query/subset", subsetParams);
         }
 
-        public async Task SendTextChangeNotification(string ownerUri, string newText, string oldText)
+        public async Task SendTextChangeNotificationAsync(string ownerUri, string newText, string oldText)
         {
             var oldTextLines = oldText.Split('\n');
             var lastLineNum = Math.Max(0, oldTextLines.Length - 1);
