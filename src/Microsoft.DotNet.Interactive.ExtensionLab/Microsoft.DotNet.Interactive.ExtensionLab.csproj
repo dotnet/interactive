@@ -42,6 +42,7 @@
  <ItemGroup>
    <PackageReference Include="Microsoft.Data.Analysis" Version="0.4.0" />
    <PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.0" />
+   <PackageReference Include="StreamJsonRpc" Version="2.6.121" />
    <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.8" />
  </ItemGroup>
 
@@ -52,7 +53,6 @@
    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
    <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="1.1.132302" />
    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
-   <PackageReference Include="StreamJsonRpc" Version="2.6.99-rc" />
  </ItemGroup>
 
   <ItemGroup>
