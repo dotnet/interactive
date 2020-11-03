@@ -55,7 +55,7 @@ type internal ParseAndCheckResults
     | Some nwpl ->
       let names = nwpl.LongId
       let lidEnd = nwpl.LongIdEndLocation
-      let! meth = checkResults.GetMethods(lidEnd.Line, lidEnd.Column, "", Some names)
+      let meth = checkResults.GetMethods(lidEnd.Line, lidEnd.Column, "", Some names)
       return Ok(meth, commas) }
 
   member __.TryFindDeclaration (pos: pos) (lineStr: LineStr) = async {
@@ -96,7 +96,7 @@ type internal ParseAndCheckResults
     | None -> return ResultOrString.Error "Could not find ident at this location"
     | Some((_, col), identIsland) ->
       let identIsland = Array.toList identIsland
-      let! declarations = checkResults.GetDeclarationLocation(pos.Line, col, lineStr, identIsland, false, sprintf "findDecl:%s" (String.concat "." identIsland))
+      let declarations = checkResults.GetDeclarationLocation(pos.Line, col, lineStr, identIsland, false)
 
       /// these are all None because you can't easily get the source file from the external symbol information here.
       let tryGetSourceRangeForSymbol (sym: ExternalSymbol): (string * int * int) option =
@@ -115,7 +115,7 @@ type internal ParseAndCheckResults
         | None -> return ResultOrString.Error (sprintf "Range for nonexistent file found, no ident found: %s" rangeInNonexistentFile.FileName)
         | Some ((_, col), identIsland) ->
           let identIsland = Array.toList identIsland
-          let! symbolUse = checkResults.GetSymbolUseAtLocation(pos.Line, col, lineStr, identIsland)
+          let symbolUse = checkResults.GetSymbolUseAtLocation(pos.Line, col, lineStr, identIsland)
           match symbolUse with
           | None -> return ResultOrString.Error (sprintf "Range for nonexistent file found, no symboluse found: %s" rangeInNonexistentFile.FileName)
           | Some sym ->
@@ -152,7 +152,7 @@ type internal ParseAndCheckResults
       return Error "Cannot find ident at this location"
     | Some((_, col),identIsland) ->
       let identIsland = Array.toList identIsland
-      let! symbol = checkResults.GetSymbolUseAtLocation(pos.Line, col, lineStr, identIsland)
+      let symbol = checkResults.GetSymbolUseAtLocation(pos.Line, col, lineStr, identIsland)
       match symbol with
       | None ->
         return Error "Cannot find symbol at this location"
@@ -203,7 +203,7 @@ type internal ParseAndCheckResults
     | Some((startCol, endCol),identIsland) ->
       let identIsland = Array.toList identIsland
       // TODO: Display other tooltip types, for example for strings or comments where appropriate
-      let! tip = checkResults.GetToolTipText(pos.Line, endCol, lineStr, identIsland, FSharpTokenTag.Identifier)
+      let tip = checkResults.GetToolTipText(pos.Line, endCol, lineStr, identIsland, FSharpTokenTag.Identifier)
       return
         match tip with
         | FSharpToolTipText(elems) when elems |> List.forall ((=) FSharpToolTipElement.None) ->
@@ -226,8 +226,8 @@ type internal ParseAndCheckResults
     | Some((startCol, endCol),identIsland) ->
       let identIsland = Array.toList identIsland
       // TODO: Display other tooltip types, for example for strings or comments where appropriate
-      let! tip = checkResults.GetToolTipText(pos.Line, endCol, lineStr, identIsland, FSharpTokenTag.Identifier)
-      let! symbol = checkResults.GetSymbolUseAtLocation(pos.Line, endCol, lineStr, identIsland)
+      let tip = checkResults.GetToolTipText(pos.Line, endCol, lineStr, identIsland, FSharpTokenTag.Identifier)
+      let symbol = checkResults.GetSymbolUseAtLocation(pos.Line, endCol, lineStr, identIsland)
 
       match tip with
       | FSharpToolTipText(elems) when elems |> List.forall ((=) FSharpToolTipElement.None) && symbol.IsNone ->
@@ -260,8 +260,8 @@ type internal ParseAndCheckResults
     | Some((_, col),identIsland) ->
       let identIsland = Array.toList identIsland
       // TODO: Display other tooltip types, for example for strings or comments where appropriate
-      let! tip = checkResults.GetToolTipText(pos.Line, col, lineStr, identIsland, FSharpTokenTag.Identifier)
-      let! symbol = checkResults.GetSymbolUseAtLocation(pos.Line, col, lineStr, identIsland)
+      let tip = checkResults.GetToolTipText(pos.Line, col, lineStr, identIsland, FSharpTokenTag.Identifier)
+      let symbol = checkResults.GetSymbolUseAtLocation(pos.Line, col, lineStr, identIsland)
 
       match tip with
       | FSharpToolTipText(elems) when elems |> List.forall ((=) FSharpToolTipElement.None) && symbol.IsNone ->
@@ -353,13 +353,13 @@ type internal ParseAndCheckResults
         | Some((_, colu), identIsland) ->
 
         let identIsland = Array.toList identIsland
-        let! symboluse = checkResults.GetSymbolUseAtLocation(pos.Line, colu, lineStr, identIsland)
+        let symboluse = checkResults.GetSymbolUseAtLocation(pos.Line, colu, lineStr, identIsland)
         match symboluse with
         | None ->
           return (ResultOrString.Error "No symbol information found")
         | Some symboluse ->
 
-        let! symboluses = checkResults.GetUsesOfSymbolInFile symboluse.Symbol
+        let symboluses = checkResults.GetUsesOfSymbolInFile symboluse.Symbol
         return Ok (symboluse, symboluses) }
 
   member __.TryGetSignatureData (pos: pos) (lineStr: LineStr) =
@@ -370,7 +370,7 @@ type internal ParseAndCheckResults
         | Some((_, colu), identIsland) ->
 
         let identIsland = Array.toList identIsland
-        let! symboluse = checkResults.GetSymbolUseAtLocation(pos.Line, colu, lineStr, identIsland)
+        let symboluse = checkResults.GetSymbolUseAtLocation(pos.Line, colu, lineStr, identIsland)
         match symboluse with
         | None ->
           return (ResultOrString.Error "No symbol information found")
@@ -410,7 +410,7 @@ type internal ParseAndCheckResults
         | Some((_, colu), identIsland) ->
 
         let identIsland = Array.toList identIsland
-        let! help = checkResults.GetF1Keyword(pos.Line, colu, lineStr, identIsland)
+        let help = checkResults.GetF1Keyword(pos.Line, colu, lineStr, identIsland)
         match help with
         | None -> return (ResultOrString.Error "No symbol information found")
         | Some hlp -> return Ok hlp}
@@ -433,7 +433,7 @@ type internal ParseAndCheckResults
       | Some k when k.Kind = Keyword  -> return None
       | _ ->
 
-      let! results = checkResults.GetDeclarationListInfo(Some parseResults, pos.Line, lineStr, longName, getAllSymbols)
+      let results = checkResults.GetDeclarationListInfo(Some parseResults, pos.Line, lineStr, longName, getAllSymbols)
 
       let getKindPriority = function
         | CompletionItemKind.CustomOperation -> -1
