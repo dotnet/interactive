@@ -135,13 +135,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         /// </summary>
         private async Task<string> UpdateFileContents(string filePath, string newContents)
         {
-            string oldFileContents;
-            using (var tempFileStream = File.Open(filePath, FileMode.OpenOrCreate))
-            using (var reader = new StreamReader(tempFileStream))
-            {
-                oldFileContents = await reader.ReadToEndAsync();
-            }
-
+            string oldFileContents = await File.ReadAllTextAsync(filePath);
             if (!oldFileContents.Equals(newContents))
             {
                 await File.WriteAllTextAsync(filePath, newContents);
