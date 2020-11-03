@@ -76,7 +76,7 @@ type FSharpKernelBase () as this =
         | _, idents -> Array.last idents
 
     let getDocumentation (declarationItem: FSharpDeclarationListItem) =
-        let result = declarationItem.DescriptionTextAsync
+        let result = declarationItem.DescriptionText
         result.ToString()
 
     let getCompletionItem (declarationItem: FSharpDeclarationListItem) =
