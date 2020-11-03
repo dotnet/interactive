@@ -105,8 +105,8 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         public static Process StartProcess(
             string command,
-            string args = null,
-            DirectoryInfo workingDir = null,
+            string args,
+            DirectoryInfo workingDir,
             Action<string> output = null,
             Action<string> error = null,
             params (string key, string value)[] environmentVariables)
