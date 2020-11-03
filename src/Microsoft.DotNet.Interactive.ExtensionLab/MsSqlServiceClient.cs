@@ -96,25 +96,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public async Task<IEnumerable<CompletionItem>> ProvideCompletionItemsAsync(string filePath, RequestCompletions command)
         {
-            string oldFileContents;
-            using (var tempFileStream = File.Open(filePath, FileMode.OpenOrCreate))
-            using (var reader = new StreamReader(tempFileStream))
-            {
-                oldFileContents = await reader.ReadToEndAsync();
-            }
+            string oldFileContents = await UpdateFileContents(filePath, command.Code);
 
-            var fileUri = GetUriForFilePath(filePath);
-            if (!oldFileContents.Equals(command.Code))
-            {
-                using (var tempFileStream = File.Open(filePath, FileMode.OpenOrCreate))
-                using (var writer = new StreamWriter(tempFileStream))
-                {
-                    await writer.WriteLineAsync(command.Code);
-                }
-                await SendTextChangeNotification(fileUri, command.Code, oldFileContents);
-            }
-
-            TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = fileUri };
+            TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = GetUriForFilePath(filePath) };
             Position position = new Position() { Line = command.LinePosition.Line, Character = command.LinePosition.Character };
             CompletionContext context = new CompletionContext() { TriggerKind = (int)CompletionTriggerKind.Invoked };
             var completionParams = new CompletionParams() { TextDocument = docId, Position = position, Context = context };
@@ -135,6 +119,22 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public async Task<Hover> ProvideHoverAsync(string filePath, RequestHoverText command)
         {
+            string oldFileContents = await UpdateFileContents(filePath, command.Code);
+
+            TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = GetUriForFilePath(filePath) };
+            Position position = new Position() { Line = command.LinePosition.Line, Character = command.LinePosition.Character };
+            var positionParams = new TextDocumentPositionParams() { TextDocument = docId, Position = position };
+
+            return await rpc.InvokeWithParameterObjectAsync<Hover>("textDocument/hover", positionParams);
+        }
+
+        /// <summary>
+        /// Updates the contents of the file at the provided path with the provided string,
+        /// and then returns the old file contents as a string. If the file contents have
+        /// changed, then a text change notification is also sent to the tools service.
+        /// </summary>
+        private async Task<string> UpdateFileContents(string filePath, string newContents)
+        {
             string oldFileContents;
             using (var tempFileStream = File.Open(filePath, FileMode.OpenOrCreate))
             using (var reader = new StreamReader(tempFileStream))
@@ -142,19 +142,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 oldFileContents = await reader.ReadToEndAsync();
             }
 
-            var fileUri = GetUriForFilePath(filePath);
-            if (!oldFileContents.Equals(command.Code))
+            if (!oldFileContents.Equals(newContents))
             {
-                await File.WriteAllTextAsync(filePath, command.Code);
-                await SendTextChangeNotification(fileUri, command.Code, oldFileContents);
+                await File.WriteAllTextAsync(filePath, newContents);
+
+                var fileUri = GetUriForFilePath(filePath);
+                await SendTextChangeNotification(fileUri, newContents, oldFileContents);
             }
-
-            TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = fileUri };
-            Position position = new Position() { Line = command.LinePosition.Line, Character = command.LinePosition.Character };
-            var positionParams = new TextDocumentPositionParams() { TextDocument = docId, Position = position };
-
-            await SendTextChangeNotification(fileUri, command.Code, oldFileContents);
-            return await rpc.InvokeWithParameterObjectAsync<Hover>("textDocument/hover", positionParams);
+            return oldFileContents;
         }
 
         public async Task<QueryExecuteResult> ExecuteQueryStringAsync(string ownerUri, string queryString)
