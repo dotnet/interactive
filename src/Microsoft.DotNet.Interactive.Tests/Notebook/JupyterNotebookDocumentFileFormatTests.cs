@@ -594,7 +594,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 .Should()
                 .BeEquivalentTo(JToken.Parse(JsonConvert.SerializeObject(new object[]
                 {
-                    "#!fsharp\r\n",
+                    "#!fsharp\n",
                     "let x = 1"
                 })));
         }
@@ -613,7 +613,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 .Should()
                 .BeEquivalentTo(JToken.Parse(JsonConvert.SerializeObject(new object[]
                 {
-                    "var x = 1;\r\n",
+                    "var x = 1;\n",
                     "var y = 2;"
                 })));
         }
@@ -640,7 +640,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                         metadata = new { },
                         source = new[]
                         {
-                            "This is `markdown`.\r\n",
+                            "This is `markdown`.\n",
                             "This is more `markdown`.",
                         }
                     }

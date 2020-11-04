@@ -1,4 +1,4 @@
-module FsAutoComplete.InteractiveDirectives
+module internal FsAutoComplete.InteractiveDirectives
 
 open System
 open System.Text.RegularExpressions
@@ -98,7 +98,7 @@ let private tryParseStringFromStart (s: string) (index: int) =
         None
 
 /// Parse the content of a "#load" instruction at the given line. Returns the script file name on success.
-let tryParseLoad (line: string) (column: int) =
+let internal tryParseLoad (line: string) (column: int) =
   let potential =
     seq {
       let matches = loadRegex.Matches(line)

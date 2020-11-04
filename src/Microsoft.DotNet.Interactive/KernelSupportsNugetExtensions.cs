@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.Interactive
 
                         if (token != null &&
                             !token.StartsWith("nuget:") &&
-                            !Path.EndsInDirectorySeparator(token))
+                            !EndsInDirectorySeparator(token))
                         {
                             return new FileInfo(token);
                         }
@@ -143,6 +143,11 @@ namespace Microsoft.DotNet.Interactive
 
                 return Task.CompletedTask;
             }
+        }
+
+        private static bool EndsInDirectorySeparator(string path)
+        {
+            return path.Length > 0 && path.EndsWith(Path.DirectorySeparatorChar);
         }
 
         private class PackageReferenceComparer : IEqualityComparer<PackageReference>

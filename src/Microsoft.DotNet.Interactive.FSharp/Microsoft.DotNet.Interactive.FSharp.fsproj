@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <NoWarn>$(NoWarn);2003</NoWarn> <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
     <LangVersion>preview</LangVersion>
@@ -26,6 +26,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="FsAutoComplete\Utils.fs" />
+    <Compile Include="FsAutoComplete\TypedAstUtils.fs" />
+    <Compile Include="FsAutoComplete\TypedAstPatterns.fs" />
+    <Compile Include="FsAutoComplete\Lexer.fs" />
+    <Compile Include="FsAutoComplete\SignatureFormatter.fs" />
+    <Compile Include="FsAutoComplete\TipFormatter.fs" />
+    <Compile Include="FsAutoComplete\DocumentationFormatter.fs" />
+    <Compile Include="FsAutoComplete\KeywordList.fs" />
+    <Compile Include="FsAutoComplete\InteractiveDirectives.fs" />
+    <Compile Include="FsAutoComplete\ParseAndCheckResults.fs" />
     <Compile Include="FSharpKernel.fs" />
     <Compile Include="FSharpHtml.fs" />
     <Compile Include="FSharpKernelHelpers.fs" />
@@ -33,7 +43,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FsAutoComplete\FsAutoComplete.Core.fsproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
   </ItemGroup>

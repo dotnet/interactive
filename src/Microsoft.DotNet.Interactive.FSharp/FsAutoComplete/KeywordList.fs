@@ -2,7 +2,7 @@ namespace FsAutoComplete
 
 open FSharp.Compiler.SourceCodeServices
 
-module KeywordList =
+module internal KeywordList =
 
     let keywordDescriptions =
         FSharp.Compiler.SourceCodeServices.Keywords.KeywordsWithDescription
