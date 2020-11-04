@@ -132,7 +132,7 @@ type FSharpKernelBase () as this =
 
     let getDocumentation (declarationItem: FSharpDeclarationListItem) =
         async {
-            match! declarationItem.DescriptionTextAsync with
+            match declarationItem.DescriptionText with
             | FSharpToolTipText(elements) ->
                 return
                     elements
