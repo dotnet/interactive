@@ -107,25 +107,21 @@ type FSharpKernelBase () as this =
                 | null -> None
                 | summaryNode -> Some summaryNode.InnerText)
 
-    let getMainDescriptionByToolTipElementData (data: FSharpToolTipElementData<string>) =
-        data.MainDescription
-
     let tryGetDocumentationByToolTipElementData (dataList: FSharpToolTipElementData<string> list) =
         let text =
             let xmlData =
                 dataList
                 |> List.map (fun data ->
-                    let mainDescription = getMainDescriptionByToolTipElementData data
                     match data.XmlDoc with
                     | FSharpXmlDoc.Text(_, xmlLines) when xmlLines.Length > 0 ->
-                        sprintf "%s\n%s" mainDescription (String.concat "" xmlLines)
+                        sprintf "%s" (String.concat "" xmlLines)
                     | FSharpXmlDoc.XmlDocFileSignature(file, key) ->
                         let xmlFile = Path.ChangeExtension(file, "xml")
                         match tryGetDocumentationByXmlFileAndKey xmlFile key with
-                        | Some docText -> sprintf "%s\n%s" mainDescription docText
-                        | _ -> mainDescription
+                        | Some docText -> sprintf "%s" docText
+                        | _ -> String.Empty
                     | _ ->
-                        mainDescription
+                        String.Empty
                 )
             if xmlData.IsEmpty then String.Empty
             else
