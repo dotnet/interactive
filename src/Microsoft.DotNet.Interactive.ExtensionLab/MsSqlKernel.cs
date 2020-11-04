@@ -1,23 +1,16 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Data.Common;
-using Microsoft.Data.SqlClient;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using System.Data;
-using System.Reactive.Disposables;
-using System.Threading;
 using Microsoft.DotNet.Interactive.Formatting;
 using Newtonsoft.Json.Linq;
-using System.Collections.Concurrent;
 using System.Text;
-using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -29,8 +22,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     {
         private bool _connected = false;
         private bool _intellisenseReady = false;
-        private readonly string _tempFilePath;
-        private readonly string _tempFileUri;
+        private readonly Uri _tempFileUri;
         private readonly string _connectionString;
         private readonly MsSqlServiceClient _serviceClient;
 
@@ -40,8 +32,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public MsSqlKernel(string name, string connectionString) : base(name)
         {
-            _tempFilePath = Path.GetTempFileName();
-            _tempFileUri = MsSqlServiceClient.GetUriForFilePath(_tempFilePath);
+            var filePath = Path.GetTempFileName();
+            _tempFileUri = new Uri(filePath);
             _connectionString = connectionString;
 
             _serviceClient = MsSqlServiceClient.Instance;
@@ -55,15 +47,15 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             {
                 if (_connected)
                 {
-                    _serviceClient.DisconnectAsync(_tempFileUri).Wait();
+                    Task.Run(() => _serviceClient.DisconnectAsync(_tempFileUri)).Wait();
                 }
             });
-            RegisterForDisposal(() => File.Delete(_tempFilePath));
+            RegisterForDisposal(() => File.Delete(_tempFileUri.LocalPath));
         }
 
         private void HandleConnectionComplete(object sender, ConnectionCompleteParams connParams)
         {
-            if (connParams.OwnerUri.Equals(_tempFileUri))
+            if (connParams.OwnerUri.Equals(_tempFileUri.ToString()))
             {
                 if (connParams.ErrorMessage != null)
                 {
@@ -76,17 +68,17 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             }
         }
 
-        private async void HandleQueryCompleteAsync(object sender, QueryCompleteParams queryParams)
+        private void HandleQueryCompleteAsync(object sender, QueryCompleteParams queryParams)
         {
             if (_queryCompletionHandler != null)
             {
-                await _queryCompletionHandler(queryParams);
+                Task.Run(() => _queryCompletionHandler(queryParams)).Wait();
             }
         }
 
         private void HandleIntellisenseReady(object sender, IntelliSenseReadyParams readyParams)
         {
-            if (readyParams.OwnerUri.Equals(this._tempFileUri))
+            if (readyParams.OwnerUri.Equals(this._tempFileUri.ToString()))
             {
                 this._intellisenseReady = true;
             }
@@ -126,7 +118,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                         {
                             var subsetParams = new QueryExecuteSubsetParams()
                             {
-                                OwnerUri = _tempFileUri,
+                                OwnerUri = _tempFileUri.ToString(),
                                 BatchIndex = batchSummary.Id,
                                 ResultSetIndex = resultSummary.Id,
                                 RowsStartIndex = 0,
@@ -190,7 +182,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             {
                 return;
             }
-            var completionItems = await _serviceClient.ProvideCompletionItemsAsync(_tempFilePath, command);
+            var completionItems = await _serviceClient.ProvideCompletionItemsAsync(_tempFileUri, command);
             context.Publish(new CompletionsProduced(completionItems, command));
         }
 
@@ -200,7 +192,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             {
                 return;
             }
-            var hoverItem = await _serviceClient.ProvideHoverAsync(_tempFilePath, command);
+            var hoverItem = await _serviceClient.ProvideHoverAsync(_tempFileUri, command);
             if (hoverItem != null)
             {
                 var stringBuilder = new StringBuilder();
