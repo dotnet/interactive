@@ -10,15 +10,13 @@ using Microsoft.DotNet.Interactive.Events;
 using System.Data;
 using Microsoft.DotNet.Interactive.Formatting;
 using Newtonsoft.Json.Linq;
-using System.Text;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
     public class MsSqlKernel :
         Kernel,
         IKernelCommandHandler<SubmitCode>,
-        IKernelCommandHandler<RequestCompletions>,
-        IKernelCommandHandler<RequestHoverText>
+        IKernelCommandHandler<RequestCompletions>
     {
         private bool _connected = false;
         private bool _intellisenseReady = false;
@@ -184,30 +182,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             }
             var completionItems = await _serviceClient.ProvideCompletionItemsAsync(_tempFileUri, command);
             context.Publish(new CompletionsProduced(completionItems, command));
-        }
-
-        public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
-        {
-            if (!_intellisenseReady)
-            {
-                return;
-            }
-            var hoverItem = await _serviceClient.ProvideHoverAsync(_tempFileUri, command);
-            if (hoverItem != null)
-            {
-                var stringBuilder = new StringBuilder();
-                foreach (var markedString in hoverItem.Contents)
-                {
-                    stringBuilder.AppendLine(markedString.Value);
-                }
-
-                context.Publish(new HoverTextProduced(
-                    command,
-                    new[]
-                    {
-                        new FormattedValue("text/markdown", stringBuilder.ToString())
-                    }));
-            }
         }
     }
 }

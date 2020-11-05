@@ -116,17 +116,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             });
         }
 
-        public async Task<Hover> ProvideHoverAsync(Uri fileUri, RequestHoverText command)
-        {
-            string oldFileContents = await UpdateFileContentsAsync(fileUri, command.Code);
-
-            TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = fileUri.ToString() };
-            Position position = new Position() { Line = command.LinePosition.Line, Character = command.LinePosition.Character };
-            var positionParams = new TextDocumentPositionParams() { TextDocument = docId, Position = position };
-
-            return await _rpc.InvokeWithParameterObjectAsync<Hover>("textDocument/hover", positionParams);
-        }
-
         /// <summary>
         /// Updates the contents of the file at the provided path with the provided string,
         /// and then returns the old file contents as a string. If the file contents have

@@ -155,26 +155,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public CompletionContext Context { get; set; }
     }
 
-    public class TextDocumentPositionParams
-    {
-        public TextDocumentIdentifier TextDocument { get; set; }
-        public Position Position { get; set; }
-    }
-
-    public class MarkedString
-    {
-        public string Language { get; set; }
-
-        public string Value { get; set; }
-    }
-
-    public class Hover
-    {
-        public MarkedString[] Contents { get; set; }
-
-        public Range Range { get; set; }
-    }
-
     public class QueryExecuteSubsetParams
     {
         /// <summary>
