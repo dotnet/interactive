@@ -14,6 +14,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
+    #pragma warning disable VSTHRD002
     public class MsSqlKernel :
         Kernel,
         IKernelCommandHandler<SubmitCode>,
@@ -39,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             _serviceClient.Initialize();
 
             _serviceClient.OnConnectionComplete += HandleConnectionComplete;
-            _serviceClient.OnQueryComplete += HandleQueryCompleteAsync;
+            _serviceClient.OnQueryComplete += HandleQueryComplete;
             _serviceClient.OnIntellisenseReady += HandleIntellisenseReady;
 
             RegisterForDisposal(() =>
@@ -67,7 +68,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             }
         }
 
-        private void HandleQueryCompleteAsync(object sender, QueryCompleteParams queryParams)
+        private void HandleQueryComplete(object sender, QueryCompleteParams queryParams)
         {
             if (_queryCompletionHandler != null)
             {
