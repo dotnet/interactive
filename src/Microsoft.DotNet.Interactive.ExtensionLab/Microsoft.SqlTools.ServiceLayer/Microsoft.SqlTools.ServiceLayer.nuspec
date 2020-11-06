@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+    <metadata>
+        $CommonMetadataElements$
+        <language>en-US</language>
+        <dependencies>
+            <group targetFramework=".NETCoreApp3.1">
+                <dependency id="runtime.osx-x64.runtime.native.Microsoft.SqlTools.ServiceLayer"     version="3.0.0" />
+                <dependency id="runtime.rhel-x64.runtime.native.Microsoft.SqlTools.ServiceLayer"    version="3.0.0" />
+                <dependency id="runtime.win10-arm.runtime.native.Microsoft.SqlTools.ServiceLayer"   version="3.0.0" />
+                <dependency id="runtime.win10-arm64.runtime.native.Microsoft.SqlTools.ServiceLayer" version="3.0.0" />
+                <dependency id="runtime.win-x86.runtime.native.Microsoft.SqlTools.ServiceLayer"     version="3.0.0" />
+                <dependency id="runtime.win-x64.runtime.native.Microsoft.SqlTools.ServiceLayer"     version="3.0.0" />
+            </group>
+        </dependencies>
+    </metadata>
+    <files>
+        <!-- assemblies -->
+        <file src="..\images\sqlserver.png" target="images\" />
+    </files>
+</package>

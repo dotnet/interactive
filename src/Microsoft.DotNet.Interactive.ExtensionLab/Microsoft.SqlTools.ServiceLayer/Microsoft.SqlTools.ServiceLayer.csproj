@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <!--- Do not glob C# source files and other project items -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+    <IsPackable>true</IsPackable>
+    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);..\..\..\artifacts\packages\$(configuration)\Shipping</RestoreAdditionalProjectSources>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageDescription>Nuget packaging for The SqlTools ServiceLayer Components - runtime components</PackageDescription>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageVersion Condition="'$(SqlToolsVersion)' != ''">$(SqlToolsVersion)</PackageVersion>
+    <PackageLicenseExpression></PackageLicenseExpression>
+    <PackageLicenseFile>license.txt</PackageLicenseFile>
+    <PackageIcon>images\sqlserver.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Class1.cs" />
+    <None Include="images\sqlserver.png" Pack="true" PackagePath=""/>
+    <None Include="..\..\..\artifacts\downloads\license.txt" Pack="true" PackagePath=""/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="runtime.osx-x64.runtime.native.Microsoft.SqlTools.ServiceLayer" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.rhel-x64.runtime.native.Microsoft.SqlTools.ServiceLayer" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.win10-arm.runtime.native.Microsoft.SqlTools.ServiceLayer" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.win10-arm64.runtime.native.Microsoft.SqlTools.ServiceLayer" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.win-x86.runtime.native.Microsoft.SqlTools.ServiceLayer" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.win-x64.runtime.native.Microsoft.SqlTools.ServiceLayer" Version="$(PackageVersion)" />
+  </ItemGroup>
+</Project>
