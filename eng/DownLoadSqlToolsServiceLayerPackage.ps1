@@ -6,6 +6,7 @@ param (
 $githubReleasePackageName = "Microsoft.SqlTools.ServiceLayer"
 $githubReleasePackageUri = "https://github.com/microsoft/sqltoolsservice/releases/download/"
 $githubLicenseText = "https://raw.githubusercontent.com/microsoft/sqltoolsservice/main/license.txt"
+$githubSqlToolsSdkIcon = "https://microsoft.github.io/sqltoolssdk/images/sqlserver.png"
 
 function Create-Directory ([string[]] $path) {
     New-Item -Path $path -Force -ItemType 'Directory' | Out-Null
@@ -113,7 +114,9 @@ function DownloadPackagesFromGithub {
     }
 
     $licenseFile = Join-Path "$rootdir"  "license.txt"
+    $sdkIconFile = Join-Path "$rootdir"  "sqlserver.png"
     Invoke-WebRequest $githubLicenseText -OutFile $licenseFile
+    Invoke-WebRequest $githubSqlToolsSdkIcon -Outfile $sdkIconFile
 
     $tarext = ".tar.gz"
     $zipext = ".zip"

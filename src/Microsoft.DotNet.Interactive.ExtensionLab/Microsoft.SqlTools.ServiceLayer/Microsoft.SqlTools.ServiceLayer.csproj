@@ -13,14 +13,15 @@
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageVersion Condition="'$(SqlToolsVersion)' != ''">$(SqlToolsVersion)</PackageVersion>
     <PackageLicenseExpression></PackageLicenseExpression>
-    <PackageLicenseFile>license.txt</PackageLicenseFile>
+    <PackageLicenseFile>license\license.txt</PackageLicenseFile>
     <PackageIcon>images\sqlserver.png</PackageIcon>
+    <PackageIconFullPath></PackageIconFullPath>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="Class1.cs" />
-    <None Include="images\sqlserver.png" Pack="true" PackagePath=""/>
-    <None Include="..\..\..\artifacts\downloads\license.txt" Pack="true" PackagePath=""/>
+    <None Include="..\..\..\artifacts\downloads\license.txt" Pack="true" PackagePath="license\"/>
+    <None Include="..\..\..\artifacts\downloads\sqlserver.png" Pack="true" PackagePath="images\"/>
   </ItemGroup>
 
   <ItemGroup>

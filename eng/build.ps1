@@ -1,3 +1,8 @@
+Param(
+  [string][Alias('c')]$configuration = "Debug",
+  [switch] $ci
+)
+
 Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
 
@@ -11,6 +16,13 @@ function TestUsingNPM([string] $testPath) {
 }
 
 try {
+    if ($ci -eq $true) {
+        . (Join-Path $PSScriptRoot "..\buildSqlTools.cmd") $configuration
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
+    }
+
     # invoke regular build/test script
     . (Join-Path $PSScriptRoot "common\build.ps1") -projects "$PSScriptRoot\..\dotnet-interactive.sln" @args
     if ($LASTEXITCODE -ne 0) {
