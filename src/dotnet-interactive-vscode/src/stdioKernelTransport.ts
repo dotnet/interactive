@@ -11,7 +11,11 @@ import {
     KernelEventEnvelopeObserver,
     DiagnosticLogEntryProducedType,
     DiagnosticLogEntryProduced,
-    KernelReadyType
+    KernelReadyType,
+    MessageTransport,
+    LabelledMessageObserver,
+    MessageObserver,
+    MessageEnvelope
 } from "./contracts";
 import { ProcessStart } from './interfaces';
 import { ReportChannel, Uri } from './interfaces/vscode';
@@ -19,11 +23,11 @@ import { LineReader } from './lineReader';
 import { isNotNull, parse, stringify, wait } from './utilities';
 import fetch from 'node-fetch';
 
-export class StdioKernelTransport {
+export class StdioKernelTransport implements MessageTransport {
     private childProcess: cp.ChildProcessWithoutNullStreams | null;
     private lineReader: LineReader;
     private readyPromise: Promise<void>;
-    private subscribers: Array<KernelEventEnvelopeObserver> = [];
+    private subscribers: Array<LabelledMessageObserver<object>> = [];
     public httpPort: Number;
     public externalUri: Uri | null;
 
@@ -62,12 +66,14 @@ export class StdioKernelTransport {
             childProcess.stderr.on('data', data => this.diagnosticChannel.appendLine(`kernel (${pid}) stderr: ${data.toString('utf-8')}`));
 
 
-            const readySubscriber = this.subscribeToKernelEvents(eventEnvelope => {
-                if (eventEnvelope.eventType === KernelReadyType) {
-                    readySubscriber.dispose();
-                    resolve();
-                }
-            });
+            const readySubscriber = this.subscribeToMessagesWithLabel(
+                "kernelEvents",
+                (eventEnvelope: KernelEventEnvelope) => {
+                    if (eventEnvelope.eventType === KernelReadyType) {
+                        readySubscriber.dispose();
+                        resolve();
+                    }
+                });
         });
     }
 
@@ -154,8 +160,8 @@ export class StdioKernelTransport {
 
 
     private handleLine(line: string) {
-        let obj = parse(line);
-        let envelope = <KernelEventEnvelope>obj;
+        let messageEnvelope = <MessageEnvelope>parse(line);
+        let envelope = <KernelEventEnvelope>messageEnvelope.payload;
         switch (envelope.eventType) {
             case DiagnosticLogEntryProducedType:
                 this.diagnosticChannel.appendLine((<DiagnosticLogEntryProduced>envelope.event).message);
@@ -163,15 +169,21 @@ export class StdioKernelTransport {
         }
 
         for (let i = this.subscribers.length - 1; i >= 0; i--) {
-            this.subscribers[i](envelope);
+            this.subscribers[i]("kernelEvents", envelope);
         }
     }
 
-    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
-        this.subscribers.push(observer);
+    private subscribeWithFilter<T extends object>(filter: (label: string) => boolean, observer: LabelledMessageObserver<T>): DisposableSubscription {
+        let filteredObserver = (messageLabel: string, message: object): void => {
+            if (filter(messageLabel)) {
+                let parsedMessage = <T>message;
+                observer(messageLabel, parsedMessage);
+            }
+        };
+        this.subscribers.push(filteredObserver);
         return {
             dispose: () => {
-                let i = this.subscribers.indexOf(observer);
+                let i = this.subscribers.indexOf(filteredObserver);
                 if (i >= 0) {
                     this.subscribers.splice(i, 1);
                 }
@@ -179,15 +191,20 @@ export class StdioKernelTransport {
         };
     }
 
-    submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void> {
-        return new Promise((resolve, reject) => {
-            let submit = {
-                token,
-                commandType,
-                command
-            };
+    subscribeToMessagesWithLabelPrefix<T extends object>(label: string, observer: LabelledMessageObserver<T>): DisposableSubscription {
+        return this.subscribeWithFilter<T>(messageLabel => messageLabel.startsWith(label), observer);
+    }
 
-            let str = stringify(submit);
+    subscribeToMessagesWithLabel<T extends object>(label: string, observer: MessageObserver<T>): DisposableSubscription {
+        return this.subscribeWithFilter<T>(
+            messageLabel => messageLabel === label,
+            (_: string, message: T) => observer(message));
+    }
+
+    sendMessage<T>(label: string, message: T): Promise<void> {
+        return new Promise((resolve, reject) => {
+            let channelMessage = { label: label, payload: message};
+            let str = stringify(channelMessage);
             if (isNotNull(this.childProcess)) {
                 this.childProcess.stdin.write(str);
                 this.childProcess.stdin.write('\n');

@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelCommand, KernelCommandType, KernelEventType, KernelEventEnvelopeObserver, DisposableSubscription, KernelEvent } from "../../contracts";
+import { KernelCommand, KernelCommandType, KernelEventType, KernelEventEnvelopeObserver, DisposableSubscription, KernelEvent, LabelledMessageObserver, MessageObserver } from "../../contracts";
 
 // Replays all events given to it
 export class TestKernelTransport {
@@ -16,6 +16,21 @@ export class TestKernelTransport {
         return {
             dispose: () => { }
         };
+    }
+
+    subscribeToMessagesWithLabelPrefix<T extends object>(label: string, observer: LabelledMessageObserver<T>): DisposableSubscription {
+        return {
+            dispose: () => { }
+        };
+    }
+
+    subscribeToMessagesWithLabel<T extends object>(label: string, observer: MessageObserver<T>): DisposableSubscription {
+        return {
+            dispose: () => { }
+        };
+    }
+
+    async sendMessage<T>(label: string, message: T): Promise<void> {
     }
 
     async submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void> {

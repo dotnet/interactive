@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelTransport } from "./contracts";
+import { MessageTransport } from "./contracts";
 import { InteractiveClient } from "./interactiveClient";
 import { Uri } from "./interfaces/vscode";
 
@@ -9,7 +9,7 @@ export class ClientMapper {
     private clientMap: Map<string, Promise<InteractiveClient>> = new Map();
     private clientCreationCallbackMap: Map<string, (client: InteractiveClient) => Promise<void>> = new Map();
 
-    constructor(readonly kernelTransportCreator: (notebookPath: string) => Promise<KernelTransport>) {
+    constructor(readonly messageTransportCreator: (notebookPath: string) => Promise<MessageTransport>) {
     }
 
     static keyFromUri(uri: Uri): string {
@@ -21,7 +21,7 @@ export class ClientMapper {
         let clientPromise = this.clientMap.get(key);
         if (clientPromise === undefined) {
             clientPromise = new Promise<InteractiveClient>(async resolve => {
-                const transport = await this.kernelTransportCreator(uri.fsPath);
+                const transport = await this.messageTransportCreator(uri.fsPath);
                 const client = new InteractiveClient(transport);
 
                 let onCreate = this.clientCreationCallbackMap.get(key);

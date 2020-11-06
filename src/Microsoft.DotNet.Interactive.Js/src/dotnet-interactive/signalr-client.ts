@@ -2,74 +2,111 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as signalR from "@microsoft/signalr";
+import { env } from "process";
 
-import { KernelTransport, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, KernelCommand, KernelCommandType, KernelCommandEnvelope, SubmitCodeType } from "./contracts";
+import { MessageTransport, LabelledMessageObserver, DisposableSubscription, MessageEnvelope, MessageObserver } from "./contracts";
 import { TokenGenerator } from "./tokenGenerator";
 
+// Would like to do this:
+//import { parse } from './utilities';
+// But can't get to that from here, so:
 
-export async function signalTransportFactory(rootUrl: string): Promise<KernelTransport> {
+function parse(text: string): any {
+    return JSON.parse(text, (key, value) => {
+        if (key === 'rawData' && typeof value === 'string') {
+            // this looks suspicously like a base64-encoded byte array; special-case this by interpreting this as a base64-encoded string
+            const buffer = Buffer.from(value, 'base64');
+            return Uint8Array.from(buffer.values());
+        }
 
-    let hubUrl = rootUrl;
-    if (hubUrl.endsWith("/")) {
-        hubUrl = `${hubUrl}kernelhub`;
-    } else {
-        hubUrl = `${hubUrl}/kernelhub`;
+        return value;
+    });
+}
+
+class SignalRTransport implements MessageTransport {
+
+    private tokenGenerator = new TokenGenerator();
+    private observers: { [key: string]: LabelledMessageObserver<object> } = {};
+    private connection: signalR.HubConnection;
+
+    async start(rootUrl: string) {
+        let hubUrl = rootUrl;
+        if (hubUrl.endsWith("/")) {
+            hubUrl = `${hubUrl}kernelhub`;
+        } else {
+            hubUrl = `${hubUrl}/kernelhub`;
+        }
+
+        this.connection = new signalR.HubConnectionBuilder()
+            .withUrl(hubUrl)
+            .withAutomaticReconnect()
+            .build();
+
+        this.connection.on("messages", (message: string) => {
+            let envelope = <MessageEnvelope>parse(message);
+            let keys = Object.keys(this.observers);
+            for (let key of keys) {
+                let observer = this.observers[key];
+                observer(envelope.label, envelope.payload);
+            }
+        });
+
+        await this.connection
+            .start()
+            .catch(err => console.log(err));
+
+        await this.connection.send("connect");
     }
 
-    let connection = new signalR.HubConnectionBuilder()
-        .withUrl(hubUrl)
-        .withAutomaticReconnect()
-        .build();
-
-    let tokenGenerator = new TokenGenerator();
-
-    let observers: { [key: string]: KernelEventEnvelopeObserver } = {};
-
-    connection.on("kernelEvent", (message: string) => {
-        let eventEnvelope = <KernelEventEnvelope>JSON.parse(message);
-        let keys = Object.keys(observers);
-        for (let key of keys) {
-            let observer = observers[key];
-            observer(eventEnvelope);
-        }
-    });
-
-    await connection
-        .start()
-        .catch(err => console.log(err));
-
-    let eventStream: KernelTransport = {
-
-        subscribeToKernelEvents: (observer: KernelEventEnvelopeObserver): DisposableSubscription => {
-            let key = tokenGenerator.GetNewToken();
-            observers[key] = observer;
-
-            let disposableSubscription: DisposableSubscription = {
-                dispose: () => {
-                    delete observers[key];
-                }
+    private subscribeWithFilter<T extends object>(filter: (label: string) => boolean, observer: LabelledMessageObserver<T>): DisposableSubscription {
+        let key = this.tokenGenerator.GetNewToken();
+        this.observers[key] = (messageLabel: string, message: object): void => {
+            if (filter(messageLabel)) {
+                let parsedMessage = <T>message;
+                observer(messageLabel, parsedMessage);
             }
+        };
 
-            return disposableSubscription;
-        },
-
-        submitCommand: (command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void> => {
-            let envelope: KernelCommandEnvelope = {
-                commandType: commandType,
-                command: command,
-                token: token,
-            };
-            return connection.send("submitCommand", JSON.stringify(envelope));
-        },
-
-        waitForReady: (): Promise<void> => {
-            return Promise.resolve();
-        },
-
-        dispose: (): void => {
+        let disposableSubscription: DisposableSubscription = {
+            dispose: () => {
+                delete this.observers[key];
+            }
         }
-    };
 
-    await connection.send("connect");
-    return Promise.resolve(eventStream);
+        return disposableSubscription;
+    }
+
+
+    subscribeToMessagesWithLabelPrefix<T extends object>(label: string, observer: LabelledMessageObserver<T>): DisposableSubscription {
+        return this.subscribeWithFilter<T>(messageLabel => messageLabel.startsWith(label), observer);
+    }
+
+    subscribeToMessagesWithLabel<T extends object>(label: string, observer: MessageObserver<T>): DisposableSubscription {
+        return this.subscribeWithFilter<T>(
+            messageLabel => messageLabel === label,
+            (_: string, message: T) => observer(message));
+    }
+
+    sendMessage<T>(label: string, message: T): Promise<void> {
+        let wrappedMessage: MessageEnvelope = {
+            label: label,
+            payload: message
+        };
+        return this.connection.send("messages", JSON.stringify(wrappedMessage));
+    }
+
+    waitForReady(): Promise<void> {
+        return Promise.resolve();
+    }
+
+    dispose(): void {
+        this.connection.off("messages");
+    }
+}
+
+export async function signalTransportFactory(rootUrl: string): Promise<MessageTransport> {
+    let transport = new SignalRTransport();
+    await transport.start(rootUrl);
+
+    return transport;
 }

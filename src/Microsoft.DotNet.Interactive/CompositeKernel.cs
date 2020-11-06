@@ -26,7 +26,8 @@ namespace Microsoft.DotNet.Interactive
         IExtensibleKernel,
         IEnumerable<Kernel>,
         IKernelCommandHandler<ParseNotebook>,
-        IKernelCommandHandler<SerializeNotebook>
+        IKernelCommandHandler<SerializeNotebook>,
+        IKernelCommandHandler<SendMessage>
     {
         private readonly ConcurrentQueue<PackageAdded> _packagesToCheckForExtensions = new ConcurrentQueue<PackageAdded>();
         private readonly List<Kernel> _childKernels = new List<Kernel>();
@@ -94,6 +95,7 @@ namespace Microsoft.DotNet.Interactive
             }
 
             RegisterForDisposal(kernel.KernelEvents.Subscribe(PublishEvent));
+            RegisterForDisposal(kernel.KernelMessages.Subscribe(PublishMessage));
             RegisterForDisposal(kernel);
         }
 
@@ -117,6 +119,11 @@ namespace Microsoft.DotNet.Interactive
             var rawData = NotebookFileFormatHandler.Serialize(command.FileName, command.Notebook, command.NewLine);
             context.Publish(new NotebookSerialized(rawData, command));
             return Task.CompletedTask;
+        }
+
+        public Task HandleAsync(SendMessage command, KernelInvocationContext context)
+        {
+            return context.HandlingKernel.ReceiveUserMessage(command);
         }
 
         private void AddChooseKernelDirective(
@@ -178,7 +185,8 @@ namespace Microsoft.DotNet.Interactive
         {
             var targetKernelName = command switch
             {
-                { } kcb => kcb.TargetKernelName ?? DefaultKernelName,
+                { TargetKernelName: string targetKernelNameFromCommand } => targetKernelNameFromCommand,
+                SendMessage _ => Name,  // SendMessage commands need to be directed to the right place, so they are a CompositeKernel concern
                 _ => DefaultKernelName
             };
 

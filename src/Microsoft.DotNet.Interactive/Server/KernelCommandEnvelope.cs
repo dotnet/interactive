@@ -65,7 +65,8 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(RequestHoverText)] = typeof(KernelCommandEnvelope<RequestHoverText>),
                 [nameof(SerializeNotebook)] = typeof(KernelCommandEnvelope<SerializeNotebook>),
                 [nameof(SubmitCode)] = typeof(KernelCommandEnvelope<SubmitCode>),
-                [nameof(UpdateDisplayedValue)] = typeof(KernelCommandEnvelope<UpdateDisplayedValue>)
+                [nameof(UpdateDisplayedValue)] = typeof(KernelCommandEnvelope<UpdateDisplayedValue>),
+                [nameof(SendMessage)] = typeof(KernelCommandEnvelope<SendMessage>),
             };
 
             _commandTypesByCommandTypeName = new ConcurrentDictionary<string, Type>(_envelopeTypesByCommandTypeName
@@ -140,19 +141,25 @@ namespace Microsoft.DotNet.Interactive.Server
         }
 
         public static string Serialize(KernelCommand command) => Serialize(Create(command));
+        internal static SerializationModel SerializeToModel(KernelCommand command) => SerializeToModel(Create(command));
 
         public static string Serialize(IKernelCommandEnvelope envelope)
         {
-            var serializationModel = new SerializationModel
+            SerializationModel serializationModel = SerializeToModel(envelope);
+
+            return JsonConvert.SerializeObject(
+                serializationModel,
+                Serializer.JsonSerializerSettings);
+        }
+
+        internal static SerializationModel SerializeToModel(IKernelCommandEnvelope envelope)
+        {
+            return new SerializationModel
             {
                 command = envelope.Command,
                 commandType = envelope.CommandType,
                 token = envelope.Token
             };
-
-            return JsonConvert.SerializeObject(
-                serializationModel,
-                Serializer.JsonSerializerSettings);
         }
 
         internal class SerializationModel

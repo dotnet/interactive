@@ -44,23 +44,27 @@ import {
     SubmitCodeType,
     RequestDiagnostics,
     RequestDiagnosticsType,
+    MessageTransport,
 } from './contracts';
 import { CellOutput, CellErrorOutput, CellOutputKind, CellDisplayOutput } from './interfaces/vscode';
 import { Eol } from './interfaces';
+import { kernelTransportFromMessageTransport } from './kernelTransport';
 
 export class InteractiveClient {
+    private kernelTransport: KernelTransport;
     private nextToken: number = 1;
     private tokenEventObservers: Map<string, Array<KernelEventEnvelopeObserver>> = new Map<string, Array<KernelEventEnvelopeObserver>>();
     private deferredOutput: Array<CellOutput> = [];
     private valueIdMap: Map<string, { idx: number, outputs: Array<CellOutput>, observer: { (outputs: Array<CellOutput>): void } }> = new Map<string, { idx: number, outputs: Array<CellOutput>, observer: { (outputs: Array<CellOutput>): void } }>();
 
-    constructor(readonly kernelTransport: KernelTransport) {
-        kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
+    constructor(readonly messageTransport: MessageTransport) {
+        this.kernelTransport = kernelTransportFromMessageTransport(messageTransport);
+        this.kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
     }
 
     public tryGetProperty<T>(propertyName: string): T | null {
         try {
-            return <T>((<any>this.kernelTransport)[propertyName]);
+            return <T>((<any>this.messageTransport)[propertyName]);
         }
         catch {
             return null;

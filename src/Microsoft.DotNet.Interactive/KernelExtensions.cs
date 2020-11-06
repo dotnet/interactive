@@ -13,6 +13,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Messages;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
@@ -43,6 +44,21 @@ namespace Microsoft.DotNet.Interactive
                  .SingleOrDefault(),
                 _ => null
             };
+        }
+
+        public static async Task ProcessMessageAsync(
+            this Kernel kernel,
+            KernelChannelMessage kernelMessage)
+        {
+            switch (kernelMessage)
+            {
+                case CommandKernelMessage commandMessage:
+                    await kernel.SendAsync(commandMessage.Command);
+                    break;
+
+                default:
+                    throw new ArgumentException($"Unrecognized message label: {kernelMessage.Label}", nameof(kernelMessage));
+            }
         }
 
         public static Task<KernelCommandResult> SendAsync(

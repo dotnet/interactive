@@ -4,6 +4,7 @@
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.DotNet.Interactive.Messages;
 using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.Http
@@ -23,6 +24,12 @@ namespace Microsoft.DotNet.Interactive.Http
             var envelope = KernelCommandEnvelope.Deserialize(kernelCommandEnvelope);
             var command = envelope.Command;
             await _connection.Kernel.SendAsync(command);
+        }
+
+        public async Task Messages(string kernelMessage)
+        {
+            var channelMessage = KernelChannelMessage.Deserialize(kernelMessage);
+            await _connection.Kernel.ProcessMessageAsync(channelMessage);
         }
 
         public async Task Connect()

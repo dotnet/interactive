@@ -4,8 +4,12 @@
 import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch } from "./dotnet-interactive-interfaces";
 import { TokenGenerator } from "./tokenGenerator";
 import { signalTransportFactory } from "./signalr-client";
-import { KernelTransport, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType, KernelCommand } from "./contracts";
+import { KernelTransport, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType, MessageObserver, LabelledMessageObserver, KernelCommandEnvelope, SendMessage, SendMessageType } from "./contracts";
 import { createDefaultClientFetch } from "./clientFetch";
+
+import { kernelTransportFromMessageTransport } from "./kernelTransport";
+import { send } from "process";
+
 
 export interface KernelClientImplParameteres {
     clientFetch: (input: RequestInfo, init: RequestInit) => Promise<Response>;
@@ -19,7 +23,7 @@ export class KernelClientImpl implements DotnetInteractiveClient {
     private _rootUrl: string;
     private _kernelTransport: KernelTransport;
     private _tokenGenerator: TokenGenerator;
-    private _configureRequire:(confing:any) => any;
+    private _configureRequire: (confing: any) => any;
     constructor(parameters: KernelClientImplParameteres) {
         this._clientFetch = parameters.clientFetch;
         this._rootUrl = parameters.rootUrl;
@@ -34,6 +38,41 @@ export class KernelClientImpl implements DotnetInteractiveClient {
     public subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
         let subscription = this._kernelTransport.subscribeToKernelEvents(observer);
         return subscription;
+    }
+
+    private subscribeWithFilter<T extends object>(filter: (label: string) => boolean, observer: LabelledMessageObserver<T>): DisposableSubscription {
+        // Note: for now, this is the only place we do anything with commands, so this is a bit of a quick
+        // hack. The vision was more around having a proper client-side kernel, which would mean we'd
+        // need to ensure in-order processing of commands, queuing up any that arrive when processing is
+        // already in progress.
+        return this._kernelTransport.subscribeToCommands(commandEnvelope => {
+            if (commandEnvelope.commandType === SendMessageType) {
+                let sendCommand = <SendMessage>commandEnvelope.command;
+                let messageLabel = sendCommand.label;
+                let messageContent = <T>sendCommand.content;
+                if (filter(messageLabel)) {
+                    observer(messageLabel, messageContent);
+                }
+            }
+        });
+    }
+
+    public subscribeToMessagesWithLabelPrefix<T extends object>(label: string, observer: LabelledMessageObserver<T>): DisposableSubscription {
+        return this.subscribeWithFilter<T>(messageLabel => messageLabel.startsWith(label), observer);
+    }
+
+    public subscribeToMessagesWithLabel<T extends object>(label: string, observer: MessageObserver<T>): DisposableSubscription {
+        return this.subscribeWithFilter<T>(
+            messageLabel => messageLabel === label,
+            (_: string, message: T) => observer(message));
+    }
+
+    public async sendMessage<T>(label: string, message: T): Promise<void> {
+        let command: SendMessage = {
+            label: label,
+            content: message,
+        };
+        await this.submitCommand(SendMessageType, command);
     }
 
     public async getVariable(kernelName: string, variableName: string): Promise<any> {
@@ -100,7 +139,7 @@ export class KernelClientImpl implements DotnetInteractiveClient {
                         return this.submitCode(code, kernelName);
                     },
 
-                    submitCommand: (commandType: string, command?: any): Promise<string> =>{
+                    submitCommand: (commandType: string, command?: any): Promise<string> => {
                         return this.submitCommand(commandType, command, kernelName);
                     }
                 };
@@ -121,14 +160,14 @@ export class KernelClientImpl implements DotnetInteractiveClient {
         return token;
     }
 
-    public async submitCommand(commandType: string,command?: any ,targetKernelName?: string ): Promise<string>{
+    public async submitCommand(commandType: string, command?: any, targetKernelName?: string): Promise<string> {
         let token: string = this._tokenGenerator.GetNewToken();
-               
+
         if (!command) {
             command = {};
         }
 
-        if (targetKernelName){
+        if (targetKernelName) {
             command.targetKernelName = targetKernelName;
         }
 
@@ -169,7 +208,7 @@ export async function createDotnetInteractiveClient(configuration: string | Dotn
     }
 
     if (!kernelTransportFactory) {
-        kernelTransportFactory = signalTransportFactory;
+        kernelTransportFactory = async (rootUrl) => kernelTransportFromMessageTransport(await signalTransportFactory(rootUrl));
     }
 
     let transport = await kernelTransportFactory(rootUrl);
@@ -177,7 +216,7 @@ export async function createDotnetInteractiveClient(configuration: string | Dotn
         clientFetch: clientFetch,
         rootUrl,
         kernelTransport: transport,
-        configureRequire: (config: any) =>{        
+        configureRequire: (config: any) => {
             return (<any>require).config(config) || require;
         }
     });

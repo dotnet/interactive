@@ -6,6 +6,7 @@ using System.IO;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Messages;
 using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Server
@@ -36,9 +37,9 @@ namespace Microsoft.DotNet.Interactive.Server
             {
                 _input.Subscribe(async line =>
                 {
-                    await DeserializeAndSendCommand(line);
+                    await DeserializeAndSendMessage(line);
                 }),
-                _kernel.KernelEvents.Subscribe(WriteEventToOutput),
+                _kernel.KernelMessages.Subscribe(WriteMessageToOutput),
                 _input
             };
 
@@ -54,39 +55,47 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public IObservable<string> Input => _input;
 
-        public Task WriteAsync(string text) => DeserializeAndSendCommand(text);
+        public Task WriteAsync(string text) => DeserializeAndSendMessage(text);
 
         public IObservable<string> Output => _output.OutputObservable; 
 
-        private async Task DeserializeAndSendCommand(string line)
+        private async Task DeserializeAndSendMessage(string line)
         {
-            IKernelCommandEnvelope kernelCommandEnvelope;
+            KernelChannelMessage kernelMessage;
             try
             {
-                kernelCommandEnvelope = KernelCommandEnvelope.Deserialize(line);
+                kernelMessage = KernelChannelMessage.Deserialize(line);
+                await _kernel.ProcessMessageAsync(kernelMessage);
             }
             catch (JsonReaderException ex)
             {
                 WriteEventToOutput(
                     new DiagnosticLogEntryProduced(
-                        $"Error while parsing command: {ex.Message}\n{line}"));
-                
-                return;
+                        $"Error while parsing message: {ex.Message}\n{line}"));
             }
-            
-            await _kernel.SendAsync(kernelCommandEnvelope.Command);
+            catch (ArgumentException ex)
+            {
+                WriteEventToOutput(
+                    new DiagnosticLogEntryProduced(
+                        $"Error while processing message: {ex.Message}\n{line}"));
+            }
         }
 
         private void WriteEventToOutput(KernelEvent kernelEvent)
         {
-            if (kernelEvent is ReturnValueProduced rvp && rvp.Value is DisplayedValue)
+            WriteMessageToOutput(new EventKernelMessage(kernelEvent));
+        }
+
+        private void WriteMessageToOutput(KernelChannelMessage message)
+        {
+            if (message is EventKernelMessage eventMessage &&
+                eventMessage.Event is ReturnValueProduced rvp
+                && rvp.Value is DisplayedValue)
             {
                 return;
             }
 
-            var envelope = KernelEventEnvelope.Create(kernelEvent);
-
-            var serialized = KernelEventEnvelope.Serialize(envelope);
+            var serialized = KernelChannelMessage.Serialize(message);
 
             _output.Write(serialized);
         }

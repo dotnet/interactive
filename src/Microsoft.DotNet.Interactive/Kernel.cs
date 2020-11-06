@@ -9,6 +9,7 @@ using System.CommandLine.Parsing;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -16,14 +17,22 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Messages;
 using Microsoft.DotNet.Interactive.Parsing;
+using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Utility;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive
 {
     public abstract partial class Kernel : IDisposable
     {
         private readonly Subject<KernelEvent> _kernelEvents = new Subject<KernelEvent>();
+        private readonly Subject<KernelChannelMessage> _kernelMessages = new Subject<KernelChannelMessage>();
+        private readonly Subject<SendMessage> _userMessages = new Subject<SendMessage>();
         private readonly CompositeDisposable _disposables;
         private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new ConcurrentQueue<KernelCommand>();
 
@@ -53,8 +62,11 @@ namespace Microsoft.DotNet.Interactive
 
             AddDirectiveMiddlewareAndCommonCommandHandlers();
 
-            _disposables.Add(Disposable.Create( 
+            _disposables.Add(Disposable.Create(
                 ()  => _kernelEvents.OnCompleted()
+                ));
+            _disposables.Add(Disposable.Create(
+                () => _kernelMessages.OnCompleted()
                 ));
         }
 
@@ -227,13 +239,60 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public IObservable<KernelEvent> KernelEvents => _kernelEvents;
+        public IObservable<KernelChannelMessage> KernelMessages => _kernelMessages;
 
         public string Name { get; set; }
 
         public IReadOnlyCollection<ICommand> Directives => SubmissionParser.Directives;
 
         public void AddDirective(Command command) => SubmissionParser.AddDirective(command);
-        
+
+        public Task SendMessage<T>(string label, T message)
+        {
+            var sendMessageCommand = new SendMessage(label, message);
+            // TODO: although KernelHubConnection sends asynchronously, we lose that because
+            // it's buried inside Rx, so this is effectively fire and forget.
+            SendCommandToClient(sendMessageCommand);
+            return Task.CompletedTask;
+        }
+
+        public void SendCommandToClient(KernelCommand command)
+        {
+            _kernelMessages.OnNext(new CommandKernelMessage(command));
+        }
+
+        public Task ReceiveUserMessage(SendMessage command)
+        {
+            _userMessages.OnNext(command);
+            return Task.CompletedTask;
+        }
+
+        private IDisposable SubscribeWithFilter<T>(Func<string, bool> filter, IObserver<T> observer)
+        {
+            return ParentKernel != null
+                ? ParentKernel.SubscribeWithFilter(filter, observer)
+                : _userMessages
+                    .Where(m => filter(m.Label))
+                    .Select(m => ((JObject)m.Content).ToObject<T>())   // TODO: serialization settings?
+                    .Subscribe(observer);
+        }
+
+        public IDisposable SubscribeToMessagesWithLabelPrefix<T>(string prefix, IObserver<T> observer)
+        {
+            return SubscribeWithFilter(label => label.StartsWith(prefix), observer);
+        }
+
+        public IDisposable SubscribeToMessagesWithLabel<T>(string label, IObserver<T> observer)
+        {
+            return SubscribeWithFilter(messageLabel => messageLabel.Equals(label, StringComparison.Ordinal), observer);
+        }
+
+        public class KernelChannelMessageData
+        {
+            public string Type { get; set; }
+            public string Content { get; set; }
+        }
+
         private class KernelOperation
         {
             public KernelOperation(KernelCommand command, TaskCompletionSource<KernelCommandResult> taskCompletionSource)
@@ -254,7 +313,7 @@ namespace Microsoft.DotNet.Interactive
             // only subscribe for the root command 
             using var _ =
                 context.Command == operation.Command
-                ? context.KernelEvents.Subscribe(PublishEvent)
+                ? new CompositeDisposable(context.KernelEvents.Subscribe(PublishEvent), context.KernelCommands.Subscribe(SendCommandToClient))
                 : Disposable.Empty;
 
             try
@@ -368,6 +427,13 @@ namespace Microsoft.DotNet.Interactive
             }
 
             _kernelEvents.OnNext(kernelEvent);
+
+            PublishMessage(new EventKernelMessage(kernelEvent));
+        }
+
+        protected void PublishMessage(KernelChannelMessage kernelMessage)
+        {
+            _kernelMessages.OnNext(kernelMessage);
         }
 
         public void RegisterForDisposal(Action dispose) => RegisterForDisposal(Disposable.Create(dispose));
@@ -492,6 +558,10 @@ namespace Microsoft.DotNet.Interactive
 
                     case (RequestHoverText hoverCommand, IKernelCommandHandler<RequestHoverText> requestHoverTextHandler):
                         SetHandler(requestHoverTextHandler, hoverCommand);
+                        break;
+
+                    case (SendMessage sendMessage, IKernelCommandHandler<SendMessage> sendMessageHandler):
+                        SetHandler(sendMessageHandler, sendMessage);
                         break;
                 }
             }

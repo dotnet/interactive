@@ -19,6 +19,8 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly ReplaySubject<KernelEvent> _events = new ReplaySubject<KernelEvent>();
 
+        private readonly ReplaySubject<KernelCommand> _commands = new ReplaySubject<KernelCommand>();
+
         private readonly HashSet<KernelCommand> _childCommands = new HashSet<KernelCommand>();
 
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
@@ -92,7 +94,14 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+        public void SendCommandToClient(KernelCommand command)
+        {
+            _commands.OnNext(command);
+        }
+
         public IObservable<KernelEvent> KernelEvents => _events;
+        
+        public IObservable<KernelCommand> KernelCommands => _commands;
 
         public KernelCommandResult Result { get; }
 

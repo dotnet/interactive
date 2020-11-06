@@ -6,8 +6,7 @@ using System.Reactive.Disposables;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Server;
+using Microsoft.DotNet.Interactive.Messages;
 
 namespace Microsoft.DotNet.Interactive.Http
 {
@@ -27,16 +26,16 @@ namespace Microsoft.DotNet.Interactive.Http
             if (!_registered)
             {
                 _registered = true;
-                _disposables.Add(Kernel.KernelEvents.Subscribe(onNext: async kernelEvent =>
-                    await PublishEventToContext(kernelEvent, hubContext)));
+                _disposables.Add(Kernel.KernelMessages.Subscribe(onNext: async kernelMessage =>
+                    await PublishMessageToContext(kernelMessage, hubContext)));
             }
         }
 
-        private async Task PublishEventToContext(KernelEvent kernelEvent, IHubContext<KernelHub> hubContext)
+        private async Task PublishMessageToContext(KernelChannelMessage kernelMessage, IHubContext<KernelHub> hubContext)
         {
-            var eventEnvelope = KernelEventEnvelope.Create(kernelEvent);
+            string data = KernelChannelMessage.Serialize(kernelMessage);
 
-            await hubContext.Clients.All.SendAsync("kernelEvent", KernelEventEnvelope.Serialize(eventEnvelope));
+            await hubContext.Clients.All.SendAsync("messages", data);
         }
 
         public void Dispose()
