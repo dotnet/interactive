@@ -10,6 +10,7 @@ using Microsoft.DotNet.Interactive.Events;
 using System.Data;
 using Microsoft.DotNet.Interactive.Formatting;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -130,8 +131,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                             }
                             else
                             {
-                                var tableString = GetTableStringForResult(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
-                                context.Display(tableString);
+                                var table = GetEnumerableTable(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
+                                context.Display(table);
                             }
                         }
                     }
@@ -154,24 +155,20 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             }
         }
 
-        private TabularJsonString GetTableStringForResult(ColumnInfo[] columnInfo, CellValue[][] rows)
+        private IEnumerable<IEnumerable<IEnumerable<(string, object)>>> GetEnumerableTable(ColumnInfo[] columnInfo, CellValue[][] rows)
         {
-            var data = new JArray();
+            var displayTable = new List<(string, object)[]>();
             var columnNames = columnInfo.Select(info => info.ColumnName).ToArray();
-            foreach (CellValue[] cellRow in rows)
+            foreach (CellValue[] row in rows)
             {
-                var rowObj = new JObject();
-                for (int i = 0; i < cellRow.Length; i++)
+                var displayRow = new (string, object)[row.Length];
+                for (int i = 0; i < row.Length; i++)
                 {
-                    var cell = cellRow[i];
-                    var fromObject = JToken.FromObject(cell.DisplayValue);
-                    rowObj.Add(columnNames[i], fromObject);
+                    displayRow[i] = (columnNames[i], row[i].DisplayValue);
                 }
-                data.Add(rowObj);
+                displayTable.Add(displayRow);
             }
-
-            var fields = columnInfo.ToDictionary(column => column.ColumnName, column => Type.GetType(column.DataType));
-            return TabularJsonString.Create(fields, data);
+            yield return displayTable;
         }
 
         public async Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
