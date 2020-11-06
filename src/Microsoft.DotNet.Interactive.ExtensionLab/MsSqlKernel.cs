@@ -8,13 +8,10 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using System.Data;
-using Microsoft.DotNet.Interactive.Formatting;
-using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
-    #pragma warning disable VSTHRD002
     public class MsSqlKernel :
         Kernel,
         IKernelCommandHandler<SubmitCode>,

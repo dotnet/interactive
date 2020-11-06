@@ -10,7 +10,7 @@
     <OutputType>Library</OutputType>
     <PackageTags>dotnet-interactive</PackageTags>
     <IncludeBuildOutput>true</IncludeBuildOutput>
-    <NoWarn>$(NoWarn);NU5100</NoWarn><!-- dll outside of lib/ folder -->
+    <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn><!-- dll outside of lib/ folder -->
      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
