@@ -106,12 +106,8 @@ function DownloadPackagesFromGithub {
     Param ($basename, $version, $uribase, $rootdir)
     Write-Host "DownloadPackagesFromGithub: ($basename, $version, $uribase, $rootdir)"
 
-    try {
-        [System.IO.Directory]::Delete($rootdir, $true)
-        Create-Directory $rootdir
-    }
-    catch {
-    }
+    try { [System.IO.Directory]::Delete($rootdir, $true) } catch {}
+    try { Create-Directory $rootdir } catch {}
 
     $licenseFile = Join-Path "$rootdir"  "license.txt"
     $sdkIconFile = Join-Path "$rootdir"  "sqlserver.png"
