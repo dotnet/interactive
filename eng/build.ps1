@@ -1,8 +1,3 @@
-Param(
-  [string][Alias('c')]$configuration = "Debug",
-  [switch] $ci
-)
-
 Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
 
@@ -15,9 +10,27 @@ function TestUsingNPM([string] $testPath) {
     return $test.ExitCode
 }
 
+$arguments = $args
+function isCi {
+    $isCi = $arguments | Select-String -Pattern '-ci' -CaseSensitive -SimpleMatch
+    return ($isCi -ne "")
+}
+$isCi = isCi
+
+function buildConfiguration {
+    $release = $arguments | Select-String -Pattern ('release', 'debug') -SimpleMatch -CaseSensitive
+    if ([System.String]::IsNullOrWhitespace($release) -eq $true) {
+        return "Debug"
+    }
+    else {
+        return "$release"
+    }
+}
+$buildConfiguration = buildConfiguration
+
 try {
-    if ($ci -eq $true) {
-        . (Join-Path $PSScriptRoot "..\buildSqlTools.cmd") $configuration
+    if (isCi -eq $true) {
+        . (Join-Path $PSScriptRoot "..\buildSqlTools.cmd") $buildConfiguration
         if ($LASTEXITCODE -ne 0) {
             exit $LASTEXITCODE
         }

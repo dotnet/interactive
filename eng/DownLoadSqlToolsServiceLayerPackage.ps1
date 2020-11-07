@@ -105,7 +105,6 @@ function DownloadPackageFromGithub {
 function DownloadPackagesFromGithub {
     Param ($basename, $version, $uribase, $rootdir)
     Write-Host "DownloadPackagesFromGithub: ($basename, $version, $uribase, $rootdir)"
-
     try { [System.IO.Directory]::Delete($rootdir, $true) } catch {}
     try { Create-Directory $rootdir } catch {}
 
