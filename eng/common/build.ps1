@@ -25,6 +25,10 @@ Param(
   [Parameter(ValueFromRemainingArguments=$true)][String[]]$properties
 )
 
+Write-Host "Arguments: ... $args"
+Write-Host "ci: ... $ci"
+Write-Host "configuration: ... $configuration"
+
 . $PSScriptRoot\tools.ps1
 
 function Print-Usage() {

@@ -10,7 +10,32 @@ function TestUsingNPM([string] $testPath) {
     return $test.ExitCode
 }
 
+$arguments = $args
+function isCi {
+    $isCi = $arguments | Select-String -Pattern '-ci' -CaseSensitive -SimpleMatch
+    return ($isCi -ne "")
+}
+$isCi = isCi
+
+function buildConfiguration {
+    $release = $arguments | Select-String -Pattern ('release', 'debug') -SimpleMatch -CaseSensitive
+    if ([System.String]::IsNullOrWhitespace($release) -eq $true) {
+        return "Debug"
+    }
+    else {
+        return "$release"
+    }
+}
+$buildConfiguration = buildConfiguration
+
 try {
+    if (isCi -eq $true) {
+        . (Join-Path $PSScriptRoot "..\buildSqlTools.cmd") $buildConfiguration
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
+    }
+
     # invoke regular build/test script
     . (Join-Path $PSScriptRoot "common\build.ps1") -projects "$PSScriptRoot\..\dotnet-interactive.sln" @args
     if ($LASTEXITCODE -ne 0) {

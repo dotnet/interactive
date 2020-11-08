@@ -1,0 +1,6 @@
+runtime.osx-x64.runtime.native.Microsoft.SqlTools.ServiceLayer
+runtime.rhel-x64.runtime.native.Microsoft.SqlTools.ServiceLayer
+runtime.win-x64.runtime.native.Microsoft.SqlTools.ServiceLayer
+runtime.win-x86.runtime.native.Microsoft.SqlTools.ServiceLayer
+runtime.win10-arm.runtime.native.Microsoft.SqlTools.ServiceLayer
+runtime.win10-arm64.runtime.native.Microsoft.SqlTools.ServiceLayer
