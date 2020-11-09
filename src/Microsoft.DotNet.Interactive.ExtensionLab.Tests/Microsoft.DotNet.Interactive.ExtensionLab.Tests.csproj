@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>preview</LangVersion>
-    <NoWarn>$(NoWarn);8002</NoWarn> <!-- Assent isn't strongly signed -->
+    <NoWarn>$(NoWarn);8002;VSTHRD002;VSTHRD200</NoWarn> <!-- Assent isn't strongly signed -->
   </PropertyGroup>
 
   <ItemGroup>

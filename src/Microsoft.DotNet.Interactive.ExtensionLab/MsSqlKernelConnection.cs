@@ -25,6 +25,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 options.KernelName,
                 options.ConnectionString);
 
+            await kernel.ConnectAsync();
+
             if (options.CreateDbContext)
             {
                 await InitializeDbContextAsync(options, context);

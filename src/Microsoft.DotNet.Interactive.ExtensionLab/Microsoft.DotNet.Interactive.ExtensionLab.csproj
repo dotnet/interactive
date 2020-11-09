@@ -10,7 +10,7 @@
     <OutputType>Library</OutputType>
     <PackageTags>dotnet-interactive</PackageTags>
     <IncludeBuildOutput>true</IncludeBuildOutput>
-    <NoWarn>$(NoWarn);NU5100</NoWarn><!-- dll outside of lib/ folder -->
+    <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn><!-- dll outside of lib/ folder -->
      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
@@ -42,6 +42,7 @@
  <ItemGroup>
    <PackageReference Include="Microsoft.Data.Analysis" Version="0.4.0" />
    <PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.0" />
+   <PackageReference Include="StreamJsonRpc" Version="2.6.121" />
    <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.8" />
  </ItemGroup>
 
