@@ -5,7 +5,7 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
     <IsPackable>true</IsPackable>
-    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);..\..\..\artifacts\packages\$(configuration)\Shipping</RestoreAdditionalProjectSources>
+    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);..\..\artifacts\packages\$(configuration)\Shipping</RestoreAdditionalProjectSources>
   </PropertyGroup>
 
   <PropertyGroup>
