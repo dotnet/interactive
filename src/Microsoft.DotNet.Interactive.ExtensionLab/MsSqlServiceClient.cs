@@ -15,11 +15,17 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
     public class MsSqlServiceClient : IDisposable
     {
-        public static readonly MsSqlServiceClient Instance = new MsSqlServiceClient();
-
         private Process _process;
         private JsonRpc _rpc;
         private bool _initialized = false;
+        private readonly string _serviceExePath;
+
+        public const string SqlToolsServiceEnvironmentVariableName = "DOTNET_SQLTOOLSSERVICE";
+
+        public MsSqlServiceClient(string serviceExePath = null)
+        {
+             _serviceExePath = serviceExePath ?? Environment.GetEnvironmentVariable(SqlToolsServiceEnvironmentVariableName);
+        }
 
         public void Initialize()
         {
@@ -32,13 +38,12 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private void StartProcessAndRedirectIO()
         {
-            var serviceExePath = Environment.GetEnvironmentVariable("DOTNET_SQLTOOLSSERVICE");
-            if (serviceExePath == null)
+            if (_serviceExePath == null)
             {
                 throw new InvalidOperationException("Path to SQL Tools Service executable was not provided.");
             }
 
-            var startInfo = new ProcessStartInfo(serviceExePath)
+            var startInfo = new ProcessStartInfo(_serviceExePath)
             {
                 UseShellExecute = false,
                 RedirectStandardInput = true,
