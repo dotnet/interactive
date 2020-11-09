@@ -20,8 +20,8 @@
 
   <ItemGroup>
     <Compile Include="Class1.cs" />
-    <None Include="..\..\..\artifacts\downloads\license.txt" Pack="true" PackagePath="license\"/>
-    <None Include="..\..\..\artifacts\downloads\sqlserver.png" Pack="true" PackagePath="images\"/>
+    <None Include="..\..\artifacts\downloads\license.txt" Pack="true" PackagePath="license\"/>
+    <None Include="..\..\artifacts\downloads\sqlserver.png" Pack="true" PackagePath="images\"/>
   </ItemGroup>
 
   <ItemGroup>
