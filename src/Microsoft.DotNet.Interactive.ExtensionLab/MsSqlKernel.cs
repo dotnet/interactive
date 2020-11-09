@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using System.Data;
 using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
@@ -23,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         private readonly string _connectionString;
         private readonly MsSqlServiceClient _serviceClient;
 
-        private TaskCompletionSource<ConnectionCompleteParams> _connectionCompleted = new TaskCompletionSource<ConnectionCompleteParams>();
+        private readonly TaskCompletionSource<ConnectionCompleteParams> _connectionCompleted = new TaskCompletionSource<ConnectionCompleteParams>();
 
         private Func<QueryCompleteParams, Task> _queryCompletionHandler = null;
 
@@ -33,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             _tempFileUri = new Uri(filePath);
             _connectionString = connectionString;
 
-            _serviceClient = MsSqlServiceClient.Instance;
+            _serviceClient = new MsSqlServiceClient();
             _serviceClient.Initialize();
 
             _serviceClient.OnConnectionComplete += HandleConnectionComplete;
@@ -75,9 +74,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private void HandleIntellisenseReady(object sender, IntelliSenseReadyParams readyParams)
         {
-            if (readyParams.OwnerUri.Equals(this._tempFileUri.ToString()))
+            if (readyParams.OwnerUri.Equals(_tempFileUri.ToString()))
             {
-                this._intellisenseReady = true;
+                _intellisenseReady = true;
             }
         }
 
