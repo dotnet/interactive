@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageDescription>Nuget packaging for The SqlTools ServiceLayer Components - runtime components</PackageDescription>
+    <PackageDescription>.NET client for SQL Tools Service</PackageDescription>
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageVersion Condition="'$(SqlToolsVersion)' != ''">$(SqlToolsVersion)</PackageVersion>
     <PackageVersion Condition="'$(PackageVersion)' == ''">3.0.0-release.52</PackageVersion>
@@ -26,11 +26,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="runtime.osx-x64.runtime.native.Microsoft.SqlTools.ServiceLayer" Version="$(PackageVersion)" />
-    <PackageReference Include="runtime.rhel-x64.runtime.native.Microsoft.SqlTools.ServiceLayer" Version="$(PackageVersion)" />
-    <PackageReference Include="runtime.win10-arm.runtime.native.Microsoft.SqlTools.ServiceLayer" Version="$(PackageVersion)" />
-    <PackageReference Include="runtime.win10-arm64.runtime.native.Microsoft.SqlTools.ServiceLayer" Version="$(PackageVersion)" />
-    <PackageReference Include="runtime.win-x86.runtime.native.Microsoft.SqlTools.ServiceLayer" Version="$(PackageVersion)" />
-    <PackageReference Include="runtime.win-x64.runtime.native.Microsoft.SqlTools.ServiceLayer" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.osx-x64.runtime.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.rhel-x64.runtime.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.win10-arm.runtime.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.win10-arm64.runtime.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.win-x86.runtime.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.win-x64.runtime.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
   </ItemGroup>
 </Project>
