@@ -55,8 +55,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             context.Display($"Scaffolding a `DbContext` and initializing an instance of it called `{options.KernelName}` in the C# kernel.", "text/markdown");
 
             var submission1 = @$"
-#r ""nuget:Microsoft.EntityFrameworkCore.Design""
-#r ""nuget:Microsoft.EntityFrameworkCore.SqlServer""
+#r ""nuget:Microsoft.EntityFrameworkCore.Design,3.1.10""
+#r ""nuget:Microsoft.EntityFrameworkCore.SqlServer,3.1.10""
 
 using System;
 using System.Reflection;

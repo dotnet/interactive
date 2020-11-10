@@ -43,10 +43,7 @@
    <PackageReference Include="Microsoft.Data.Analysis" Version="0.4.0" />
    <PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.0" />
    <PackageReference Include="StreamJsonRpc" Version="2.6.121" />
-   <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.8" />
- </ItemGroup>
-
- <ItemGroup>
+   <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.10" />
    <PackageReference Include="Iced" Version="1.8.0" />
    <PackageReference Include="ICSharpCode.Decompiler" Version="6.1.0.5902" />
    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="$(MicrosoftCodeAnalysisCommonVersion)" />

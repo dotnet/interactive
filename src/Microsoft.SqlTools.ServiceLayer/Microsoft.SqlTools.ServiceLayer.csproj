@@ -5,7 +5,7 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
     <IsPackable>true</IsPackable>
-    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);..\..\artifacts\packages\$(configuration)\Shipping</RestoreAdditionalProjectSources>
+    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);..\..\artifacts\packages\Release\Shipping</RestoreAdditionalProjectSources>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -20,8 +20,8 @@
 
   <ItemGroup>
     <Compile Include="Class1.cs" />
-    <None Include="..\..\..\artifacts\downloads\license.txt" Pack="true" PackagePath="license\"/>
-    <None Include="..\..\..\artifacts\downloads\sqlserver.png" Pack="true" PackagePath="images\"/>
+    <None Include="..\..\artifacts\downloads\license.txt" Pack="true" PackagePath="license\"/>
+    <None Include="..\..\artifacts\downloads\sqlserver.png" Pack="true" PackagePath="images\"/>
   </ItemGroup>
 
   <ItemGroup>
