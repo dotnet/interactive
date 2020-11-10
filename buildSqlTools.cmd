@@ -1,7 +1,7 @@
 @echo off
 
 set version=3.0.0-release.52
-rem powershell -noprofile -executionPolicy RemoteSigned -file "%~dp0eng\DownLoadSqlToolsServiceLayerPackage.ps1" -out %~dp0artifacts\downloads -version v%version% %* 
+powershell -noprofile -executionPolicy RemoteSigned -file "%~dp0eng\DownLoadSqlToolsServiceLayerPackage.ps1" -out %~dp0artifacts\downloads -version v%version% %* 
 
 set ProjRoot="%~dp0src\Microsoft.SqlTools.ServiceLayer"
 

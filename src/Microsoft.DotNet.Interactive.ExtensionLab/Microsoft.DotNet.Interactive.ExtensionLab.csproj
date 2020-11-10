@@ -12,6 +12,7 @@
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn><!-- dll outside of lib/ folder -->
      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+     <RestoreAdditionalProjectSources Condition="Exists('$(MSBuildThisFileDirectory)..\..\..\artifacts\packages\Release\Shipping')">$(RestoreAdditionalProjectSources);$(MSBuildThisFileDirectory)..\..\..\artifacts\packages\Release\Shipping</RestoreAdditionalProjectSources>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -50,6 +51,7 @@
    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
    <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="1.1.132302" />
    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+   <PackageReference Include="Microsoft.SqlTools.ServiceLayer" Version="3.0.0-release.52" />
  </ItemGroup>
 
   <ItemGroup>
