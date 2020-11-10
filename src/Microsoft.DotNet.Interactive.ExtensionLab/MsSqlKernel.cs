@@ -26,13 +26,13 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private Func<QueryCompleteParams, Task> _queryCompletionHandler = null;
 
-        public MsSqlKernel(string name, string connectionString) : base(name)
+        public MsSqlKernel(string pathToService, string name, string connectionString) : base(name)
         {
-            var filePath = Path.GetTempFileName();
+             var filePath = Path.GetTempFileName();
             _tempFileUri = new Uri(filePath);
             _connectionString = connectionString;
 
-            _serviceClient = new MsSqlServiceClient();
+            _serviceClient = new MsSqlServiceClient(pathToService);
             _serviceClient.Initialize();
 
             _serviceClient.OnConnectionComplete += HandleConnectionComplete;

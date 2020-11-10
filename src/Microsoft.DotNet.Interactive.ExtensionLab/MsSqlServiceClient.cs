@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public MsSqlServiceClient(string serviceExePath = null)
         {
-             _serviceExePath = serviceExePath ?? Environment.GetEnvironmentVariable(SqlToolsServiceEnvironmentVariableName);
+            _serviceExePath = serviceExePath;
         }
 
         public void Initialize()

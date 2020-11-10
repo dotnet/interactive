@@ -5,13 +5,14 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
     <IsPackable>true</IsPackable>
-    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);..\..\artifacts\packages\$(configuration)\Shipping</RestoreAdditionalProjectSources>
+    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);..\..\artifacts\packages\Release\Shipping</RestoreAdditionalProjectSources>
   </PropertyGroup>
 
   <PropertyGroup>
     <PackageDescription>Nuget packaging for The SqlTools ServiceLayer Components - runtime components</PackageDescription>
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageVersion Condition="'$(SqlToolsVersion)' != ''">$(SqlToolsVersion)</PackageVersion>
+    <PackageVersion Condition="'$(PackageVersion)' == ''">3.0.0-release.52</PackageVersion>
     <PackageLicenseExpression></PackageLicenseExpression>
     <PackageLicenseFile>license\license.txt</PackageLicenseFile>
     <PackageIcon>images\sqlserver.png</PackageIcon>
