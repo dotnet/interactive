@@ -47,6 +47,7 @@ import {
 } from './contracts';
 import { CellOutput, CellErrorOutput, CellOutputKind, CellDisplayOutput } from './interfaces/vscode';
 import { Eol } from './interfaces';
+import { debounce } from './utilities';
 
 export class InteractiveClient {
     private nextToken: number = 1;
@@ -87,7 +88,8 @@ export class InteractiveClient {
         return serializedNotebook.rawData;
     }
 
-    async execute(source: string, language: string, outputObserver: { (outputs: Array<CellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, token?: string | undefined): Promise<void> {
+    async execute(id: string, source: string, language: string, outputObserver: { (outputs: Array<CellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, token?: string | undefined): Promise<void> {
+        debounce(id, 0, () => { });
         return new Promise(async (resolve, reject) => {
             let diagnostics: Array<Diagnostic> = [];
             let outputs: Array<CellOutput> = [];

@@ -9,6 +9,7 @@ import { CellOutput } from '../interfaces/vscode';
 import { getDiagnosticCollection } from './diagnostics';
 import { getSimpleLanguage } from "../interactiveNotebook";
 import { Diagnostic, DiagnosticSeverity } from "../contracts";
+import { debounce } from '../utilities';
 
 export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
     id?: string | undefined;
@@ -43,10 +44,12 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
         }
 
         let diagnosticCollection = getDiagnosticCollection(cell.uri);
+
         function diagnosticObserver(diags: Array<Diagnostic>) {
             diagnosticCollection.set(cell.uri, diags.filter(d => d.severity !== DiagnosticSeverity.Hidden).map(toVsCodeDiagnostic));
         }
-        return client.execute(source, getSimpleLanguage(cell.language), outputObserver, diagnosticObserver).then(async () => {
+
+        return client.execute(document.uri.toString(), source, getSimpleLanguage(cell.language), outputObserver, diagnosticObserver).then(async () => {
             await updateCellMetadata(document, cell, {
                 runState: vscode.NotebookCellRunState.Success,
                 lastRunDuration: Date.now() - startTime,
