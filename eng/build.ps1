@@ -29,12 +29,12 @@ function buildConfiguration {
 $buildConfiguration = buildConfiguration
 
 try {
-    # if (isCi -eq $true) {
-    #     . (Join-Path $PSScriptRoot "..\buildSqlTools.cmd") $buildConfiguration
-    #     if ($LASTEXITCODE -ne 0) {
-    #         exit $LASTEXITCODE
-    #     }
-    # }
+    if (isCi -eq $true) {
+        . (Join-Path $PSScriptRoot "..\buildSqlTools.cmd") $buildConfiguration
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
+    }
 
     # invoke regular build/test script
     . (Join-Path $PSScriptRoot "common\build.ps1") -projects "$PSScriptRoot\..\dotnet-interactive.sln" @args
