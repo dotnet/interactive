@@ -26,7 +26,7 @@ type KernelTests() =
         action k getEvents
 
     let getHoverTexts (line : int) (column : int) (code : #seq<string>)  =
-        let code = String.concat "\r\n" code
+        let code = String.concat "\n" code
         withKernel <| fun kernel events ->
             let cmd =
                 RequestHoverText(
@@ -45,7 +45,7 @@ type KernelTests() =
             texts
 
     let getCompletions (line : int) (column : int) (code : #seq<string>)  =
-        let code = String.concat "\r\n" code
+        let code = String.concat "\n" code
         withKernel <| fun kernel events ->
             let cmd =
                 RequestCompletions(
