@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         public MsSqlConnectionTests(ITestOutputHelper output)
         {
             _output = output;
-
+            // FIX: (MsSqlConnectionTests) 
             Environment.SetEnvironmentVariable(
                 MsSqlServiceClient.SqlToolsServiceEnvironmentVariableName,
                 @"C:\temp\Microsoft.SqlTools.ServiceLayer-win-x64-netcoreapp3.1\MicrosoftSqlToolsServiceLayer.exe");
