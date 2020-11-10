@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             var submission1 = @$"
 #r ""nuget:Microsoft.EntityFrameworkCore.Design,3.1.8""
-#r ""nuget:Microsoft.EntityFrameworkCore.SqlServer,3.1.8"
+#r ""nuget:Microsoft.EntityFrameworkCore.SqlServer,3.1.8""
 
 using System;
 using System.Reflection;
