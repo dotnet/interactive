@@ -9,7 +9,6 @@ import { CellOutput } from '../interfaces/vscode';
 import { getDiagnosticCollection } from './diagnostics';
 import { getSimpleLanguage } from "../interactiveNotebook";
 import { Diagnostic, DiagnosticSeverity } from "../contracts";
-import { debounce } from '../utilities';
 
 export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
     id?: string | undefined;
