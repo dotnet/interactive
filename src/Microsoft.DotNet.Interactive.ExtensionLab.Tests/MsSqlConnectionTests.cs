@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             // FIX: (MsSqlConnectionTests) 
             Environment.SetEnvironmentVariable(
                 MsSqlServiceClient.SqlToolsServiceEnvironmentVariableName,
-                @"C:\temp\Microsoft.SqlTools.ServiceLayer-win-x64-netcoreapp3.1\MicrosoftSqlToolsServiceLayer.exe");
+                @"C:\temp\Microsoft.SqlToolsService-win-x64-netcoreapp3.1\MicrosoftSqlToolsServiceLayer.exe");
         }
 
         [MsSqlFact("Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost")]

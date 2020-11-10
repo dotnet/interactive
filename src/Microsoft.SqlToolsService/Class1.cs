@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Microsoft.SqlTools.ServiceLayer
+namespace Microsoft.SqlToolsService
 {
     public class Class1
     {
