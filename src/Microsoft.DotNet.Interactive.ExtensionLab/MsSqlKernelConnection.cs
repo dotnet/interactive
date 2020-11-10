@@ -25,7 +25,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             MsSqlConnectionOptions options,
             KernelInvocationContext context)
         {
-            System.Diagnostics.Debugger.Break();
             var resolvedPackageReferences = ((ISupportNuget)context.HandlingKernel).ResolvedPackageReferences;
             // Walk through the packages looking for the package that endswith the name "runtime.native.microsoft.sqltools.servicelayer"
             // and grab the packageroot
