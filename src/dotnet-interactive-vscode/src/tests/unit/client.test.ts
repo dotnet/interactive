@@ -67,7 +67,7 @@ describe('InteractiveClient tests', () => {
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute("id0", code, 'csharp', outputs => result = outputs, _ => { }, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -141,7 +141,7 @@ describe('InteractiveClient tests', () => {
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute("id0", code, 'csharp', outputs => result = outputs, _ => { }, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -230,7 +230,7 @@ describe('InteractiveClient tests', () => {
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
         let result: Array<CellOutput> = [];
-        await client.execute("id0", code, 'csharp', outputs => result = outputs, _ => { }, token);
+        await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -303,7 +303,7 @@ describe('InteractiveClient tests', () => {
 
         // execute first command
         let result1: Array<CellOutput> = [];
-        await client.execute("id0", code, 'csharp', outputs => result1 = outputs, _ => { }, 'token 1');
+        await client.execute(code, 'csharp', outputs => result1 = outputs, _ => { }, { token: 'token 1' });
         expect(result1).to.deep.equal([
             {
                 outputKind: CellOutputKind.Rich,
@@ -315,7 +315,7 @@ describe('InteractiveClient tests', () => {
 
         // execute second command
         let result2: Array<CellOutput> = [];
-        await client.execute("id0", code, 'csharp', outputs => result2 = outputs, _ => { }, 'token 2');
+        await client.execute(code, 'csharp', outputs => result2 = outputs, _ => { }, { token: 'token 2' });
         expect(result2).to.deep.equal([]);
 
         // ensure first result array was updated
@@ -341,7 +341,7 @@ describe('InteractiveClient tests', () => {
             ]
         }));
         clientMapper.getOrAddClient({ fsPath: 'test/path' }).then(client => {
-            client.execute("id0", 'bad-code-that-will-fail', 'csharp', _ => { }, _ => { }, token).then(result => {
+            client.execute('bad-code-that-will-fail', 'csharp', _ => { }, _ => { }, { token }).then(result => {
                 done(`expected execution to fail promise, but passed with: ${result}`);
             }).catch(_err => {
                 done();
@@ -387,7 +387,7 @@ describe('InteractiveClient tests', () => {
         });
 
         const client = await clientMapper.getOrAddClient({ fsPath: 'test-path.dib' });
-        await client.execute("id0", "1+1", "csharp", (_outputs) => { }, (_diagnostics) => { }, token);
+        await client.execute("1+1", "csharp", (_outputs) => { }, (_diagnostics) => { }, { token: token, id: "id0" });
         await wait(1000);
         expect(diagnosticsCallbackFired).to.be.false;
     });

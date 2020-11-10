@@ -88,8 +88,10 @@ export class InteractiveClient {
         return serializedNotebook.rawData;
     }
 
-    async execute(id: string, source: string, language: string, outputObserver: { (outputs: Array<CellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, token?: string | undefined): Promise<void> {
-        debounce(id, 0, () => { });
+    async execute(source: string, language: string, outputObserver: { (outputs: Array<CellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, configuration: { token?: string | undefined, id?: string | undefined } | undefined): Promise<void> {
+        if (configuration !== undefined && configuration.id !== undefined) {
+            debounce(configuration.id, 0, () => { });
+        }
         return new Promise(async (resolve, reject) => {
             let diagnostics: Array<Diagnostic> = [];
             let outputs: Array<CellOutput> = [];
@@ -175,7 +177,7 @@ export class InteractiveClient {
                         }
                         break;
                 }
-            }, token);
+            }, configuration?.token);
         });
     }
 
