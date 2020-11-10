@@ -44,6 +44,24 @@ type KernelTests() =
             
             texts
 
+    let getCompletions (line : int) (column : int) (code : #seq<string>)  =
+        let code = String.concat "\r\n" code
+        withKernel <| fun kernel events ->
+            let cmd =
+                RequestCompletions(
+                    code,
+                    LinePosition(line, column),
+                    kernel.Name
+                )
+            kernel.SendAsync(cmd).Wait()
+
+            let completions = 
+                events() 
+                |> Seq.collect (function :? CompletionsProduced as e -> e.Completions |> Seq.map (fun v -> v) | _ -> Seq.empty)
+                |> Seq.toArray
+            
+            completions
+
     [<Fact>]
     member __.``HoverText for Values``() =
         let texts =
@@ -111,6 +129,16 @@ type KernelTests() =
 
         // val int : value:'T -> int (requires member op_Explicit)
         texts.Should().ContainAll("val int:", "^T (requires static member op_Explicit )", "-> int")
+
+    [<Fact>]
+    member __.``Get completion list for List module then get the 'average' function and verify it has documentation``() =
+        let completionItem =
+            getCompletions 0 5 [ 
+                "List."
+            ]
+            |> Array.find (fun x -> x.DisplayText = "average")
+
+        completionItem.Documentation.Should().Equals("Returns the average of the elements in the list.")
         
 
 
