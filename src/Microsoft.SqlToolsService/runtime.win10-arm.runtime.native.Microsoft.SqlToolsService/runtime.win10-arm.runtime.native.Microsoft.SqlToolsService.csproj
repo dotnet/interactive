@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageDescription>Nuget packaging for The SqlTools ServiceLayer Components - runtime components for win10-arm</PackageDescription>
+    <PackageDescription>SQL Tools Service runtime components for win10-arm</PackageDescription>
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageVersion Condition="'$(SqlToolsVersion)' != ''">$(SqlToolsVersion)</PackageVersion>
     <PackageLicenseExpression></PackageLicenseExpression>

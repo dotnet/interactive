@@ -26,10 +26,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             KernelInvocationContext context)
         {
             var resolvedPackageReferences = ((ISupportNuget)context.HandlingKernel).ResolvedPackageReferences;
-            // Walk through the packages looking for the package that endswith the name "runtime.native.microsoft.sqltools.servicelayer"
+            // Walk through the packages looking for the package that endswith the name "runtime.native.Microsoft.SqlToolsService"
             // and grab the packageroot
-            var runtimePackageId = "runtime.native.microsoft.sqltools.servicelayer";
-            var runtimePackageIdSuffix = "microsoft.sqltools.servicelayer";
+            var runtimePackageId = "runtime.native.Microsoft.SqlToolsService";
+            var runtimePackageIdSuffix = "Microsoft.SqlToolsService";
             var root = resolvedPackageReferences.FirstOrDefault(p => p.PackageName.EndsWith(runtimePackageId, StringComparison.OrdinalIgnoreCase));
             string pathToService = "";
             if (root != null)
