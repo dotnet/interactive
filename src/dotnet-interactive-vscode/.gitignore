@@ -1,3 +1,6 @@
 out/
 dotnet-interactive-vscode-*.vsix
 .vscode-test/
+
+.fake
+.ionide
