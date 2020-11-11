@@ -61,6 +61,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             AddLocalRpcMethod(nameof(HandleConnectionCompletion), "connection/complete");
             AddLocalRpcMethod(nameof(HandleQueryCompletion), "query/complete");
+            AddLocalRpcMethod(nameof(HandleQueryMessage), "query/message");
             AddLocalRpcMethod(nameof(HandleIntellisenseReady), "textDocument/intelliSenseReady");
 
             _rpc.StartListening();
@@ -80,6 +81,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public event EventHandler<ConnectionCompleteParams> OnConnectionComplete;
         public event EventHandler<QueryCompleteParams> OnQueryComplete;
         public event EventHandler<IntelliSenseReadyParams> OnIntellisenseReady;
+        public event EventHandler<MessageParams> OnQueryMessage;
 
         public async Task<bool> ConnectAsync(Uri ownerUri, string connectionStr)
         {
@@ -176,6 +178,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public void HandleQueryCompletion(QueryCompleteParams queryParams)
         {
             OnQueryComplete(this, queryParams);
+        }
+
+        public void HandleQueryMessage(MessageParams messageParams)
+        {
+            OnQueryMessage(this, messageParams);
         }
 
         public void HandleIntellisenseReady(IntelliSenseReadyParams readyParams)
