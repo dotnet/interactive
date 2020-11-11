@@ -9,12 +9,12 @@ set outputPath=%~dp0artifacts\packages\Release\Shipping
 md "%outputPath%"
 echo %outputPath%
 
-dotnet pack "%ProjRoot%\runtime.osx-x64.runtime.native.Microsoft.SqlToolsService\runtime.osx-x64.runtime.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=%version% --configuration Release -o %outputPath%
-dotnet pack "%ProjRoot%\runtime.rhel-x64.runtime.native.Microsoft.SqlToolsService\runtime.rhel-x64.runtime.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=%version% --configuration Release -o %outputPath%
-dotnet pack "%ProjRoot%\runtime.win-x64.runtime.native.Microsoft.SqlToolsService\runtime.win-x64.runtime.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=%version% --configuration Release -o %outputPath%
-dotnet pack "%ProjRoot%\runtime.win-x86.runtime.native.Microsoft.SqlToolsService\runtime.win-x86.runtime.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=%version% --configuration Release -o %outputPath%
-dotnet pack "%ProjRoot%\runtime.win10-arm.runtime.native.Microsoft.SqlToolsService\runtime.win10-arm.runtime.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=%version% --configuration Release -o %outputPath%
-dotnet pack "%ProjRoot%\runtime.win10-arm64.runtime.native.Microsoft.SqlToolsService\runtime.win10-arm64.runtime.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=%version% --configuration Release -o %outputPath%
+dotnet pack "%ProjRoot%\runtime.osx-x64.native.Microsoft.SqlToolsService\runtime.osx-x64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=%version% --configuration Release -o %outputPath%
+dotnet pack "%ProjRoot%\runtime.rhel-x64.native.Microsoft.SqlToolsService\runtime.rhel-x64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=%version% --configuration Release -o %outputPath%
+dotnet pack "%ProjRoot%\runtime.win-x64.native.Microsoft.SqlToolsService\runtime.win-x64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=%version% --configuration Release -o %outputPath%
+dotnet pack "%ProjRoot%\runtime.win-x86.native.Microsoft.SqlToolsService\runtime.win-x86.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=%version% --configuration Release -o %outputPath%
+dotnet pack "%ProjRoot%\runtime.win10-arm.native.Microsoft.SqlToolsService\runtime.win10-arm.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=%version% --configuration Release -o %outputPath%
+dotnet pack "%ProjRoot%\runtime.win10-arm64.native.Microsoft.SqlToolsService\runtime.win10-arm64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=%version% --configuration Release -o %outputPath%
 dotnet pack "%ProjRoot%\Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=%version% --configuration Release -o %outputPath%
 
 echo done

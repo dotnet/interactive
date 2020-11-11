@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             var resolvedPackageReferences = ((ISupportNuget)context.HandlingKernel).ResolvedPackageReferences;
             // Walk through the packages looking for the package that endswith the name "runtime.native.Microsoft.SqlToolsService"
             // and grab the packageroot
-            var runtimePackageId = "runtime.native.Microsoft.SqlToolsService";
+            var runtimePackageId = "native.Microsoft.SqlToolsService";
             var runtimePackageIdSuffix = "Microsoft.SqlToolsService";
             var root = resolvedPackageReferences.FirstOrDefault(p => p.PackageName.EndsWith(runtimePackageId, StringComparison.OrdinalIgnoreCase));
             string pathToService = "";
@@ -37,7 +37,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 // Packagename is rubbish, but can be reformatted to compute the path to the binaries
                 var runtimePackageIdPath = root.PackageName.Replace(runtimePackageIdSuffix, "", StringComparison.OrdinalIgnoreCase)
                                                            .Replace(".", "\\", StringComparison.OrdinalIgnoreCase)
-                                                           .Replace(@"\runtime\", "\\", StringComparison.OrdinalIgnoreCase)
                                                            .Replace(@"runtime\", @"runtimes\", StringComparison.OrdinalIgnoreCase);
                 pathToService = Path.Combine(root.PackageRoot, runtimePackageIdPath, "MicrosoftSqlToolsServiceLayer.exe");
             }

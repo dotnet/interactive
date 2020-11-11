@@ -5,7 +5,7 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
     <IsPackable>true</IsPackable>
-    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);..\..\artifacts\packages\Release\Shipping</RestoreAdditionalProjectSources>
+    <RestoreAdditionalProjectSources Condition="Exists('$(MSBuildThisFileDirectory)../../artifacts/packages/Release/Shipping')">$(RestoreAdditionalProjectSources);../../artifacts/packages/Release/Shipping</RestoreAdditionalProjectSources>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -26,11 +26,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="runtime.osx-x64.runtime.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
-    <PackageReference Include="runtime.rhel-x64.runtime.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
-    <PackageReference Include="runtime.win10-arm.runtime.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
-    <PackageReference Include="runtime.win10-arm64.runtime.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
-    <PackageReference Include="runtime.win-x86.runtime.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
-    <PackageReference Include="runtime.win-x64.runtime.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.osx-x64.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.rhel-x64.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.win10-arm.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.win10-arm64.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.win-x86.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
+    <PackageReference Include="runtime.win-x64.native.Microsoft.SqlToolsService" Version="$(PackageVersion)" />
   </ItemGroup>
 </Project>

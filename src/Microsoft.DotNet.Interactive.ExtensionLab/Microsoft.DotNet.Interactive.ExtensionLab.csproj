@@ -11,8 +11,8 @@
     <PackageTags>dotnet-interactive</PackageTags>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn><!-- dll outside of lib/ folder -->
-     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-     <RestoreAdditionalProjectSources Condition="Exists('$(MSBuildThisFileDirectory)..\..\artifacts\packages\Release\Shipping')">$(RestoreAdditionalProjectSources);$(MSBuildThisFileDirectory)..\..\artifacts\packages\Release\Shipping</RestoreAdditionalProjectSources>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RestoreAdditionalProjectSources Condition="Exists('$(MSBuildThisFileDirectory)../../artifacts/packages/Release/Shipping')">$(RestoreAdditionalProjectSources);$(MSBuildThisFileDirectory)../../artifacts/packages/Release/Shipping</RestoreAdditionalProjectSources>
   </PropertyGroup>
 
   <PropertyGroup>
