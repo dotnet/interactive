@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             });
 
             KernelInvocationContext.Current?.Display(
-                $@"Added the `#!linqify` magic command.",
+                $@"* Adds the `#!linqify` magic command. It transforms a an ordinary `DataFrame` into one with strongly-typed columns that can be queried using LINQ.",
                 "text/markdown");
 
             return Task.CompletedTask;
