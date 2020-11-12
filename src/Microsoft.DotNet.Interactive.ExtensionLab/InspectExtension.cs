@@ -40,6 +40,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             kernel.AddDirective(inspect);
 
+            KernelInvocationContext.Current?.Display(
+            $@"* Adds the `#!{INSPECT_COMMAND}` magic command. You can use this to decompile code.",
+            "text/markdown");
 
             return Task.CompletedTask;
         }

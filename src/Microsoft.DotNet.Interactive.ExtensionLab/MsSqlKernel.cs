@@ -25,6 +25,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         private readonly TaskCompletionSource<ConnectionCompleteParams> _connectionCompleted = new TaskCompletionSource<ConnectionCompleteParams>();
 
         private Func<QueryCompleteParams, Task> _queryCompletionHandler = null;
+        private Func<MessageParams, Task> _queryMessageHandler = null;
 
         public MsSqlKernel(string pathToService, string name, string connectionString) : base(name)
         {
@@ -38,6 +39,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             _serviceClient.OnConnectionComplete += HandleConnectionComplete;
             _serviceClient.OnQueryComplete += HandleQueryComplete;
             _serviceClient.OnIntellisenseReady += HandleIntellisenseReady;
+            _serviceClient.OnQueryMessage += HandleQueryMessage;
 
             RegisterForDisposal(() =>
             {
@@ -69,6 +71,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             if (_queryCompletionHandler != null)
             {
                 Task.Run(() => _queryCompletionHandler(queryParams)).Wait();
+            }
+        }
+
+        private void HandleQueryMessage(object sender, MessageParams messageParams)
+        {
+            if (_queryMessageHandler != null)
+            {
+                Task.Run(() => _queryMessageHandler(messageParams)).Wait();
             }
         }
 
@@ -104,6 +114,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             }
 
             var completion = new TaskCompletionSource<bool>();
+
             _queryCompletionHandler = async queryParams =>
             {
                 try
@@ -112,6 +123,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     {
                         foreach (var resultSummary in batchSummary.ResultSetSummaries)
                         {
+                            if (completion.Task.IsCompleted)
+                            {
+                                return;
+                            }
+
                             var subsetParams = new QueryExecuteSubsetParams()
                             {
                                 OwnerUri = _tempFileUri.ToString(),
@@ -124,7 +140,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
                             if (subsetResult.Message != null)
                             {
-                                context.Display(subsetResult.Message);
+                                context.Fail(message: subsetResult.Message);
                             }
                             else
                             {
@@ -141,6 +157,22 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 }
             };
 
+            _queryMessageHandler = async messageParams =>
+            {
+                try
+                {
+                    if (messageParams.Message.IsError)
+                    {
+                        context.Fail(message: messageParams.Message.Message);
+                        completion.SetResult(true);
+                    }
+                }
+                catch (Exception e)
+                {
+                    completion.SetException(e);
+                }
+            };
+
             try
             {
                 var queryResult = await _serviceClient.ExecuteQueryStringAsync(_tempFileUri, command.Code);
@@ -149,6 +181,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             finally
             {
                 _queryCompletionHandler = null;
+                _queryMessageHandler = null;
             }
         }
 

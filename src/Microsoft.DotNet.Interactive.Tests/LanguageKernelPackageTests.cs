@@ -910,11 +910,11 @@ tInput.Length"
             var source = language switch
             {
                 Language.FSharp => @"
-#r ""nuget:System.Device.Gpio""
+#r ""nuget:System.Device.Gpio,1.0.0""
 typeof<System.Device.Gpio.GpioController>.Assembly.Location
 ",
                 Language.CSharp => @"
-#r ""nuget:System.Device.Gpio""
+#r ""nuget:System.Device.Gpio,1.0.0""
 typeof(System.Device.Gpio.GpioController).Assembly.Location
 "
             };
