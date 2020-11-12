@@ -3,13 +3,15 @@ param (
     [string][Alias('out')]$packageOutputDirectory
 )
 
+Write-Host "DownloadPackagesFromGithub: ($sqlToolsVersion, $packageOutputDirectory)"
+
 $githubReleasePackageName = "Microsoft.SqlTools.ServiceLayer"
 $githubReleasePackageUri = "https://github.com/microsoft/sqltoolsservice/releases/download/"
 $githubLicenseText = "https://raw.githubusercontent.com/microsoft/sqltoolsservice/main/license.txt"
 $githubSqlToolsSdkIcon = "https://microsoft.github.io/sqltoolssdk/images/sqlserver.png"
 
-$sqlVersion="v$version"
-$downloads=$out
+$sqlVersion="v$sqlToolsVersion"
+$downloads=$packageOutputDirectory
 
 function Create-Directory ([string[]] $path) {
     New-Item -Path $path -Force -ItemType 'Directory' | Out-Null
@@ -76,6 +78,7 @@ function DownloadPackageFromGithub {
 function DownloadPackagesFromGithub {
     Param ($basename, $version, $uribase, $rootdir)
     Write-Host "DownloadPackagesFromGithub: ($basename, $version, $uribase, $rootdir)"
+<#
     try { [System.IO.Directory]::Delete($rootdir, $true) } catch {}
     try { Create-Directory $rootdir } catch {}
 
@@ -87,22 +90,24 @@ function DownloadPackagesFromGithub {
     $tarext = ".tar.gz"
     $zipext = ".zip"
     $netcoreapp31tfm = "netcoreapp3.1"
-
+#>
     <# Download .tar.gz files #>
-    "osx-x64", "rhel-x64" | ForEach-Object {
+<#    "osx-x64", "rhel-x64" | ForEach-Object {
         $packagename = $basename + "-" + $_ + "-" + $netcoreapp31tfm + $tarext
         DownloadPackageFromGithub $rootdir $packagename ($uribase + $version + "/" + $packagename)
     }
-
+#>
     <# Download .zip files #>
-    "win-x86", "win-x64", "win10-arm", "win10-arm64" | ForEach-Object {
+<#    "win-x86", "win-x64", "win10-arm", "win10-arm64" | ForEach-Object {
         $packagename = $basename + "-" + $_ + "-" + $netcoreapp31tfm + $zipext
         DownloadPackageFromGithub $rootdir $packagename ($uribase + $version + "/" + $packagename)
     }
+#>
 }
 
 DownloadPackagesFromGithub $githubReleasePackageName $sqlToolsVersion $githubReleasePackageUri $packageOutputDirectory
 
+<#
 $outputPath=(Join-Path $PSScriptRoot "..\artifacts\packages\Release\Shipping")
 New-Item -Path $outputPath -ItemType Directory -Force
 
@@ -128,5 +133,4 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 dotnet pack "$projRoot\Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-
+#>
