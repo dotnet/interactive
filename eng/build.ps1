@@ -22,33 +22,8 @@ try {
 
         $sqlVersion="3.0.0-release.52"
         $downloads=(Join-Path $PSScriptRoot "..\artifacts\downloads")
-        . (Join-Path $PSScriptRoot "DownLoadSqlToolsService.ps1") Release -out $downloads -version "v$sqlVersion"
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-        $outputPath=(Join-Path $PSScriptRoot "..\artifacts\packages\Release\Shipping")
-        md $outputPath
-
-        $projRoot=(Join-Path $PSScriptRoot "..\src\Microsoft.SqlToolsService")
-
-        dotnet pack "$projRoot\runtime.osx-x64.native.Microsoft.SqlToolsService\runtime.osx-x64.native.Microsoft.SqlToolsService.csproj"         /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-        dotnet pack "$projRoot\runtime.rhel-x64.native.Microsoft.SqlToolsService\runtime.rhel-x64.native.Microsoft.SqlToolsService.csproj"       /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-        dotnet pack "$projRoot\runtime.win-x64.native.Microsoft.SqlToolsService\runtime.win-x64.native.Microsoft.SqlToolsService.csproj"         /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-        dotnet pack "$projRoot\runtime.win-x86.native.Microsoft.SqlToolsService\runtime.win-x86.native.Microsoft.SqlToolsService.csproj"         /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-        dotnet pack "$projRoot\runtime.win10-arm.native.Microsoft.SqlToolsService\runtime.win10-arm.native.Microsoft.SqlToolsService.csproj"     /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-        dotnet pack "$projRoot\runtime.win10-arm64.native.Microsoft.SqlToolsService\runtime.win10-arm64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-        dotnet pack "$projRoot\Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
+        . (Join-Path $PSScriptRoot "DownLoadSqlToolsService.ps1") Release -out $downloads -version "$sqlVersion"
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
 

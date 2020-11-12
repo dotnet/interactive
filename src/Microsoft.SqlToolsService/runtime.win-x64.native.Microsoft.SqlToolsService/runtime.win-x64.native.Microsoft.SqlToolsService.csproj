@@ -13,16 +13,16 @@
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageVersion Condition="'$(SqlToolsVersion)' != ''">$(SqlToolsVersion)</PackageVersion>
     <PackageLicenseExpression></PackageLicenseExpression>
-    <PackageLicenseFile>license\license.txt</PackageLicenseFile>
-    <PackageIcon>images\sqlserver.png</PackageIcon>
+    <PackageLicenseFile>license/license.txt</PackageLicenseFile>
+    <PackageIcon>images/sqlserver.png</PackageIcon>
     <PackageIconFullPath></PackageIconFullPath>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="Class1.cs" />
-    <None Include="..\..\..\artifacts\downloads\license.txt" Pack="true" PackagePath="license\" />
-    <None Include="..\..\..\artifacts\downloads\sqlserver.png" Pack="true" PackagePath="images\" />
-    <None Include="..\..\..\artifacts\downloads\Microsoft.SqlTools.ServiceLayer-win-x64-netcoreapp3.1\**" Pack="true" PackagePath="runtimes\win-x64\native" />
-    <None Include="..\lib\netcoreapp3.1\_._" Pack="true" PackagePath="lib\netcoreapp3.1\" />
+    <None Include="../../../artifacts/downloads/license.txt" Pack="true" PackagePath="license/" />
+    <None Include="../../../artifacts/downloads/sqlserver.png" Pack="true" PackagePath="images/" />
+    <None Include="../../../artifacts/downloads/Microsoft.SqlTools.ServiceLayer-win-x64-netcoreapp3.1/**" Pack="true" PackagePath="runtimes/win-x64/native" />
+    <None Include="../lib/netcoreapp3.1/_._" Pack="true" PackagePath="lib/netcoreapp3.1/" />
   </ItemGroup>
 </Project>
