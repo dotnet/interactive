@@ -42,7 +42,6 @@ Function DeGZip-File{
 function DownloadPackageFromGithub {
     Param ($rootdir, $filename, $uri)
 
-    Write-Host "DownloadPackageFromGithub:   ($rootdir, $filename, $uri)"
     $isTarGz = $filename.EndsWith(".tar.gz")
     Create-Directory $rootdir
 
@@ -78,7 +77,7 @@ function DownloadPackageFromGithub {
 function DownloadPackagesFromGithub {
     Param ($basename, $version, $uribase, $rootdir)
     Write-Host "DownloadPackagesFromGithub: ($basename, $version, $uribase, $rootdir)"
-<#
+
     try { [System.IO.Directory]::Delete($rootdir, $true) } catch {}
     try { Create-Directory $rootdir } catch {}
 
@@ -90,47 +89,43 @@ function DownloadPackagesFromGithub {
     $tarext = ".tar.gz"
     $zipext = ".zip"
     $netcoreapp31tfm = "netcoreapp3.1"
-#>
     <# Download .tar.gz files #>
-<#    "osx-x64", "rhel-x64" | ForEach-Object {
+    "osx-x64", "rhel-x64" | ForEach-Object {
         $packagename = $basename + "-" + $_ + "-" + $netcoreapp31tfm + $tarext
         DownloadPackageFromGithub $rootdir $packagename ($uribase + $version + "/" + $packagename)
     }
-#>
+
     <# Download .zip files #>
-<#    "win-x86", "win-x64", "win10-arm", "win10-arm64" | ForEach-Object {
+    "win-x86", "win-x64", "win10-arm", "win10-arm64" | ForEach-Object {
         $packagename = $basename + "-" + $_ + "-" + $netcoreapp31tfm + $zipext
         DownloadPackageFromGithub $rootdir $packagename ($uribase + $version + "/" + $packagename)
     }
-#>
 }
 
-DownloadPackagesFromGithub $githubReleasePackageName $sqlToolsVersion $githubReleasePackageUri $packageOutputDirectory
+DownloadPackagesFromGithub $githubReleasePackageName $sqlVersion $githubReleasePackageUri $packageOutputDirectory
 
-<#
-$outputPath=(Join-Path $PSScriptRoot "..\artifacts\packages\Release\Shipping")
+$outputPath=(Join-Path $PSScriptRoot "../artifacts/packages/Release/Shipping")
 New-Item -Path $outputPath -ItemType Directory -Force
 
-$projRoot=(Join-Path $PSScriptRoot "..\src\Microsoft.SqlToolsService")
+$projRoot=(Join-Path $PSScriptRoot "../src/Microsoft.SqlToolsService")
 
-dotnet pack "$projRoot/runtime.osx-x64.native.Microsoft.SqlToolsService/runtime.osx-x64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
+dotnet pack "$projRoot/runtime.osx-x64.native.Microsoft.SqlToolsService/runtime.osx-x64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-dotnet pack "$projRoot/runtime.rhel-x64.native.Microsoft.SqlToolsService/runtime.rhel-x64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
+dotnet pack "$projRoot/runtime.rhel-x64.native.Microsoft.SqlToolsService/runtime.rhel-x64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-dotnet pack "$projRoot/runtime.win-x64.native.Microsoft.SqlToolsService/runtime.win-x64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
+dotnet pack "$projRoot/runtime.win-x64.native.Microsoft.SqlToolsService/runtime.win-x64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-dotnet pack "$projRoot/runtime.win-x86.native.Microsoft.SqlToolsService/runtime.win-x86.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
+dotnet pack "$projRoot/runtime.win-x86.native.Microsoft.SqlToolsService/runtime.win-x86.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-dotnet pack "$projRoot\runtime.win10-arm.native.Microsoft.SqlToolsService\runtime.win10-arm.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
+dotnet pack "$projRoot/runtime.win10-arm.native.Microsoft.SqlToolsService/runtime.win10-arm.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-dotnet pack "$projRoot\runtime.win10-arm64.native.Microsoft.SqlToolsService\runtime.win10-arm64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
+dotnet pack "$projRoot/runtime.win10-arm64.native.Microsoft.SqlToolsService/runtime.win10-arm64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-dotnet pack "$projRoot\Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
+dotnet pack "$projRoot/Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-#>
