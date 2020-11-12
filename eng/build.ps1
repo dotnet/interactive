@@ -17,30 +17,44 @@ function isCi {
 }
 $isCi = isCi
 
-function buildConfiguration {
-    $release = $arguments | Select-String -Pattern ('release', 'debug') -SimpleMatch -CaseSensitive
-    if ([System.String]::IsNullOrWhitespace($release) -eq $true) {
-        return "Debug"
-    }
-    else {
-        return "$release"
-    }
-}
-$buildConfiguration = buildConfiguration
-
 try {
     if (isCi -eq $true) {
-        . (Join-Path $PSScriptRoot "..\buildSqlTools.cmd") $buildConfiguration
-        if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
-        }
+
+        $sqlVersion="3.0.0-release.52"
+        $downloads=(Join-Path $PSScriptRoot "..\artifacts\downloads")
+        . (Join-Path $PSScriptRoot "DownLoadSqlToolsService.ps1") Release -out $downloads -version "v$sqlVersion"
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+        $outputPath=(Join-Path $PSScriptRoot "..\artifacts\packages\Release\Shipping")
+        md $outputPath
+
+        $projRoot=(Join-Path $PSScriptRoot "..\src\Microsoft.SqlToolsService")
+
+        dotnet pack "$projRoot\runtime.osx-x64.native.Microsoft.SqlToolsService\runtime.osx-x64.native.Microsoft.SqlToolsService.csproj"         /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+        dotnet pack "$projRoot\runtime.rhel-x64.native.Microsoft.SqlToolsService\runtime.rhel-x64.native.Microsoft.SqlToolsService.csproj"       /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+        dotnet pack "$projRoot\runtime.win-x64.native.Microsoft.SqlToolsService\runtime.win-x64.native.Microsoft.SqlToolsService.csproj"         /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+        dotnet pack "$projRoot\runtime.win-x86.native.Microsoft.SqlToolsService\runtime.win-x86.native.Microsoft.SqlToolsService.csproj"         /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+        dotnet pack "$projRoot\runtime.win10-arm.native.Microsoft.SqlToolsService\runtime.win10-arm.native.Microsoft.SqlToolsService.csproj"     /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+        dotnet pack "$projRoot\runtime.win10-arm64.native.Microsoft.SqlToolsService\runtime.win10-arm64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+        dotnet pack "$projRoot\Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlVersion --configuration Release -o $outputPath
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
 
     # invoke regular build/test script
     . (Join-Path $PSScriptRoot "common\build.ps1") -projects "$PSScriptRoot\..\dotnet-interactive.sln" @args
-    if ($LASTEXITCODE -ne 0) {
-        exit $LASTEXITCODE
-    }
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 catch {
     Write-Host $_

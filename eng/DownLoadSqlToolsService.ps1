@@ -12,38 +12,6 @@ function Create-Directory ([string[]] $path) {
     New-Item -Path $path -Force -ItemType 'Directory' | Out-Null
 }
 
-# This will exec a process using the console and return it's exit code.
-# This will not throw when the process fails.
-# Returns process exit code.
-function Exec-Process([string]$command, [string]$commandArgs) {
-  $startInfo = New-Object System.Diagnostics.ProcessStartInfo
-  $startInfo.FileName = $command
-  $startInfo.Arguments = $commandArgs
-  $startInfo.UseShellExecute = $false
-  $startInfo.WorkingDirectory = Get-Location
-
-  $process = New-Object System.Diagnostics.Process
-  $process.StartInfo = $startInfo
-  $process.Start() | Out-Null
-
-  $finished = $false
-  try {
-    while (-not $process.WaitForExit(100)) {
-      # Non-blocking loop done to allow ctr-c interrupts
-    }
-
-    $finished = $true
-    return $global:LASTEXITCODE = $process.ExitCode
-  }
-  finally {
-    # If we didn't finish then an error occurred or the user hit ctrl-c.  Either
-    # way kill the process
-    if (-not $finished) {
-      $process.Kill()
-    }
-  }
-}
-
 function Unzip([string]$zipfile, [string]$outpath) {
   Add-Type -AssemblyName System.IO.Compression.FileSystem
   [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfile, $outpath)
@@ -88,7 +56,7 @@ function DownloadPackageFromGithub {
         Create-Directory $packageDir
         $tarfile = $dlfile + ".tar"
         DeGZip-File $dlFile $tarfile
-        Exec-Process "tar" "-zxf $tarfile  -C $packageDir"
+        tar -zxf $tarfile  -C $packageDir
     }
     else {
         $packageDir = Join-Path "$rootdir"  ($filename -replace ".zip", "")
