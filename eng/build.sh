@@ -39,5 +39,4 @@ function TestUsingNPM() {
 sqlVersion="3.0.0-release.52"
 downloads="$scriptroot/../artifacts/downloads"
 pwsh "$scriptroot/DownLoadSqlToolsService.ps1 -version $sqlVersion -out $downloads"
-
 . "$scriptroot/common/build.sh" "/p:Projects=$scriptroot/../dotnet-interactive.sln" $args
