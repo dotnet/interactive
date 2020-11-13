@@ -8,6 +8,7 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
 
+  <PropertyGroup>
     <PackageDescription>SQL Tools Service runtime components for win-x64</PackageDescription>
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageVersion Condition="'$(SqlToolsVersion)' != ''">$(SqlToolsVersion)</PackageVersion>
