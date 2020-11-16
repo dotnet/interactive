@@ -9,7 +9,9 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp;
@@ -21,7 +23,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
-
+using Microsoft.Extensions.Hosting;
 using XPlot.Plotly;
 
 using CompletionItem = Microsoft.DotNet.Interactive.Events.CompletionItem;
@@ -67,7 +69,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              typeof(Kernel).Assembly,
                              typeof(CSharpKernel).Assembly,
                              typeof(PocketView).Assembly,
-                             typeof(PlotlyChart).Assembly);
+                             typeof(PlotlyChart).Assembly,
+                             typeof(Host).Assembly,
+                             typeof(WebHost).Assembly,
+                             typeof(Controller).Assembly,
+                             typeof(DeveloperExceptionPageMiddleware).Assembly);
 
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
         private string _currentDirectory;
