@@ -467,7 +467,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseWho()
                     .UseXplot()
                     .UseMathAndLaTeX()
-                    .UseDotNetVariableSharing(),
+                    .UseDotNetVariableSharing()
+                    .UseAspNet(),
                 new[] { "c#", "C#" });
 
             compositeKernel.Add(
