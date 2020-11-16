@@ -61,7 +61,15 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              "System.Collections",
                              "System.Collections.Generic",
                              "System.Threading.Tasks",
-                             "System.Linq")
+                             "System.Linq",
+                             "Microsoft.AspNetCore",
+                             "Microsoft.AspNetCore.Builder",
+                             "Microsoft.AspNetCore.Hosting",
+                             "Microsoft.AspNetCore.Http",
+                             "Microsoft.AspNetCore.Routing",
+                             "Microsoft.Extensions.Configuration",
+                             "Microsoft.Extensions.DependencyInjection",
+                             "Microsoft.Extensions.Hosting")
                          .AddReferences(
                              typeof(Enumerable).Assembly,
                              typeof(IEnumerable<>).Assembly,
