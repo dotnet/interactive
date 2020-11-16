@@ -4,7 +4,7 @@
 import * as signalR from "@microsoft/signalr";
 import { env } from "process";
 
-import { MessageTransport, LabelledMessageObserver, DisposableSubscription, MessageEnvelope, MessageObserver } from "./contracts";
+import { MessageTransport, LabelledKernelChannelMessageObserver, DisposableSubscription, KernelChannelMessageEnvelope, KernelChannelMessageObserver } from "./contracts";
 import { TokenGenerator } from "./tokenGenerator";
 
 // Would like to do this:
@@ -26,7 +26,7 @@ function parse(text: string): any {
 class SignalRTransport implements MessageTransport {
 
     private tokenGenerator = new TokenGenerator();
-    private observers: { [key: string]: LabelledMessageObserver<object> } = {};
+    private observers: { [key: string]: LabelledKernelChannelMessageObserver<object> } = {};
     private connection: signalR.HubConnection;
 
     async start(rootUrl: string) {
@@ -43,7 +43,7 @@ class SignalRTransport implements MessageTransport {
             .build();
 
         this.connection.on("messages", (message: string) => {
-            let envelope = <MessageEnvelope>parse(message);
+            let envelope = <KernelChannelMessageEnvelope>parse(message);
             let keys = Object.keys(this.observers);
             for (let key of keys) {
                 let observer = this.observers[key];
@@ -58,7 +58,7 @@ class SignalRTransport implements MessageTransport {
         await this.connection.send("connect");
     }
 
-    private subscribeWithFilter<T extends object>(filter: (label: string) => boolean, observer: LabelledMessageObserver<T>): DisposableSubscription {
+    private subscribeWithFilter<T extends object>(filter: (label: string) => boolean, observer: LabelledKernelChannelMessageObserver<T>): DisposableSubscription {
         let key = this.tokenGenerator.GetNewToken();
         this.observers[key] = (messageLabel: string, message: object): void => {
             if (filter(messageLabel)) {
@@ -77,18 +77,18 @@ class SignalRTransport implements MessageTransport {
     }
 
 
-    subscribeToMessagesWithLabelPrefix<T extends object>(label: string, observer: LabelledMessageObserver<T>): DisposableSubscription {
+    subscribeToMessagesWithLabelPrefix<T extends object>(label: string, observer: LabelledKernelChannelMessageObserver<T>): DisposableSubscription {
         return this.subscribeWithFilter<T>(messageLabel => messageLabel.startsWith(label), observer);
     }
 
-    subscribeToMessagesWithLabel<T extends object>(label: string, observer: MessageObserver<T>): DisposableSubscription {
+    subscribeToMessagesWithLabel<T extends object>(label: string, observer: KernelChannelMessageObserver<T>): DisposableSubscription {
         return this.subscribeWithFilter<T>(
             messageLabel => messageLabel === label,
             (_: string, message: T) => observer(message));
     }
 
     sendMessage<T>(label: string, message: T): Promise<void> {
-        let wrappedMessage: MessageEnvelope = {
+        let wrappedMessage: KernelChannelMessageEnvelope = {
             label: label,
             payload: message
         };

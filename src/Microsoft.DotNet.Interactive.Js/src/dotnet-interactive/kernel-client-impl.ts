@@ -1,10 +1,10 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch } from "./dotnet-interactive-interfaces";
+import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch, KernelCommandObserver } from "./dotnet-interactive-interfaces";
 import { TokenGenerator } from "./tokenGenerator";
 import { signalTransportFactory } from "./signalr-client";
-import { KernelTransport, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType, MessageObserver, LabelledMessageObserver, KernelCommandEnvelope, SendMessage, SendMessageType } from "./contracts";
+import { KernelTransport, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType, KernelChannelMessageObserver, LabelledKernelChannelMessageObserver, KernelCommandEnvelope, ApplicationCommand, ApplicationCommandType } from "./contracts";
 import { createDefaultClientFetch } from "./clientFetch";
 
 import { kernelTransportFromMessageTransport } from "./kernelTransport";
@@ -40,39 +40,36 @@ export class KernelClientImpl implements DotnetInteractiveClient {
         return subscription;
     }
 
-    private subscribeWithFilter<T extends object>(filter: (label: string) => boolean, observer: LabelledMessageObserver<T>): DisposableSubscription {
+    private subscribeToApplicationCommandsWithFilter<T extends object>(filter: (label: string) => boolean, observer: KernelCommandObserver<ApplicationCommand>): DisposableSubscription {
         // Note: for now, this is the only place we do anything with commands, so this is a bit of a quick
         // hack. The vision was more around having a proper client-side kernel, which would mean we'd
         // need to ensure in-order processing of commands, queuing up any that arrive when processing is
         // already in progress.
         return this._kernelTransport.subscribeToCommands(commandEnvelope => {
-            if (commandEnvelope.commandType === SendMessageType) {
-                let sendCommand = <SendMessage>commandEnvelope.command;
-                let messageLabel = sendCommand.label;
-                let messageContent = <T>sendCommand.content;
+            if (commandEnvelope.commandType === ApplicationCommandType) {
+                let applicationCommand = <ApplicationCommand>commandEnvelope.command;
+                let messageLabel = applicationCommand.label;
                 if (filter(messageLabel)) {
-                    observer(messageLabel, messageContent);
+                    observer(applicationCommand);
                 }
             }
         });
     }
 
-    public subscribeToMessagesWithLabelPrefix<T extends object>(label: string, observer: LabelledMessageObserver<T>): DisposableSubscription {
-        return this.subscribeWithFilter<T>(messageLabel => messageLabel.startsWith(label), observer);
+    public subscribeToApplicationCommandsWithLabelPrefix<T extends object>(label: string, observer: KernelCommandObserver<ApplicationCommand>): DisposableSubscription {
+        return this.subscribeToApplicationCommandsWithFilter<T>(messageLabel => messageLabel.startsWith(label), observer);
     }
 
-    public subscribeToMessagesWithLabel<T extends object>(label: string, observer: MessageObserver<T>): DisposableSubscription {
-        return this.subscribeWithFilter<T>(
-            messageLabel => messageLabel === label,
-            (_: string, message: T) => observer(message));
+    public subscribeToApplicationCommandsWithLabel<T extends object>(label: string, observer: KernelCommandObserver<ApplicationCommand>): DisposableSubscription {
+        return this.subscribeToApplicationCommandsWithFilter<T>(messageLabel => messageLabel === label, observer);
     }
 
-    public async sendMessage<T>(label: string, message: T): Promise<void> {
-        let command: SendMessage = {
+    public async sendApplicationCommand<T>(label: string, content: T): Promise<void> {
+        let command: ApplicationCommand = {
             label: label,
-            content: message,
+            content: content,
         };
-        await this.submitCommand(SendMessageType, command);
+        await this.submitCommand(ApplicationCommandType, command);
     }
 
     public async getVariable(kernelName: string, variableName: string): Promise<any> {

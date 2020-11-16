@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly Subject<KernelEvent> _kernelEvents = new Subject<KernelEvent>();
         private readonly Subject<KernelChannelMessage> _kernelMessages = new Subject<KernelChannelMessage>();
-        private readonly Subject<SendMessage> _userMessages = new Subject<SendMessage>();
+        private readonly Subject<ApplicationCommand> _applicationCommands = new Subject<ApplicationCommand>();
         private readonly CompositeDisposable _disposables;
         private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new ConcurrentQueue<KernelCommand>();
 
@@ -247,12 +247,12 @@ namespace Microsoft.DotNet.Interactive
 
         public void AddDirective(Command command) => SubmissionParser.AddDirective(command);
 
-        public Task SendMessage<T>(string label, T message)
+        public Task SendApplicationCommand<T>(string label, T message)
         {
-            var sendMessageCommand = new SendMessage(label, message);
+            var applicationCommand = new ApplicationCommand(label, message);
             // TODO: although KernelHubConnection sends asynchronously, we lose that because
             // it's buried inside Rx, so this is effectively fire and forget.
-            SendCommandToClient(sendMessageCommand);
+            SendCommandToClient(applicationCommand);
             return Task.CompletedTask;
         }
 
@@ -261,36 +261,30 @@ namespace Microsoft.DotNet.Interactive
             _kernelMessages.OnNext(new CommandKernelMessage(command));
         }
 
-        public Task ReceiveUserMessage(SendMessage command)
+        public Task ReceiveApplicationCommand(ApplicationCommand command)
         {
-            _userMessages.OnNext(command);
+            _applicationCommands.OnNext(command);
             return Task.CompletedTask;
         }
 
-        private IDisposable SubscribeWithFilter<T>(Func<string, bool> filter, IObserver<T> observer)
+        private IDisposable SubscribeToApplicationCommandsWithFilter<T>(Func<string, bool> filter, IObserver<T> observer)
         {
             return ParentKernel != null
-                ? ParentKernel.SubscribeWithFilter(filter, observer)
-                : _userMessages
+                ? ParentKernel.SubscribeToApplicationCommandsWithFilter(filter, observer)
+                : _applicationCommands
                     .Where(m => filter(m.Label))
                     .Select(m => ((JObject)m.Content).ToObject<T>())   // TODO: serialization settings?
                     .Subscribe(observer);
         }
 
-        public IDisposable SubscribeToMessagesWithLabelPrefix<T>(string prefix, IObserver<T> observer)
+        public IDisposable SubscribeToApplicationCommandsWithLabelPrefix<T>(string prefix, IObserver<T> observer)
         {
-            return SubscribeWithFilter(label => label.StartsWith(prefix), observer);
+            return SubscribeToApplicationCommandsWithFilter(label => label.StartsWith(prefix), observer);
         }
 
-        public IDisposable SubscribeToMessagesWithLabel<T>(string label, IObserver<T> observer)
+        public IDisposable SubscribeToApplicationCommandsWithLabel<T>(string label, IObserver<T> observer)
         {
-            return SubscribeWithFilter(messageLabel => messageLabel.Equals(label, StringComparison.Ordinal), observer);
-        }
-
-        public class KernelChannelMessageData
-        {
-            public string Type { get; set; }
-            public string Content { get; set; }
+            return SubscribeToApplicationCommandsWithFilter(messageLabel => messageLabel.Equals(label, StringComparison.Ordinal), observer);
         }
 
         private class KernelOperation
@@ -560,8 +554,8 @@ namespace Microsoft.DotNet.Interactive
                         SetHandler(requestHoverTextHandler, hoverCommand);
                         break;
 
-                    case (SendMessage sendMessage, IKernelCommandHandler<SendMessage> sendMessageHandler):
-                        SetHandler(sendMessageHandler, sendMessage);
+                    case (ApplicationCommand applicationCommand, IKernelCommandHandler<ApplicationCommand> applicationCommandHandler):
+                        SetHandler(applicationCommandHandler, applicationCommand);
                         break;
                 }
             }

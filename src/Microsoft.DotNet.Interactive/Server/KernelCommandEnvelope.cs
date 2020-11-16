@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(SerializeNotebook)] = typeof(KernelCommandEnvelope<SerializeNotebook>),
                 [nameof(SubmitCode)] = typeof(KernelCommandEnvelope<SubmitCode>),
                 [nameof(UpdateDisplayedValue)] = typeof(KernelCommandEnvelope<UpdateDisplayedValue>),
-                [nameof(SendMessage)] = typeof(KernelCommandEnvelope<SendMessage>),
+                [nameof(ApplicationCommand)] = typeof(KernelCommandEnvelope<ApplicationCommand>),
             };
 
             _commandTypesByCommandTypeName = new ConcurrentDictionary<string, Type>(_envelopeTypesByCommandTypeName

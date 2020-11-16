@@ -6,6 +6,7 @@
 // --------------------------------------------- Kernel Commands
 
 export const AddPackageType = "AddPackage";
+export const ApplicationCommandType = "ApplicationCommand";
 export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
@@ -13,13 +14,13 @@ export const ParseNotebookType = "ParseNotebook";
 export const RequestCompletionsType = "RequestCompletions";
 export const RequestDiagnosticsType = "RequestDiagnostics";
 export const RequestHoverTextType = "RequestHoverText";
-export const SendMessageType = "SendMessage";
 export const SerializeNotebookType = "SerializeNotebook";
 export const SubmitCodeType = "SubmitCode";
 export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 
 export type KernelCommandType =
       typeof AddPackageType
+    | typeof ApplicationCommandType
     | typeof ChangeWorkingDirectoryType
     | typeof DisplayErrorType
     | typeof DisplayValueType
@@ -27,7 +28,6 @@ export type KernelCommandType =
     | typeof RequestCompletionsType
     | typeof RequestDiagnosticsType
     | typeof RequestHoverTextType
-    | typeof SendMessageType
     | typeof SerializeNotebookType
     | typeof SubmitCodeType
     | typeof UpdateDisplayedValueType;
@@ -38,6 +38,11 @@ export interface AddPackage extends KernelCommand {
 
 export interface KernelCommand {
     targetKernelName?: string;
+}
+
+export interface ApplicationCommand extends KernelCommand {
+    label: string;
+    content: any;
 }
 
 export interface ChangeWorkingDirectory extends KernelCommand {
@@ -71,11 +76,6 @@ export interface RequestDiagnostics extends KernelCommand {
 }
 
 export interface RequestHoverText extends LanguageServiceCommand {
-}
-
-export interface SendMessage extends KernelCommand {
-    label: string;
-    content: any;
 }
 
 export interface SerializeNotebook extends KernelCommand {
@@ -326,6 +326,11 @@ export enum SubmissionType {
     Diagnose = 1,
 }
 
+export interface KernelChannelMessageEnvelope {
+    label: string;
+    payload: any;
+}
+
 export interface KernelEventEnvelope {
     eventType: KernelEventType;
     event: KernelEvent;
@@ -336,6 +341,14 @@ export interface KernelCommandEnvelope {
     token?: string;
     commandType: KernelCommandType;
     command: KernelCommand;
+}
+
+export interface KernelChannelMessageObserver<T> {
+    (message: T): void;
+}
+
+export interface LabelledKernelChannelMessageObserver<T> {
+    (label: string, message: T): void;
 }
 
 export interface KernelCommandEnvelopeObserver {
@@ -353,22 +366,9 @@ export interface Disposable {
 export interface DisposableSubscription extends Disposable {
 }
 
-export interface MessageEnvelope {
-    label: string;
-    payload: any;
-}
-
-export interface MessageObserver<T> {
-    (message: T): void;
-}
-
-export interface LabelledMessageObserver<T> {
-    (label: string, message: T): void;
-}
-
 export interface MessageTransport extends Disposable {
-    subscribeToMessagesWithLabelPrefix<T extends object>(label: string, observer: LabelledMessageObserver<T>): DisposableSubscription;
-    subscribeToMessagesWithLabel<T extends object>(label: string, observer: MessageObserver<T>): DisposableSubscription;
+    subscribeToMessagesWithLabelPrefix<T extends object>(label: string, observer: LabelledKernelChannelMessageObserver<T>): DisposableSubscription;
+    subscribeToMessagesWithLabel<T extends object>(label: string, observer: KernelChannelMessageObserver<T>): DisposableSubscription;
     sendMessage<T>(label: string, message: T): Promise<void>;
     waitForReady(): Promise<void>;
 }

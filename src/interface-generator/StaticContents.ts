@@ -1,4 +1,9 @@
-﻿export interface KernelEventEnvelope {
+﻿export interface KernelChannelMessageEnvelope {
+    label: string;
+    payload: any;
+}
+
+export interface KernelEventEnvelope {
     eventType: KernelEventType;
     event: KernelEvent;
     command?: KernelCommandEnvelope;
@@ -8,6 +13,14 @@ export interface KernelCommandEnvelope {
     token?: string;
     commandType: KernelCommandType;
     command: KernelCommand;
+}
+
+export interface KernelChannelMessageObserver<T> {
+    (message: T): void;
+}
+
+export interface LabelledKernelChannelMessageObserver<T> {
+    (label: string, message: T): void;
 }
 
 export interface KernelCommandEnvelopeObserver {
@@ -25,22 +38,9 @@ export interface Disposable {
 export interface DisposableSubscription extends Disposable {
 }
 
-export interface MessageEnvelope {
-    label: string;
-    payload: any;
-}
-
-export interface MessageObserver<T> {
-    (message: T): void;
-}
-
-export interface LabelledMessageObserver<T> {
-    (label: string, message: T): void;
-}
-
 export interface MessageTransport extends Disposable {
-    subscribeToMessagesWithLabelPrefix<T extends object>(label: string, observer: LabelledMessageObserver<T>): DisposableSubscription;
-    subscribeToMessagesWithLabel<T extends object>(label: string, observer: MessageObserver<T>): DisposableSubscription;
+    subscribeToMessagesWithLabelPrefix<T extends object>(label: string, observer: LabelledKernelChannelMessageObserver<T>): DisposableSubscription;
+    subscribeToMessagesWithLabel<T extends object>(label: string, observer: KernelChannelMessageObserver<T>): DisposableSubscription;
     sendMessage<T>(label: string, message: T): Promise<void>;
     waitForReady(): Promise<void>;
 }

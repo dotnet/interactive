@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive
         IEnumerable<Kernel>,
         IKernelCommandHandler<ParseNotebook>,
         IKernelCommandHandler<SerializeNotebook>,
-        IKernelCommandHandler<SendMessage>
+        IKernelCommandHandler<ApplicationCommand>
     {
         private readonly ConcurrentQueue<PackageAdded> _packagesToCheckForExtensions = new ConcurrentQueue<PackageAdded>();
         private readonly List<Kernel> _childKernels = new List<Kernel>();
@@ -121,9 +121,9 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
-        public Task HandleAsync(SendMessage command, KernelInvocationContext context)
+        public Task HandleAsync(ApplicationCommand command, KernelInvocationContext context)
         {
-            return context.HandlingKernel.ReceiveUserMessage(command);
+            return context.HandlingKernel.ReceiveApplicationCommand(command);
         }
 
         private void AddChooseKernelDirective(
@@ -186,7 +186,7 @@ namespace Microsoft.DotNet.Interactive
             var targetKernelName = command switch
             {
                 { TargetKernelName: string targetKernelNameFromCommand } => targetKernelNameFromCommand,
-                SendMessage _ => Name,  // SendMessage commands need to be directed to the right place, so they are a CompositeKernel concern
+                ApplicationCommand _ => Name,  // ApplicationCommands need to be directed to the right place, so they are a CompositeKernel concern
                 _ => DefaultKernelName
             };
 
