@@ -13,6 +13,36 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var command = new SubmitCode(@"
 Environment.SetEnvironmentVariable($""ASPNETCORE_{WebHostDefaults.PreventHostingStartupKey}"", ""true"");
 
+class WriteLineHandler : DelegatingHandler
+{
+    public WriteLineHandler(HttpMessageHandler innerHandler)
+        : base(innerHandler)
+    {
+    }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        Console.WriteLine($""(HttpClient Request) {request}"");
+        if (request.Content != null)
+        {
+            Console.WriteLine(await request.Content.ReadAsStringAsync());
+        }
+
+        HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
+
+        Console.WriteLine($""(HttpClient Response) {response}"");
+        if (response.Content != null)
+        {
+            Console.WriteLine(await response.Content.ReadAsStringAsync());
+        }
+
+        return response;
+    }
+}
+
+var HttpClient = new HttpClient(new WriteLineHandler(new SocketsHttpHandler()));
+HttpClient.BaseAddress = new Uri(""http://localhost:5000/"");
+
 private static int __AspNet_NextEndpointOrder;
 
 public static IEndpointConventionBuilder MapAction(
@@ -26,7 +56,6 @@ public static IEndpointConventionBuilder MapAction(
     return builder;
 }
 
-//#if false
 IApplicationBuilder App = null;
 IEndpointRouteBuilder Endpoints = null;
 
@@ -46,7 +75,6 @@ var __AspNet_HostRunAsyncTask = Host.CreateDefaultBuilder()
                    App.Build()(httpContext));
         });
     }).Build().RunAsync();
-//#endif
 ");
 
             kernel.DeferCommand(command);
