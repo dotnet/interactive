@@ -7,14 +7,17 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+
 using FluentAssertions;
 using FluentAssertions.Collections;
 using FluentAssertions.Execution;
 using FluentAssertions.Primitives;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Server;
+
 using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility
@@ -91,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             }
             else
             {
-                should.ContainSingle(e => e is T && where((T) e));
+                should.ContainSingle(e => e is T && where((T)e));
 
                 subject = should.Subject
                                 .OfType<T>()
@@ -119,7 +122,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             }
             else
             {
-                should.ContainSingle(e => e is T && where((T) e));
+                should.ContainSingle(e => e is T && where((T)e));
 
                 subject = should.Subject
                                 .OfType<T>()
@@ -129,7 +132,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
             return new AndWhichConstraint<ObjectAssertions, T>(subject.Should(), subject);
         }
-        
+
         public static AndWhichConstraint<ObjectAssertions, T> ContainSingle<T>(
             this GenericCollectionAssertions<SyntaxNode> should,
             Func<T, bool> where = null)
@@ -147,7 +150,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             }
             else
             {
-                should.ContainSingle(e => e is T && where((T) e));
+                should.ContainSingle(e => e is T && where((T)e));
 
                 subject = should.Subject
                                 .OfType<T>()
@@ -175,7 +178,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             }
             else
             {
-                should.ContainSingle(e => e is T && where((T) e));
+                should.ContainSingle(e => e is T && where((T)e));
 
                 subject = should.Subject
                                 .OfType<T>()
@@ -203,7 +206,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             }
             else
             {
-                should.ContainSingle(e => e is T && where((T) e));
+                should.ContainSingle(e => e is T && where((T)e));
 
                 subject = should.Subject
                                 .OfType<T>()
@@ -271,7 +274,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
         public IEnumerator<T> GetEnumerator()
         {
-            return ((IEnumerable<T>) _list).GetEnumerator();
+            return ((IEnumerable<T>)_list).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
