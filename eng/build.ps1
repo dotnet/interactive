@@ -11,29 +11,27 @@ function TestUsingNPM([string] $testPath) {
 }
 
 $arguments = $args
-function isCi {
-    $isCi = $arguments | Select-String -Pattern '-ci' -CaseSensitive -SimpleMatch
-    return ($isCi -ne "")
-}
-$isCi = isCi
+function doWork ([string] $ciSwitch){
+    try {
+        if ($ciSwitch -eq "-ci") {
 
-try {
-    if (isCi -eq $true) {
+            $sqlVersion="3.0.0-release.52"
+            $downloads=(Join-Path $PSScriptRoot "..\artifacts\downloads")
 
-        $sqlVersion="3.0.0-release.52"
-        $downloads=(Join-Path $PSScriptRoot "..\artifacts\downloads")
+            . (Join-Path $PSScriptRoot "DownLoadSqlToolsService.ps1") Release -out $downloads -version "$sqlVersion"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        }
 
-        . (Join-Path $PSScriptRoot "DownLoadSqlToolsService.ps1") Release -out $downloads -version "$sqlVersion"
+        # invoke regular build/test script
+        . (Join-Path $PSScriptRoot "common\build.ps1") -projects "$PSScriptRoot\..\dotnet-interactive.sln" @arguments
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
+    catch {
+        Write-Host $_
+        Write-Host $_.Exception
+        Write-Host $_.ScriptStackTrace
+        exit 1
+    }
+}
 
-    # invoke regular build/test script
-    . (Join-Path $PSScriptRoot "common\build.ps1") -projects "$PSScriptRoot\..\dotnet-interactive.sln" @args
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-}
-catch {
-    Write-Host $_
-    Write-Host $_.Exception
-    Write-Host $_.ScriptStackTrace
-    exit 1
-}
+doWork ($args | Select-String -Pattern '-ci' -CaseSensitive -SimpleMatch)
