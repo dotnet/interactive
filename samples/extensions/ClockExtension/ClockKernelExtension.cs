@@ -40,7 +40,6 @@ namespace ClockExtension
             clockCommand.Handler = CommandHandler.Create(
                 (int hour, int minute, int second, KernelInvocationContext invocationContext) => {
                     invocationContext.Display(SvgClock.DrawSvgClock(hour, minute, second));
-                    return Task.CompletedTask;
                 });
 
             kernel.AddDirective(clockCommand);
