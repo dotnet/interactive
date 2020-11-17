@@ -157,6 +157,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 }
             };
 
+#pragma warning disable 1998
             _queryMessageHandler = async messageParams =>
             {
                 try
@@ -172,6 +173,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     completion.SetException(e);
                 }
             };
+#pragma warning restore 1998
 
             try
             {
