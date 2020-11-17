@@ -112,23 +112,37 @@ New-Item -Path $outputPath -ItemType Directory -Force
 
 $projRoot=(Join-Path $PSScriptRoot "../src/Microsoft.SqlToolsService")
 
+Write-Host "$projRoot/runtime.osx-x64.native.Microsoft.SqlToolsService/runtime.osx-x64.native.Microsoft.SqlToolsService.csproj /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath"
 dotnet pack "$projRoot/runtime.osx-x64.native.Microsoft.SqlToolsService/runtime.osx-x64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath
+Write-Host "LASTEXITCODE: $LASTEXITCODE"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+Write-Host "$projRoot/runtime.rhel-x64.native.Microsoft.SqlToolsService/runtime.rhel-x64.native.Microsoft.SqlToolsService.csproj /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath"
 dotnet pack "$projRoot/runtime.rhel-x64.native.Microsoft.SqlToolsService/runtime.rhel-x64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath
+Write-Host "LASTEXITCODE: $LASTEXITCODE"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+Write-Host "$projRoot/runtime.win-x64.native.Microsoft.SqlToolsService/runtime.win-x64.native.Microsoft.SqlToolsService.csproj /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath"
 dotnet pack "$projRoot/runtime.win-x64.native.Microsoft.SqlToolsService/runtime.win-x64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath
+Write-Host "LASTEXITCODE: $LASTEXITCODE"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+Write-Host "$projRoot/runtime.win-x86.native.Microsoft.SqlToolsService/runtime.win-x86.native.Microsoft.SqlToolsService.csproj /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath"
 dotnet pack "$projRoot/runtime.win-x86.native.Microsoft.SqlToolsService/runtime.win-x86.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath
+Write-Host "LASTEXITCODE: $LASTEXITCODE"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+Write-Host "$projRoot/runtime.win10-arm.native.Microsoft.SqlToolsService/runtime.win10-arm.native.Microsoft.SqlToolsService.csproj /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath"
 dotnet pack "$projRoot/runtime.win10-arm.native.Microsoft.SqlToolsService/runtime.win10-arm.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath
+Write-Host "LASTEXITCODE: $LASTEXITCODE"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+Write-Host "$projRoot/runtime.win10-arm64.native.Microsoft.SqlToolsService/runtime.win10-arm64.native.Microsoft.SqlToolsService.csproj /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath"
 dotnet pack "$projRoot/runtime.win10-arm64.native.Microsoft.SqlToolsService/runtime.win10-arm64.native.Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath
+Write-Host "LASTEXITCODE: $LASTEXITCODE"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+Write-Host "$projRoot/Microsoft.SqlToolsService.csproj /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath"
 dotnet pack "$projRoot/Microsoft.SqlToolsService.csproj" /p:SqlToolsVersion=$sqlToolsVersion --configuration Release -o $outputPath
+Write-Host "LASTEXITCODE: $LASTEXITCODE"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
