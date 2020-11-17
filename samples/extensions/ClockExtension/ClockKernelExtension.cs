@@ -5,7 +5,7 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Threading.Tasks;
-
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
@@ -14,7 +14,7 @@ namespace ClockExtension
 {
     public class ClockKernelExtension : IKernelExtension
     {
-        public async Task OnLoadAsync(Kernel kernel)
+        public Task OnLoadAsync(Kernel kernel)
         {
             Formatter.Register<DateTime>((date, writer) =>
             {
@@ -38,10 +38,10 @@ namespace ClockExtension
                 };
 
             clockCommand.Handler = CommandHandler.Create(
-                async (int hour, int minute, int second, KernelInvocationContext context) =>
-            {
-                await context.DisplayAsync(SvgClock.DrawSvgClock(hour, minute, second));
-            });
+                (int hour, int minute, int second, KernelInvocationContext invocationContext) => {
+                    invocationContext.Display(SvgClock.DrawSvgClock(hour, minute, second));
+                    return Task.CompletedTask;
+                });
 
             kernel.AddDirective(clockCommand);
 
@@ -59,8 +59,10 @@ namespace ClockExtension
                     code("#!clock -h")
                 );
 
-                await context.DisplayAsync(view);
+                context.Display(view);
             }
+
+            return Task.CompletedTask;
         }
     }
 }
