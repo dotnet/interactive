@@ -102,6 +102,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
                                .GetDirectories("bin", SearchOption.AllDirectories)
                                .Single()
                                .GetFiles($"{extensionName}.dll", SearchOption.AllDirectories)
+                               .Where(f => f.Directory.Name != "ref")
                                .Single();
 
             if (copyDllTo != null)
