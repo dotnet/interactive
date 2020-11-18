@@ -19,6 +19,7 @@ using Xunit;
 using Xunit.Abstractions;
 
 #pragma warning disable 8509
+#pragma warning disable 8524
 namespace Microsoft.DotNet.Interactive.Tests
 {
     public sealed class LanguageKernelTests : LanguageKernelTestBase

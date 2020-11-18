@@ -36,8 +36,9 @@ type FSharpKernelBase () as this =
 
     static let lockObj = Object();
 
-    let createScript () =  
-        lock lockObj (fun () -> new FSharpScript(additionalArgs=[|"/langversion:preview"|]))
+    let createScript () =
+        // work around ref/impl type resolution; see https://github.com/dotnet/fsharp/issues/10496
+        lock lockObj (fun () -> new FSharpScript(additionalArgs=[|"/langversion:preview"; "/usesdkrefs-"|]))
 
     let script = lazy createScript ()
 

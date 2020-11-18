@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive
 {
     public class PackageRestoreContext : IDisposable
     {
-        private const string restoreTfm = "netcoreapp3.1";
+        private const string restoreTfm = "net5.0";
         private readonly ConcurrentDictionary<string, PackageReference> _requestedPackageReferences = new ConcurrentDictionary<string, PackageReference>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, ResolvedPackageReference> _resolvedPackageReferences = new Dictionary<string, ResolvedPackageReference>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _restoreSources = new HashSet<string>();
