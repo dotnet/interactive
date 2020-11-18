@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
  <PropertyGroup>
@@ -62,7 +62,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="bin\Debug\netcoreapp3.1\/Microsoft.DotNet.Interactive.ExtensionLab.dll" />
+    <None Remove="bin\Debug\net5.0\Microsoft.DotNet.Interactive.ExtensionLab.dll" />
   </ItemGroup>
 
   <ItemGroup>

@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.CSharpDecompiler
         {
             var decompilationLanguageVersion = Defaults.GetDecompilationLanguageVersion(inspectionOptions.DecompilationLanguage);
 
-            var decompiler = new ICSharpCode.Decompiler.CSharp.CSharpDecompiler(module: assembly, assemblyResolver: new UniversalAssemblyResolver($"{Defaults.InternalAssemblyName}.dll", true, "netcoreapp3.1"), new DecompilerSettings(decompilationLanguageVersion))
+            var decompiler = new ICSharpCode.Decompiler.CSharp.CSharpDecompiler(module: assembly, assemblyResolver: new UniversalAssemblyResolver($"{Defaults.InternalAssemblyName}.dll", true, "net5.0"), new DecompilerSettings(decompilationLanguageVersion))
             {
                 DebugInfoProvider = debugInfoProvider
             };
