@@ -71,7 +71,10 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              "Microsoft.AspNetCore.Routing",
                              "Microsoft.Extensions.Configuration",
                              "Microsoft.Extensions.DependencyInjection",
-                             "Microsoft.Extensions.Hosting")
+                             "Microsoft.Extensions.Hosting",
+                             "Microsoft.Extensions.Logging",
+                             "Microsoft.Extensions.Logging.Console",
+                             "Microsoft.Extensions.Options")
                          .AddReferences(
                              typeof(Enumerable).Assembly,
                              typeof(IEnumerable<>).Assembly,

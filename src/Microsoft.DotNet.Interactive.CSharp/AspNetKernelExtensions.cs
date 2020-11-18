@@ -56,10 +56,79 @@ public static IEndpointConventionBuilder MapAction(
     return builder;
 }
 
+class LogLevelMonitor : IOptionsMonitor<LoggerFilterOptions>
+{
+    LoggerFilterOptions _loggerFilterOptions;
+    event Action<LoggerFilterOptions, string> _onChange;
+
+    public LogLevelMonitor(LoggerFilterOptions initialOptions)
+    {
+        _loggerFilterOptions = initialOptions;
+    }
+
+    public LoggerFilterOptions CurrentValue 
+    { 
+        get => _loggerFilterOptions;
+        set
+        {
+            _loggerFilterOptions = value;
+            _onChange(value, string.Empty);
+        }
+    }
+
+    public IDisposable OnChange(Action<LoggerFilterOptions, string> listener)
+    {
+        var disposable = new ChangeTrackerDisposable(this, listener);
+        _onChange += disposable.OnChange;
+        return disposable;
+    }
+
+    public LoggerFilterOptions Get(string name)
+    {
+        throw new NotImplementedException();
+    }
+
+    class ChangeTrackerDisposable : IDisposable
+    {
+        private readonly Action<LoggerFilterOptions, string> _listener;
+        private readonly LogLevelMonitor _monitor;
+
+        public ChangeTrackerDisposable(LogLevelMonitor monitor, Action<LoggerFilterOptions, string> listener)
+        {
+            _listener = listener;
+            _monitor = monitor;
+        }
+
+        public void OnChange(LoggerFilterOptions options, string name) => _listener.Invoke(options, name);
+
+        public void Dispose() => _monitor._onChange -= OnChange;
+    }
+}
+
+static LogLevelMonitor __AspNet_LogLevelMonitor = new LogLevelMonitor(new LoggerFilterOptions
+{
+    MinLevel = LogLevel.Warning,
+});
+
+public static class Logging
+{
+    public static LogLevel MinLevel
+    {
+        set
+        {
+            __AspNet_LogLevelMonitor.CurrentValue = new LoggerFilterOptions { MinLevel = value };
+        }
+    }
+}
+
 IApplicationBuilder App = null;
 IEndpointRouteBuilder Endpoints = null;
 
-var __AspNet_HostRunAsyncTask = Host.CreateDefaultBuilder()
+var __AspNet_HostBuilder = Host.CreateDefaultBuilder()
+    .ConfigureServices(services =>
+    {
+        services.AddSingleton<IOptionsMonitor<LoggerFilterOptions>>(__AspNet_LogLevelMonitor);
+    })
     .ConfigureWebHostDefaults(webBuilder =>
     {
         webBuilder.Configure(app => {
@@ -74,7 +143,14 @@ var __AspNet_HostRunAsyncTask = Host.CreateDefaultBuilder()
                 httpContext =>
                    App.Build()(httpContext));
         });
-    }).Build().RunAsync();
+    })
+    .ConfigureLogging(loggingBuilder =>
+    {
+        loggingBuilder.ClearProviders();
+        loggingBuilder.AddSimpleConsole(options => options.ColorBehavior = LoggerColorBehavior.Disabled);
+    });
+
+var __AspNet_HostRunAsyncTask = __AspNet_HostBuilder.Build().RunAsync();
 ");
 
             kernel.DeferCommand(command);
