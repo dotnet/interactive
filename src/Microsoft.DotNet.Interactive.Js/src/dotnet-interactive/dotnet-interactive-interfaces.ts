@@ -36,9 +36,7 @@ export interface DotnetInteractiveClient {
     submitCode(code: string, targetKernelName?: string): Promise<string>;
     submitCommand(commandType: string, command?: any, targetKernelName?: string): Promise<string>;
     configureRequire(config: any): any;
-    subscribeToApplicationCommandsWithLabel<T extends object>(label: string, observer: KernelCommandObserver<ApplicationCommand>): DisposableSubscription;
-    subscribeToApplicationCommandsWithLabelPrefix<T extends object>(label: string, observer: KernelCommandObserver<ApplicationCommand>): DisposableSubscription;
-    sendApplicationCommand<T>(label: string, message: T): Promise<void>;
+    subscribeToCommands<TCommand extends KernelCommand>(commandType: string, observer: KernelCommandObserver<TCommand>): DisposableSubscription;
 }
 
 export interface KernelClientContainer {

@@ -27,13 +27,13 @@ namespace Microsoft.DotNet.Interactive.Commands
             TargetKernelName = targetKernelName;
         }
 
-        [JsonIgnore]
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public KernelCommandInvocation Handler { get; set; }
 
-        [JsonIgnore]   
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]   
         public KernelCommand Parent { get; internal set; }
 
-        [JsonIgnore]
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public IDictionary<string, object> Properties { get; }
 
         public string TargetKernelName { get; internal set; }

@@ -6,8 +6,6 @@ import {
     KernelCommandType,
     KernelCommandEnvelope,
     DisposableSubscription,
-    LabelledMessageObserver,
-    MessageObserver,
     KernelCommandEnvelopeObserver,
     KernelEventEnvelope,
     KernelEvent,
@@ -37,7 +35,7 @@ export function kernelTransportFromMessageTransport(messageTransport: MessageTra
                 "kernelCommands",
                 observer);
         },
-        
+
         submitKernelEvent: (event: KernelEvent, eventType: KernelEventType, associatedCommand?: { command: KernelCommand, commandType: KernelCommandType, token: string }): Promise<void> => {
             let envelope: KernelEventEnvelope = {
                 eventType: eventType,

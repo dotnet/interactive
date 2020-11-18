@@ -2,6 +2,8 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using System;
+
 namespace Microsoft.DotNet.Interactive.Messages
 {
     public abstract class KernelChannelMessage
@@ -12,6 +14,8 @@ namespace Microsoft.DotNet.Interactive.Messages
         }
 
         public string Label { get; }
+
+        public abstract object PayloadForSerializationModel();
 
         public static KernelChannelMessage Deserialize(string json)
         {
@@ -34,25 +38,24 @@ namespace Microsoft.DotNet.Interactive.Messages
 
         public static string Serialize(KernelChannelMessage channelMessage)
         {
-            if (channelMessage is EventKernelMessage eventMessage)
-            {
-                var envelopeModel = KernelEventEnvelope.SerializeToModel(eventMessage.Event);
-                return JsonConvert.SerializeObject(
-                    new { label = channelMessage.Label, payload = envelopeModel },
-                    Serializer.JsonSerializerSettings);
-            }
-
-            if (channelMessage is CommandKernelMessage commandMessage)
-            {
-                var envelopeModel = KernelCommandEnvelope.SerializeToModel(commandMessage.Command);
-                return JsonConvert.SerializeObject(
-                    new { label = channelMessage.Label, payload = envelopeModel },
-                    Serializer.JsonSerializerSettings);
-            }
-
             return JsonConvert.SerializeObject(
-                channelMessage,
+                SerializeToModel(channelMessage),
                 Serializer.JsonSerializerSettings);
+        }
+
+        public static SerializationModel SerializeToModel(KernelChannelMessage channelMessage)
+        {
+            return new SerializationModel
+            {
+                Label = channelMessage.Label,
+                Payload = channelMessage.PayloadForSerializationModel()
+            };
+        }
+
+        public class SerializationModel
+        {
+            public string Label { get; set; }
+            public object Payload { get; set; }
         }
     }
 }

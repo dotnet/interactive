@@ -1,4 +1,5 @@
 ﻿using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.Messages
 {
@@ -14,5 +15,7 @@ namespace Microsoft.DotNet.Interactive.Messages
         }
 
         public KernelEvent Event { get; }
+
+        public override object PayloadForSerializationModel() => KernelEventEnvelope.SerializeToModel(Event);
     }
 }

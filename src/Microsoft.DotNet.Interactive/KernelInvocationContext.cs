@@ -94,9 +94,12 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public void SendCommandToClient(KernelCommand command)
+        public Task SendCommandToClientAsync(KernelCommand command)
         {
+            // TODO: faking async for now. To do this properly, we need to pick up the event that
+            // tells us the command has been executed.
             _commands.OnNext(command);
+            return Task.CompletedTask;
         }
 
         public IObservable<KernelEvent> KernelEvents => _events;

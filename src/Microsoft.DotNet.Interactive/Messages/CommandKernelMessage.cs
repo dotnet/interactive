@@ -1,4 +1,5 @@
 ﻿using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.Messages
 {
@@ -13,5 +14,7 @@ namespace Microsoft.DotNet.Interactive.Messages
         }
 
         public KernelCommand Command { get; }
+
+        public override object PayloadForSerializationModel() => KernelCommandEnvelope.SerializeToModel(Command);
     }
 }

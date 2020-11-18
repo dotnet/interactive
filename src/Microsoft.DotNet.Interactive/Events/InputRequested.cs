@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Events
             Prompt = prompt;
         }
 
-        [JsonIgnore]
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public string Content { get; set; }
         public string Prompt { get; }
 

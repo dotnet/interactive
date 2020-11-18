@@ -26,8 +26,7 @@ namespace Microsoft.DotNet.Interactive
         IExtensibleKernel,
         IEnumerable<Kernel>,
         IKernelCommandHandler<ParseNotebook>,
-        IKernelCommandHandler<SerializeNotebook>,
-        IKernelCommandHandler<ApplicationCommand>
+        IKernelCommandHandler<SerializeNotebook>
     {
         private readonly ConcurrentQueue<PackageAdded> _packagesToCheckForExtensions = new ConcurrentQueue<PackageAdded>();
         private readonly List<Kernel> _childKernels = new List<Kernel>();
@@ -121,11 +120,6 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
-        public Task HandleAsync(ApplicationCommand command, KernelInvocationContext context)
-        {
-            return context.HandlingKernel.ReceiveApplicationCommand(command);
-        }
-
         private void AddChooseKernelDirective(
             Kernel kernel,
             IEnumerable<string> aliases = null)
@@ -186,7 +180,6 @@ namespace Microsoft.DotNet.Interactive
             var targetKernelName = command switch
             {
                 { TargetKernelName: string targetKernelNameFromCommand } => targetKernelNameFromCommand,
-                ApplicationCommand _ => Name,  // ApplicationCommands need to be directed to the right place, so they are a CompositeKernel concern
                 _ => DefaultKernelName
             };
 

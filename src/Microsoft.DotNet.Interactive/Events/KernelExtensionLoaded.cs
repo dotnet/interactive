@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public class KernelExtensionLoaded : KernelEvent
     {
-        [JsonIgnore]
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public IKernelExtension KernelExtension { get; }
 
 

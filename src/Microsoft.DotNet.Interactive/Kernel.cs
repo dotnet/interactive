@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly Subject<KernelEvent> _kernelEvents = new Subject<KernelEvent>();
         private readonly Subject<KernelChannelMessage> _kernelMessages = new Subject<KernelChannelMessage>();
-        private readonly Subject<ApplicationCommand> _applicationCommands = new Subject<ApplicationCommand>();
+        private readonly ConcurrentDictionary<Type, Delegate> _applicationCommandHandlers = new ConcurrentDictionary<Type, Delegate>();
         private readonly CompositeDisposable _disposables;
         private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new ConcurrentQueue<KernelCommand>();
 
@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Interactive
             AddDirectiveMiddlewareAndCommonCommandHandlers();
 
             _disposables.Add(Disposable.Create(
-                ()  => _kernelEvents.OnCompleted()
+                () => _kernelEvents.OnCompleted()
                 ));
             _disposables.Add(Disposable.Create(
                 () => _kernelMessages.OnCompleted()
@@ -247,44 +247,76 @@ namespace Microsoft.DotNet.Interactive
 
         public void AddDirective(Command command) => SubmissionParser.AddDirective(command);
 
-        public Task SendApplicationCommand<T>(string label, T message)
+        public void RegisterCommandType<T>(string commandTypeName)
+            where T : KernelCommand
         {
-            var applicationCommand = new ApplicationCommand(label, message);
-            // TODO: although KernelHubConnection sends asynchronously, we lose that because
-            // it's buried inside Rx, so this is effectively fire and forget.
-            SendCommandToClient(applicationCommand);
+            KernelCommandEnvelope.RegisterCommandType<T>(commandTypeName);
+        }
+
+        public Task SendCommandToClientAsync(KernelCommand command)
+        {
+            // TODO: faking it for now. To do this properly, we need to pick up the event that
+            // tells us the command has been executed.
+            // TODO: how do we deal with back and forth - code in a cell runs as part of executing
+            // a command, so that command will be in progress if it then invokes something back on the
+            // client, and if the client then attempts to invoke another command back on the client
+            // we're going to deadlock aren't we?
+
+            SendCommandToClient(command);
             return Task.CompletedTask;
         }
 
-        public void SendCommandToClient(KernelCommand command)
+        private void SendCommandToClient(KernelCommand command)
         {
             _kernelMessages.OnNext(new CommandKernelMessage(command));
         }
 
-        public Task ReceiveApplicationCommand(ApplicationCommand command)
+        public void RegisterCommandHandler<TCommand>(Func<TCommand, KernelInvocationContext, Task> handler)
+            where TCommand : KernelCommand
         {
-            _applicationCommands.OnNext(command);
-            return Task.CompletedTask;
+            if (ParentKernel != null)
+            {
+                // TODO: Currently registering all command handlers at the root kernel level because it avoids thinking about routing...
+                ParentKernel.RegisterCommandHandler(handler);
+            }
+            else
+            {
+                // TODO: this just overwrites any earlier handlers - is that right?
+                // It might be. We can only have a single handler for any particular command,
+                // and if we don't do this, cells that register handlers will only succeed
+                // on first invocation.
+                _applicationCommandHandlers[typeof(TCommand)] = handler;
+            }
         }
 
-        private IDisposable SubscribeToApplicationCommandsWithFilter<T>(Func<string, bool> filter, IObserver<T> observer)
+        private bool TrySetApplicationHandler(KernelCommand command)
         {
-            return ParentKernel != null
-                ? ParentKernel.SubscribeToApplicationCommandsWithFilter(filter, observer)
-                : _applicationCommands
-                    .Where(m => filter(m.Label))
-                    .Select(m => ((JObject)m.Content).ToObject<T>())   // TODO: serialization settings?
-                    .Subscribe(observer);
+            Type commandType = command.GetType();
+            var coreMethod = typeof(Kernel)
+                .GetMethod(nameof(TrySetApplicationHandlerCore), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .MakeGenericMethod(commandType);
+            return (bool)coreMethod.Invoke(this, new object[] { command });
         }
 
-        public IDisposable SubscribeToApplicationCommandsWithLabelPrefix<T>(string prefix, IObserver<T> observer)
+        private bool TrySetApplicationHandlerCore<TCommand>(TCommand command)
+            where TCommand : KernelCommand
         {
-            return SubscribeToApplicationCommandsWithFilter(label => label.StartsWith(prefix), observer);
-        }
+            if (ParentKernel != null)
+            {
+                // TODO: Currently registering all command handlers at the root kernel level because it avoids thinking about routing...
+                return ParentKernel.TrySetApplicationHandlerCore<TCommand>(command);
+            }
+            else
+            {
+                if (_applicationCommandHandlers.TryGetValue(typeof(TCommand), out Delegate handler))
+                {
+                    var typedHandler = (Func<TCommand, KernelInvocationContext, Task>)handler;
+                    command.Handler = (_, context) => typedHandler(command, context);
+                    return true;
+                }
 
-        public IDisposable SubscribeToApplicationCommandsWithLabel<T>(string label, IObserver<T> observer)
-        {
-            return SubscribeToApplicationCommandsWithFilter(messageLabel => messageLabel.Equals(label, StringComparison.Ordinal), observer);
+                return false;
+            }
         }
 
         private class KernelOperation
@@ -554,8 +586,8 @@ namespace Microsoft.DotNet.Interactive
                         SetHandler(requestHoverTextHandler, hoverCommand);
                         break;
 
-                    case (ApplicationCommand applicationCommand, IKernelCommandHandler<ApplicationCommand> applicationCommandHandler):
-                        SetHandler(applicationCommandHandler, applicationCommand);
+                    default:
+                        TrySetApplicationHandler(command);
                         break;
                 }
             }

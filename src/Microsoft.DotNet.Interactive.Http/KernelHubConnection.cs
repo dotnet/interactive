@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
         private async Task PublishMessageToContext(KernelChannelMessage kernelMessage, IHubContext<KernelHub> hubContext)
         {
-            string data = KernelChannelMessage.Serialize(kernelMessage);
+            object data = KernelChannelMessage.SerializeToModel(kernelMessage);
 
             await hubContext.Clients.All.SendAsync("messages", data);
         }

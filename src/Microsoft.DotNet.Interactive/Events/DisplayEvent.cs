@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Events
             ValueId = valueId;
         }
 
-        [JsonIgnore]
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public object Value { get; }
 
         public IReadOnlyCollection<FormattedValue> FormattedValues { get; }

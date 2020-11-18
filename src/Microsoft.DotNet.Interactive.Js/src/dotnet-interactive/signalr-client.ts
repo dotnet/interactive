@@ -42,8 +42,7 @@ class SignalRTransport implements MessageTransport {
             .withAutomaticReconnect()
             .build();
 
-        this.connection.on("messages", (message: string) => {
-            let envelope = <KernelChannelMessageEnvelope>parse(message);
+        this.connection.on("messages", (envelope: KernelChannelMessageEnvelope) => {
             let keys = Object.keys(this.observers);
             for (let key of keys) {
                 let observer = this.observers[key];

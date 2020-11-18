@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.Events
             Message = message;
         }
 
-        [JsonIgnore]
+        [JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
         public Exception Exception { get; }
 
         public string Message { get; set; }
