@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             "#!pwsh",
             "$x = 1",
             "#!share --from pwsh x")]
-        public async Task csharp_kernel_can_operate_on_variables_shared_from_other_kernels(string from, string codeToWrite, string codeToRead)
+        public async Task csharp_kernel_variables_shared_from_other_kernels_resolve_to_the_correct_runtime_type(string from, string codeToWrite, string codeToRead)
         {
             using var kernel = CreateKernel();
 
@@ -153,7 +153,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             "#!pwsh",
             "$x = 1",
             "#!share --from pwsh x")]
-        public async Task fsharp_kernel_can_operate_on_variables_shared_from_other_kernels(string from, string codeToWrite, string codeToRead)
+        public async Task fsharp_kernel_variables_shared_from_other_kernels_resolve_to_the_correct_runtime_types(string from, string codeToWrite, string codeToRead)
         {
             using var kernel = CreateKernel();
 
@@ -180,7 +180,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             "#!fsharp",
             "let x = 1",
             "#!share --from fsharp x")]
-        public async Task pwsh_kernel_can_operate_on_variables_shared_from_other_kernels(string from, string codeToWrite, string codeToRead)
+        public async Task pwsh_kernel_variables_shared_from_other_kernels_resolve_to_the_correct_runtime_type(string from, string codeToWrite, string codeToRead)
         {
             using var kernel = CreateKernel();
 
