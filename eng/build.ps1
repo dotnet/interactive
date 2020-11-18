@@ -11,9 +11,9 @@ function TestUsingNPM([string] $testPath) {
 }
 
 $arguments = $args
-function doWork ([string] $sqlPackagesSwitch){
+function doWork ([string] $ci){
     try {
-        if ($sqlPackagesSwitch -eq "-sqlPackagesOnly") {
+        if ($ci -eq "-ci") {
 
             $sqlVersion="3.0.0-release.52"
             $downloads=(Join-Path $PSScriptRoot "..\artifacts\downloads")
@@ -34,4 +34,4 @@ function doWork ([string] $sqlPackagesSwitch){
     }
 }
 
-doWork ($args | Select-String -Pattern '-sqlPackagesOnly' -CaseSensitive -SimpleMatch)
+doWork ($args | Select-String -Pattern '-ci' -CaseSensitive -SimpleMatch)
