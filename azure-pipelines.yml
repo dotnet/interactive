@@ -159,7 +159,7 @@ stages:
     parameters:
       enableMicrobuild: true
       enablePublishBuildArtifacts: true
-      enablePublishTestResults: true
+      enablePublishTestResults: false
       enablePublishBuildAssets: true
       enablePublishUsingPipelines: $(_PublishUsingPipelines)
       jobs:
