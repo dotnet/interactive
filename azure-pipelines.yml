@@ -42,6 +42,7 @@ stages:
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCoreInternal-Pool
             queue: buildpool.windows.10.amd64.vs2019
+        timeoutInMinutes: 300
         variables:
         # Enable signing for internal, non-PR builds
         - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
