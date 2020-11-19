@@ -22,7 +22,7 @@ We support running on devices like Raspberry Pi and [pi-top [4]](https://github.
 
 ### Telemetry
 
-Telemetry is collected when various .NET Interactive command lines are run. Once .NET Interactive is running, we do not collect telemetry from any further user actions. The teletry is anonymous and collected only the values for a specific subset of the verbs on the .NET Interactive CLI. Those verbs are:
+Telemetry is collected when various .NET Interactive command lines are run. Once .NET Interactive is running, we do not collect telemetry from any further user actions. The telemetry is anonymous and collected only the values for a specific subset of the verbs on the .NET Interactive CLI. Those verbs are:
 
 * `dotnet interactive jupyter`
 * `dotnet interactive jupyter install`
