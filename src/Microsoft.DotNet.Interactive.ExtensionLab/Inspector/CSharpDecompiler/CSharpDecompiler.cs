@@ -15,7 +15,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.CSharpDecompiler
         {
             var decompilationLanguageVersion = Defaults.GetDecompilationLanguageVersion(inspectionOptions.DecompilationLanguage);
 
-            var decompiler = new ICSharpCode.Decompiler.CSharp.CSharpDecompiler(module: assembly, assemblyResolver: new UniversalAssemblyResolver($"{Defaults.InternalAssemblyName}.dll", true, "net5.0"), new DecompilerSettings(decompilationLanguageVersion))
+            // due to https://github.com/icsharpcode/ILSpy/issues/2228, we need a custom assembly resolver
+            var assemblyResolver = new RuntimeAssemblyResolver($"{Defaults.InternalAssemblyName}.dll", "net5.0");
+            var settings = new DecompilerSettings(decompilationLanguageVersion);
+            var decompiler = new ICSharpCode.Decompiler.CSharp.CSharpDecompiler(module: assembly, assemblyResolver: assemblyResolver, settings: settings)
             {
                 DebugInfoProvider = debugInfoProvider
             };

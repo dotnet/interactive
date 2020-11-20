@@ -16,8 +16,8 @@
   <PropertyGroup>
     <MicrosoftCodeAnalysisAnalyzersVersion>2.9.6</MicrosoftCodeAnalysisAnalyzersVersion>	
     <SystemRuntimeLoaderVersion>4.3.0</SystemRuntimeLoaderVersion>	
-    <SystemCollectionsImmutableVersion>5.0.0-preview.8.20407.11</SystemCollectionsImmutableVersion>	
-    <SystemReflectionMetadataVersion>5.0.0-preview.8.20407.11</SystemReflectionMetadataVersion>	
+    <SystemCollectionsImmutableVersion>5.0.0</SystemCollectionsImmutableVersion>	
+    <SystemReflectionMetadataVersion>5.0.0</SystemReflectionMetadataVersion>	
     <SystemCommandLineVersion>2.0.0-beta1.20478.1</SystemCommandLineVersion>	
   </PropertyGroup>
 
