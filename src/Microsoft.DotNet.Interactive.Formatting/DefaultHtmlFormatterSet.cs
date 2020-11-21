@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     internal class DefaultHtmlFormatterSet
     {
-        static internal readonly ITypeFormatter[] DefaultFormatters =
+        internal static readonly ITypeFormatter[] DefaultFormatters =
             {
                 new HtmlFormatter<DateTime>((context, dateTime, writer) =>
                 {

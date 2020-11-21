@@ -8,31 +8,27 @@ using FluentAssertions;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
-using static Microsoft.DotNet.Interactive.Tests.Tags;
 
 #pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    public class Tags
+    [LogTestNamesToPocketLogger]
+    public class LanguageKernelFormattingTests : LanguageKernelTestBase
     {
         public const string PlainTextBegin = "<div class=\"dni-plaintext\">";
         public const string PlainTextEnd = "</div>";
 
-    }
-
-    [LogTestNamesToPocketLogger]
-    public class LanguageKernelFormattingTests : LanguageKernelTestBase
-    {
         public LanguageKernelFormattingTests(ITestOutputHelper output) : base(output)
         {
         }
 
         [Theory]
         // PocketView
-        [InlineData(Language.CSharp, "b(123)", "<b>"+PlainTextBegin+"123"+PlainTextEnd+"</b>")]
+        [InlineData(Language.CSharp, "b(123)", "<b>" + PlainTextBegin + "123" + PlainTextEnd + "</b>")]
         [InlineData(Language.FSharp, "b [] [str \"123\" ]", "<b>123</b>")]
         // sequence
         [InlineData(Language.CSharp, "new[] { 1, 2, 3, 4 }", "<table>")]
@@ -59,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                                    v.MimeType == "text/html" &&
                                    v.Value.ToString().Contains(expectedContent));
         }
-
+        
         [Theory]
         [InlineData(Language.CSharp, "display(\"<test></test>\")", "<test></test>")]
         [InlineData(Language.FSharp, "display(\"<test></test>\")", "<test></test>")]
@@ -363,6 +359,32 @@ f();"
                 .Contain("the-inner-exception")
                 .And
                 .Contain("the-outer-exception");
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Display_indicates_when_a_value_is_null(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            var submission = language switch
+            {
+                Language.CSharp => "display(null);",
+                Language.FSharp => "display(null)"
+            };
+
+            await kernel.SendAsync(new SubmitCode(submission));
+
+            KernelEvents.Should().NotContainErrors();
+
+            KernelEvents
+                .OfType<DisplayedValueProduced>()
+                .SelectMany(v => v.FormattedValues)
+                .Should()
+                .ContainSingle(v =>
+                                   v.MimeType == "text/html" &&
+                                   v.Value.ToString().Contains(Formatter.NullString.HtmlEncode().ToString()));
         }
 
         [Fact]

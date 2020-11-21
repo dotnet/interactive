@@ -10,8 +10,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         private readonly Func<FormatContext, T, TextWriter, bool> _format;
 
-        public AnonymousTypeFormatter(Func<FormatContext, T, TextWriter, bool> format, string mimeType, Type type = null)
-            : base(type??typeof(T))
+        public AnonymousTypeFormatter(
+            Func<FormatContext, T, TextWriter, bool> format, 
+            string mimeType, 
+            Type type = null)
+            : base(type)
         {
             if (string.IsNullOrWhiteSpace(mimeType))
             {

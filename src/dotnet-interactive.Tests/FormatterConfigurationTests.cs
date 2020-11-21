@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
             var latex = new LaTeXString(@"F(k) = \int_{-\infty}^{\infty} f(x) e^{2\pi i k} dx");
 
-            var mimeType = Formatter.PreferredMimeTypeFor(latex.GetType());
+            var mimeType = Formatter.GetPreferredMimeTypeFor(latex.GetType());
 
             var formattedValue = new FormattedValue(
                 mimeType,
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
             var latex = new MathString(@"F(k) = \int_{-\infty}^{\infty} f(x) e^{2\pi i k} dx");
 
-            var mimeType = Formatter.PreferredMimeTypeFor(latex.GetType());
+            var mimeType = Formatter.GetPreferredMimeTypeFor(latex.GetType());
 
             var formattedValue = new FormattedValue(
                 mimeType,
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public void ScriptContent_type_is_formatted()
         {
             var script = new ScriptContent("alert('hello');");
-            var mimeType = Formatter.PreferredMimeTypeFor(script.GetType());
+            var mimeType = Formatter.GetPreferredMimeTypeFor(script.GetType());
 
             var formattedValue = new FormattedValue(
                 mimeType,
@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         {
             var scriptText = "if (true && false) { alert('hello with embedded <>\" escapes'); };";
             var script = new ScriptContent(scriptText);
-            var mimeType = Formatter.PreferredMimeTypeFor(script.GetType());
+            var mimeType = Formatter.GetPreferredMimeTypeFor(script.GetType());
 
             var formattedValue = new FormattedValue(
                 mimeType,
@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             CommandLineParser.SetUpFormatters(frontendEnvironment, new StartupOptions(httpPort: new HttpPort(4242)), 10.Seconds());
             var script = new ScriptContent("alert('hello');");
-            var mimeType = Formatter.PreferredMimeTypeFor(script.GetType());
+            var mimeType = Formatter.GetPreferredMimeTypeFor(script.GetType());
 
             var formattedValue = new FormattedValue(
                 mimeType,
@@ -124,7 +124,7 @@ alert('hello');
 
             CommandLineParser.SetUpFormatters(frontendEnvironment, new StartupOptions(httpPort: new HttpPort(4242)), 1.Seconds());
             var script = new ScriptContent("alert('hello');");
-            var mimeType = Formatter.PreferredMimeTypeFor(script.GetType());
+            var mimeType = Formatter.GetPreferredMimeTypeFor(script.GetType());
 
             Action formatting = () =>  script.ToDisplayString(mimeType);
             formatting.Should()
@@ -139,7 +139,7 @@ alert('hello');
         {
             var obj = JObject.FromObject(new { value = 123, OtherValue = 456 });
 
-            var mimeType = Formatter.PreferredMimeTypeFor(obj.GetType());
+            var mimeType = Formatter.GetPreferredMimeTypeFor(obj.GetType());
             var output = obj.ToDisplayString(JsonFormatter.MimeType);
 
             mimeType.Should().Be(JsonFormatter.MimeType);
@@ -154,7 +154,7 @@ alert('hello');
         {
             var obj = JArray.FromObject(new object[] { "one", 1 });
 
-            var mimeType = Formatter.PreferredMimeTypeFor(obj.GetType());
+            var mimeType = Formatter.GetPreferredMimeTypeFor(obj.GetType());
 
             mimeType.Should().Be(JsonFormatter.MimeType);
 

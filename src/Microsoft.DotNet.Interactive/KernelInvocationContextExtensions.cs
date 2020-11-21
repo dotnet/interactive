@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var displayId = Guid.NewGuid().ToString();
 
-            mimeType ??= Formatter.PreferredMimeTypeFor(value.GetType());
+            mimeType ??= Formatter.GetPreferredMimeTypeFor(value?.GetType());
 
             var formattedValue = new FormattedValue(
                 mimeType,
