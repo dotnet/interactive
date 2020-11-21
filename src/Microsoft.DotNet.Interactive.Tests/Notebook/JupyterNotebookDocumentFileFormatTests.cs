@@ -3,14 +3,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using Assent;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using FluentAssertions.Json;
-using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Notebook;
-using Microsoft.PowerShell.Commands;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;

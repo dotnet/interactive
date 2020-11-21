@@ -1041,7 +1041,7 @@ Console.Write(2);
 
         }
 
-        [Fact(Skip = "requires support for cs8 in roslyn scripting")]
+        [Fact]
         public async Task it_supports_csharp_8()
         {
             var kernel = CreateKernel();
@@ -1050,7 +1050,7 @@ Console.Write(2);
             await kernel.SendAsync(new SubmitCode("text[^5..^0]"));
 
             KernelEvents
-                .OfType<StandardOutputValueProduced>()
+                .OfType<ReturnValueProduced>()
                 .Last()
                 .Value
                 .Should()

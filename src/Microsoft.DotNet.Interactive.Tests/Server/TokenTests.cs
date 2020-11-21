@@ -5,7 +5,6 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Server;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests.Server

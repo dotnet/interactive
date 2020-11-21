@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
@@ -19,50 +18,12 @@ using Pocket;
 
 using Recipes;
 
-using Serilog.Sinks.RollingFileAlternate;
-
 using Xunit.Abstractions;
-
-using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    [LogTestNamesToPocketLogger]
     public abstract class LanguageKernelTestBase : IDisposable
     {
-        static LanguageKernelTestBase()
-        {
-            var artifactsPath = new DirectoryInfo(".");
-
-            while (artifactsPath.Name != "artifacts")
-            {
-                if (artifactsPath.Parent != null)
-                {
-                    artifactsPath = artifactsPath.Parent;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            var logPath =
-                artifactsPath.Name == "artifacts"
-                    ? Path.Combine(
-                        artifactsPath.ToString(),
-                        "log",
-                        "Release")
-                    : ".";
-
-            var log = new SerilogLoggerConfiguration()
-                      .WriteTo
-                      .RollingFileAlternate(logPath, outputTemplate: "{Message}{NewLine}")
-                      .CreateLogger();
-
-            LogEvents.Subscribe(
-                e => log.Information(e.ToLogString()));
-        }
-
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
         private static readonly AsyncLock _lock = new AsyncLock();
