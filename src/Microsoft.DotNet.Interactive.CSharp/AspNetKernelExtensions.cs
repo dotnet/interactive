@@ -13,49 +13,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var command = new SubmitCode(@"
 Environment.SetEnvironmentVariable($""ASPNETCORE_{WebHostDefaults.PreventHostingStartupKey}"", ""true"");
 
-class WriteLineHandler : DelegatingHandler
-{
-    public WriteLineHandler(HttpMessageHandler innerHandler)
-        : base(innerHandler)
-    {
-    }
-
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        Console.WriteLine($""(HttpClient Request) {request}"");
-        if (request.Content != null)
-        {
-            Console.WriteLine(await request.Content.ReadAsStringAsync());
-        }
-
-        HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
-
-        Console.WriteLine($""(HttpClient Response) {response}"");
-        if (response.Content != null)
-        {
-            Console.WriteLine(await response.Content.ReadAsStringAsync());
-        }
-
-        return response;
-    }
-}
-
-var HttpClient = new HttpClient(new WriteLineHandler(new SocketsHttpHandler()));
-HttpClient.BaseAddress = new Uri(""http://localhost:5000/"");
-
-private static int __AspNet_NextEndpointOrder;
-
-public static IEndpointConventionBuilder MapAction(
-    this IEndpointRouteBuilder endpoints,
-    string pattern,
-    RequestDelegate requestDelegate)
-{
-    var order = __AspNet_NextEndpointOrder--;
-    var builder = endpoints.MapGet(pattern, requestDelegate);
-    builder.Add(b => ((RouteEndpointBuilder)b).Order = order);
-    return builder;
-}
-
 class LogLevelMonitor : IOptionsMonitor<LoggerFilterOptions>
 {
     LoggerFilterOptions _loggerFilterOptions;
@@ -110,7 +67,7 @@ static LogLevelMonitor __AspNet_LogLevelMonitor = new LogLevelMonitor(new Logger
     MinLevel = LogLevel.Warning,
 });
 
-public static class Logging
+static class Logging
 {
     public static LogLevel MinLevel
     {
@@ -119,7 +76,58 @@ public static class Logging
             __AspNet_LogLevelMonitor.CurrentValue = new LoggerFilterOptions { MinLevel = value };
         }
     }
+
+    public static bool EnableHttpClientTracing { get; set; }
 }
+
+class WriteLineDelegatingHandler : DelegatingHandler
+{
+    public WriteLineDelegatingHandler(HttpMessageHandler innerHandler)
+        : base(innerHandler)
+    {
+    }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        if (Logging.EnableHttpClientTracing)
+        {
+            Console.WriteLine($""(HttpClient Request) {request}"");
+            if (request.Content != null)
+            {
+                Console.WriteLine(await request.Content.ReadAsStringAsync());
+            }
+        }
+
+        HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
+
+        if (Logging.EnableHttpClientTracing)
+        {
+            Console.WriteLine($""(HttpClient Response) {response}"");
+            if (response.Content != null)
+            {
+                Console.WriteLine(await response.Content.ReadAsStringAsync());
+            }
+        }
+
+        return response;
+    }
+}
+
+private static int __AspNet_NextEndpointOrder;
+
+static IEndpointConventionBuilder MapAction(
+    this IEndpointRouteBuilder endpoints,
+    string pattern,
+    RequestDelegate requestDelegate)
+{
+    var order = __AspNet_NextEndpointOrder--;
+    var builder = endpoints.MapGet(pattern, requestDelegate);
+    builder.Add(b => ((RouteEndpointBuilder)b).Order = order);
+    return builder;
+}
+
+var HttpClient = new HttpClient(new WriteLineDelegatingHandler(new SocketsHttpHandler()));
+HttpClient.BaseAddress = new Uri(""http://localhost:5000/"");
 
 IApplicationBuilder App = null;
 IEndpointRouteBuilder Endpoints = null;
