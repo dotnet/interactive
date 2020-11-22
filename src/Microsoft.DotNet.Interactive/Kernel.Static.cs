@@ -1,9 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
@@ -43,8 +41,7 @@ namespace Microsoft.DotNet.Interactive
               style.appendChild(document.createTextNode(css));
             }}");
 
-        public static void Javascript(
-            string scriptContent)
+        public static void Javascript(string scriptContent)
         {
             PocketView value =
                 script[type: "text/javascript"](
