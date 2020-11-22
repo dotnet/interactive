@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _preferredMimeTypesTable.Clear();
         }
 
-        public static void SetPreferredMimeTypeFor(Type type, string preferredMimeType, bool addToDefaults = false)
+        public static void SetPreferredMimeTypeFor(Type type, string preferredMimeType)
         {
             if (type == null)
             {
@@ -146,14 +146,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
 
             ClearComputedState();
-            if (addToDefaults)
-            {
-                _defaultPreferredMimeTypes.Push((type, preferredMimeType));
-            }
-            else
-            {
-                _preferredMimeTypes.Push((type, preferredMimeType));
-            }
+            
+            _preferredMimeTypes.Push((type, preferredMimeType));
         }
 
         public static string DefaultMimeType
@@ -163,8 +157,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
                                       throw new ArgumentNullException(nameof(value));
         }
 
-        public static string PreferredMimeTypeFor(Type type) =>
-            _preferredMimeTypesTable.GetOrAdd(type, InferMimeType);
+        public static string GetPreferredMimeTypeFor(Type type) =>
+            _preferredMimeTypesTable.GetOrAdd(type ??= typeof(object), InferMimeType);
 
         private class SortByRelevanceAndOrder<T> : IComparer<T>
         {
@@ -219,22 +213,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        private static string InferMimeType(Type type)
-        {
-            var mimeType = TryInferMimeType(type, _preferredMimeTypes);
-            if (mimeType != null)
-            {
-                return mimeType;
-            }
-
-            mimeType = TryInferMimeType(type, _defaultPreferredMimeTypes);
-            if (mimeType != null)
-            {
-                return mimeType;
-            }
-
-            return _defaultMimeType;
-        }
+        private static string InferMimeType(Type type) =>
+            TryInferMimeType(type, _preferredMimeTypes)  ?? 
+            TryInferMimeType(type, _defaultPreferredMimeTypes) ?? 
+            _defaultMimeType;
 
         public static string ToDisplayString(
             this object obj,
@@ -399,7 +381,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <summary>
         /// Registers a formatter to be used when formatting.
         /// </summary>
-        public static void Register(ITypeFormatter formatter, bool addToDefaults = false)
+        public static void Register(ITypeFormatter formatter)
         {
             if (formatter == null)
             {
@@ -408,14 +390,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             ClearComputedState();
 
-            if (addToDefaults)
-            {
-                _defaultTypeFormatters.Push(formatter);
-            }
-            else
-            {
-                _typeFormatters.Push(formatter);
-            }
+            _typeFormatters.Push(formatter);
         }
 
         /// <summary>
@@ -424,10 +399,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="formatter">The formatter.</param>
         public static void Register<T>(
             Func<FormatContext, T, TextWriter, bool> formatter,
-            string mimeType = PlainTextFormatter.MimeType,
-            bool addToDefaults = false)
+            string mimeType = PlainTextFormatter.MimeType)
         {
-            Register(new AnonymousTypeFormatter<T>(formatter, mimeType), addToDefaults);
+            Register(new AnonymousTypeFormatter<T>(formatter, mimeType));
         }
 
 
@@ -439,10 +413,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static void Register(
             Type type,
             Func<FormatContext, object, TextWriter, bool> formatter,
-            string mimeType = PlainTextFormatter.MimeType, 
-            bool addToDefaults = false)
+            string mimeType = PlainTextFormatter.MimeType)
         {
-            Register(new AnonymousTypeFormatter<object>(formatter, mimeType, type), addToDefaults);
+            Register(new AnonymousTypeFormatter<object>(formatter, mimeType, type));
         }
 
         /// <summary>
@@ -453,14 +426,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static void Register(
             Type type,
             Action<object, TextWriter> formatter,
-            string mimeType = PlainTextFormatter.MimeType,
-            bool addToDefaults = false)
+            string mimeType = PlainTextFormatter.MimeType)
         {
             Register(new AnonymousTypeFormatter<object>((context, value, writer) =>
             {
                 formatter(value, writer); 
                 return true;
-            }, mimeType, type), addToDefaults);
+            }, mimeType, type));
         }
 
         /// <summary>
@@ -469,14 +441,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="formatter">The formatting action.</param>
         public static void Register<T>(
             Action<T, TextWriter> formatter,
-            string mimeType = PlainTextFormatter.MimeType,
-            bool addToDefaults = false)
+            string mimeType = PlainTextFormatter.MimeType)
         {
             Register(new AnonymousTypeFormatter<object>((context, value, writer) =>
             {
                 formatter((T)value, writer); 
                 return true;
-            }, mimeType, typeof(T)), addToDefaults);
+            }, mimeType, typeof(T)));
         }
 
         /// <summary>
@@ -492,7 +463,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 writer.Write(formatter(value)); 
                 return true;
-            }, mimeType), addToDefaults);
+            }, mimeType));
         }
 
         public static IEnumerable<ITypeFormatter> RegisteredFormatters(bool includeDefaults = true)
@@ -555,7 +526,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     .ToArray();
 
             if (candidates.Length == 1)
-               { return candidates[0].formatter;}
+            {
+                return candidates[0].formatter;
+            }
 
             if (candidates.Length > 0)
             {
@@ -563,17 +536,21 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 // Compose the possible formatters into one formatter, trying each in turn
                 return new AnonymousTypeFormatter<object>((context, obj, writer) =>
+                {
+                    foreach (var formatter in candidates)
                     {
-                        foreach (var formatter in candidates)
+                        if (formatter.formatter.Format(context, obj, writer))
                         {
-                            if (formatter.formatter.Format(context, obj, writer))
-                               { return true;}
+                            return true;
                         }
-                      {  return false;}
-                    }, mimeType);
+                    }
+
+                    {
+                        return false;
+                    }
+                }, mimeType);
             }
 
-            // A last restorr
             return null;
         }
 
@@ -583,34 +560,5 @@ namespace Microsoft.DotNet.Interactive.Formatting
             typeof(Formatter)
             .GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
             .Single(m => m.Name == nameof(ReadOnlyMemoryToArray));
-
-
-    }
-
-    internal class FormatterTable
-    {
-        ConcurrentDictionary<(Type type, bool flag), ITypeFormatter> _formatters = new ConcurrentDictionary<(Type type, bool flag), ITypeFormatter>();
-        Type _genericDef;
-        string _name;
-        internal FormatterTable(Type genericDef, string name)
-        {
-            _genericDef = genericDef;
-            _name = name;
-        }
-        internal ITypeFormatter GetFormatter(Type type, bool flag)
-        {
-            return
-                _formatters.GetOrAdd((type, flag),
-                    tup =>
-                    {
-                        return
-                          (ITypeFormatter)
-                            _genericDef
-                            .MakeGenericType(tup.type)
-                            .GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
-                            .Invoke(null, new object[] { flag });
-                    });
-        }
-
     }
 }

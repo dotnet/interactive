@@ -187,7 +187,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             {
                 var value = "hola! \n \t \" \" ' ' the joy of escapes! and    white  space  ";
 
-                var mimeType = Formatter.PreferredMimeTypeFor(typeof(string));
+                var mimeType = Formatter.GetPreferredMimeTypeFor(typeof(string));
                 var text = value.ToDisplayString(mimeType);
 
                 mimeType.Should().Be("text/plain");
@@ -452,11 +452,11 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         {
             Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
 
-            Formatter.PreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
-            Formatter.PreferredMimeTypeFor(typeof(object)).Should().Be(mimeType);
-            Formatter.PreferredMimeTypeFor(typeof(string)).Should().Be(mimeType);
-            Formatter.PreferredMimeTypeFor(typeof(Type)).Should().Be(mimeType);
-            Formatter.PreferredMimeTypeFor(typeof(JsonToken)).Should().Be(mimeType);
+            Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
+            Formatter.GetPreferredMimeTypeFor(typeof(object)).Should().Be(mimeType);
+            Formatter.GetPreferredMimeTypeFor(typeof(string)).Should().Be(mimeType);
+            Formatter.GetPreferredMimeTypeFor(typeof(Type)).Should().Be(mimeType);
+            Formatter.GetPreferredMimeTypeFor(typeof(JsonToken)).Should().Be(mimeType);
 
         }
 
@@ -473,11 +473,11 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             Formatter.SetPreferredMimeTypeFor(typeof(object), "text/html");
             Formatter.SetPreferredMimeTypeFor(typeof(object), mimeType);
 
-            Formatter.PreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
-            Formatter.PreferredMimeTypeFor(typeof(object)).Should().Be(mimeType);
-            Formatter.PreferredMimeTypeFor(typeof(string)).Should().Be(mimeType);
-            Formatter.PreferredMimeTypeFor(typeof(Type)).Should().Be(mimeType);
-            Formatter.PreferredMimeTypeFor(typeof(JsonToken)).Should().Be(mimeType);
+            Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
+            Formatter.GetPreferredMimeTypeFor(typeof(object)).Should().Be(mimeType);
+            Formatter.GetPreferredMimeTypeFor(typeof(string)).Should().Be(mimeType);
+            Formatter.GetPreferredMimeTypeFor(typeof(Type)).Should().Be(mimeType);
+            Formatter.GetPreferredMimeTypeFor(typeof(JsonToken)).Should().Be(mimeType);
 
         }
 
@@ -489,7 +489,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         {
             Formatter.SetPreferredMimeTypeFor(typeof(int), mimeType);
 
-            Formatter.PreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
+            Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be(mimeType);
 
         }
 
@@ -502,7 +502,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             Formatter.SetPreferredMimeTypeFor(typeof(int), mimeType);
             Formatter.ResetToDefault();
 
-            Formatter.PreferredMimeTypeFor(typeof(int)).Should().Be("text/html");
+            Formatter.GetPreferredMimeTypeFor(typeof(int)).Should().Be("text/html");
 
         }
 

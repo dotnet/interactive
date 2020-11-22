@@ -105,17 +105,25 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
 
             var baseChain = actualType;
+
             while (baseChain != null)
             {
                 if (baseChain.IsGenericType && baseChain.GetGenericTypeDefinition().Equals(type))
+                {
                     return true;
+                }
+
                 baseChain = baseChain.BaseType;
             }
+
             foreach (var i in actualType.GetInterfaces())
             {
                 if (i.IsGenericType && i.GetGenericTypeDefinition().Equals(type))
+                {
                     return true;
+                }
             }
+
             return false;
         }
 

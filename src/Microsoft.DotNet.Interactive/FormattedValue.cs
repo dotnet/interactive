@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive
 
             var mimeTypes = MimeTypesFor(type).ToArray();
 
-            var preferredMimeType = Formatter.PreferredMimeTypeFor(type ?? typeof(object));
+            var preferredMimeType = Formatter.GetPreferredMimeTypeFor(type ?? typeof(object));
 
             if (mimeTypes.Length != 1)
             {
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (type != null)
             {
-                var preferredMimeType = Formatter.PreferredMimeTypeFor(type);
+                var preferredMimeType = Formatter.GetPreferredMimeTypeFor(type);
 
                 if (preferredMimeType == null)
                 {

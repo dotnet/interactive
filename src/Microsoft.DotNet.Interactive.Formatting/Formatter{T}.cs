@@ -35,34 +35,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
         }
 
         /// <summary>
-        /// Registers a formatter to be used when formatting instances of type <typeparamref name="T" />.
-        /// </summary>
-        /// <param name="formatter">The formatter.</param>
-        [Obsolete("Please use Formatter.Register<T>(formatter, ...)")]
-        public static void Register(
-            Func<T, string> formatter,
-            string mimeType = PlainTextFormatter.MimeType,
-            bool addToDefaults = false)
-        {
-            Formatter.Register(formatter, mimeType, addToDefaults);
-        }
-
-
-        /// <summary>
-        /// Registers a formatter to be used when formatting instances of type <typeparamref name="T" />.
-        /// </summary>
-        /// <param name="formatter">The formatter.</param>
-        [Obsolete("Please use Formatter.Register<T>(formatter, ...)")]
-        public static void Register(
-            Action<T, TextWriter> formatter,
-            string mimeType = PlainTextFormatter.MimeType,
-            bool addToDefaults = false)
-        {
-            Formatter.Register(formatter, mimeType, addToDefaults);
-        }
-
-
-        /// <summary>
         /// Formats an object and writes it to the specified writer.
         /// </summary>
         /// <param name="obj">The object to be formatted.</param>
