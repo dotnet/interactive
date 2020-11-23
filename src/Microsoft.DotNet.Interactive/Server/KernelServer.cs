@@ -67,9 +67,9 @@ namespace Microsoft.DotNet.Interactive.Server
             }
             catch (JsonReaderException ex)
             {
-                WriteEventToOutput(
-                    new DiagnosticLogEntryProduced(
-                        $"Error while parsing command: {ex.Message}\n{line}"));
+              // WriteEventToOutput(
+              //      new DiagnosticLogEntryProduced(
+               //         $"Error while parsing command: {ex.Message}\n{line}"));
                 
                 return;
             }

@@ -1,41 +1,28 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Pocket;
 
 namespace Recipes
 {
     internal class AsyncLock
     {
         private readonly AsyncSemaphore _semaphore;
-        private readonly Task<Releaser> _releaser;
 
         public AsyncLock()
         {
             _semaphore = new AsyncSemaphore(1);
-            _releaser = Task.FromResult(new Releaser(this));
         }
 
-        public Task<Releaser> LockAsync()
+        public async Task<IDisposable> LockAsync()
         {
-            var wait = _semaphore.WaitAsync();
+            // await _semaphore.WaitAsync();
+            await Task.Yield();
 
-            return wait.IsCompleted
-                       ? _releaser
-                       : wait.ContinueWith((_, state) => new Releaser((AsyncLock) state),
-                                           this, CancellationToken.None,
-                                           TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
-        }
-
-        public struct Releaser : IDisposable
-        {
-            private readonly AsyncLock _toRelease;
-
-            internal Releaser(AsyncLock toRelease)
+            return Disposable.Create(() =>
             {
-                _toRelease = toRelease ?? throw new ArgumentNullException(nameof(toRelease));
-            }
-
-            public void Dispose() => _toRelease?._semaphore.Release();
+                // _semaphore.Release();
+            });
         }
     }
 }

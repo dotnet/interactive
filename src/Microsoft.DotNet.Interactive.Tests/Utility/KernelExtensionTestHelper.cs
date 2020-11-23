@@ -53,7 +53,15 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
 </Project>
 
-"));
+"), 
+       ("global.json", @"{
+  ""sdk"": {
+    ""version"": ""3.1.200"",
+    ""rollForward"": ""latestMinor""
+  }
+}
+")
+);
 
             var dotnet = new Dotnet(projectDir);
 
@@ -126,7 +134,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             return match.Success ? $"{testName}{match.Groups["counter"].Value}" : testName;
         }
 
-        private static async Task CreateExtensionProjectAndBuild(
+     private static async Task CreateExtensionProjectAndBuild(
             DirectoryInfo projectDir,
             string code,
             string extensionName)
@@ -148,6 +156,13 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
   </ItemGroup>
 
 </Project>
+"),
+                ("global.json", @"{
+  ""sdk"": {
+    ""version"": ""3.1.200"",
+    ""rollForward"": ""latestMinor""
+  }
+}
 "));
 
             var buildResult = await new Dotnet(projectDir).Build();

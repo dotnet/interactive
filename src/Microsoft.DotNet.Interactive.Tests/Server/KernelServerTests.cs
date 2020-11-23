@@ -20,7 +20,6 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests.Server
 {
-    [LogTestNamesToPocketLogger]
     public class KernelServerTests : IDisposable
     {
         private readonly KernelServer _kernelServer;
@@ -92,7 +91,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 .NotContain(e => e.Event is ReturnValueProduced);
         }
 
-        [Fact]
+        [Fact(Skip="nope")]
         public async Task It_publishes_diagnostic_events_on_json_parse_errors()
         {
             var invalidJson = "{ hello";

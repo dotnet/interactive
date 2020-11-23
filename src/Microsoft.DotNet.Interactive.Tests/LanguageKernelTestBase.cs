@@ -15,32 +15,42 @@ using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
 using Pocket;
+using Pocket.For.Xunit;
 
 using Recipes;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.LanguageKernelTestBase>;
 
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
+    [LogTestNamesToPocketLogger]
+    [LogToPocketLogger(@"c:\temp\test.log")]
     public abstract class LanguageKernelTestBase : IDisposable
     {
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
         private static readonly AsyncLock _lock = new AsyncLock();
-        private readonly AsyncLock.Releaser _lockReleaser;
 
         protected LanguageKernelTestBase(ITestOutputHelper output)
         {
-            _lockReleaser = Task.Run(() => _lock.LockAsync()).Result;
+            var lockReleaser = Task.Run(() => _lock.LockAsync()).Result;
+
+            DisposeAfterTest(lockReleaser);
 
             DisposeAfterTest(output.SubscribeToPocketLogger());
         }
 
         public void Dispose()
         {
-            _disposables?.Dispose();
-
-            _lockReleaser.Dispose();
+            try
+            {
+                _disposables?.Dispose();
+            }
+            catch (Exception ex) 
+            {
+               Log.Error(exception: ex);
+            }
         }
 
         protected CompositeKernel CreateCompositeKernel(Language defaultKernelLanguage = Language.CSharp,
