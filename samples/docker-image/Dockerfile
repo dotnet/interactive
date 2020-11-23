@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1.302-focal
+FROM mcr.microsoft.com/dotnet/sdk:5.0.100-focal
 
 ARG HTTP_PORT_RANGE=1100-1200
 
@@ -29,7 +29,7 @@ RUN python3 -m pip install setuptools
 RUN python3 -m pip install jupyter
 RUN python3 -m pip install jupyterlab
 
-# Install lastest build from master branch of Microsoft.DotNet.Interactive from myget
+# Install lastest build from master branch of Microsoft.DotNet.Interactive
 RUN dotnet tool install --tool-path /usr/share/dotnet-interactive Microsoft.dotnet-interactive --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json"
 RUN ln -s /usr/share/dotnet-interactive/dotnet-interactive /usr/bin/dotnet-interactive
 RUN dotnet interactive jupyter install --http-port-range ${HTTP_PORT_RANGE}
