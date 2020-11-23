@@ -11,18 +11,17 @@ namespace Recipes
 
         public AsyncLock()
         {
-            _semaphore = new AsyncSemaphore(1);
+          //  _semaphore = new AsyncSemaphore(1);
         }
 
-        public async Task<IDisposable> LockAsync()
+        public Task<IDisposable> LockAsync()
         {
             // await _semaphore.WaitAsync();
-            await Task.Yield();
 
-            return Disposable.Create(() =>
+            return Task.FromResult(Disposable.Create(() =>
             {
                 // _semaphore.Release();
-            });
+            }));
         }
     }
 }

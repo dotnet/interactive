@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.Server
             {
                 kernelCommandEnvelope = KernelCommandEnvelope.Deserialize(line);
             }
-            catch (JsonReaderException ex)
+            catch (JsonReaderException)
             {
               // WriteEventToOutput(
               //      new DiagnosticLogEntryProduced(
