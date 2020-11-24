@@ -6,17 +6,17 @@ If you would like to build `dotnet-interactive` tool and its associated librarie
 
 ## Prerequisites
 
-This project depends on .NET Core 3.1. Before working on the project, check that the .NET Core prerequisites have been met:
+This project depends on .NET 5.0. Before working on the project, check that the .NET prerequisites have been met:
 
-   - [Prerequisites for .NET Core on Windows](https://docs.microsoft.com/en-us/dotnet/core/windows-prerequisites?tabs=netcore31)
-   - [Prerequisites for .NET Core on Linux](https://docs.microsoft.com/en-us/dotnet/core/linux-prerequisites?tabs=netcore31)
-   - [Prerequisites for .NET Core on macOS](https://docs.microsoft.com/en-us/dotnet/core/macos-prerequisites?tabs=netcore31)
+   - [Prerequisites for .NET on Windows](https://docs.microsoft.com/en-us/dotnet/core/install/windows?tabs=net50#dependencies)
+   - [Prerequisites for .NET on Linux](https://docs.microsoft.com/en-us/dotnet/core/install/linux?tabs=net50#dependencies)
+   - [Prerequisites for .NET on macOS](https://docs.microsoft.com/en-us/dotnet/core/install/macos?tabs=net50#dependencies)
 
 ## Visual Studio / Visual Studio Code
 
-This project supports [Visual Studio 2019](https://visualstudio.com) and [Visual Studio for Mac](https://www.visualstudio.com/vs/visual-studio-mac/). Any version, including the free Community Edition, should be sufficient, as long as you install Visual Studio support for .NET Core development.
+This project supports [Visual Studio 2019](https://visualstudio.com) and [Visual Studio for Mac](https://www.visualstudio.com/vs/visual-studio-mac/). Any version, including the free Community Edition, should be sufficient, as long as you install Visual Studio support for .NET development.
 
-This project also supports using [Visual Studio Code](https://code.visualstudio.com). Install the [C# extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp) and install the [.NET Core SDK](https://get.dot.net/core) to get started.
+This project also supports using [Visual Studio Code](https://code.visualstudio.com). Install the [C# extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp) and install the [.NET SDK](https://dotnet.microsoft.com/download) to get started.
 
 ## Build and test (command line)
 
@@ -55,7 +55,7 @@ Linux or macOS:
 To build and then install your developer build of the `dotnet-interactive` global tool, you can run the PowerShell script
 
     pwsh src/dotnet-interactive/build-and-install-dotnet-interactive.ps1
-   
+
 Powershell for .NET Core is required. This will uninstall any previous version of `dotnet-interactive` you might have installed.
 
 ## Arcade build system
