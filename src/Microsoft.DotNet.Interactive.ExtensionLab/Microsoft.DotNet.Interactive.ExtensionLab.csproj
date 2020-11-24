@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
  <PropertyGroup>
@@ -48,7 +48,7 @@
 
  <ItemGroup>
    <PackageReference Include="Iced" Version="1.8.0" />
-   <PackageReference Include="ICSharpCode.Decompiler" Version="6.1.0.5902" />
+   <PackageReference Include="ICSharpCode.Decompiler" Version="7.0.0.6225-preview1" />
    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
    <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="1.1.132302" />
@@ -62,7 +62,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="bin\Debug\netcoreapp3.1\/Microsoft.DotNet.Interactive.ExtensionLab.dll" />
+    <None Remove="bin\Debug\net5.0\Microsoft.DotNet.Interactive.ExtensionLab.dll" />
   </ItemGroup>
 
   <ItemGroup>

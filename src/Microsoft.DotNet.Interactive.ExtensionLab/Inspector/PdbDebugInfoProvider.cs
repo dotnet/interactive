@@ -41,6 +41,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector
         private readonly MetadataReader _reader;
 
         public string Description => "";
+        public string SourceFileName => "";
 
         public PdbDebugInfoProvider(Stream symbolStream)
         {

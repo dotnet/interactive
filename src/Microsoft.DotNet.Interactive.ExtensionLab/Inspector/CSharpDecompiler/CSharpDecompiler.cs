@@ -15,7 +15,13 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.CSharpDecompiler
         {
             var decompilationLanguageVersion = Defaults.GetDecompilationLanguageVersion(inspectionOptions.DecompilationLanguage);
 
-            var decompiler = new ICSharpCode.Decompiler.CSharp.CSharpDecompiler(module: assembly, assemblyResolver: new UniversalAssemblyResolver($"{Defaults.InternalAssemblyName}.dll", true, "netcoreapp3.1"), new DecompilerSettings(decompilationLanguageVersion))
+            var systemPrivateCoreLibLocation = typeof(object).Assembly.Location;
+            using var peStream = File.OpenRead(systemPrivateCoreLibLocation);
+            using var systemPrivateCoreLib = new PEFile(Path.GetFileName(systemPrivateCoreLibLocation), peStream);
+            var targetFramework = systemPrivateCoreLib.DetectTargetFrameworkId();
+            var assemblyResolver = new UniversalAssemblyResolver($"{Defaults.InternalAssemblyName}.dll", true, targetFramework);
+            var settings = new DecompilerSettings(decompilationLanguageVersion);
+            var decompiler = new ICSharpCode.Decompiler.CSharp.CSharpDecompiler(module: assembly, assemblyResolver: assemblyResolver, settings: settings)
             {
                 DebugInfoProvider = debugInfoProvider
             };

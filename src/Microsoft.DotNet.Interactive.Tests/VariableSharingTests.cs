@@ -117,6 +117,92 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .Be("123:System.Int32");
         }
 
+        [Theory]
+        [InlineData(
+            "#!fsharp",
+            "let x = 1",
+            "#!share --from fsharp x")]
+        [InlineData(
+            "#!pwsh",
+            "$x = 1",
+            "#!share --from pwsh x")]
+        public async Task csharp_kernel_variables_shared_from_other_kernels_resolve_to_the_correct_runtime_type(string from, string codeToWrite, string codeToRead)
+        {
+            using var kernel = CreateKernel();
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
+
+            await kernel.SubmitCodeAsync($"#!csharp\n{codeToRead}\nx + 1");
+
+            events.Should()
+                  .ContainSingle<ReturnValueProduced>()
+                  .Which
+                  .Value
+                  .Should()
+                  .Be(2);
+        }
+
+        [Theory]
+        [InlineData(
+            "#!csharp",
+            "var x = 1;",
+            "#!share --from csharp x")]
+        [InlineData(
+            "#!pwsh",
+            "$x = 1",
+            "#!share --from pwsh x")]
+        public async Task fsharp_kernel_variables_shared_from_other_kernels_resolve_to_the_correct_runtime_types(string from, string codeToWrite, string codeToRead)
+        {
+            using var kernel = CreateKernel();
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
+
+            await kernel.SubmitCodeAsync($"#!fsharp\n{codeToRead}\nx + 1");
+
+            events.Should()
+                  .ContainSingle<ReturnValueProduced>()
+                  .Which
+                  .Value
+                  .Should()
+                  .Be(2);
+        }
+
+        [Theory]
+        [InlineData(
+            "#!csharp",
+            "var x = 1;",
+            "#!share --from csharp x")]
+        [InlineData(
+            "#!fsharp",
+            "let x = 1",
+            "#!share --from fsharp x")]
+        public async Task pwsh_kernel_variables_shared_from_other_kernels_resolve_to_the_correct_runtime_type(string from, string codeToWrite, string codeToRead)
+        {
+            using var kernel = CreateKernel();
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
+
+            await kernel.SubmitCodeAsync($"#!pwsh\n{codeToRead}\n$x + 1");
+
+            events.Should()
+                  .ContainSingle<StandardOutputValueProduced>()
+                  .Which
+                  .FormattedValues
+                  .Should()
+                  .ContainSingle(v => v.MimeType == PlainTextFormatter.MimeType)
+                  .Which
+                  .Value
+                  .Trim()
+                  .Should()
+                  .Be("2");
+        }
+
         [Fact(Skip = "not implemented")]
         public async Task Directives_can_access_local_kernel_variables()
         {
