@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Pocket;
 
@@ -11,17 +10,17 @@ namespace Recipes
 
         public AsyncLock()
         {
-          //  _semaphore = new AsyncSemaphore(1);
+            _semaphore = new AsyncSemaphore(1);
         }
 
-        public Task<IDisposable> LockAsync()
+        public async Task<IDisposable> LockAsync()
         {
-            // await _semaphore.WaitAsync();
+            await _semaphore.WaitAsync();
 
-            return Task.FromResult(Disposable.Create(() =>
+            return Disposable.Create(() =>
             {
-                // _semaphore.Release();
-            }));
+                _semaphore.Release();
+            });
         }
     }
 }

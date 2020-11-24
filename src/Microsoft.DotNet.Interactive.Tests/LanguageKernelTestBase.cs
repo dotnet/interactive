@@ -21,6 +21,7 @@ using Recipes;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.LanguageKernelTestBase>;
 
 using Xunit.Abstractions;
+using System.Threading;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -31,12 +32,31 @@ namespace Microsoft.DotNet.Interactive.Tests
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
         private static readonly AsyncLock _lock = new AsyncLock();
+        private static SemaphoreSlim _semaphore = new SemaphoreSlim(1);
 
         protected LanguageKernelTestBase(ITestOutputHelper output)
         {
-            var lockReleaser = Task.Run(() => _lock.LockAsync()).Result;
+            var got = _semaphore.Wait(60000);
 
-            DisposeAfterTest(lockReleaser);
+            if (!got)
+            {
+                Log.Error($"Failed to acquire semaphore in {GetType().Name}");
+               // throw new TimeoutException("Didn't get semaphore in time");
+            }
+            else
+            {
+                DisposeAfterTest(Disposable.Create(() =>
+                {
+                    try
+                    {
+                        _semaphore.Release();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error($"Error when releasing semaphore in {GetType().Name}", ex);
+                    }
+                }));
+            }
 
             DisposeAfterTest(output.SubscribeToPocketLogger());
         }
@@ -49,7 +69,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             }
             catch (Exception ex) 
             {
-               Log.Error(exception: ex);
+                Log.Error(exception: ex);
             }
         }
 
