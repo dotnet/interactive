@@ -48,8 +48,8 @@ namespace Microsoft.DotNet.Interactive
             Pipeline = new KernelCommandPipeline(this);
 
             // FIX: (Kernel) 
-            // AddConsoleMultiplexingMiddleware();
-            AddCaptureConsoleMiddleware();
+             AddConsoleMultiplexingMiddleware();
+            //AddCaptureConsoleMiddleware();
 
             AddSetKernelMiddleware();
 

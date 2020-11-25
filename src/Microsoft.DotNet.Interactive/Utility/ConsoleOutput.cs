@@ -158,7 +158,6 @@ namespace Microsoft.DotNet.Interactive.Utility
                     Console.SetError(_originalErrorWriter);
                 }
 
-                _consoleLock.Release();
                 _isCaptured = false;
             }
         }
