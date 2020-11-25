@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         {
         }
 
-        public static async Task<IObservableConsole> CaptureAsync()
+        private static async Task<IObservableConsole> CaptureAsync()
         {
             if (_isCaptured)
             {
@@ -441,8 +441,8 @@ namespace Microsoft.DotNet.Interactive.Utility
         private class ObservableConsole : IObservableConsole
         {
             public ObservableConsole(
-                ObservableStringWriter @out,
-                ObservableStringWriter error)
+                IObservable<string> @out,
+                IObservable<string> error)
             {
                 Out = @out;
                 Error = error;

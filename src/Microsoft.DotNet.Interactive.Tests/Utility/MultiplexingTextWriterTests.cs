@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             {
                 return Task.Run(async () =>
                 {
-                    using var _ = writer.InitializeForCurrentAsyncContext();
+                    using var _ = writer.EnsureInitializedForCurrentAsyncContext();
 
                     barrier.SignalAndWait();
 
@@ -59,11 +59,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         public void Initialization_per_context_is_idempotent()
         {
             var writer = new MultiplexingTextWriter(() => new TestWriter());
-            using var outer = writer.InitializeForCurrentAsyncContext();
+            using var outer = writer.EnsureInitializedForCurrentAsyncContext();
             writer.Write("hi!");
             writer.Writers.Count().Should().Be(1);
 
-            using var inner = writer.InitializeForCurrentAsyncContext();
+            using var inner = writer.EnsureInitializedForCurrentAsyncContext();
 
             writer.Writers
                   .Should()
@@ -79,9 +79,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         public void Disposal_of_outer_context_disposes_writer()
         {
             var writer = new MultiplexingTextWriter(() => new TestWriter());
-            using var outer = writer.InitializeForCurrentAsyncContext();
+            using var outer = writer.EnsureInitializedForCurrentAsyncContext();
             writer.Write("outer");
-            var inner = writer.InitializeForCurrentAsyncContext();
+            var inner = writer.EnsureInitializedForCurrentAsyncContext();
             writer.Write(inner);
 
             var testWriter = writer.Writers.OfType<TestWriter>().Single();
@@ -95,9 +95,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         public void Disposal_of_inner_contexts_doe_not_dispose_writer()
         {
             var writer = new MultiplexingTextWriter();
-            using var outer = writer.InitializeForCurrentAsyncContext();
+            using var outer = writer.EnsureInitializedForCurrentAsyncContext();
             writer.Write("outer");
-            var inner = writer.InitializeForCurrentAsyncContext();
+            var inner = writer.EnsureInitializedForCurrentAsyncContext();
             writer.Write(inner);
             
             inner.Dispose();
@@ -113,7 +113,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             try
             {
                 var multiWriter = new MultiplexingTextWriter();
-                using var _ = multiWriter.InitializeForCurrentAsyncContext();
+                using var _ = multiWriter.EnsureInitializedForCurrentAsyncContext();
 
                 Console.SetOut(multiWriter);
 
@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             try
             {
                 var multiWriter = new MultiplexingTextWriter();
-                multiWriter.InitializeForCurrentAsyncContext();
+                multiWriter.EnsureInitializedForCurrentAsyncContext();
 
                 Console.SetOut(multiWriter);
 

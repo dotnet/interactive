@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -72,7 +73,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             }
         }
 
-        public IDisposable InitializeForCurrentAsyncContext()
+        public IDisposable EnsureInitializedForCurrentAsyncContext()
         {
             if (_localKey.Value is null)
             {
