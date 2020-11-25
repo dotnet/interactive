@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Interactive
 
             Pipeline = new KernelCommandPipeline(this);
 
-            AddCaptureConsoleMiddleware();
+            AddConsoleMultiplexingMiddleware();
 
             AddSetKernelMiddleware();
 
@@ -89,6 +89,23 @@ namespace Microsoft.DotNet.Interactive
             AddMiddleware(async (command, context, next) =>
             {
                 using var console = await ConsoleOutput.TryCaptureAsync(c =>
+                {
+                    return new CompositeDisposable
+                    {
+                        c.Out.Subscribe(s => context.DisplayStandardOut(s, command)),
+                        c.Error.Subscribe(s => context.DisplayStandardError(s, command))
+                    };
+                });
+
+                await next(command, context);
+            });
+        }
+
+        private void AddConsoleMultiplexingMiddleware()
+        {
+            AddMiddleware(async (command, context, next) =>
+            {
+                using var _ = await ConsoleOutput.TryCaptureAsync2(c =>
                 {
                     return new CompositeDisposable
                     {

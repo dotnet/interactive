@@ -40,6 +40,12 @@ namespace Microsoft.DotNet.Interactive.Utility
             Dispose(true);
         }
 
+        public IObservable<string> GetObservable()
+        {
+            // FIX: (GetObservable) observability per context
+            return Observable.Empty<string>();
+        } 
+
         public override Encoding Encoding
         {
             get

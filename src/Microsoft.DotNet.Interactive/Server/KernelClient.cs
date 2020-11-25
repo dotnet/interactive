@@ -83,6 +83,7 @@ namespace Microsoft.DotNet.Interactive.Server
             }
             catch (JsonReaderException)
             {
+                // FIX: error channel
            //     var diagnosticEvent = new DiagnosticLogEntryProduced(
              //           $"Error while parsing command: {ex.Message}\n{line}");
 

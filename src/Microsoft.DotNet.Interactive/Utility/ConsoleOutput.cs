@@ -80,6 +80,66 @@ namespace Microsoft.DotNet.Interactive.Utility
             return Task.CompletedTask;
         }
 
+        private static async Task<IObservableConsole> CaptureAsync2()
+        {
+            await _consoleLock.WaitAsync();
+
+            using var _ = Disposable.Create(() => _consoleLock.Release());
+
+            if (!(Console.Out is MultiplexingTextWriter @out) ||
+                !(Console.Error is MultiplexingTextWriter error))
+            {
+                var multiplexed = new ConsoleOutput
+                {
+                    _originalOutputWriter = Console.Out,
+                    _originalErrorWriter = Console.Error
+                };
+
+                @out = new MultiplexingTextWriter();
+                error = new MultiplexingTextWriter();
+
+                EnsureInitializedForCurrentAsyncContext();
+
+                Console.SetOut(@out);
+                Console.SetError(error);
+
+                _isCaptured = true;
+
+                return multiplexed;
+            }
+            else
+            {
+                EnsureInitializedForCurrentAsyncContext();
+                return new ObservableConsole(
+                    @out: @out.GetObservable(),
+                    error: error.GetObservable());
+            }
+
+            void EnsureInitializedForCurrentAsyncContext()
+            {
+                @out.EnsureInitializedForCurrentAsyncContext();
+                error.EnsureInitializedForCurrentAsyncContext();
+            }
+        }
+
+        public static async Task<IDisposable> TryCaptureAsync2(Func<IObservableConsole, IDisposable> onCaptured)
+        {
+            if (!_isCaptured)
+            {
+                var console = await CaptureAsync2();
+
+                var disposables = onCaptured(console);
+
+                return new CompositeDisposable
+                {
+                    disposables,
+                    console
+                };
+            }
+
+            return Task.CompletedTask;
+        }
+
         public IObservable<string> Out => _outputWriter;
 
         public IObservable<string> Error => _errorWriter;
@@ -102,18 +162,6 @@ namespace Microsoft.DotNet.Interactive.Utility
                 _isCaptured = false;
             }
         }
-
-        public string StandardOutput => _outputWriter.ToString();
-
-        public string StandardError => _errorWriter.ToString();
-
-        public void Clear()
-        {
-            _outputWriter.GetStringBuilder().Clear();
-            _errorWriter.GetStringBuilder().Clear();
-        }
-
-        public bool IsEmpty() => _outputWriter.ToString().Length == 0 && _errorWriter.ToString().Length == 0;
 
         private class ObservableStringWriter : StringWriter, IObservable<string>
         {
