@@ -352,7 +352,7 @@ namespace Microsoft.DotNet.Interactive
                     await ExecuteCommand(currentOperation);
 
                     ProcessCommandQueue(commandQueue, cancellationToken,onDone);
-                }, cancellationToken).ConfigureAwait(false);
+                },  cancellationToken).ConfigureAwait(false);
             }
             else
             {

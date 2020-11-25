@@ -11,19 +11,21 @@ namespace Microsoft.DotNet.Interactive.Utility
 {
     internal class ConsoleOutput : IObservableConsole
     {
-        private TextWriter _originalOutputWriter;
-        private TextWriter _originalErrorWriter;
+        private static readonly SemaphoreSlim _consoleLock = new SemaphoreSlim(1, 1);
+        private static bool _isCaptured;
+        private static RefCountDisposable _refCount;
+        private static MultiplexingTextWriter @out;
+        private static MultiplexingTextWriter error;
         private static readonly ObservableStringWriter _outputWriter = new ObservableStringWriter();
         private static readonly ObservableStringWriter _errorWriter = new ObservableStringWriter();
+
+        private TextWriter _originalOutputWriter;
+        private TextWriter _originalErrorWriter;
 
         private const int NOT_DISPOSED = 0;
         private const int DISPOSED = 1;
 
         private int _alreadyDisposed = NOT_DISPOSED;
-
-        private static readonly SemaphoreSlim _consoleLock = new SemaphoreSlim(1, 1);
-        private static bool _isCaptured;
-        private static RefCountDisposable _refCount;
 
         private ConsoleOutput()
         {
@@ -84,8 +86,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
             using var _ = Disposable.Create(() => _consoleLock.Release());
 
-            if (Console.Out is not MultiplexingTextWriter @out ||
-                Console.Error is not MultiplexingTextWriter error)
+            if (_refCount is null)
             {
                 var console = new ConsoleOutput
                 {
@@ -105,14 +106,18 @@ namespace Microsoft.DotNet.Interactive.Utility
 
                 _refCount = new RefCountDisposable(Disposable.Create(() =>
                 {
+                    @out = null;
+                    error = null;
                     _refCount = null;
 
                     console.RestoreSystemConsole();
                 }));
 
+                var subscription = subscribe(console);
+
                 return new CompositeDisposable {
                     _refCount,
-                    subscribe(console)
+                    subscription
                 };
             }
             else
