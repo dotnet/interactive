@@ -43,8 +43,6 @@ namespace Microsoft.DotNet.Interactive.Utility
             var redirector = new ConsoleOutput();
             await _consoleLock.WaitAsync();
             
-            _isCaptured = true;
-            
             try
             {
                 redirector._originalOutputWriter = Console.Out;
@@ -52,6 +50,8 @@ namespace Microsoft.DotNet.Interactive.Utility
 
                 Console.SetOut(_outputWriter);
                 Console.SetError(_errorWriter);
+
+                _isCaptured = true;
             }
             catch
             {
