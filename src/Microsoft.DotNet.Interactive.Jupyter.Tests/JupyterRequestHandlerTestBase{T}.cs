@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
     {
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
         private readonly CSharpKernel _cSharpKernel;
-        private readonly FSharpKernelBase _fSharpKernel;
+        private readonly FSharpKernel _fSharpKernel;
         private readonly PowerShellKernel _psKernel;
         private readonly CompositeKernel _compositeKernel;
 

@@ -16,7 +16,7 @@ type FSharpKernelExtensions private () =
     static let openNamespaceOrType (whatToOpen: string) = sprintf "open %s" whatToOpen
 
     [<Extension>]
-    static member UseDefaultFormatting(kernel: FSharpKernelBase) =
+    static member UseDefaultFormatting(kernel: FSharpKernel) =
         let code = 
             [
                 referenceFromType typeof<IHtmlContent>
@@ -35,12 +35,12 @@ type FSharpKernelExtensions private () =
         kernel
 
     [<Extension>]
-    static member UseDefaultNamespaces(kernel: FSharpKernelBase) =
+    static member UseDefaultNamespaces(kernel: FSharpKernel) =
         // F# has its own views on what namespaces are open by default in its scripting model
         kernel
 
     [<Extension>]
-    static member UseKernelHelpers(kernel: FSharpKernelBase) =
+    static member UseKernelHelpers(kernel: FSharpKernel) =
         let code = 
             [
                 referenceFromType typeof<FSharpKernelHelpers.IMarker>
