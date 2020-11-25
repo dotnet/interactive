@@ -24,7 +24,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         {
             var msbuildFragment = GenerateEmbeddedResourceFragment(filesToEmbed);
 
-
             var extensionCode = filesToEmbed?.Length == 0 ? ExtensionCs(code) : FileProviderExtensionCs(code);
             projectDir.Populate(
                 extensionCode,
@@ -53,15 +52,15 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
 </Project>
 
-"), 
-       ("global.json", @"{
+"),
+                ("global.json", @"{
   ""sdk"": {
-    ""version"": ""3.1.200"",
+    ""version"": ""5.0.100"",
     ""rollForward"": ""latestMinor""
   }
 }
 ")
-);
+            );
 
             var dotnet = new Dotnet(projectDir);
 
@@ -134,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             return match.Success ? $"{testName}{match.Groups["counter"].Value}" : testName;
         }
 
-     private static async Task CreateExtensionProjectAndBuild(
+        private static async Task CreateExtensionProjectAndBuild(
             DirectoryInfo projectDir,
             string code,
             string extensionName)
@@ -159,7 +158,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 "),
                 ("global.json", @"{
   ""sdk"": {
-    ""version"": ""3.1.200"",
+    ""version"": ""5.0.100"",
     ""rollForward"": ""latestMinor""
   }
 }
