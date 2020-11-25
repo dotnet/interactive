@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.Interactive
         {
             AddMiddleware(async (command, context, next) =>
             {
-                using var _ = await ConsoleOutput.TryCaptureAsync2(c =>
+                using var _ = await ConsoleOutput.SubscribeAsync(c =>
                 {
                     return new CompositeDisposable
                     {
