@@ -31,52 +31,13 @@ namespace Microsoft.DotNet.Interactive.Utility
             Func<TextWriter> createTextWriter = null,
             TextWriter defaultWriter = null)
         {
-            _createTextWriter = createTextWriter ?? (() => new StringWriter());
+            _createTextWriter = createTextWriter ?? (() => new ObservableStringWriter());
             _defaultWriter = defaultWriter ?? Null;
         }
 
         public override void Close()
         {
             Dispose(true);
-        }
-
-        public IObservable<string> GetObservable()
-        {
-            // FIX: (GetObservable) observability per context
-            return Observable.Empty<string>();
-        } 
-
-        public override Encoding Encoding
-        {
-            get
-            {
-                if (_encoding == null)
-                {
-                    _encoding = new UnicodeEncoding(false, false);
-                }
-
-                return _encoding;
-            }
-        }
-
-        public IEnumerable<TextWriter> Writers => _writers.Values;
-
-        public override void Write(char value)
-        {
-            GetCurrentWriter().Write(value);
-        }
-
-        public override void Write(char[] buffer, int index, int count)
-        {
-            GetCurrentWriter().Write(buffer, index, count);
-        }
-
-        public override void Write(string value)
-        {
-            if (value != null)
-            {
-                GetCurrentWriter().Write(value);
-            }
         }
 
         public IDisposable EnsureInitializedForCurrentAsyncContext()
@@ -111,40 +72,259 @@ namespace Microsoft.DotNet.Interactive.Utility
             return _defaultWriter;
         }
 
-        public override Task WriteAsync(char value)
+        public IObservable<string> GetObservable()
         {
-            Write(value);
-            return Task.CompletedTask;
+            if (GetCurrentWriter() is IObservable<string> observable)
+            {
+                return observable;
+            }
+
+            return Observable.Empty<string>();
+        } 
+
+        public override Encoding Encoding
+        {
+            get
+            {
+                if (_encoding == null)
+                {
+                    _encoding = new UnicodeEncoding(false, false);
+                }
+
+                return _encoding;
+            }
         }
 
-        public override Task WriteAsync(String value)
+        public IEnumerable<TextWriter> Writers => _writers.Values;
+
+        public override void Write(char value)
         {
-            Write(value);
-            return Task.CompletedTask;
+            GetCurrentWriter().Write(value);
+        }
+
+        public override void WriteLine()
+        {
+            GetCurrentWriter().WriteLine();
+        }
+
+        public override void WriteLine(char value)
+        {
+            GetCurrentWriter().WriteLine(value);
+        }
+
+        public override void Write(char[] buffer, int index, int count)
+        {
+            GetCurrentWriter().Write(buffer, index, count);
+        }
+
+        public override void Write(string value)
+        {
+            GetCurrentWriter().Write(value);
+        }
+
+        public override void Write(bool value)
+        {
+            GetCurrentWriter().Write(value);
+        }
+
+        public override void Write(char[] buffer)
+        {
+            GetCurrentWriter().Write(buffer);
+        }
+
+        public override void Write(decimal value)
+        {
+            GetCurrentWriter().Write(value);
+        }
+
+        public override void Write(double value)
+        {
+            GetCurrentWriter().Write(value);
+        }
+
+        public override void Write(int value)
+        {
+            GetCurrentWriter().Write(value);
+        }
+
+        public override void Write(long value)
+        {
+            GetCurrentWriter().Write(value);
+        }
+
+        public override void Write(object value)
+        {
+            GetCurrentWriter().Write(value);
+        }
+
+        public override void Write(ReadOnlySpan<char> buffer)
+        {
+            GetCurrentWriter().Write(buffer);
+        }
+
+        public override void Write(float value)
+        {
+            GetCurrentWriter().Write(value);
+        }
+
+        public override void Write(string format, object arg0)
+        {
+            GetCurrentWriter().Write(format, arg0);
+        }
+
+        public override void Write(string format, object arg0, object arg1)
+        {
+            GetCurrentWriter().Write(format, arg0, arg1);
+        }
+
+        public override void Write(string format, object arg0, object arg1, object arg2)
+        {
+            GetCurrentWriter().Write(format, arg0, arg1, arg2);
+        }
+
+        public override void Write(string format, params object[] arg)
+        {
+            GetCurrentWriter().Write(format, arg);
+        }
+
+        public override void Write(uint value)
+        {
+            GetCurrentWriter().Write(value);
+        }
+
+        public override void Write(ulong value)
+        {
+            GetCurrentWriter().Write(value);
+        }
+
+        public override Task WriteAsync(char value)
+        {
+            return GetCurrentWriter().WriteAsync(value);
         }
 
         public override Task WriteAsync(char[] buffer, int index, int count)
         {
-            Write(buffer, index, count);
-            return Task.CompletedTask;
+            return GetCurrentWriter().WriteAsync(buffer, index, count);
+        }
+
+        public override Task WriteAsync(ReadOnlyMemory<char> buffer, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return GetCurrentWriter().WriteAsync(buffer, cancellationToken);
+        }
+
+        public override Task WriteAsync(string value)
+        {
+            return GetCurrentWriter().WriteAsync(value);
+        }
+
+        public override void WriteLine(bool value)
+        {
+            GetCurrentWriter().WriteLine(value);
+        }
+
+        public override void WriteLine(char[] buffer)
+        {
+            GetCurrentWriter().WriteLine(buffer);
+        }
+
+        public override void WriteLine(char[] buffer, int index, int count)
+        {
+            GetCurrentWriter().WriteLine(buffer, index, count);
+        }
+
+        public override void WriteLine(decimal value)
+        {
+            GetCurrentWriter().WriteLine(value);
+        }
+
+        public override void WriteLine(double value)
+        {
+            GetCurrentWriter().WriteLine(value);
+        }
+
+        public override void WriteLine(int value)
+        {
+            GetCurrentWriter().WriteLine(value);
+        }
+
+        public override void WriteLine(long value)
+        {
+            GetCurrentWriter().WriteLine(value);
+        }
+
+        public override void WriteLine(object value)
+        {
+            GetCurrentWriter().WriteLine(value);
+        }
+
+        public override void WriteLine(ReadOnlySpan<char> buffer)
+        {
+            GetCurrentWriter().WriteLine(buffer);
+        }
+
+        public override void WriteLine(float value)
+        {
+            GetCurrentWriter().WriteLine(value);
+        }
+
+        public override void WriteLine(string value)
+        {
+            GetCurrentWriter().WriteLine(value);
+        }
+
+        public override void WriteLine(string format, object arg0)
+        {
+            GetCurrentWriter().WriteLine(format, arg0);
+        }
+
+        public override void WriteLine(string format, object arg0, object arg1)
+        {
+            GetCurrentWriter().WriteLine(format, arg0, arg1);
+        }
+
+        public override void WriteLine(string format, object arg0, object arg1, object arg2)
+        {
+            GetCurrentWriter().WriteLine(format, arg0, arg1, arg2);
+        }
+
+        public override void WriteLine(string format, params object[] arg)
+        {
+            GetCurrentWriter().WriteLine(format, arg);
+        }
+
+        public override void WriteLine(uint value)
+        {
+            GetCurrentWriter().WriteLine(value);
+        }
+
+        public override void WriteLine(ulong value)
+        {
+            GetCurrentWriter().WriteLine(value);
+        }
+
+        public override Task WriteLineAsync()
+        {
+            return GetCurrentWriter().WriteLineAsync();
         }
 
         public override Task WriteLineAsync(char value)
         {
-            WriteLine(value);
-            return Task.CompletedTask;
-        }
-
-        public override Task WriteLineAsync(String value)
-        {
-            WriteLine(value);
-            return Task.CompletedTask;
+            return GetCurrentWriter().WriteLineAsync(value);
         }
 
         public override Task WriteLineAsync(char[] buffer, int index, int count)
         {
-            WriteLine(buffer, index, count);
-            return Task.CompletedTask;
+            return GetCurrentWriter().WriteLineAsync(buffer, index, count);
+        }
+
+        public override Task WriteLineAsync(ReadOnlyMemory<char> buffer, CancellationToken cancellationToken = new CancellationToken())
+        {
+            return GetCurrentWriter().WriteLineAsync(buffer, cancellationToken);
+        }
+
+        public override Task WriteLineAsync(string value)
+        {
+            return GetCurrentWriter().WriteLineAsync(value);
         }
 
         public override string ToString()
