@@ -13,34 +13,6 @@ using Pocket;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
-    internal static class AsyncContext
-    {
-        private static int _seed = 0;
-
-        private static readonly AsyncLocal<int?> _id = new AsyncLocal<int?>();
-
-        public static int? Id
-        {
-            get => _id.Value;
-            set => _id.Value = value;
-        }
-
-        public static bool TryEstablish(out int id)
-        {
-            if (_id.Value is { } value)
-            {
-                id = _id.Value.Value;
-                return false;
-            }
-            else
-            {
-                _id.Value = Interlocked.Increment(ref _seed);
-                id = _id.Value.Value;
-                return true;
-            }
-        }
-    }
-
     public class MultiplexingTextWriter : TextWriter
     {
         private static volatile UnicodeEncoding _encoding;
@@ -98,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             {
                 if (_defaultWriter is IObservable<string> observable2)
                 {
-                    return observable2.Merge(observable);
+                   // return observable2.Merge(observable);
                 }
 
                 return observable;

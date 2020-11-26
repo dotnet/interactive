@@ -86,23 +86,6 @@ namespace Microsoft.DotNet.Interactive
             AddMiddleware(SetKernel);
         }
 
-        private void AddCaptureConsoleMiddleware()
-        {
-            AddMiddleware(async (command, context, next) =>
-            {
-                using var console = await ConsoleOutput.TryCaptureAsync(c =>
-                {
-                    return new CompositeDisposable
-                    {
-                        c.Out.Subscribe(s => context.DisplayStandardOut(s, command)),
-                        c.Error.Subscribe(s => context.DisplayStandardError(s, command))
-                    };
-                });
-
-                await next(command, context);
-            });
-        }
-
         private void AddConsoleMultiplexingMiddleware()
         {
             AddMiddleware(async (command, context, next) =>

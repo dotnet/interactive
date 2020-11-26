@@ -14,10 +14,8 @@ namespace Microsoft.DotNet.Interactive.Utility
         private static readonly SemaphoreSlim _consoleLock = new SemaphoreSlim(1, 1);
         private static bool _isCaptured;
         private static RefCountDisposable _refCount;
-        private static MultiplexingTextWriter @out;
-        private static MultiplexingTextWriter error;
-        private static readonly ObservableStringWriter _outputWriter = new ObservableStringWriter();
-        private static readonly ObservableStringWriter _errorWriter = new ObservableStringWriter();
+        private static MultiplexingTextWriter _out;
+        private static MultiplexingTextWriter _error;
 
         private TextWriter _originalOutputWriter;
         private TextWriter _originalErrorWriter;
@@ -29,55 +27,6 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         private ConsoleOutput()
         {
-        }
-
-        private static async Task<IObservableConsole> CaptureAsync()
-        {
-            if (_isCaptured)
-            {
-                return new ObservableConsole(
-                    @out: _outputWriter,
-                    error: _errorWriter);
-            }
-
-            var redirector = new ConsoleOutput();
-            await _consoleLock.WaitAsync();
-
-            try
-            {
-                redirector._originalOutputWriter = Console.Out;
-                redirector._originalErrorWriter = Console.Error;
-
-                Console.SetOut(_outputWriter);
-                Console.SetError(_errorWriter);
-
-                _isCaptured = true;
-            }
-            catch
-            {
-                _consoleLock.Release();
-                throw;
-            }
-
-            return redirector;
-        }
-
-        public static async Task<IDisposable> TryCaptureAsync(Func<IObservableConsole, IDisposable> onCaptured)
-        {
-            if (!_isCaptured)
-            {
-                var console = await CaptureAsync();
-
-                var disposables = onCaptured(console);
-
-                return new CompositeDisposable
-                {
-                    disposables,
-                    console
-                };
-            }
-
-            return Task.CompletedTask;
         }
 
         public static async Task<IDisposable> SubscribeAsync(Func<IObservableConsole, IDisposable> subscribe)
@@ -94,20 +43,20 @@ namespace Microsoft.DotNet.Interactive.Utility
                     _originalErrorWriter = Console.Error
                 };
 
-                @out = new MultiplexingTextWriter();
-                error = new MultiplexingTextWriter();
+                _out = new MultiplexingTextWriter();
+                _error = new MultiplexingTextWriter();
 
                 EnsureInitializedForCurrentAsyncContext();
 
-                Console.SetOut(@out);
-                Console.SetError(error);
+                Console.SetOut(_out);
+                Console.SetError(_error);
 
                 _isCaptured = true;
 
                 _refCount = new RefCountDisposable(Disposable.Create(() =>
                 {
-                    @out = null;
-                    error = null;
+                    _out = null;
+                    _error = null;
                     _refCount = null;
 
                     console.RestoreSystemConsole();
@@ -125,8 +74,8 @@ namespace Microsoft.DotNet.Interactive.Utility
                 EnsureInitializedForCurrentAsyncContext();
 
                 var console = new ObservableConsole(
-                    @out: @out.GetObservable(),
-                    error: error.GetObservable());
+                    @out: _out.GetObservable(),
+                    error: _error.GetObservable());
 
                 return new CompositeDisposable{
                     _refCount.GetDisposable(),
@@ -135,14 +84,14 @@ namespace Microsoft.DotNet.Interactive.Utility
 
             void EnsureInitializedForCurrentAsyncContext()
             {
-                @out.EnsureInitializedForCurrentAsyncContext();
-                error.EnsureInitializedForCurrentAsyncContext();
+                _out.EnsureInitializedForCurrentAsyncContext();
+                _error.EnsureInitializedForCurrentAsyncContext();
             }
         }
 
-        public IObservable<string> Out => _outputWriter;
+        public IObservable<string> Out => _out.GetObservable();
 
-        public IObservable<string> Error => _errorWriter;
+        public IObservable<string> Error => _error.GetObservable();
 
         public void Dispose()
         {
