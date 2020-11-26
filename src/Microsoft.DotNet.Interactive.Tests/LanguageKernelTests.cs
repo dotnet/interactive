@@ -889,11 +889,12 @@ Console.Write(""value three"");"
 
             KernelEvents
                 .OfType<StandardOutputValueProduced>()
+                .Select(e => e.FormattedValues.ToArray())
                 .Should()
-                .BeEquivalentTo(
-                    new StandardOutputValueProduced(kernelCommand, new[] { new FormattedValue("text/plain", "value one") }),
-                    new StandardOutputValueProduced(kernelCommand, new[] { new FormattedValue("text/plain", "value two") }),
-                    new StandardOutputValueProduced(kernelCommand, new[] { new FormattedValue("text/plain", "value three") }));
+                .BeEquivalentSequenceTo(
+                    new[] { new FormattedValue("text/plain", "value one") },
+                    new[] { new FormattedValue("text/plain", "value two") },
+                    new[] { new FormattedValue("text/plain", "value three") });
         }
 
         [Theory]

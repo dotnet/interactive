@@ -13,18 +13,42 @@ using Pocket;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
+    internal static class AsyncContext
+    {
+        private static int _seed = 0;
+
+        private static readonly AsyncLocal<int?> _id = new AsyncLocal<int?>();
+
+        public static int? Id
+        {
+            get => _id.Value;
+            set => _id.Value = value;
+        }
+
+        public static bool TryEstablish(out int id)
+        {
+            if (_id.Value is { } value)
+            {
+                id = _id.Value.Value;
+                return false;
+            }
+            else
+            {
+                _id.Value = Interlocked.Increment(ref _seed);
+                id = _id.Value.Value;
+                return true;
+            }
+        }
+    }
+
     public class MultiplexingTextWriter : TextWriter
     {
         private static volatile UnicodeEncoding _encoding;
 
         private readonly Func<TextWriter> _createTextWriter;
 
-        private int _key = 0;
-
-        private readonly AsyncLocal<int?> _localKey = new AsyncLocal<int?>();
-
         private readonly ConcurrentDictionary<int, TextWriter> _writers = new ConcurrentDictionary<int, TextWriter>();
-        
+
         private readonly TextWriter _defaultWriter;
 
         public MultiplexingTextWriter(
@@ -32,7 +56,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             TextWriter defaultWriter = null)
         {
             _createTextWriter = createTextWriter ?? (() => new ObservableStringWriter());
-            _defaultWriter = defaultWriter ?? Null;
+            _defaultWriter = defaultWriter ?? new ObservableStringWriter();
         }
 
         public override void Close()
@@ -42,15 +66,11 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         public IDisposable EnsureInitializedForCurrentAsyncContext()
         {
-            if (_localKey.Value is null)
+            if (AsyncContext.TryEstablish(out var id))
             {
-                _localKey.Value = Interlocked.Increment(ref _key);
-
-                var copy = _key;
-
                 return Disposable.Create(() =>
                 {
-                    _writers.TryRemove(copy, out var writer);
+                    _writers.TryRemove(id, out var writer);
                     writer?.Dispose();
                 });
             }
@@ -62,7 +82,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         private TextWriter GetCurrentWriter()
         {
-            if (_localKey.Value is { } key)
+            if (AsyncContext.Id is { } key)
             {
                 return _writers.GetOrAdd(
                     key,
@@ -76,11 +96,21 @@ namespace Microsoft.DotNet.Interactive.Utility
         {
             if (GetCurrentWriter() is IObservable<string> observable)
             {
+                if (_defaultWriter is IObservable<string> observable2)
+                {
+                    return observable2.Merge(observable);
+                }
+
                 return observable;
             }
 
+            if (_defaultWriter is IObservable<string> observable3)
+            {
+                return observable3;
+            }
+
             return Observable.Empty<string>();
-        } 
+        }
 
         public override Encoding Encoding
         {
@@ -329,7 +359,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         public override string ToString()
         {
-            if (_localKey.Value is {} key)
+            if (AsyncContext.Id is { } key)
             {
                 return _writers[key].ToString();
             }

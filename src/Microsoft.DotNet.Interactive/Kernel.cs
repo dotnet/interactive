@@ -255,15 +255,22 @@ namespace Microsoft.DotNet.Interactive
         
         private class KernelOperation
         {
-            public KernelOperation(KernelCommand command, TaskCompletionSource<KernelCommandResult> taskCompletionSource)
+            public KernelOperation(
+                KernelCommand command, 
+                TaskCompletionSource<KernelCommandResult> taskCompletionSource)
             {
                 Command = command;
                 TaskCompletionSource = taskCompletionSource;
+                
+                AsyncContext.TryEstablish(out var id);
+                AsyncContextId = id;
             }
 
             public KernelCommand Command { get; }
 
             public TaskCompletionSource<KernelCommandResult> TaskCompletionSource { get; }
+
+            public int AsyncContextId { get; }
         }
 
         private async Task ExecuteCommand(KernelOperation operation)
@@ -349,10 +356,12 @@ namespace Microsoft.DotNet.Interactive
             {
                 Task.Run(async () =>
                 {
+                    AsyncContext.Id = currentOperation.AsyncContextId;
+                       
                     await ExecuteCommand(currentOperation);
 
-                    ProcessCommandQueue(commandQueue, cancellationToken,onDone);
-                },  cancellationToken).ConfigureAwait(false);
+                    ProcessCommandQueue(commandQueue, cancellationToken, onDone);
+                }, cancellationToken).ConfigureAwait(false);
             }
             else
             {
