@@ -72,7 +72,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj" />
-    <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp.Wrapper\Microsoft.DotNet.Interactive.FSharp.Wrapper.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp\Microsoft.DotNet.Interactive.FSharp.fsproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Http\Microsoft.DotNet.Interactive.Http.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.PowerShell\Microsoft.DotNet.Interactive.PowerShell.csproj" />

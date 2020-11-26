@@ -9,9 +9,6 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <!-- The Microsoft.DotNet.Interactive.FSharp.Wrapper project is the package entry point. -->
-    <PackageId>Microsoft.DotNet.Interactive.FSharp.Internal</PackageId>
-    <!-- -->
     <PackageDescription>Microsoft.DotNet.Interactive.Kernel implementation for F#</PackageDescription>
     <PackageTags>interactive fsharp</PackageTags>
   </PropertyGroup>

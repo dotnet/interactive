@@ -29,8 +29,7 @@ open FSharp.Compiler.Scripting
 open FSharp.Compiler.SourceCodeServices
 open FsAutoComplete
 
-[<AbstractClass>]
-type FSharpKernelBase () as this =
+type FSharpKernel () as this =
 
     inherit DotNetKernel("fsharp")
 
@@ -386,17 +385,17 @@ type FSharpKernelBase () as this =
 
     member _.PackageRestoreContext = _packageRestoreContext.Value
 
-    // ideally via IKernelCommandHandler<RequestCompletion>, but requires https://github.com/dotnet/fsharp/pull/2867
-    member _.HandleRequestCompletionAsync(command: RequestCompletions, context: KernelInvocationContext) = handleRequestCompletions command context |> Async.StartAsTask :> Task
+    interface IKernelCommandHandler<RequestCompletions> with
+        member this.HandleAsync(command: RequestCompletions, context: KernelInvocationContext) = handleRequestCompletions command context |> Async.StartAsTask :> Task
 
-    // ideally via IKernelCommandHandler<RequestDiagnostics, but requires https://github.com/dotnet/fsharp/pull/2867
-    member _.HandleRequestDiagnosticsAsync(command: RequestDiagnostics, context: KernelInvocationContext) = handleRequestDiagnostics command context |> Async.StartAsTask :> Task
-    
-    // ideally via IKernelCommandHandler<RequestHoverText, but requires https://github.com/dotnet/fsharp/pull/2867
-    member _.HandleRequestHoverText(command: RequestHoverText, context: KernelInvocationContext) = handleRequestHoverText command context |> Async.StartAsTask :> Task
+    interface IKernelCommandHandler<RequestDiagnostics> with
+        member this.HandleAsync(command: RequestDiagnostics, context: KernelInvocationContext) = handleRequestDiagnostics command context |> Async.StartAsTask :> Task
 
-    // ideally via IKernelCommandHandler<SubmitCode, but requires https://github.com/dotnet/fsharp/pull/2867
-    member _.HandleSubmitCodeAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context |> Async.StartAsTask :> Task
+    interface IKernelCommandHandler<RequestHoverText> with
+        member this.HandleAsync(command: RequestHoverText, context: KernelInvocationContext) = handleRequestHoverText command context |> Async.StartAsTask :> Task
+
+    interface IKernelCommandHandler<SubmitCode> with
+        member this.HandleAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context |> Async.StartAsTask :> Task
 
     interface ISupportNuget with
         member _.AddRestoreSource(source: string) =
