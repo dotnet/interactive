@@ -36,28 +36,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         protected LanguageKernelTestBase(ITestOutputHelper output)
         {
-            var got = _semaphore.Wait(60000);
-
-            if (!got)
-            {
-                Log.Error($"Failed to acquire semaphore in {GetType().Name}");
-               // throw new TimeoutException("Didn't get semaphore in time");
-            }
-            else
-            {
-                DisposeAfterTest(Disposable.Create(() =>
-                {
-                    try
-                    {
-                        _semaphore.Release();
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error($"Error when releasing semaphore in {GetType().Name}", ex);
-                    }
-                }));
-            }
-
+          
             DisposeAfterTest(output.SubscribeToPocketLogger());
         }
 

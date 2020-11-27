@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             TextWriter defaultWriter = null)
         {
             _createTextWriter = createTextWriter ?? (() => new ObservableStringWriter());
-            _defaultWriter = defaultWriter ?? new ObservableStringWriter();
+            _defaultWriter = defaultWriter ?? Null;
         }
 
         public override void Close()
