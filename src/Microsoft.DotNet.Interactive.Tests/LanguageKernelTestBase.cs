@@ -17,11 +17,9 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
 using Pocket.For.Xunit;
 
-using Recipes;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.LanguageKernelTestBase>;
 
 using Xunit.Abstractions;
-using System.Threading;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -31,12 +29,8 @@ namespace Microsoft.DotNet.Interactive.Tests
     {
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
 
-        private static readonly AsyncLock _lock = new AsyncLock();
-        private static SemaphoreSlim _semaphore = new SemaphoreSlim(1);
-
         protected LanguageKernelTestBase(ITestOutputHelper output)
         {
-          
             DisposeAfterTest(output.SubscribeToPocketLogger());
         }
 
