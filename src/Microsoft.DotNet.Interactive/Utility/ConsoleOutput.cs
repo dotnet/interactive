@@ -66,6 +66,10 @@ namespace Microsoft.DotNet.Interactive.Utility
                     subscription
                 };
             }
+            else if (AsyncContext.Id is not null)
+            {
+                return Disposable.Empty;
+            }
             else
             {
                 EnsureInitializedForCurrentAsyncContext();
@@ -76,15 +80,17 @@ namespace Microsoft.DotNet.Interactive.Utility
 
                 return new CompositeDisposable{
                     _refCount.GetDisposable(),
-                    subscribe(console)};
+                    subscribe(console)
+                };
             }
+
 
             void EnsureInitializedForCurrentAsyncContext()
             {
                 _out.EnsureInitializedForCurrentAsyncContext();
                 _error.EnsureInitializedForCurrentAsyncContext();
             }
-        }
+            }
 
         public IObservable<string> Out => _out.GetObservable();
 
