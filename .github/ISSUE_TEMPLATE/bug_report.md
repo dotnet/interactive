@@ -16,7 +16,6 @@ Please provide as much information as you can.
 
 * In a notebook, run the `#!about` magic command. 
 * At the command line, run `dotnet interactive --version`.
-* In VS Code, run "Report installed version for .NET Interactive` and copy the version number from the status popup.
 
 - OS
     - [ ] Windows 10
