@@ -5,9 +5,10 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Formatting;
+
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace ClockExtension
@@ -38,7 +39,8 @@ namespace ClockExtension
                 };
 
             clockCommand.Handler = CommandHandler.Create(
-                (int hour, int minute, int second, KernelInvocationContext invocationContext) => {
+                (int hour, int minute, int second, KernelInvocationContext invocationContext) =>
+                {
                     invocationContext.Display(SvgClock.DrawSvgClock(hour, minute, second));
                 });
 
