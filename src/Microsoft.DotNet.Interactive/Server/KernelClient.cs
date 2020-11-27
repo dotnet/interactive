@@ -81,13 +81,12 @@ namespace Microsoft.DotNet.Interactive.Server
                 var kernelEventEnvelope = KernelEventEnvelope.Deserialize(line);
                 _kernelEvents.OnNext(kernelEventEnvelope.Event);
             }
-            catch (JsonReaderException)
+            catch (JsonReaderException ex)
             {
-                // FIX: error channel
-           //     var diagnosticEvent = new DiagnosticLogEntryProduced(
-             //           $"Error while parsing command: {ex.Message}\n{line}");
+                var diagnosticEvent = new DiagnosticLogEntryProduced(
+                    $"Error while parsing command: {ex.Message}\n{line}");
 
-            //   _kernelEvents.OnNext(diagnosticEvent);
+                _kernelEvents.OnNext(diagnosticEvent);
             }
         }
 

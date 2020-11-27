@@ -900,7 +900,7 @@ tInput.Length"
                 .Be(4);
         }
 
-        [Theory(Skip="nope")]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task it_can_load_platform_specific_assembly_in_nugetpackage(Language language)

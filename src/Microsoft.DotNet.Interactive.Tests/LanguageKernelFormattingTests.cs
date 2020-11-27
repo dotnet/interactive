@@ -274,7 +274,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                                    v.Value.ToString().Contains($@"<script type=""text/javascript"">{scriptContent}</script>"));
         }
 
-        [Theory(Skip="nope")]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task CSS_helper_emits_content_within_a_chunk_of_javascript(Language language)

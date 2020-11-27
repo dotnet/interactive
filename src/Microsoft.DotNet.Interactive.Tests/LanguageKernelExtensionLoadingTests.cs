@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
         }
 
-        [Theory(Skip = "nope")]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task It_loads_extensions_in_specified_directory_via_a_command(Language language)
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .ContainSingle<DisplayedValueProduced>(v => v.FormattedValues.Single().Value == $"{language} extension installed");
         }
 
-        [Theory(Skip = "nope")]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task It_throws_when_extension_throws_during_load(Language language)
@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .ContainSingle<CommandFailed>(cf => cf.Exception is KernelExtensionLoadException);
         }
 
-        [Theory(Skip = "nope")]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task It_loads_extensions_found_in_nuget_packages(Language language)

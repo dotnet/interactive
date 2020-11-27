@@ -65,12 +65,11 @@ namespace Microsoft.DotNet.Interactive.Server
             {
                 kernelCommandEnvelope = KernelCommandEnvelope.Deserialize(line);
             }
-            catch (JsonReaderException)
+            catch (JsonReaderException ex)
             {
-                // FIX: error channel
-              // WriteEventToOutput(
-              //      new DiagnosticLogEntryProduced(
-               //         $"Error while parsing command: {ex.Message}\n{line}"));
+                WriteEventToOutput(
+                    new DiagnosticLogEntryProduced(
+                        $"Error while parsing command: {ex.Message}\n{line}"));
                 
                 return;
             }

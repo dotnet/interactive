@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
             return kernel.SendAsync(command);
         }
 
-        [Fact(Skip = "nope")]
+        [Fact]
         public async Task hover_on_unsupported_language_service_returns_nothing()
         {
             using var kernel = new FakeKernel();
@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                   .NotContain(kv => kv is HoverTextProduced);
         }
 
-        [Theory(Skip="nope")]
+        [Theory]
         [InlineData(Language.CSharp, "var x = 12$$34;", "text/markdown", "readonly struct System.Int32")]
         [InlineData(Language.FSharp, "let f$$oo = 12", "text/markdown", "```fsharp\nval foo : int\n```\n\n----\n*Full name: foo*")]
         public async Task hover_request_returns_expected_result(Language language, string markupCode, string expectedMimeType, string expectedContent)
@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .ContainEquivalentOf(new FormattedValue(expectedMimeType, expectedContent));
         }
 
-        [Theory(Skip="nope")]
+        [Theory]
         [InlineData(Language.CSharp, "var x = 1; // hovering$$ in a comment")]
         [InlineData(Language.FSharp, "let x = 1 // hovering$$ in a comment")]
         public async Task invalid_hover_request_returns_no_result(Language language, string markupCode)
@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .NotContain(kv => kv.GetType().IsSubclassOf(typeof(HoverTextProduced)));
         }
 
-        [Theory(Skip="nope")]
+        [Theory]
         [InlineData(Language.CSharp, "var x = 1; // hovering past the end of the line", 0, 200)]
         [InlineData(Language.CSharp, "var x = 1; // hovering on a non-existent line", 10, 2)]
         [InlineData(Language.FSharp, "let x = 1 // hovering past the end of the line", 0, 200)]
@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .NotContain(kv => kv.GetType().IsSubclassOf(typeof(HoverTextProduced)));
         }
 
-        [Theory(Skip="nope")]
+        [Theory]
         [InlineData(Language.CSharp, "var one = 1;", "Console.WriteLine(o$$ne)", "text/markdown", "(field) int one")]
         [InlineData(Language.FSharp, "let one = 1", "printfn \"%a\" o$$ne", "text/markdown", "```fsharp\nval one : int\n```\n\n----\n*Full name: one*")]
         public async Task language_service_methods_run_deferred_commands(Language language, string deferredCode, string markupCode, string expectedMimeType, string expectedContent)
@@ -118,7 +118,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .ContainEquivalentOf(new FormattedValue(expectedMimeType, expectedContent));
         }
 
-        [Theory(Skip="nope")]
+        [Theory]
         [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 17 overloads)")]
         [InlineData(Language.FSharp, "ex$$it 0", "text/markdown", "```fsharp\nval exit: \n   exitcode: int \n          -> 'T\n```\n\n----\n\n\n**Generic parameters**\n\n* `'T` is `obj`\n\n----\n*Full name: Microsoft.FSharp.Core.Operators.exit*\n\n----\n*Assembly: FSharp.Core*")]
         public async Task hover_text_commands_have_offsets_normalized_after_magic_commands(Language language, string markupCode, string expectedMimeType, string expectedContent)
@@ -146,7 +146,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .ContainEquivalentOf(new FormattedValue(expectedMimeType, expectedContent));
         }
 
-        [Theory(Skip="nope")]
+        [Theory]
         [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 17 overloads)")]
         [InlineData(Language.FSharp, "ex$$it 0", "text/markdown", "```fsharp\nval exit: \n   exitcode: int \n          -> 'T\n```\n\n----\n\n\n**Generic parameters**\n\n* `'T` is `obj`\n\n----\n*Full name: Microsoft.FSharp.Core.Operators.exit*\n\n----\n*Assembly: FSharp.Core*")]
         public async Task hover_text_commands_have_offsets_normalized_after_switching_to_the_same_language(Language language, string markupCode, string expectedMimeType, string expectedContent)
@@ -174,7 +174,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .ContainEquivalentOf(new FormattedValue(expectedMimeType, expectedContent));
         }
 
-        [Fact(Skip = "nope")]
+        [Fact]
         public async Task hover_text_commands_and_events_have_offsets_normalized_when_switching_languages()
         {
             // switch to C# from an F# kernel/cell
@@ -200,7 +200,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .Be(new LinePositionSpan(new LinePosition(line, 8), new LinePosition(line, 17)));
         }
 
-        [Theory(Skip="nope")]
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task csharp_hover_text_is_returned_for_shadowing_variables(Language language)

@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 {
     public class LogDirectiveTests
     {
-        [Fact(Skip="nope")]
+        [Fact]
         public async Task It_outputs_diagnostic_log_events()
         {
             using var kernel = new CSharpKernel()

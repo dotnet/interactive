@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 .NotContain(e => e.Event is ReturnValueProduced);
         }
 
-        [Fact(Skip="nope")]
+        [Fact]
         public async Task It_publishes_diagnostic_events_on_json_parse_errors()
         {
             var invalidJson = "{ hello";
