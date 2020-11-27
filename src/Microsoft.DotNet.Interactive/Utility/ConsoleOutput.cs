@@ -12,7 +12,6 @@ namespace Microsoft.DotNet.Interactive.Utility
     internal class ConsoleOutput : IObservableConsole
     {
         private static readonly SemaphoreSlim _consoleLock = new SemaphoreSlim(1, 1);
-        private static bool _isCaptured;
         private static RefCountDisposable _refCount;
         private static MultiplexingTextWriter _out;
         private static MultiplexingTextWriter _error;
@@ -50,8 +49,6 @@ namespace Microsoft.DotNet.Interactive.Utility
 
                 Console.SetOut(_out);
                 Console.SetError(_error);
-
-                _isCaptured = true;
 
                 _refCount = new RefCountDisposable(Disposable.Create(() =>
                 {
@@ -111,8 +108,6 @@ namespace Microsoft.DotNet.Interactive.Utility
                 {
                     Console.SetError(_originalErrorWriter);
                 }
-
-                _isCaptured = false;
             }
         }
 
