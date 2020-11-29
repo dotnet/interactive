@@ -331,9 +331,10 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         public override string ToString()
         {
-            if (AsyncContext.Id is { } key)
+            if (AsyncContext.Id is { } key &&
+                _writers.TryGetValue(key, out var writer))
             {
-                return _writers[key].ToString();
+                return writer.ToString();
             }
 
             return "";
