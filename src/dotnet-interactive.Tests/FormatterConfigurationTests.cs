@@ -114,7 +114,7 @@ createDotnetInteractiveClient('http://12.12.12.12:4242/').then(function (interac
 let notebookScope = getDotnetInteractiveScope('http://12.12.12.12:4242/');
 alert('hello');
 });
-}</script>");
+}</script>".EnforceNewLine());
         }
 
         [Fact]
