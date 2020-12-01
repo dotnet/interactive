@@ -14,6 +14,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.Utility;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Tests
@@ -240,6 +241,8 @@ i");
             kernel.AddDirective(command);
 
             using var events = compositeKernel.KernelEvents.ToSubscribedList();
+
+           // AsyncContext.Id = 123;
 
             await compositeKernel.SubmitCodeAsync("#!hello -h");
 

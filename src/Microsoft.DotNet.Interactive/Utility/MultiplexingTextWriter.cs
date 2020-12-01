@@ -31,11 +31,6 @@ namespace Microsoft.DotNet.Interactive.Utility
             _defaultWriter = defaultWriter ?? Null;
         }
 
-        public override void Close()
-        {
-            Dispose(true);
-        }
-
         public IDisposable EnsureInitializedForCurrentAsyncContext()
         {
             if (AsyncContext.TryEstablish(out var id))

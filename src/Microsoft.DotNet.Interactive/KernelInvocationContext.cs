@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -33,6 +34,15 @@ namespace Microsoft.DotNet.Interactive
             Command = command;
             CommandToSignalCompletion = command;
             Result = new KernelCommandResult(_events);
+
+            _disposables.Add(ConsoleOutput.Subscribe(c =>
+                {
+                    return new CompositeDisposable
+                    {
+                        c.Out.Subscribe(s => this.DisplayStandardOut(s, command)),
+                        c.Error.Subscribe(s => this.DisplayStandardError(s, command))
+                    };
+                }));
         }
 
         public KernelCommand Command { get; }

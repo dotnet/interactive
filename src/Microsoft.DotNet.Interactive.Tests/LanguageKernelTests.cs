@@ -751,11 +751,12 @@ $${languageSpecificCode}
             await SubmitCode(kernel, source);
 
             KernelEvents
-                        .OfType<ReturnValueProduced>()
-                        .Last()
-                        .Value
-                        .Should()
-                        .BeNull();
+                .Should()
+                .ContainSingle<ReturnValueProduced>()
+                .Which
+                .Value
+                .Should()
+                .BeNull();
         }
 
         [Theory]
@@ -1057,8 +1058,6 @@ Console.Write(2);
                 .Should()
                 .Be("meow!");
         }
-
-
 
         [Theory]
         [InlineData(Language.CSharp)]
