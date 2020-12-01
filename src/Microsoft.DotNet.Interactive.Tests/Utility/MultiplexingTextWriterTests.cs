@@ -111,62 +111,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             innerWriter.Disposed.Should().BeFalse();
         }
 
-        [Fact]
-        public async Task async_context_is_available_in_csharp_scripting()
-        {
-            var originalWriter = Console.Out;
-
-            try
-            {
-                var multiWriter = new MultiplexingTextWriter();
-                using var _ = multiWriter.EnsureInitializedForCurrentAsyncContext();
-
-                Console.SetOut(multiWriter);
-
-                var result = await CSharpScript.RunAsync("System.Console.WriteLine(\"hello!\");");
-
-                result.Exception.Should().BeNull();
-
-                multiWriter.ToString().Should().Be($"hello!{NewLine}");
-            }
-            finally
-            {
-                Console.SetOut(originalWriter);
-            }
-        }
-
-        [Fact]
-        public void async_context_is_available_in_fsharp_scripting()
-        {
-            var originalWriter = Console.Out;
-
-            try
-            {
-                var multiWriter = new MultiplexingTextWriter();
-                multiWriter.EnsureInitializedForCurrentAsyncContext();
-
-                Console.SetOut(multiWriter);
-
-                var fSharpScript = new FSharpScript(
-                    new FSharpOption<string[]>(new[] { "/langversion:preview", "/usesdkrefs-" }),
-                    new FSharpOption<bool>(true),
-                    new FSharpOption<LangVersion>(LangVersion.Preview));
-
-                var result = fSharpScript.Eval(
-                    "System.Console.WriteLine \"hello!\"",
-                    new FSharpOption<CancellationToken>(CancellationToken.None));
-
-                var ex = result.Item2;
-                ex.Should().BeEmpty();
-
-                multiWriter.ToString().Should().Be($"hello!{NewLine}");
-            }
-            finally
-            {
-                Console.SetOut(originalWriter);
-            }
-        }
-
         [Theory]
         [MemberData(nameof(WriteOperations))]
         public void Write_operations_on_MultiplexingStringWriter_are_observable_and_produce_one_event_per_top_level_write_invocation(
