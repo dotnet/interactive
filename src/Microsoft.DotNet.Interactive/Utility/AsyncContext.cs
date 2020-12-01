@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
-    internal static class AsyncContext
+    public static class AsyncContext
     {
         private static int _seed = 0;
 
