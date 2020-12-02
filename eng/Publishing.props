@@ -1,6 +1,5 @@
 <Project>
   <PropertyGroup>
-    <!-- falling back to publish v1 temporarily -->
-    <!-- <PublishingVersion>3</PublishingVersion> -->
+    <PublishingVersion>3</PublishingVersion>
   </PropertyGroup>
 </Project>
