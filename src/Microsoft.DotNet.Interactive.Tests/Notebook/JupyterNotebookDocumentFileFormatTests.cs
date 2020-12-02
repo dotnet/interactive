@@ -15,7 +15,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests.Notebook
 {
-    public partial class JupyterNotebookDocumentFileFormatTests : NotebookDocumentFileFormatTests
+    public class JupyterNotebookDocumentFileFormatTests : NotebookDocumentFileFormatTests
     {
         public JupyterNotebookDocumentFileFormatTests(ITestOutputHelper output)
             : base(output)

@@ -9,13 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using FSharp.Compiler.Scripting;
-using Microsoft.CodeAnalysis.CSharp.Scripting;
-using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.Utility;
-using Microsoft.FSharp.Core;
 using Xunit;
 using static System.Environment;
 

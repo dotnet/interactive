@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests.Notebook
 {
-    public partial class NotebookDocumentFileFormatTests : LanguageKernelTestBase
+    public class NotebookDocumentFileFormatTests : LanguageKernelTestBase
     {
         public NotebookDocumentFileFormatTests(ITestOutputHelper output)
             : base(output)
