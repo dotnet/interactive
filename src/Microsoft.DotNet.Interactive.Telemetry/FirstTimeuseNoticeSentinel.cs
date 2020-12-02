@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -8,16 +8,16 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 {
     public sealed class FirstTimeUseNoticeSentinel : IFirstTimeUseNoticeSentinel
     {
-        public const string SkipFirstTimeExperienceEnvironmentVariableName = "DOTNET_TRY_SKIP_FIRST_TIME_EXPERIENCE";
+        public const string SkipFirstTimeExperienceEnvironmentVariableName = "DOTNET_INTERACTIVE_SKIP_FIRST_TIME_EXPERIENCE";
 
         private readonly string _sentinel;
-        private readonly string _dotnetTryUserProfileFolderPath;
+        private readonly string _folderPath;
         private readonly Func<string, bool> _fileExists;
         private readonly Func<string, bool> _directoryExists;
         private readonly Action<string> _createDirectory;
         private readonly Action<string> _createEmptyFile;
 
-        private string SentinelPath => Path.Combine(_dotnetTryUserProfileFolderPath, _sentinel);
+        private string SentinelPath => Path.Combine(_folderPath, _sentinel);
 
         public FirstTimeUseNoticeSentinel(string productVersion) :
             this(
@@ -32,14 +32,14 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 
         public FirstTimeUseNoticeSentinel(
             string productVersion,
-            string dotnetTryUserProfileFolderPath,
+            string folderPath,
             Func<string, bool> fileExists,
             Func<string, bool> directoryExists,
             Action<string> createDirectory,
             Action<string> createEmptyFile)
         {
-            _sentinel = $"{productVersion}.dotnetTryFirstUseSentinel";
-            _dotnetTryUserProfileFolderPath = dotnetTryUserProfileFolderPath;
+            _sentinel = $"{productVersion}.dotnetInteractiveFirstUseSentinel";
+            _folderPath = folderPath;
             _fileExists = fileExists;
             _directoryExists = directoryExists;
             _createDirectory = createDirectory;
@@ -55,9 +55,9 @@ namespace Microsoft.DotNet.Interactive.Telemetry
         {
             if (!Exists())
             {
-                if (!_directoryExists(_dotnetTryUserProfileFolderPath))
+                if (!_directoryExists(_folderPath))
                 {
-                    _createDirectory(_dotnetTryUserProfileFolderPath);
+                    _createDirectory(_folderPath);
                 }
 
                 _createEmptyFile(SentinelPath);
