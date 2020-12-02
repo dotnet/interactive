@@ -41,6 +41,20 @@ try {
     if ($LASTEXITCODE -ne 0) {
         exit $LASTEXITCODE
     }
+    
+    dotnet test "$PSScriptRoot\..\dotnet-interactive.sln" --configuration Release --no-restore --no-build --blame-hang-timeout 3m
+    
+    $LASTLASTEXITCODE = $LASTEXITCODE
+    
+    mkdir ..\artifacts\dumps
+    
+    cd ..\src
+    
+    Get-ChildItem *.dmp -Recurse | %{​​ Copy-Item $_ ..\artifacts\dumps\ }​​
+
+    if ($LASTLASTEXITCODE -ne 0) {
+        exit $LASTLASTEXITCODE
+    }
 }
 catch {
     Write-Host $_

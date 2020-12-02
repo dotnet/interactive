@@ -102,11 +102,18 @@ stages:
             -configuration $(_BuildConfig)
             -prepareMachine
             -sign
-            -test
             $(_BuildArgs)
           displayName: Build / Test
           env:
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
+
+        - task: PublishBuildArtifacts@1
+          displayName: Publish dumps
+          condition: always()
+          inputs:
+            pathToPublish: '$(Build.SourcesDirectory)/artifacts/dumps'
+            artifactName: dumps
+            artifactType: container
 
         - script: npm run test
           displayName: NPM tests
