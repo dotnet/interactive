@@ -161,56 +161,55 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
             IEnumerable<( Action<TextWriter> writeOperation,  string expectedValue )> actions()
             {
-                // yield return (writer => writer.Write("char[] buffer, int index, int count".ToArray()   , 0, 4), "char");
-                // yield return (writer => writer.Write("string value"), "string value");
-                // yield return (writer => writer.WriteAsync('c').Wait(), "c");
-                // yield return (writer => writer.WriteAsync(new[] { 'h', 'e', 'l', 'l', 'o' }, 0, 4).Wait(), "hell");
-                // yield return (writer => writer.WriteAsync("string value").Wait(), "string value");
-                // yield return (writer => writer.WriteLineAsync('c').Wait(), "c" + NewLine);
-                // yield return (writer => writer.WriteLineAsync("char[] buffer, int index, int count".ToArray(), 0, 4).Wait(), "char" + NewLine);
-                // yield return (writer => writer.WriteLineAsync("string value").Wait(), "string value" + NewLine);
-                // yield return (writer => writer.Write(true), true.ToString());
-                // yield return (writer => writer.Write("char[] buffer".ToArray()), "char[] buffer");
-                // yield return (writer => writer.Write(1d), 1d.ToString());
-                // yield return (writer => writer.Write(2.1), 2.1.ToString());
-                // yield return (writer => writer.Write(int.MaxValue), int.MaxValue.ToString());
-                // yield return (writer => writer.Write(long.MaxValue), long.MaxValue.ToString());
-                // yield return (writer => writer.Write(new object()), new object().ToString());
-                // yield return (writer => writer.Write(float.MaxValue), float.MaxValue.ToString());
-                // yield return (writer => writer.Write("string format, object {0}", 123), "string format, object 123");
-                // yield return (writer => writer.Write("string format, object {0}, object {1}", 456, 789), "string format, object 456, object 789");
-                // yield return (writer => writer.Write("string format, object {0}, object {1}, object {2}", 12, 34, 56), "string format, object 12, object 34, object 56");
-                // yield return (writer => writer.Write("string format, object {0}, object {1}, object {2}, object {3}", 123, false, new object(), 789), $"string format, object {123}, object {false}, object {new object()}, object {789}");
-                // yield return (writer => writer.Write(uint.MaxValue), uint.MaxValue.ToString());
-                // yield return (writer => writer.Write(ulong.MaxValue), ulong.MaxValue.ToString());
-                // yield return (writer => writer.WriteLine(), NewLine);
+                yield return (writer => writer.Write("char[] buffer, int index, int count".ToArray()   , 0, 4), "char");
+                yield return (writer => writer.Write("string value"), "string value");
+                yield return (writer => writer.WriteAsync('c').Wait(), "c");
+                yield return (writer => writer.WriteAsync(new[] { 'h', 'e', 'l', 'l', 'o' }, 0, 4).Wait(), "hell");
+                yield return (writer => writer.WriteAsync("string value").Wait(), "string value");
+                yield return (writer => writer.WriteLineAsync('c').Wait(), "c" + NewLine);
+                yield return (writer => writer.WriteLineAsync("char[] buffer, int index, int count".ToArray(), 0, 4).Wait(), "char" + NewLine);
+                yield return (writer => writer.WriteLineAsync("string value").Wait(), "string value" + NewLine);
+                yield return (writer => writer.Write(true), true.ToString());
+                yield return (writer => writer.Write("char[] buffer".ToArray()), "char[] buffer");
+                yield return (writer => writer.Write(1d), 1d.ToString());
+                yield return (writer => writer.Write(2.1), 2.1.ToString());
+                yield return (writer => writer.Write(int.MaxValue), int.MaxValue.ToString());
+                yield return (writer => writer.Write(long.MaxValue), long.MaxValue.ToString());
+                yield return (writer => writer.Write(new object()), new object().ToString());
+                yield return (writer => writer.Write(float.MaxValue), float.MaxValue.ToString());
+                yield return (writer => writer.Write("string format, object {0}", 123), "string format, object 123");
+                yield return (writer => writer.Write("string format, object {0}, object {1}", 456, 789), "string format, object 456, object 789");
+                yield return (writer => writer.Write("string format, object {0}, object {1}, object {2}", 12, 34, 56), "string format, object 12, object 34, object 56");
+                yield return (writer => writer.Write("string format, object {0}, object {1}, object {2}, object {3}", 123, false, new object(), 789), $"string format, object {123}, object {false}, object {new object()}, object {789}");
+                yield return (writer => writer.Write(uint.MaxValue), uint.MaxValue.ToString());
+                yield return (writer => writer.Write(ulong.MaxValue), ulong.MaxValue.ToString());
+                yield return (writer => writer.WriteLine(), NewLine);
                 yield return (writer => writer.WriteLine(true), true + NewLine);
-                // yield return (writer => writer.WriteLine('c'), "c" + NewLine);
-                // yield return (writer => writer.WriteLine("char[] buffer".ToArray()), "char[] buffer" + NewLine);
-                // yield return (writer => writer.WriteLine("char[] buffer, int index, int count".ToArray(), 0, 4), "char" + NewLine);
-                // yield return (writer => writer.WriteLine(decimal.MaxValue), decimal.MaxValue + NewLine);
-                // yield return (writer => writer.WriteLine(double.MaxValue), double.MaxValue + NewLine);
-                // yield return (writer => writer.WriteLine(int.MaxValue), int.MaxValue + NewLine);
-                // yield return (writer => writer.WriteLine(long.MaxValue), long.MaxValue + NewLine);
-                // yield return (writer => writer.WriteLine(new object()), new object() + NewLine);
-                // yield return (writer => writer.WriteLine(float.MaxValue), float.MaxValue + NewLine);
-                // yield return (writer => writer.WriteLine("string value"), "string value" + NewLine);
-                //
-                // yield return (writer => writer.WriteLine("string format, object {0}", 123), "string format, object 123" + NewLine);
-                // yield return (writer => writer.WriteLine("string format, object {0}, object {1}", 456, 789), "string format, object 456, object 789" + NewLine);
-                // yield return (writer => writer.WriteLine("string format, object {0}, object {1}, object {2}", 12, 34, 56), "string format, object 12, object 34, object 56" + NewLine);
-                // yield return (writer => writer.WriteLine("string format, object {0}, object {1}, object {2}, object {3}", 123, false, new object(), 789), $"string format, object {123}, object {false}, object {new object()}, object {789}" + NewLine);
-                //
-                // yield return (writer => writer.WriteLine(uint.MaxValue), uint.MaxValue + NewLine);
-                // yield return (writer => writer.WriteLine(ulong.MaxValue), ulong.MaxValue + NewLine);
-                // yield return (writer => writer.WriteLineAsync().Wait(), NewLine);
-                // yield return (writer => writer.Write("ReadOnlySpan<char> buffer".AsSpan()), "ReadOnlySpan<char> buffer");
-                // yield return (writer => writer.WriteAsync("ReadOnlyMemory<char> buffer, CancellationToken cancellationToken".AsMemory(), CancellationToken.None ).Wait(), "ReadOnlyMemory<char> buffer, CancellationToken cancellationToken");
-                // yield return (writer => writer.WriteLine("ReadOnlySpan<char> buffer".AsSpan()), "ReadOnlySpan<char> buffer" + NewLine);
-                // yield return (writer => writer.WriteLineAsync("ReadOnlyMemory<char> buffer, CancellationToken cancellationToken".AsMemory(), CancellationToken.None ).Wait(), "ReadOnlyMemory<char> buffer, CancellationToken cancellationToken" + NewLine);
+                yield return (writer => writer.WriteLine('c'), "c" + NewLine);
+                yield return (writer => writer.WriteLine("char[] buffer".ToArray()), "char[] buffer" + NewLine);
+                yield return (writer => writer.WriteLine("char[] buffer, int index, int count".ToArray(), 0, 4), "char" + NewLine);
+                yield return (writer => writer.WriteLine(decimal.MaxValue), decimal.MaxValue + NewLine);
+                yield return (writer => writer.WriteLine(double.MaxValue), double.MaxValue + NewLine);
+                yield return (writer => writer.WriteLine(int.MaxValue), int.MaxValue + NewLine);
+                yield return (writer => writer.WriteLine(long.MaxValue), long.MaxValue + NewLine);
+                yield return (writer => writer.WriteLine(new object()), new object() + NewLine);
+                yield return (writer => writer.WriteLine(float.MaxValue), float.MaxValue + NewLine);
+                yield return (writer => writer.WriteLine("string value"), "string value" + NewLine);
+                
+                yield return (writer => writer.WriteLine("string format, object {0}", 123), "string format, object 123" + NewLine);
+                yield return (writer => writer.WriteLine("string format, object {0}, object {1}", 456, 789), "string format, object 456, object 789" + NewLine);
+                yield return (writer => writer.WriteLine("string format, object {0}, object {1}, object {2}", 12, 34, 56), "string format, object 12, object 34, object 56" + NewLine);
+                yield return (writer => writer.WriteLine("string format, object {0}, object {1}, object {2}, object {3}", 123, false, new object(), 789), $"string format, object {123}, object {false}, object {new object()}, object {789}" + NewLine);
+                
+                yield return (writer => writer.WriteLine(uint.MaxValue), uint.MaxValue + NewLine);
+                yield return (writer => writer.WriteLine(ulong.MaxValue), ulong.MaxValue + NewLine);
+                yield return (writer => writer.WriteLineAsync().Wait(), NewLine);
+                yield return (writer => writer.Write("ReadOnlySpan<char> buffer".AsSpan()), "ReadOnlySpan<char> buffer");
+                yield return (writer => writer.WriteAsync("ReadOnlyMemory<char> buffer, CancellationToken cancellationToken".AsMemory(), CancellationToken.None ).Wait(), "ReadOnlyMemory<char> buffer, CancellationToken cancellationToken");
+                yield return (writer => writer.WriteLine("ReadOnlySpan<char> buffer".AsSpan()), "ReadOnlySpan<char> buffer" + NewLine);
+                yield return (writer => writer.WriteLineAsync("ReadOnlyMemory<char> buffer, CancellationToken cancellationToken".AsMemory(), CancellationToken.None ).Wait(), "ReadOnlyMemory<char> buffer, CancellationToken cancellationToken" + NewLine);
             }
         }
-
 
         private class TestWriter : TextWriter
         {
