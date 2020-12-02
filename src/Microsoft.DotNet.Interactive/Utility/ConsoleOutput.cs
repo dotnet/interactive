@@ -5,11 +5,10 @@ using System;
 using System.IO;
 using System.Reactive.Disposables;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
-    internal class ConsoleOutput : IObservableConsole
+    internal class ConsoleOutput
     {
         private static RefCountDisposable _refCount;
         private static MultiplexingTextWriter _out;
@@ -28,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         {
         }
 
-        public static IDisposable Subscribe(Func<IObservableConsole, IDisposable> subscribe)
+        public static IDisposable Subscribe(Func<ObservableConsole, IDisposable> subscribe)
         {
             lock (_systemConsoleSwapLock)
             {
@@ -63,12 +62,12 @@ namespace Microsoft.DotNet.Interactive.Utility
                     error: _error.GetObservable());
 
                 return new CompositeDisposable
-                    {
-                        _refCount,
-                        _refCount.GetDisposable(),
-                        subscribe(observableConsole),
-                        writerForCurrentContext
-                    };
+                {
+                    _refCount,
+                    _refCount.GetDisposable(),
+                    subscribe(observableConsole),
+                    writerForCurrentContext
+                };
 
                 IDisposable EnsureInitializedForCurrentAsyncContext() =>
                     new CompositeDisposable
@@ -76,16 +75,7 @@ namespace Microsoft.DotNet.Interactive.Utility
                         _out.EnsureInitializedForCurrentAsyncContext(),
                         _error.EnsureInitializedForCurrentAsyncContext()
                     };
-                }
-        }
-
-        public IObservable<string> Out => _out.GetObservable();
-
-        public IObservable<string> Error => _error.GetObservable();
-
-        public void Dispose()
-        {
-            RestoreSystemConsole();
+            }
         }
 
         private void RestoreSystemConsole()
@@ -104,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             }
         }
 
-        private class ObservableConsole : IObservableConsole
+        internal class ObservableConsole
         {
             public ObservableConsole(
                 IObservable<string> @out,
@@ -116,10 +106,6 @@ namespace Microsoft.DotNet.Interactive.Utility
 
             public IObservable<string> Out { get; }
             public IObservable<string> Error { get; }
-
-            public void Dispose()
-            {
-            }
         }
     }
 }
