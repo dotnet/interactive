@@ -42,15 +42,15 @@ try {
         exit $LASTEXITCODE
     }
     
-    dotnet test "$PSScriptRoot\..\dotnet-interactive.sln" --configuration Release --no-restore --no-build --blame-hang-timeout 3m
+    dotnet test "$PSScriptRoot\..\dotnet-interactive.sln" --configuration Release --no-restore --no-build --blame-hang-timeout 3m --blame-hang-dump-type full
     
     $LASTLASTEXITCODE = $LASTEXITCODE
     
-    mkdir ..\artifacts\dumps
+    mkdir "$PSScriptRoot\..\artifacts\dumps"
     
-    cd ..\src
+    cd "$PSScriptRoot\..\src"
     
-    Get-ChildItem *.dmp -Recurse | %{​​ Copy-Item $_ ..\artifacts\dumps\ }​​
+    Get-ChildItem *.dmp -Recurse | %{​​ Copy-Item $_ "$PSScriptRoot\..\artifacts\dumps\" }​​
 
     if ($LASTLASTEXITCODE -ne 0) {
         exit $LASTLASTEXITCODE
