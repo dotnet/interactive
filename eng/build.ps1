@@ -50,7 +50,10 @@ try {
     
     cd "$PSScriptRoot\..\src"
     
-    Get-ChildItem *.dmp -Recurse | Copy-Item -Destination "$PSScriptRoot\..\artifacts\dumps\" 
+    $dumpFiles = Get-ChildItem *.dmp -Recurse
+    $dumpFileCount = $dumpFiles.Length
+    Write-Host "Copying $dumpFileCount dump files."
+    Copy-Item -Path $dumpFiles -Destination "$PSScriptRoot\..\artifacts\dumps"
 
     if ($LASTLASTEXITCODE -ne 0) {
         exit $LASTLASTEXITCODE
