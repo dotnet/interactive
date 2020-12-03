@@ -53,8 +53,9 @@ try {
     $PSVersionTable
 
     $dumpFiles = Get-ChildItem *.dmp -Recurse
-    $dumpFileCount = $dumpFiles.Length
-    Write-Host "Copying $dumpFileCount dump files."
+    $dumpFiles
+    # $dumpFileCount = $dumpFiles.Length
+    # Write-Host "Copying $dumpFileCount dump files."
     Copy-Item -Path $dumpFiles -Destination "$PSScriptRoot\..\artifacts\dumps"
 
     if ($LASTLASTEXITCODE -ne 0) {
