@@ -50,6 +50,8 @@ try {
     
     cd "$PSScriptRoot\..\src"
     
+    $PSVersionTable
+
     $dumpFiles = Get-ChildItem *.dmp -Recurse
     $dumpFileCount = $dumpFiles.Length
     Write-Host "Copying $dumpFileCount dump files."
