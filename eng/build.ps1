@@ -46,17 +46,17 @@ try {
     
     $LASTLASTEXITCODE = $LASTEXITCODE
     
-    mkdir "$PSScriptRoot\..\artifacts\dumps"
+    # mkdir "$PSScriptRoot\..\artifacts\dumps"
     
-    cd "$PSScriptRoot\..\src"
+    # cd "$PSScriptRoot\..\src"
     
-    $PSVersionTable
+    # $PSVersionTable
 
-    $dumpFiles = Get-ChildItem *.dmp -Recurse
-    $dumpFiles
-    # $dumpFileCount = $dumpFiles.Length
-    # Write-Host "Copying $dumpFileCount dump files."
-    Copy-Item -Path $dumpFiles -Destination "$PSScriptRoot\..\artifacts\dumps"
+    # $dumpFiles = Get-ChildItem *.dmp -Recurse
+    # $dumpFiles
+    # # $dumpFileCount = $dumpFiles.Length
+    # # Write-Host "Copying $dumpFileCount dump files."
+    # Copy-Item -Path $dumpFiles -Destination "$PSScriptRoot\..\artifacts\dumps"
 
     if ($LASTLASTEXITCODE -ne 0) {
         exit $LASTLASTEXITCODE
