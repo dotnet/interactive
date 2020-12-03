@@ -97,12 +97,12 @@ namespace Microsoft.DotNet.Interactive
                 PackageReferenceOrFileInfo package,
                 KernelInvocationContext context)
             {
-                if (package?.Value is PackageReference pkg)
+                if (package?.Value is PackageReference pkg &&
+                    context.HandlingKernel is ISupportNuget kernel)
                 {
-                    var kernel = context.HandlingKernel as ISupportNuget;
                     var alreadyGotten = kernel.ResolvedPackageReferences
-                                                      .Concat(kernel.RequestedPackageReferences)
-                                                      .FirstOrDefault(r => r.PackageName.Equals(pkg.PackageName, StringComparison.OrdinalIgnoreCase));
+                                              .Concat(kernel.RequestedPackageReferences)
+                                              .FirstOrDefault(r => r.PackageName.Equals(pkg.PackageName, StringComparison.OrdinalIgnoreCase));
 
                     if (alreadyGotten is { } && !string.IsNullOrWhiteSpace(pkg.PackageVersion) && pkg.PackageVersion != alreadyGotten.PackageVersion)
                     {
@@ -174,7 +174,11 @@ namespace Microsoft.DotNet.Interactive
             {
                 KernelCommandInvocation restore = async (_, context) =>
                 {
-                    var kernel = context.HandlingKernel as ISupportNuget;
+                    if (!(context.HandlingKernel is ISupportNuget kernel))
+                    {
+                        return;
+                    }
+
                     var messages = new Dictionary<PackageReference, string>(new PackageReferenceComparer());
                     var displayedValues = new Dictionary<string, DisplayedValue>();
 
@@ -258,7 +262,7 @@ namespace Microsoft.DotNet.Interactive
                 };
 
                 await invocationContext.QueueAction(restore);
-                var kernel = invocationContext.HandlingKernel as Kernel;
+                var kernel = invocationContext.HandlingKernel;
                 await kernel.RunDeferredCommandsAsync();
             };
 
