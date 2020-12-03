@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Telemetry
 {
@@ -30,7 +29,10 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 
             process.WaitForExit();
 
-            Task.Run(async () => await Task.WhenAll(taskOut, taskErr)).Wait();
+            var timeoutMs = 20000;
+
+            taskOut.Wait(timeoutMs);
+            taskErr.Wait(timeoutMs);
 
             stdOut = outStream.CapturedOutput;
             stdErr = errStream.CapturedOutput;
