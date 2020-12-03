@@ -48,8 +48,7 @@ try {
     
     mkdir "$PSScriptRoot\..\artifacts\dumps"
     
-    try
-    {
+    try {
         cd "$PSScriptRoot\..\src"
     
         $PSVersionTable
