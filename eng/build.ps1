@@ -29,25 +29,25 @@ function buildConfiguration {
 $buildConfiguration = buildConfiguration
 
 try {
-    # if (isCi -eq $true) {
-    #     . (Join-Path $PSScriptRoot "..\buildSqlTools.cmd") $buildConfiguration
-    #     if ($LASTEXITCODE -ne 0) {
-    #         exit $LASTEXITCODE
-    #     }
-    # }
-
     # invoke regular build/test script
     . (Join-Path $PSScriptRoot "common\build.ps1") -projects "$PSScriptRoot\..\dotnet-interactive.sln" @args
     if ($LASTEXITCODE -ne 0) {
         exit $LASTEXITCODE
     }
     
+    Write-Host "Restoring NuGet packages used by tests"
+
+    # pre-populate the NuGet cache with some things that the tests depend on, as a potential workaround to https://github.com/dotnet/sdk/issues/14813, https://github.com/dotnet/sdk/issues/14547
+    dotnet restore "$PSScriptRoot\dotnet-interactive-test-setup.sln"
+
+    Write-Host "Running tests"
+
     dotnet test "$PSScriptRoot\..\dotnet-interactive.sln" --configuration Release --no-restore --no-build --blame-hang-timeout 3m --blame-hang-dump-type full
     
     $LASTLASTEXITCODE = $LASTEXITCODE
     
     mkdir "$PSScriptRoot\..\artifacts\dumps"
-    
+
     try {
         cd "$PSScriptRoot\..\src"
     

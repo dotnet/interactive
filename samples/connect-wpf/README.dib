@@ -4,7 +4,7 @@
 
 First, let's start the WPF app and connect to it.
 
-#!powershell
+#!pwsh
 
 Start-Process -NoNewWindow dotnet run
 

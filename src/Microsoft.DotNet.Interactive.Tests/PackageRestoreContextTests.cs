@@ -222,7 +222,6 @@ namespace Microsoft.DotNet.Interactive.Tests
                                      .ContainSingle(r => r.PackageName == "Microsoft.ML.AutoML" && r.PackageVersion == "0.16.0-preview");
         }
 
-
         [Fact]
         // Question:   should it not throw, or is ignore sufficient
         public async Task Ignores__subsequent_package_specifications_with_different_higer_version()
