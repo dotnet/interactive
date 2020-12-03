@@ -38,7 +38,7 @@ try {
     Write-Host "Restoring NuGet packages used by tests"
 
     # pre-populate the NuGet cache with some things that the tests depend on, as a potential workaround to https://github.com/dotnet/sdk/issues/14813, https://github.com/dotnet/sdk/issues/14547
-    dotnet restore "$PSScriptRoot\dotnet-interactive-test-setup.sln"
+    dotnet restore "$PSScriptRoot\nuget-test-prerestore\nuget-test-prerestore.sln"
 
     Write-Host "Running tests"
 
