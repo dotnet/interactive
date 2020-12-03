@@ -180,7 +180,8 @@ namespace Microsoft.DotNet.Interactive
 
                     var newlyRequestedPackages =
                             kernel.RequestedPackageReferences
-                                          .Except(kernel.ResolvedPackageReferences, PackageReferenceComparer.Instance);
+                                          .Except(kernel.ResolvedPackageReferences, PackageReferenceComparer.Instance)
+                                          .ToArray();
 
                     var requestedPackageIds = new Dictionary<string, PackageReference>();
 
@@ -196,8 +197,16 @@ namespace Microsoft.DotNet.Interactive
 
                     var restorePackagesTask = kernel.RestoreAsync();
 
-                    while (await Task.WhenAny(Task.Delay(500), restorePackagesTask) != restorePackagesTask)
+                    var totalWaitMs = 0;
+                    var delay = 500;
+                    while (await Task.WhenAny(Task.Delay(delay), restorePackagesTask) != restorePackagesTask)
                     {
+                        totalWaitMs += delay;
+                        if (totalWaitMs > TimeSpan.FromMinutes(1.5).TotalMilliseconds)
+                        {
+                            throw new TimeoutException($"Package restore took longer than expected for packages: {string.Join(", ", newlyRequestedPackages.Select(p => p.PackageName))}.");
+                        }
+
                         foreach (var package in messages.Keys.ToArray())
                         {
                             var id = PackageReferenceComparer.GetDisplayValueId(package);
