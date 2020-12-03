@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:5.0.100-focal
 ARG HTTP_PORT_RANGE=1100-1200
 
 # Opt out of telemetry until after we install jupyter when building the image, this prevents caching of machine id
-ENV DOTNET_TRY_CLI_TELEMETRY_OPTOUT=true
+ENV DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT=true
 
 # Install all OS dependencies for notebook server that starts but lacks all
 # features (e.g., download as all possible file formats)
@@ -35,7 +35,7 @@ RUN ln -s /usr/share/dotnet-interactive/dotnet-interactive /usr/bin/dotnet-inter
 RUN dotnet interactive jupyter install --http-port-range ${HTTP_PORT_RANGE}
 
 # Enable telemetry once we install jupyter for the image
-ENV DOTNET_TRY_CLI_TELEMETRY_OPTOUT=false
+ENV DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT=false
 
 
 EXPOSE 8888
