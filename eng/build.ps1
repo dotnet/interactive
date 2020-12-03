@@ -46,7 +46,7 @@ try {
     
     $LASTLASTEXITCODE = $LASTEXITCODE
     
-    # mkdir "$PSScriptRoot\..\artifacts\dumps"
+    mkdir "$PSScriptRoot\..\artifacts\dumps"
     
     # cd "$PSScriptRoot\..\src"
     
