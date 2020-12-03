@@ -51,12 +51,10 @@ try {
     try {
         cd "$PSScriptRoot\..\src"
     
-        $PSVersionTable
-
-        $dumpFiles = Get-ChildItem *.dmp -Recurse
+        $dumpFiles = Get-ChildItem  -Recurse -Include *.dmp,Sequence*.xml
         $dumpFiles
         # $dumpFileCount = $dumpFiles.Length
-        # Write-Host "Copying $dumpFileCount dump files."
+        Write-Host "Copying dump files: $dumpFiles"
         Copy-Item -Path $dumpFiles -Destination "$PSScriptRoot\..\artifacts\dumps"
     }
     catch {
