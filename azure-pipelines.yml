@@ -277,7 +277,7 @@ stages:
         pool:
           vmImage: ubuntu-16.04
         variables:
-        - name: DOTNET_TRY_CLI_TELEMETRY_OPTOUT
+        - name: DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT
           value: 1
         - name: DOTNET_TRY_SKIP_FIRST_TIME_EXPERIENCE
           value: 1

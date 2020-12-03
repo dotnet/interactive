@@ -22,7 +22,7 @@ ENV \
     # Skip extraction of XML docs - generally not useful within an image/container - helps performance
     NUGET_XMLDOC_MODE=skip \
     # Opt out of telemetry until after we install jupyter when building the image, this prevents caching of machine id
-    DOTNET_TRY_CLI_TELEMETRY_OPTOUT=true
+    DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT=true
 
 # Install .NET CLI dependencies
 RUN apt-get update \
@@ -70,7 +70,7 @@ RUN echo "$PATH"
 RUN dotnet interactive jupyter install
 
 # Enable telemetry once we install jupyter for the image
-ENV DOTNET_TRY_CLI_TELEMETRY_OPTOUT=false
+ENV DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT=false
 
 # Set root to Notebooks
 WORKDIR ${HOME}/Notebooks/
