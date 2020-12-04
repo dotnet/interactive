@@ -7,10 +7,13 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
+
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
     public partial class MagicCommandTests
     {
+        [Collection("Do not parallelize")]
         public class about
         {
             [Fact]

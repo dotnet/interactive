@@ -20,7 +20,6 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests.Server
 {
-    [LogTestNamesToPocketLogger]
     public class KernelServerTests : IDisposable
     {
         private readonly KernelServer _kernelServer;

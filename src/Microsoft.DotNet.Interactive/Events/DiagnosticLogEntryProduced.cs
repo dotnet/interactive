@@ -15,5 +15,7 @@ namespace Microsoft.DotNet.Interactive.Events
         }
 
         public string Message { get; }
+
+        public override string ToString() => $"{base.ToString()}: {Message}";
     }
 }

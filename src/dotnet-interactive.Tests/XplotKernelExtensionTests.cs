@@ -14,9 +14,9 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
-    public partial class XplotKernelExtensionTests : LanguageKernelTestBase
+    [Collection("Do not parallelize")]
+    public class XplotKernelExtensionTests : LanguageKernelTestBase
     {
-     
         public XplotKernelExtensionTests(ITestOutputHelper output) : base(output)
         {
         }

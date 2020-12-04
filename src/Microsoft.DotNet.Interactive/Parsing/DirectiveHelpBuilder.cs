@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Help;
@@ -13,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
         private readonly string _rootCommandName;
         private readonly Dictionary<ISymbol, string> _directiveHelp = new Dictionary<ISymbol, string>();
 
-        public DirectiveHelpBuilder(IConsole console, string rootCommandName) : base(console)
+        public DirectiveHelpBuilder(IConsole console, string rootCommandName) : base(new SystemConsole())
         {
             _rootCommandName = rootCommandName;
         }
@@ -57,5 +58,28 @@ namespace Microsoft.DotNet.Interactive.Parsing
             capturingConsole.Out
                             .ToString()
                             .Replace(_rootCommandName + " ", "");
+
+        private class SystemConsole : IConsole
+        {
+            public IStandardStreamWriter Out { get; } = new StandardOutStreamWriter();
+
+            public bool IsOutputRedirected => System.Console.IsOutputRedirected;
+
+            public IStandardStreamWriter Error { get; } = new StandardErrorStreamWriter();
+
+            public bool IsErrorRedirected => System.Console.IsErrorRedirected;
+
+            public bool IsInputRedirected => System.Console.IsInputRedirected;
+
+            private class StandardOutStreamWriter : IStandardStreamWriter
+            {
+                public void Write(string value) => System.Console.Out.Write(value);
+            }
+
+            private class StandardErrorStreamWriter : IStandardStreamWriter
+            {
+                public void Write(string value) => System.Console.Error.Write(value);
+            }
+        }
     }
 }

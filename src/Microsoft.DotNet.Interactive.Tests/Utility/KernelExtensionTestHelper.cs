@@ -24,7 +24,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         {
             var msbuildFragment = GenerateEmbeddedResourceFragment(filesToEmbed);
 
-
             var extensionCode = filesToEmbed?.Length == 0 ? ExtensionCs(code) : FileProviderExtensionCs(code);
             projectDir.Populate(
                 extensionCode,
@@ -53,7 +52,15 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
 </Project>
 
-"));
+"),
+                ("global.json", @"{
+  ""sdk"": {
+    ""version"": ""5.0.100"",
+    ""rollForward"": ""latestMinor""
+  }
+}
+")
+            );
 
             var dotnet = new Dotnet(projectDir);
 
@@ -148,6 +155,13 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
   </ItemGroup>
 
 </Project>
+"),
+                ("global.json", @"{
+  ""sdk"": {
+    ""version"": ""5.0.100"",
+    ""rollForward"": ""latestMinor""
+  }
+}
 "));
 
             var buildResult = await new Dotnet(projectDir).Build();

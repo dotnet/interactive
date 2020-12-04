@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
@@ -17,69 +16,32 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 
 using Pocket;
 
-using Recipes;
-
-using Serilog.Sinks.RollingFileAlternate;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.LanguageKernelTestBase>;
 
 using Xunit.Abstractions;
-
-using SerilogLoggerConfiguration = Serilog.LoggerConfiguration;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
     [LogTestNamesToPocketLogger]
     public abstract class LanguageKernelTestBase : IDisposable
     {
-        static LanguageKernelTestBase()
-        {
-            var artifactsPath = new DirectoryInfo(".");
-
-            while (artifactsPath.Name != "artifacts")
-            {
-                if (artifactsPath.Parent != null)
-                {
-                    artifactsPath = artifactsPath.Parent;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            var logPath =
-                artifactsPath.Name == "artifacts"
-                    ? Path.Combine(
-                        artifactsPath.ToString(),
-                        "log",
-                        "Release")
-                    : ".";
-
-            var log = new SerilogLoggerConfiguration()
-                      .WriteTo
-                      .RollingFileAlternate(logPath, outputTemplate: "{Message}{NewLine}")
-                      .CreateLogger();
-
-            LogEvents.Subscribe(
-                e => log.Information(e.ToLogString()));
-        }
-
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
-
-        private static readonly AsyncLock _lock = new AsyncLock();
-        private readonly AsyncLock.Releaser _lockReleaser;
 
         protected LanguageKernelTestBase(ITestOutputHelper output)
         {
-            _lockReleaser = Task.Run(() => _lock.LockAsync()).Result;
-
             DisposeAfterTest(output.SubscribeToPocketLogger());
         }
 
         public void Dispose()
         {
-            _disposables?.Dispose();
-
-            _lockReleaser.Dispose();
+            try
+            {
+                _disposables?.Dispose();
+            }
+            catch (Exception ex) 
+            {
+                Log.Error(exception: ex);
+            }
         }
 
         protected CompositeKernel CreateCompositeKernel(Language defaultKernelLanguage = Language.CSharp,

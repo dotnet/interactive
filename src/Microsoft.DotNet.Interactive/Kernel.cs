@@ -47,14 +47,12 @@ namespace Microsoft.DotNet.Interactive
 
             Pipeline = new KernelCommandPipeline(this);
 
-            AddCaptureConsoleMiddleware();
-
             AddSetKernelMiddleware();
 
             AddDirectiveMiddlewareAndCommonCommandHandlers();
 
-            _disposables.Add(Disposable.Create( 
-                ()  => _kernelEvents.OnCompleted()
+            _disposables.Add(Disposable.Create(
+                () => _kernelEvents.OnCompleted()
                 ));
         }
 
@@ -82,23 +80,6 @@ namespace Microsoft.DotNet.Interactive
         private void AddSetKernelMiddleware()
         {
             AddMiddleware(SetKernel);
-        }
-
-        private void AddCaptureConsoleMiddleware()
-        {
-            AddMiddleware(async (command, context, next) =>
-            {
-                using var console = await ConsoleOutput.TryCaptureAsync(c =>
-                {
-                    return new CompositeDisposable
-                    {
-                        c.Out.Subscribe(s => context.DisplayStandardOut(s, command)),
-                        c.Error.Subscribe(s => context.DisplayStandardError(s, command))
-                    };
-                });
-
-                await next(command, context);
-            });
         }
 
         private void AddDirectiveMiddlewareAndCommonCommandHandlers()
@@ -233,18 +214,25 @@ namespace Microsoft.DotNet.Interactive
         public IReadOnlyCollection<ICommand> Directives => SubmissionParser.Directives;
 
         public void AddDirective(Command command) => SubmissionParser.AddDirective(command);
-        
+
         private class KernelOperation
         {
-            public KernelOperation(KernelCommand command, TaskCompletionSource<KernelCommandResult> taskCompletionSource)
+            public KernelOperation(
+                KernelCommand command,
+                TaskCompletionSource<KernelCommandResult> taskCompletionSource)
             {
                 Command = command;
                 TaskCompletionSource = taskCompletionSource;
+
+                AsyncContext.TryEstablish(out var id);
+                AsyncContextId = id;
             }
 
             public KernelCommand Command { get; }
 
             public TaskCompletionSource<KernelCommandResult> TaskCompletionSource { get; }
+
+            public int AsyncContextId { get; }
         }
 
         private async Task ExecuteCommand(KernelOperation operation)
@@ -300,7 +288,7 @@ namespace Microsoft.DotNet.Interactive
 
         internal Task<KernelCommandResult> SendAsync(
             KernelCommand command,
-            CancellationToken cancellationToken, 
+            CancellationToken cancellationToken,
             Action onDone)
         {
             if (command == null)
@@ -313,7 +301,7 @@ namespace Microsoft.DotNet.Interactive
             var tcs = new TaskCompletionSource<KernelCommandResult>();
 
             var operation = new KernelOperation(command, tcs);
-           
+
             _commandQueue.Enqueue(operation);
 
             ProcessCommandQueue(_commandQueue, cancellationToken, onDone);
@@ -330,9 +318,11 @@ namespace Microsoft.DotNet.Interactive
             {
                 Task.Run(async () =>
                 {
+                    AsyncContext.Id = currentOperation.AsyncContextId;
+
                     await ExecuteCommand(currentOperation);
 
-                    ProcessCommandQueue(commandQueue, cancellationToken,onDone);
+                    ProcessCommandQueue(commandQueue, cancellationToken, onDone);
                 }, cancellationToken).ConfigureAwait(false);
             }
             else
@@ -346,7 +336,7 @@ namespace Microsoft.DotNet.Interactive
             var tcs = new TaskCompletionSource<Unit>();
             UndeferCommands();
             ProcessCommandQueue(
-                _commandQueue, 
+                _commandQueue,
                 CancellationToken.None,
                 () => tcs.SetResult(Unit.Default));
             return tcs.Task;
@@ -393,15 +383,15 @@ namespace Microsoft.DotNet.Interactive
                                                 .GetPosition(command.LinePosition);
 
                 var completions = GetDirectiveCompletionItems(
-                    directiveNode, 
+                    directiveNode,
                     requestPosition);
-                
+
                 var upToCursor =
                     directiveNode.Text[..command.LinePosition.Character];
 
                 var indexOfPreviousSpace =
                     Math.Max(
-                        0, 
+                        0,
                         upToCursor.LastIndexOf(" ", StringComparison.CurrentCultureIgnoreCase) + 1);
 
                 var resultRange = new LinePositionSpan(
@@ -429,7 +419,7 @@ namespace Microsoft.DotNet.Interactive
             var topDirectiveParser = SubmissionParser.GetDirectiveParser();
             var prefix = topDirectiveParser.Configuration.RootCommand.Name + " ";
             requestPosition += prefix.Length;
-            
+
             foreach (var parser in directiveParsers)
             {
                 var effectiveText = $"{prefix}{directiveNode.Text}";

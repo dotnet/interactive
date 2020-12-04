@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.Interactive.Server
             catch (JsonReaderException ex)
             {
                 var diagnosticEvent = new DiagnosticLogEntryProduced(
-                        $"Error while parsing command: {ex.Message}\n{line}");
+                    $"Error while parsing command: {ex.Message}\n{line}");
 
                 _kernelEvents.OnNext(diagnosticEvent);
             }

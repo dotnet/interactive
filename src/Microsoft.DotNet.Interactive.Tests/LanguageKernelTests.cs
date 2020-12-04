@@ -751,11 +751,12 @@ $${languageSpecificCode}
             await SubmitCode(kernel, source);
 
             KernelEvents
-                        .OfType<ReturnValueProduced>()
-                        .Last()
-                        .Value
-                        .Should()
-                        .BeNull();
+                .Should()
+                .ContainSingle<ReturnValueProduced>()
+                .Which
+                .Value
+                .Should()
+                .BeNull();
         }
 
         [Theory]
@@ -889,11 +890,12 @@ Console.Write(""value three"");"
 
             KernelEvents
                 .OfType<StandardOutputValueProduced>()
+                .Select(e => e.FormattedValues.ToArray())
                 .Should()
-                .BeEquivalentTo(
-                    new StandardOutputValueProduced(kernelCommand, new[] { new FormattedValue("text/plain", "value one") }),
-                    new StandardOutputValueProduced(kernelCommand, new[] { new FormattedValue("text/plain", "value two") }),
-                    new StandardOutputValueProduced(kernelCommand, new[] { new FormattedValue("text/plain", "value three") }));
+                .BeEquivalentSequenceTo(
+                    new[] { new FormattedValue("text/plain", "value one") },
+                    new[] { new FormattedValue("text/plain", "value two") },
+                    new[] { new FormattedValue("text/plain", "value three") });
         }
 
         [Theory]
@@ -1041,7 +1043,7 @@ Console.Write(2);
 
         }
 
-        [Fact(Skip = "requires support for cs8 in roslyn scripting")]
+        [Fact]
         public async Task it_supports_csharp_8()
         {
             var kernel = CreateKernel();
@@ -1050,14 +1052,12 @@ Console.Write(2);
             await kernel.SendAsync(new SubmitCode("text[^5..^0]"));
 
             KernelEvents
-                .OfType<StandardOutputValueProduced>()
+                .OfType<ReturnValueProduced>()
                 .Last()
                 .Value
                 .Should()
                 .Be("meow!");
         }
-
-
 
         [Theory]
         [InlineData(Language.CSharp)]

@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             _output = output;
         }
 
-        [MsSqlFact("Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost")]
+        [MsSqlFact("Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost", Skip = "not ready")]
         public async Task It_can_connect_and_query_data()
         {
             using var kernel = new CompositeKernel
@@ -59,7 +59,7 @@ SELECT TOP 100 * FROM Person.Person
                   .ContainSingle(f => f.MimeType == HtmlFormatter.MimeType);
         }
 
-        [MsSqlFact("Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost")]
+        [MsSqlFact("Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost", Skip = "not ready")]
         public async Task It_can_scaffold_a_DbContext_in_a_CSharpKernel()
         {
             using var kernel = new CompositeKernel

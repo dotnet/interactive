@@ -226,7 +226,6 @@ namespace Microsoft.DotNet.Interactive
                      Resolve(GetPackageManagerLines(), restoreTfm, ReportError)
                 );
 
-
             PackageRestoreResult packageRestoreResult;
 
             if (!result.Success)
