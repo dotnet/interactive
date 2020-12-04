@@ -85,8 +85,8 @@ stages:
           inputs:
             versionSpec: $(NodeJSVersion)        
 
-        - task: UseDotNet@2
-          displayName: Add dotnet 3.0
+        - task: UseDotNet@5
+          displayName: Add dotnet 5.0
           inputs:
             packageType: sdk
             version: $(DotNetSdkVersion)
@@ -196,7 +196,7 @@ stages:
           inputs:
             versionSpec: $(NodeJSVersion)
 
-        - task: UseDotNet@2
+        - task: UseDotNet@5
           displayName: Add dotnet
           inputs:
             packageType: sdk
@@ -280,7 +280,7 @@ stages:
         variables:
         - name: DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT
           value: 1
-        - name: DOTNET_TRY_SKIP_FIRST_TIME_EXPERIENCE
+        - name: DOTNET_INTERACTIVE_SKIP_FIRST_TIME_EXPERIENCE
           value: 1
         # specify tool version on public CI builds
         - ${{ if eq(variables['System.TeamProject'], 'public') }}:
@@ -293,8 +293,8 @@ stages:
         steps:
         - checkout: self
           clean: true
-        - task: UseDotNet@2
-          displayName: Add dotnet
+        - task: UseDotNet@5
+          displayName: Add dotnet 5.0
           inputs:
             packageType: sdk
             version: $(DotNetSdkVersion)
