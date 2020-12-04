@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "more-packages", "more-packa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wildcard-packages", "wildcard-packages\wildcard-packages.csproj", "{107EF765-FC88-44E3-829C-9FEA4C8CA48D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "a-few-more-packages", "a-few-more-packages\a-few-more-packages.csproj", "{D29804EB-BFDE-4439-AF0C-232110454325}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,5 +60,17 @@ Global
 		{107EF765-FC88-44E3-829C-9FEA4C8CA48D}.Release|x64.Build.0 = Release|Any CPU
 		{107EF765-FC88-44E3-829C-9FEA4C8CA48D}.Release|x86.ActiveCfg = Release|Any CPU
 		{107EF765-FC88-44E3-829C-9FEA4C8CA48D}.Release|x86.Build.0 = Release|Any CPU
+		{D29804EB-BFDE-4439-AF0C-232110454325}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D29804EB-BFDE-4439-AF0C-232110454325}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D29804EB-BFDE-4439-AF0C-232110454325}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D29804EB-BFDE-4439-AF0C-232110454325}.Debug|x64.Build.0 = Debug|Any CPU
+		{D29804EB-BFDE-4439-AF0C-232110454325}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D29804EB-BFDE-4439-AF0C-232110454325}.Debug|x86.Build.0 = Debug|Any CPU
+		{D29804EB-BFDE-4439-AF0C-232110454325}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D29804EB-BFDE-4439-AF0C-232110454325}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D29804EB-BFDE-4439-AF0C-232110454325}.Release|x64.ActiveCfg = Release|Any CPU
+		{D29804EB-BFDE-4439-AF0C-232110454325}.Release|x64.Build.0 = Release|Any CPU
+		{D29804EB-BFDE-4439-AF0C-232110454325}.Release|x86.ActiveCfg = Release|Any CPU
+		{D29804EB-BFDE-4439-AF0C-232110454325}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
