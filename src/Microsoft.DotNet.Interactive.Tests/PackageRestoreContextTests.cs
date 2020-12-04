@@ -258,7 +258,6 @@ namespace Microsoft.DotNet.Interactive.Tests
             restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "0.16.0-preview");
 
             await restoreContext.RestoreAsync();
-            var restoreSources = restoreContext.RestoreSources;
 
             var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
             resolvedPackageReferences.Should()
@@ -273,7 +272,6 @@ namespace Microsoft.DotNet.Interactive.Tests
             restoreContext.GetOrAddPackageReference("Microsoft.ML.AutoML", "*");
 
             await restoreContext.RestoreAsync();
-            var restoreSources = restoreContext.RestoreSources;
 
             var resolvedPackageReferences = restoreContext.ResolvedPackageReferences;
             resolvedPackageReferences.Should()
