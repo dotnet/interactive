@@ -948,5 +948,31 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
             }
             // (OSPlatform.OSX is not supported by this library
         }
+
+        [Fact]
+        public async Task Pound_r_nuget_works_immediately_after_a_language_selector()
+        {
+            var kernel = CreateCompositeKernel(defaultKernelLanguage: Language.CSharp);
+
+            var code = @"
+#!csharp
+#r ""nuget: System.Text.Json, 4.6.0""
+";
+
+            var command = new SubmitCode(code);
+
+            var result = await kernel.SendAsync(command);
+
+            using var events = result.KernelEvents.ToSubscribedList();
+
+            events
+                .Should()
+                .ContainSingle<PackageAdded>()
+                .Which
+                .PackageReference
+                .PackageName
+                .Should()
+                .Be("System.Text.Json");
+        }
     }
 }

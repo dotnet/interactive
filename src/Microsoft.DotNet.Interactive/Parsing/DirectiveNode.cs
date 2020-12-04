@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
         internal DirectiveNode(
             DirectiveToken directiveToken,
             SourceText sourceText,
-            PolyglotSyntaxTree? syntaxTree) : base("#!", sourceText, syntaxTree)
+            PolyglotSyntaxTree? syntaxTree) : base(directiveToken.DirectiveName, sourceText, syntaxTree)
         {
             Add(directiveToken);
         }
