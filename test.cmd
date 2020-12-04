@@ -1,2 +1,2 @@
 @echo off
-pwsh -noprofile -executionPolicy RemoteSigned -file "%~dp0eng\build.ps1" -test -binaryLog %*
+powershell -noprofile -executionPolicy RemoteSigned -file "%~dp0eng\build.ps1" -test -binaryLog %*

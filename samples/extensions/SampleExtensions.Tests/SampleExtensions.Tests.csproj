@@ -14,7 +14,7 @@
     <PackageReference Include="microsoft.dotnet.interactive.csharp" Version="1.0.0-beta.20574.9" />
     <PackageReference Include="microsoft.dotnet.interactive.fsharp" Version="1.0.0-beta.20574.9" />
     <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
     <PackageReference Include="coverlet.collector" Version="1.0.1" />
     <PackageReference Include="FluentAssertions" Version="5.10.2" />
   </ItemGroup>

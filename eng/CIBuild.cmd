@@ -1,2 +1,2 @@
 @echo off
-pwsh -noprofile -executionPolicy RemoteSigned -file "%~dp0build.ps1" -ci -restore -build -pack -publish -binaryLog %*
+powershell -noprofile -executionPolicy RemoteSigned -file "%~dp0build.ps1" -ci -restore -build -pack -publish -binaryLog %*

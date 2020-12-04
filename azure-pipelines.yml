@@ -102,18 +102,11 @@ stages:
             -configuration $(_BuildConfig)
             -prepareMachine
             -sign
+            -test
             $(_BuildArgs)
           displayName: Build / Test
           env:
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
-
-        - task: PublishBuildArtifacts@1
-          displayName: Publish dumps
-          condition: always()
-          inputs:
-            pathToPublish: '$(Build.SourcesDirectory)/artifacts/dumps'
-            artifactName: dumps
-            artifactType: container
 
         - script: npm run test
           displayName: NPM tests
@@ -286,7 +279,7 @@ stages:
         variables:
         - name: DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT
           value: 1
-        - name: DOTNET_INTERACTIVE_SKIP_FIRST_TIME_EXPERIENCE
+        - name: DOTNET_TRY_SKIP_FIRST_TIME_EXPERIENCE
           value: 1
         # specify tool version on public CI builds
         - ${{ if eq(variables['System.TeamProject'], 'public') }}:

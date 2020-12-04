@@ -25,7 +25,7 @@
     <PackageReference Include="PocketLogger" Version="0.4.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger.For.Xunit" Version="0.5.1">
+    <PackageReference Include="PocketLogger.For.Xunit" Version="0.5.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="PocketLogger.Subscribe" Version="0.7.0">

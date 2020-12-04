@@ -28,7 +28,7 @@
     <PackageReference Include="PocketLogger" Version="0.4.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="PocketLogger.For.Xunit" Version="0.5.1">
+    <PackageReference Include="PocketLogger.For.Xunit" Version="0.5.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="PocketLogger.Subscribe" Version="0.7.0">
@@ -40,6 +40,9 @@
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Jupyter\Microsoft.DotNet.Interactive.Jupyter.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting.Tests\Microsoft.DotNet.Interactive.Formatting.Tests.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Tests\Microsoft.DotNet.Interactive.Tests.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="16.6.1" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Update="xunit.runner.visualstudio" Version="2.4.3">
