@@ -42,7 +42,7 @@ try {
 
     Write-Host "Running tests"
 
-    dotnet test "$PSScriptRoot\..\dotnet-interactive.sln" --configuration Release --no-restore --no-build 
+    dotnet test "$PSScriptRoot\..\dotnet-interactive.sln" --configuration Release --no-restore --no-build --blame
     
     $LASTLASTEXITCODE = $LASTEXITCODE
     
