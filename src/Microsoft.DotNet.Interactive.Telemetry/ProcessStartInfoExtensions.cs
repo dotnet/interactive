@@ -29,10 +29,8 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 
             process.WaitForExit();
 
-            var timeoutMs = 20000;
-
-            taskOut.Wait(timeoutMs);
-            taskErr.Wait(timeoutMs);
+            taskOut.Wait();
+            taskErr.Wait();
 
             stdOut = outStream.CapturedOutput;
             stdErr = errStream.CapturedOutput;
