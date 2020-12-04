@@ -85,8 +85,8 @@ stages:
           inputs:
             versionSpec: $(NodeJSVersion)        
 
-        - task: UseDotNet@5
-          displayName: Add dotnet 5.0
+        - task: AddDotNetSDK
+          displayName: Use .NET SDK 5.0
           inputs:
             packageType: sdk
             version: $(DotNetSdkVersion)
@@ -196,8 +196,8 @@ stages:
           inputs:
             versionSpec: $(NodeJSVersion)
 
-        - task: UseDotNet@5
-          displayName: Add dotnet
+        - task: AddDotNetSDK
+          displayName: Use .NET SDK
           inputs:
             packageType: sdk
             version: $(DotNetSdkVersion)
@@ -293,8 +293,8 @@ stages:
         steps:
         - checkout: self
           clean: true
-        - task: UseDotNet@5
-          displayName: Add dotnet 5.0
+        - task: AddDotNetSDK
+          displayName: Use .NET SDK 5.0
           inputs:
             packageType: sdk
             version: $(DotNetSdkVersion)
