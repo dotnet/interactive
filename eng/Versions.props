@@ -13,7 +13,8 @@
     <PatchVersion>0</PatchVersion>
     <VersionPrefix>$(MajorVersion).$(MinorVersion).$(PatchVersion)</VersionPrefix>
     <AutoGenerateAssemblyVersion>true</AutoGenerateAssemblyVersion>
-    <PreReleaseVersionLabel></PreReleaseVersionLabel>
+    <PreReleaseVersionLabel>
+    </PreReleaseVersionLabel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(UseGlobalToolVersion)' == 'true'">
     <AutoGenerateAssemblyVersion>false</AutoGenerateAssemblyVersion>
