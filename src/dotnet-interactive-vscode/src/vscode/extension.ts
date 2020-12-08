@@ -28,7 +28,7 @@ export async function activate(context: vscode.ExtensionContext) {
     if (await isDotnetUpToDate(minDotNetSdkVersion!)) {
         dotnetPath = 'dotnet';
     } else {
-        const commandResult = await vscode.commands.executeCommand<IDotnetAcquireResult>('dotnet.acquire', { version: minDotNetSdkVersion });
+        const commandResult = await vscode.commands.executeCommand<IDotnetAcquireResult>('dotnet.acquire', { version: minDotNetSdkVersion, requestingExtensionId: 'ms-dotnettools.dotnet-interactive-vscode' });
         dotnetPath = commandResult!.dotnetPath;
     }
 
