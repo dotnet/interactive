@@ -149,6 +149,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             void AppendAsLanguageNode(SyntaxNodeOrToken nodeOrToken)
             {
                 if (rootNode.ChildNodes.LastOrDefault() is LanguageNode previousLanguageNode &&
+                    previousLanguageNode is not KernelNameDirectiveNode &&
                     previousLanguageNode.KernelName == currentKernelName)
                 {
                     previousLanguageNode.Add(nodeOrToken);
