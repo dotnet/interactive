@@ -197,7 +197,7 @@ async function getInteractiveVersion(dotnetPath: string, globalStoragePath: stri
 async function createToolManifest(dotnetPath: string, globalStoragePath: string): Promise<void> {
     const result = await execute(dotnetPath, ['new', 'tool-manifest'], globalStoragePath);
     if (result.code !== 0) {
-        throw new Error('Unable to create local tool manifest.');
+        throw new Error(`Unable to create local tool manifest.  Command failed with code ${result.code}.\n\nSTDOUT:\n${result.output}\n\nSTDERR:\n${result.error}`);
     }
 }
 
