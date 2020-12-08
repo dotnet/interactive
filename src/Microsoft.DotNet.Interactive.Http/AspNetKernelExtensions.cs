@@ -1,6 +1,8 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Http
@@ -10,9 +12,9 @@ namespace Microsoft.DotNet.Interactive.Http
         public static T UseAspNet<T>(this T kernel)
             where T : Kernel
         {
-            var command = new SubmitCode(@"
-Environment.SetEnvironmentVariable($""ASPNETCORE_{WebHostDefaults.PreventHostingStartupKey}"", ""true"");
+            Environment.SetEnvironmentVariable($"ASPNETCORE_{WebHostDefaults.PreventHostingStartupKey}", "true");
 
+            var command = new SubmitCode(@"
 class LogLevelMonitor : IOptionsMonitor<LoggerFilterOptions>
 {
     LoggerFilterOptions _loggerFilterOptions;
