@@ -7,11 +7,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using static Pocket.Logger;
 using Microsoft.DotNet.DependencyManager;
 using System.Globalization;
+using Recipes;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive
     {
         private const string restoreTfm = "net5.0";
         private readonly ConcurrentDictionary<string, PackageReference> _requestedPackageReferences = new ConcurrentDictionary<string, PackageReference>(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, ResolvedPackageReference> _resolvedPackageReferences = new Dictionary<string, ResolvedPackageReference>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, ResolvedPackageReference> _resolvedPackageReferences = new ConcurrentDictionary<string, ResolvedPackageReference>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _restoreSources = new HashSet<string>();
         private readonly DependencyProvider _dependencies;
 
@@ -199,9 +199,10 @@ namespace Microsoft.DotNet.Interactive
             Log.Info("OnAssemblyLoad: {location}", args.LoadedAssembly.Location);
         }
 
-        private IResolveDependenciesResult Resolve(IEnumerable<Tuple<string, string>> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
+        private Task<IResolveDependenciesResult> ResolveAsync(IEnumerable<Tuple<string, string>> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
         {
             IDependencyManagerProvider iDependencyManager = _dependencies.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
+
             if (iDependencyManager == null)
             {
                 // If this happens it is because of a bug in the Dependency provider. or deployment failed to deploy the nuget provider dll.
@@ -209,7 +210,8 @@ namespace Microsoft.DotNet.Interactive
                 throw new InvalidOperationException("Internal error - unable to locate the nuget package manager, please try to reinstall.");
             }
 
-            return _dependencies.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm);
+            return Task.Run(() => _dependencies.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm))
+                       .Timeout(TimeSpan.FromMinutes(2));
         }
 
         public async Task<PackageRestoreResult> RestoreAsync()
@@ -221,10 +223,7 @@ namespace Microsoft.DotNet.Interactive
 
             var errors = new List<string>();
 
-            var result =
-                await Task.Run(() => 
-                     Resolve(GetPackageManagerLines(), restoreTfm, ReportError)
-                );
+            var result = await ResolveAsync(GetPackageManagerLines(), restoreTfm, ReportError);
 
             PackageRestoreResult packageRestoreResult;
 

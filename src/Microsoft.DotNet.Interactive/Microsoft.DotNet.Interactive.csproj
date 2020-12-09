@@ -22,6 +22,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\dotnet-interactive\%28Recipes%29\TaskExtensions.cs" Link="Utility\TaskExtensions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="3.1.8" />
     <PackageReference Include="System.Runtime.Loader" Version="$(SystemRuntimeLoaderVersion)" />
     <PackageReference Include="System.Reactive" Version="$(SystemReactiveVersion)" />
