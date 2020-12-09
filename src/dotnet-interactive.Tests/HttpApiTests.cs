@@ -72,6 +72,8 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var server = await GetServer(Language.CSharp);
 
             var result = await server.Kernel.SendAsync(new SubmitCode(@"
+#!aspnet
+
 Logging.MinLevel = LogLevel.Information;
 Logging.EnableHttpClientTracing = true;
 
@@ -87,31 +89,6 @@ await HttpClient.GetAsync(""/Endpoint"")"));
                 .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == "text/html")
                 .Which.Value.Should().Match("Hello world!");
         }
-
-        [Fact]
-        public async Task Logging_MinLevel_sets_aspnet_min_logging_level()
-        {
-            PocketView dom = div(span(ol(li(),li(),li(),li())));
-
-            var server = await GetServer(Language.CSharp);
-
-            var result = await server.Kernel.SendAsync(new SubmitCode(@"
-Logging.MinLevel = LogLevel.Information;
-Logging.EnableHttpClientTracing = true;
-
-Endpoints.MapAction(""/Endpoint"", async context =>
-{
-    await context.Response.WriteAsync($""Hello world!"");
-});
-
-await HttpClient.GetAsync(""/Endpoint"")"));
-
-            var subbedList = result.KernelEvents.ToSubscribedList();
-            subbedList.Should().NotContainErrors().And.ContainSingle<ReturnValueProduced>()
-                .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == "text/html")
-                .Which.Value.Should().Match("Hello world!");
-        }
-
 
         [Fact]
         public async Task FrontendEnvironment_host_is_set_via_handshake()

@@ -377,7 +377,7 @@ type FSharpKernel () as this =
         | _ ->
             false
 
-    override _.SetVariableAsync(name: string, value: Object) : Task = 
+    override _.SetVariableAsync(name: string, value: Object, declaredType: Type) : Task = 
         script.Value.Fsi.AddBoundValue(name, value) |> ignore
         Task.CompletedTask
 

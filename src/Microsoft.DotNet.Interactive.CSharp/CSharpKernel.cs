@@ -146,11 +146,12 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return false;
         }
 
-        public override async Task SetVariableAsync(string name, object value)
+        public override async Task SetVariableAsync(string name, object value, Type declaredType = null)
         {
             var csharpTypeDeclaration = new StringWriter();
 
-            value.GetType().WriteCSharpDeclarationTo(csharpTypeDeclaration);
+            declaredType ??= value.GetType();
+            declaredType.WriteCSharpDeclarationTo(csharpTypeDeclaration);
 
             await RunAsync($"{csharpTypeDeclaration} {name} = default;");
 
