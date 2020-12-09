@@ -7,16 +7,63 @@ using System.CommandLine.Invocation;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 
 namespace Microsoft.DotNet.Interactive.Http
 {
     public static class AspNetKernelExtensions
     {
+        private const string _prelude = @"
+class LogLevelController
+{
+    private readonly object _kernelLogLevelController;
+
+    public LogLevelController(object kernelLogLevelController)
+    {
+        _kernelLogLevelController = kernelLogLevelController;
+    }
+
+    public LogLevel MinLevel
+    {
+        set
+        {
+            ((dynamic)_kernelLogLevelController).MinLevel = value;
+        }
+    }
+
+    public bool EnableHttpClientTracing
+    {
+        set
+        {
+            ((dynamic)_kernelLogLevelController).EnableHttpClientTracing = value;
+        }
+    }
+}
+
+var Logging = new LogLevelController(__AspNet_LogLevelController);
+
+private static int __AspNet_NextEndpointOrder;
+
+static IEndpointConventionBuilder MapAction(
+    this IEndpointRouteBuilder endpoints,
+    string pattern,
+    RequestDelegate requestDelegate)
+{
+    var order = __AspNet_NextEndpointOrder--;
+    var builder = endpoints.MapGet(pattern, requestDelegate);
+    builder.Add(b => ((RouteEndpointBuilder)b).Order = order);
+    return builder;
+}";
+
         public static T UseAspNet<T>(this T kernel)
             where T : DotNetKernel
         {
@@ -31,119 +78,55 @@ namespace Microsoft.DotNet.Interactive.Http
                         MinLevel = LogLevel.Warning,
                     });
 
-                    var code = new SubmitCode(@"
-class LoggingController
-{
-    private readonly IOptionsMonitor<LoggerFilterOptions> _logLevelMonitor;
+                    IApplicationBuilder capturedApp = null;
+                    IEndpointRouteBuilder capturedEndpoints = null;
 
-    public LoggingController(IOptionsMonitor<LoggerFilterOptions> logLevelMonitor)
-    {
-        _logLevelMonitor = logLevelMonitor;
-    }
+                    var hostBuilder = Host.CreateDefaultBuilder()
+                        .ConfigureServices(services =>
+                        {
+                            services.AddSingleton<IOptionsMonitor<LoggerFilterOptions>>(logLevelMonitor);
+                        })
+                        .ConfigureWebHostDefaults(webBuilder =>
+                        {
+                            webBuilder.Configure(app => {
+                                capturedApp = app.New();
+                                capturedApp.UseRouting();
+                                capturedApp.UseEndpoints(endpoints =>
+                                {
+                                    capturedEndpoints = endpoints;
+                                });
 
-    public LogLevel MinLevel
-    {
-        set
-        {
-            ((dynamic)_logLevelMonitor).CurrentValue = new LoggerFilterOptions { MinLevel = value };
-        }
-    }
+                                app.Use(next =>
+                                    httpContext =>
+                                       capturedApp.Build()(httpContext));
+                            });
+                        })
+                        .ConfigureLogging(loggingBuilder =>
+                        {
+                            loggingBuilder.ClearProviders();
+                            loggingBuilder.AddSimpleConsole(options => options.ColorBehavior = LoggerColorBehavior.Disabled);
+                        });
 
-    public bool EnableHttpClientTracing { get; set; }
-}
+                    // TODO: Manage lifetime. Allow stopping, restarting, selecting port/in-memory etc...
+                    await hostBuilder.Build().StartAsync();
 
-var Logging = new LoggingController((IOptionsMonitor<LoggerFilterOptions>)__AspNet_LogLevelMonitor);
+                    var logLevelController = new LogLevelController(logLevelMonitor);
+                    var httpClient = new HttpClient(new WriteLineDelegatingHandler(new SocketsHttpHandler(), logLevelController))
+                    {
+                        BaseAddress = new Uri("http://localhost:5000")
+                    };
 
-class WriteLineDelegatingHandler : DelegatingHandler
-{
-    private readonly LoggingController _loggingController;
+                    await kernel.SetVariableAsync("App", capturedApp, typeof(IApplicationBuilder));
+                    await kernel.SetVariableAsync("Endpoints", capturedEndpoints, typeof(IEndpointRouteBuilder));
+                    await kernel.SetVariableAsync("HttpClient", httpClient);
+                    await kernel.SetVariableAsync("__AspNet_LogLevelController", logLevelController, typeof(object));
 
-    public WriteLineDelegatingHandler(HttpMessageHandler innerHandler, LoggingController loggingController)
-        : base(innerHandler)
-    {
-        _loggingController = loggingController;
-    }
-
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        if (_loggingController.EnableHttpClientTracing)
-        {
-            Console.WriteLine($""(HttpClient Request) {request}"");
-            if (request.Content != null)
-            {
-                Console.WriteLine(await request.Content.ReadAsStringAsync());
-            }
-        }
-
-        HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
-
-        if (_loggingController.EnableHttpClientTracing)
-        {
-            Console.WriteLine($""(HttpClient Response) {response}"");
-            if (response.Content != null)
-            {
-                Console.WriteLine(await response.Content.ReadAsStringAsync());
-            }
-        }
-
-        return response;
-    }
-}
-
-private static int __AspNet_NextEndpointOrder;
-
-static IEndpointConventionBuilder MapAction(
-    this IEndpointRouteBuilder endpoints,
-    string pattern,
-    RequestDelegate requestDelegate)
-{
-    var order = __AspNet_NextEndpointOrder--;
-    var builder = endpoints.MapGet(pattern, requestDelegate);
-    builder.Add(b => ((RouteEndpointBuilder)b).Order = order);
-    return builder;
-}
-
-var HttpClient = new HttpClient(new WriteLineDelegatingHandler(new SocketsHttpHandler(), Logging));
-HttpClient.BaseAddress = new Uri(""http://localhost:5000/"");
-
-IApplicationBuilder App = null;
-IEndpointRouteBuilder Endpoints = null;
-
-var __AspNet_HostBuilder = Host.CreateDefaultBuilder()
-    .ConfigureServices(services =>
-    {
-        services.AddSingleton<IOptionsMonitor<LoggerFilterOptions>>((IOptionsMonitor<LoggerFilterOptions>)__AspNet_LogLevelMonitor);
-    })
-    .ConfigureWebHostDefaults(webBuilder =>
-    {
-        webBuilder.Configure(app => {
-            App = app.New();
-            App.UseRouting();
-            App.UseEndpoints(endpoints =>
-            {
-                Endpoints = endpoints;
-            });
-
-            app.Use(next =>
-                httpContext =>
-                   App.Build()(httpContext));
-        });
-    })
-    .ConfigureLogging(loggingBuilder =>
-    {
-        loggingBuilder.ClearProviders();
-        loggingBuilder.AddSimpleConsole(options => options.ColorBehavior = LoggerColorBehavior.Disabled);
-    });
-
-var __AspNet_HostRunAsyncTask = __AspNet_HostBuilder.Build().RunAsync();
-");
-
-                    await kernel.SetVariableAsync("__AspNet_LogLevelMonitor", logLevelMonitor, typeof(IOptionsMonitor<LoggerFilterOptions>));
-                    kernel.DeferCommand(code);
+                    kernel.DeferCommand(new SubmitCode(_prelude));
                 })
             };
 
             kernel.AddDirective(directive);
+
             Formatter.Register<HttpResponseMessage>((responseMessage, textWriter) =>
             {
                 // Formatter.Register() doesn't support async formatters yet.
@@ -167,7 +150,28 @@ var __AspNet_HostRunAsyncTask = __AspNet_HostBuilder.Build().RunAsync();
             return kernel;
         }
 
-        public class LogLevelMonitor : IOptionsMonitor<LoggerFilterOptions>
+        // Must be public to access properties using `dynamic`
+        public class LogLevelController
+        {
+            private readonly LogLevelMonitor _logLevelMonitor;
+
+            internal LogLevelController(LogLevelMonitor logLevelMonitor)
+            {
+                _logLevelMonitor = logLevelMonitor;
+            }
+
+            public LogLevel MinLevel
+            {
+                set
+                {
+                    _logLevelMonitor.CurrentValue = new LoggerFilterOptions { MinLevel = value };
+                }
+            }
+
+            public bool EnableHttpClientTracing { get; set; }
+        }
+
+        internal class LogLevelMonitor : IOptionsMonitor<LoggerFilterOptions>
         {
             LoggerFilterOptions _loggerFilterOptions;
             event Action<LoggerFilterOptions, string> _onChange;
@@ -213,6 +217,42 @@ var __AspNet_HostRunAsyncTask = __AspNet_HostBuilder.Build().RunAsync();
                 public void OnChange(LoggerFilterOptions options, string name) => _listener.Invoke(options, name);
 
                 public void Dispose() => _monitor._onChange -= OnChange;
+            }
+        }
+
+        private class WriteLineDelegatingHandler : DelegatingHandler
+        {
+            private readonly LogLevelController _logLevelController;
+
+            public WriteLineDelegatingHandler(HttpMessageHandler innerHandler, LogLevelController logLevelController)
+                : base(innerHandler)
+            {
+                _logLevelController = logLevelController;
+            }
+
+            protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                if (_logLevelController.EnableHttpClientTracing)
+                {
+                    Console.WriteLine($"(HttpClient Request) {request}");
+                    if (request.Content != null)
+                    {
+                        Console.WriteLine(await request.Content.ReadAsStringAsync());
+                    }
+                }
+
+                HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
+
+                if (_logLevelController.EnableHttpClientTracing)
+                {
+                    Console.WriteLine($"(HttpClient Response) {response}");
+                    if (response.Content != null)
+                    {
+                        Console.WriteLine(await response.Content.ReadAsStringAsync());
+                    }
+                }
+
+                return response;
             }
         }
     }
