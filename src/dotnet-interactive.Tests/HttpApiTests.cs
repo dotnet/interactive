@@ -26,6 +26,8 @@ using Pocket;
 
 using Xunit;
 
+using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
+
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
     public class HttpApiTests : IDisposable
@@ -61,6 +63,55 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var frontendEnvironment = server.FrontendEnvironment;
             frontendEnvironment.Should().NotBeOfType<HtmlNotebookFrontedEnvironment>();
         }
+
+        [Fact]
+        public async Task can_define_hello_world_aspnet_endpoint()
+        {
+            PocketView dom = div(span(ol(li(),li(),li(),li())));
+
+            var server = await GetServer(Language.CSharp);
+
+            var result = await server.Kernel.SendAsync(new SubmitCode(@"
+Logging.MinLevel = LogLevel.Information;
+Logging.EnableHttpClientTracing = true;
+
+Endpoints.MapAction(""/Endpoint"", async context =>
+{
+    await context.Response.WriteAsync($""Hello world!"");
+});
+
+await HttpClient.GetAsync(""/Endpoint"")"));
+
+            var subbedList = result.KernelEvents.ToSubscribedList();
+            subbedList.Should().NotContainErrors().And.ContainSingle<ReturnValueProduced>()
+                .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == "text/html")
+                .Which.Value.Should().Match("Hello world!");
+        }
+
+        [Fact]
+        public async Task Logging_MinLevel_sets_aspnet_min_logging_level()
+        {
+            PocketView dom = div(span(ol(li(),li(),li(),li())));
+
+            var server = await GetServer(Language.CSharp);
+
+            var result = await server.Kernel.SendAsync(new SubmitCode(@"
+Logging.MinLevel = LogLevel.Information;
+Logging.EnableHttpClientTracing = true;
+
+Endpoints.MapAction(""/Endpoint"", async context =>
+{
+    await context.Response.WriteAsync($""Hello world!"");
+});
+
+await HttpClient.GetAsync(""/Endpoint"")"));
+
+            var subbedList = result.KernelEvents.ToSubscribedList();
+            subbedList.Should().NotContainErrors().And.ContainSingle<ReturnValueProduced>()
+                .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == "text/html")
+                .Which.Value.Should().Match("Hello world!");
+        }
+
 
         [Fact]
         public async Task FrontendEnvironment_host_is_set_via_handshake()

@@ -2,8 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.CommandLine.Invocation;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Http
 {
@@ -164,6 +169,26 @@ var __AspNet_HostRunAsyncTask = __AspNet_HostBuilder.Build().RunAsync();
 ");
 
             kernel.DeferCommand(command);
+
+            Formatter.Register<HttpResponseMessage>((responseMessage, textWriter) =>
+            {
+                // Formatter.Register() doesn't support async formatters yet.
+                // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
+                ExecutionContext.SuppressFlow();
+
+                try
+                {
+                    var responseText = responseMessage.Content.ReadAsStringAsync().Result;
+                    textWriter.Write(responseText);
+                }
+                finally
+                {
+                    ExecutionContext.RestoreFlow();
+                }
+            }, HtmlFormatter.MimeType);
+
+            //KernelInvocationContext.Current.Publish(...)
+            //kernel.AddMiddleware()
 
             return kernel;
         }
