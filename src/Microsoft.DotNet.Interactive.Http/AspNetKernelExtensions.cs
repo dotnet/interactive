@@ -4,12 +4,16 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +21,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
+
+using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.Http
 {
@@ -67,10 +73,21 @@ static IEndpointConventionBuilder MapAction(
         public static T UseAspNet<T>(this T kernel)
             where T : DotNetKernel
         {
+            // TODO: Manage lifetime. Allow stopping, restarting, selecting port/in-memory etc...
+            var isActive = false;
+
             var directive = new Command("#!aspnet", "Activate ASP.NET")
             {
                 Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (from, name, context) =>
                 {
+                    // REVIEW: Commands cannot run concurrently, right?
+                    if (isActive)
+                    {
+                        return;
+                    }
+
+                    isActive = true;
+
                     Environment.SetEnvironmentVariable($"ASPNETCORE_{WebHostDefaults.PreventHostingStartupKey}", "true");
 
                     var logLevelMonitor = new LogLevelMonitor(new LoggerFilterOptions
@@ -107,7 +124,6 @@ static IEndpointConventionBuilder MapAction(
                             loggingBuilder.AddSimpleConsole(options => options.ColorBehavior = LoggerColorBehavior.Disabled);
                         });
 
-                    // TODO: Manage lifetime. Allow stopping, restarting, selecting port/in-memory etc...
                     await hostBuilder.Build().StartAsync();
 
                     var logLevelController = new LogLevelController(logLevelMonitor);
@@ -135,8 +151,7 @@ static IEndpointConventionBuilder MapAction(
 
                 try
                 {
-                    var responseText = responseMessage.Content.ReadAsStringAsync().Result;
-                    textWriter.Write(responseText);
+                    FormatHttpResponseMessage(responseMessage, textWriter).Wait();
                 }
                 finally
                 {
@@ -148,6 +163,23 @@ static IEndpointConventionBuilder MapAction(
             //kernel.AddMiddleware()
 
             return kernel;
+        }
+
+        private static async Task FormatHttpResponseMessage(HttpResponseMessage responseMessage, TextWriter textWriter)
+        {
+            h3("Response Headers").WriteTo(textWriter, HtmlEncoder.Default);
+
+            table(
+                thead(tr(
+                    th("Name"), th("Value"))),
+                tbody(responseMessage.Headers.Select(header => tr(
+                    td(header.Key), td(string.Join("; ", header.Value))))))
+                .WriteTo(textWriter, HtmlEncoder.Default);
+
+            h3("Response Body").WriteTo(textWriter, HtmlEncoder.Default);
+
+            pre(await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false))
+                .WriteTo(textWriter, HtmlEncoder.Default);
         }
 
         // Must be public to access properties using `dynamic`

@@ -26,8 +26,6 @@ using Pocket;
 
 using Xunit;
 
-using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
-
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
     public class HttpApiTests : IDisposable
@@ -67,8 +65,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         [Fact]
         public async Task can_define_hello_world_aspnet_endpoint()
         {
-            PocketView dom = div(span(ol(li(),li(),li(),li())));
-
             var server = await GetServer(Language.CSharp);
 
             var result = await server.Kernel.SendAsync(new SubmitCode(@"
@@ -87,7 +83,52 @@ await HttpClient.GetAsync(""/Endpoint"")"));
             var subbedList = result.KernelEvents.ToSubscribedList();
             subbedList.Should().NotContainErrors().And.ContainSingle<ReturnValueProduced>()
                 .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == "text/html")
-                .Which.Value.Should().Match("Hello world!");
+                .Which.Value.Should().Contain("Hello world!");
+        }
+
+        [Fact]
+        public async Task repeatedly_invoking_aspnet_command_noops()
+        {
+            var server = await GetServer(Language.CSharp);
+
+            var result = await server.Kernel.SendAsync(new SubmitCode(@"
+#!aspnet
+#!aspnet
+
+Endpoints.MapGet(""/"", async context =>
+{
+    await context.Response.WriteAsync($""Hello world!"");
+});
+
+await HttpClient.GetAsync(""/"")"));
+
+            var subbedList = result.KernelEvents.ToSubscribedList();
+            subbedList.Should().NotContainErrors().And.ContainSingle<ReturnValueProduced>()
+                .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == "text/html")
+                .Which.Value.Should().Contain("Hello world!");
+        }
+
+        [Fact]
+        public async Task aspnet_command_is_only_necessary_in_first_submission()
+        {
+            var server = await GetServer(Language.CSharp);
+
+            var commandResult = await server.Kernel.SendAsync(new SubmitCode("#!aspnet"));
+
+            commandResult.KernelEvents.ToSubscribedList().Should().NotContainErrors();
+
+            var requestResult = await server.Kernel.SendAsync(new SubmitCode(@"
+Endpoints.MapGet(""/"", async context =>
+{
+    await context.Response.WriteAsync($""Hello world!"");
+});
+
+await HttpClient.GetAsync(""/"")"));
+
+            var subbedList = requestResult.KernelEvents.ToSubscribedList();
+            subbedList.Should().NotContainErrors().And.ContainSingle<ReturnValueProduced>()
+                .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == "text/html")
+                .Which.Value.Should().Contain("Hello world!");
         }
 
         [Fact]
