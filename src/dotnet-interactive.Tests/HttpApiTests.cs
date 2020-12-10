@@ -63,9 +63,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         }
 
         [Fact]
-        public async Task can_define_hello_world_aspnet_endpoint()
+        public async Task can_define_aspnet_endpoint()
         {
-            var server = await GetServer(Language.CSharp);
+            var server = await GetServer();
 
             var result = await server.Kernel.SendAsync(new SubmitCode(@"
 #!aspnet
@@ -89,7 +89,7 @@ await HttpClient.GetAsync(""/Endpoint"")"));
         [Fact]
         public async Task repeatedly_invoking_aspnet_command_noops()
         {
-            var server = await GetServer(Language.CSharp);
+            var server = await GetServer();
 
             var result = await server.Kernel.SendAsync(new SubmitCode(@"
 #!aspnet
@@ -111,7 +111,7 @@ await HttpClient.GetAsync(""/"")"));
         [Fact]
         public async Task aspnet_command_is_only_necessary_in_first_submission()
         {
-            var server = await GetServer(Language.CSharp);
+            var server = await GetServer();
 
             var commandResult = await server.Kernel.SendAsync(new SubmitCode("#!aspnet"));
 

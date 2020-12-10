@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,7 +37,7 @@ class LogLevelController
         _kernelLogLevelController = kernelLogLevelController;
     }
 
-    public LogLevel MinLevel
+    public Microsoft.Extensions.Logging.LogLevel MinLevel
     {
         set
         {
@@ -137,7 +136,7 @@ static IEndpointConventionBuilder MapAction(
                     await kernel.SetVariableAsync("HttpClient", httpClient);
                     await kernel.SetVariableAsync("__AspNet_LogLevelController", logLevelController, typeof(object));
 
-                    kernel.DeferCommand(new SubmitCode(_prelude));
+                    await kernel.SendAsync(new SubmitCode(_prelude), CancellationToken.None);
                 })
             };
 
@@ -169,6 +168,8 @@ static IEndpointConventionBuilder MapAction(
         {
             h3("Response Headers").WriteTo(textWriter, HtmlEncoder.Default);
 
+            hr().WriteTo(textWriter, HtmlEncoder.Default);
+
             table(
                 thead(tr(
                     th("Name"), th("Value"))),
@@ -178,8 +179,11 @@ static IEndpointConventionBuilder MapAction(
 
             h3("Response Body").WriteTo(textWriter, HtmlEncoder.Default);
 
-            pre(await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false))
-                .WriteTo(textWriter, HtmlEncoder.Default);
+            hr().WriteTo(textWriter, HtmlEncoder.Default);
+
+            var responseBody = await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+            pre(responseBody).WriteTo(textWriter, HtmlEncoder.Default);
         }
 
         // Must be public to access properties using `dynamic`

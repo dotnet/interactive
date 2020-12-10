@@ -66,15 +66,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              "System.Net.Http",
                              "Microsoft.AspNetCore",
                              "Microsoft.AspNetCore.Builder",
-                             "Microsoft.AspNetCore.Hosting",
                              "Microsoft.AspNetCore.Http",
-                             "Microsoft.AspNetCore.Routing",
-                             "Microsoft.Extensions.Configuration",
-                             "Microsoft.Extensions.DependencyInjection",
-                             "Microsoft.Extensions.Hosting",
-                             "Microsoft.Extensions.Logging",
-                             "Microsoft.Extensions.Logging.Console",
-                             "Microsoft.Extensions.Options")
+                             "Microsoft.AspNetCore.Routing")
                          .AddReferences(
                              typeof(Enumerable).Assembly,
                              typeof(IEnumerable<>).Assembly,
