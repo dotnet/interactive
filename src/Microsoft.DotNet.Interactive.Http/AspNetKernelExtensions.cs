@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
@@ -9,13 +10,11 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Encodings.Web;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -23,7 +22,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
-using Microsoft.Extensions.Options;
 
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -31,35 +29,8 @@ namespace Microsoft.DotNet.Interactive.Http
 {
     public static class AspNetKernelExtensions
     {
+        private const string _aspnetLogsKey = "aspnet-logs";
         private const string _prelude = @"
-class LogLevelController
-{
-    private readonly object _kernelLogLevelController;
-
-    public LogLevelController(object kernelLogLevelController)
-    {
-        _kernelLogLevelController = kernelLogLevelController;
-    }
-
-    public LogLevel MinLevel
-    {
-        set
-        {
-            ((dynamic)_kernelLogLevelController).MinLevel = value;
-        }
-    }
-
-    public bool EnableHttpClientTracing
-    {
-        set
-        {
-            ((dynamic)_kernelLogLevelController).EnableHttpClientTracing = value;
-        }
-    }
-}
-
-var Logging = new LogLevelController(__AspNet_LogLevelController);
-
 private static int __AspNet_NextEndpointOrder;
 
 static IEndpointConventionBuilder MapAction(
@@ -93,18 +64,12 @@ static IEndpointConventionBuilder MapAction(
 
                     Environment.SetEnvironmentVariable($"ASPNETCORE_{WebHostDefaults.PreventHostingStartupKey}", "true");
 
-                    var logLevelMonitor = new LogLevelMonitor(new LoggerFilterOptions
-                    {
-                        MinLevel = LogLevel.Warning,
-                    });
-
                     IApplicationBuilder capturedApp = null;
                     IEndpointRouteBuilder capturedEndpoints = null;
 
                     var hostBuilder = Host.CreateDefaultBuilder()
                         .ConfigureServices(services =>
                         {
-                            services.AddSingleton<IOptionsMonitor<LoggerFilterOptions>>(logLevelMonitor);
                             services.AddCors(options =>
                             {
                                 options.AddPolicy("AllowAll",
@@ -137,12 +102,12 @@ static IEndpointConventionBuilder MapAction(
                         {
                             loggingBuilder.ClearProviders();
                             loggingBuilder.AddSimpleConsole(options => options.ColorBehavior = LoggerColorBehavior.Disabled);
+                            loggingBuilder.AddProvider(new InteractiveLoggerProvider());
                         });
 
                     await hostBuilder.Build().StartAsync();
 
-                    var logLevelController = new LogLevelController(logLevelMonitor);
-                    var httpClient = new HttpClient(new WriteLineDelegatingHandler(new SocketsHttpHandler(), logLevelController))
+                    var httpClient = new HttpClient(new LogCapturingDelegatingHandler(new SocketsHttpHandler()))
                     {
                         BaseAddress = new Uri("http://localhost:5000")
                     };
@@ -150,7 +115,6 @@ static IEndpointConventionBuilder MapAction(
                     await kernel.SetVariableAsync("App", capturedApp, typeof(IApplicationBuilder));
                     await kernel.SetVariableAsync("Endpoints", capturedEndpoints, typeof(IEndpointRouteBuilder));
                     await kernel.SetVariableAsync("HttpClient", httpClient);
-                    await kernel.SetVariableAsync("__AspNet_LogLevelController", logLevelController, typeof(object));
 
                     await kernel.SendAsync(new SubmitCode(_prelude), CancellationToken.None);
                 })
@@ -231,115 +195,79 @@ static IEndpointConventionBuilder MapAction(
 
             Pocket.LoggerExtensions.Info(Pocket.Logger.Log, output.ToString());
             output.WriteTo(textWriter, HtmlEncoder.Default);
-        }
 
-        // Must be public to access properties using `dynamic`
-        public class LogLevelController
-        {
-            private readonly LogLevelMonitor _logLevelMonitor;
-
-            internal LogLevelController(LogLevelMonitor logLevelMonitor)
+            if (requestMessage.Options.TryGetValue(new HttpRequestOptionsKey<ConcurrentQueue<(LogLevel, EventId, string, Exception)>>(_aspnetLogsKey), out var aspnetLogs))
             {
-                _logLevelMonitor = logLevelMonitor;
-            }
-
-            public LogLevel MinLevel
-            {
-                set
-                {
-                    _logLevelMonitor.CurrentValue = new LoggerFilterOptions { MinLevel = value };
-                }
-            }
-
-            public bool EnableHttpClientTracing { get; set; }
-        }
-
-        internal class LogLevelMonitor : IOptionsMonitor<LoggerFilterOptions>
-        {
-            LoggerFilterOptions _loggerFilterOptions;
-            event Action<LoggerFilterOptions, string> _onChange;
-
-            public LogLevelMonitor(LoggerFilterOptions initialOptions)
-            {
-                _loggerFilterOptions = initialOptions;
-            }
-
-            public LoggerFilterOptions CurrentValue 
-            { 
-                get => _loggerFilterOptions;
-                set
-                {
-                    _loggerFilterOptions = value;
-                    _onChange(value, string.Empty);
-                }
-            }
-
-            public IDisposable OnChange(Action<LoggerFilterOptions, string> listener)
-            {
-                var disposable = new ChangeTrackerDisposable(this, listener);
-                _onChange += disposable.OnChange;
-                return disposable;
-            }
-
-            public LoggerFilterOptions Get(string name)
-            {
-                throw new NotImplementedException();
-            }
-
-            private class ChangeTrackerDisposable : IDisposable
-            {
-                private readonly Action<LoggerFilterOptions, string> _listener;
-                private readonly LogLevelMonitor _monitor;
-
-                public ChangeTrackerDisposable(LogLevelMonitor monitor, Action<LoggerFilterOptions, string> listener)
-                {
-                    _listener = listener;
-                    _monitor = monitor;
-                }
-
-                public void OnChange(LoggerFilterOptions options, string name) => _listener.Invoke(options, name);
-
-                public void Dispose() => _monitor._onChange -= OnChange;
+                details(summary("Logs"), aspnetLogs).WriteTo(textWriter, HtmlEncoder.Default);
             }
         }
 
-        private class WriteLineDelegatingHandler : DelegatingHandler
+        private class LogCapturingDelegatingHandler : DelegatingHandler
         {
-            private readonly LogLevelController _logLevelController;
-
-            public WriteLineDelegatingHandler(HttpMessageHandler innerHandler, LogLevelController logLevelController)
+            public LogCapturingDelegatingHandler(HttpMessageHandler innerHandler)
                 : base(innerHandler)
             {
-                _logLevelController = logLevelController;
             }
 
-            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
-                if (_logLevelController.EnableHttpClientTracing)
+                var logs = new ConcurrentQueue<(LogLevel, EventId, string, Exception)>();
+                request.Options.Set(new HttpRequestOptionsKey<ConcurrentQueue<(LogLevel, EventId, string, Exception)>>(_aspnetLogsKey), logs);
+
+                void LogHandler(LogLevel logLevel, EventId eventId, string message, Exception exception)
                 {
-                    return TraceSendAsync(request, cancellationToken);
+                    logs.Enqueue((logLevel, eventId, message, exception));
                 }
 
-                return base.SendAsync(request, cancellationToken);
+                InteractiveLoggerProvider.Posted += LogHandler;
+
+                try
+                {
+                    return await base.SendAsync(request, cancellationToken);
+                }
+                finally
+                {
+                    InteractiveLoggerProvider.Posted -= LogHandler;
+                }
+            }
+        }
+
+        private class InteractiveLoggerProvider : ILoggerProvider
+        {
+            public static event Action<LogLevel, EventId, string, Exception> Posted;
+
+            public ILogger CreateLogger(string categoryName)
+            {
+                return new InteractiveLogger();
             }
 
-            private async Task<HttpResponseMessage> TraceSendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            public void Dispose()
             {
-                Console.WriteLine($"(HttpClient Request) {request}");
-                if (request.Content != null)
+            }
+
+            private class InteractiveLogger : ILogger, IDisposable
+            {
+                public IDisposable BeginScope<TState>(TState state)
                 {
-                    Console.WriteLine(await request.Content.ReadAsStringAsync());
+                    //throw new NotImplementedException();
+                    return this;
                 }
 
-                HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
-
-                Console.WriteLine($"(HttpClient Response) {response}");
-                if (response.Content != null)
+                public bool IsEnabled(LogLevel logLevel)
                 {
-                    Console.WriteLine(await response.Content.ReadAsStringAsync());
+                    return true;
                 }
 
-                return response;
+                public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+                {
+                    var message = formatter(state, exception);
+                    Pocket.LoggerExtensions.Info(Pocket.Logger.Log, message);
+                    Posted?.Invoke(logLevel, eventId, message, exception);
+                }
+
+                public void Dispose()
+                {
+                }
             }
         }
     }
