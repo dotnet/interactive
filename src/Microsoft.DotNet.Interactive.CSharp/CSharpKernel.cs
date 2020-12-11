@@ -67,7 +67,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              "Microsoft.AspNetCore",
                              "Microsoft.AspNetCore.Builder",
                              "Microsoft.AspNetCore.Http",
-                             "Microsoft.AspNetCore.Routing")
+                             "Microsoft.AspNetCore.Routing",
+                             "Microsoft.Extensions.Logging")
                          .AddReferences(
                              typeof(Enumerable).Assembly,
                              typeof(IEnumerable<>).Assembly,

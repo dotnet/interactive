@@ -7,11 +7,15 @@ using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Html;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -37,7 +41,7 @@ class LogLevelController
         _kernelLogLevelController = kernelLogLevelController;
     }
 
-    public Microsoft.Extensions.Logging.LogLevel MinLevel
+    public LogLevel MinLevel
     {
         set
         {
@@ -101,12 +105,24 @@ static IEndpointConventionBuilder MapAction(
                         .ConfigureServices(services =>
                         {
                             services.AddSingleton<IOptionsMonitor<LoggerFilterOptions>>(logLevelMonitor);
+                            services.AddCors(options =>
+                            {
+                                options.AddPolicy("AllowAll",
+                                    builder =>
+                                    {
+                                        builder
+                                            .AllowAnyOrigin()
+                                            .AllowAnyMethod()
+                                            .AllowAnyHeader();
+                                    });
+                            });
                         })
                         .ConfigureWebHostDefaults(webBuilder =>
                         {
                             webBuilder.Configure(app => {
                                 capturedApp = app.New();
                                 capturedApp.UseRouting();
+                                capturedApp.UseCors("AllowAll");
                                 capturedApp.UseEndpoints(endpoints =>
                                 {
                                     capturedEndpoints = endpoints;
@@ -166,24 +182,55 @@ static IEndpointConventionBuilder MapAction(
 
         private static async Task FormatHttpResponseMessage(HttpResponseMessage responseMessage, TextWriter textWriter)
         {
-            h3("Response Headers").WriteTo(textWriter, HtmlEncoder.Default);
+            //textWriter.WriteLine("<script>fetch('http://localhost:5000/Endpoint');</script>");
 
-            hr().WriteTo(textWriter, HtmlEncoder.Default);
+            var requestMessage = responseMessage.RequestMessage;
+            var requestUri = requestMessage.RequestUri.ToString();
+            var requestContent = requestMessage.Content is {} ?
+                await requestMessage.Content.ReadAsStringAsync().ConfigureAwait(false) :
+                string.Empty;
 
-            table(
-                thead(tr(
-                    th("Name"), th("Value"))),
-                tbody(responseMessage.Headers.Select(header => tr(
-                    td(header.Key), td(string.Join("; ", header.Value))))))
-                .WriteTo(textWriter, HtmlEncoder.Default);
+            var responseContent = await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
 
-            h3("Response Body").WriteTo(textWriter, HtmlEncoder.Default);
+            static dynamic HeaderTable(HttpHeaders headers) =>
+                table(
+                   thead(tr(
+                       th("Name"), th("Value"))),
+                   tbody(headers.Select(header => tr(
+                       td(header.Key), td(string.Join("; ", header.Value))))));
 
-            hr().WriteTo(textWriter, HtmlEncoder.Default);
+            const string containerCssClass = "http-response-message-container";
+            var flexCss = new HtmlString($@"
+.{containerCssClass} {{
+    display: flex;
+    flex-wrap: wrap;
+}}
 
-            var responseBody = await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
+.{containerCssClass} > div {{
+    margin: .5em;
+    padding: 1em;
+    border: 1px solid;
+}}
 
-            pre(responseBody).WriteTo(textWriter, HtmlEncoder.Default);
+.{containerCssClass} > div > h2 {{
+    margin-block-start: 0;
+}}");
+
+            var requestLine = h3($"{requestMessage.Method} ", a[href: requestUri](requestUri), $" HTTP/{requestMessage.Version}");
+            var requestHeaders = details(summary("Headers"), HeaderTable(requestMessage.Headers));
+            var requestBody = details(summary("Body"), pre(requestContent));
+
+            var responseLine = h3($"HTTP/{responseMessage.Version} {(int)responseMessage.StatusCode} {responseMessage.ReasonPhrase}");
+            var responseHeaders = details[open: true](summary("Headers"), HeaderTable(responseMessage.Headers));
+            var responseBody = details[open: true](summary("Body"), pre(responseContent));
+
+            var output = div[@class: containerCssClass](
+                style[type: "text/css"](flexCss),
+                div(h2("Request"), hr(), requestLine, requestHeaders, requestBody),
+                div(h2("Response"), hr(), responseLine, responseHeaders, responseBody));
+
+            Pocket.LoggerExtensions.Info(Pocket.Logger.Log, output.ToString());
+            output.WriteTo(textWriter, HtmlEncoder.Default);
         }
 
         // Must be public to access properties using `dynamic`
@@ -266,26 +313,30 @@ static IEndpointConventionBuilder MapAction(
                 _logLevelController = logLevelController;
             }
 
-            protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
                 if (_logLevelController.EnableHttpClientTracing)
                 {
-                    Console.WriteLine($"(HttpClient Request) {request}");
-                    if (request.Content != null)
-                    {
-                        Console.WriteLine(await request.Content.ReadAsStringAsync());
-                    }
+                    return TraceSendAsync(request, cancellationToken);
+                }
+
+                return base.SendAsync(request, cancellationToken);
+            }
+
+            private async Task<HttpResponseMessage> TraceSendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                Console.WriteLine($"(HttpClient Request) {request}");
+                if (request.Content != null)
+                {
+                    Console.WriteLine(await request.Content.ReadAsStringAsync());
                 }
 
                 HttpResponseMessage response = await base.SendAsync(request, cancellationToken);
 
-                if (_logLevelController.EnableHttpClientTracing)
+                Console.WriteLine($"(HttpClient Response) {response}");
+                if (response.Content != null)
                 {
-                    Console.WriteLine($"(HttpClient Response) {response}");
-                    if (response.Content != null)
-                    {
-                        Console.WriteLine(await response.Content.ReadAsStringAsync());
-                    }
+                    Console.WriteLine(await response.Content.ReadAsStringAsync());
                 }
 
                 return response;

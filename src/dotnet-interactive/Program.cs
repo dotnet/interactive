@@ -36,6 +36,7 @@ namespace Microsoft.DotNet.Interactive.App
             typeof(Startup).Assembly, // dotnet-interactive.dll
             typeof(Kernel).Assembly, // Microsoft.DotNet.Interactive.dll
             typeof(Shell).Assembly, // Microsoft.DotNet.Interactive.Jupyter.dll
+            typeof(AspNetKernelExtensions).Assembly, // Microsoft.DotNet.Interactive.Http.dll
         };
 
         internal static IDisposable StartToolLogging(StartupOptions options)
