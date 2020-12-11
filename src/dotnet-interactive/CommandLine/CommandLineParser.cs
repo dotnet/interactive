@@ -480,7 +480,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseDefaultNamespaces()
                     .UseXplot()
                     .UseMathAndLaTeX()
-                    .UseDotNetVariableSharing(),
+                    .UseDotNetVariableSharing()
+                    .UseAspNet(),
                 new[] { "f#", "F#" });
 
             compositeKernel.Add(
@@ -488,7 +489,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseJupyterHelpers()
                     .UseXplot()
                     .UseProfiles()
-                    .UseDotNetVariableSharing(),
+                    .UseDotNetVariableSharing()
+                    .UseAspNet(),
                 new[] { "powershell" });
 
             compositeKernel.Add(
