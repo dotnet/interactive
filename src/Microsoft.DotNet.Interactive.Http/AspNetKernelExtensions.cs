@@ -21,7 +21,6 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
 
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -84,24 +83,33 @@ static IEndpointConventionBuilder MapAction(
                         })
                         .ConfigureWebHostDefaults(webBuilder =>
                         {
-                            webBuilder.Configure(app => {
-                                capturedApp = app.New();
-                                capturedApp.UseRouting();
-                                capturedApp.UseCors("AllowAll");
-                                capturedApp.UseEndpoints(endpoints =>
+                            webBuilder
+                                .ConfigureKestrel(kestrelOptions =>
                                 {
-                                    capturedEndpoints = endpoints;
-                                });
+                                    kestrelOptions.ListenLocalhost(5000, listenOptions =>
+                                    {
+                                        listenOptions.UseConnectionLogging();
+                                    });
+                                })
+                                .Configure(app => {
+                                    capturedApp = app.New();
+                                    capturedApp.UseRouting();
+                                    capturedApp.UseCors("AllowAll");
+                                    capturedApp.UseEndpoints(endpoints =>
+                                    {
+                                        capturedEndpoints = endpoints;
+                                    });
 
-                                app.Use(next =>
-                                    httpContext =>
-                                       capturedApp.Build()(httpContext));
-                            });
+                                    app.Use(next =>
+                                        httpContext =>
+                                           capturedApp.Build()(httpContext));
+                                });
                         })
                         .ConfigureLogging(loggingBuilder =>
                         {
+                            loggingBuilder.SetMinimumLevel(LogLevel.Trace);
                             loggingBuilder.ClearProviders();
-                            loggingBuilder.AddSimpleConsole(options => options.ColorBehavior = LoggerColorBehavior.Disabled);
+                            //loggingBuilder.AddSimpleConsole(options => options.ColorBehavior = LoggerColorBehavior.Disabled);
                             loggingBuilder.AddProvider(new InteractiveLoggerProvider());
                         });
 
@@ -150,45 +158,64 @@ static IEndpointConventionBuilder MapAction(
 
             var requestMessage = responseMessage.RequestMessage;
             var requestUri = requestMessage.RequestUri.ToString();
-            var requestContent = requestMessage.Content is {} ?
+            var requestBodyString = requestMessage.Content is {} ?
                 await requestMessage.Content.ReadAsStringAsync().ConfigureAwait(false) :
                 string.Empty;
 
-            var responseContent = await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var responseBodyString = await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
 
-            static dynamic HeaderTable(HttpHeaders headers) =>
+            static dynamic HeaderTable(HttpHeaders headers, HttpContentHeaders contentHeaders) =>
                 table(
-                   thead(tr(
-                       th("Name"), th("Value"))),
-                   tbody(headers.Select(header => tr(
-                       td(header.Key), td(string.Join("; ", header.Value))))));
+                    thead(tr(
+                        th("Name"), th("Value"))),
+                    tbody((contentHeaders is null ? headers : headers.Concat(contentHeaders)).Select(header => tr(
+                            td(header.Key), td(string.Join("; ", header.Value))))));
 
-            const string containerCssClass = "http-response-message-container";
+            const string containerClass = "http-response-message-container";
+            const string logContainerClass = "aspnet-logs-container";
             var flexCss = new HtmlString($@"
-.{containerCssClass} {{
+.{containerClass} {{
     display: flex;
     flex-wrap: wrap;
 }}
 
-.{containerCssClass} > div {{
+.{containerClass} > div {{
     margin: .5em;
     padding: 1em;
     border: 1px solid;
 }}
 
-.{containerCssClass} > div > h2 {{
-    margin-block-start: 0;
+.{containerClass} > div > h2 {{
+    margin-top: 0;
+}}
+
+.{containerClass} > div > h3 {{
+    margin-bottom: 0;
+}}
+
+.{containerClass} summary {{
+    margin-top: 1em;
+}}
+
+.{containerClass} summary, .{logContainerClass} summary {{
+    font-size: 1.17em;
+    font-weight: 700;
+}}
+
+.{logContainerClass} {{
+    margin: 0 .5em;
 }}");
 
             var requestLine = h3($"{requestMessage.Method} ", a[href: requestUri](requestUri), $" HTTP/{requestMessage.Version}");
-            var requestHeaders = details(summary("Headers"), HeaderTable(requestMessage.Headers));
-            var requestBody = details(summary("Body"), pre(requestContent));
+            var requestHeaders = details(summary("Headers"), HeaderTable(requestMessage.Headers, requestMessage.Content?.Headers));
+            var requestBody = details(summary("Body"), pre(requestBodyString));
 
             var responseLine = h3($"HTTP/{responseMessage.Version} {(int)responseMessage.StatusCode} {responseMessage.ReasonPhrase}");
-            var responseHeaders = details[open: true](summary("Headers"), HeaderTable(responseMessage.Headers));
-            var responseBody = details[open: true](summary("Body"), pre(responseContent));
 
-            var output = div[@class: containerCssClass](
+            var responseHeaders = details[open: true](summary("Headers"), HeaderTable(responseMessage.Headers, responseMessage.Content.Headers));
+            var responseBody = details[open: true](summary("Body"), pre(responseBodyString));
+
+            var output = div[@class: containerClass](
                 style[type: "text/css"](flexCss),
                 div(h2("Request"), hr(), requestLine, requestHeaders, requestBody),
                 div(h2("Response"), hr(), responseLine, responseHeaders, responseBody));
@@ -196,9 +223,9 @@ static IEndpointConventionBuilder MapAction(
             Pocket.LoggerExtensions.Info(Pocket.Logger.Log, output.ToString());
             output.WriteTo(textWriter, HtmlEncoder.Default);
 
-            if (requestMessage.Options.TryGetValue(new HttpRequestOptionsKey<ConcurrentQueue<(LogLevel, EventId, string, Exception)>>(_aspnetLogsKey), out var aspnetLogs))
+            if (requestMessage.Options.TryGetValue(new HttpRequestOptionsKey<ConcurrentQueue<LogMessage>>(_aspnetLogsKey), out var aspnetLogs))
             {
-                details(summary("Logs"), aspnetLogs).WriteTo(textWriter, HtmlEncoder.Default);
+                details[@class: logContainerClass](summary("Logs"), aspnetLogs).WriteTo(textWriter, HtmlEncoder.Default);
             }
         }
 
@@ -211,15 +238,10 @@ static IEndpointConventionBuilder MapAction(
 
             protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
-                var logs = new ConcurrentQueue<(LogLevel, EventId, string, Exception)>();
-                request.Options.Set(new HttpRequestOptionsKey<ConcurrentQueue<(LogLevel, EventId, string, Exception)>>(_aspnetLogsKey), logs);
+                var logs = new ConcurrentQueue<LogMessage>();
+                request.Options.Set(new HttpRequestOptionsKey<ConcurrentQueue<LogMessage>>(_aspnetLogsKey), logs);
 
-                void LogHandler(LogLevel logLevel, EventId eventId, string message, Exception exception)
-                {
-                    logs.Enqueue((logLevel, eventId, message, exception));
-                }
-
-                InteractiveLoggerProvider.Posted += LogHandler;
+                InteractiveLoggerProvider.Posted += logs.Enqueue;
 
                 try
                 {
@@ -227,18 +249,24 @@ static IEndpointConventionBuilder MapAction(
                 }
                 finally
                 {
-                    InteractiveLoggerProvider.Posted -= LogHandler;
+                    // Delay unregistering to give a chance for the last logs related to the request to arrive.
+                    // The normal "_ =" doesn't work because of PocketView
+                    var _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(100);
+                        InteractiveLoggerProvider.Posted -= logs.Enqueue;
+                    });
                 }
             }
         }
 
         private class InteractiveLoggerProvider : ILoggerProvider
         {
-            public static event Action<LogLevel, EventId, string, Exception> Posted;
+            public static event Action<LogMessage> Posted;
 
             public ILogger CreateLogger(string categoryName)
             {
-                return new InteractiveLogger();
+                return new InteractiveLogger(categoryName);
             }
 
             public void Dispose()
@@ -247,6 +275,13 @@ static IEndpointConventionBuilder MapAction(
 
             private class InteractiveLogger : ILogger, IDisposable
             {
+                private readonly string _categoryName;
+
+                public InteractiveLogger(string categoryName)
+                {
+                    _categoryName = categoryName;
+                }
+
                 public IDisposable BeginScope<TState>(TState state)
                 {
                     //throw new NotImplementedException();
@@ -262,13 +297,29 @@ static IEndpointConventionBuilder MapAction(
                 {
                     var message = formatter(state, exception);
                     Pocket.LoggerExtensions.Info(Pocket.Logger.Log, message);
-                    Posted?.Invoke(logLevel, eventId, message, exception);
+                    Posted?.Invoke(new LogMessage
+                    {
+                        LogLevel = logLevel,
+                        Category = _categoryName,
+                        EventId = eventId,
+                        Message = message,
+                        Exception = exception
+                    });
                 }
 
                 public void Dispose()
                 {
                 }
             }
+        }
+
+        private class LogMessage
+        {
+            public LogLevel LogLevel { get; set; }
+            public string Category { get; set; }
+            public EventId EventId { get; set; }
+            public string Message { get; set; }
+            public Exception Exception { get; set; }
         }
     }
 }
