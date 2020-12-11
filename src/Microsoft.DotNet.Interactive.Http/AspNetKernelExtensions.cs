@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Http
     public static class AspNetKernelExtensions
     {
         private const string _aspnetLogsKey = "aspnet-logs";
-        private const string _prelude = @"
+        private const string _csharpPrelude = @"
 private static int __AspNet_NextEndpointOrder;
 
 static IEndpointConventionBuilder MapAction(
@@ -67,26 +67,27 @@ static IEndpointConventionBuilder MapAction(
                     IEndpointRouteBuilder capturedEndpoints = null;
 
                     var hostBuilder = Host.CreateDefaultBuilder()
-                        .ConfigureServices(services =>
-                        {
-                            services.AddCors(options =>
-                            {
-                                options.AddPolicy("AllowAll",
-                                    builder =>
-                                    {
-                                        builder
-                                            .AllowAnyOrigin()
-                                            .AllowAnyMethod()
-                                            .AllowAnyHeader();
-                                    });
-                            });
-                        })
                         .ConfigureWebHostDefaults(webBuilder =>
                         {
                             webBuilder
+                                .ConfigureServices(services =>
+                                {
+                                    services.AddCors(options =>
+                                    {
+                                        options.AddPolicy("AllowAll",
+                                            builder =>
+                                            {
+                                                builder
+                                                    .AllowAnyMethod()
+                                                    .AllowAnyHeader()
+                                                    .AllowCredentials()
+                                                    .SetIsOriginAllowed(_ => true);
+                                            });
+                                    });
+                                })
                                 .ConfigureKestrel(kestrelOptions =>
                                 {
-                                    kestrelOptions.ListenLocalhost(5000, listenOptions =>
+                                    kestrelOptions.ConfigureEndpointDefaults(listenOptions =>
                                     {
                                         listenOptions.UseConnectionLogging();
                                     });
@@ -109,7 +110,6 @@ static IEndpointConventionBuilder MapAction(
                         {
                             loggingBuilder.SetMinimumLevel(LogLevel.Trace);
                             loggingBuilder.ClearProviders();
-                            //loggingBuilder.AddSimpleConsole(options => options.ColorBehavior = LoggerColorBehavior.Disabled);
                             loggingBuilder.AddProvider(new InteractiveLoggerProvider());
                         });
 
@@ -124,7 +124,11 @@ static IEndpointConventionBuilder MapAction(
                     await kernel.SetVariableAsync("Endpoints", capturedEndpoints, typeof(IEndpointRouteBuilder));
                     await kernel.SetVariableAsync("HttpClient", httpClient);
 
-                    await kernel.SendAsync(new SubmitCode(_prelude), CancellationToken.None);
+                    // We would do an "is" check on the kernel type, but we don't have a reference to the containing project
+                    if (kernel.Name == "csharp")
+                    {
+                        await kernel.SendAsync(new SubmitCode(_csharpPrelude), CancellationToken.None);
+                    }
                 })
             };
 
@@ -154,7 +158,7 @@ static IEndpointConventionBuilder MapAction(
 
         private static async Task FormatHttpResponseMessage(HttpResponseMessage responseMessage, TextWriter textWriter)
         {
-            //textWriter.WriteLine("<script>fetch('http://localhost:5000/Endpoint');</script>");
+            textWriter.WriteLine("<script>fetch('http://localhost:5000/Endpoint');</script>");
 
             var requestMessage = responseMessage.RequestMessage;
             var requestUri = requestMessage.RequestUri.ToString();
@@ -164,47 +168,42 @@ static IEndpointConventionBuilder MapAction(
 
             var responseBodyString = await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
 
-            static dynamic HeaderTable(HttpHeaders headers, HttpContentHeaders contentHeaders) =>
-                table(
-                    thead(tr(
-                        th("Name"), th("Value"))),
-                    tbody((contentHeaders is null ? headers : headers.Concat(contentHeaders)).Select(header => tr(
-                            td(header.Key), td(string.Join("; ", header.Value))))));
-
             const string containerClass = "http-response-message-container";
             const string logContainerClass = "aspnet-logs-container";
             var flexCss = new HtmlString($@"
-.{containerClass} {{
-    display: flex;
-    flex-wrap: wrap;
-}}
+                .{containerClass} {{
+                    display: flex;
+                    flex-wrap: wrap;
+                }}
 
-.{containerClass} > div {{
-    margin: .5em;
-    padding: 1em;
-    border: 1px solid;
-}}
+                .{containerClass} > div {{
+                    margin: .5em;
+                    padding: 1em;
+                    border: 1px solid;
+                }}
 
-.{containerClass} > div > h2 {{
-    margin-top: 0;
-}}
+                .{containerClass} > div > h2 {{
+                    margin-top: 0;
+                }}
 
-.{containerClass} > div > h3 {{
-    margin-bottom: 0;
-}}
+                .{containerClass} > div > h3 {{
+                    margin-bottom: 0;
+                }}
 
-.{containerClass} summary {{
-    margin-top: 1em;
-}}
+                .{logContainerClass} {{
+                    margin: 0 .5em;
+                }}
 
-.{containerClass} summary, .{logContainerClass} summary {{
-    font-size: 1.17em;
-    font-weight: 700;
-}}
+                .{containerClass} summary, .{logContainerClass} summary {{
+                    margin: 1em 0;
+                    font-size: 1.17em;
+                    font-weight: 700;
+                }}");
 
-.{logContainerClass} {{
-    margin: 0 .5em;
-}}");
+            static dynamic HeaderTable(HttpHeaders headers, HttpContentHeaders contentHeaders) =>
+                table(thead(tr(th("Name"), th("Value"))),
+                    tbody((contentHeaders is null ? headers : headers.Concat(contentHeaders)).Select(header => tr(
+                            td(header.Key), td(string.Join("; ", header.Value))))));
 
             var requestLine = h3($"{requestMessage.Method} ", a[href: requestUri](requestUri), $" HTTP/{requestMessage.Version}");
             var requestHeaders = details(summary("Headers"), HeaderTable(requestMessage.Headers, requestMessage.Content?.Headers));
@@ -220,7 +219,7 @@ static IEndpointConventionBuilder MapAction(
                 div(h2("Request"), hr(), requestLine, requestHeaders, requestBody),
                 div(h2("Response"), hr(), responseLine, responseHeaders, responseBody));
 
-            Pocket.LoggerExtensions.Info(Pocket.Logger.Log, output.ToString());
+            //Pocket.LoggerExtensions.Info(Pocket.Logger.Log, output.ToString());
             output.WriteTo(textWriter, HtmlEncoder.Default);
 
             if (requestMessage.Options.TryGetValue(new HttpRequestOptionsKey<ConcurrentQueue<LogMessage>>(_aspnetLogsKey), out var aspnetLogs))
