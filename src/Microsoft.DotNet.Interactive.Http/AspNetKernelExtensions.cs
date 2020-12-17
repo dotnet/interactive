@@ -7,6 +7,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Encodings.Web;
@@ -14,6 +15,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.DotNet.Interactive.Commands;
@@ -87,7 +90,7 @@ static IEndpointConventionBuilder MapAction(
                                 })
                                 .ConfigureKestrel(kestrelOptions =>
                                 {
-                                    kestrelOptions.ConfigureEndpointDefaults(listenOptions =>
+                                    kestrelOptions.Listen(IPAddress.Loopback, 0, listenOptions =>
                                     {
                                         listenOptions.UseConnectionLogging();
                                     });
@@ -113,11 +116,15 @@ static IEndpointConventionBuilder MapAction(
                             loggingBuilder.AddProvider(new InteractiveLoggerProvider());
                         });
 
-                    await hostBuilder.Build().StartAsync();
+                    var host = hostBuilder.Build();
+                    await host.StartAsync();
+
+                    var kestrelServer = host.Services.GetRequiredService<IServer>();
+                    var address = kestrelServer.Features.Get<IServerAddressesFeature>().Addresses.First();
 
                     var httpClient = new HttpClient(new LogCapturingDelegatingHandler(new SocketsHttpHandler()))
                     {
-                        BaseAddress = new Uri("http://localhost:5000")
+                        BaseAddress = new Uri(address)
                     };
 
                     await kernel.SetVariableAsync("App", capturedApp, typeof(IApplicationBuilder));
@@ -158,8 +165,6 @@ static IEndpointConventionBuilder MapAction(
 
         private static async Task FormatHttpResponseMessage(HttpResponseMessage responseMessage, TextWriter textWriter)
         {
-            textWriter.WriteLine("<script>fetch('http://localhost:5000/Endpoint');</script>");
-
             var requestMessage = responseMessage.RequestMessage;
             var requestUri = requestMessage.RequestUri.ToString();
             var requestBodyString = requestMessage.Content is {} ?

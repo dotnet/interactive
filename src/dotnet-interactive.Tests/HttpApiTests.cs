@@ -70,9 +70,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var result = await server.Kernel.SendAsync(new SubmitCode(@"
 #!aspnet
 
-Logging.MinLevel = LogLevel.Information;
-Logging.EnableHttpClientTracing = true;
-
 Endpoints.MapAction(""/Endpoint"", async context =>
 {
     await context.Response.WriteAsync($""Hello world!"");
