@@ -1,7 +1,11 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.CommandLine;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -21,7 +25,24 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             MsSqlConnectionOptions options,
             KernelInvocationContext context)
         {
+            var resolvedPackageReferences = ((ISupportNuget)context.HandlingKernel).ResolvedPackageReferences;
+            // Walk through the packages looking for the package that endswith the name "runtime.native.Microsoft.SqlToolsService"
+            // and grab the packageroot
+            var runtimePackageId = "runtime.native.Microsoft.SqlToolsServiceLayer";
+            var runtimePackageIdSuffix = "Microsoft.SqlToolsServiceLayer";
+            var root = resolvedPackageReferences.FirstOrDefault(p => p.PackageName.EndsWith(runtimePackageId, StringComparison.OrdinalIgnoreCase));
+            string pathToService = "";
+            if (root != null)
+            {
+                // Packagename is rubbish, but can be reformatted to compute the path to the binaries
+                var runtimePackageIdPath = root.PackageName.Replace(runtimePackageIdSuffix, "", StringComparison.OrdinalIgnoreCase)
+                                                           .Replace(".", "\\", StringComparison.OrdinalIgnoreCase)
+                                                           .Replace(@"\runtime\", "\\", StringComparison.OrdinalIgnoreCase)
+                                                           .Replace(@"runtime\", @"runtimes\", StringComparison.OrdinalIgnoreCase);
+                pathToService = Path.Combine(root.PackageRoot, runtimePackageIdPath, "MicrosoftSqlToolsServiceLayer.exe");
+            }
             var kernel = new MsSqlKernel(
+                pathToService,
                 options.KernelName,
                 options.ConnectionString);
 
@@ -55,8 +76,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             context.Display($"Scaffolding a `DbContext` and initializing an instance of it called `{options.KernelName}` in the C# kernel.", "text/markdown");
 
             var submission1 = @$"
-#r ""nuget:Microsoft.EntityFrameworkCore.Design""
-#r ""nuget:Microsoft.EntityFrameworkCore.SqlServer""
+#r ""nuget:Microsoft.EntityFrameworkCore.Design,3.1.8""
+#r ""nuget:Microsoft.EntityFrameworkCore.SqlServer,3.1.8""
 
 using System;
 using System.Reflection;

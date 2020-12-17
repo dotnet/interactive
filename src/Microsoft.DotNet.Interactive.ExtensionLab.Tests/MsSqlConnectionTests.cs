@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Threading.Tasks;
 
 using FluentAssertions;
@@ -19,6 +20,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         public MsSqlConnectionTests(ITestOutputHelper output)
         {
             _output = output;
+            
+            // FIX: (MsSqlConnectionTests) 
+            if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(MsSqlServiceClient.SqlToolsServiceEnvironmentVariableName)))
+            {
+                Environment.SetEnvironmentVariable(
+                    MsSqlServiceClient.SqlToolsServiceEnvironmentVariableName,
+                    @"/Users/bro/code/sqltoolsservice/src/Microsoft.SqlTools.ServiceLayer/bin/Debug/netcoreapp3.1/osx.10.11-x64/publish/MicrosoftSqlToolsServiceLayer");
+            }
         }
 
         [MsSqlFact("Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost", Skip = "not ready")]

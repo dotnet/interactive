@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using System.Data;
 using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
@@ -23,22 +22,24 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         private readonly string _connectionString;
         private readonly MsSqlServiceClient _serviceClient;
 
-        private TaskCompletionSource<ConnectionCompleteParams> _connectionCompleted = new TaskCompletionSource<ConnectionCompleteParams>();
+        private readonly TaskCompletionSource<ConnectionCompleteParams> _connectionCompleted = new TaskCompletionSource<ConnectionCompleteParams>();
 
         private Func<QueryCompleteParams, Task> _queryCompletionHandler = null;
+        private Func<MessageParams, Task> _queryMessageHandler = null;
 
-        public MsSqlKernel(string name, string connectionString) : base(name)
+        public MsSqlKernel(string pathToService, string name, string connectionString) : base(name)
         {
-            var filePath = Path.GetTempFileName();
+             var filePath = Path.GetTempFileName();
             _tempFileUri = new Uri(filePath);
             _connectionString = connectionString;
 
-            _serviceClient = MsSqlServiceClient.Instance;
+            _serviceClient = new MsSqlServiceClient(pathToService);
             _serviceClient.Initialize();
 
             _serviceClient.OnConnectionComplete += HandleConnectionComplete;
             _serviceClient.OnQueryComplete += HandleQueryComplete;
             _serviceClient.OnIntellisenseReady += HandleIntellisenseReady;
+            _serviceClient.OnQueryMessage += HandleQueryMessage;
 
             RegisterForDisposal(() =>
             {
@@ -73,11 +74,19 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             }
         }
 
+        private void HandleQueryMessage(object sender, MessageParams messageParams)
+        {
+            if (_queryMessageHandler != null)
+            {
+                Task.Run(() => _queryMessageHandler(messageParams)).Wait();
+            }
+        }
+
         private void HandleIntellisenseReady(object sender, IntelliSenseReadyParams readyParams)
         {
-            if (readyParams.OwnerUri.Equals(this._tempFileUri.ToString()))
+            if (readyParams.OwnerUri.Equals(_tempFileUri.ToString()))
             {
-                this._intellisenseReady = true;
+                _intellisenseReady = true;
             }
         }
 
@@ -105,6 +114,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             }
 
             var completion = new TaskCompletionSource<bool>();
+
             _queryCompletionHandler = async queryParams =>
             {
                 try
@@ -113,6 +123,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     {
                         foreach (var resultSummary in batchSummary.ResultSetSummaries)
                         {
+                            if (completion.Task.IsCompleted)
+                            {
+                                return;
+                            }
+
                             var subsetParams = new QueryExecuteSubsetParams()
                             {
                                 OwnerUri = _tempFileUri.ToString(),
@@ -125,7 +140,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
                             if (subsetResult.Message != null)
                             {
-                                context.Display(subsetResult.Message);
+                                context.Fail(message: subsetResult.Message);
                             }
                             else
                             {
@@ -142,6 +157,24 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 }
             };
 
+#pragma warning disable 1998
+            _queryMessageHandler = async messageParams =>
+            {
+                try
+                {
+                    if (messageParams.Message.IsError)
+                    {
+                        context.Fail(message: messageParams.Message.Message);
+                        completion.SetResult(true);
+                    }
+                }
+                catch (Exception e)
+                {
+                    completion.SetException(e);
+                }
+            };
+#pragma warning restore 1998
+
             try
             {
                 var queryResult = await _serviceClient.ExecuteQueryStringAsync(_tempFileUri, command.Code);
@@ -150,6 +183,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             finally
             {
                 _queryCompletionHandler = null;
+                _queryMessageHandler = null;
             }
         }
 
