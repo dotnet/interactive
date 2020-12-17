@@ -32,19 +32,6 @@ namespace Microsoft.DotNet.Interactive.Http
     public static class AspNetKernelExtensions
     {
         private const string _aspnetLogsKey = "aspnet-logs";
-        private const string _csharpPrelude = @"
-private static int __AspNet_NextEndpointOrder;
-
-static IEndpointConventionBuilder MapAction(
-    this IEndpointRouteBuilder endpoints,
-    string pattern,
-    RequestDelegate requestDelegate)
-{
-    var order = __AspNet_NextEndpointOrder--;
-    var builder = endpoints.MapGet(pattern, requestDelegate);
-    builder.Add(b => ((RouteEndpointBuilder)b).Order = order);
-    return builder;
-}";
 
         public static T UseAspNet<T>(this T kernel)
             where T : DotNetKernel
@@ -64,63 +51,7 @@ static IEndpointConventionBuilder MapAction(
 
                     isActive = true;
 
-                    Environment.SetEnvironmentVariable($"ASPNETCORE_{WebHostDefaults.PreventHostingStartupKey}", "true");
-
-                    IApplicationBuilder capturedApp = null;
-                    IEndpointRouteBuilder capturedEndpoints = null;
-
-                    var hostBuilder = Host.CreateDefaultBuilder()
-                        .ConfigureWebHostDefaults(webBuilder =>
-                        {
-                            webBuilder
-                                .ConfigureServices(services =>
-                                {
-                                    services.AddCors(options =>
-                                    {
-                                        options.AddPolicy("AllowAll",
-                                            builder =>
-                                            {
-                                                builder
-                                                    .AllowAnyMethod()
-                                                    .AllowAnyHeader()
-                                                    .AllowCredentials()
-                                                    .SetIsOriginAllowed(_ => true);
-                                            });
-                                    });
-                                })
-                                .ConfigureKestrel(kestrelOptions =>
-                                {
-                                    kestrelOptions.Listen(IPAddress.Loopback, 0, listenOptions =>
-                                    {
-                                        listenOptions.UseConnectionLogging();
-                                    });
-                                })
-                                .Configure(app => {
-                                    capturedApp = app.New();
-                                    capturedApp.UseRouting();
-                                    capturedApp.UseCors("AllowAll");
-                                    capturedApp.UseEndpoints(endpoints =>
-                                    {
-                                        capturedEndpoints = endpoints;
-                                    });
-
-                                    app.Use(next =>
-                                        httpContext =>
-                                           capturedApp.Build()(httpContext));
-                                });
-                        })
-                        .ConfigureLogging(loggingBuilder =>
-                        {
-                            loggingBuilder.SetMinimumLevel(LogLevel.Trace);
-                            loggingBuilder.ClearProviders();
-                            loggingBuilder.AddProvider(new InteractiveLoggerProvider());
-                        });
-
-                    var host = hostBuilder.Build();
-                    await host.StartAsync();
-
-                    var kestrelServer = host.Services.GetRequiredService<IServer>();
-                    var address = kestrelServer.Features.Get<IServerAddressesFeature>().Addresses.First();
+                    var (address, capturedApp, capturedEndpoints) = await StartHost();
 
                     var httpClient = new HttpClient(new LogCapturingDelegatingHandler(new SocketsHttpHandler()))
                     {
@@ -134,7 +65,7 @@ static IEndpointConventionBuilder MapAction(
                     // We would do an "is" check on the kernel type, but we don't have a reference to the containing project
                     if (kernel.Name == "csharp")
                     {
-                        await kernel.SendAsync(new SubmitCode(_csharpPrelude), CancellationToken.None);
+                        await kernel.SendAsync(new SubmitCode($"using {typeof(EndpointRouteBuilderExtensions).Namespace};"), CancellationToken.None);
                     }
                 })
             };
@@ -161,6 +92,69 @@ static IEndpointConventionBuilder MapAction(
             //kernel.AddMiddleware()
 
             return kernel;
+        }
+
+        private static async Task<(string, IApplicationBuilder, IEndpointRouteBuilder)> StartHost()
+        {
+            Environment.SetEnvironmentVariable($"ASPNETCORE_{WebHostDefaults.PreventHostingStartupKey}", "true");
+
+            IApplicationBuilder capturedApp = null;
+            IEndpointRouteBuilder capturedEndpoints = null;
+
+            var hostBuilder = Host.CreateDefaultBuilder()
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder
+                        .ConfigureServices(services =>
+                        {
+                            services.AddCors(options =>
+                            {
+                                options.AddPolicy("AllowAll",
+                                    builder =>
+                                    {
+                                        builder
+                                            .AllowAnyMethod()
+                                            .AllowAnyHeader()
+                                            .AllowCredentials()
+                                            .SetIsOriginAllowed(_ => true);
+                                    });
+                            });
+                        })
+                        .ConfigureKestrel(kestrelOptions =>
+                        {
+                            kestrelOptions.Listen(IPAddress.Loopback, 0, listenOptions =>
+                            {
+                                listenOptions.UseConnectionLogging();
+                            });
+                        })
+                        .Configure(app => {
+                            capturedApp = app.New();
+                            capturedApp.UseRouting();
+                            capturedApp.UseCors("AllowAll");
+                            capturedApp.UseEndpoints(endpoints =>
+                            {
+                                capturedEndpoints = endpoints;
+                            });
+
+                            app.Use(next =>
+                                httpContext =>
+                                   capturedApp.Build()(httpContext));
+                        });
+                })
+                .ConfigureLogging(loggingBuilder =>
+                {
+                    loggingBuilder.SetMinimumLevel(LogLevel.Trace);
+                    loggingBuilder.ClearProviders();
+                    loggingBuilder.AddProvider(new InteractiveLoggerProvider());
+                });
+
+            var host = hostBuilder.Build();
+            await host.StartAsync();
+
+            var kestrelServer = host.Services.GetRequiredService<IServer>();
+            var address = kestrelServer.Features.Get<IServerAddressesFeature>().Addresses.First();
+
+            return (address, capturedApp, capturedEndpoints);
         }
 
         private static async Task FormatHttpResponseMessage(HttpResponseMessage responseMessage, TextWriter textWriter)
@@ -288,7 +282,7 @@ static IEndpointConventionBuilder MapAction(
 
                 public IDisposable BeginScope<TState>(TState state)
                 {
-                    //throw new NotImplementedException();
+                    // this.Dispose() no-ops
                     return this;
                 }
 
