@@ -26,21 +26,35 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             KernelInvocationContext context)
         {
             var resolvedPackageReferences = ((ISupportNuget)context.HandlingKernel).ResolvedPackageReferences;
-            // Walk through the packages looking for the package that endswith the name "runtime.native.Microsoft.SqlToolsService"
+            // Walk through the packages looking for the package that endswith the name "Microsoft.SqlToolsService"
             // and grab the packageroot
-            var runtimePackageId = "runtime.native.Microsoft.SqlToolsServiceLayer";
-            var runtimePackageIdSuffix = "Microsoft.SqlToolsServiceLayer";
-            var root = resolvedPackageReferences.FirstOrDefault(p => p.PackageName.EndsWith(runtimePackageId, StringComparison.OrdinalIgnoreCase));
+            var runtimePackageIdSuffix = "Microsoft.SqlToolsService";
+            var root = resolvedPackageReferences.FirstOrDefault(p => p.PackageName.EndsWith(runtimePackageIdSuffix, StringComparison.OrdinalIgnoreCase));
             string pathToService = "";
             if (root != null)
             {
-                // Packagename is rubbish, but can be reformatted to compute the path to the binaries
-                var runtimePackageIdPath = root.PackageName.Replace(runtimePackageIdSuffix, "", StringComparison.OrdinalIgnoreCase)
-                                                           .Replace(".", "\\", StringComparison.OrdinalIgnoreCase)
-                                                           .Replace(@"\runtime\", "\\", StringComparison.OrdinalIgnoreCase)
-                                                           .Replace(@"runtime\", @"runtimes\", StringComparison.OrdinalIgnoreCase);
-                pathToService = Path.Combine(root.PackageRoot, runtimePackageIdPath, "MicrosoftSqlToolsServiceLayer.exe");
+                // Extract the platform 'osx-x64' from the package name 'runtime.osx-x64.native.microsoft.sqltoolsservice'
+                string[] packageNameSegments = root.PackageName.Split(".");
+                if (packageNameSegments.Length > 2)
+                {
+                    string platform = packageNameSegments[1];
+                    
+                    // Build the path to the MicrosoftSqlToolsServiceLayer executable by reaching into the resolve nuget package
+                    // assuming a convention for native binaries.
+                    pathToService = Path.Combine(
+                        root.PackageRoot,
+                        "runtimes",
+                        platform,
+                        "native",
+                        "MicrosoftSqlToolsServiceLayer");
+                    
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        pathToService += ".exe";
+                    }
+                }
             }
+            
             var kernel = new MsSqlKernel(
                 pathToService,
                 options.KernelName,
@@ -55,7 +69,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             return kernel;
         }
-
+        
         private async Task InitializeDbContextAsync(MsSqlConnectionOptions options, KernelInvocationContext context)
         {
             CSharpKernel csharpKernel = null;
