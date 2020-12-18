@@ -30,6 +30,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             {
                 _serviceExePath = Environment.GetEnvironmentVariable(SqlToolsServiceEnvironmentVariableName);
             }
+
+            if (string.IsNullOrWhiteSpace(_serviceExePath))
+            {
+                throw new ArgumentException("Path to SQL Tools Service executable was not provided.", nameof(serviceExePath));
+            }
         }
 
         public void Initialize()
@@ -43,11 +48,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private void StartProcessAndRedirectIO()
         {
-            if (_serviceExePath == null)
-            {
-                throw new InvalidOperationException("Path to SQL Tools Service executable was not provided.");
-            }
-
             var startInfo = new ProcessStartInfo(_serviceExePath)
             {
                 UseShellExecute = false,
