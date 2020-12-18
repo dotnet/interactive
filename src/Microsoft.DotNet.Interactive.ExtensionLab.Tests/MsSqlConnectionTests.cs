@@ -20,29 +20,30 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         public MsSqlConnectionTests(ITestOutputHelper output)
         {
             _output = output;
-            
-            // FIX: (MsSqlConnectionTests) 
-            if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(MsSqlServiceClient.SqlToolsServiceEnvironmentVariableName)))
-            {
-                Environment.SetEnvironmentVariable(
-                    MsSqlServiceClient.SqlToolsServiceEnvironmentVariableName,
-                    @"/Users/bro/code/sqltoolsservice/src/Microsoft.SqlTools.ServiceLayer/bin/Debug/netcoreapp3.1/osx.10.11-x64/publish/MicrosoftSqlToolsServiceLayer");
-            }
         }
 
-        [MsSqlFact("Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost", Skip = "not ready")]
-        public async Task It_can_connect_and_query_data()
+        private async Task<CompositeKernel> CreateKernel()
         {
-            using var kernel = new CompositeKernel
+            var csharpKernel = new CSharpKernel().UseNugetDirective();
+            await csharpKernel.SubmitCodeAsync(@$"
+#r ""nuget:runtime.osx-x64.native.microsoft.sqltoolsservice,3.0.0-release.52""
+");
+            
+            var kernel = new CompositeKernel
             {
-                new CSharpKernel().UseNugetDirective(),
+                csharpKernel,
                 new KeyValueStoreKernel()
             };
 
             kernel.UseKernelClientConnection(new MsSqlKernelConnection());
+            return kernel;
+        }
 
-            var connectionString = "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost";
-
+        [MsSqlFact]
+        public async Task It_can_connect_and_query_data()
+        {
+            var connectionString = MsSqlFact.GetConnectionStringForTests();
+            using var kernel = await CreateKernel();
             var result = await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
 
@@ -68,19 +69,12 @@ SELECT TOP 100 * FROM Person.Person
                   .ContainSingle(f => f.MimeType == HtmlFormatter.MimeType);
         }
 
-        [MsSqlFact("Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost", Skip = "not ready")]
+        [MsSqlFact]
         public async Task It_can_scaffold_a_DbContext_in_a_CSharpKernel()
         {
-            using var kernel = new CompositeKernel
-            {
-                new CSharpKernel().UseNugetDirective(),
-                new KeyValueStoreKernel()
-            };
-
-            kernel.UseKernelClientConnection(new MsSqlKernelConnection());
-
-            var connectionString = "Persist Security Info=False; Integrated Security=true; Initial Catalog=AdventureWorks2019; Server=localhost";
-
+            var connectionString = MsSqlFact.GetConnectionStringForTests();
+            
+            using var kernel = await CreateKernel();
             var result = await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{connectionString}\" --create-dbcontext");
 
