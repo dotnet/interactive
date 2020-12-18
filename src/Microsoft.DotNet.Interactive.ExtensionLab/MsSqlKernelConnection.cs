@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             var resolvedPackageReferences = ((ISupportNuget)context.HandlingKernel).ResolvedPackageReferences;
             // Walk through the packages looking for the package that endswith the name "Microsoft.SqlToolsService"
             // and grab the packageroot
-            var runtimePackageIdSuffix = "Microsoft.SqlToolsService";
+            var runtimePackageIdSuffix = "native.Microsoft.SqlToolsService";
             var root = resolvedPackageReferences.FirstOrDefault(p => p.PackageName.EndsWith(runtimePackageIdSuffix, StringComparison.OrdinalIgnoreCase));
             string pathToService = "";
             if (root != null)
