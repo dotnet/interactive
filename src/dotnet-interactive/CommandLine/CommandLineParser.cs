@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.AspNetCore;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -468,7 +469,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseXplot()
                     .UseMathAndLaTeX()
                     .UseDotNetVariableSharing()
-                    .UseAspNet(),
+                    .UseAspNetCore(),
                 new[] { "c#", "C#" });
 
             compositeKernel.Add(
@@ -480,8 +481,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseDefaultNamespaces()
                     .UseXplot()
                     .UseMathAndLaTeX()
-                    .UseDotNetVariableSharing()
-                    .UseAspNet(),
+                    .UseDotNetVariableSharing(),
                 new[] { "f#", "F#" });
 
             compositeKernel.Add(
@@ -489,8 +489,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseJupyterHelpers()
                     .UseXplot()
                     .UseProfiles()
-                    .UseDotNetVariableSharing()
-                    .UseAspNet(),
+                    .UseDotNetVariableSharing(),
                 new[] { "powershell" });
 
             compositeKernel.Add(
