@@ -249,8 +249,9 @@ HttpClient.BaseAddress"));
             // Assume any port higher than 10000 is ephemeral. In practice, the start of the ephemeral port range is
             // usually even higher (Windows XP and older Windows releases notwithstanding).
             // https://en.wikipedia.org/wiki/Ephemeral_port
-            var serverUri = result.KernelEvents.ToSubscribedList().Should().NotContainErrors()
-                .And.ContainSingle<ReturnValueProduced>().Which.Value.Should().Match(uri => uri.As<Uri>().Port > 10_000);
+            result.KernelEvents.ToSubscribedList().Should().NotContainErrors()
+                .And.ContainSingle<ReturnValueProduced>()
+                .Which.Value.Should().Match(uri => uri.As<Uri>().Port > 10_000);
         }
     }
 }

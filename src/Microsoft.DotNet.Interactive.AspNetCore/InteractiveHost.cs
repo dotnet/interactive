@@ -37,21 +37,13 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
             _startup = new Startup();
 
             var hostBuilder = Host.CreateDefaultBuilder()
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder
-                        .ConfigureKestrel(kestrelOptions =>
-                        {
-                            kestrelOptions.Listen(IPAddress.Loopback, 0);
-                        })
-                        .UseStartup(_ => _startup);
-                })
-                .ConfigureLogging(loggingBuilder =>
-                {
-                    loggingBuilder.SetMinimumLevel(LogLevel.Trace);
-                    loggingBuilder.ClearProviders();
-                    loggingBuilder.AddProvider(new InteractiveLoggerProvider());
-                });
+                .ConfigureWebHostDefaults(webBuilder => webBuilder
+                    .ConfigureKestrel(kestrelOptions => kestrelOptions.Listen(IPAddress.Loopback, 0))
+                    .UseStartup(_ => _startup))
+                .ConfigureLogging(loggingBuilder => loggingBuilder
+                    .SetMinimumLevel(LogLevel.Trace)
+                    .ClearProviders()
+                    .AddProvider(new InteractiveLoggerProvider()));
 
             _host = hostBuilder.Build();
             await _host.StartAsync();
