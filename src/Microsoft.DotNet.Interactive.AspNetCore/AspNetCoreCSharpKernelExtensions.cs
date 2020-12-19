@@ -21,8 +21,17 @@ using Microsoft.Extensions.Hosting;
 
 namespace Microsoft.DotNet.Interactive.AspNetCore
 {
-    public static class AspNetCoreKernelExtensions
+    public static class AspNetCoreCSharpKernelExtensions
     {
+        private static readonly Assembly[] _references = new[]
+        {
+            typeof(Host).Assembly, // Microsoft.Extensions.Hosting
+            typeof(WebHost).Assembly, // Microsoft.AspNetCore
+            typeof(Controller).Assembly, // Microsoft.AspNetCore.Mvc.ViewFeatures
+            typeof(DeveloperExceptionPageMiddleware).Assembly, // Microsoft.AspNetCore.Diagnostics
+            typeof(AspNetCoreCSharpKernelExtensions).Assembly, // Microsoft.DotNet.Interactive.AspNetCore
+        };
+
         private static readonly string[] _namespaces = new[]
         {
             typeof(HttpContext).Namespace, // Microsoft.AspNetCore.Http
@@ -30,16 +39,6 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
             typeof(EndpointRouteBuilderExtensions).Namespace, // Microsoft.AspNetCore.Builder
             typeof(InteractiveEndpointRouteBuilderExtensions).Namespace, // Microsoft.DotNet.Interactive.AspNetCore
             typeof(HttpClient).Namespace, // System.Net.Htttp
-        };
-
-        // Indirect references are found automatically
-        private static readonly Assembly[] _references = new[]
-        {
-            typeof(Host).Assembly, // Microsoft.Extensions.Hosting
-            typeof(WebHost).Assembly, // Microsoft.AspNetCore
-            typeof(Controller).Assembly, // Microsoft.AspNetCore.Mvc.ViewFeatures
-            typeof(DeveloperExceptionPageMiddleware).Assembly, // Microsoft.AspNetCore.Diagnostics
-            typeof(AspNetCoreKernelExtensions).Assembly, // Microsoft.DotNet.Interactive.AspNetCore
         };
 
         public static CSharpKernel UseAspNetCore(this CSharpKernel kernel)
