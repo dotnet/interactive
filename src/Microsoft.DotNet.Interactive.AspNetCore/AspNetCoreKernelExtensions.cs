@@ -8,7 +8,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
@@ -93,12 +92,6 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
             }, HtmlFormatter.MimeType);
 
             return kernel;
-        }
-
-        // REVIEW: Should we make this a public CSharp/DotNetKernel extension method?
-        private static Task SetVariableAsync<T>(this CSharpKernel kernel, string name, T value)
-        {
-            return kernel.SetVariableAsync(name, value, typeof(T));
         }
     }
 }
