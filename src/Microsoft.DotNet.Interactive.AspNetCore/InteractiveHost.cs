@@ -18,23 +18,16 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
 {
     internal class InteractiveHost : IAsyncDisposable
     {
-        private IHost _host;
-        private Startup _startup;
+        private readonly IHost _host;
+        private readonly Startup _startup;
+        private readonly InteractiveLoggerProvider _interactiveLoggerProvider;
 
-        public string Address { get; private set; }
-        public IApplicationBuilder App => _startup?.App;
-        public IEndpointRouteBuilder Endpoints => _startup?.Endpoints;
-
-        public async Task StartAsync()
+        public InteractiveHost(InteractiveLoggerProvider interactiveLoggerProvider)
         {
-            if (_host is {})
-            {
-                throw new InvalidOperationException("Already started.");
-            }
+            _interactiveLoggerProvider = interactiveLoggerProvider;
+            _startup = new Startup();
 
             Environment.SetEnvironmentVariable($"ASPNETCORE_{WebHostDefaults.PreventHostingStartupKey}", "true");
-
-            _startup = new Startup();
 
             var hostBuilder = Host.CreateDefaultBuilder()
                 .ConfigureWebHostDefaults(webBuilder => webBuilder
@@ -43,9 +36,17 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                 .ConfigureLogging(loggingBuilder => loggingBuilder
                     .SetMinimumLevel(LogLevel.Trace)
                     .ClearProviders()
-                    .AddProvider(new InteractiveLoggerProvider()));
+                    .AddProvider(_interactiveLoggerProvider));
 
             _host = hostBuilder.Build();
+        }
+
+        public string Address { get; private set; }
+        public IApplicationBuilder App => _startup?.App;
+        public IEndpointRouteBuilder Endpoints => _startup?.Endpoints;
+
+        public async Task StartAsync()
+        {
             await _host.StartAsync();
 
             var kestrelServer = _host.Services.GetRequiredService<IServer>();

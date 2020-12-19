@@ -89,16 +89,20 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
             }
         }
 
-        public static HttpClient CreateEnhancedHttpClient(string address) =>
-            new(new LogCapturingHandler())
+        public static HttpClient CreateEnhancedHttpClient(string address, InteractiveLoggerProvider interactiveLoggerProvider) =>
+            new(new LogCapturingHandler(interactiveLoggerProvider))
             {
                 BaseAddress = new Uri(address)
             };
 
         private class LogCapturingHandler : DelegatingHandler
         {
-            public LogCapturingHandler() : base(new SocketsHttpHandler())
+            private readonly InteractiveLoggerProvider _interactiveLoggerProvider;
+
+            public LogCapturingHandler(InteractiveLoggerProvider interactiveLoggerProvider)
+                : base(new SocketsHttpHandler())
             {
+                _interactiveLoggerProvider = interactiveLoggerProvider;
             }
 
             protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -106,7 +110,7 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                 var logs = new ConcurrentQueue<LogMessage>();
                 request.Options.Set(new HttpRequestOptionsKey<ConcurrentQueue<LogMessage>>(_logKey), logs);
 
-                InteractiveLoggerProvider.Posted += logs.Enqueue;
+                _interactiveLoggerProvider.Posted += logs.Enqueue;
 
                 try
                 {
@@ -119,7 +123,7 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                     var _ = Task.Run(async () =>
                     {
                         await Task.Delay(100);
-                        InteractiveLoggerProvider.Posted -= logs.Enqueue;
+                        _interactiveLoggerProvider.Posted -= logs.Enqueue;
                     });
                 }
             }

@@ -8,30 +8,32 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
 {
     internal class InteractiveLoggerProvider : ILoggerProvider
     {
-        public static event Action<LogMessage> Posted;
+        public event Action<LogMessage> Posted;
 
         public ILogger CreateLogger(string categoryName)
         {
-            return new InteractiveLogger(categoryName);
+            return new InteractiveLogger(this, categoryName);
         }
 
         public void Dispose()
         {
         }
 
-        private class InteractiveLogger : ILogger, IDisposable
+        private class InteractiveLogger : ILogger
         {
+            private readonly InteractiveLoggerProvider _loggerProvider;
             private readonly string _categoryName;
 
-            public InteractiveLogger(string categoryName)
+            public InteractiveLogger(InteractiveLoggerProvider loggerProvider, string categoryName)
             {
+                _loggerProvider = loggerProvider;
                 _categoryName = categoryName;
             }
 
             public IDisposable BeginScope<TState>(TState state)
             {
-                // this.Dispose() no-ops
-                return this;
+                // InteractiveLoggerProvider.Dispose() no-ops
+                return _loggerProvider;
             }
 
             public bool IsEnabled(LogLevel logLevel)
@@ -42,8 +44,10 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
             public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
             {
                 var message = formatter(state, exception);
+
                 Pocket.LoggerExtensions.Info(Pocket.Logger.Log, message);
-                Posted?.Invoke(new LogMessage
+
+                _loggerProvider.Posted?.Invoke(new LogMessage
                 {
                     LogLevel = logLevel,
                     Category = _categoryName,
@@ -51,10 +55,6 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                     Message = message,
                     Exception = exception
                 });
-            }
-
-            public void Dispose()
-            {
             }
         }
     }

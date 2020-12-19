@@ -58,7 +58,8 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                     isActive = true;
 
                     // We could try to manage lifetime, but for now just stop the kernel if you want to stop the host.
-                    var interactiveHost = new InteractiveHost();
+                    var interactiveLoggerProvider = new InteractiveLoggerProvider();
+                    var interactiveHost = new InteractiveHost(interactiveLoggerProvider);
                     var startHostTask = interactiveHost.StartAsync();
 
                     var rDirectives = string.Join(Environment.NewLine, _references.Select(a => $"#r \"{a.Location}\""));
@@ -67,9 +68,11 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                     await kernel.SendAsync(new SubmitCode($"{rDirectives}{Environment.NewLine}{usings}"), CancellationToken.None);
                     await startHostTask;
 
+                    var httpClient = HttpClientFormatter.CreateEnhancedHttpClient(interactiveHost.Address, interactiveLoggerProvider);
+
                     await kernel.SetVariableAsync<IApplicationBuilder>("App", interactiveHost.App);
                     await kernel.SetVariableAsync<IEndpointRouteBuilder>("Endpoints", interactiveHost.Endpoints);
-                    await kernel.SetVariableAsync<HttpClient>("HttpClient", HttpClientFormatter.CreateEnhancedHttpClient(interactiveHost.Address));
+                    await kernel.SetVariableAsync<HttpClient>("HttpClient", httpClient);
                 })
             };
 
