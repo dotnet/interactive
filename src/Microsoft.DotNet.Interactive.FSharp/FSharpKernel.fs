@@ -291,7 +291,6 @@ type FSharpKernel () as this =
                                         | Some (Some value) when not (Reflection.FSharpType.IsFunction value.ReflectionType) -> 
                                             let valueString = sprintf "%0A" value.ReflectionValue
                                             let lines = valueString.Split([|'\n'|], StringSplitOptions.RemoveEmptyEntries) |> Array.toList
-                                            
                                             match lines with
                                             | [] -> 
                                                 signature
@@ -321,10 +320,10 @@ type FSharpKernel () as this =
                                     newFooter
                             ]
 
-                        FormattedValue("text/markdown", stdinRx.Replace(fsiModuleRx.Replace(markdown, ""), ""))
+                        FormattedValue("text/markdown", stdinRx.Replace(fsiModuleRx.Replace(markdown, "").Replace("\r\n", "\n"), ""))
                     )
                     |> Seq.toArray
-                
+
                 let sp = LinePosition(requestHoverText.LinePosition.Line, startCol)
                 let ep = LinePosition(requestHoverText.LinePosition.Line, endCol)
                 let lps = LinePositionSpan(sp, ep)
