@@ -81,7 +81,6 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                 div(h2("Request"), hr(), requestLine, requestHeaders, requestBody),
                 div(h2("Response"), hr(), responseLine, responseHeaders, responseBody));
 
-            //Pocket.LoggerExtensions.Info(Pocket.Logger.Log, output.ToString());
             output.WriteTo(textWriter, HtmlEncoder.Default);
 
             if (requestMessage.Options.TryGetValue(new HttpRequestOptionsKey<ConcurrentQueue<LogMessage>>(_logKey), out var aspnetLogs))
