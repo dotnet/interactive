@@ -45,7 +45,12 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
             {
                 var message = formatter(state, exception);
 
-                Pocket.LoggerExtensions.Info(Pocket.Logger.Log, message);
+                Pocket.Logger.Log.Post(new Pocket.LogEntry(
+                    logLevel: ToPocketLogLevel(logLevel),
+                    message: message,
+                    exception: exception,
+                    category: _categoryName,
+                    operationName: eventId.ToString()));
 
                 _loggerProvider.Posted?.Invoke(new LogMessage
                 {
@@ -56,6 +61,18 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                     Exception = exception
                 });
             }
+
+            private static Pocket.LogLevel ToPocketLogLevel(LogLevel logLevel) =>
+                logLevel switch
+                {
+                    LogLevel.Trace => Pocket.LogLevel.Trace,
+                    LogLevel.Debug => Pocket.LogLevel.Debug,
+                    LogLevel.Information => Pocket.LogLevel.Information,
+                    LogLevel.Warning => Pocket.LogLevel.Warning,
+                    LogLevel.Error => Pocket.LogLevel.Error,
+                    LogLevel.Critical => Pocket.LogLevel.Critical,
+                    _ => throw new NotSupportedException()
+                };
         }
     }
 }

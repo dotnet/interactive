@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 {
     public class AspNetCoreTests : IDisposable
     {
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
 
         public void Dispose()
         {

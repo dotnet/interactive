@@ -83,7 +83,8 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
 
             output.WriteTo(textWriter, HtmlEncoder.Default);
 
-            if (requestMessage.Options.TryGetValue(new HttpRequestOptionsKey<ConcurrentQueue<LogMessage>>(_logKey), out var aspnetLogs))
+            if (requestMessage.Options.TryGetValue(new HttpRequestOptionsKey<ConcurrentQueue<LogMessage>>(_logKey), out var aspnetLogs)
+                && !aspnetLogs.IsEmpty)
             {
                 details[@class: _logContainerClass](summary("Logs"), aspnetLogs).WriteTo(textWriter, HtmlEncoder.Default);
             }
