@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                         // Is there a way to log to diagnostic output without KernelInvocationContext.Current?
                         using (interactiveLoggerProvider.SubscribePocketLogerWithCurrentEC())
                         {
-                            await next(command, context);
+                            await next(command, context).ConfigureAwait(false);
                         }
                     });
 
@@ -81,14 +81,14 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                         var rDirectives = string.Join(Environment.NewLine, _references.Select(a => $"#r \"{a.Location}\""));
                         var usings = string.Join(Environment.NewLine, _namespaces.Select(ns => $"using {ns};"));
 
-                        await startHostTask;
+                        await startHostTask.ConfigureAwait(false);
 
-                        await kernel.SendAsync(new SubmitCode($"{rDirectives}{Environment.NewLine}{usings}"), CancellationToken.None);
+                        await kernel.SendAsync(new SubmitCode($"{rDirectives}{Environment.NewLine}{usings}"), CancellationToken.None).ConfigureAwait(false);
 
                         var httpClient = HttpClientFormatter.CreateEnhancedHttpClient(interactiveHost.Address, interactiveLoggerProvider);
-                        await kernel.SetVariableAsync<IApplicationBuilder>("App", interactiveHost.App);
-                        await kernel.SetVariableAsync<IEndpointRouteBuilder>("Endpoints", interactiveHost.Endpoints);
-                        await kernel.SetVariableAsync<HttpClient>("HttpClient", httpClient);
+                        await kernel.SetVariableAsync<IApplicationBuilder>("App", interactiveHost.App).ConfigureAwait(false);
+                        await kernel.SetVariableAsync<IEndpointRouteBuilder>("Endpoints", interactiveHost.Endpoints).ConfigureAwait(false);
+                        await kernel.SetVariableAsync<HttpClient>("HttpClient", httpClient).ConfigureAwait(false);
                     }
                 })
             };

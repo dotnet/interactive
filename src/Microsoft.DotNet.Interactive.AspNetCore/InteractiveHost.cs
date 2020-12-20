@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
 
         public async Task StartAsync()
         {
-            await _host.StartAsync();
+            await _host.StartAsync().ConfigureAwait(false);
 
             var kestrelServer = _host.Services.GetRequiredService<IServer>();
             Address = kestrelServer.Features.Get<IServerAddressesFeature>().Addresses.First();

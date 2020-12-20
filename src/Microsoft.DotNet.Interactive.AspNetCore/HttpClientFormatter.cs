@@ -115,17 +115,17 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
 
                 try
                 {
-                    return await base.SendAsync(request, cancellationToken);
+                    var responseMessage = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+                    // Wait to download the body so we catch all the logs. If someone wants to access the response before
+                    // downloading the body, they're free to create a their own HttpClient.
+                    await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                    return responseMessage;
                 }
                 finally
                 {
-                    // Delay unregistering to give a chance for the last logs related to the request to arrive.
-                    // The normal "_ =" doesn't work because of PocketView
-                    var _ = Task.Run(async () =>
-                    {
-                        await Task.Delay(100);
-                        _interactiveLoggerProvider.Posted -= logs.Enqueue;
-                    });
+                    _interactiveLoggerProvider.Posted -= logs.Enqueue;
                 }
             }
         }
