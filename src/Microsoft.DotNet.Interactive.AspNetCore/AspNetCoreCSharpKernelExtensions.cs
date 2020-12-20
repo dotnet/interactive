@@ -61,11 +61,10 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                     kernel.AddMiddleware(async (command, context, next) =>
                     {
                         // REVIEW: Is there a way to log even when there's no command in progress?
-                        // This is currently necessary because the #!log command checks
-                        // `if (KernelInvocationContext.Current is {} currentContext)` in its LogEvents.Subscribe
-                        // callback and KernelInvocationContext.Current is backed by an AsyncLocal.
+                        // This is currently necessary because the #!log command uses KernelInvocationContext.Current in
+                        // its LogEvents.Subscribe callback and KernelInvocationContext.Current is backed by an AsyncLocal.
                         // Is there a way to log to diagnostic output without KernelInvocationContext.Current?
-                        using (interactiveLoggerProvider.SubscribePocketLogerWithCurrentEC())
+                        using (command is SubmitCode ? interactiveLoggerProvider.SubscribePocketLogerWithCurrentEC() : null)
                         {
                             await next(command, context).ConfigureAwait(false);
                         }
@@ -81,9 +80,9 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                         var rDirectives = string.Join(Environment.NewLine, _references.Select(a => $"#r \"{a.Location}\""));
                         var usings = string.Join(Environment.NewLine, _namespaces.Select(ns => $"using {ns};"));
 
-                        await startHostTask.ConfigureAwait(false);
-
                         await kernel.SendAsync(new SubmitCode($"{rDirectives}{Environment.NewLine}{usings}"), CancellationToken.None).ConfigureAwait(false);
+
+                        await startHostTask.ConfigureAwait(false);
 
                         var httpClient = HttpClientFormatter.CreateEnhancedHttpClient(interactiveHost.Address, interactiveLoggerProvider);
                         await kernel.SetVariableAsync<IApplicationBuilder>("App", interactiveHost.App).ConfigureAwait(false);
