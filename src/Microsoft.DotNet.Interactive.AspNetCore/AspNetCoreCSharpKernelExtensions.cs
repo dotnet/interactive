@@ -56,22 +56,40 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
 
                     isActive = true;
 
-                    // We could try to manage lifetime, but for now just stop the kernel if you want to stop the host.
                     var interactiveLoggerProvider = new InteractiveLoggerProvider();
-                    var interactiveHost = new InteractiveHost(interactiveLoggerProvider);
-                    var startHostTask = interactiveHost.StartAsync();
 
-                    var rDirectives = string.Join(Environment.NewLine, _references.Select(a => $"#r \"{a.Location}\""));
-                    var usings = string.Join(Environment.NewLine, _namespaces.Select(ns => $"using {ns};"));
+                    kernel.AddMiddleware(async (command, context, next) =>
+                    {
+                        // REVIEW: Is there a way to log even when there's no command in progress?
+                        // This is currently necessary because the #!log command checks
+                        // `if (KernelInvocationContext.Current is {} currentContext)` in its LogEvents.Subscribe
+                        // callback and KernelInvocationContext.Current is backed by an AsyncLocal.
+                        // Is there a way to log to diagnostic output without KernelInvocationContext.Current?
+                        using (interactiveLoggerProvider.SubscribePocketLogerWithCurrentEC())
+                        {
+                            await next(command, context);
+                        }
+                    });
 
-                    await kernel.SendAsync(new SubmitCode($"{rDirectives}{Environment.NewLine}{usings}"), CancellationToken.None);
-                    await startHostTask;
+                    // The middleware doesn't cover the current command's executions so we need this to capture startup logs.
+                    using (interactiveLoggerProvider.SubscribePocketLogerWithCurrentEC())
+                    {
+                        // We could try to manage the host's lifetime, but for now just stop the kernel if you want to stop the host.
+                        var interactiveHost = new InteractiveHost(interactiveLoggerProvider);
+                        var startHostTask = interactiveHost.StartAsync();
 
-                    var httpClient = HttpClientFormatter.CreateEnhancedHttpClient(interactiveHost.Address, interactiveLoggerProvider);
+                        var rDirectives = string.Join(Environment.NewLine, _references.Select(a => $"#r \"{a.Location}\""));
+                        var usings = string.Join(Environment.NewLine, _namespaces.Select(ns => $"using {ns};"));
 
-                    await kernel.SetVariableAsync<IApplicationBuilder>("App", interactiveHost.App);
-                    await kernel.SetVariableAsync<IEndpointRouteBuilder>("Endpoints", interactiveHost.Endpoints);
-                    await kernel.SetVariableAsync<HttpClient>("HttpClient", httpClient);
+                        await startHostTask;
+
+                        await kernel.SendAsync(new SubmitCode($"{rDirectives}{Environment.NewLine}{usings}"), CancellationToken.None);
+
+                        var httpClient = HttpClientFormatter.CreateEnhancedHttpClient(interactiveHost.Address, interactiveLoggerProvider);
+                        await kernel.SetVariableAsync<IApplicationBuilder>("App", interactiveHost.App);
+                        await kernel.SetVariableAsync<IEndpointRouteBuilder>("Endpoints", interactiveHost.Endpoints);
+                        await kernel.SetVariableAsync<HttpClient>("HttpClient", httpClient);
+                    }
                 })
             };
 
