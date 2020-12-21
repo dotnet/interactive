@@ -3,7 +3,6 @@
 
 using System;
 using Microsoft.Data.SqlClient;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
