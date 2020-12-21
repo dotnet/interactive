@@ -90,8 +90,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             context.Display($"Scaffolding a `DbContext` and initializing an instance of it called `{options.KernelName}` in the C# kernel.", "text/markdown");
 
             var submission1 = @$"
-#r ""nuget:Microsoft.EntityFrameworkCore.Design,5.0.0""
-#r ""nuget:Microsoft.EntityFrameworkCore.SqlServer,5.0.0""
+#r ""nuget:Microsoft.EntityFrameworkCore.Design,5.0.1""
+#r ""nuget:Microsoft.EntityFrameworkCore.SqlServer,5.0.1""
 
 using System;
 using System.Reflection;
@@ -124,7 +124,8 @@ var model = scaffolder.ScaffoldModel(
 var code = @""using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;"";
+using Microsoft.EntityFrameworkCore.Metadata;
+"";
 
 foreach (var file in  new[] {{ model.ContextFile.Code }}.Concat(model.AdditionalFiles.Select(f => f.Code)))
 {{
@@ -137,6 +138,7 @@ foreach (var file in  new[] {{ model.ContextFile.Code }}.Concat(model.Additional
         .Replace(""using System.Collections.Generic;"", """")
         .Replace(""using Microsoft.EntityFrameworkCore;"", """")
         .Replace(""using Microsoft.EntityFrameworkCore.Metadata;"", """")
+        .Replace(Environment.NewLine + ""{{"" + Environment.NewLine, Environment.NewLine)
 
         // trim out the wrapping braces
         .Trim()

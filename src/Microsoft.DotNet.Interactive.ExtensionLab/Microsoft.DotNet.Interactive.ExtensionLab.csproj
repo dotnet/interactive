@@ -40,8 +40,14 @@
   </ItemGroup>
 
  <ItemGroup>
+   <PackageReference Include="Humanizer.Core" Version="2.8.26" />
    <PackageReference Include="Microsoft.Data.Analysis" Version="0.4.0" />
-   <PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.0" />
+   <PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.1" />
+   <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.1">
+     <PrivateAssets>all</PrivateAssets>
+     <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+   </PackageReference>
+   <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.1" />
    <PackageReference Include="StreamJsonRpc" Version="2.6.121" />
    <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.8" />
  </ItemGroup>
