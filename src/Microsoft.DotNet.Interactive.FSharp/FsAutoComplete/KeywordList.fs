@@ -2,10 +2,12 @@ namespace FsAutoComplete
 
 open FSharp.Compiler.SourceCodeServices
 
+#nowarn "57"
+
 module internal KeywordList =
 
     let keywordDescriptions =
-        FSharp.Compiler.SourceCodeServices.Keywords.KeywordsWithDescription
+        FSharp.Compiler.SourceCodeServices.FSharpKeywords.KeywordsWithDescription
         |> dict
 
     let keywordTooltips =
@@ -29,5 +31,5 @@ module internal KeywordList =
 
 
     let allKeywords : string list =
-        FSharp.Compiler.SourceCodeServices.Keywords.KeywordsWithDescription
+        FSharp.Compiler.SourceCodeServices.FSharpKeywords.KeywordsWithDescription
         |> List.map fst
