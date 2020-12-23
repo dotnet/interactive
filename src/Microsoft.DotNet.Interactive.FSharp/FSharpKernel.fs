@@ -154,7 +154,7 @@ type FSharpKernel () as this =
             return CompletionItem(declarationItem.Name, kind, filterText=filterText, documentation=documentation)
         }
 
-    let getDiagnostic (error: FSharpErrorInfo) =
+    let getDiagnostic (error: FSharpDiagnostic) =
         // F# errors are 1-based but should be 0-based for diagnostics, however, 0-based errors are still valid to report
         let diagLineDelta = if error.Start.Line = 0 then 0 else -1
         let startPos = LinePosition(error.Start.Line + diagLineDelta, error.Start.Column)
@@ -162,8 +162,11 @@ type FSharpKernel () as this =
         let linePositionSpan = LinePositionSpan(startPos, endPos)
         let severity =
             match error.Severity with
-            | FSharpErrorSeverity.Error -> DiagnosticSeverity.Error
-            | FSharpErrorSeverity.Warning -> DiagnosticSeverity.Warning
+            | FSharpDiagnosticSeverity.Error -> DiagnosticSeverity.Error
+            | FSharpDiagnosticSeverity.Warning -> DiagnosticSeverity.Warning
+            | FSharpDiagnosticSeverity.Hidden -> DiagnosticSeverity.Hidden
+            | FSharpDiagnosticSeverity.Info -> DiagnosticSeverity.Info
+
         let errorId = sprintf "FS%04i" error.ErrorNumber
         Diagnostic(linePositionSpan, severity, errorId, error.Message)
 
@@ -181,7 +184,7 @@ type FSharpKernel () as this =
             let diagnostics = fsiDiagnostics |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
             
             // script.Eval can succeed with error diagnostics, see https://github.com/dotnet/interactive/issues/691
-            let isError = fsiDiagnostics |> Array.exists (fun d -> d.Severity = FSharpErrorSeverity.Error)
+            let isError = fsiDiagnostics |> Array.exists (fun d -> d.Severity = FSharpDiagnosticSeverity.Error)
 
             let formattedDiagnostics =
                 fsiDiagnostics
