@@ -144,32 +144,32 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .Be(2);
         }
 
-        [Theory]
-        [InlineData(
-            "#!csharp",
-            "var x = 1;",
-            "#!share --from csharp x")]
-        [InlineData(
-            "#!pwsh",
-            "$x = 1",
-            "#!share --from pwsh x")]
-        public async Task fsharp_kernel_variables_shared_from_other_kernels_resolve_to_the_correct_runtime_types(string from, string codeToWrite, string codeToRead)
-        {
-            using var kernel = CreateKernel();
-
-            using var events = kernel.KernelEvents.ToSubscribedList();
-
-            await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
-
-            await kernel.SubmitCodeAsync($"#!fsharp\n{codeToRead}\nx + 1");
-
-            events.Should()
-                  .ContainSingle<ReturnValueProduced>()
-                  .Which
-                  .Value
-                  .Should()
-                  .Be(2);
-        }
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@        [Theory]
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@        [InlineData(
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@            "#!csharp",
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@            "var x = 1;",
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@            "#!share --from csharp x")]
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@        [InlineData(
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@            "#!pwsh",
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@            "$x = 1",
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@            "#!share --from pwsh x")]
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@        public async Task fsharp_kernel_variables_shared_from_other_kernels_resolve_to_the_correct_runtime_types(string from, string codeToWrite, string codeToRead)
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@        {
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@            using var kernel = CreateKernel();
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@            using var events = kernel.KernelEvents.ToSubscribedList();
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@            await kernel.SubmitCodeAsync($"{from}\n{codeToWrite}");
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@            await kernel.SubmitCodeAsync($"#!fsharp\n{codeToRead}\nx + 1");
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@            events.Should()
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                  .ContainSingle<ReturnValueProduced>()
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                  .Which
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                  .Value
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                  .Should()
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                  .Be(2);
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@        }
 
         [Theory]
         [InlineData(
