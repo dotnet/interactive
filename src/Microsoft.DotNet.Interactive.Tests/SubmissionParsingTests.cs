@@ -35,8 +35,8 @@ let x = 123 // with some intervening code
         {
             using var kernel = new CompositeKernel
             {
-                new CSharpKernel(),
-                new FSharpKernel(),
+                new CSharpKernel().UseNugetDirective(),
+                new FSharpKernel().UseNugetDirective(),
             };
 
             kernel.DefaultKernelName = defaultKernel;
