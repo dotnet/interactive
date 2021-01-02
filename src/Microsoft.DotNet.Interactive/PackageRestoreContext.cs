@@ -23,6 +23,9 @@ namespace Microsoft.DotNet.Interactive
         private readonly HashSet<string> _restoreSources = new HashSet<string>();
         private readonly DependencyProvider _dependencies;
 
+        // Resolution will  after 3 minutes by default
+        private int _resolutionTimeout = 180000;
+
         public PackageRestoreContext()
         {
             // By default look in to the package sources
@@ -209,8 +212,7 @@ namespace Microsoft.DotNet.Interactive
                 throw new InvalidOperationException("Internal error - unable to locate the nuget package manager, please try to reinstall.");
             }
 
-            return _dependencies.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm);
-        }
+            return _dependencies.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm, default(string), default(string), default(string), default(string), _resolutionTimeout);        }
 
         public async Task<PackageRestoreResult> RestoreAsync()
         {

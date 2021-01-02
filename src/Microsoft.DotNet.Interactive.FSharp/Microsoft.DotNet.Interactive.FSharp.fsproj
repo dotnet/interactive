@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <NoWarn>$(NoWarn);2003</NoWarn> <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
+    <NoWarn>$(NoWarn);2003;57</NoWarn> <!-- AssemblyInformationalVersionAttribute contains a non-standard value -->
     <Deterministic Condition="'$(NCrunch)' == '1'">false</Deterministic>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
