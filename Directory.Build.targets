@@ -15,10 +15,10 @@
 
   <!-- Consolidate FSharp package versions -->
   <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="5.0.1-beta.20552.1" />
-    <PackageReference Update="FSharp.Compiler.Private.Scripting" Version="11.0.1-beta.20552.1" />
-    <PackageReference Update="FSharp.Compiler.Service" Version="11.0.1-beta.20552.1" />
-    <PackageReference Update="Microsoft.DotNet.DependencyManager" Version="11.0.1-beta.20552.1" />
+    <PackageReference Update="FSharp.Core" Version="5.0.0-beta.20622.10" />
+    <PackageReference Update="FSharp.Compiler.Private.Scripting" Version="11.0.0-beta.20622.10" />
+    <PackageReference Update="FSharp.Compiler.Service" Version="11.0.0-beta.20614.5" />
+    <PackageReference Update="Microsoft.DotNet.DependencyManager" Version="11.0.0-beta.20622.10" />
   </ItemGroup>
 
 </Project>
