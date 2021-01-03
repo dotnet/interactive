@@ -148,7 +148,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 
         [Theory]
         [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 17 overloads)")]
-        [InlineData(Language.FSharp, "ex$$it 0", "text/markdown", "```fsharp\nval exit: \n   exitcode: int \n          -> 'T\n```\n\n----\n\n\n**Generic parameters**\n\n* `'T` is `obj`\n\n----\n*Full name: Microsoft.FSharp.Core.Operators.exit*\n\n----\n*Assembly: FSharp.Core*")]
+        [InlineData(Language.FSharp, "ex$$it 0", "text/markdown", "```fsharp\nval exit: \n   exitcode: int \n          -> 'T\n```\n\n----\nExit the current hardware isolated process, if security settings permit,\n otherwise raise an exception. Calls `System.Environment.Exit`.\n\n`exitcode`: The exit code to use.\n\n**Generic parameters**\n\n* `'T` is `obj`\n\n----\n*Full name: Microsoft.FSharp.Core.Operators.exit*\n\n----\n*Assembly: FSharp.Core*")]
         public async Task hover_text_commands_have_offsets_normalized_after_switching_to_the_same_language(Language language, string markupCode, string expectedMimeType, string expectedContent)
         {
             using var kernel = CreateKernel(language);
