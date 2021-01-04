@@ -203,7 +203,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                   .Be("2");
         }
 
-//        [Fact(Skip = "not implemented")]
+        [Fact(Skip = "not implemented")]
         public async Task Directives_can_access_local_kernel_variables()
         {
             using var kernel = CreateKernel();
@@ -248,7 +248,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             }.LogEventsToPocketLogger();
         }
 
-//        [Fact(Skip = "WIP")]
+        [Fact(Skip = "WIP")]
         public void Internal_types_are_shared_as_their_most_public_supertype()
         {
             throw new NotImplementedException("test not written");
