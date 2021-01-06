@@ -29,6 +29,14 @@ RUN python3 -m pip install setuptools
 RUN python3 -m pip install jupyter
 RUN python3 -m pip install jupyterlab
 
+# Add sources
+RUN dotnet nuget add source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json" -n "dotnet-eng"
+RUN dotnet nuget add source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" -n "dotnet-tools"
+RUN dotnet nuget add source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1/nuget/v3/index.json" -n "dotnet3-dev"
+RUN dotnet nuget add source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json" -n "dotnet5"
+RUN dotnet nuget add source "https://pkgs.dev.azure.com/dnceng/public/_packaging/MachineLearning/nuget/v3/index.json" -n "MachineLearning"
+RUN dotnet nuget add source "https://www.powershellgallery.com/api/v2/" -n "PSGallery"
+
 # Install lastest build from master branch of Microsoft.DotNet.Interactive
 RUN dotnet tool install --tool-path /usr/share/dotnet-interactive Microsoft.dotnet-interactive --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json"
 RUN ln -s /usr/share/dotnet-interactive/dotnet-interactive /usr/bin/dotnet-interactive
