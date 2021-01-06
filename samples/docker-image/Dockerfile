@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:5.0.100-focal
+FROM mcr.microsoft.com/dotnet/sdk:5.0-focal
 
 ARG HTTP_PORT_RANGE=1100-1200
 
