@@ -75,7 +75,7 @@ module internal DocumentationFormatter =
             [formatLink name xmlDocSig assemblyName]
         else
           if typ.HasTypeDefinition then
-            let name = typ.TypeDefinition.DisplayName |> PrettyNaming.QuoteIdentifierIfNeeded
+            let name = typ.TypeDefinition.DisplayName |> FSharpKeywords.QuoteIdentifierIfNeeded
             [formatLink name xmlDocSig assemblyName]
           else
             let name = typ.Format displayContext
@@ -184,10 +184,10 @@ module internal DocumentationFormatter =
                     match func.EnclosingEntitySafe with
                     | Some ent -> ent.DisplayName
                     | _ -> func.DisplayName
-                    |> PrettyNaming.QuoteIdentifierIfNeeded
+                    |> FSharpKeywords.QuoteIdentifierIfNeeded
                 elif func.IsOperatorOrActivePattern then func.DisplayName
-                elif func.DisplayName.StartsWith "( " then PrettyNaming.QuoteIdentifierIfNeeded func.LogicalName
-                else PrettyNaming.QuoteIdentifierIfNeeded func.DisplayName
+                elif func.DisplayName.StartsWith "( " then FSharpKeywords.QuoteIdentifierIfNeeded func.LogicalName
+                else FSharpKeywords.QuoteIdentifierIfNeeded func.DisplayName
             name
 
         let modifiers =
@@ -242,7 +242,7 @@ module internal DocumentationFormatter =
                 argInfos
                 |> List.concat
                 |> List.map (fun p -> let name = Option.defaultValue p.DisplayName p.Name
-                                      let normalisedName = PrettyNaming.QuoteIdentifierIfNeeded name
+                                      let normalisedName = FSharpKeywords.QuoteIdentifierIfNeeded name
                                       normalisedName.Length)
             match allLengths with
             | [] -> 0
@@ -250,7 +250,7 @@ module internal DocumentationFormatter =
 
         let formatName indent padding (parameter:FSharpParameter) =
             let name = Option.defaultValue parameter.DisplayName parameter.Name
-            let normalisedName = PrettyNaming.QuoteIdentifierIfNeeded name
+            let normalisedName = FSharpKeywords.QuoteIdentifierIfNeeded name
             indent + normalisedName.PadRight padding + ":"
 
         let isDelegate =
@@ -311,7 +311,7 @@ module internal DocumentationFormatter =
             let name =
                 if func.IsConstructor then "new"
                 elif func.IsOperatorOrActivePattern then func.DisplayName
-                elif func.DisplayName.StartsWith "( " then PrettyNaming.QuoteIdentifierIfNeeded func.LogicalName
+                elif func.DisplayName.StartsWith "( " then FSharpKeywords.QuoteIdentifierIfNeeded func.LogicalName
                 elif func.LogicalName.StartsWith "get_" || func.LogicalName.StartsWith "set_" then PrettyNaming.TryChopPropertyName func.DisplayName |> Option.defaultValue func.DisplayName
                 else func.DisplayName
             fst (formatLink name func.XmlDocSig func.Assembly.SimpleName)
@@ -416,7 +416,7 @@ module internal DocumentationFormatter =
         let name =
             if v.DisplayName.StartsWith "( "
             then v.LogicalName else v.DisplayName
-            |> PrettyNaming.QuoteIdentifierIfNeeded
+            |> FSharpKeywords.QuoteIdentifierIfNeeded
         let constraints =
             match v.FullTypeSafe with
             | Some fulltype when fulltype.IsGenericParameter ->
@@ -576,7 +576,7 @@ module internal DocumentationFormatter =
 
         let typeDisplay =
             let name =
-                let normalisedName = PrettyNaming.QuoteIdentifierIfNeeded fse.DisplayName
+                let normalisedName = FSharpKeywords.QuoteIdentifierIfNeeded fse.DisplayName
                 if fse.GenericParameters.Count > 0 then
                     let paramsAndConstraints =
                         fse.GenericParameters

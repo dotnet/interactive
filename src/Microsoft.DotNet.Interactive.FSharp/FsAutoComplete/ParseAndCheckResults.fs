@@ -4,14 +4,14 @@ open System
 open System.IO
 open FSharp.Compiler.SourceCodeServices
 open Utils
-open FSharp.Compiler.Range
 open FSharp.Compiler
 open FSharp.Compiler.Text
+open FSharp.Compiler.Text.Pos
 open FsAutoComplete.Utils
 
 [<RequireQualifiedAccess>]
 type internal FindDeclarationResult =
-    | Range of FSharp.Compiler.Range.range
+    | Range of FSharp.Compiler.Text.Range
     /// The declaration refers to a file.
     | File of string
 
@@ -417,7 +417,7 @@ type internal ParseAndCheckResults
 
   member __.TryGetCompletions (pos: pos) (lineStr: LineStr) filter (getAllSymbols : unit -> AssemblySymbol list) = async {
     try
-      let longName = FSharp.Compiler.QuickParse.GetPartialLongNameEx(lineStr, pos.Column - 2)
+      let longName = QuickParse.GetPartialLongNameEx(lineStr, pos.Column - 2)
       let residue = longName.PartialIdent
 
       let getAllSymbols() =

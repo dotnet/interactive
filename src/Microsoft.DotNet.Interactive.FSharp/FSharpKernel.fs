@@ -27,6 +27,8 @@ open Microsoft.DotNet.Interactive.Formatting
 open FSharp.Compiler.Interactive.Shell
 open FSharp.Compiler.Scripting
 open FSharp.Compiler.SourceCodeServices
+open FSharp.Compiler.Text
+open FSharp.Compiler.Text.Pos
 open FsAutoComplete
 
 type FSharpKernel () as this =
@@ -242,7 +244,7 @@ type FSharpKernel () as this =
             let lineContent = text.GetLineString(line - 1)
             let! value =
                 async {
-                    match! res.TryGetSymbolUse (FSharp.Compiler.Range.mkPos line col) lineContent with
+                    match! res.TryGetSymbolUse (mkPos line col) lineContent with
                     | Ok (mine, _others) ->
                         let fullName = 
                             match mine with
@@ -267,7 +269,7 @@ type FSharpKernel () as this =
                         return None
                 }
             
-            match! res.TryGetToolTipEnhanced (FSharp.Compiler.Range.mkPos line col) lineContent with
+            match! res.TryGetToolTipEnhanced (mkPos line col) lineContent with
             | Result.Ok (startCol, endCol, tip, signature, footer, typeDoc) ->
                 let fsiModuleRx = System.Text.RegularExpressions.Regex @"FSI_[0-9]+\."
                 let stdinRx = System.Text.RegularExpressions.Regex @"Stdin\."
