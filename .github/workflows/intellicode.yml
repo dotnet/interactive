@@ -1,0 +1,23 @@
+name: Main IntelliCode Workflow
+
+on:
+  push:
+    branches: 
+      - main # IntelliCode recommends training on main branch to increase your model availability. Switch to another branch if you'd like to reduce update frequency.
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2 #Checkout v2 by default fetches just a shallow clone of the repository (latest changes).
+      with:
+        fetch-depth: 0 # If you are using v2 We need to override the fetch-depth to fetch the entire codebase for code analysis.
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.101
+    - name: Build with dotnet
+      run: dotnet build --configuration Release # Project needs to build before training a model.
+    - name: Train Intellicode Model
+      uses: microsoft/vs-intellicode@v1
