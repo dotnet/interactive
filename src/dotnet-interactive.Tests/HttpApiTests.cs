@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var result = await server.Kernel.SendAsync(new SubmitCode(@"
 #!aspnet
 
-Endpoints.MapAction(""/Endpoint"", async context =>
+Endpoints.MapInteractive(""/Endpoint"", async context =>
 {
     await context.Response.WriteAsync($""Hello world!"");
 });
@@ -92,7 +92,7 @@ await HttpClient.GetAsync(""/Endpoint"")"));
 #!aspnet
 #!aspnet
 
-Endpoints.MapGet(""/"", async context =>
+Endpoints.MapInteractive(""/"", async context =>
 {
     await context.Response.WriteAsync($""Hello world!"");
 });
@@ -115,7 +115,7 @@ await HttpClient.GetAsync(""/"")"));
             commandResult.KernelEvents.ToSubscribedList().Should().NotContainErrors();
 
             var requestResult = await server.Kernel.SendAsync(new SubmitCode(@"
-Endpoints.MapGet(""/"", async context =>
+Endpoints.MapInteractive(""/"", async context =>
 {
     await context.Response.WriteAsync($""Hello world!"");
 });

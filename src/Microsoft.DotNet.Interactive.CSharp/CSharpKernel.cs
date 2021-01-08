@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp;
@@ -20,6 +21,7 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
+
 using XPlot.Plotly;
 
 using CompletionItem = Microsoft.DotNet.Interactive.Events.CompletionItem;

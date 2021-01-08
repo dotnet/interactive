@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
 
             var directive = new Command("#!aspnet", "Activate ASP.NET Core")
             {
-                Handler = CommandHandler.Create<string, string, KernelInvocationContext>(async (from, name, context) =>
+                Handler = CommandHandler.Create(async () =>
                 {
                     if (isActive)
                     {
