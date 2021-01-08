@@ -51,6 +51,16 @@ namespace Microsoft.DotNet.Interactive.Server
             _envelopeTypesByCommandTypeName.TryAdd(commandTypeName, commandEnvelopeType);
             _commandTypesByCommandTypeName.TryAdd(commandTypeName, commandType);
         }
+
+        internal static void RegisterCommandTypeReplacingIfNecessary<T>(string commandTypeName) where T : KernelCommand
+        {
+            var commandEnvelopeType = typeof(KernelCommandEnvelope<T>);
+            var commandType = typeof(T);
+
+            _envelopeTypesByCommandTypeName[commandTypeName] = commandEnvelopeType;
+            _commandTypesByCommandTypeName[commandTypeName] = commandType;
+        }
+
         public static void ResetToDefaults()
         {
             _envelopeTypesByCommandTypeName = new ConcurrentDictionary<string, Type>

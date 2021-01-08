@@ -17,6 +17,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Parsing;
+using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive
@@ -29,6 +30,8 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly ConcurrentQueue<KernelOperation> _commandQueue =
             new ConcurrentQueue<KernelOperation>();
+        private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers =
+            new Dictionary<Type, KernelCommandInvocation>();
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
 
@@ -214,6 +217,19 @@ namespace Microsoft.DotNet.Interactive
         public IReadOnlyCollection<ICommand> Directives => SubmissionParser.Directives;
 
         public void AddDirective(Command command) => SubmissionParser.AddDirective(command);
+
+        public virtual void RegisterCommandHandler<TCommand>(string commandType, Func<TCommand, KernelInvocationContext, Task> handler)
+            where TCommand : KernelCommand
+        {
+            RegisterCommandType<TCommand>(commandType);
+            _dynamicHandlers[typeof(TCommand)] = (command, context) => handler((TCommand)command, context);
+        }
+
+        public void RegisterCommandType<TCommand>(string commandType)
+            where TCommand : KernelCommand
+        {
+            KernelCommandEnvelope.RegisterCommandTypeReplacingIfNecessary<TCommand>(commandType);
+        }
 
         private class KernelOperation
         {
@@ -483,7 +499,19 @@ namespace Microsoft.DotNet.Interactive
                     case (RequestHoverText hoverCommand, IKernelCommandHandler<RequestHoverText> requestHoverTextHandler):
                         SetHandler(requestHoverTextHandler, hoverCommand);
                         break;
+
+                    default:
+                        TrySetDynamicHandler(command, context);
+                        break;
                 }
+            }
+        }
+
+        private void TrySetDynamicHandler(KernelCommand command, KernelInvocationContext context)
+        {
+            if (_dynamicHandlers.TryGetValue(command.GetType(), out KernelCommandInvocation handler))
+            {
+                command.Handler = handler;
             }
         }
 
