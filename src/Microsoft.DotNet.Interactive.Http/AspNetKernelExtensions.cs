@@ -3,12 +3,12 @@
 
 using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.CSharp
+namespace Microsoft.DotNet.Interactive.Http
 {
     public static class AspNetKernelExtensions
     {
-        public static CSharpKernel UseAspNet(
-            this CSharpKernel kernel)
+        public static T UseAspNet<T>(this T kernel)
+            where T : Kernel
         {
             var command = new SubmitCode(@"
 Environment.SetEnvironmentVariable($""ASPNETCORE_{WebHostDefaults.PreventHostingStartupKey}"", ""true"");
