@@ -110,7 +110,7 @@ stages:
           env:
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
 
-        - script: npm run test
+        - script: npm run ciTest
           displayName: NPM tests
           workingDirectory: "$(Build.SourcesDirectory)/src/Microsoft.DotNet.Interactive.Js"
 
@@ -217,7 +217,7 @@ stages:
           env:
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
 
-        - script: npm run test
+        - script: npm run ciTest
           displayName: NPM tests
           workingDirectory: "$(Build.SourcesDirectory)/src/Microsoft.DotNet.Interactive.Js"
 

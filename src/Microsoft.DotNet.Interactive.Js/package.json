@@ -9,6 +9,7 @@
     "build": "npm run rollup-dotnet-interactive && npm run rollup-dotnet-interactive-code-mirror",
     "build-ci": "rollup -c rollup.config.js",
     "test": "mocha --opts mocha.opts",
+    "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json",
     "rollup-dotnet-interactive": "npm run build-ci -- -i src/dotnet-interactive.ts -o dist/dotnet-interactive.js",
     "rollup-dotnet-interactive-code-mirror": "npm run build-ci -- -i src/dotnet-interactive-code-mirror.ts -o dist/dotnet-interactive-code-mirror.js"
   },
@@ -43,6 +44,8 @@
     "fetch-mock": "9.4.0",
     "mkdirp": "1.0.4",
     "mocha": "7.1.1",
+    "mocha-multi-reporters": "1.1.7",
+    "mocha-trx-reporter": "3.2.4",
     "mocha-typescript": "1.1.17",
     "node-fetch": "^2.6.1",
     "requirejs": "2.3.6",
