@@ -28,7 +28,7 @@ Finally start Jupyter Lab
 
 ## Installing .NET Interactive on a piTop[4] 
 
-Follow the instructions on the [piTop](https://github.com/colombod/pi-top) repository.
+Follow the instructions on the [piTop[4] .NET sdk](https://github.com/pi-top/pi-top-4-.NET-SDK) repository.
 
 ## Libraries and tools
 
