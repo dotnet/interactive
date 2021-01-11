@@ -25,10 +25,11 @@ cd
 echo "Installing Jupyter: creating virtualenv..."
 rm -rf .jupyter_venv || true
 virtualenv .jupyter_venv -p python3
-source .jupyter_venv/bin/activate
+
 
 # Inside the virtual env: Install jupyter
 echo "virtualenv: pip install jupyter jupyterlab..."
+source .jupyter_venv/bin/activate
 pip3 install jupyter jupyterlab
 
 # Inside the virtual env: Install .NET kernel
