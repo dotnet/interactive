@@ -72,34 +72,38 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.restartCurrentNotebookKernel', async (document?: vscode.NotebookDocument | undefined) => {
         if (!document) {
-            if (!vscode.notebook.activeNotebookEditor) {
+            if (!vscode.window.activeNotebookEditor) {
                 // no notebook to operate on
                 return;
             }
 
-            document = vscode.notebook.activeNotebookEditor.document;
+            document = vscode.window.activeNotebookEditor.document;
         }
 
-        await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', document);
-        const _client = await clientMapper.getOrAddClient(document.uri);
+        if (document) {
+            await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', document);
+            const _client = await clientMapper.getOrAddClient(document.uri);
+        }
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopCurrentNotebookKernel', async (document?: vscode.NotebookDocument | undefined) => {
         if (!document) {
-            if (!vscode.notebook.activeNotebookEditor) {
+            if (!vscode.window.activeNotebookEditor) {
                 // no notebook to operate on
                 return;
             }
 
-            document = vscode.notebook.activeNotebookEditor.document;
+            document = vscode.window.activeNotebookEditor.document;
         }
 
-        const d = document;
-        document.cells.forEach(async cell => {
-            await updateCellMetadata(d, cell, { runState: vscode.NotebookCellRunState.Idle });
-        });
+        if (document) {
+            const d = document;
+            document.cells.forEach(async cell => {
+                await updateCellMetadata(d, cell, { runState: vscode.NotebookCellRunState.Idle });
+            });
 
-        clientMapper.closeClient(document.uri);
+            clientMapper.closeClient(document.uri);
+        }
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopAllNotebookKernels', async () => {
@@ -165,7 +169,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {
-        if (vscode.notebook.activeNotebookEditor) {
+        if (vscode.window.activeNotebookEditor) {
             const uri = await vscode.window.showSaveDialog({
                 filters: fileFormatFilters
             });
@@ -174,7 +178,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
                 return;
             }
 
-            const { document } = vscode.notebook.activeNotebookEditor;
+            const { document } = vscode.window.activeNotebookEditor;
             const notebook = toNotebookDocument(document);
             const client = await clientMapper.getOrAddClient(uri);
             const buffer = await client.serializeNotebook(uri.fsPath, notebook, eol);
