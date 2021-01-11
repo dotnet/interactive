@@ -11,6 +11,18 @@ Open a terminal and type
 curl -L https://raw.githubusercontent.com/dotnet/interactive/master/tools/setup-raspbian.sh | bash -e
 ```
 
+To start using the notebook experiences you can use Visual Studio Code and Jupyer.
+
+## Installing Visual Studio Code Insiders Notebook Experience
+Install [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/) on your device, then get the [.NET Interactive Notebook](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) Extension.
+
+## Configuring Jupyter on a Raspberry Pi
+
+Open a terminal and type
+```bash
+curl -L https://raw.githubusercontent.com/dotnet/interactive/master/tools/setup-raspian-jupyter.sh | bash -e
+```
+
 Now you can activate the jupyter virtual environment using the command
 ```bash
 pi@raspberrypi:~ $ source ~/.jupyter_venv/bin/activate
