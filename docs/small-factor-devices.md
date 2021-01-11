@@ -20,7 +20,7 @@ Install [Visual Studio Code Insiders](https://code.visualstudio.com/insiders/) o
 
 Open a terminal and type
 ```bash
-curl -L https://raw.githubusercontent.com/dotnet/interactive/master/tools/setup-raspian-jupyter.sh | bash -e
+curl -L https://raw.githubusercontent.com/dotnet/interactive/master/tools/setup-raspbian-jupyter.sh | bash -e
 ```
 
 Now you can activate the jupyter virtual environment using the command
