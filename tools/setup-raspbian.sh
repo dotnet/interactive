@@ -24,7 +24,7 @@ curl -L https://dot.net/v1/dotnet-install.sh | bash -e
 curl -L https://dot.net/v1/dotnet-install.sh | bash -e -s -- --channel 5.0
 echo ""
 
-echo "Updating PATH, DOTNET_ROOT and LD_LIBRARY_PATH environment variables..."
+echo "Updating PATH and DOTNET_ROOT environment variables..."
 if ! grep -q ".NET Core SDK tools" "/home/pi/.bashrc"; then
   cat << \EOF >> "/home/pi/.bashrc"
 # .NET Core SDK tools
