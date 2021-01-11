@@ -6,7 +6,7 @@
 
 * [Notebooks](#notebooks-with-net): Jupyter, nteract, and Visual Studio Code 
 * [Code bots](https://github.com/CodeConversations/CodeConversations)
-* Devices like [Raspberry Pi]()
+* Devices like [Raspberry Pi](https://www.raspberrypi.org/)
 * Embeddable script engines
 * REPLs
 
