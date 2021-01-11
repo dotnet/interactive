@@ -38,4 +38,3 @@ echo "virtualenv: install .NET kernel..."
 dotnet interactive jupyter install
 
 deactivate
-set -eu
