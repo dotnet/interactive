@@ -23,10 +23,11 @@ cd
 
 # Create virtual env
 echo "Installing Jupyter: creating virtualenv..."
+set +eu
 rm -rf .jupyter_venv || true
 virtualenv .jupyter_venv -p python3
 source .jupyter_venv/bin/activate
-
+set -eu
 
 # Inside the virtual env: Install jupyter
 echo "virtualenv: pip install jupyter jupyterlab..."
