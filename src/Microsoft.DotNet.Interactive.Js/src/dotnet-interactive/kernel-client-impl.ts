@@ -1,16 +1,18 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch } from "./dotnet-interactive-interfaces";
+import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch, Kernel } from "./dotnet-interactive-interfaces";
 import { TokenGenerator } from "./tokenGenerator";
 import { signalTransportFactory } from "./signalr-client";
-import { KernelTransport, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType, KernelCommand } from "./contracts";
+import { KernelTransport, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType, KernelCommand, KernelCommandEnvelopeObserver, KernelCommandEnvelope } from "./contracts";
 import { createDefaultClientFetch } from "./clientFetch";
+import { clientSideKernelFactory } from "./client-side-kernel";
 
 export interface KernelClientImplParameteres {
     clientFetch: (input: RequestInfo, init: RequestInit) => Promise<Response>;
     rootUrl: string;
     kernelTransport: KernelTransport,
+    clientSideKernel: Kernel,
     configureRequire: (config: any) => any
 }
 export class KernelClientImpl implements DotnetInteractiveClient {
@@ -18,6 +20,7 @@ export class KernelClientImpl implements DotnetInteractiveClient {
     private _clientFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
     private _rootUrl: string;
     private _kernelTransport: KernelTransport;
+    private _clientSideKernel: Kernel;
     private _tokenGenerator: TokenGenerator;
     private _configureRequire:(confing:any) => any;
     constructor(parameters: KernelClientImplParameteres) {
@@ -26,6 +29,7 @@ export class KernelClientImpl implements DotnetInteractiveClient {
         this._kernelTransport = parameters.kernelTransport;
         this._tokenGenerator = new TokenGenerator();
         this._configureRequire = parameters.configureRequire;
+        this._clientSideKernel = parameters.clientSideKernel;
     }
     public configureRequire(config: any) {
         return this._configureRequire(config);
@@ -34,6 +38,10 @@ export class KernelClientImpl implements DotnetInteractiveClient {
     public subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
         let subscription = this._kernelTransport.subscribeToKernelEvents(observer);
         return subscription;
+    }
+
+    public registerCommandHandler(commandType: string, handler: (envelope: KernelCommandEnvelope) => Promise<void>): void {
+        this._clientSideKernel.registerCommandHandler(commandType, handler);
     }
 
     public async getVariable(kernelName: string, variableName: string): Promise<any> {
@@ -140,7 +148,8 @@ export class KernelClientImpl implements DotnetInteractiveClient {
 export type DotnetInteractiveClientConfiguration = {
     address: string,
     clientFetch?: ClientFetch,
-    kernelTransportFactory?: (rootUrl: string) => Promise<KernelTransport>
+    kernelTransportFactory?: (rootUrl: string) => Promise<KernelTransport>,
+    clientSideKernelFactory?: (kernelTransport: KernelTransport) => Promise<Kernel>
 };
 
 function isConfiguration(config: any): config is DotnetInteractiveClientConfiguration {
@@ -151,11 +160,13 @@ export async function createDotnetInteractiveClient(configuration: string | Dotn
     let rootUrl = "";
     let clientFetch: ClientFetch = null;
     let kernelTransportFactory: (rootUrl: string) => Promise<KernelTransport> = null;
+    let kernelFactory: (kernelTransport: KernelTransport) => Promise<Kernel> = null;
 
     if (isConfiguration(configuration)) {
         rootUrl = configuration.address;
         clientFetch = configuration.clientFetch;
         kernelTransportFactory = configuration.kernelTransportFactory;
+        kernelFactory = configuration.clientSideKernelFactory;
     } else {
         rootUrl = configuration;
     }
@@ -172,11 +183,17 @@ export async function createDotnetInteractiveClient(configuration: string | Dotn
         kernelTransportFactory = signalTransportFactory;
     }
 
+    if (!kernelFactory) {
+        kernelFactory = clientSideKernelFactory;
+    }
+
     let transport = await kernelTransportFactory(rootUrl);
+    let clientSideKernel = await kernelFactory(transport);
     let client = new KernelClientImpl({
         clientFetch: clientFetch,
         rootUrl,
         kernelTransport: transport,
+        clientSideKernel,
         configureRequire: (config: any) =>{        
             return (<any>require).config(config) || require;
         }

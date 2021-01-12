@@ -14,12 +14,14 @@ namespace Microsoft.DotNet.Interactive.Http
     public class KernelHubConnection : IDisposable
     {
         private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly SignalRBackchannelKernelClient _backchannelKernelClient;
         private bool _registered;
         public Kernel Kernel { get; }
 
-        public KernelHubConnection(Kernel kernel)
+        public KernelHubConnection(Kernel kernel, SignalRBackchannelKernelClient backchannelKernelClient)
         {
             Kernel = kernel;
+            _backchannelKernelClient = backchannelKernelClient;
         }
 
         public void RegisterContext(IHubContext<KernelHub> hubContext)
@@ -29,8 +31,11 @@ namespace Microsoft.DotNet.Interactive.Http
                 _registered = true;
                 _disposables.Add(Kernel.KernelEvents.Subscribe(onNext: async kernelEvent =>
                     await PublishEventToContext(kernelEvent, hubContext)));
+                _backchannelKernelClient.SetContext(hubContext);
             }
         }
+
+        internal Task HandleKernelEventFromClientAsync(IKernelEventEnvelope envelope) => _backchannelKernelClient.HandleKernelEventFromClientAsync(envelope);
 
         private async Task PublishEventToContext(KernelEvent kernelEvent, IHubContext<KernelHub> hubContext)
         {

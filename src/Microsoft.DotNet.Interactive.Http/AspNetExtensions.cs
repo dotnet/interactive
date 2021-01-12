@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Interactive.Http
         }
         public static IServiceCollection AddDotnetInteractiveHttpApi(this IServiceCollection services)
         {
-            services.AddSingleton(c => new KernelHubConnection(c.GetRequiredService<Kernel>()));
+            services.AddSingleton(c => new KernelHubConnection(c.GetRequiredService<Kernel>(), c.GetRequiredService<SignalRBackchannelKernelClient>()));
             services.AddRouting();
             services.AddCors(options =>
             {

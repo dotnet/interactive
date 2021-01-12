@@ -3,7 +3,7 @@
 
 import * as signalR from "@microsoft/signalr";
 
-import { KernelTransport, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, KernelCommand, KernelCommandType, KernelCommandEnvelope, SubmitCodeType } from "./contracts";
+import { KernelTransport, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, KernelCommand, KernelCommandType, KernelCommandEnvelope, SubmitCodeType, KernelCommandEnvelopeObserver, KernelEvent, KernelEventType } from "./contracts";
 import { TokenGenerator } from "./tokenGenerator";
 
 
@@ -23,14 +23,24 @@ export async function signalTransportFactory(rootUrl: string): Promise<KernelTra
 
     let tokenGenerator = new TokenGenerator();
 
-    let observers: { [key: string]: KernelEventEnvelopeObserver } = {};
+    let eventObservers: { [key: string]: KernelEventEnvelopeObserver } = {};
+    let commandObservers: { [key: string]: KernelCommandEnvelopeObserver } = {};
 
     connection.on("kernelEvent", (message: string) => {
         let eventEnvelope = <KernelEventEnvelope>JSON.parse(message);
-        let keys = Object.keys(observers);
+        let keys = Object.keys(eventObservers);
         for (let key of keys) {
-            let observer = observers[key];
+            let observer = eventObservers[key];
             observer(eventEnvelope);
+        }
+    });
+
+    connection.on("submitCommand", (message: string) => {
+        let commandEnvelope = <KernelCommandEnvelope>JSON.parse(message);
+        let keys = Object.keys(commandObservers);
+        for (let key of keys) {
+            let observer = commandObservers[key];
+            observer(commandEnvelope);
         }
     });
 
@@ -42,11 +52,24 @@ export async function signalTransportFactory(rootUrl: string): Promise<KernelTra
 
         subscribeToKernelEvents: (observer: KernelEventEnvelopeObserver): DisposableSubscription => {
             let key = tokenGenerator.GetNewToken();
-            observers[key] = observer;
+            eventObservers[key] = observer;
 
             let disposableSubscription: DisposableSubscription = {
                 dispose: () => {
-                    delete observers[key];
+                    delete eventObservers[key];
+                }
+            }
+
+            return disposableSubscription;
+        },
+
+        subscribeToCommands: (observer: KernelCommandEnvelopeObserver): DisposableSubscription => {
+            let key = tokenGenerator.GetNewToken();
+            commandObservers[key] = observer;
+
+            let disposableSubscription: DisposableSubscription = {
+                dispose: () => {
+                    delete commandObservers[key];
                 }
             }
 
@@ -60,6 +83,10 @@ export async function signalTransportFactory(rootUrl: string): Promise<KernelTra
                 token: token,
             };
             return connection.send("submitCommand", JSON.stringify(envelope));
+        },
+
+        publishKernelEvent: (eventEnvelope: KernelEventEnvelope): Promise<void> => {
+            return connection.send("kernelEvent", JSON.stringify(eventEnvelope));
         },
 
         waitForReady: (): Promise<void> => {
