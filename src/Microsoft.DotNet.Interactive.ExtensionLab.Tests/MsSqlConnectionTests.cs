@@ -82,7 +82,7 @@ SELECT TOP 100 * FROM Person.Person
 
             events.Should().NotContainErrors();
 
-            result = await kernel.SubmitCodeAsync("adventureworks.AddressTypes.Count()");
+            result = await kernel.SubmitCodeAsync("adventureworks.AddressType.Count()");
 
             events = result.KernelEvents.ToSubscribedList();
 
