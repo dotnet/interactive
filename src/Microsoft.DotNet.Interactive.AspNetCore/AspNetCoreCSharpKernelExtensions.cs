@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
@@ -43,18 +44,16 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
 
         public static CSharpKernel UseAspNetCore(this CSharpKernel kernel)
         {
-            var isActive = false;
+            InteractiveHost interactiveHost = null;
 
             var directive = new Command("#!aspnet", "Activate ASP.NET Core")
             {
                 Handler = CommandHandler.Create(async () =>
                 {
-                    if (isActive)
+                    if (interactiveHost is {})
                     {
                         return;
                     }
-
-                    isActive = true;
 
                     var interactiveLoggerProvider = new InteractiveLoggerProvider();
 
@@ -74,7 +73,7 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                     using (interactiveLoggerProvider.SubscribePocketLogerWithCurrentEC())
                     {
                         // We could try to manage the host's lifetime, but for now just stop the kernel if you want to stop the host.
-                        var interactiveHost = new InteractiveHost(interactiveLoggerProvider);
+                        interactiveHost = new InteractiveHost(interactiveLoggerProvider);
                         var startHostTask = interactiveHost.StartAsync();
 
                         var rDirectives = string.Join(Environment.NewLine, _references.Select(a => $"#r \"{a.Location}\""));
@@ -93,6 +92,21 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
             };
 
             kernel.AddDirective(directive);
+
+            kernel.AddDirective(new Command("#!aspnet-stop", "Stop ASP.NET Core host")
+            {
+                Handler = CommandHandler.Create(async () =>
+                {
+                    if (interactiveHost is null)
+                    {
+                        return;
+                    }
+
+                    await interactiveHost.DisposeAsync();
+
+                    interactiveHost = null;
+                })
+            });
 
             Formatter.Register<HttpResponseMessage>((responseMessage, textWriter) =>
             {

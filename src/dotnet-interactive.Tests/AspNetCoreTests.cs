@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
@@ -29,6 +30,20 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var newServer =
                 await InProcessTestServer.StartServer(
                     $"{command} --default-kernel {defaultLanguage.LanguageName()} --http-port {port}", servicesSetup);
+
+            _disposables.Add(() =>
+            {
+                ExecutionContext.SuppressFlow();
+
+                try
+                {
+                    newServer.Kernel.SendAsync(new SubmitCode("#!aspnet-stop")).Wait();
+                }
+                finally
+                {
+                    ExecutionContext.RestoreFlow();
+                }
+            });
 
             _disposables.Add(newServer);
 
