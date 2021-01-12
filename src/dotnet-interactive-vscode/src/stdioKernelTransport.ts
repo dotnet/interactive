@@ -9,17 +9,20 @@ import {
     KernelCommandType,
     KernelEventEnvelope,
     KernelEventEnvelopeObserver,
+    KernelTransport,
     DiagnosticLogEntryProducedType,
     DiagnosticLogEntryProduced,
-    KernelReadyType
+    KernelReadyType,
+    KernelCommandEnvelopeObserver
 } from "./contracts";
 import { ProcessStart } from './interfaces';
 import { ReportChannel, Uri } from './interfaces/vscode';
 import { LineReader } from './lineReader';
 import { isNotNull, parse, stringify, wait } from './utilities';
 import fetch from 'node-fetch';
+import { extname } from "path";
 
-export class StdioKernelTransport {
+export class StdioKernelTransport implements KernelTransport {
     private childProcess: cp.ChildProcessWithoutNullStreams | null;
     private lineReader: LineReader;
     private readyPromise: Promise<void>;
@@ -179,6 +182,10 @@ export class StdioKernelTransport {
         };
     }
 
+    subscribeToCommands(observer: KernelCommandEnvelopeObserver): DisposableSubscription {
+        throw new Error('Backchannel not currently supported by this transport');
+    }
+
     submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string): Promise<void> {
         return new Promise((resolve, reject) => {
             let submit = {
@@ -198,6 +205,10 @@ export class StdioKernelTransport {
                 reject();
             }
         });
+    }
+
+    publishKernelEvent(eventEnvelope: KernelEventEnvelope): Promise<void> {
+        throw new Error('Backchannel not currently supported by this transport');
     }
 
     waitForReady(): Promise<void> {

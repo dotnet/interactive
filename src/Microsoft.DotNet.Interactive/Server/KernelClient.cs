@@ -8,13 +8,14 @@ using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 
 using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
-    public class KernelClient : IDisposable
+    public class KernelClient : KernelClientBase, IDisposable
     {
         private readonly IInputTextStream _input;
         private readonly IOutputTextStream _output;
@@ -38,9 +39,9 @@ namespace Microsoft.DotNet.Interactive.Server
         public IObservable<string> Output => _output.OutputObservable;
         public bool IsStarted => _input.IsStarted;
 
-        public IObservable<KernelEvent> KernelEvents => _kernelEvents;
+        public override IObservable<KernelEvent> KernelEvents => _kernelEvents;
 
-        public async Task SendAsync(KernelCommand command, string token = null)
+        public async override Task SendAsync(KernelCommand command, string token = null)
         {
             if (!string.IsNullOrWhiteSpace(token))
             {

@@ -393,6 +393,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                     false;
                             }
 
+                            var clientSideKernelClient = new SignalRBackchannelKernelClient();
+                            services.AddSingleton(clientSideKernelClient);
+                            kernel.UseKernelClientConnection(new ConnectClientKernel(clientSideKernelClient));
+
                             kernelServer.Start();
                             onServerStarted ??= () =>
                             {

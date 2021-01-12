@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelEventEnvelopeObserver, DisposableSubscription } from "./contracts";
+import { KernelEventEnvelopeObserver, DisposableSubscription, KernelCommandEnvelopeObserver, KernelCommand, KernelEvent, KernelCommandEnvelope } from "./contracts";
 
 
 export interface VariableRequest {
@@ -20,8 +20,16 @@ export interface KernelClient {
     submitCommand(commandType: string, command?: any): Promise<string>;
 }
 
+// Implemented by the client-side kernel.
+export interface Kernel {
+    send(command: KernelCommandEnvelope): Promise<void>;
+    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
+    registerCommandHandler(commandType: string, observer: (envelope: KernelCommandEnvelope) => Promise<void>): void;
+}
+
 export interface DotnetInteractiveClient {
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
+    registerCommandHandler(commandType: string, handler: (envelope: KernelCommandEnvelope) => Promise<void>): void;
     getVariable(kernelName: string, variableName: string): Promise<any>;
     getVariables(variableRequest: VariableRequest): Promise<VariableResponse>;
     getResource(resource: string): Promise<Response>;

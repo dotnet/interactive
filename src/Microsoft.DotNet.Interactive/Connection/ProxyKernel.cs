@@ -16,9 +16,9 @@ namespace Microsoft.DotNet.Interactive.Connection
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<RequestHoverText>
     {
-        private readonly KernelClient _client;
+        private readonly KernelClientBase _client;
 
-        public ProxyKernel(string name, KernelClient client) : base(name)
+        public ProxyKernel(string name, KernelClientBase client) : base(name)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
 
