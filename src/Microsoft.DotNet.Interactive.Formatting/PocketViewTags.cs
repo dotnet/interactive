@@ -73,6 +73,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static dynamic style => _.style;
         public static dynamic strong => _.strong;
         public static dynamic sub => _.sub;
+        public static dynamic summary => _.summary;
         public static dynamic sup => _.sup;
         public static dynamic svg => _.svg;
         public static dynamic table => _.table;
