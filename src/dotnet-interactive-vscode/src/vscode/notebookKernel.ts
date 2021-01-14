@@ -10,8 +10,10 @@ import { getDiagnosticCollection } from './diagnostics';
 import { getSimpleLanguage } from "../interactiveNotebook";
 import { Diagnostic, DiagnosticSeverity } from "../contracts";
 
+export const KernelId: string = 'dotnet-interactive';
+
 export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
-    id?: string | undefined;
+    id: string = KernelId;
     label: string;
     description?: string | undefined;
     detail?: string | undefined;

@@ -10,6 +10,9 @@ using Recipes;
 using Xunit;
 using Xunit.Abstractions;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
+using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {
@@ -48,6 +51,32 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             await context.Done().Timeout(5.Seconds());
 
             JupyterMessageSender.ReplyMessages.OfType<IsCompleteReply>().Should().ContainSingle(r => r.Status == "incomplete" && r.Indent == "*");
+        }
+
+        [Fact]
+        public void cell_language_can_be_pulled_from_metadata_when_present()
+        {
+            var metaData = new Dictionary<string, object>()
+            {
+                { "dotnet_interactive", JObject.Parse(JsonConvert.SerializeObject(new { language = "fsharp" })) }
+            };
+            var request = ZeroMQMessage.Create(new IsCompleteRequest("1+1"), metaData: metaData);
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            var language = context.GetLanguage();
+            language
+                .Should()
+                .Be("fsharp");
+        }
+
+        [Fact]
+        public void cell_language_defaults_to_null_when_it_cant_be_found()
+        {
+            var request = ZeroMQMessage.Create(new IsCompleteRequest("1+1"));
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            var language = context.GetLanguage();
+            language
+                .Should()
+                .BeNull();
         }
     }
 }

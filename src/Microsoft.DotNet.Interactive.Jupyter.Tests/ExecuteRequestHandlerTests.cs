@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -11,6 +12,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Tests;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Pocket;
 using Recipes;
@@ -450,6 +452,32 @@ f();"));
             errorMessage
                 .Should()
                 .StartWith("System.NotSupportedException: Password request is not supported");
+        }
+
+        [Fact]
+        public void cell_language_can_be_pulled_from_metadata_when_present()
+        {
+            var metaData = new Dictionary<string, object>()
+            {
+                { "dotnet_interactive", JObject.Parse(JsonConvert.SerializeObject(new { language = "fsharp" })) }
+            };
+            var request = ZeroMQMessage.Create(new ExecuteRequest("1+1"), metaData: metaData);
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            var language = context.GetLanguage();
+            language
+                .Should()
+                .Be("fsharp");
+        }
+
+        [Fact]
+        public void cell_language_defaults_to_null_when_it_cant_be_found()
+        {
+            var request = ZeroMQMessage.Create(new ExecuteRequest("1+1"));
+            var context = new JupyterRequestContext(JupyterMessageSender, request);
+            var language = context.GetLanguage();
+            language
+                .Should()
+                .BeNull();
         }
     }
 }

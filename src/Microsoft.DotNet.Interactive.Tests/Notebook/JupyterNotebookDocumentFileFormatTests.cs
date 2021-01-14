@@ -113,6 +113,89 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         }
 
         [Fact]
+        public void cell_metadata_can_specify_language_that_overrides_notebook()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        execution_count = 1,
+                        metadata = new
+                        {
+                            dotnet_interactive = new
+                            {
+                                language = "fsharp"
+                            }
+                        },
+                        source = "// this should be F#"
+                    }
+                },
+                metadata = new
+                {
+                    kernelspec = new
+                    {
+                        display_name = $".NET (C#)",
+                        language = "C#",
+                        name = $".net-csharp"
+                    },
+                    language_info = new
+                    {
+                        file_extension = ".cs",
+                        mimetype = $"text/x-csharp",
+                        name = "C#",
+                        pygments_lexer = "C#",
+                        version = "8.0"
+                    }
+                },
+                nbformat = 4,
+                nbformat_minor = 4
+            };
+            var notebook = ParseJupyter(jupyter);
+            notebook.Cells
+                .Should()
+                .ContainSingle()
+                .Which
+                .Language
+                .Should()
+                .Be("fsharp");
+        }
+
+        [Fact]
+        public void cell_language_can_specify_language_when_theres_no_notebook_default()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        execution_count = 1,
+                        metadata = new
+                        {
+                            dotnet_interactive = new
+                            {
+                                language = "fsharp"
+                            }
+                        },
+                        source = "// this should be F#"
+                    }
+                }
+            };
+            var notebook = ParseJupyter(jupyter);
+            notebook.Cells
+                .Should()
+                .ContainSingle()
+                .Which
+                .Language
+                .Should()
+                .Be("fsharp");
+        }
+
+        [Fact]
         public void parsed_cells_dont_contain_redundant_language_specifier()
         {
             var jupyter = new
@@ -154,6 +237,61 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 {
                     new NotebookCell("csharp", "// this is the code")
                 });
+        }
+
+        [Fact]
+        public void cell_language_specifier_takes_precedence_over_metadata_language()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        execution_count = 1,
+                        metadata = new
+                        {
+                            dotnet_interactive = new
+                            {
+                                language = "fsharp"
+                            }
+                        },
+                        source = new[]
+                        {
+                            "#!pwsh",
+                            "# this is PowerShell and not F#"
+                        }
+                    }
+                },
+                metadata = new
+                {
+                    kernelspec = new
+                    {
+                        display_name = $".NET (C#)",
+                        language = "C#",
+                        name = $".net-csharp"
+                    },
+                    language_info = new
+                    {
+                        file_extension = ".cs",
+                        mimetype = $"text/x-csharp",
+                        name = "C#",
+                        pygments_lexer = "C#",
+                        version = "8.0"
+                    }
+                },
+                nbformat = 4,
+                nbformat_minor = 4
+            };
+            var notebook = ParseJupyter(jupyter);
+            notebook.Cells
+                .Should()
+                .ContainSingle()
+                .Which
+                .Language
+                .Should()
+                .Be("pwsh");
         }
 
         [Fact]
@@ -549,7 +687,13 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                     {
                         cell_type = "code",
                         execution_count = 1,
-                        metadata = new { },
+                        metadata = new
+                        {
+                            dotnet_interactive = new
+                            {
+                                language = "csharp"
+                            }
+                        },
                         source = new[]
                         {
                             "//"
@@ -578,7 +722,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         }
 
         [Fact]
-        public void serialized_code_cells_with_non_default_jupyter_kernel_language_have_language_specifier()
+        public void serialized_code_cells_with_non_default_jupyter_kernel_language_have_language_metadata_and_no_language_specifier()
         {
             var cells = new[]
             {
@@ -587,12 +731,24 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
             var notebook = new NotebookDocument(cells);
             var serialized = SerializeJupyter(notebook);
             var jupyter = JToken.Parse(serialized);
-            jupyter["cells"][0]["source"]
+            jupyter["cells"][0]
                 .Should()
-                .BeEquivalentTo(JToken.Parse(JsonConvert.SerializeObject(new object[]
+                .BeEquivalentTo(JToken.Parse(JsonConvert.SerializeObject(new
                 {
-                    "#!fsharp\n",
-                    "let x = 1"
+                    cell_type = "code",
+                    execution_count = 1,
+                    metadata = new
+                    {
+                        dotnet_interactive = new
+                        {
+                            language = "fsharp"
+                        }
+                    },
+                    source = new[]
+                    {
+                        "let x = 1"
+                    },
+                    outputs = new object[] { }
                 })));
         }
 

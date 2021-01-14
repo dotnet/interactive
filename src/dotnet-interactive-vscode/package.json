@@ -40,10 +40,9 @@
     "PowerShell"
   ],
   "activationEvents": [
-    "onNotebookEditor:dotnet-interactive",
-    "onNotebookEditor:dotnet-interactive-jupyter",
     "onNotebook:dotnet-interactive",
     "onNotebook:dotnet-interactive-jupyter",
+    "onNotebook:*",
     "onCommand:dotnet-interactive.acquire",
     "onCommand:dotnet-interactive.newNotebook",
     "onCommand:dotnet-interactive.openNotebook",
