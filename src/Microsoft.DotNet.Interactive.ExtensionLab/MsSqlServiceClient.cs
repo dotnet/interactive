@@ -15,11 +15,27 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
     public class MsSqlServiceClient : IDisposable
     {
-        public static readonly MsSqlServiceClient Instance = new MsSqlServiceClient();
-
         private Process _process;
         private JsonRpc _rpc;
         private bool _initialized = false;
+        private readonly string _serviceExePath;
+
+        public const string SqlToolsServiceEnvironmentVariableName = "DOTNET_SQLTOOLSSERVICE";
+
+        public MsSqlServiceClient(string serviceExePath = null)
+        {
+            _serviceExePath = serviceExePath;
+
+            if (string.IsNullOrWhiteSpace(_serviceExePath))
+            {
+                _serviceExePath = Environment.GetEnvironmentVariable(SqlToolsServiceEnvironmentVariableName);
+            }
+
+            if (string.IsNullOrWhiteSpace(_serviceExePath))
+            {
+                throw new ArgumentException("Path to SQL Tools Service executable was not provided.", nameof(serviceExePath));
+            }
+        }
 
         public void Initialize()
         {
@@ -32,13 +48,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private void StartProcessAndRedirectIO()
         {
-            var serviceExePath = Environment.GetEnvironmentVariable("DOTNET_SQLTOOLSSERVICE");
-            if (serviceExePath == null)
-            {
-                throw new InvalidOperationException("Path to SQL Tools Service executable was not provided.");
-            }
-
-            var startInfo = new ProcessStartInfo(serviceExePath)
+            var startInfo = new ProcessStartInfo(_serviceExePath)
             {
                 UseShellExecute = false,
                 RedirectStandardInput = true,
@@ -56,6 +66,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             AddLocalRpcMethod(nameof(HandleConnectionCompletion), "connection/complete");
             AddLocalRpcMethod(nameof(HandleQueryCompletion), "query/complete");
+            AddLocalRpcMethod(nameof(HandleQueryMessage), "query/message");
             AddLocalRpcMethod(nameof(HandleIntellisenseReady), "textDocument/intelliSenseReady");
 
             _rpc.StartListening();
@@ -75,6 +86,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public event EventHandler<ConnectionCompleteParams> OnConnectionComplete;
         public event EventHandler<QueryCompleteParams> OnQueryComplete;
         public event EventHandler<IntelliSenseReadyParams> OnIntellisenseReady;
+        public event EventHandler<MessageParams> OnQueryMessage;
 
         public async Task<bool> ConnectAsync(Uri ownerUri, string connectionStr)
         {
@@ -171,6 +183,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public void HandleQueryCompletion(QueryCompleteParams queryParams)
         {
             OnQueryComplete(this, queryParams);
+        }
+
+        public void HandleQueryMessage(MessageParams messageParams)
+        {
+            OnQueryMessage(this, messageParams);
         }
 
         public void HandleIntellisenseReady(IntelliSenseReadyParams readyParams)
