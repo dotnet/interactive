@@ -11,8 +11,7 @@ using Xunit;
 using Xunit.Abstractions;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
 using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
+using Microsoft.DotNet.Interactive.Notebook;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 {
@@ -58,7 +57,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             var metaData = new Dictionary<string, object>()
             {
-                { "dotnet_interactive", JObject.Parse(JsonConvert.SerializeObject(new { language = "fsharp" })) }
+                { "dotnet_interactive", new InputCellMetadata { Language = "fsharp" } }
             };
             var request = ZeroMQMessage.Create(new IsCompleteRequest("1+1"), metaData: metaData);
             var context = new JupyterRequestContext(JupyterMessageSender, request);

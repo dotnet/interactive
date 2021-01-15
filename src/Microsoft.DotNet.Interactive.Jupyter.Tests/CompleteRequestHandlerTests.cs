@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Microsoft.DotNet.Interactive.Notebook;
 using Recipes;
 using Xunit;
 using Xunit.Abstractions;
@@ -42,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             var metaData = new Dictionary<string, object>()
             {
-                { "dotnet_interactive", JObject.Parse(JsonConvert.SerializeObject(new { language = "fsharp" })) }
+                { "dotnet_interactive", new InputCellMetadata { Language = "fsharp" } }
             };
             var request = ZeroMQMessage.Create(new CompleteRequest("1+1"), metaData: metaData);
             var context = new JupyterRequestContext(JupyterMessageSender, request);

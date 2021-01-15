@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 {
     internal static class NetMQExtensions
     {
-        private static T DeserializeFromJsonString<T>(string source)
+        public static T DeserializeFromJsonString<T>(string source)
         {
             var ret = default(T);
             if (!string.IsNullOrWhiteSpace(source))
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
         {
             var header = JsonConvert.DeserializeObject<Header>(headerJson);
             var parentHeader = DeserializeFromJsonString<Header>(parentHeaderJson);
-            var metaData = DeserializeFromJsonString<Dictionary<string, object>>(metadataJson) ?? new Dictionary<string, object>();
+            var metaData = MetadataExtensions.DeserializeMetadataFromJsonString(metadataJson);
             var content = DeserializeMessageContentFromJsonString(contentJson, header.MessageType);
 
             var message = new Message(header, content, parentHeader, signature, metaData, identifiers);

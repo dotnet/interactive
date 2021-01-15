@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.DotNet.Interactive.Notebook;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
@@ -11,9 +10,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         public static string GetLanguage(this JupyterRequestContext context)
         {
             if (context.JupyterRequestMessageEnvelope.MetaData.TryGetValue(NotebookFileFormatHandler.MetadataNamespace, out var candidateMetadata) &&
-                candidateMetadata is JObject dotnetMetadata)
+                candidateMetadata is InputCellMetadata inputCellMetadata)
             {
-                return dotnetMetadata["language"]?.ToObject<string>();
+                return inputCellMetadata.Language;
             }
 
             return null;

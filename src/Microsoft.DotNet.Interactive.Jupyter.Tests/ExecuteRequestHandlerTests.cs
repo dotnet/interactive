@@ -11,8 +11,8 @@ using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
+using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.Tests;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Pocket;
 using Recipes;
@@ -459,7 +459,7 @@ f();"));
         {
             var metaData = new Dictionary<string, object>()
             {
-                { "dotnet_interactive", JObject.Parse(JsonConvert.SerializeObject(new { language = "fsharp" })) }
+                { "dotnet_interactive", new InputCellMetadata { Language = "fsharp" } }
             };
             var request = ZeroMQMessage.Create(new ExecuteRequest("1+1"), metaData: metaData);
             var context = new JupyterRequestContext(JupyterMessageSender, request);
