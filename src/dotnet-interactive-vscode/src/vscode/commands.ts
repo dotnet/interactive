@@ -11,16 +11,21 @@ import { getEol, isUnsavedNotebook } from './vscodeUtilities';
 import { toNotebookDocument } from './notebookContentProvider';
 import { updateCellMetadata } from './notebookKernel';
 
-export function registerAcquisitionCommands(context: vscode.ExtensionContext, dotnetPath: string) {
+export function registerAcquisitionCommands(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
     const minDotNetInteractiveVersion = config.get<string>('minimumInteractiveToolVersion');
     const interactiveToolSource = config.get<string>('interactiveToolSource');
 
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.acquire', async (args?: InstallInteractiveArgs | undefined): Promise<InteractiveLaunchOptions | undefined> => {
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.acquire', async (args?: InstallInteractiveArgs | string | undefined): Promise<InteractiveLaunchOptions> => {
         if (!args) {
+            // unspecified; the best we can do is hope it's on the path
+            args = 'dotnet';
+        }
+
+        if (typeof args === 'string') {
             args = {
-                dotnetPath: dotnetPath,
-                toolVersion: undefined
+                dotnetPath: args,
+                toolVersion: undefined,
             };
         }
 

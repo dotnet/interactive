@@ -15,7 +15,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
-using Microsoft.CodeAnalysis.Scripting;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
@@ -38,6 +37,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
         public async Task Handle(JupyterRequestContext context)
         {
             var executeRequest = GetJupyterRequest(context);
+            string targetKernelName = context.GetLanguage();
 
             _executionCount = executeRequest.Silent ? _executionCount : Interlocked.Increment(ref _executionCount);
             
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             var executeInputPayload = new ExecuteInput(executeRequest.Code, _executionCount);
             context.JupyterMessageSender.Send(executeInputPayload);
 
-            var command = new SubmitCode(executeRequest.Code);
+            var command = new SubmitCode(executeRequest.Code, targetKernelName);
 
             await SendAsync(context, command);
         }

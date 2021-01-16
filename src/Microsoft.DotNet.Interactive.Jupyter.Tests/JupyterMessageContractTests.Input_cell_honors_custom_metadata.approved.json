@@ -1,0 +1,6 @@
+data: <IDS|MSG> more: True
+data: 8ba0f29e039958a3c6de74503641e8673d126410e3a86d58ffffd948792fb969 more: True
+data: {"msg_id":"00000000-0000-0000-0000-000000000000","username":"dotnet_kernel","session":"test session","date":"0001-01-01T00:00:00Z","msg_type":"execute_result","version":"5.3"} more: True
+data: {} more: True
+data: {"dotnet_interactive":{"language":"fsharp"}} more: True
+data: {"data":{"text/html":"some result","text/plain":"some result"},"metadata":{},"transient":{"display_id":"none"},"execution_count":12} more: False

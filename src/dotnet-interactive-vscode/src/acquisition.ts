@@ -17,7 +17,7 @@ export async function acquireDotnetInteractive(
     reportInstallationStarted: ReportInstallationStarted,
     installInteractive: InstallInteractiveTool,
     reportInstallationFinished: ReportInstallationFinished
-): Promise<InteractiveLaunchOptions | undefined> {
+): Promise<InteractiveLaunchOptions> {
     // Ensure `globalStoragePath` exists.  This prevents a bunch of issues with spawned processes and working directories.
     if (!fs.existsSync(globalStoragePath)) {
         fs.mkdirSync(globalStoragePath);

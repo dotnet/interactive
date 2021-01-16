@@ -3,7 +3,11 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "metadata": {},
+   "metadata": {
+    "dotnet_interactive": {
+     "language": "csharp"
+    }
+   },
    "source": [
     "// this is csharp"
    ],
