@@ -3,13 +3,12 @@
 
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
-import * as path from 'path';
 import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
 import { ClientMapper } from '../clientMapper';
-import { getEol, isUnsavedNotebook } from './vscodeUtilities';
+import { getEol } from './vscodeUtilities';
 import { toNotebookDocument } from './notebookContentProvider';
-import { updateCellMetadata } from './notebookKernel';
+import { KernelId, updateCellMetadata } from './notebookKernel';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
@@ -127,30 +126,9 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
         '.NET Interactive Notebooks': ['dib', 'dotnet-interactive']
     };
 
-    function workspaceHasUnsavedNotebookWithName(fileName: string): boolean {
-        return vscode.workspace.textDocuments.findIndex(textDocument => {
-            if (textDocument.notebook) {
-                const notebookUri = textDocument.notebook.uri;
-                return isUnsavedNotebook(notebookUri) && path.basename(notebookUri.fsPath) === fileName;
-            }
-
-            return false;
-        }) >= 0;
-    }
-
-    function getNewNotebookName(): string {
-        let suffix = 1;
-        while (workspaceHasUnsavedNotebookWithName(`Untitled-${suffix}.ipynb`)) {
-            suffix++;
-        }
-
-        return `Untitled-${suffix}.ipynb`;
-    }
-
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebook', async () => {
-        const fileName = getNewNotebookName();
-        const newUri = vscode.Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
-        await vscode.commands.executeCommand('vscode.openWith', newUri, 'dotnet-interactive-jupyter');
+        await vscode.commands.executeCommand('jupyter.createnewnotebook');
+        await switchToInteractiveKernel();
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
@@ -170,7 +148,8 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
             }
         }
 
-        await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'dotnet-interactive-jupyter');
+        await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'jupyter-notebook');
+        await switchToInteractiveKernel();
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {
@@ -190,6 +169,11 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
             await vscode.workspace.fs.writeFile(uri, buffer);
         }
     }));
+}
+
+async function switchToInteractiveKernel() {
+    const id = `ms-dotnettools.dotnet-interactive-vscode_${KernelId}`;
+    await vscode.commands.executeCommand('notebook.selectKernel', { id });
 }
 
 // callbacks used to install interactive tool
