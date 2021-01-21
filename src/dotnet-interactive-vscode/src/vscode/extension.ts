@@ -74,7 +74,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const notebookContentProvider = new DotNetInteractiveNotebookContentProvider(clientMapper);
     const apiBootstrapperUri = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'kernelHttpApiBootstrapper.js'));
     const notebookKernel = new DotNetInteractiveNotebookKernel(clientMapper, apiBootstrapperUri);
-    const notebookKernelProvider = new DotNetInteractiveNotebookKernelProvider(notebookKernel);
+    const notebookKernelProvider = new DotNetInteractiveNotebookKernelProvider(notebookKernel, clientMapper);
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookContentProvider));
     context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorDib, notebookKernelProvider));
     context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorJupyter, notebookKernelProvider));
