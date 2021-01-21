@@ -133,6 +133,12 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="NOTICE.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <Target Name="InstallNodeModules">
     <Exec Command="npm i" WorkingDirectory="$(JsApiRoot)" />
   </Target>
