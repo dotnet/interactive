@@ -17,7 +17,7 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
     label: string;
     description?: string | undefined;
     detail?: string | undefined;
-    isPreferred?: boolean | undefined;
+    isPreferred: boolean = true;
     preloads?: vscode.Uri[] | undefined;
 
     constructor(readonly clientMapper: ClientMapper, apiBootstrapperUri: vscode.Uri) {

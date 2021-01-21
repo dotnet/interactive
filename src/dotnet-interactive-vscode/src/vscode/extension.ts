@@ -10,7 +10,7 @@ import { StdioKernelTransport } from '../stdioKernelTransport';
 import { registerLanguageProviders } from './languageProvider';
 import { execute, registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
 
-import { getNotebookSpecificLanguage, getSimpleLanguage, isDotnetInteractiveLanguage, notebookCellLanguages } from '../interactiveNotebook';
+import { getSimpleLanguage, isDotnetInteractiveLanguage, notebookCellLanguages } from '../interactiveNotebook';
 import { IDotnetAcquireResult } from '../interfaces/dotnet';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
@@ -63,18 +63,22 @@ export async function activate(context: vscode.ExtensionContext) {
     registerFileCommands(context, clientMapper);
 
     const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable
-    const selector = {
-        viewType: ['dotnet-interactive', 'dotnet-interactive-jupyter'],
-        filenamePattern: '*.{dib,dotnet-interactive,ipynb}'
+    const selectorDib = {
+        viewType: ['dotnet-interactive'],
+        filenamePattern: '*.{dib,dotnet-interactive}'
+    };
+    const selectorJupyter = {
+        viewType: ['jupyter-notebook'],
+        filenamePattern: '*.ipynb'
     };
     const notebookContentProvider = new DotNetInteractiveNotebookContentProvider(clientMapper);
     const apiBootstrapperUri = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'kernelHttpApiBootstrapper.js'));
     const notebookKernel = new DotNetInteractiveNotebookKernel(clientMapper, apiBootstrapperUri);
     const notebookKernelProvider = new DotNetInteractiveNotebookKernelProvider(notebookKernel);
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookContentProvider));
-    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive-jupyter', notebookContentProvider));
-    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selector, notebookKernelProvider));
-    context.subscriptions.push(vscode.notebook.onDidChangeActiveNotebookKernel(async e => await updateDocumentLanguages(e)));
+    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorDib, notebookKernelProvider));
+    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorJupyter, notebookKernelProvider));
+    context.subscriptions.push(vscode.notebook.onDidChangeActiveNotebookKernel(async e => await updateDocumentMetadata(e)));
     context.subscriptions.push(vscode.notebook.onDidChangeCellLanguage(async e => await updateCellLanguageInMetadata(e)));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(registerLanguageProviders(clientMapper, diagnosticDelay));
@@ -99,14 +103,15 @@ async function updateCellLanguageInMetadata(languageChangeEvent: { cell: vscode.
     }
 }
 
-async function updateDocumentLanguages(e: { document: vscode.NotebookDocument, kernel: vscode.NotebookKernel | undefined }) {
+async function updateDocumentMetadata(e: { document: vscode.NotebookDocument, kernel: vscode.NotebookKernel | undefined }) {
     if (e.kernel?.id === KernelId) {
         // update document language
         e.document.languages = notebookCellLanguages;
         const documentLanguageInfo = getLanguageInfoMetadata(e.document.metadata);
 
-        // update cell language
         const edit = new vscode.WorkspaceEdit();
+
+        // update cell language
         let cellData: Array<vscode.NotebookCellData> = [];
         for (const cell of e.document.cells) {
             const cellMetadata = getDotNetMetadata(cell.metadata);
