@@ -20,6 +20,17 @@ appear in the VS Code Marketplace in about 10 minutes once their internal valida
 
 The publish/verification script is located in this repo at [`eng/publish/PublishVSCodeExtension.ps1`](eng/publish/PublishVSCodeExtension.ps1).
 
+### Rolling back to an older version of the VS Code Extension
+
+To roll back to a previous build, you'll need to:
+
+1. Find the build you'd like to roll back to.
+2. Copy the commit's SHA.
+3. Start a new signed build with that SHA.
+4. Use that build to publish like normal.
+
+This ensures that the version number of the extension is always increasing to pass the VS Code Marketplace verification.
+
 ## Internal Code Mirror
 
 The public GitHub code is internally mirrored [here](https://dev.azure.com/dnceng/internal/_git/dotnet-interactive) to enable signed builds.  You'll likely never need to do anything with this.
