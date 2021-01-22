@@ -329,7 +329,7 @@ describe('ipynb metadata tests', () => {
     });
 
     describe('cell language selection', () => {
-        it(`cell language is first determined from cell text`, () => {
+        it(`sets the cell language first from cell text`, () => {
             const cellMetadata: DotNetCellMetadata = {
                 language: 'pwsh',
             };
@@ -341,7 +341,7 @@ describe('ipynb metadata tests', () => {
             expect(cellLanguage).to.equal('dotnet-interactive.javascript');
         });
 
-        it(`cell language is not set from a non-language specifier on the first line`, () => {
+        it(`does not use the cell text for the language if a non-language specifier is on the first line`, () => {
             const cellMetadata: DotNetCellMetadata = {
                 language: 'pwsh',
             };
@@ -353,7 +353,7 @@ describe('ipynb metadata tests', () => {
             expect(cellLanguage).to.equal('dotnet-interactive.pwsh');
         });
 
-        it(`cell language is second determined from cell metadata`, () => {
+        it(`sets the cell language second from cell metadata`, () => {
             const cellMetadata: DotNetCellMetadata = {
                 language: 'pwsh',
             };
@@ -365,7 +365,7 @@ describe('ipynb metadata tests', () => {
             expect(cellLanguage).to.equal('dotnet-interactive.pwsh');
         });
 
-        it(`cell language is third determined from document metadata`, () => {
+        it(`sets the cell language third from document metadata`, () => {
             const cellMetadata: DotNetCellMetadata = {
                 language: undefined,
             };
@@ -377,7 +377,7 @@ describe('ipynb metadata tests', () => {
             expect(cellLanguage).to.equal('dotnet-interactive.fsharp');
         });
 
-        it(`cell language is ultimately determined from the fallback value`, () => {
+        it(`sets the cell language finally from the fallback value`, () => {
             const cellMetadata: DotNetCellMetadata = {
                 language: undefined,
             };
