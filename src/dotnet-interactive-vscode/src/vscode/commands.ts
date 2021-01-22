@@ -172,8 +172,9 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
 }
 
 async function switchToInteractiveKernel() {
-    const id = `ms-dotnettools.dotnet-interactive-vscode_${KernelId}`;
-    await vscode.commands.executeCommand('notebook.selectKernel', { id });
+    const extension = 'ms-dotnettools.dotnet-interactive-vscode';
+    const id = KernelId;
+    await vscode.commands.executeCommand('notebook.selectKernel', { extension, id });
 }
 
 // callbacks used to install interactive tool
