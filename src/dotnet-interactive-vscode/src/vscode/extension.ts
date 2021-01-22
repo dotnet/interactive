@@ -115,10 +115,11 @@ async function updateDocumentMetadata(e: { document: vscode.NotebookDocument, ke
         let cellData: Array<vscode.NotebookCellData> = [];
         for (const cell of e.document.cells) {
             const cellMetadata = getDotNetMetadata(cell.metadata);
-            const newLanguage = getCellLanguage(cellMetadata, documentLanguageInfo, cell.language);
+            const cellText = cell.document.getText();
+            const newLanguage = getCellLanguage(cellText, cellMetadata, documentLanguageInfo, cell.language);
             cellData.push({
                 cellKind: cell.cellKind,
-                source: cell.document.getText(),
+                source: cellText,
                 language: newLanguage,
                 outputs: cell.outputs,
                 metadata: cell.metadata,
