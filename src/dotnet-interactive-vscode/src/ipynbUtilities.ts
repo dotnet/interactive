@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { getNotebookSpecificLanguage } from "./interactiveNotebook";
+import { getNotebookSpecificLanguage, notebookCellLanguages } from "./interactiveNotebook";
 
 // the shape of this is meant to match the cell metadata from VS Code
 interface CellMetadata {
@@ -99,6 +99,16 @@ function mapIpynbLanguageName(name: string | undefined): string | undefined {
     return undefined;
 }
 
-export function getCellLanguage(cellMetadata: DotNetCellMetadata, documentMetadata: LanguageInfoMetadata, fallbackLanguage: string): string {
-    return getNotebookSpecificLanguage(cellMetadata.language || documentMetadata.name || fallbackLanguage);
+export function getCellLanguage(cellText: string, cellMetadata: DotNetCellMetadata, documentMetadata: LanguageInfoMetadata, fallbackLanguage: string): string {
+    const cellLines = cellText.split('\n').map(line => line.trim());
+    let cellLanguageSpecifier: string | undefined = undefined;
+    if (cellLines.length > 0 && cellLines[0].startsWith('#!')) {
+        const cellLanguage = cellLines[0].substr(2);
+        const notebookSpecficLanguage = getNotebookSpecificLanguage(cellLanguage);
+        if (notebookCellLanguages.includes(notebookSpecficLanguage)) {
+            cellLanguageSpecifier = cellLanguage;
+        }
+    }
+
+    return getNotebookSpecificLanguage(cellLanguageSpecifier || cellMetadata.language || documentMetadata.name || fallbackLanguage);
 }

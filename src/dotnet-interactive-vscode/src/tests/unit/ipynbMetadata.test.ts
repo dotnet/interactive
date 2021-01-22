@@ -329,36 +329,63 @@ describe('ipynb metadata tests', () => {
     });
 
     describe('cell language selection', () => {
-        it(`cell language is first determined from cell metadata`, () => {
+        it(`sets the cell language first from cell text`, () => {
             const cellMetadata: DotNetCellMetadata = {
                 language: 'pwsh',
             };
             const documentMetadata: LanguageInfoMetadata = {
                 name: 'fsharp',
             };
-            const cellLanguage = getCellLanguage(cellMetadata, documentMetadata, 'csharp');
+            const cellText = '#!javascript\r\nalert(1+1);';
+            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, 'csharp');
+            expect(cellLanguage).to.equal('dotnet-interactive.javascript');
+        });
+
+        it(`does not use the cell text for the language if a non-language specifier is on the first line`, () => {
+            const cellMetadata: DotNetCellMetadata = {
+                language: 'pwsh',
+            };
+            const documentMetadata: LanguageInfoMetadata = {
+                name: 'fsharp',
+            };
+            const cellText = '#!about\r\n1+1';
+            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, 'csharp');
             expect(cellLanguage).to.equal('dotnet-interactive.pwsh');
         });
 
-        it(`cell language is second determined from document metadata`, () => {
+        it(`sets the cell language second from cell metadata`, () => {
+            const cellMetadata: DotNetCellMetadata = {
+                language: 'pwsh',
+            };
+            const documentMetadata: LanguageInfoMetadata = {
+                name: 'fsharp',
+            };
+            const cellText = '1+1';
+            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, 'csharp');
+            expect(cellLanguage).to.equal('dotnet-interactive.pwsh');
+        });
+
+        it(`sets the cell language third from document metadata`, () => {
             const cellMetadata: DotNetCellMetadata = {
                 language: undefined,
             };
             const documentMetadata: LanguageInfoMetadata = {
                 name: 'fsharp',
             };
-            const cellLanguage = getCellLanguage(cellMetadata, documentMetadata, 'csharp');
+            const cellText = '1+1';
+            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, 'csharp');
             expect(cellLanguage).to.equal('dotnet-interactive.fsharp');
         });
 
-        it(`cell language is ultimately determined from the fallback value`, () => {
+        it(`sets the cell language finally from the fallback value`, () => {
             const cellMetadata: DotNetCellMetadata = {
                 language: undefined,
             };
             const documentMetadata: LanguageInfoMetadata = {
                 name: undefined,
             };
-            const cellLanguage = getCellLanguage(cellMetadata, documentMetadata, 'csharp');
+            const cellText = '1+1';
+            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, 'csharp');
             expect(cellLanguage).to.equal('dotnet-interactive.csharp');
         });
     });
