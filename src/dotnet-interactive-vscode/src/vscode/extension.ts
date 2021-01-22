@@ -74,11 +74,11 @@ export async function activate(context: vscode.ExtensionContext) {
     const notebookContentProvider = new DotNetInteractiveNotebookContentProvider(clientMapper);
     const apiBootstrapperUri = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'kernelHttpApiBootstrapper.js'));
     const notebookKernel = new DotNetInteractiveNotebookKernel(clientMapper, apiBootstrapperUri);
-    const notebookKernelProvider = new DotNetInteractiveNotebookKernelProvider(notebookKernel);
+    const notebookKernelProvider = new DotNetInteractiveNotebookKernelProvider(notebookKernel, clientMapper);
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookContentProvider));
     context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorDib, notebookKernelProvider));
     context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorJupyter, notebookKernelProvider));
-    context.subscriptions.push(vscode.notebook.onDidChangeActiveNotebookKernel(async e => await updateDocumentMetadata(e)));
+    context.subscriptions.push(vscode.notebook.onDidChangeActiveNotebookKernel(async e => await updateDocumentMetadata(e, clientMapper)));
     context.subscriptions.push(vscode.notebook.onDidChangeCellLanguage(async e => await updateCellLanguageInMetadata(e)));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(registerLanguageProviders(clientMapper, diagnosticDelay));
@@ -103,7 +103,7 @@ async function updateCellLanguageInMetadata(languageChangeEvent: { cell: vscode.
     }
 }
 
-async function updateDocumentMetadata(e: { document: vscode.NotebookDocument, kernel: vscode.NotebookKernel | undefined }) {
+async function updateDocumentMetadata(e: { document: vscode.NotebookDocument, kernel: vscode.NotebookKernel | undefined }, clientMapper: ClientMapper) {
     if (e.kernel?.id === KernelId) {
         // update document language
         e.document.languages = notebookCellLanguages;
@@ -127,6 +127,9 @@ async function updateDocumentMetadata(e: { document: vscode.NotebookDocument, ke
 
         edit.replaceNotebookCells(e.document.uri, 0, e.document.cells.length, cellData);
         await vscode.workspace.applyEdit(edit);
+
+        // force creation of the client so we don't have to wait for the user to execute a cell to get the tool
+        await clientMapper.getOrAddClient(e.document.uri);
     }
 }
 

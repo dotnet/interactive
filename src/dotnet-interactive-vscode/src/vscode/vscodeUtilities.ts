@@ -5,6 +5,7 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import { Eol, WindowsEol, NonWindowsEol } from "../interfaces";
 import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan } from "../contracts";
+import { ClientMapper } from '../clientMapper';
 
 function convertToPosition(linePosition: LinePosition): vscode.Position {
     return new vscode.Position(linePosition.line, linePosition.character);
@@ -62,4 +63,21 @@ export function getEol(): Eol {
 
 export function isUnsavedNotebook(uri: vscode.Uri): boolean {
     return uri.scheme === 'untitled';
+}
+
+export function configureWebViewMessaging(webview: vscode.NotebookCommunication, documentUri: vscode.Uri, clientMapper: ClientMapper) {
+    webview.onDidReceiveMessage(async (message) => {
+        switch (message.command) {
+            case "getHttpApiEndpoint":
+                const client = await clientMapper.getOrAddClient(documentUri);
+                const uri = client.tryGetProperty<vscode.Uri>("externalUri");
+                webview.postMessage({ command: "configureFactories", endpointUri: uri?.toString() });
+
+                clientMapper.onClientCreate(documentUri, async (client) => {
+                    const uri = client.tryGetProperty<vscode.Uri>("externalUri");
+                    await webview.postMessage({ command: "resetFactories", endpointUri: uri?.toString() });
+                });
+                break;
+        }
+    });
 }

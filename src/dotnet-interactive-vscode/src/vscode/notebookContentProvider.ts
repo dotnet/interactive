@@ -7,7 +7,7 @@ import { ClientMapper } from '../clientMapper';
 import { notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook } from '../interactiveNotebook';
 import { Eol } from '../interfaces';
 import { NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookCellTextOutput, NotebookDocument } from '../contracts';
-import { getEol, isUnsavedNotebook } from './vscodeUtilities';
+import { configureWebViewMessaging, getEol, isUnsavedNotebook } from './vscodeUtilities';
 
 import { isDisplayOutput, isErrorOutput, isTextOutput } from '../utilities';
 
@@ -67,20 +67,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     }
 
     async resolveNotebook(document: vscode.NotebookDocument, webview: vscode.NotebookCommunication): Promise<void> {
-        webview.onDidReceiveMessage(async (message) => {
-            switch (message.command) {
-                case "getHttpApiEndpoint":
-                    const client = await this.clientMapper.getOrAddClient(document.uri);
-                    const uri = client.tryGetProperty<vscode.Uri>("externalUri");
-                    webview.postMessage({ command: "configureFactories", endpointUri: uri?.toString() });
-
-                    this.clientMapper.onClientCreate(document.uri, async (client) => {
-                        const uri = client.tryGetProperty<vscode.Uri>("externalUri");
-                        await webview.postMessage({ command: "resetFactories", endpointUri: uri?.toString() });
-                    });
-                    break;
-            }
-        });
+        configureWebViewMessaging(webview, document.uri, this.clientMapper);
     }
 
     saveNotebook(document: vscode.NotebookDocument, _cancellation: vscode.CancellationToken): Promise<void> {
