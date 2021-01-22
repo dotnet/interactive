@@ -6,12 +6,18 @@ import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOut
 import { ProcessStart } from "./interfaces";
 import { Uri } from './interfaces/vscode';
 
-export function processArguments(template: { args: Array<string>, workingDirectory: string }, notebookPath: string, dotnetPath: string, globalStoragePath: string): ProcessStart {
+export function processArguments(template: { args: Array<string>, workingDirectory: string }, notebookPath: string, fallbackWorkingDirectory: string, dotnetPath: string, globalStoragePath: string): ProcessStart {
+    let workingDirectory = path.parse(notebookPath).dir;
+    if (workingDirectory === '') {
+        workingDirectory = fallbackWorkingDirectory;
+    }
+
     let map: { [key: string]: string } = {
         'dotnet_path': dotnetPath,
         'global_storage_path': globalStoragePath,
-        'working_dir': path.dirname(notebookPath)
+        'working_dir': workingDirectory
     };
+
     let processed = template.args.map(a => performReplacement(a, map));
     return {
         command: processed[0],
