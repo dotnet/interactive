@@ -15,10 +15,10 @@ import { IDotnetAcquireResult } from '../interfaces/dotnet';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
 import compareVersions = require("compare-versions");
-import { DotNetCellMetadata, getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, withDotNetMetadata } from '../ipynbUtilities';
+import { DotNetCellMetadata, getLanguageInfoMetadata, withDotNetMetadata } from '../ipynbUtilities';
 import { processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
-import { DotNetInteractiveNotebookKernel, KernelId } from './notebookKernel';
+import { DotNetInteractiveNotebookKernel, KernelId, updateCellLanguages } from './notebookKernel';
 import { DotNetInteractiveNotebookKernelProvider } from './notebookKernelProvider';
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -113,27 +113,9 @@ async function updateDocumentMetadata(e: { document: vscode.NotebookDocument, ke
     if (e.kernel?.id === KernelId) {
         // update document language
         e.document.languages = notebookCellLanguages;
-        const documentLanguageInfo = getLanguageInfoMetadata(e.document.metadata);
 
-        const edit = new vscode.WorkspaceEdit();
-
-        // update cell language
-        let cellData: Array<vscode.NotebookCellData> = [];
-        for (const cell of e.document.cells) {
-            const cellMetadata = getDotNetMetadata(cell.metadata);
-            const cellText = cell.document.getText();
-            const newLanguage = getCellLanguage(cellText, cellMetadata, documentLanguageInfo, cell.language);
-            cellData.push({
-                cellKind: cell.cellKind,
-                source: cellText,
-                language: newLanguage,
-                outputs: cell.outputs,
-                metadata: cell.metadata,
-            });
-        }
-
-        edit.replaceNotebookCells(e.document.uri, 0, e.document.cells.length, cellData);
-        await vscode.workspace.applyEdit(edit);
+        // update cell languages
+        await updateCellLanguages(e.document);
 
         // force creation of the client so we don't have to wait for the user to execute a cell to get the tool
         await clientMapper.getOrAddClient(e.document.uri);
