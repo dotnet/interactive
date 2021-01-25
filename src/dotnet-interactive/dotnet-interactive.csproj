@@ -134,7 +134,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="NOTICE.txt">
+    <None Include="..\..\NOTICE.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
