@@ -9,6 +9,7 @@ import { CellOutput } from '../interfaces/vscode';
 import { getDiagnosticCollection } from './diagnostics';
 import { getSimpleLanguage } from "../interactiveNotebook";
 import { Diagnostic, DiagnosticSeverity } from "../contracts";
+import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata } from '../ipynbUtilities';
 
 export const KernelId: string = 'dotnet-interactive';
 
@@ -60,6 +61,8 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
                 runState: vscode.NotebookCellRunState.Error,
                 lastRunDuration: Date.now() - startTime,
             });
+        }).then(async () => {
+            await updateCellLanguages(document);
         });
     }
 
@@ -86,6 +89,34 @@ export async function updateCellOutputs(document: vscode.NotebookDocument, cell:
     if (cellIndex >= 0) {
         const edit = new vscode.WorkspaceEdit();
         edit.replaceNotebookCellOutput(document.uri, cellIndex, outputs);
+        await vscode.workspace.applyEdit(edit);
+    }
+}
+
+export async function updateCellLanguages(document: vscode.NotebookDocument): Promise<void> {
+    const documentLanguageInfo = getLanguageInfoMetadata(document.metadata);
+
+    // update cell language
+    let applyUpdate = false;
+    let cellDatas: Array<vscode.NotebookCellData> = [];
+    for (const cell of document.cells) {
+        const cellMetadata = getDotNetMetadata(cell.metadata);
+        const cellText = cell.document.getText();
+        const newLanguage = getCellLanguage(cellText, cellMetadata, documentLanguageInfo, cell.language);
+        const cellData = {
+            cellKind: cell.cellKind,
+            source: cellText,
+            language: newLanguage,
+            outputs: cell.outputs,
+            metadata: cell.metadata,
+        };
+        cellDatas.push(cellData);
+        applyUpdate ||= cell.language !== newLanguage;
+    }
+
+    if (applyUpdate) {
+        const edit = new vscode.WorkspaceEdit();
+        edit.replaceNotebookCells(document.uri, 0, document.cells.length, cellDatas);
         await vscode.workspace.applyEdit(edit);
     }
 }
