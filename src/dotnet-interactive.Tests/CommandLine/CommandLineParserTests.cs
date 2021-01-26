@@ -120,6 +120,14 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         }
 
         [Fact]
+        public void jupyter_command_help_shows_default_port_range()
+        {
+            _parser.Invoke("jupyter -h", _console);
+
+            _console.Out.ToString().Should().Contain("default: 1000-3000");
+        }
+
+        [Fact]
         public void jupyter_install_command_parses_path_option()
         {
             Directory.CreateDirectory(_kernelSpecInstallPath.FullName);

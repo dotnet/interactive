@@ -221,7 +221,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     httpPortRangeOption,
                     new Argument<FileInfo>
                     {
-                        Name = "connection-file"
+                        Name = "connection-file",
+                        Description = "The path to a connection file provided by Jupyter"
                     }.ExistingOnly()
                 };
 
