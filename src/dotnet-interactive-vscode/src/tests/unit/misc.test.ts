@@ -21,7 +21,7 @@ describe('Miscellaneous tests', () => {
             ],
             workingDirectory: '{global_storage_path}'
         };
-        let actual = processArguments(template, 'replacement-working-dir/notebook-file.dib', 'replacement-dotnet-path', 'replacement-global-storage-path');
+        let actual = processArguments(template, 'replacement-working-dir/notebook-file.dib', 'unused-working-dir', 'replacement-dotnet-path', 'replacement-global-storage-path');
         expect(actual).to.deep.equal({
             command: 'replacement-dotnet-path',
             args: [
@@ -34,6 +34,26 @@ describe('Miscellaneous tests', () => {
                 'replacement-working-dir'
             ],
             workingDirectory: 'replacement-global-storage-path'
+        });
+    });
+
+    it(`uses the fallback working directory when it can't be reasonably determined`, () => {
+        const template = {
+            args: [
+                '{dotnet_path}',
+                '--working-dir',
+                '{working_dir}'
+            ],
+            workingDirectory: '{global_storage_path}'
+        };
+        let actual = processArguments(template, 'notebook-file-with-no-dir.dib', 'fallback-working-dir', 'dotnet-path', 'global-storage-path');
+        expect(actual).to.deep.equal({
+            command: 'dotnet-path',
+            args: [
+                '--working-dir',
+                'fallback-working-dir'
+            ],
+            workingDirectory: 'global-storage-path'
         });
     });
 

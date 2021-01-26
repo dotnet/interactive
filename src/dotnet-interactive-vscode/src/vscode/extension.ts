@@ -44,7 +44,13 @@ export async function activate(context: vscode.ExtensionContext) {
             args: kernelTransportArgs,
             workingDirectory: config.get<string>('kernelTransportWorkingDirectory')!
         };
-        const processStart = processArguments(argsTemplate, notebookPath, dotnetPath, launchOptions!.workingDirectory);
+
+        // ensure a reasonable working directory is selected
+        const fallbackWorkingDirectory = (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0)
+            ? vscode.workspace.workspaceFolders[0].uri.fsPath
+            : '.';
+
+        const processStart = processArguments(argsTemplate, notebookPath, fallbackWorkingDirectory, dotnetPath, launchOptions!.workingDirectory);
         let notification = {
             displayError: async (message: string) => { await vscode.window.showErrorMessage(message, { modal: false }); },
             displayInfo: async (message: string) => { await vscode.window.showInformationMessage(message, { modal: false }); },
