@@ -25,7 +25,6 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 
         public IEnumerable<ApplicationInsightsEntryFormat> Filter(object objectToFilter)
         {
-         
             if (objectToFilter == null)
             {
                 return new List<ApplicationInsightsEntryFormat>();
@@ -54,7 +53,6 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                 {
                     result.Add(CreateEntry(entryItems));
                 }
-
             }
 
             return result.Select(r => r.WithAppliedToPropertiesValue(_hash, name => !_clearTextProperties.Contains(name))).ToList();
@@ -110,7 +108,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                 {
                     case OptionItem optItem:
                         {
-                            var optionValue = commandResult.OptionResult(optItem.Option).GetValueOrDefault()?.ToString();
+                            var optionValue = commandResult.Children.OfType<OptionResult>().FirstOrDefault(o => o.Option.HasAlias(optItem.Option))?.GetValueOrDefault()?.ToString();
                             if (optionValue != null && optItem.Values.Contains(optionValue))
                             {
                                 entryItems.Add(new KeyValuePair<string, string>(optItem.EntryKey, optionValue));

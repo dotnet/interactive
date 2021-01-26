@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20478.1" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.21072.2" />
   </ItemGroup>
 
 </Project>

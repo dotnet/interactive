@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
@@ -117,7 +118,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                             if (parseResult.Errors.Count == 0)
                             {
-                                var value = parseResult.CommandResult.GetArgumentValueOrDefault<PackageReferenceOrFileInfo>("package");
+                                var value = parseResult.ValueForArgument<PackageReferenceOrFileInfo>("package");
 
                                 if (value?.Value is FileInfo)
                                 {
@@ -175,6 +176,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                    .Configuration
                    .RootCommand
                    .Children
+                   .OfType<IIdentifierSymbol>()
                    .Any(c => c.HasAlias(directiveName));
         }
 
