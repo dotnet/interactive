@@ -4,14 +4,14 @@ open System
 open System.IO
 open FSharp.Compiler.SourceCodeServices
 open Utils
-open FSharp.Compiler.Range
 open FSharp.Compiler
 open FSharp.Compiler.Text
+open FSharp.Compiler.Text.Pos
 open FsAutoComplete.Utils
 
 [<RequireQualifiedAccess>]
 type internal FindDeclarationResult =
-    | Range of FSharp.Compiler.Range.range
+    | Range of FSharp.Compiler.Text.Range
     /// The declaration refers to a file.
     | File of string
 
@@ -99,14 +99,14 @@ type internal ParseAndCheckResults
       let declarations = checkResults.GetDeclarationLocation(pos.Line, col, lineStr, identIsland, false)
 
       /// these are all None because you can't easily get the source file from the external symbol information here.
-      let tryGetSourceRangeForSymbol (sym: ExternalSymbol): (string * int * int) option =
+      let tryGetSourceRangeForSymbol (sym: FSharpExternalSymbol): (string * int * int) option =
         match sym with
-        | ExternalSymbol.Type name -> None
-        | ExternalSymbol.Constructor(typeName, args) -> None
-        | ExternalSymbol.Method(typeName, name, paramSyms, genericArity) -> None
-        | ExternalSymbol.Field(typeName, name) -> None
-        | ExternalSymbol.Event(typeName, name) -> None
-        | ExternalSymbol.Property(typeName, name) -> None
+        | FSharpExternalSymbol.Type name -> None
+        | FSharpExternalSymbol.Constructor(typeName, args) -> None
+        | FSharpExternalSymbol.Method(typeName, name, paramSyms, genericArity) -> None
+        | FSharpExternalSymbol.Field(typeName, name) -> None
+        | FSharpExternalSymbol.Event(typeName, name) -> None
+        | FSharpExternalSymbol.Property(typeName, name) -> None
 
       // attempts to manually discover symbol use and externalsymbol information for a range that doesn't exist in a local file
       // bugfix/workaround for FCS returning invalid declfound for f# members.
@@ -417,7 +417,7 @@ type internal ParseAndCheckResults
 
   member __.TryGetCompletions (pos: pos) (lineStr: LineStr) filter (getAllSymbols : unit -> AssemblySymbol list) = async {
     try
-      let longName = FSharp.Compiler.QuickParse.GetPartialLongNameEx(lineStr, pos.Column - 2)
+      let longName = QuickParse.GetPartialLongNameEx(lineStr, pos.Column - 2)
       let residue = longName.PartialIdent
 
       let getAllSymbols() =
@@ -436,14 +436,14 @@ type internal ParseAndCheckResults
       let results = checkResults.GetDeclarationListInfo(Some parseResults, pos.Line, lineStr, longName, getAllSymbols)
 
       let getKindPriority = function
-        | CompletionItemKind.CustomOperation -> -1
-        | CompletionItemKind.Property -> 0
-        | CompletionItemKind.Field -> 1
-        | CompletionItemKind.Method (isExtension = false) -> 2
-        | CompletionItemKind.Event -> 3
-        | CompletionItemKind.Argument -> 4
-        | CompletionItemKind.Other -> 5
-        | CompletionItemKind.Method (isExtension = true) -> 6
+        | FSharpCompletionItemKind.CustomOperation -> -1
+        | FSharpCompletionItemKind.Property -> 0
+        | FSharpCompletionItemKind.Field -> 1
+        | FSharpCompletionItemKind.Method (isExtension = false) -> 2
+        | FSharpCompletionItemKind.Event -> 3
+        | FSharpCompletionItemKind.Argument -> 4
+        | FSharpCompletionItemKind.Other -> 5
+        | FSharpCompletionItemKind.Method (isExtension = true) -> 6
 
       let decls =
         match filter with

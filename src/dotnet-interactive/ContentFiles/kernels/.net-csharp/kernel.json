@@ -8,5 +8,11 @@
     "{connection_file}"
   ],
   "display_name": ".NET (C#)",
-  "language": "C#"
+  "language": "C#",
+  "metadata": {
+    "vscode": {
+      "extension_id": "ms-dotnettools.dotnet-interactive-vscode",
+      "kernel_id": "dotnet-interactive"
+    }
+  }
 }

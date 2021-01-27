@@ -34,6 +34,10 @@ export function getNotebookSpecificLanguage(language: string): string {
     return language;
 }
 
+export function isDotnetInteractiveLanguage(language: string): boolean {
+    return language.startsWith(notebookLanguagePrefix);
+}
+
 export function languageToCellKind(language: string): CellKind {
     switch (language) {
         case 'markdown':

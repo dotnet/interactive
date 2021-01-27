@@ -15,6 +15,7 @@ namespace Microsoft.DotNet.Interactive.Notebook
     public static class NotebookFileFormatHandler
     {
         private const string InteractiveNotebookCellSpecifier = "#!";
+        public const string MetadataNamespace = "dotnet_interactive";
 
         public static NotebookDocument Parse(string fileName, byte[] rawData, string defaultLanguage, IDictionary<string, string> kernelLanguageAliases)
         {
@@ -131,6 +132,9 @@ namespace Microsoft.DotNet.Interactive.Notebook
                         //
                         // figure out cell language and content
                         //
+                        var cellMetadata = cell["metadata"]?[MetadataNamespace];
+                        var languageFromMetadata = cellMetadata?["language"]?.ToObject<string>();
+
                         var sourceLines = GetTextLines(cell["source"]);
 
                         var possibleCellLanguage = sourceLines.Count > 0 && sourceLines[0].StartsWith("#!")
@@ -139,7 +143,7 @@ namespace Microsoft.DotNet.Interactive.Notebook
 
                         var (cellLanguage, cellSourceLines) = possibleCellLanguage != null && kernelLanguageAliases.TryGetValue(possibleCellLanguage, out var actualCellLanguage)
                             ? (actualCellLanguage, sourceLines.Skip(1))
-                            : (defaultLanguage, sourceLines);
+                            : (languageFromMetadata ?? defaultLanguage, sourceLines);
 
                         var source = string.Join("\n", cellSourceLines); // normalize all line endings to `\n`
 
@@ -253,7 +257,6 @@ namespace Microsoft.DotNet.Interactive.Notebook
                         });
                         break;
                     default:
-                        var cellHeader = cell.Language == "csharp" ? "" : $"{InteractiveNotebookCellSpecifier}{cell.Language}\n";
                         var outputs = cell.Outputs.Select<NotebookCellOutput, object>(o => o switch
                             {
                                 NotebookCellDisplayOutput displayOutput => new
@@ -282,8 +285,14 @@ namespace Microsoft.DotNet.Interactive.Notebook
                         {
                             cell_type = "code",
                             execution_count = 1,
-                            metadata = new { },
-                            source = AddTrailingNewlinesToAllButLast(NotebookParsingExtensions.SplitAsLines(cellHeader + cell.Contents)),
+                            metadata = new
+                            {
+                                dotnet_interactive = new
+                                {
+                                    language = cell.Language
+                                }
+                            },
+                            source = AddTrailingNewlinesToAllButLast(NotebookParsingExtensions.SplitAsLines(cell.Contents)),
                             outputs
                         });
                         break;

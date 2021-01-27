@@ -102,7 +102,7 @@ export function registerLanguageProviders(clientMapper: ClientMapper, diagnostic
     disposables.push(vscode.languages.registerHoverProvider(languages, new HoverProvider(clientMapper)));
     disposables.push(vscode.workspace.onDidChangeTextDocument(e => {
         if (vscode.languages.match(notebookCellLanguages, e.document)) {
-            const cell = vscode.notebook.activeNotebookEditor?.document.cells.find(cell => cell.document === e.document);
+            const cell = vscode.window.activeNotebookEditor?.document.cells.find(cell => cell.document === e.document);
             if (cell) {
                 notebookCellChanged(clientMapper, e.document, getSimpleLanguage(cell.language), diagnosticDelay, diagnostics => {
                     const collection = getDiagnosticCollection(e.document.uri);

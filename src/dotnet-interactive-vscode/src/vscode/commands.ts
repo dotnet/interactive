@@ -3,24 +3,28 @@
 
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
-import * as path from 'path';
 import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
 import { ClientMapper } from '../clientMapper';
-import { getEol, isUnsavedNotebook } from './vscodeUtilities';
+import { getEol } from './vscodeUtilities';
 import { toNotebookDocument } from './notebookContentProvider';
-import { updateCellMetadata } from './notebookKernel';
+import { KernelId, updateCellMetadata } from './notebookKernel';
 
-export function registerAcquisitionCommands(context: vscode.ExtensionContext, dotnetPath: string) {
+export function registerAcquisitionCommands(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
     const minDotNetInteractiveVersion = config.get<string>('minimumInteractiveToolVersion');
     const interactiveToolSource = config.get<string>('interactiveToolSource');
 
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.acquire', async (args?: InstallInteractiveArgs | undefined): Promise<InteractiveLaunchOptions | undefined> => {
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.acquire', async (args?: InstallInteractiveArgs | string | undefined): Promise<InteractiveLaunchOptions> => {
         if (!args) {
+            // unspecified; the best we can do is hope it's on the path
+            args = 'dotnet';
+        }
+
+        if (typeof args === 'string') {
             args = {
-                dotnetPath: dotnetPath,
-                toolVersion: undefined
+                dotnetPath: args,
+                toolVersion: undefined,
             };
         }
 
@@ -72,34 +76,38 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.restartCurrentNotebookKernel', async (document?: vscode.NotebookDocument | undefined) => {
         if (!document) {
-            if (!vscode.notebook.activeNotebookEditor) {
+            if (!vscode.window.activeNotebookEditor) {
                 // no notebook to operate on
                 return;
             }
 
-            document = vscode.notebook.activeNotebookEditor.document;
+            document = vscode.window.activeNotebookEditor.document;
         }
 
-        await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', document);
-        const _client = await clientMapper.getOrAddClient(document.uri);
+        if (document) {
+            await vscode.commands.executeCommand('dotnet-interactive.stopCurrentNotebookKernel', document);
+            const _client = await clientMapper.getOrAddClient(document.uri);
+        }
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopCurrentNotebookKernel', async (document?: vscode.NotebookDocument | undefined) => {
         if (!document) {
-            if (!vscode.notebook.activeNotebookEditor) {
+            if (!vscode.window.activeNotebookEditor) {
                 // no notebook to operate on
                 return;
             }
 
-            document = vscode.notebook.activeNotebookEditor.document;
+            document = vscode.window.activeNotebookEditor.document;
         }
 
-        const d = document;
-        document.cells.forEach(async cell => {
-            await updateCellMetadata(d, cell, { runState: vscode.NotebookCellRunState.Idle });
-        });
+        if (document) {
+            const d = document;
+            document.cells.forEach(async cell => {
+                await updateCellMetadata(d, cell, { runState: vscode.NotebookCellRunState.Idle });
+            });
 
-        clientMapper.closeClient(document.uri);
+            clientMapper.closeClient(document.uri);
+        }
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.stopAllNotebookKernels', async () => {
@@ -118,30 +126,9 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
         '.NET Interactive Notebooks': ['dib', 'dotnet-interactive']
     };
 
-    function workspaceHasUnsavedNotebookWithName(fileName: string): boolean {
-        return vscode.workspace.textDocuments.findIndex(textDocument => {
-            if (textDocument.notebook) {
-                const notebookUri = textDocument.notebook.uri;
-                return isUnsavedNotebook(notebookUri) && path.basename(notebookUri.fsPath) === fileName;
-            }
-
-            return false;
-        }) >= 0;
-    }
-
-    function getNewNotebookName(): string {
-        let suffix = 1;
-        while (workspaceHasUnsavedNotebookWithName(`Untitled-${suffix}.ipynb`)) {
-            suffix++;
-        }
-
-        return `Untitled-${suffix}.ipynb`;
-    }
-
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebook', async () => {
-        const fileName = getNewNotebookName();
-        const newUri = vscode.Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
-        await vscode.commands.executeCommand('vscode.openWith', newUri, 'dotnet-interactive-jupyter');
+        await vscode.commands.executeCommand('jupyter.createnewnotebook');
+        await switchToInteractiveKernel();
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
@@ -161,11 +148,12 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
             }
         }
 
-        await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'dotnet-interactive-jupyter');
+        await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'jupyter-notebook');
+        await switchToInteractiveKernel();
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {
-        if (vscode.notebook.activeNotebookEditor) {
+        if (vscode.window.activeNotebookEditor) {
             const uri = await vscode.window.showSaveDialog({
                 filters: fileFormatFilters
             });
@@ -174,13 +162,19 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
                 return;
             }
 
-            const { document } = vscode.notebook.activeNotebookEditor;
+            const { document } = vscode.window.activeNotebookEditor;
             const notebook = toNotebookDocument(document);
             const client = await clientMapper.getOrAddClient(uri);
             const buffer = await client.serializeNotebook(uri.fsPath, notebook, eol);
             await vscode.workspace.fs.writeFile(uri, buffer);
         }
     }));
+}
+
+async function switchToInteractiveKernel() {
+    const extension = 'ms-dotnettools.dotnet-interactive-vscode';
+    const id = KernelId;
+    await vscode.commands.executeCommand('notebook.selectKernel', { extension, id });
 }
 
 // callbacks used to install interactive tool

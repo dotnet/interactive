@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Assent;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
+using Microsoft.DotNet.Interactive.Notebook;
 using Xunit;
 using Message = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
 
@@ -145,6 +146,39 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                 date: DateTime.MinValue.ToString("yyyy-MM-ddTHH:mm:ssZ"));
 
             var replyMessage = new Message(header, content: displayData);
+            sender.Send(replyMessage);
+
+            var encoded = socket.GetEncodedMessage();
+            this.Assent(encoded, _configuration);
+        }
+
+        [Fact]
+        public void Input_cell_honors_custom_metadata()
+        {
+            var socket = new TextSocket();
+            var sender = new MessageSender(socket, new SignatureValidator("key", "HMACSHA256"));
+            var transient = new Dictionary<string, object> { { "display_id", "none" } };
+            var output = "some result";
+            var executeResult = new ExecuteResult(
+                12,
+                transient: transient,
+                data: new Dictionary<string, object> {
+                    { "text/html", output },
+                    { "text/plain", output }
+
+                });
+
+            var header = new Header(messageType: JupyterMessageContentTypes.ExecuteResult, messageId: Guid.Empty.ToString(),
+                version: "5.3", username: Constants.USERNAME, session: "test session",
+                date: DateTime.MinValue.ToString("yyyy-MM-ddTHH:mm:ssZ"));
+
+            var metaData = new Dictionary<string, object>()
+            {
+                { "dotnet_interactive", new InputCellMetadata() { Language = "fsharp" } }
+            };
+
+            var replyMessage = new Message(header, content: executeResult, metaData: metaData);
+
             sender.Send(replyMessage);
 
             var encoded = socket.GetEncodedMessage();

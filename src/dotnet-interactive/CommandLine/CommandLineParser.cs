@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.AspNetCore;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -220,7 +221,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     httpPortRangeOption,
                     new Argument<FileInfo>
                     {
-                        Name = "connection-file"
+                        Name = "connection-file",
+                        Description = "The path to a connection file provided by Jupyter"
                     }.ExistingOnly()
                 };
 
@@ -471,7 +473,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseWho()
                     .UseXplot()
                     .UseMathAndLaTeX()
-                    .UseDotNetVariableSharing(),
+                    .UseDotNetVariableSharing()
+                    .UseAspNetCore(),
                 new[] { "c#", "C#" });
 
             compositeKernel.Add(

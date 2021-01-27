@@ -111,6 +111,7 @@ export class InteractiveClient {
                 }
 
                 switch (eventEnvelope.eventType) {
+                    // if kernel languages were added, handle those events here
                     case CommandSucceededType:
                         resolve();
                         break;

@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             return false;
         }
 
-        public override Task SetVariableAsync(string name, object value)
+        public override Task SetVariableAsync(string name, object value, Type declaredType)
         {
             _lazyPwsh.Value.Runspace.SessionStateProxy.PSVariable.Set(name, value);
             return Task.CompletedTask;

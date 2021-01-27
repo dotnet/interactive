@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive
         {
         }
 
-        public override Task SetVariableAsync(string name, object value)
+        public override Task SetVariableAsync(string name, object value, Type declaredType = null)
         {
             _values[name] = value;
             return Task.CompletedTask;

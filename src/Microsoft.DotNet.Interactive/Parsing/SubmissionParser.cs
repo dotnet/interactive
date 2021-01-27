@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                         if (parseResult.CommandResult.Command.Name == "#r")
                         {
-                            var value = parseResult.CommandResult.GetArgumentValueOrDefault<PackageReferenceOrFileInfo>("package");
+                            var value = parseResult.ValueForArgument<PackageReferenceOrFileInfo>("package");
 
                             if (value.Value is FileInfo)
                             {

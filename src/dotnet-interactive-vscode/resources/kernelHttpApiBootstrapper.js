@@ -3,6 +3,15 @@
         global = window;
     }
     const vscode = acquireVsCodeApi();
+    const timerId = global.setInterval(() => {
+        vscode.postMessage({
+            command: 'getHttpApiEndpoint'
+        });
+    }, 500);
+
+    function clearApiRequest() {
+        global.clearInterval(timerId);
+    }
 
     // Handle the message inside the webview
     global.addEventListener('message', event => {
@@ -11,11 +20,13 @@
 
         switch (message.command) {
             case 'resetFactories':
+                clearApiRequest();
                 vscode.postMessage({
                     command: 'getHttpApiEndpoint'
                 });
                 break;
             case 'configureFactories':
+                clearApiRequest();
                 let uri = message.endpointUri + "";
                 if (!uri.endsWith("/")) {
                     uri += "/";
@@ -78,10 +89,5 @@
                 }
                 break;
         }
-    });
-
-    console.log("request http api endpoint");
-    vscode.postMessage({
-        command: 'getHttpApiEndpoint'
     });
 })(window);

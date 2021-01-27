@@ -381,3 +381,6 @@ src/Microsoft.DotNet.Interactive.nteract.js/dist/
 src/Microsoft.DotNet.Interactive.nteract.js/lib/
 
 .DS_Store
+
+# Rider IDE cache files
+.idea/

@@ -27,6 +27,8 @@ open Microsoft.DotNet.Interactive.Formatting
 open FSharp.Compiler.Interactive.Shell
 open FSharp.Compiler.Scripting
 open FSharp.Compiler.SourceCodeServices
+open FSharp.Compiler.Text
+open FSharp.Compiler.Text.Pos
 open FsAutoComplete
 
 type FSharpKernel () as this =
@@ -154,7 +156,7 @@ type FSharpKernel () as this =
             return CompletionItem(declarationItem.Name, kind, filterText=filterText, documentation=documentation)
         }
 
-    let getDiagnostic (error: FSharpErrorInfo) =
+    let getDiagnostic (error: FSharpDiagnostic) =
         // F# errors are 1-based but should be 0-based for diagnostics, however, 0-based errors are still valid to report
         let diagLineDelta = if error.Start.Line = 0 then 0 else -1
         let startPos = LinePosition(error.Start.Line + diagLineDelta, error.Start.Column)
@@ -162,8 +164,10 @@ type FSharpKernel () as this =
         let linePositionSpan = LinePositionSpan(startPos, endPos)
         let severity =
             match error.Severity with
-            | FSharpErrorSeverity.Error -> DiagnosticSeverity.Error
-            | FSharpErrorSeverity.Warning -> DiagnosticSeverity.Warning
+            | FSharpDiagnosticSeverity.Error -> DiagnosticSeverity.Error
+            | FSharpDiagnosticSeverity.Warning -> DiagnosticSeverity.Warning
+            | FSharpDiagnosticSeverity.Hidden -> DiagnosticSeverity.Hidden
+            | FSharpDiagnosticSeverity.Info -> DiagnosticSeverity.Info
         let errorId = sprintf "FS%04i" error.ErrorNumber
         Diagnostic(linePositionSpan, severity, errorId, error.Message)
 
@@ -181,7 +185,7 @@ type FSharpKernel () as this =
             let diagnostics = fsiDiagnostics |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
             
             // script.Eval can succeed with error diagnostics, see https://github.com/dotnet/interactive/issues/691
-            let isError = fsiDiagnostics |> Array.exists (fun d -> d.Severity = FSharpErrorSeverity.Error)
+            let isError = fsiDiagnostics |> Array.exists (fun d -> d.Severity = FSharpDiagnosticSeverity.Error)
 
             let formattedDiagnostics =
                 fsiDiagnostics
@@ -240,7 +244,7 @@ type FSharpKernel () as this =
             let lineContent = text.GetLineString(line - 1)
             let! value =
                 async {
-                    match! res.TryGetSymbolUse (FSharp.Compiler.Range.mkPos line col) lineContent with
+                    match! res.TryGetSymbolUse (mkPos line col) lineContent with
                     | Ok (mine, _others) ->
                         let fullName = 
                             match mine with
@@ -265,7 +269,7 @@ type FSharpKernel () as this =
                         return None
                 }
             
-            match! res.TryGetToolTipEnhanced (FSharp.Compiler.Range.mkPos line col) lineContent with
+            match! res.TryGetToolTipEnhanced (mkPos line col) lineContent with
             | Result.Ok (startCol, endCol, tip, signature, footer, typeDoc) ->
                 let fsiModuleRx = System.Text.RegularExpressions.Regex @"FSI_[0-9]+\."
                 let stdinRx = System.Text.RegularExpressions.Regex @"Stdin\."
@@ -291,7 +295,7 @@ type FSharpKernel () as this =
                                         | Some (Some value) when not (Reflection.FSharpType.IsFunction value.ReflectionType) -> 
                                             let valueString = sprintf "%0A" value.ReflectionValue
                                             let lines = valueString.Split([|'\n'|], StringSplitOptions.RemoveEmptyEntries) |> Array.toList
-                                            
+
                                             match lines with
                                             | [] -> 
                                                 signature
@@ -321,10 +325,10 @@ type FSharpKernel () as this =
                                     newFooter
                             ]
 
-                        FormattedValue("text/markdown", stdinRx.Replace(fsiModuleRx.Replace(markdown, ""), ""))
+                        FormattedValue("text/markdown", stdinRx.Replace(fsiModuleRx.Replace(markdown, "").Replace("\r\n", "\n"), ""))
                     )
                     |> Seq.toArray
-                
+
                 let sp = LinePosition(requestHoverText.LinePosition.Line, startCol)
                 let ep = LinePosition(requestHoverText.LinePosition.Line, endCol)
                 let lps = LinePositionSpan(sp, ep)
@@ -373,7 +377,7 @@ type FSharpKernel () as this =
         | _ ->
             false
 
-    override _.SetVariableAsync(name: string, value: Object) : Task = 
+    override _.SetVariableAsync(name: string, value: Object, [<Optional>] declaredType: Type) : Task = 
         script.Value.Fsi.AddBoundValue(name, value) |> ignore
         Task.CompletedTask
 
