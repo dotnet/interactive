@@ -15,10 +15,10 @@ import { IDotnetAcquireResult } from '../interfaces/dotnet';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
 import compareVersions = require("compare-versions");
-import { DotNetCellMetadata, getLanguageInfoMetadata, withDotNetMetadata } from '../ipynbUtilities';
+import { DotNetCellMetadata, withDotNetMetadata } from '../ipynbUtilities';
 import { processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
-import { DotNetInteractiveNotebookKernel, KernelId, updateCellLanguages } from './notebookKernel';
+import { DotNetInteractiveNotebookKernel, KernelId, updateCellLanguages, updateDocumentKernelspecMetadata } from './notebookKernel';
 import { DotNetInteractiveNotebookKernelProvider } from './notebookKernelProvider';
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -114,7 +114,8 @@ async function updateDocumentMetadata(e: { document: vscode.NotebookDocument, ke
         // update document language
         e.document.languages = notebookCellLanguages;
 
-        // update cell languages
+        // update various metadata
+        await updateDocumentKernelspecMetadata(e.document);
         await updateCellLanguages(e.document);
 
         // force creation of the client so we don't have to wait for the user to execute a cell to get the tool

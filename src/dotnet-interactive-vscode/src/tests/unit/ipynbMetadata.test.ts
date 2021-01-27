@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { expect } from 'chai';
-import { DotNetCellMetadata, getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, LanguageInfoMetadata, withDotNetMetadata } from '../../ipynbUtilities';
+import { DotNetCellMetadata, getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, LanguageInfoMetadata, withDotNetKernelMetadata, withDotNetMetadata } from '../../ipynbUtilities';
 
 describe('ipynb metadata tests', () => {
     describe('document metadata', () => {
@@ -130,6 +130,132 @@ describe('ipynb metadata tests', () => {
             const languageInfoMetadata = getLanguageInfoMetadata(documentMetadata);
             expect(languageInfoMetadata).to.deep.equal({
                 name: undefined
+            });
+        });
+    });
+
+    describe('kernelspec metadata', () => {
+        it(`sets kernelspec data when document metadata is undefined`, () => {
+            const documentMetadata = undefined;
+            const newDocumentMetadata = withDotNetKernelMetadata(documentMetadata);
+            expect(newDocumentMetadata).to.deep.equal({
+                custom: {
+                    metadata: {
+                        kernelspec: {
+                            display_name: '.NET (C#)',
+                            language: 'C#',
+                            name: '.net-csharp',
+                        }
+                    }
+                }
+            });
+        });
+
+        it(`sets kernelspec data when not present`, () => {
+            const documentMetadata = {
+                custom: {
+                }
+            };
+            const newDocumentMetadata = withDotNetKernelMetadata(documentMetadata);
+            expect(newDocumentMetadata).to.deep.equal({
+                custom: {
+                    metadata: {
+                        kernelspec: {
+                            display_name: '.NET (C#)',
+                            language: 'C#',
+                            name: '.net-csharp',
+                        }
+                    }
+                }
+            });
+        });
+
+        it(`doesn't set kernelspec data when already present`, () => {
+            const documentMetadata = {
+                custom: {
+                    metadata: {
+                        kernelspec: {
+                            some_existing_key: 'some existing value'
+                        }
+                    }
+                }
+            };
+            const newDocumentMetadata = withDotNetKernelMetadata(documentMetadata);
+            expect(newDocumentMetadata).to.deep.equal({
+                custom: {
+                    metadata: {
+                        kernelspec: {
+                            some_existing_key: 'some existing value'
+                        }
+                    }
+                }
+            });
+        });
+
+        it(`preserves other metadata while setting kernelspec`, () => {
+            const documentMetadata = {
+                custom: {
+                    metadata: {
+                        some_custom_metadata: {
+                            key1: 'value 1'
+                        }
+                    },
+                    some_other_custom_data: {
+                        key2: 'value 2'
+                    }
+                }
+            };
+            const newDocumentMetadata = withDotNetKernelMetadata(documentMetadata);
+            expect(newDocumentMetadata).to.deep.equal({
+                custom: {
+                    metadata: {
+                        kernelspec: {
+                            display_name: '.NET (C#)',
+                            language: 'C#',
+                            name: '.net-csharp',
+                        },
+                        some_custom_metadata: {
+                            key1: 'value 1'
+                        }
+                    },
+                    some_other_custom_data: {
+                        key2: 'value 2'
+                    }
+                }
+            });
+        });
+
+        it(`preserves other metadata when kernelspec is already present`, () => {
+            const documentMetadata = {
+                custom: {
+                    metadata: {
+                        kernelspec: {
+                            some_existing_key: 'some existing value'
+                        },
+                        some_custom_metadata: {
+                            key1: 'value 1'
+                        }
+                    },
+                    some_other_custom_data: {
+                        key2: 'value 2'
+                    }
+                }
+            };
+            const newDocumentMetadata = withDotNetKernelMetadata(documentMetadata);
+            expect(newDocumentMetadata).to.deep.equal({
+                custom: {
+                    metadata: {
+                        kernelspec: {
+                            some_existing_key: 'some existing value'
+                        },
+                        some_custom_metadata: {
+                            key1: 'value 1'
+                        }
+                    },
+                    some_other_custom_data: {
+                        key2: 'value 2'
+                    }
+                }
             });
         });
     });
