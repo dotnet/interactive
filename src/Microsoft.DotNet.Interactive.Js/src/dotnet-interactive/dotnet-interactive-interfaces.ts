@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelEventEnvelopeObserver, DisposableSubscription, KernelCommandEnvelopeObserver, KernelCommand, KernelEvent, KernelCommandEnvelope } from "./contracts";
+import { KernelEventEnvelopeObserver, DisposableSubscription, KernelCommandEnvelopeObserver, KernelCommand, KernelEvent, KernelCommandEnvelope, KernelEventEnvelope, Disposable } from "./contracts";
 
 
 export interface VariableRequest {
@@ -20,11 +20,19 @@ export interface KernelClient {
     submitCommand(commandType: string, command?: any): Promise<string>;
 }
 
+export interface KernelInvocationContext extends Disposable {
+    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
+    complete(commandEnvelope: KernelCommandEnvelope): void;
+    fail(message?: string): void
+    publish(eventEnvelope: KernelEventEnvelope): void;
+    command: KernelCommandEnvelope;
+}
+
 // Implemented by the client-side kernel.
 export interface Kernel {
     send(command: KernelCommandEnvelope): Promise<void>;
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
-    registerCommandHandler(commandType: string, observer: (envelope: KernelCommandEnvelope) => Promise<void>): void;
+    registerCommandHandler(commandType: string, observer: (envelope: KernelCommandEnvelope, context: KernelInvocationContext) => Promise<void>): void;
 }
 
 export interface DotnetInteractiveClient {

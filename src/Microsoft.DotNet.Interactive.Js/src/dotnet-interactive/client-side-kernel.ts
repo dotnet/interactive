@@ -1,26 +1,49 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import { ClientSideKernelInvocationContext } from "./client-side-kernel-invocation-context";
 import { DisposableSubscription, KernelEventEnvelopeObserver, KernelCommandEnvelope, KernelTransport } from "./contracts";
-import { Kernel } from "./dotnet-interactive-interfaces";
+import { Kernel, KernelInvocationContext } from "./dotnet-interactive-interfaces";
 
 export class ClientSideKernel implements Kernel {
-    private _commandHandlers: { [commandType: string]: (envelope: KernelCommandEnvelope) => Promise<void> } = {};
+    private _commandHandlers: { [commandType: string]: (envelope: KernelCommandEnvelope, context: KernelInvocationContext) => Promise<void> } = {};
 
+    // Is it worth us going to efforts to ensure that the Promise returned here accurately reflects
+    // the command's progress? The only thing that actually calls this is the kernel transport, through
+    // the callback set up by attachKernelToTransport, and the callback is expected to return void, so
+    // nothing is ever going to look at the promise we return here.
     send(command: KernelCommandEnvelope): Promise<void> {
-        // TODO: add this to a queue, and deal with completion properly.
+
         let handler = this._commandHandlers[command.commandType];
         if (handler) {
-            handler(command);
+            let resolvePromise: () => void;
+            let promise = new Promise<void>(r => resolvePromise = r);
+                let _: Promise<void> = (async () => {
+                let context = ClientSideKernelInvocationContext.establish(command);
+                await handler(command, context);
+
+                if (context.command === command) {
+                    context.dispose();
+                } else {
+                    context.complete(command);
+                }
+
+                resolvePromise();
+            })();
+            return promise;
+
+        } else {
+            // TODO: what's the right behaviour if there is no handler?
+            return Promise.reject(`No handler found for command type ${command.commandType}`)
         }
-        return Promise.resolve();
     }
+
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
         // TODO: implement
         return { dispose: () => {} };
     }
 
-    registerCommandHandler(commandType: string, handler: (envelope: KernelCommandEnvelope) => Promise<void>): void {
+    registerCommandHandler(commandType: string, handler: (envelope: KernelCommandEnvelope, context: KernelInvocationContext) => Promise<void>): void {
         // When a registration already existed, we want to overwrite it because we want users to
         // be able to develop handlers iteratively, and it would be unhelpful for handler registration
         // for any particular command to be cumulative.

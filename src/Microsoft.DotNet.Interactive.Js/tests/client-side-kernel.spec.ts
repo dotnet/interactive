@@ -5,7 +5,7 @@ import { expect } from "chai";
 import { describe } from "mocha";
 import { ClientSideKernel } from "../src/dotnet-interactive/client-side-kernel";
 import { KernelCommand, KernelCommandEnvelope, KernelCommandType } from "../src/dotnet-interactive/contracts";
-import { createMockKernelTransport } from "./testSupport";
+import { KernelInvocationContext } from "../src/dotnet-interactive/dotnet-interactive-interfaces";
 
 interface CustomCommand1 extends KernelCommand {
     data: string
@@ -16,6 +16,9 @@ interface CustomCommand2 extends KernelCommand {
 }
 
 describe("dotnet-interactive", () => {
+    let commandType1: KernelCommandType = <KernelCommandType>"CustomCommand1";
+    let commandType2: KernelCommandType = <KernelCommandType>"CustomCommand2";
+
     let makeKernel = async () => {
         let kernel = new ClientSideKernel();
         return kernel;
@@ -24,8 +27,6 @@ describe("dotnet-interactive", () => {
         it("invokes command handler when type matches", async () => {
             var kernel = await makeKernel();
 
-            let commandType1: KernelCommandType = <KernelCommandType>"CustomCommand1";
-            let commandType2: KernelCommandType = <KernelCommandType>"CustomCommand2";
             let command1In: CustomCommand1 = {
                 data: "Test"
             };
@@ -33,10 +34,10 @@ describe("dotnet-interactive", () => {
                 moreData: "Test 2"
             };
 
-            let command1EnvelopesSentToKernel: KernelCommandEnvelope[] = [];
-            let command2EnvelopesSentToKernel: KernelCommandEnvelope[] = [];
-            kernel.registerCommandHandler(commandType1, async env => { command1EnvelopesSentToKernel.push(env); })
-            kernel.registerCommandHandler(commandType2, async env => { command2EnvelopesSentToKernel.push(env); })
+            let handler1Invocations: { envelope: KernelCommandEnvelope, context: KernelInvocationContext }[] = [];
+            let handler2Invocations: { envelope: KernelCommandEnvelope, context: KernelInvocationContext }[] = [];
+            kernel.registerCommandHandler(commandType1, async (envelope, context) => { handler1Invocations.push({ envelope, context }); })
+            kernel.registerCommandHandler(commandType2, async (envelope, context) => { handler2Invocations.push({ envelope, context }); })
 
             await kernel.send({
                 commandType: commandType1,
@@ -47,15 +48,21 @@ describe("dotnet-interactive", () => {
                 command: command2In
             });
 
-            expect(command1EnvelopesSentToKernel.length).to.be.equal(1);
-            expect(command1EnvelopesSentToKernel[0].commandType).to.be.equal(commandType1);
-            let command1SentToKernel = <CustomCommand1>command1EnvelopesSentToKernel[0].command;
-            expect(command1SentToKernel.data).to.be.equal(command1In.data);
+            expect(handler1Invocations.length).to.be.equal(1);
+            let handler1Invocation = handler1Invocations[0];
+            let handler1Envelope = handler1Invocation.envelope;
+            expect(handler1Envelope.commandType).to.be.equal(commandType1);
+            let commandSentToHandler1 = <CustomCommand1>handler1Envelope.command;
+            expect(commandSentToHandler1).to.equal(command1In);
+            expect(handler1Invocation.context).is.not.null;
 
-            expect(command2EnvelopesSentToKernel.length).to.be.equal(1);
-            expect(command2EnvelopesSentToKernel[0].commandType).to.be.equal(commandType2);
-            let command2SentToKernel = <CustomCommand2>command2EnvelopesSentToKernel[0].command;
-            expect(command2SentToKernel.moreData).to.be.equal(command2In.moreData);
+            expect(handler2Invocations.length).to.be.equal(1);
+            let handler2Invocation = handler2Invocations[0];
+            let handler2Envelope = handler2Invocation.envelope;
+            expect(handler2Envelope.commandType).to.be.equal(commandType2);
+            let commandSentToHandler2 = <CustomCommand2>handler2Envelope.command;
+            expect(commandSentToHandler2).to.equal(command2In);
+            expect(handler2Invocation.context).is.not.null;
         });
 
         it("invokes only most recently registered command handler", () => {
@@ -78,23 +85,18 @@ describe("dotnet-interactive", () => {
             let command1EnvelopesSentToKernel: KernelCommandEnvelope[] = [];
             kernel.registerCommandHandler(commandType1, async env => { command1EnvelopesSentToKernel.push(env); })
 
+            let errorFromSend = null;
             await kernel.send({
                 commandType: commandType2,
                 command: command2In
-            });
+            })
+            .catch(e => { errorFromSend = e; });
 
             expect(command1EnvelopesSentToKernel.length).to.be.equal(0);
+            expect(errorFromSend).is.not.null;
         });
 
         it("raises suitable kernel event when command type matches no handlers", async () => {
-            // TODO
-        });
-
-        it("does not invoke command handler immediately when handling already in progress", async () => {
-            // TODO
-        });
-
-        it("invokes command handler after previous command in progress completes", async () => {
             // TODO
         });
     });
