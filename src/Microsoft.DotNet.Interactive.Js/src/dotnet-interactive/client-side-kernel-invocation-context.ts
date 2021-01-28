@@ -64,7 +64,9 @@ export class ClientSideKernelInvocationContext implements KernelInvocationContex
     }
 
     fail(message?: string) {
-        // TODO: exception?
+        // TODO:
+        // The C# code accepts a message and/or an exception. Do we need to add support
+        // for exceptions? (The TS CommandFailed interface doesn't have a place for it right now.)
         let failed: CommandFailed = { message };
         let failedEnvelope: KernelEventEnvelope = {
             command: this._command,
