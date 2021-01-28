@@ -76,7 +76,7 @@ describe("dotnet-interactive", () => {
             let handler1Invocations: { envelope: KernelCommandEnvelope, context: KernelInvocationContext }[] = [];
             let handler2Invocations: { envelope: KernelCommandEnvelope, context: KernelInvocationContext }[] = [];
             kernel.registerCommandHandler(commandType1, async (envelope, context) => { handler1Invocations.push({ envelope, context }); })
-            kernel.registerCommandHandler(commandType2, async (envelope, context) => { handler2Invocations.push({ envelope, context }); })
+            kernel.registerCommandHandler(commandType1, async (envelope, context) => { handler2Invocations.push({ envelope, context }); })
 
             await kernel.send({
                 commandType: commandType1,
