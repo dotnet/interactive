@@ -65,11 +65,33 @@ describe("dotnet-interactive", () => {
             expect(handler2Invocation.context).is.not.null;
         });
 
-        it("invokes only most recently registered command handler", () => {
-            // TODO
-
+        it("invokes only most recently registered command handler", async () => {
             // Multiple registrations for the same command: latest should replace previous handlers, to
             // avoid the problem of running every version of the handler ever registered.
+            var kernel = await makeKernel();
+
+            let command1In: CustomCommand1 = {
+                data: "Test"
+            };
+            let handler1Invocations: { envelope: KernelCommandEnvelope, context: KernelInvocationContext }[] = [];
+            let handler2Invocations: { envelope: KernelCommandEnvelope, context: KernelInvocationContext }[] = [];
+            kernel.registerCommandHandler(commandType1, async (envelope, context) => { handler1Invocations.push({ envelope, context }); })
+            kernel.registerCommandHandler(commandType2, async (envelope, context) => { handler2Invocations.push({ envelope, context }); })
+
+            await kernel.send({
+                commandType: commandType1,
+                command: command1In
+            });
+
+            expect(handler1Invocations.length).to.be.equal(0);
+
+            expect(handler2Invocations.length).to.be.equal(1);
+            let handler2Invocation = handler2Invocations[0];
+            let handler2Envelope = handler2Invocation.envelope;
+            expect(handler2Envelope.commandType).to.be.equal(commandType1);
+            let commandSentToHandler2 = <CustomCommand1>handler2Envelope.command;
+            expect(commandSentToHandler2).to.equal(command1In);
+            expect(handler2Invocation.context).is.not.null;
         });
         
 
@@ -98,6 +120,12 @@ describe("dotnet-interactive", () => {
 
         it("raises suitable kernel event when command type matches no handlers", async () => {
             // TODO
+            // What's the right event? We probably need to understand this in the broader
+            // context of what sort of error we think this is. Should the dotnet-interactive side
+            // only ever send a command to the client if it's confident the client will handle
+            // it? (In which case, this is a "this should never happen" type error.) Or do we
+            // let user code attempt to send whatever commands they like to the client? (In which
+            // case this is a "we need to tell the user what they did wrong" type error.)
         });
     });
 });

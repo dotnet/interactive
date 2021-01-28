@@ -60,8 +60,12 @@ describe("dotnet-interactive", () => {
             });
         });
 
-        it("completes only when child context completes when child command spawned", async () => {
-            //TODO
+        it("completes only when child context introduced by spawned command completes", async () => {
+            // TODO
+            // Not clear that we can test this right now, because the C# test depends on adding
+            // middleware to the composite kernel, and getting it to invoke the C# kernel. I'm not
+            // even sure where the spawned child command gets created - the test only appears to
+            // create one command explicitly.
         });
 
         it("does not publish further events after Complete is called", async () => {
@@ -208,12 +212,6 @@ describe("dotnet-interactive", () => {
             ew.events.forEach(event => {
                 expect(event.eventType).is.not.eq(ErrorProducedType);
             });
-
-            // TODO
-            // Presumably the original version of this test was introduced because a child
-            // context's events normally are published. But there are no tests for this,
-            // so in our case they aren't yet... So this test passes right now only because
-            // we never actually publish child context events from the parent one.
         });
 
         it("does not publish further events from inner context after it is completed", async () => {
@@ -250,7 +248,8 @@ describe("dotnet-interactive", () => {
 
             // TODO
             // The C# test registers a completion callback with OnComplete, but it's not
-            // entirely clear why.
+            // entirely clear why. It doesn't verify that the completion callback is
+            // invoked, so I'm not sure what the relevance is to this test.
 
             context.dispose();
 
