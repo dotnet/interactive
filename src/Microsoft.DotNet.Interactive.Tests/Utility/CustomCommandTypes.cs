@@ -7,8 +7,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
     public class CustomCommandTypes
     {
-        public const string MyCommandType = "MyCommand";
-
         // Multiple definitions of MyCommand simulate a user experimentally developing
         // the command type in a notebook over time.
 
