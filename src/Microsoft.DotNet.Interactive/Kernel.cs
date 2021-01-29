@@ -218,7 +218,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void AddDirective(Command command) => SubmissionParser.AddDirective(command);
 
-        public virtual void RegisterCommandHandler<TCommand>(Func<TCommand, KernelInvocationContext, Task> handler)
+        public void RegisterCommandHandler<TCommand>(Func<TCommand, KernelInvocationContext, Task> handler)
             where TCommand : KernelCommand
         {
             RegisterCommandType<TCommand>();
