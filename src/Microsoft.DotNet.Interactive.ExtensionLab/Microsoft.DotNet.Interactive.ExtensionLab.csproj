@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <OutputType>Library</OutputType>
   </PropertyGroup>
 
  <PropertyGroup>
-    <OutputType>Library</OutputType>
     <IsPackable>true</IsPackable>
     <PackageDescription>Experimental kernel extensions for dotnet-interactive</PackageDescription>
     <PackageTags>dotnet-interactive</PackageTags>
