@@ -39,9 +39,9 @@ export function withDotNetMetadata(metadata: { [key: string]: any } | undefined,
         }
     }
 
-    result.custom = result.custom || {};
-    result.custom.metadata = result.custom.metadata || {};
-    result.custom.metadata.dotnet_interactive = result.custom.metadata.dotnet_interactive || {};
+    result.custom ||= {};
+    result.custom.metadata ||= {};
+    result.custom.metadata.dotnet_interactive ||= {};
     for (const key in cellMetadata) {
         result.custom.metadata.dotnet_interactive[key] = (<any>cellMetadata)[key];
     }
@@ -111,4 +111,28 @@ export function getCellLanguage(cellText: string, cellMetadata: DotNetCellMetada
     }
 
     return getNotebookSpecificLanguage(cellLanguageSpecifier || cellMetadata.language || documentMetadata.name || fallbackLanguage);
+}
+
+export function withDotNetKernelMetadata(metadata: { [key: string]: any } | undefined): any | undefined {
+    // clone the existing metadata
+    let result: { [key: string]: any } = {};
+    if (metadata) {
+        for (const key in metadata) {
+            result[key] = metadata[key];
+        }
+    }
+
+    result.custom ||= {};
+    result.custom.metadata ||= {};
+
+    // set kernelspec only if there's nothing present
+    if (!result.custom.metadata.kernelspec) {
+        result.custom.metadata.kernelspec = {
+            display_name: '.NET (C#)',
+            language: 'C#',
+            name: '.net-csharp',
+        };
+    }
+
+    return result;
 }

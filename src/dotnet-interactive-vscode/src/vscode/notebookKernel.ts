@@ -9,7 +9,7 @@ import { CellOutput } from '../interfaces/vscode';
 import { getDiagnosticCollection } from './diagnostics';
 import { getSimpleLanguage } from "../interactiveNotebook";
 import { Diagnostic, DiagnosticSeverity } from "../contracts";
-import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata } from '../ipynbUtilities';
+import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, withDotNetKernelMetadata } from '../ipynbUtilities';
 
 export const KernelId: string = 'dotnet-interactive';
 
@@ -91,6 +91,13 @@ export async function updateCellOutputs(document: vscode.NotebookDocument, cell:
         edit.replaceNotebookCellOutput(document.uri, cellIndex, outputs);
         await vscode.workspace.applyEdit(edit);
     }
+}
+
+export async function updateDocumentKernelspecMetadata(document: vscode.NotebookDocument): Promise<void> {
+    const edit = new vscode.WorkspaceEdit();
+    const documentKernelMetadata = withDotNetKernelMetadata(document.metadata);
+    edit.replaceNotebookMetadata(document.uri, documentKernelMetadata);
+    await vscode.workspace.applyEdit(edit);
 }
 
 export async function updateCellLanguages(document: vscode.NotebookDocument): Promise<void> {
