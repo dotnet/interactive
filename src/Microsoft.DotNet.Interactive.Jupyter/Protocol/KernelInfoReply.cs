@@ -3,32 +3,33 @@
 
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 {
     [JupyterMessageType(JupyterMessageContentTypes.KernelInfoReply)]
     public class KernelInfoReply : ReplyMessage
     {
-        [JsonProperty("protocol_version")]
+        [JsonPropertyName("protocol_version")]
         public string ProtocolVersion { get; }
 
-        [JsonProperty("implementation")]
+        [JsonPropertyName("implementation")]
         public string Implementation { get; }
 
-        [JsonProperty("implementation_version")]
+        [JsonPropertyName("implementation_version")]
         public string ImplementationVersion { get; }
 
-        [JsonProperty("language_info", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("language_info")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public LanguageInfo LanguageInfo { get; }
 
-        [JsonProperty("banner")]
+        [JsonPropertyName("banner")]
         public string Banner { get; }
 
-        [JsonProperty("status")]
+        [JsonPropertyName("status")]
         public string Status { get; }
 
-        [JsonProperty("help_links")]
+        [JsonPropertyName("help_links")]
         public IReadOnlyList<Link> HelpLinks { get; }
 
         public KernelInfoReply(string protocolVersion, string implementation, string implementationVersion, LanguageInfo languageInfo, string banner = null, IReadOnlyList<Link> helpLinks = null)

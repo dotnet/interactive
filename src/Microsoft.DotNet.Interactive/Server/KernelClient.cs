@@ -5,13 +5,13 @@ using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
@@ -77,17 +77,23 @@ namespace Microsoft.DotNet.Interactive.Server
 
         private void DeserializeAndSendEvent(string line)
         {
+            IKernelEventEnvelope kernelEventEnvelope = null;
             try
             {
-                var kernelEventEnvelope = KernelEventEnvelope.Deserialize(line);
-                _kernelEvents.OnNext(kernelEventEnvelope.Event);
+                kernelEventEnvelope = KernelEventEnvelope.Deserialize(line);
+               
             }
-            catch (JsonReaderException ex)
+            catch (Exception ex)
             {
                 var diagnosticEvent = new DiagnosticLogEntryProduced(
-                    $"Error while parsing command: {ex.Message}\n{line}");
+                    $"Error while parsing command: {ex.Message}\n{line}", KernelCommand.None);
 
                 _kernelEvents.OnNext(diagnosticEvent);
+            }
+
+            if (kernelEventEnvelope != null)
+            {
+                _kernelEvents.OnNext(kernelEventEnvelope.Event);
             }
         }
 

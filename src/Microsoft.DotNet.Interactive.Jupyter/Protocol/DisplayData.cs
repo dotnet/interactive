@@ -2,23 +2,27 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 {
     [JupyterMessageType(JupyterMessageContentTypes.DisplayData)]
     public class DisplayData : PubSubMessage
     {
-        [JsonProperty("source", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("source")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Source { get;  }
 
-        [JsonProperty("data", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("data")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IReadOnlyDictionary<string, object> Data { get; }
 
-        [JsonProperty("metadata", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("metadata")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IReadOnlyDictionary<string, object> MetaData { get;} 
 
-        [JsonProperty("transient", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("transient")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IReadOnlyDictionary<string, object> Transient { get; }
 
         public DisplayData(string source = null,

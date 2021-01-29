@@ -2,17 +2,17 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 {
     [JupyterMessageType(JupyterMessageContentTypes.CompleteRequest)]
     public class CompleteRequest : RequestMessage
     {
-        [JsonProperty("code")]
+        [JsonPropertyName("code")]
         public string Code { get; set; }
 
-        [JsonProperty("cursor_pos")]
+        [JsonPropertyName("cursor_pos")]
         public int CursorPosition { get; set; }
 
         public CompleteRequest(string code, int cursorPosition = 0)

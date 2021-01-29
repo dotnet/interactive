@@ -20,27 +20,27 @@
     {
       "Name": "Q",
       "IsValid": false,
-      "Cost": 10.0
+      "Cost": 10
     },
     {
       "Name": "U",
       "IsValid": false,
-      "Cost": 5.0
+      "Cost": 5
     },
     {
       "Name": "E",
       "IsValid": true,
-      "Cost": 10.0
+      "Cost": 10.2
     },
     {
       "Name": "S",
       "IsValid": false,
-      "Cost": 10.0
+      "Cost": 10
     },
     {
       "Name": "T",
       "IsValid": false,
-      "Cost": 10.0
+      "Cost": 10
     }
   ]
 }

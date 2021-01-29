@@ -4,8 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 {
@@ -17,19 +17,21 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
         [JsonIgnore]
         public string Signature { get; }
 
-        [JsonProperty("header")]
+        [JsonPropertyName("header")]
         public Header Header { get; }
 
-        [JsonProperty("parent_header")]
+        [JsonPropertyName("parent_header")]
         public Header ParentHeader { get; }
 
-        [JsonProperty("metadata", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("metadata")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IReadOnlyDictionary<string, object> MetaData { get; }
 
-        [JsonProperty("content", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("content")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public Protocol.Message Content { get; }
 
-        [JsonProperty("buffers")]
+        [JsonPropertyName("buffers")]
         public IReadOnlyList<IReadOnlyList<byte>> Buffers { get; }
 
         public Message(Header header,

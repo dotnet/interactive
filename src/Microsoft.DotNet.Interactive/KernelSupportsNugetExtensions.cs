@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -107,7 +108,7 @@ namespace Microsoft.DotNet.Interactive
                     if (alreadyGotten is { } && !string.IsNullOrWhiteSpace(pkg.PackageVersion) && pkg.PackageVersion != alreadyGotten.PackageVersion)
                     {
                         var errorMessage = GenerateErrorMessage(pkg, alreadyGotten).ToString(OutputMode.NonAnsi);
-                        context.Publish(new ErrorProduced(errorMessage));
+                        context.Publish(new ErrorProduced(errorMessage, context.Command));
                     }
                     else
                     {
@@ -116,7 +117,7 @@ namespace Microsoft.DotNet.Interactive
                         if (added is null)
                         {
                             var errorMessage = GenerateErrorMessage(pkg).ToString(OutputMode.NonAnsi);
-                            context.Publish(new ErrorProduced(errorMessage));
+                            context.Publish(new ErrorProduced(errorMessage, context.Command));
                         }
                     }
 
@@ -240,7 +241,7 @@ namespace Microsoft.DotNet.Interactive
                                     $"Installed package {resolvedReference.PackageName} version {resolvedReference.PackageVersion}");
                             }
 
-                            context.Publish(new PackageAdded(resolvedReference));
+                            context.Publish(new PackageAdded(resolvedReference, context.Command));
                         }
 
                         foreach (var package in requestedPackageIds.Values)

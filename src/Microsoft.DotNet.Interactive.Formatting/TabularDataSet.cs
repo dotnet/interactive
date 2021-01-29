@@ -2,7 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
-using Newtonsoft.Json.Linq;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -20,16 +21,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public TabularJsonString ToJson()
         {
-            var schema = JObject.FromObject(Schema);
-            var data = JArray.FromObject(Data);
-
-            var tabularData = new JObject
+            var tabularData = new
             {
-                ["schema"] = schema,
-                ["data"] = data
+                schema = Schema,
+                data = Data
             };
 
-            return new TabularJsonString(tabularData.ToString(Newtonsoft.Json.Formatting.Indented));
+            return new TabularJsonString(JsonSerializer.Serialize(tabularData, new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            }));
         }
     }
 }

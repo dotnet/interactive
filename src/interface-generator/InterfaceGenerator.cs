@@ -7,9 +7,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 {
@@ -249,7 +249,11 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             return type
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.DeclaringType == type)
-                .Where(p => p.GetCustomAttribute(typeof(JsonIgnoreAttribute)) == null);
+                .Where(p =>
+                {
+                    var jsonIgnore = p.GetCustomAttribute(typeof(JsonIgnoreAttribute)) as JsonIgnoreAttribute;
+                    return jsonIgnore == null || jsonIgnore.Condition != JsonIgnoreCondition.Always;
+                });
         }
     }
 }

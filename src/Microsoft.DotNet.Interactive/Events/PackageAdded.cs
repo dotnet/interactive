@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Events
     {
         public PackageAdded(
             ResolvedPackageReference packageReference,
-            AddPackage command = null) : base(command)
+            KernelCommand command) : base(command)
         {
             PackageReference = packageReference ?? throw new ArgumentNullException(nameof(packageReference));
         }

@@ -1,7 +1,8 @@
 ﻿// Copyright(c).NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Newtonsoft.Json;
+
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -13,10 +14,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
             Type = type;
         }
 
-        [JsonProperty(PropertyName = "name")]
+        [JsonPropertyName("name")]
         public string Name { get; }
 
-        [JsonProperty(PropertyName = "type")]
+        [JsonPropertyName( "type")]
         public string Type { get; }
     }
 }

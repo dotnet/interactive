@@ -457,9 +457,9 @@ f();"));
         [Fact]
         public void cell_language_can_be_pulled_from_metadata_when_present()
         {
-            var metaData = new Dictionary<string, object>()
+            var metaData = new Dictionary<string, object>
             {
-                { "dotnet_interactive", new InputCellMetadata { Language = "fsharp" } }
+                { "dotnet_interactive", new InputCellMetadata ("fsharp") }
             };
             var request = ZeroMQMessage.Create(new ExecuteRequest("1+1"), metaData: metaData);
             var context = new JupyterRequestContext(JupyterMessageSender, request);

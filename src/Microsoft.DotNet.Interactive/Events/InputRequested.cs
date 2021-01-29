@@ -2,28 +2,17 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
     public class InputRequested : KernelEvent
     {
-        [JsonConstructor]
-        internal InputRequested(string prompt)
-        {
-            Prompt = prompt;
-        }
-
         public InputRequested(
             string prompt,
             KernelCommand command) : base(command)
         {
-            if (command == null)
-            {
-                throw new ArgumentNullException(nameof(command));
-            }
-
             Prompt = prompt;
         }
 

@@ -8,11 +8,11 @@ namespace Microsoft.DotNet.Interactive.Notebook
 {
     public class NotebookDocument
     {
-        public IReadOnlyCollection<NotebookCell> Cells { get; }
+        public NotebookCell[] Cells { get; }
 
-        public NotebookDocument(IEnumerable<NotebookCell> cells)
+        public NotebookDocument(NotebookCell[] cells)
         {
-            Cells = cells.ToImmutableArray();
+            Cells = cells;
         }
     }
 }

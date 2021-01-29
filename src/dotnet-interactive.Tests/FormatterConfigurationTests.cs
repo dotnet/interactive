@@ -136,34 +136,5 @@ alert('hello');
                 .Message
                 .Should().Be("Timeout resolving the kernel's HTTP endpoint. Please try again.");
         }
-
-        [Fact]
-        public void JObject_is_formatted_as_application_json()
-        {
-            var obj = JObject.FromObject(new { value = 123, OtherValue = 456 });
-
-            var mimeType = Formatter.GetPreferredMimeTypeFor(obj.GetType());
-            var output = obj.ToDisplayString(JsonFormatter.MimeType);
-
-            mimeType.Should().Be(JsonFormatter.MimeType);
-
-            output
-               .Should()
-               .Be(@"{""value"":123,""OtherValue"":456}");
-        }
-
-        [Fact]
-        public void JArray_is_formatted_as_application_json()
-        {
-            var obj = JArray.FromObject(new object[] { "one", 1 });
-
-            var mimeType = Formatter.GetPreferredMimeTypeFor(obj.GetType());
-
-            mimeType.Should().Be(JsonFormatter.MimeType);
-
-            obj.ToDisplayString(JsonFormatter.MimeType)
-               .Should()
-               .Be(@"[""one"",1]");
-        }
     }
 }

@@ -3,37 +3,38 @@
 
 using System;
 using System.IO;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public class ConnectionInformation
     {
-        [JsonProperty("stdin_port")]
+        [JsonPropertyName("stdin_port")]
         public int StdinPort { get; set; }
 
-        [JsonProperty("ip")]
+        [JsonPropertyName("ip")]
         public string IP { get; set; }
 
-        [JsonProperty("control_port")]
+        [JsonPropertyName("control_port")]
         public int ControlPort { get; set; }
 
-        [JsonProperty("hb_port")]
+        [JsonPropertyName("hb_port")]
         public int HBPort { get; set; }
 
-        [JsonProperty("signature_scheme")]
+        [JsonPropertyName("signature_scheme")]
         public string SignatureScheme { get; set; }
 
-        [JsonProperty("key")]
+        [JsonPropertyName("key")]
         public string Key { get; set; }
 
-        [JsonProperty("shell_port")]
+        [JsonPropertyName("shell_port")]
         public int ShellPort { get; set; }
 
-        [JsonProperty("transport")]
+        [JsonPropertyName("transport")]
         public string Transport { get; set; }
 
-        [JsonProperty("iopub_port")]
+        [JsonPropertyName("iopub_port")]
         public int IOPubPort { get; set; }
 
         public static ConnectionInformation Load(FileInfo file)
@@ -51,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             var fileContent = File.ReadAllText(file.FullName);
 
             var connectionInformation =
-                JsonConvert.DeserializeObject<ConnectionInformation>(fileContent);
+                JsonSerializer.Deserialize<ConnectionInformation>(fileContent);
 
             return connectionInformation;
         }

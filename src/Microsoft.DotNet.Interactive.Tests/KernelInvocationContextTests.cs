@@ -201,7 +201,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             await using var inner = KernelInvocationContext.Establish(new SubmitCode("def"));
 
             outer.Complete(outer.Command);
-            inner.Publish(new ErrorProduced("oops!"));
+            inner.Publish(new ErrorProduced("oops!", inner.Command));
 
             events.Should().NotContain(e => e is ErrorProduced);
         }

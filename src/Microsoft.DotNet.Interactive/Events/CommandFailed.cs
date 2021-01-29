@@ -2,8 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
@@ -30,12 +30,6 @@ namespace Microsoft.DotNet.Interactive.Events
             string message,
             KernelCommand command) : this(null, command, message)
         {
-        }
-
-        [JsonConstructor]
-        internal CommandFailed(string message)
-        {
-            Message = message;
         }
 
         [JsonIgnore]

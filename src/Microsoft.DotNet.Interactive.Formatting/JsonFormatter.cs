@@ -2,7 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using Newtonsoft.Json;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -10,13 +11,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         static JsonFormatter()
         {
-            SerializerSettings = new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore,
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                Formatting = Newtonsoft.Json.Formatting.None
+            SerializerOptions = new JsonSerializerOptions{
+                WriteIndented = false,
+                IgnoreNullValues = true,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
-
         }
 
         public static ITypeFormatter GetPreferredFormatterFor(Type type)
@@ -31,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultJsonFormatterSet.DefaultFormatters;
 
-        public static JsonSerializerSettings SerializerSettings { get; }
+        public static JsonSerializerOptions SerializerOptions { get; }
 
     }
 }

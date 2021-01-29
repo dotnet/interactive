@@ -3,13 +3,18 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
+
 using FluentAssertions;
 using FluentAssertions.Extensions;
+
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Notebook;
+
 using Recipes;
+
 using Xunit;
 using Xunit.Abstractions;
+
 using ZeroMQMessage = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
@@ -28,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             var context = new JupyterRequestContext(JupyterMessageSender, request);
 
             await scheduler.Schedule(context);
-            
+
             await context.Done().Timeout(5.Seconds());
 
             JupyterMessageSender.ReplyMessages
@@ -39,9 +44,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         [Fact]
         public void cell_language_can_be_pulled_from_metadata_when_present()
         {
-            var metaData = new Dictionary<string, object>()
+            var metaData = new Dictionary<string, object>
             {
-                { "dotnet_interactive", new InputCellMetadata { Language = "fsharp" } }
+                { "dotnet_interactive", new InputCellMetadata("fsharp" ) }
             };
             var request = ZeroMQMessage.Create(new CompleteRequest("1+1"), metaData: metaData);
             var context = new JupyterRequestContext(JupyterMessageSender, request);

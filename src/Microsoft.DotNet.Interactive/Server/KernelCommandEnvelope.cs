@@ -5,11 +5,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
-
+using System.Text.Json;
 using Microsoft.DotNet.Interactive.Commands;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
@@ -117,31 +114,45 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public static IKernelCommandEnvelope Deserialize(string json)
         {
-            var jsonObject = JObject.Parse(json);
+            var jsonObject = JsonDocument.Parse(json);
 
-            return Deserialize(jsonObject);
+            return Deserialize(jsonObject.RootElement);
         }
 
-        internal static IKernelCommandEnvelope Deserialize(JToken json)
+        internal static IKernelCommandEnvelope Deserialize(JsonElement json)
         {
-            if (json is JValue)
+            var commandTypeJson = string.Empty;
+            var commandJson = string.Empty;
+            var token = string.Empty;
+            
+            if (json.TryGetProperty("commandType", out var commandTypeProperty))
+            {
+                commandTypeJson = commandTypeProperty.GetString();
+            }
+
+            if (string.IsNullOrWhiteSpace(commandTypeJson))
             {
                 return null;
             }
 
-            var commandTypeJson = json["commandType"];
-
-            if (commandTypeJson == null)
+            var commandType = CommandTypeByName(commandTypeJson);
+            if (json.TryGetProperty("command", out var commandJsonProperty))
+            {
+                commandJson = commandJsonProperty.GetRawText();
+            }
+            else
             {
                 return null;
             }
 
-            var commandType = CommandTypeByName(commandTypeJson.Value<string>());
-            var commandJson = json["command"];
-            var command = (KernelCommand)commandJson?.ToObject(commandType, Serializer.JsonSerializer);
+       
+            var command = (KernelCommand) JsonSerializer.Deserialize( commandJson,commandType, Serializer.JsonSerializerOptions);
 
-            var token = json["token"]?.Value<string>();
-
+           
+            if (json.TryGetProperty("token", out var tokenProperty))
+            {
+                token = tokenProperty.GetString();
+            }
             if (token != null)
             {
                 command.SetToken(token);
@@ -161,9 +172,9 @@ namespace Microsoft.DotNet.Interactive.Server
                 token = envelope.Token
             };
 
-            return JsonConvert.SerializeObject(
+            return JsonSerializer.Serialize(
                 serializationModel,
-                Serializer.JsonSerializerSettings);
+                Serializer.JsonSerializerOptions);
         }
 
         internal class SerializationModel

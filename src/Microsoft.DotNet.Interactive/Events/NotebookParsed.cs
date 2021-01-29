@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Events
     {
         public NotebookDocument Notebook { get; }
 
-        public NotebookParsed(NotebookDocument notebook, KernelCommand command = null)
+        public NotebookParsed(NotebookDocument notebook, KernelCommand command)
             : base(command)
         {
             Notebook = notebook;

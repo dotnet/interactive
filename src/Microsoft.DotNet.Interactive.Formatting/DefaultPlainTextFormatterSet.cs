@@ -8,6 +8,7 @@ using System.CommandLine.Rendering;
 using System.Dynamic;
 using System.Linq;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.CSharp;
 
@@ -107,7 +108,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         return true;
                     }),
 
-                new PlainTextFormatter<Newtonsoft.Json.Linq.JToken>((context, obj, writer) =>
+                new PlainTextFormatter<JsonElement>((context, obj, writer) =>
                     {
                         writer.Write(obj);
                         return true;

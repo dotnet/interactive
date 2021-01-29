@@ -25,8 +25,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         public async Task sends_isCompleteReply_with_complete_if_the_code_is_a_complete_submission()
         {
             var scheduler = CreateScheduler();
-            var request = ZeroMQMessage
-.Create(new IsCompleteRequest("var a = 12;"), null);
+            var request = ZeroMQMessage.Create(new IsCompleteRequest("var a = 12;"), null);
             var context = new JupyterRequestContext(JupyterMessageSender, request);
 
             await scheduler.Schedule(context);
@@ -42,8 +41,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         public async Task sends_isCompleteReply_with_incomplete_and_indent_if_the_code_is_not_a_complete_submission()
         {
             var scheduler = CreateScheduler();
-            var request = ZeroMQMessage
-.Create(new IsCompleteRequest("var a = 12"), null);
+            var request = ZeroMQMessage.Create(new IsCompleteRequest("var a = 12"), null);
             var context = new JupyterRequestContext(JupyterMessageSender, request);
 
             await scheduler.Schedule(context);
@@ -55,9 +53,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         [Fact]
         public void cell_language_can_be_pulled_from_metadata_when_present()
         {
-            var metaData = new Dictionary<string, object>()
+            var metaData = new Dictionary<string, object>
             {
-                { "dotnet_interactive", new InputCellMetadata { Language = "fsharp" } }
+                { "dotnet_interactive", new InputCellMetadata( "fsharp") }
             };
             var request = ZeroMQMessage.Create(new IsCompleteRequest("1+1"), metaData: metaData);
             var context = new JupyterRequestContext(JupyterMessageSender, request);

@@ -22,22 +22,22 @@
   },
   "data": [
     {
-      "id": 1.0,
+      "id": 1,
       "name": "apple",
       "color": "green",
-      "deliciousness": 10.0
+      "deliciousness": 10
     },
     {
-      "id": 2.0,
+      "id": 2,
       "name": "banana",
       "color": "yellow",
-      "deliciousness": 11.0
+      "deliciousness": 11
     },
     {
-      "id": 3.0,
+      "id": 3,
       "name": "cherry",
       "color": "red",
-      "deliciousness": 9000.0
+      "deliciousness": 9000
     }
   ]
 }

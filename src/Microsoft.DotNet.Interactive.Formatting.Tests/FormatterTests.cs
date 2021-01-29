@@ -9,8 +9,7 @@ using System.IO;
 using FluentAssertions;
 using System.Linq;
 using System.Reflection;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
@@ -214,27 +213,14 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 text.Should().Be($"<div class=\"dni-plaintext\">{value.HtmlEncode()}</div>");
             }
 
-            [Fact]
-            public void When_JObject_is_formatted_it_outputs_its_string_representation()
-            {
-                JObject jObject = JObject.Parse(JsonConvert.SerializeObject(new
-                {
-                    SomeString = "hello",
-                    SomeInt = 123
-                }));
-
-                var output = jObject.ToDisplayString();
-
-                output.Should().Be(jObject.ToString());
-            }
         }
 
         [Fact]
         public void ToDisplayString_uses_actual_type_formatter_and_not_compiled_type()
         {
             Widget widget = new InheritedWidget();
-            bool widgetFormatterCalled = false;
-            bool inheritedWidgetFormatterCalled = false;
+            var widgetFormatterCalled = false;
+            var inheritedWidgetFormatterCalled = false;
 
             Formatter.Register<Widget>(w =>
             {
@@ -456,7 +442,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             Formatter.GetPreferredMimeTypeFor(typeof(object)).Should().Be(mimeType);
             Formatter.GetPreferredMimeTypeFor(typeof(string)).Should().Be(mimeType);
             Formatter.GetPreferredMimeTypeFor(typeof(Type)).Should().Be(mimeType);
-            Formatter.GetPreferredMimeTypeFor(typeof(JsonToken)).Should().Be(mimeType);
+            Formatter.GetPreferredMimeTypeFor(typeof(JsonElement)).Should().Be(mimeType);
 
         }
 
@@ -477,7 +463,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             Formatter.GetPreferredMimeTypeFor(typeof(object)).Should().Be(mimeType);
             Formatter.GetPreferredMimeTypeFor(typeof(string)).Should().Be(mimeType);
             Formatter.GetPreferredMimeTypeFor(typeof(Type)).Should().Be(mimeType);
-            Formatter.GetPreferredMimeTypeFor(typeof(JsonToken)).Should().Be(mimeType);
+            Formatter.GetPreferredMimeTypeFor(typeof(JsonElement)).Should().Be(mimeType);
 
         }
 
@@ -642,21 +628,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             list.ToDisplayString(mimeType)
                 .Should()
                 .Be(list.Count.ToString());
-        }
-
-        [Fact]
-        public void When_JArray_is_formatted_it_outputs_its_string_representation()
-        {
-            JArray jArray = JArray.Parse(JsonConvert.SerializeObject(Enumerable.Range(1, 10).Select(
-                                                                         i => new
-                                                                         {
-                                                                             SomeString = "hello",
-                                                                             SomeInt = 123
-                                                                         }).ToArray()));
-
-            jArray.ToDisplayString()
-                  .Should()
-                  .Be(jArray.ToString());
         }
 
         [Fact]

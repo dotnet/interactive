@@ -1,38 +1,38 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 {
     [JupyterMessageType(JupyterMessageContentTypes.HistoryRequest)]
     public class HistoryRequest : RequestMessage
     {
-        [JsonProperty("output")]
+        [JsonPropertyName("output")]
         public bool Output { get; }
 
-        [JsonProperty("hist_access_type")]
+        [JsonPropertyName("hist_access_type")]
         public string AccessType { get; }
 
-        [JsonProperty("raw")]
+        [JsonPropertyName("raw")]
         public bool Raw { get; }
 
-        [JsonProperty("session")]
+        [JsonPropertyName("session")]
         public int Session { get; }
 
-        [JsonProperty("start")]
+        [JsonPropertyName("start")]
         public int Start { get; }
 
-        [JsonProperty("stop")]
+        [JsonPropertyName("stop")]
         public int Stop { get; }
 
-        [JsonProperty("n")]
+        [JsonPropertyName("n")]
         public int N { get;}
 
-        [JsonProperty("pattern")]
+        [JsonPropertyName("pattern")]
         public string Pattern { get;  }
 
-        [JsonProperty("unique")]
+        [JsonPropertyName("unique")]
         public bool Unique { get;  }
 
         public HistoryRequest(int session, string accessType = "range", int start = 0, int stop = 0, int n = 0,string pattern = null, bool unique = false, bool raw = false, bool output = false)

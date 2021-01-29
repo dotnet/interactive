@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 {
@@ -15,10 +15,10 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
             Payload = payload ?? new List<IReadOnlyDictionary<string, string>>();
         }
 
-        [JsonProperty("payload")]
+        [JsonPropertyName("payload")]
         public IReadOnlyList<IReadOnlyDictionary<string,string>> Payload { get;  }
 
-        [JsonProperty("user_expressions")]
+        [JsonPropertyName("user_expressions")]
         public IReadOnlyDictionary<string,string> UserExpressions { get; }
     }
 }

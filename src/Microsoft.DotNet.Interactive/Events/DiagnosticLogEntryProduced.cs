@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.Events
     {
         public DiagnosticLogEntryProduced(
             string message,
-            KernelCommand command = null) : base(command)
+            KernelCommand command) : base(command)
         {
             Message = message;
         }

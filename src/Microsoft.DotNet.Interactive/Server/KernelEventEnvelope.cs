@@ -6,9 +6,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text.Json;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+
+using BindingFlags = System.Reflection.BindingFlags;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
@@ -109,27 +111,48 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public static IKernelEventEnvelope Deserialize(string json)
         {
-            var jsonObject = JObject.Parse(json);
+            var jsonObject = JsonDocument.Parse(json).RootElement;
 
-            var commandJson = jsonObject[nameof(SerializationModel.command)];
+            var commandJson = jsonObject.GetProperty(nameof(SerializationModel.command));
 
-            var commandEnvelope = KernelCommandEnvelope.Deserialize(commandJson);
+            var commandEnvelope = commandJson.ValueKind == JsonValueKind.Null ? null : KernelCommandEnvelope.Deserialize(commandJson);
 
-            var eventJson = jsonObject[nameof(SerializationModel.@event)];
+            var eventJson = jsonObject.GetProperty(nameof(SerializationModel.@event));
 
-            var eventTypeName = jsonObject[nameof(SerializationModel.eventType)].Value<string>();
+            var eventTypeName = jsonObject.GetProperty(nameof(SerializationModel.eventType)).GetString();
 
             var eventType = EventTypeByName(eventTypeName);
 
-            var @event = (KernelEvent) eventJson.ToObject(eventType, Serializer.JsonSerializer);
+            var ctor = eventType.GetConstructors(BindingFlags.IgnoreCase
+                                                 | BindingFlags.Public
+                                                 | BindingFlags.Instance)[0];
 
-            if (@event is {} &&
-                commandEnvelope is {})
+            var ctorParams = new List<object>();
+
+            foreach (var parameterInfo in ctor.GetParameters())
             {
-                @event.Command = commandEnvelope.Command;
+                if (typeof(KernelCommand).IsAssignableFrom(parameterInfo.ParameterType))
+                {
+                    ctorParams.Add(commandEnvelope == null ? KernelCommand.None: commandEnvelope.Command);
+                }
+                else
+                {
+
+                    ctorParams.Add(eventJson.TryGetProperty(parameterInfo.Name, out var property)
+                        ? JsonSerializer.Deserialize(property.GetRawText(), parameterInfo.ParameterType,
+                            Serializer.JsonSerializerOptions)
+                        : GetDefaultValueForType(parameterInfo.ParameterType));
+                }
             }
 
+            var @event = (KernelEvent)ctor.Invoke(ctorParams.ToArray());
+
             return Create(@event);
+        }
+
+        private static object GetDefaultValueForType(Type type)
+        {
+            return type.IsValueType ? Activator.CreateInstance(type) : null;
         }
 
         public static string Serialize(KernelEvent @event) => Serialize(Create(@event));
@@ -138,7 +161,7 @@ namespace Microsoft.DotNet.Interactive.Server
         {
             KernelCommandEnvelope.SerializationModel commandSerializationModel = null;
 
-            if (eventEnvelope.Event.Command != null)
+            if (eventEnvelope.Event.Command != null && eventEnvelope.Event.Command is not NoCommand)
             {
                 var commandEnvelope = KernelCommandEnvelope.Create(eventEnvelope.Event.Command);
 
@@ -157,9 +180,9 @@ namespace Microsoft.DotNet.Interactive.Server
                 command = commandSerializationModel
             };
 
-            return JsonConvert.SerializeObject(
+            return JsonSerializer.Serialize(
                 serializationModel,
-                Serializer.JsonSerializerSettings);
+                Serializer.JsonSerializerOptions);
         }
 
         internal class SerializationModel

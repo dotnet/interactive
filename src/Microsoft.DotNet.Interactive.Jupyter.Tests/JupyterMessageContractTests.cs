@@ -3,11 +3,15 @@
 
 using System;
 using System.Collections.Generic;
+
 using Assent;
+
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 using Microsoft.DotNet.Interactive.Notebook;
+
 using Xunit;
+
 using Message = Microsoft.DotNet.Interactive.Jupyter.ZMQ.Message;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
@@ -172,9 +176,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                 version: "5.3", username: Constants.USERNAME, session: "test session",
                 date: DateTime.MinValue.ToString("yyyy-MM-ddTHH:mm:ssZ"));
 
-            var metaData = new Dictionary<string, object>()
+            var metaData = new Dictionary<string, object>
             {
-                { "dotnet_interactive", new InputCellMetadata() { Language = "fsharp" } }
+                { "dotnet_interactive", new InputCellMetadata("fsharp") }
             };
 
             var replyMessage = new Message(header, content: executeResult, metaData: metaData);

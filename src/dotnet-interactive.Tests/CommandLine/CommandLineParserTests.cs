@@ -423,7 +423,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         {
             await _parser.InvokeAsync("stdio");
 
-            var envelope = KernelCommandEnvelope.Deserialize(@"{ commandType: ""Quit"", command : { } }");
+            var envelope = KernelCommandEnvelope.Deserialize(@"{ ""commandType"": ""Quit"", ""command"" : { } }");
             
             envelope.Command.Should()
                 .BeOfType<Quit>();

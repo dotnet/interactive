@@ -6,7 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 {
@@ -75,7 +76,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 
             if (_messageTypeToClrType.TryGetValue(messageType, out var supportedType))
             {
-                return JsonConvert.DeserializeObject(jsonString, supportedType) as Message;
+                return JsonSerializer.Deserialize(jsonString, supportedType) as Message;
             }
 
             return Empty;

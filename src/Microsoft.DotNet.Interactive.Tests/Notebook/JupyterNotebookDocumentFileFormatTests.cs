@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Assent;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -605,14 +606,14 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 {
                     kernelspec = new
                     {
-                        display_name = $".NET (C#)",
+                        display_name = ".NET (C#)",
                         language = "C#",
                         name = $".net-csharp"
                     },
                     language_info = new
                     {
                         file_extension = ".cs",
-                        mimetype = $"text/x-csharp",
+                        mimetype = "text/x-csharp",
                         name = "C#",
                         pygments_lexer = "csharp",
                         version = "8.0"
@@ -987,7 +988,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentTo(new NotebookCellDisplayOutput(new Dictionary<string, object>()
+                .BeEquivalentTo(new NotebookCellDisplayOutput(new Dictionary<string, object>
                 {
                     { "text/html", "this is html" }
                 }));
@@ -1081,7 +1082,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         {
             var configuration = new Configuration()
                                  .UsingExtension("json")
-                                 .SetInteractive(false);
+                                 .SetInteractive(Debugger.IsAttached);
             var cells = new[]
             {
                 new NotebookCell("csharp", "// this is csharp", new[]

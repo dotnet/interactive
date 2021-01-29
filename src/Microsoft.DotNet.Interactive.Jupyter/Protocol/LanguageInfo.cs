@@ -2,31 +2,33 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 {
     public class LanguageInfo
     {
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; }
 
-        [JsonProperty("version")]
+        [JsonPropertyName("version")]
         public string Version { get; }
 
-        [JsonProperty("mimetype")]
+        [JsonPropertyName("mimetype")]
         public string MimeType { get;  }
 
-        [JsonProperty("file_extension")]
+        [JsonPropertyName("file_extension")]
         public string FileExtension { get; }
 
-        [JsonProperty("pygments_lexer")]
+        [JsonPropertyName("pygments_lexer")]
         public string PygmentsLexer { get;  }
 
-        [JsonProperty("codemirror_mode", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("codemirror_mode")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public object CodeMirrorMode { get; set; }
 
-        [JsonProperty("nbconvert_exporter", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("nbconvert_exporter")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string NbConvertExporter { get;  }
 
         public LanguageInfo(string name, string version, string mimeType, string fileExtension, string pygmentsLexer = null, object codeMirrorMode = null, string nbConvertExporter = null)

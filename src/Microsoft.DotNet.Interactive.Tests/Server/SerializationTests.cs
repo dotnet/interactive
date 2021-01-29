@@ -162,7 +162,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new SerializeNotebook("notebook.ipynb", new NotebookDocument(new[]
                 {
-                    new NotebookCell("language", "contents", new NotebookCellOutput[]
+                    new NotebookCell("csharp", "user code", new NotebookCellOutput[]
                     {
                         new NotebookCellDisplayOutput(new Dictionary<string, object>()
                         {
@@ -259,7 +259,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                         new FormattedValue("text/html", "<b>hi!</b>"),
                     });
 
-                yield return new ErrorProduced("oops!");
+                yield return new ErrorProduced("oops!", submitCode);
 
                 yield return new IncompleteCodeSubmissionReceived(submitCode);
 
@@ -289,17 +289,18 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                             "at func2()"
                         })
                     })
-                }));
+                }), new ParseNotebook("notebook.ipynb", new byte[0]));
 
-                yield return new NotebookSerialized(new byte[] { 0x01, 0x02, 0x03, 0x04 });
-
+                yield return new NotebookSerialized(new byte[] { 0x01, 0x02, 0x03, 0x04 }, new SerializeNotebook("notebook.ipynb", null,"\n"));
+               
                 yield return new PackageAdded(
                     new ResolvedPackageReference(
                         packageName: "ThePackage",
                         packageVersion: "1.2.3",
                         assemblyPaths: new[] { "/path/to/a.dll" },
                         packageRoot: "/the/package/root",
-                        probingPaths: new[] { "/probing/path/1", "/probing/path/2" }));
+                        probingPaths: new[] { "/probing/path/1", "/probing/path/2" }),
+                        new SubmitCode("#r \"nuget:ThePackage,1.2.3\""));
 
                 yield return new PasswordRequested("password", submitCode);
 

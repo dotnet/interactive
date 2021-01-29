@@ -2,10 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public const string MimeType = "application/table-schema+json";
 
         internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultTabularDataFormatterSet.DefaultFormatters;
-        
+
         public static TabularJsonString ToTabularJsonString<T>(this IEnumerable<T> source)
         {
             var (schema, data) = Generate(source);
@@ -23,65 +23,69 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return tabularDataSet.ToJson();
         }
 
-        private static (TabularDataSchema schema, JArray data) Generate<T>(IEnumerable<T> source)
+        private static (TabularDataSchema schema, IEnumerable data) Generate<T>(IEnumerable<T> source)
         {
             var schema = new TabularDataSchema();
             var fields = new HashSet<string>();
             var members = new HashSet<(string name, Type type)>();
-            var data = new JArray();
+            var data = new List<object>();
 
             foreach (var item in source)
             {
                 switch (item)
                 {
                     case IEnumerable<(string name, object value)> valueTuples:
-
-                        var tuples = valueTuples.ToArray();
-
-                        EnsureFieldsAreInitializedFromValueTuples(tuples);
-
-                        var o = new JObject();
-                        foreach (var tuple in tuples)
                         {
-                            o.Add(tuple.name, JToken.FromObject(tuple.value ?? "NULL"));
-                        }
+                            var tuples = valueTuples.ToArray();
 
-                        data.Add(o);
+                            EnsureFieldsAreInitializedFromValueTuples(tuples);
+
+                            var obj = new Dictionary<string, object>();
+                            foreach (var (name, value) in tuples)
+                            {
+                                obj.Add(name, value);
+                            }
+
+                            data.Add(obj);
+                        }
                         break;
 
                     case IEnumerable<KeyValuePair<string, object>> keyValuePairs:
-
-                        var pairs = keyValuePairs.ToArray();
-
-                        EnsureFieldsAreInitializedFromKeyValuePairs(pairs);
-
-                        var obj = new JObject();
-                        foreach (var pair in pairs)
                         {
-                            obj.Add(pair.Key, JToken.FromObject(pair.Value));
-                        }
+                            var pairs = keyValuePairs.ToArray();
 
-                        data.Add(obj);
+                            EnsureFieldsAreInitializedFromKeyValuePairs(pairs);
+
+                            var obj = new Dictionary<string, object>();
+                            foreach (var pair in pairs)
+                            {
+                                obj.Add(pair.Key, pair.Value);
+                            }
+
+                            data.Add(obj);
+                        }
                         break;
 
                     default:
-                        foreach (var memberInfo in item
-                                                   .GetType()
-                                                   .GetMembers(BindingFlags.Public | BindingFlags.Instance))
                         {
-                            switch (memberInfo)
+                            foreach (var memberInfo in item
+                                .GetType()
+                                .GetMembers(BindingFlags.Public | BindingFlags.Instance))
                             {
-                                case PropertyInfo pi:
-                                    members.Add((memberInfo.Name, pi.PropertyType));
-                                    break;
-                                case FieldInfo fi:
-                                    members.Add((memberInfo.Name, fi.FieldType));
-                                    break;
+                                switch (memberInfo)
+                                {
+                                    case PropertyInfo pi:
+                                        members.Add((memberInfo.Name, pi.PropertyType));
+                                        break;
+                                    case FieldInfo fi:
+                                        members.Add((memberInfo.Name, fi.FieldType));
+                                        break;
+                                }
                             }
-                        }
 
-                        EnsureFieldsAreInitializedFromMembers();
-                        data.Add(JObject.FromObject(item));
+                            EnsureFieldsAreInitializedFromMembers();
+                            data.Add(item);
+                        }
                         break;
                 }
             }
@@ -90,13 +94,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             void EnsureFieldsAreInitializedFromMembers()
             {
-                    foreach (var memberInfo in members)
+                foreach (var memberInfo in members)
+                {
+                    if (fields.Add(memberInfo.name))
                     {
-                        if (fields.Add(memberInfo.name))
-                        {
-                            schema.Fields.Add(new TabularDataSchemaField(memberInfo.name, memberInfo.type.ToTableFieldType()));
-                        }
+                        schema.Fields.Add(new TabularDataSchemaField(memberInfo.name, memberInfo.type.ToTableFieldType()));
                     }
+                }
             }
 
             void EnsureFieldsAreInitializedFromValueTuples(IEnumerable<(string name, object value)> valueTuples)

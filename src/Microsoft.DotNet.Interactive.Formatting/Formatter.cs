@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             // It is unclear if we need this default:
             _defaultPreferredMimeTypes.Push((typeof(string), PlainTextFormatter.MimeType));
-            _defaultPreferredMimeTypes.Push((typeof(JToken), JsonFormatter.MimeType));
+            _defaultPreferredMimeTypes.Push((typeof(JsonElement), JsonFormatter.MimeType));
 
             ListExpansionLimit = 20;
             RecursionLimit = 6;

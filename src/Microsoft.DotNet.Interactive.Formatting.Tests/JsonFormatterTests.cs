@@ -5,8 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using FluentAssertions;
 using System.Linq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
@@ -14,44 +13,42 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
     public class JsonFormatterTests : FormatterTestBase
     {
         [Theory]
-        [MemberData(nameof(JTokens))]
-        public void It_does_not_JSON_encode_JSON_types(JToken jtoken)
+        [MemberData(nameof(JsonElements))]
+        public void It_does_not_JSON_encode_JSON_types(JsonElement jsonElement)
         {
-            var formatter = JsonFormatter.GetPreferredFormatterFor(jtoken.GetType());
+            var formatter = JsonFormatter.GetPreferredFormatterFor(jsonElement.GetType());
 
             var writer = new StringWriter();
 
-            formatter.Format(jtoken, writer);
+            formatter.Format(jsonElement, writer);
 
             writer
                 .ToString()
                 .Should()
-                .Be(jtoken.ToString(Newtonsoft.Json.Formatting.None));
+                .Be(JsonSerializer.Serialize(jsonElement));
         }
 
-        public static IEnumerable<object[]> JTokens()
+        public static IEnumerable<object[]> JsonElements()
         {
-            return jtokens().Select(t => new object[] { t });
+            return elements().Select(t => new object[] { t });
 
-            IEnumerable<JToken> jtokens()
+            IEnumerable<JsonElement> elements()
             {
-                yield return JToken.FromObject(789);
+                yield return JsonDocument.Parse( JsonSerializer.Serialize(789)).RootElement;
                 
-                yield return JToken.FromObject("123");
+                yield return JsonDocument.Parse(JsonSerializer.Serialize("123")).RootElement;
                 
-                yield return JToken.FromObject(new[] { 1, 2, 3 });
+                yield return JsonDocument.Parse(JsonSerializer.Serialize(new[] { 1, 2, 3 })).RootElement; 
                 
-                yield return JToken.FromObject(new { parent = new { Child = new { Age = 5 } } });
-
-                yield return JToken.FromObject(JsonConvert.SerializeObject(new { parent = new { Child = new { Age = 5 } } }));
-
-                yield return JToken.FromObject(new Dictionary<string, object>
+                yield return JsonDocument.Parse(JsonSerializer.Serialize(new { parent = new { Child = new { Age = 5 } } })).RootElement; 
+                
+                yield return JsonDocument.Parse(JsonSerializer.Serialize(new Dictionary<string, object>
                 {
                     ["anInt"] = 1,
                     ["aString"] = "456",
                     ["anArray"] = new[] { 1, 2, 3 },
                     ["anObject"] = new { parent = new { child = new { age = 5 } } }
-                });
+                })).RootElement; 
             }
         }
     }

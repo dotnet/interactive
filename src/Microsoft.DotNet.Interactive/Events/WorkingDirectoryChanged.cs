@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public class WorkingDirectoryChanged : KernelEvent
     {
-        public WorkingDirectoryChanged(string workingDirectory, KernelCommand command = null)
+        public WorkingDirectoryChanged(string workingDirectory, KernelCommand command)
             : base(command)
         {
             WorkingDirectory = workingDirectory;

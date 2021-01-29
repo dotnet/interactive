@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public class DiagnosticsProduced : KernelEvent
     {
-        private IReadOnlyCollection<Diagnostic> _diagnostics;
+        private readonly IReadOnlyCollection<Diagnostic> _diagnostics;
 
         public DiagnosticsProduced(IEnumerable<Diagnostic> diagnostics,
             KernelCommand command,
