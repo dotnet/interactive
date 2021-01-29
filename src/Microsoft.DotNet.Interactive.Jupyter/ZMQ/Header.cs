@@ -21,7 +21,10 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
         public string Date { get; }
 
         [JsonPropertyName("msg_type")]
-        public string MessageType { get; }
+        public string MessageType
+        {
+            get;
+        }
 
         [JsonPropertyName("version")]
         public string Version { get; }
