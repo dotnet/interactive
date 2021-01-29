@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
                         break;
 
                     default:
-                        metadata[property.Name] = property.Value;
+                        metadata[property.Name] = property.Value.ToObject();
                         break;
                 }
             }
