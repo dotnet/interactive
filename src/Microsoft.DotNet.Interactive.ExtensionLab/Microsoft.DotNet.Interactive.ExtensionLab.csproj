@@ -5,13 +5,13 @@
   </PropertyGroup>
 
  <PropertyGroup>
+    <OutputType>Library</OutputType>
     <IsPackable>true</IsPackable>
     <PackageDescription>Experimental kernel extensions for dotnet-interactive</PackageDescription>
-    <OutputType>Library</OutputType>
     <PackageTags>dotnet-interactive</PackageTags>
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn><!-- dll outside of lib/ folder -->
-     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup>
