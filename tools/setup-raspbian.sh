@@ -53,13 +53,12 @@ add_nuget_src() {
   fi
 }
 
-add_nuget_src https://api.nuget.org/v3/index.json nuget.org
+add_nuget_src https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json dotnet-public
 add_nuget_src https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json dotnet-eng
 add_nuget_src https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json dotnet-tools
 add_nuget_src https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1/nuget/v3/index.json dotnet3-dev
 add_nuget_src https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json dotnet5
 add_nuget_src https://pkgs.dev.azure.com/dnceng/public/_packaging/MachineLearning/nuget/v3/index.json MachineLearning
-add_nuget_src https://www.powershellgallery.com/api/v2/ PSGallery
 echo ""
 
 
