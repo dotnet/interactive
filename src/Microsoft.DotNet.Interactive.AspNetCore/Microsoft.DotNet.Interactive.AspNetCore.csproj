@@ -2,7 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <PackageDescription>Run an ASP.NET Core playground in a .NET Interactive notebook.</PackageDescription>
+    <OutputType>Library</OutputType>
+    <PackageTags>dotnet-interactive aspnet</PackageTags>
+    <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn><!-- dll outside of lib/ folder -->
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(OutputPath)/Microsoft.DotNet.Interactive.AspNetCore.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
+  </ItemGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
