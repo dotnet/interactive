@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Commands
 
             Handler = (_, context) =>
             {
-                context.Publish(new ErrorProduced(Message));
+                context.Publish(new ErrorProduced(Message, context.Command));
 
                 return Task.CompletedTask;
             };

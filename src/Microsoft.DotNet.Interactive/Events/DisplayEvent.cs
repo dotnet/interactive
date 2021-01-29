@@ -3,8 +3,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Commands;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Events
     {
         protected DisplayEvent(
             object value,
-            KernelCommand command = null,
+            KernelCommand command,
             IReadOnlyCollection<FormattedValue> formattedValues = null,
             string valueId = null) : base(command)
         {

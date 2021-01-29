@@ -7,8 +7,10 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using ArgumentOutOfRangeException = System.ArgumentOutOfRangeException;
 
 namespace Microsoft.DotNet.Interactive.Notebook
 {
@@ -107,14 +109,31 @@ namespace Microsoft.DotNet.Interactive.Notebook
                 cells.Add(CreateCell(defaultLanguage, Array.Empty<string>()));
             }
 
-            return new NotebookDocument(cells);
+            return new NotebookDocument(cells.ToArray());
+        }
+
+        private static JsonElement? GetPropertyFromPath(this JsonElement source, params string[] path)
+        {
+            var current = source;
+            foreach (var propertyName in path)
+            {
+                if (!current.TryGetProperty(propertyName, out var propertyValue))
+                {
+                    return null;
+                }
+
+                current = propertyValue;
+
+            }
+
+            return current;
         }
 
         private static NotebookDocument ParseJupyterNotebook(byte[] rawData, IDictionary<string, string> kernelLanguageAliases)
         {
             var content = Encoding.UTF8.GetString(rawData);
-            var jupyter = JObject.Parse(content);
-            var notebookLanguage = jupyter["metadata"]?["kernelspec"]?["language"]?.ToObject<string>() ?? "C#";
+            var jupyter = JsonDocument.Parse(content).RootElement;
+            var notebookLanguage = jupyter.GetPropertyFromPath("metadata","kernelspec","language")?.GetString() ?? "C#";
             var defaultLanguage = notebookLanguage switch
             {
                 "C#" => "csharp",
@@ -124,18 +143,19 @@ namespace Microsoft.DotNet.Interactive.Notebook
             };
 
             var cells = new List<NotebookCell>();
-            foreach (var cell in jupyter["cells"])
+            foreach (var cell in jupyter.GetProperty("cells").EnumerateArray())
             {
-                switch (cell["cell_type"]?.ToObject<string>())
+                switch (cell.GetProperty("cell_type").GetString())
                 {
                     case "code":
                         //
                         // figure out cell language and content
                         //
-                        var cellMetadata = cell["metadata"]?[MetadataNamespace];
-                        var languageFromMetadata = cellMetadata?["language"]?.ToObject<string>();
+                        var cellMetadata = cell.GetPropertyFromPath("metadata",MetadataNamespace);
 
-                        var sourceLines = GetTextLines(cell["source"]);
+                        var languageFromMetadata = cellMetadata?.GetProperty("language").GetString();
+
+                        var sourceLines = GetTextLines(cell.GetProperty("source"));
 
                         var possibleCellLanguage = sourceLines.Count > 0 && sourceLines[0].StartsWith("#!")
                             ? sourceLines[0].Substring(2)
@@ -150,53 +170,71 @@ namespace Microsoft.DotNet.Interactive.Notebook
                         //
                         // gather cell outputs
                         //
-                        var outputs = (cell["outputs"] ?? new JArray()) // might be `null`
-                            .Select<JToken, NotebookCellOutput>(cellOutput =>
-                                cellOutput["output_type"]?.ToObject<string>() switch
+                       
+                        var outputs = Enumerable.Empty<NotebookCellOutput>();
+                        if (cell.TryGetProperty("outputs", out var cellOutputs))
+                        {
+
+                            var serializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.General);
+                            serializerOptions.Converters.Add(new DataDictionaryConverter());
+
+                            outputs = cellOutputs.EnumerateArray()
+                                .Select<JsonElement, NotebookCellOutput>(cellOutput =>
+                            {
+                                if (cellOutput.TryGetProperty("output_type", out var cellTypeProperty))
                                 {
-                                    // our concept of a notebook is heavily influenced by VS Code and they don't distinguish between execution results and displayed data
-                                    var type when
-                                        type == "display_data" ||
-                                        type == "execute_result" => new NotebookCellDisplayOutput(cellOutput["data"]?.ToObject<IDictionary<string, object>>()),
+                                    return cellTypeProperty.GetString() switch
+                                    {
+                                        // our concept of a notebook is heavily influenced by VS Code and they don't distinguish between execution results and displayed data
+                                        var type when
+                                            type == "display_data" ||
+                                            type == "execute_result" => new NotebookCellDisplayOutput(
+                                                JsonSerializer.Deserialize<Dictionary<string, object>>(cellOutput
+                                                    .GetProperty("data").GetRawText(), serializerOptions)),
 
-                                    "stream" => new NotebookCellTextOutput(GetTextAsSingleString(cellOutput["text"])),
+                                        "stream" => new NotebookCellTextOutput(
+                                            GetTextAsSingleString(cellOutput.GetProperty("text"))),
 
-                                    "error" => new NotebookCellErrorOutput(
-                                        cellOutput["ename"]?.ToObject<string>(),
-                                        cellOutput["evalue"]?.ToObject<string>(),
-                                        cellOutput["traceback"]?.ToObject<string[]>()),
+                                        "error" => new NotebookCellErrorOutput(
+                                            cellOutput.GetProperty("ename").GetString(),
+                                            cellOutput.GetProperty("evalue").GetString(),
+                                            cellOutput.GetProperty("traceback").EnumerateArray()
+                                                .Select(s => s.GetString()).ToArray()),
 
-                                    _ => null
-                                })
-                            .Where(x => x != null);
+                                        _ => null
+                                    };
+                                }
 
-                        cells.Add(new NotebookCell(cellLanguage, source, outputs));
+                                return null;
+                            }).Where(x => x != null);
+                        }
+                        cells.Add(new NotebookCell(cellLanguage, source, outputs.ToArray()));
                         break;
                     case "markdown":
-                        var markdown = GetTextAsSingleString(cell["source"]);
+                        var markdown = GetTextAsSingleString(cell.GetProperty("source"));
                         cells.Add(new NotebookCell("markdown", markdown));
                         break;
                 }
             }
 
-            return new NotebookDocument(cells);
+            return new NotebookDocument(cells.ToArray());
         }
 
-        private static List<string> GetTextLines(JToken token)
+        private static List<string> GetTextLines(JsonElement jsonElement)
         {
-            var textLines = (token switch
+            var textLines = jsonElement.ValueKind switch
             {
-                // can either be a string or an array of string
-                JArray arr => arr.Select(l => l.ToObject<string>().TrimNewline()),
-                JValue val when val.Type == JTokenType.String => NotebookParsingExtensions.SplitAsLines(val.ToObject<string>()),
-                _ => Array.Empty<string>() // null/unknown/unsupported; don't crash
-            }).ToList();
-            return textLines;
+                JsonValueKind.Array => jsonElement.EnumerateArray().Select(element => element.GetString().TrimNewline()),
+                JsonValueKind.String => NotebookParsingExtensions.SplitAsLines(jsonElement.GetString()),
+                _ => Array.Empty<string>()
+            };
+
+            return textLines.ToList();
         }
 
-        private static string GetTextAsSingleString(JToken token)
+        private static string GetTextAsSingleString(JsonElement jsonElement)
         {
-            var textLines = GetTextLines(token);
+            var textLines = GetTextLines(jsonElement);
             return string.Join("\n", textLines);
         }
 
@@ -324,16 +362,15 @@ namespace Microsoft.DotNet.Interactive.Notebook
             };
 
             // use single space indention as is common with .ipynb
-            var serializer = JsonSerializer.CreateDefault();
-            var stringWriter = new StringWriter();
-            using var jsonWriter = new JsonTextWriter(stringWriter)
+
+            var options = new JsonSerializerOptions(JsonSerializerDefaults.General)
             {
-                Formatting = Newtonsoft.Json.Formatting.Indented,
-                IndentChar = ' ',
-                Indentation = 1
+                WriteIndented = true,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                DictionaryKeyPolicy = JsonNamingPolicy.CamelCase
             };
-            serializer.Serialize(jsonWriter, jupyter);
-            var content = stringWriter.ToString();
+
+            var content = JsonSerializer.Serialize(jupyter, options);
 
             var rawData = Encoding.UTF8.GetBytes(content);
             return rawData;

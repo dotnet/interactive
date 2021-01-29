@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Linq;
@@ -15,8 +16,6 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.ML;
-
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -169,13 +168,13 @@ namespace Microsoft.ML
         public static TabularJsonString ToTabularJsonString(this IDataView source)
         {
             var fields = source.Schema.ToDictionary(column => column.Name, column => column.Type.RawType);
-            var data = new JArray();
+            var data = new List<Dictionary<string,object>>();
 
             var cursor = source.GetRowCursor(source.Schema);
 
             while (cursor.MoveNext())
             {
-                var rowObj = new JObject();
+                var rowObj = new Dictionary<string, object>();
 
                 foreach (var column in source.Schema)
                 {
@@ -193,9 +192,7 @@ namespace Microsoft.ML
                         value = value.ToString();
                     }
 
-                    var fromObject = JToken.FromObject(value);
-
-                    rowObj.Add(column.Name, fromObject);
+                    rowObj.Add(column.Name, value);
                 }
 
                 data.Add(rowObj);

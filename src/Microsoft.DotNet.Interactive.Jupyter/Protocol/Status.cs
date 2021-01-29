@@ -3,14 +3,14 @@
 
 
 using System;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 {
     [JupyterMessageType(JupyterMessageContentTypes.Status)]
     public class Status : PubSubMessage
     {
-        [JsonProperty("execution_state")]
+        [JsonPropertyName("execution_state")]
         public string ExecutionState { get; }
 
         public Status(string executionState)

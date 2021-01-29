@@ -4,7 +4,6 @@
 using System;
 using System.Threading.Tasks;
 
-
 namespace Microsoft.DotNet.Interactive.Jupyter
 {
     public class JupyterRequestContextScheduler

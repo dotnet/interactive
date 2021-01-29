@@ -2,26 +2,27 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 {
     [JupyterMessageType(JupyterMessageContentTypes.CompleteReply)]
     public class CompleteReply : ReplyMessage
     {
-        [JsonProperty("matches")]
+        [JsonPropertyName("matches")]
         public IReadOnlyList<string> Matches { get; }
 
-        [JsonProperty("cursor_start")]
+        [JsonPropertyName("cursor_start")]
         public int CursorStart { get; }
 
-        [JsonProperty("cursor_end")]
+        [JsonPropertyName("cursor_end")]
         public int CursorEnd { get; }
 
-        [JsonProperty("metadata", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("metadata")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IReadOnlyDictionary<string, object> MetaData { get; }
 
-        [JsonProperty("status")] public string Status { get; }
+        [JsonPropertyName("status")] public string Status { get; }
 
         public CompleteReply(int cursorStart = 0, int cursorEnd = 0, IReadOnlyList<string> matches = null, IReadOnlyDictionary<string, object> metaData = null, string status = null)
         {

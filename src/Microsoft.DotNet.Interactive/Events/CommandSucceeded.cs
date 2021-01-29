@@ -3,23 +3,14 @@
 
 using System;
 using Microsoft.DotNet.Interactive.Commands;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
     public class CommandSucceeded : KernelEvent
     {
-        [JsonConstructor]
-        internal CommandSucceeded()
-        {
-        }
 
         public CommandSucceeded(KernelCommand command) : base(command)
         {
-            if (command == null)
-            {
-                throw new ArgumentNullException(nameof(command));
-            }
         }
 
         public override string ToString() => $"{nameof(CommandSucceeded)}: {Command}";

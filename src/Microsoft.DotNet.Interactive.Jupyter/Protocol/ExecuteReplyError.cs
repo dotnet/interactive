@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 {
@@ -22,13 +22,13 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
            
         }
 
-        [JsonProperty("ename")]
+        [JsonPropertyName("ename")]
         public string EName { get; }
 
-        [JsonProperty("evalue")]
+        [JsonPropertyName("evalue")]
         public string EValue { get;  }
 
-        [JsonProperty("traceback")]
+        [JsonPropertyName("traceback")]
         public IReadOnlyList<string> Traceback { get;} 
     }
 }

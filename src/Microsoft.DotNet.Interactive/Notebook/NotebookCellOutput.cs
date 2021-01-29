@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using System.Collections.Immutable;
 
 namespace Microsoft.DotNet.Interactive.Notebook
 {
@@ -12,11 +11,11 @@ namespace Microsoft.DotNet.Interactive.Notebook
 
     public class NotebookCellDisplayOutput : NotebookCellOutput
     {
-        public IReadOnlyDictionary<string, object> Data { get; }
+        public Dictionary<string, object> Data { get; }
 
-        public NotebookCellDisplayOutput(IDictionary<string, object> data)
+        public NotebookCellDisplayOutput(Dictionary<string, object> data)
         {
-            Data = (IReadOnlyDictionary<string, object>)data;
+            Data = data;
         }
     }
 
@@ -24,13 +23,13 @@ namespace Microsoft.DotNet.Interactive.Notebook
     {
         public string ErrorName { get; }
         public string ErrorValue { get; }
-        public IReadOnlyCollection<string> StackTrace { get; }
+        public string[] StackTrace { get; }
 
-        public NotebookCellErrorOutput(string errorName, string errorValue, IEnumerable<string> stackTrace)
+        public NotebookCellErrorOutput(string errorName, string errorValue, string[] stackTrace)
         {
             ErrorName = errorName;
             ErrorValue = errorValue;
-            StackTrace = stackTrace.ToImmutableArray();
+            StackTrace = stackTrace;
         }
     }
 

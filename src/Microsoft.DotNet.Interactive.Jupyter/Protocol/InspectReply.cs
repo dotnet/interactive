@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 {
@@ -24,16 +24,18 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
             MetaData = metaData?? new Dictionary<string, object>();
         }
 
-        [JsonProperty("status")]
+        [JsonPropertyName("status")]
         public string Status { get; }
 
-        [JsonProperty("source")]
+        [JsonPropertyName("source")]
         public string Source { get;  }
 
-        [JsonProperty("data", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("data")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IReadOnlyDictionary<string,object> Data { get; }
 
-        [JsonProperty("metadata", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("metadata")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IReadOnlyDictionary<string, object> MetaData { get; }
     }
 }

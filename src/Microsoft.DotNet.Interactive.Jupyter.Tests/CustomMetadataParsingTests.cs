@@ -1,10 +1,10 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.Json;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 using Microsoft.DotNet.Interactive.Notebook;
-using Newtonsoft.Json;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
@@ -16,15 +16,15 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             var rawMetadata = new
             {
-                dotnet_interactive = new InputCellMetadata() { Language = "fsharp" }
+                dotnet_interactive = new InputCellMetadata("fsharp")
             };
-            var rawMetadataJson = JsonConvert.SerializeObject(rawMetadata);
+            var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
             var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
             metadata.Should()
                 .ContainKey("dotnet_interactive")
                 .WhichValue
                 .Should()
-                .BeEquivalentTo(new InputCellMetadata() { Language = "fsharp" });
+                .BeEquivalentTo(new InputCellMetadata("fsharp"));
         }
 
         [Fact]
@@ -34,13 +34,13 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             {
                 dotnet_interactive = new InputCellMetadata()
             };
-            var rawMetadataJson = JsonConvert.SerializeObject(rawMetadata);
+            var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
             var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
             metadata.Should()
                 .ContainKey("dotnet_interactive")
                 .WhichValue
                 .Should()
-                .BeEquivalentTo(new InputCellMetadata() { Language = null });
+                .BeEquivalentTo(new InputCellMetadata() );
         }
 
         [Fact]
@@ -48,9 +48,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             var rawMetadata = new
             {
-                dotnet_interactive_but_not_the_right_shape = new InputCellMetadata() { Language = "fsharp" }
+                dotnet_interactive_but_not_the_right_shape = new InputCellMetadata("fsharp")
             };
-            var rawMetadataJson = JsonConvert.SerializeObject(rawMetadata);
+            var rawMetadataJson = JsonSerializer.Serialize(rawMetadata);
             var metadata = MetadataExtensions.DeserializeMetadataFromJsonString(rawMetadataJson);
             metadata.Should()
                 .NotContainKey("dotnet_interactive");

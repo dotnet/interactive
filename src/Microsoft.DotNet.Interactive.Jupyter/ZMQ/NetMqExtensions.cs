@@ -4,9 +4,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using NetMQ;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 {
@@ -17,11 +16,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
             var ret = default(T);
             if (!string.IsNullOrWhiteSpace(source))
             {
-                var sourceObject = JObject.Parse(source);
-                if (sourceObject.HasValues)
-                {
-                    ret = JsonConvert.DeserializeObject<T>(source);
-                }
+                ret = JsonSerializer.Deserialize<T>(source);
             }
             return ret;
         }
@@ -31,11 +26,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
             var ret = Protocol.Message.Empty;
             if (!string.IsNullOrWhiteSpace(source))
             {
-                var sourceObject = JObject.Parse(source);
-                if (sourceObject.HasValues)
-                {
-                    ret = Protocol.Message.FromJsonString(source, messageType);
-                }
+                ret = Protocol.Message.FromJsonString(source, messageType);
             }
             return ret;
         }
@@ -80,7 +71,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
         public static Message DeserializeMessage(string signature, string headerJson, string parentHeaderJson,
             string metadataJson, string contentJson, IReadOnlyList<IReadOnlyList<byte>> identifiers)
         {
-            var header = JsonConvert.DeserializeObject<Header>(headerJson);
+            var header = JsonSerializer.Deserialize<Header>(headerJson);
             var parentHeader = DeserializeFromJsonString<Header>(parentHeaderJson);
             var metaData = MetadataExtensions.DeserializeMetadataFromJsonString(metadataJson);
             var content = DeserializeMessageContentFromJsonString(contentJson, header.MessageType);

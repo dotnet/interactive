@@ -1,30 +1,26 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using Microsoft.DotNet.Interactive.Notebook;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
     internal static class Serializer
     {
-        public static readonly JsonSerializerSettings JsonSerializerSettings;
-
         static Serializer()
         {
-            JsonSerializerSettings = new JsonSerializerSettings
+            JsonSerializerOptions = new JsonSerializerOptions
             {
-                ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                Formatting = Newtonsoft.Json.Formatting.None,
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                WriteIndented = false,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
-
-            JsonSerializerSettings.Converters.Add(new FileSystemInfoJsonConverter());
-            JsonSerializerSettings.Converters.Add(new NotebookCellOutputJsonConverter());
-
-            JsonSerializer = JsonSerializer.Create(JsonSerializerSettings);
+            JsonSerializerOptions.Converters.Add(new DataDictionaryConverter());
+            JsonSerializerOptions.Converters.Add(new NotebookCellOutputConverter());
         }
 
-        public static JsonSerializer JsonSerializer { get; }
+        public static JsonSerializerOptions JsonSerializerOptions { get; }
     }
 }

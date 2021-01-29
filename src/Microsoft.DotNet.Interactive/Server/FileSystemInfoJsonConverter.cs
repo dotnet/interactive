@@ -3,27 +3,29 @@
 
 using System;
 using System.IO;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
     public class FileSystemInfoJsonConverter : JsonConverter<FileSystemInfo>
     {
-        public override void WriteJson(JsonWriter writer, FileSystemInfo value, JsonSerializer serializer)
+        public override FileSystemInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            writer.WriteValue(value.FullName);
-        }
-
-        public override FileSystemInfo ReadJson(JsonReader reader, Type objectType, FileSystemInfo existingValue, bool hasExistingValue, JsonSerializer serializer)
-        {
-            if (reader.Value is string path)
+            if(reader.TokenType == JsonTokenType.String)
             {
-                if (objectType == typeof(FileInfo))
+                var path = reader.GetString();
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    return null;
+                }
+
+                if (typeToConvert == typeof(FileInfo))
                 {
                     return new FileInfo(path);
                 }
 
-                if (objectType == typeof(DirectoryInfo))
+                if (typeToConvert == typeof(DirectoryInfo))
                 {
                     return new DirectoryInfo(path);
                 }
@@ -32,8 +34,9 @@ namespace Microsoft.DotNet.Interactive.Server
             return null;
         }
 
-        public override bool CanRead { get; } = true;
-
-        public override bool CanWrite { get; }= true;
+        public override void Write(Utf8JsonWriter writer, FileSystemInfo value, JsonSerializerOptions options)
+        {
+            writer.WriteStringValue(value.FullName);
+        }
     }
 }

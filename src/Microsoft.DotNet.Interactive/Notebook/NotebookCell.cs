@@ -11,13 +11,13 @@ namespace Microsoft.DotNet.Interactive.Notebook
     {
         public string Language { get; }
         public string Contents { get; }
-        public IReadOnlyCollection<NotebookCellOutput> Outputs { get; }
+        public NotebookCellOutput[] Outputs { get; }
 
-        public NotebookCell(string language, string contents, IEnumerable<NotebookCellOutput> outputs = null)
+        public NotebookCell(string language, string contents, NotebookCellOutput[] outputs = null)
         {
             Language = language;
             Contents = contents;
-            Outputs = (outputs ?? Array.Empty<NotebookCellOutput>()).ToImmutableArray();
+            Outputs = (outputs ?? Array.Empty<NotebookCellOutput>());
         }
     }
 }

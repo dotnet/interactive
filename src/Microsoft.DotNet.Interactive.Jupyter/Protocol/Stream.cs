@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 {
@@ -15,9 +15,9 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
         [JsonIgnore]
         public static string StandardOutput { get; } = "stdout";
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; }
-        [JsonProperty("text")]
+        [JsonPropertyName("text")]
         public string Text { get; }
 
         public Stream(string name, string text)

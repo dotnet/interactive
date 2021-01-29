@@ -2,16 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
     internal class TabularDataSchema
     {
-        [JsonProperty(PropertyName = "primaryKey")]
+        [JsonPropertyName("primaryKey")]
         public List<string> PrimaryKey { get; } = new List<string>();
 
-        [JsonProperty(PropertyName = "fields")]
+        [JsonPropertyName("fields")]
         public TabularDataFieldList Fields { get; } = new TabularDataFieldList();
     }
 }

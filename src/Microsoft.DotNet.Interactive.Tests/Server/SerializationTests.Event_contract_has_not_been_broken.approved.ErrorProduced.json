@@ -1,1 +1,1 @@
-{"event":{"message":"oops!","formattedValues":[],"valueId":null},"eventType":"ErrorProduced","command":null}
+{"event":{"message":"oops!","formattedValues":[],"valueId":null},"eventType":"ErrorProduced","command":{"token":"the-token","commandType":"SubmitCode","command":{"code":"123","submissionType":0,"targetKernelName":null}}}

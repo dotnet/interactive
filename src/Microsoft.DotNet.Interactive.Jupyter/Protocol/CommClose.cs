@@ -3,17 +3,19 @@
 
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
+
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 {
     [JupyterMessageType(JupyterMessageContentTypes.CommClose)]
     public class CommClose : Message
     {
-        [JsonProperty("comm_id")]
+        [JsonPropertyName("comm_id")]
         public string CommId { get; }
 
-        [JsonProperty("data", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("data")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IReadOnlyDictionary<string,object> Data { get; }
 
         public CommClose(string commId, IReadOnlyDictionary<string, object> data = null )

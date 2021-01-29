@@ -2,28 +2,28 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 {
     public class Header
     {
-        [JsonProperty("msg_id")]
+        [JsonPropertyName("msg_id")]
         public string MessageId { get; }
 
-        [JsonProperty("username")]
+        [JsonPropertyName("username")]
         public string Username { get; }
 
-        [JsonProperty("session")]
+        [JsonPropertyName("session")]
         public string Session { get; }
 
-        [JsonProperty("date")]
+        [JsonPropertyName("date")]
         public string Date { get; }
 
-        [JsonProperty("msg_type")]
+        [JsonPropertyName("msg_type")]
         public string MessageType { get; }
 
-        [JsonProperty("version")]
+        [JsonPropertyName("version")]
         public string Version { get; }
 
         public Header(string messageType, string messageId, string version, string session, string username, string date = null)

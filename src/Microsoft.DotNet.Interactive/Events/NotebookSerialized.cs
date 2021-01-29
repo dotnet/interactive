@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.Events
     {
         public byte[] RawData { get; }
 
-        public NotebookSerialized(byte[] rawData, KernelCommand command = null)
+        public NotebookSerialized(byte[] rawData, KernelCommand command)
             : base(command)
         {
             RawData = rawData;

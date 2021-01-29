@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.Interactive
 
                 Log(context, "Logging enabled");
 
-                static void Log(KernelInvocationContext c, string message) => c.Publish(new DiagnosticLogEntryProduced(message));
+                static void Log(KernelInvocationContext c, string message) => c.Publish(new DiagnosticLogEntryProduced(message, c.Command));
             });
 
             kernel.AddDirective(command);

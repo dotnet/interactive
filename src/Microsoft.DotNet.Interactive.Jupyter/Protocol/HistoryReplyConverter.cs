@@ -1,45 +1,190 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-// using System;
 
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 {
-    public class HistoryReplyConverter : JsonConverter<HistoryReply> {
-        public override bool CanRead { get; } = true;
-        public override bool CanWrite { get; } = true;
+    public class HistoryReplyConverter : JsonConverter<HistoryReply>
+    {
+        public override HistoryReply Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType == JsonTokenType.StartObject)
+            {
+                if (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
+                {
+                    if (reader.GetString() == "history")
+                    {
+                        if (reader.Read())
+                        {
+                            if (reader.TokenType == JsonTokenType.StartArray)
+                            {
+                                if (reader.Read())
+                                {
+                                    switch (reader.TokenType)
+                                    {
+                                        case JsonTokenType.StartArray:
+                                            var elements = ReadHistoryElements(ref reader);
+                                            if (!reader.Read() || reader.TokenType != JsonTokenType.EndObject)
+                                            {
+                                                throw new JsonException();
+                                            }
 
-        public override void WriteJson(JsonWriter writer, HistoryReply value, JsonSerializer serializer)
+                                            return new HistoryReply(elements);
+                                        case JsonTokenType.EndArray:
+                                            if (reader.Read() && reader.TokenType == JsonTokenType.EndObject)
+                                            {
+                                                return new HistoryReply();
+                                            }
+                                            else
+                                            {
+                                                throw new JsonException();
+                                            }
+                                    }
+                                }
+
+                            }
+                            else if (reader.TokenType == JsonTokenType.Null)
+                            {
+                                if (!reader.Read() || reader.TokenType != JsonTokenType.EndObject)
+                                {
+                                    throw new JsonException();
+                                }
+                                return new HistoryReply();
+                            }
+                        }
+                    }
+                }
+            }
+            throw new JsonException();
+        }
+
+        private IReadOnlyList<HistoryElement> ReadHistoryElements(ref Utf8JsonReader reader)
+        {
+            var elements = new List<HistoryElement>();
+            while (reader.TokenType == JsonTokenType.StartArray)
+            {
+                int session;
+                if (reader.Read() && reader.TokenType == JsonTokenType.Number)
+                {
+                    session = reader.GetInt32();
+                }
+                else
+                {
+                    throw new JsonException();
+                }
+
+                int lineNumber;
+                if (reader.Read() && reader.TokenType == JsonTokenType.Number)
+                {
+                    lineNumber = reader.GetInt32();
+                }
+                else
+                {
+                    throw new JsonException();
+                }
+
+                if (reader.Read())
+                {
+                    switch (reader.TokenType)
+                    {
+                        case JsonTokenType.String:
+                        {
+                            var input = reader.GetString();
+                            elements.Add(new InputHistoryElement(session, lineNumber, input));
+                        }
+                            break;
+                        case JsonTokenType.StartArray:
+                        {
+                            string input = null;
+                            string output = null;
+                            if (reader.Read() && reader.TokenType == JsonTokenType.String)
+                            {
+                                input = reader.GetString();
+                            }
+                            else
+                            {
+                                throw new JsonException();
+                            }
+
+
+                            if (reader.Read() && reader.TokenType == JsonTokenType.String)
+                            {
+                                output = reader.GetString();
+                            }
+                            else
+                            {
+                                throw new JsonException();
+                            }
+
+                            if (!reader.Read() || reader.TokenType != JsonTokenType.EndArray)
+                            {
+                                throw new JsonException();
+                            }
+
+                            elements.Add(new InputOutputHistoryElement(session, lineNumber, input, output));
+                        }
+                            break;
+                        default:
+                            throw new JsonException();
+
+                    }
+
+                    if (reader.Read() && reader.TokenType == JsonTokenType.EndArray)
+                    {
+                        reader.Read();
+                    }
+                }
+            }
+
+
+            return elements;
+        }
+
+        public override void Write(Utf8JsonWriter writer, HistoryReply value, JsonSerializerOptions options)
         {
             writer.WriteStartObject();
-            writer.WritePropertyName("history");
-            serializer.Serialize(writer,value.History);
+            writer.WriteStartArray("history");
+
+            foreach (var element in value.History)
+            {
+                switch (element)
+                {
+                    case InputOutputHistoryElement inputOutputHistoryElement:
+                        Write(writer, inputOutputHistoryElement);
+                        break;
+                    case InputHistoryElement inputHistoryElement:
+                        Write(writer, inputHistoryElement);
+                        break;
+                }
+            }
+
+            writer.WriteEndArray();
             writer.WriteEndObject();
         }
 
-        public override HistoryReply ReadJson(JsonReader reader, Type objectType, HistoryReply existingValue,
-            bool hasExistingValue, JsonSerializer serializer)
+        private static void Write(Utf8JsonWriter writer, InputHistoryElement inputHistoryElement)
         {
-            var obj = serializer.Deserialize<JObject>(reader);
-            var historyProperty = obj.Property("history").Value.Values<JArray>();
-            var history = new List<HistoryElement>();
-            foreach (var entry in historyProperty)
-            {
-                if (entry.Count != 3)
-                {
-                    throw new FormatException("invalid history element format");
-                }
+            writer.WriteStartArray();
+            writer.WriteNumberValue(inputHistoryElement.Session);
+            writer.WriteNumberValue(inputHistoryElement.LineNumber);
+            writer.WriteStringValue(inputHistoryElement.Input);
+            writer.WriteEndArray();
+        }
 
-                history.Add(entry[2].Type == JTokenType.Array
-                    ? entry.ToObject<InputOutputHistoryElement>()
-                    : entry.ToObject<InputHistoryElement>());
-            }
-            
-            return new HistoryReply(history);
+        private static void Write(Utf8JsonWriter writer, InputOutputHistoryElement inputOutputHistoryElement)
+        {
+            writer.WriteStartArray();
+            writer.WriteNumberValue(inputOutputHistoryElement.Session);
+            writer.WriteNumberValue(inputOutputHistoryElement.LineNumber);
+            writer.WriteStartArray();
+            writer.WriteStringValue(inputOutputHistoryElement.Input);
+            writer.WriteStringValue(inputOutputHistoryElement.Output);
+            writer.WriteEndArray();
+            writer.WriteEndArray();
         }
     }
 }

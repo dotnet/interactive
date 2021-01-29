@@ -2,26 +2,30 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 {
     [JupyterMessageType(JupyterMessageContentTypes.ExecuteResult)]
     public class ExecuteResult : PubSubMessage
     {
-        [JsonProperty("source", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("source")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Source { get; }
 
-        [JsonProperty("data", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("data")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IReadOnlyDictionary<string, object> Data { get; }
 
-        [JsonProperty("metadata", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("metadata")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IReadOnlyDictionary<string, object> MetaData { get; }
 
-        [JsonProperty("transient", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("transient")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public IReadOnlyDictionary<string, object> Transient { get; }
 
-        [JsonProperty("execution_count", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("execution_count")]
         public int ExecutionCount { get; }
 
         public ExecuteResult(int executionCount, string source = null, IReadOnlyDictionary<string, object> data = null, IReadOnlyDictionary<string, object> metaData = null, IReadOnlyDictionary<string, object> transient = null)

@@ -2,8 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Text.Json;
 using Microsoft.DotNet.Interactive.Notebook;
-using Newtonsoft.Json.Linq;
+
 
 namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 {
@@ -11,22 +12,23 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
     {
         public static Dictionary<string, object> DeserializeMetadataFromJsonString(string metadataJson)
         {
-            var metadata = NetMQExtensions.DeserializeFromJsonString<Dictionary<string, object>>(metadataJson) ?? new Dictionary<string, object>();
-            TryParseWellKnownMetadata(metadata);
-            return metadata;
-        }
-
-        private static void TryParseWellKnownMetadata(Dictionary<string, object> metadata)
-        {
-            foreach (var kvp in metadata)
+            var metadata = new Dictionary<string, object>();
+            var doc = JsonDocument.Parse(metadataJson);
+            foreach (var property in doc.RootElement.EnumerateObject())
             {
-                switch (kvp.Key)
+                switch (property.Name)
                 {
-                    case "dotnet_interactive" when kvp.Value is JObject jo:
-                        metadata[kvp.Key] = jo.ToObject<InputCellMetadata>();
+                    case "dotnet_interactive":
+                        metadata[property.Name] = JsonSerializer.Deserialize<InputCellMetadata>( property.Value.GetRawText() );
+                        break;
+
+                    default:
+                        metadata[property.Name] = property.Value;
                         break;
                 }
             }
+
+            return metadata;
         }
     }
 }

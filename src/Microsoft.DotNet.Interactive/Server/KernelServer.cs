@@ -4,9 +4,10 @@
 using System;
 using System.IO;
 using System.Reactive.Disposables;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
@@ -65,11 +66,11 @@ namespace Microsoft.DotNet.Interactive.Server
             {
                 kernelCommandEnvelope = KernelCommandEnvelope.Deserialize(line);
             }
-            catch (JsonReaderException ex)
+            catch (Exception ex)
             {
                 WriteEventToOutput(
                     new DiagnosticLogEntryProduced(
-                        $"Error while parsing command: {ex.Message}\n{line}"));
+                        $"Error while parsing command: {ex.Message}\n{line}", KernelCommand.None));
                 
                 return;
             }

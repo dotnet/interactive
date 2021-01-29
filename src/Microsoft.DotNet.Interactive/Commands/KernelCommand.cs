@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
@@ -30,13 +30,15 @@ namespace Microsoft.DotNet.Interactive.Commands
         [JsonIgnore]
         public KernelCommandInvocation Handler { get; set; }
 
-        [JsonIgnore]   
+        [JsonIgnore]
         public KernelCommand Parent { get; internal set; }
 
         [JsonIgnore]
         public IDictionary<string, object> Properties { get; }
 
         public string TargetKernelName { get; internal set; }
+
+        internal static KernelCommand None { get; } = new NoCommand();
 
         public virtual Task InvokeAsync(KernelInvocationContext context)
         {
