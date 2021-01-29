@@ -218,17 +218,17 @@ namespace Microsoft.DotNet.Interactive
 
         public void AddDirective(Command command) => SubmissionParser.AddDirective(command);
 
-        public virtual void RegisterCommandHandler<TCommand>(string commandType, Func<TCommand, KernelInvocationContext, Task> handler)
+        public virtual void RegisterCommandHandler<TCommand>(Func<TCommand, KernelInvocationContext, Task> handler)
             where TCommand : KernelCommand
         {
-            RegisterCommandType<TCommand>(commandType);
+            RegisterCommandType<TCommand>();
             _dynamicHandlers[typeof(TCommand)] = (command, context) => handler((TCommand)command, context);
         }
 
-        public void RegisterCommandType<TCommand>(string commandType)
+        public void RegisterCommandType<TCommand>()
             where TCommand : KernelCommand
         {
-            KernelCommandEnvelope.RegisterCommandTypeReplacingIfNecessary<TCommand>(commandType);
+            KernelCommandEnvelope.RegisterCommandTypeReplacingIfNecessary<TCommand>();
         }
 
         private class KernelOperation

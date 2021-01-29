@@ -174,13 +174,11 @@ namespace Microsoft.DotNet.Interactive.Tests
             if (withHandler)
             {
                 kernel.RegisterCommandHandler<CustomCommandTypes.FirstSubmission.MyCommand>(
-                    CustomCommandTypes.MyCommandType,
                     (_, _) => Task.CompletedTask);
             }
             else
             {
-                kernel.RegisterCommandType<CustomCommandTypes.FirstSubmission.MyCommand>(
-                    CustomCommandTypes.MyCommandType);
+                kernel.RegisterCommandType<CustomCommandTypes.FirstSubmission.MyCommand>();
             }
 
             var originalCommand = new CustomCommandTypes.FirstSubmission.MyCommand("xyzzy");
@@ -212,18 +210,14 @@ namespace Microsoft.DotNet.Interactive.Tests
             if (withHandler)
             {
                 kernel.RegisterCommandHandler<CustomCommandTypes.FirstSubmission.MyCommand>(
-                    CustomCommandTypes.MyCommandType,
                     (_, _) => Task.CompletedTask);
                 kernel.RegisterCommandHandler<CustomCommandTypes.SecondSubmission.MyCommand>(
-                    CustomCommandTypes.MyCommandType,
                     (_, _) => Task.CompletedTask);
             }
             else
             {
-                kernel.RegisterCommandType<CustomCommandTypes.FirstSubmission.MyCommand>(
-                    CustomCommandTypes.MyCommandType);
-                kernel.RegisterCommandType<CustomCommandTypes.SecondSubmission.MyCommand>(
-                    CustomCommandTypes.MyCommandType);
+                kernel.RegisterCommandType<CustomCommandTypes.FirstSubmission.MyCommand>();
+                kernel.RegisterCommandType<CustomCommandTypes.SecondSubmission.MyCommand>();
             }
 
             var originalCommand = new CustomCommandTypes.SecondSubmission.MyCommand("xyzzy", 42);

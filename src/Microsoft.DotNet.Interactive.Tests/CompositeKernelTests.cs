@@ -532,7 +532,6 @@ new [] {1,2,3}");
             KernelInvocationContext contextPassedToHandler = null;
 
             compositeKernel.RegisterCommandHandler<CustomCommandTypes.FirstSubmission.MyCommand>(
-                CustomCommandTypes.MyCommandType,
                 (command, context) =>
                 {
                     commandPassedToHandler = command;
@@ -562,7 +561,6 @@ new [] {1,2,3}");
             KernelInvocationContext contextPassedToHandler = null;
 
             childKernel.RegisterCommandHandler<CustomCommandTypes.FirstSubmission.MyCommand>(
-                CustomCommandTypes.MyCommandType,
                 (command, context) =>
                 {
                     commandPassedToHandler = command;

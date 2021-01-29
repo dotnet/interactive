@@ -52,10 +52,11 @@ namespace Microsoft.DotNet.Interactive.Server
             _commandTypesByCommandTypeName.TryAdd(commandTypeName, commandType);
         }
 
-        internal static void RegisterCommandTypeReplacingIfNecessary<T>(string commandTypeName) where T : KernelCommand
+        internal static void RegisterCommandTypeReplacingIfNecessary<T>() where T : KernelCommand
         {
             var commandEnvelopeType = typeof(KernelCommandEnvelope<T>);
             var commandType = typeof(T);
+            var commandTypeName = commandType.Name;
 
             _envelopeTypesByCommandTypeName[commandTypeName] = commandEnvelopeType;
             _commandTypesByCommandTypeName[commandTypeName] = commandType;
