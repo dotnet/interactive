@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
         private static readonly Dictionary<Type, string> WellKnownTypes = new Dictionary<Type, string>
         {
             { typeof(bool), "boolean" },
+            { typeof(byte), "number" },
             { typeof(int), "number" },
             { typeof(object), "any" },
             { typeof(string), "string" },
@@ -213,7 +214,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
             if (type.ShouldBeArray())
             {
-                return $"Array<{GetTypeScriptTypeName(type.GenericTypeArguments[0])}>";
+                return $"Array<{GetTypeScriptTypeName(type.GetArrayElementType())}>";
             }
 
             if (type.IsNullable())
@@ -233,7 +234,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
             if (type.ShouldBeArray())
             {
-                return type.GenericTypeArguments[0];
+                return type.GetArrayElementType();
             }
 
             if (type.IsNullable())
