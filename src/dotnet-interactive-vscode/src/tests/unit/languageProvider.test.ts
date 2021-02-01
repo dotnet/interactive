@@ -7,7 +7,8 @@ import { ClientMapper } from '../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
 import { provideCompletion } from './../../languageServices/completion';
 import { provideHover } from './../../languageServices/hover';
-import { CommandSucceededType, CompletionsProducedType } from '../../contracts';
+import { provideSignatureHelp } from '../../languageServices/signatureHelp';
+import { CommandSucceededType, CompletionsProducedType, HoverTextProducedType, SignatureHelpProducedType } from '../../contracts';
 
 describe('LanguageProvider tests', () => {
     it('CompletionProvider', async () => {
@@ -72,7 +73,7 @@ describe('LanguageProvider tests', () => {
         let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
             'RequestHoverText': [
                 {
-                    eventType: 'HoverTextProduced',
+                    eventType: HoverTextProducedType,
                     event: {
                         content: [
                             {
@@ -95,7 +96,7 @@ describe('LanguageProvider tests', () => {
                     token
                 },
                 {
-                    eventType: 'CommandSucceeded',
+                    eventType: CommandSucceededType,
                     event: {},
                     token
                 }
@@ -128,6 +129,81 @@ describe('LanguageProvider tests', () => {
                     character: 12
                 }
             }
+        });
+    });
+
+    it('SignatureHelpProvider', async () => {
+        let token = '123';
+        let clientMapper = new ClientMapper(async (_notebookPath) => new TestKernelTransport({
+            'RequestSignatureHelp': [
+                {
+                    eventType: SignatureHelpProducedType,
+                    event: {
+                        activeSignature: 0,
+                        activeParameter: 0,
+                        signatures: [
+                            {
+                                label: 'void Console.WriteLine(bool value)',
+                                documentation: {
+                                    mimeType: 'text/markdown',
+                                    value: ''
+                                },
+                                parameters: [
+                                    {
+                                        label: 'value',
+                                        documentation: {
+                                            mimeType: 'text/markdown',
+                                            value: 'value'
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    token
+                },
+                {
+                    eventType: CommandSucceededType,
+                    event: {},
+                    token
+                }
+            ]
+        }));
+        clientMapper.getOrAddClient({ fsPath: 'test/path' });
+
+        let code = 'Console.WriteLine(true';
+        let document = {
+            uri: { fsPath: 'test/path' },
+            getText: () => code,
+        };
+        let position = {
+            line: 0,
+            character: 22
+        };
+
+        // perform the sig help request
+        let sigHelp = await provideSignatureHelp(clientMapper, 'csharp', document, position, token);
+        expect(sigHelp).to.deep.equal({
+            activeParameter: 0,
+            activeSignature: 0,
+            signatures: [
+                {
+                    documentation: {
+                        mimeType: 'text/markdown',
+                        value: ''
+                    },
+                    label: 'void Console.WriteLine(bool value)',
+                    parameters: [
+                        {
+                            documentation: {
+                                mimeType: 'text/markdown',
+                                value: 'value'
+                            },
+                            label: 'value'
+                        }
+                    ]
+                }
+            ]
         });
     });
 });

@@ -8,9 +8,10 @@ import { provideHover } from './../languageServices/hover';
 import { notebookCellLanguages, getSimpleLanguage, notebookCellChanged } from '../interactiveNotebook';
 import { convertToRange, toVsCodeDiagnostic } from './vscodeUtilities';
 import { getDiagnosticCollection } from './diagnostics';
+import { provideSignatureHelp } from './../languageServices/signatureHelp';
 
 export class CompletionItemProvider implements vscode.CompletionItemProvider {
-    static readonly triggerCharacters = ['.', '('];
+    static readonly triggerCharacters = ['.'];
 
     constructor(readonly clientMapper: ClientMapper) {
     }
@@ -83,6 +84,33 @@ export class HoverProvider implements vscode.HoverProvider {
     }
 }
 
+export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
+    static readonly triggerCharacters = ['(', ','];
+
+    constructor(readonly clientMapper: ClientMapper) {
+    }
+
+    provideSignatureHelp(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.SignatureHelpContext): vscode.ProviderResult<vscode.SignatureHelp> {
+        const sigHelpPromise = provideSignatureHelp(this.clientMapper, getSimpleLanguage(document.languageId), document, position);
+        return ensureErrorsAreRejected(sigHelpPromise, result => {
+            const signatures: Array<vscode.SignatureInformation> = result.signatures.map(sig => {
+                const parameters: Array<vscode.ParameterInformation> = sig.parameters.map(p => new vscode.ParameterInformation(p.label, p.documentation.value));
+                let si = new vscode.SignatureInformation(
+                    sig.label,
+                    sig.documentation.value
+                );
+                si.parameters = parameters;
+                return si;
+            });
+            let sh = new vscode.SignatureHelp();
+            sh.signatures = signatures;
+            sh.activeSignature = result.activeSignature;
+            sh.activeParameter = result.activeParameter;
+            return sh;
+        });
+    }
+}
+
 function ensureErrorsAreRejected<TInterimResult, TFinalResult>(promise: Promise<TInterimResult>, successHandler: { (result: TInterimResult): TFinalResult }): Promise<TFinalResult> {
     return new Promise<TFinalResult>((resolve, reject) => {
         promise.then(interimResult => {
@@ -100,6 +128,7 @@ export function registerLanguageProviders(clientMapper: ClientMapper, diagnostic
     let languages = [...notebookCellLanguages, "dotnet-interactive.magic-commands"];
     disposables.push(vscode.languages.registerCompletionItemProvider(languages, new CompletionItemProvider(clientMapper), ...CompletionItemProvider.triggerCharacters));
     disposables.push(vscode.languages.registerHoverProvider(languages, new HoverProvider(clientMapper)));
+    disposables.push(vscode.languages.registerSignatureHelpProvider(languages, new SignatureHelpProvider(clientMapper), ...SignatureHelpProvider.triggerCharacters));
     disposables.push(vscode.workspace.onDidChangeTextDocument(e => {
         if (vscode.languages.match(notebookCellLanguages, e.document)) {
             const cell = vscode.window.activeNotebookEditor?.document.cells.find(cell => cell.document === e.document);

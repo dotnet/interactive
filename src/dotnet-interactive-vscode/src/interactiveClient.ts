@@ -34,16 +34,20 @@ import {
     SerializeNotebookType,
     RequestCompletions,
     RequestCompletionsType,
+    RequestDiagnostics,
+    RequestDiagnosticsType,
     RequestHoverText,
     RequestHoverTextType,
+    RequestSignatureHelp,
+    RequestSignatureHelpType,
     ReturnValueProducedType,
+    SignatureHelpProduced,
+    SignatureHelpProducedType,
     StandardErrorValueProducedType,
     StandardOutputValueProducedType,
     SubmissionType,
     SubmitCode,
     SubmitCodeType,
-    RequestDiagnostics,
-    RequestDiagnosticsType,
 } from './contracts';
 import { CellOutput, CellErrorOutput, CellOutputKind, CellDisplayOutput } from './interfaces/vscode';
 import { Eol } from './interfaces';
@@ -204,6 +208,18 @@ export class InteractiveClient {
             targetKernelName: language
         };
         return this.submitCommandAndGetResult<HoverTextProduced>(command, RequestHoverTextType, HoverTextProducedType, token);
+    }
+
+    signatureHelp(language: string, code: string, line: number, character: number, token?: string | undefined): Promise<SignatureHelpProduced> {
+        let command: RequestSignatureHelp = {
+            code,
+            linePosition: {
+                line,
+                character
+            },
+            targetKernelName: language
+        };
+        return this.submitCommandAndGetResult<SignatureHelpProduced>(command, RequestSignatureHelpType, SignatureHelpProducedType, token);
     }
 
     async getDiagnostics(language: string, code: string, token?: string | undefined): Promise<Array<Diagnostic>> {

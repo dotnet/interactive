@@ -500,6 +500,10 @@ namespace Microsoft.DotNet.Interactive
                         SetHandler(requestHoverTextHandler, hoverCommand);
                         break;
 
+                    case (RequestSignatureHelp requestSignatureHelp, IKernelCommandHandler<RequestSignatureHelp> requestSignatureHelpHandler):
+                        SetHandler(requestSignatureHelpHandler, requestSignatureHelp);
+                        break;
+
                     default:
                         TrySetDynamicHandler(command, context);
                         break;

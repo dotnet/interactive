@@ -13,6 +13,7 @@ export const ParseNotebookType = "ParseNotebook";
 export const RequestCompletionsType = "RequestCompletions";
 export const RequestDiagnosticsType = "RequestDiagnostics";
 export const RequestHoverTextType = "RequestHoverText";
+export const RequestSignatureHelpType = "RequestSignatureHelp";
 export const SerializeNotebookType = "SerializeNotebook";
 export const SubmitCodeType = "SubmitCode";
 export const UpdateDisplayedValueType = "UpdateDisplayedValue";
@@ -26,6 +27,7 @@ export type KernelCommandType =
     | typeof RequestCompletionsType
     | typeof RequestDiagnosticsType
     | typeof RequestHoverTextType
+    | typeof RequestSignatureHelpType
     | typeof SerializeNotebookType
     | typeof SubmitCodeType
     | typeof UpdateDisplayedValueType;
@@ -71,6 +73,9 @@ export interface RequestDiagnostics extends KernelCommand {
 export interface RequestHoverText extends LanguageServiceCommand {
 }
 
+export interface RequestSignatureHelp extends LanguageServiceCommand {
+}
+
 export interface SerializeNotebook extends KernelCommand {
     fileName: string;
     notebook: NotebookDocument;
@@ -109,6 +114,7 @@ export const NotebookSerializedType = "NotebookSerialized";
 export const PackageAddedType = "PackageAdded";
 export const PasswordRequestedType = "PasswordRequested";
 export const ReturnValueProducedType = "ReturnValueProduced";
+export const SignatureHelpProducedType = "SignatureHelpProduced";
 export const StandardErrorValueProducedType = "StandardErrorValueProduced";
 export const StandardOutputValueProducedType = "StandardOutputValueProduced";
 export const WorkingDirectoryChangedType = "WorkingDirectoryChanged";
@@ -134,6 +140,7 @@ export type KernelEventType =
     | typeof PackageAddedType
     | typeof PasswordRequestedType
     | typeof ReturnValueProducedType
+    | typeof SignatureHelpProducedType
     | typeof StandardErrorValueProducedType
     | typeof StandardOutputValueProducedType
     | typeof WorkingDirectoryChangedType;
@@ -225,6 +232,12 @@ export interface PasswordRequested extends KernelEvent {
 export interface ReturnValueProduced extends DisplayEvent {
 }
 
+export interface SignatureHelpProduced extends KernelEvent {
+    signatures: Array<SignatureInformation>;
+    activeSignature: number;
+    activeParameter: number;
+}
+
 export interface StandardErrorValueProduced extends DisplayEvent {
 }
 
@@ -312,6 +325,17 @@ export interface ResolvedPackageReference extends PackageReference {
     assemblyPaths: Array<string>;
     probingPaths: Array<string>;
     packageRoot: string;
+}
+
+export interface SignatureInformation {
+    label: string;
+    documentation: FormattedValue;
+    parameters: Array<ParameterInformation>;
+}
+
+export interface ParameterInformation {
+    label: string;
+    documentation: FormattedValue;
 }
 
 export enum SubmissionType {
