@@ -104,8 +104,8 @@ export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
             });
             let sh = new vscode.SignatureHelp();
             sh.signatures = signatures;
-            sh.activeSignature = result.activeSignature;
-            sh.activeParameter = result.activeParameter;
+            sh.activeSignature = result.activeSignatureIndex;
+            sh.activeParameter = result.activeParameterIndex;
             return sh;
         });
     }

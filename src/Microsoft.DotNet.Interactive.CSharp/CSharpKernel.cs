@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
             var document = _workspace.UpdateWorkingDocument(command.Code);
             var signatureHelp = await SignatureHelpGenerator.GenerateSignatureInformation(document, command);
-            if (signatureHelp != null)
+            if (signatureHelp is { })
             {
                 context.Publish(signatureHelp);
             }

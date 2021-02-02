@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
         public static async Task<SignatureHelpProduced> GenerateSignatureInformation(Document document, RequestSignatureHelp command)
         {
             var invocation = await GetInvocation(document, command.LinePosition);
-            if (invocation == null)
+            if (invocation is null)
             {
                 return null;
             }

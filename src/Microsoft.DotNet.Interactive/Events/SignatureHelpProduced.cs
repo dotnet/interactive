@@ -9,46 +9,46 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public class SignatureHelpProduced : KernelEvent
     {
-        public SignatureHelpProduced(RequestSignatureHelp command, IReadOnlyList<SignatureInformation> signatures, int activeSignature, int activeParameter)
+        public SignatureHelpProduced(RequestSignatureHelp command, IReadOnlyList<SignatureInformation> signatures, int activeSignatureIndex, int activeParameterIndex)
             : base(command)
         {
             if (signatures?.Count >= 1)
             {
                 // validate
-                if (activeSignature < 0 || activeSignature >= signatures?.Count)
+                if (activeSignatureIndex < 0 || activeSignatureIndex >= signatures?.Count)
                 {
-                    throw new ArgumentOutOfRangeException("Active signature must be a valid index.", nameof(activeSignature));
+                    throw new ArgumentOutOfRangeException("Active signature must be a valid index.", nameof(activeSignatureIndex));
                 }
 
-                if (activeParameter < 0 || (signatures[activeSignature].Parameters.Count > 0 && activeParameter >= signatures[activeSignature].Parameters.Count))
+                if (activeParameterIndex < 0 || (signatures[activeSignatureIndex].Parameters.Count > 0 && activeParameterIndex >= signatures[activeSignatureIndex].Parameters.Count))
                 {
-                    throw new ArgumentOutOfRangeException("Active parameter must be a valid index.", nameof(activeParameter));
+                    throw new ArgumentOutOfRangeException("Active parameter must be a valid index.", nameof(activeParameterIndex));
                 }
             }
             else
             {
-                if (activeSignature != 0)
+                if (activeSignatureIndex != 0)
                 {
-                    throw new ArgumentOutOfRangeException("When no signatures are provided, the active signature must be 0.");
+                    throw new ArgumentOutOfRangeException("When no signatures are provided, the active signature index must be 0.");
                 }
 
-                if (activeParameter != 0)
+                if (activeParameterIndex != 0)
                 {
-                    throw new ArgumentOutOfRangeException("When no signatures are provided, the active signature must be 0.");
+                    throw new ArgumentOutOfRangeException("When no parameters are provided, the active parameter index must be 0.");
                 }
             }
 
             Signatures = signatures;
-            ActiveSignature = activeSignature;
-            ActiveParameter = activeParameter;
+            ActiveSignatureIndex = activeSignatureIndex;
+            ActiveParameterIndex = activeParameterIndex;
         }
 
         public static SignatureHelpProduced Empty(RequestSignatureHelp command) => new SignatureHelpProduced(command, null, 0, 0);
 
         public IReadOnlyList<SignatureInformation> Signatures { get; }
 
-        public int ActiveSignature { get; }
+        public int ActiveSignatureIndex { get; }
 
-        public int ActiveParameter { get; }
+        public int ActiveParameterIndex { get; }
     }
 }

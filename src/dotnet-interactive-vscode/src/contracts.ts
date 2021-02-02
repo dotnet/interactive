@@ -234,8 +234,8 @@ export interface ReturnValueProduced extends DisplayEvent {
 
 export interface SignatureHelpProduced extends KernelEvent {
     signatures: Array<SignatureInformation>;
-    activeSignature: number;
-    activeParameter: number;
+    activeSignatureIndex: number;
+    activeParameterIndex: number;
 }
 
 export interface StandardErrorValueProduced extends DisplayEvent {
