@@ -2,12 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { ClientSideKernelInvocationContext } from "./client-side-kernel-invocation-context";
-import { DisposableSubscription, KernelEventEnvelopeObserver, KernelCommandEnvelope, KernelTransport, Disposable, KernelEventEnvelope } from "./contracts";
-import { Kernel, KernelInvocationContext } from "./dotnet-interactive-interfaces";
+import { DisposableSubscription, KernelEventEnvelopeObserver, KernelTransport, Disposable, KernelCommand, KernelEvent, KernelEventType, KernelCommandType } from "./contracts";
+import { IKernelCommandHandler, Kernel } from "./dotnet-interactive-interfaces";
 import { TokenGenerator } from "./tokenGenerator";
 
 export class ClientSideKernel implements Kernel {
-    private _commandHandlers: { [commandType: string]: (envelope: KernelCommandEnvelope, context: KernelInvocationContext) => Promise<void> } = {};
+    private _commandHandlers: { [commandType: string]: IKernelCommandHandler } = {};
     private readonly _eventSubscribers: { [token: string]: KernelEventEnvelopeObserver} = {};
     private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
 
@@ -15,14 +15,15 @@ export class ClientSideKernel implements Kernel {
     // the command's progress? The only thing that actually calls this is the kernel transport, through
     // the callback set up by attachKernelToTransport, and the callback is expected to return void, so
     // nothing is ever going to look at the promise we return here.
-    send(command: KernelCommandEnvelope): Promise<void> {
+    send(argument: { command: KernelCommand, commandType: string }): Promise<void> {
 
-        let handler = this._commandHandlers[command.commandType];
+        let { command, commandType } = argument;
+        let handler = this._commandHandlers[commandType];
         if (handler) {
             let resolvePromise: () => void;
             let promise = new Promise<void>(r => resolvePromise = r);
                 let _: Promise<void> = (async () => {
-                let context = ClientSideKernelInvocationContext.establish(command);
+                let context = ClientSideKernelInvocationContext.establish(argument);
 
                 let isRootCommand = context.command === command;
                 let contextEventsSubscription: Disposable = null;
@@ -31,7 +32,7 @@ export class ClientSideKernel implements Kernel {
                     contextEventsSubscription = context.subscribeToKernelEvents(e => this.publishEvent(e));
                 }
 
-                await handler(command, context);
+                await handler.handle({ command, context });
 
                 if (isRootCommand) {
                     context.dispose();
@@ -48,31 +49,36 @@ export class ClientSideKernel implements Kernel {
             return promise;
 
         } else {
-            // TODO: what's the right behaviour if there is no handler?
-            return Promise.reject(`No handler found for command type ${command.commandType}`)
+            return Promise.reject(`No handler found for command type ${commandType}`)
         }
     }
 
-    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
+    subscribeToKernelEvents(handler: KernelEventEnvelopeObserver): DisposableSubscription {
         let subToken = this._tokenGenerator.GetNewToken();
-        this._eventSubscribers[subToken] = observer;
+        this._eventSubscribers[subToken] = handler;
         return {
             dispose: () => { delete this._eventSubscribers[subToken]; }
         };
     }
 
-    registerCommandHandler(commandType: string, handler: (envelope: KernelCommandEnvelope, context: KernelInvocationContext) => Promise<void>): void {
+    registerCommandHandler(handler: IKernelCommandHandler): void {
         // When a registration already existed, we want to overwrite it because we want users to
         // be able to develop handlers iteratively, and it would be unhelpful for handler registration
         // for any particular command to be cumulative.
-        this._commandHandlers[commandType] = handler;
+        this._commandHandlers[handler.commandType] = handler;
     }
 
-    private publishEvent(eventEnvelope: KernelEventEnvelope) {
+    private publishEvent(argument: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }) {
         let keys = Object.keys(this._eventSubscribers);
         for (let subToken of keys) {
             let observer = this._eventSubscribers[subToken];
-            observer(eventEnvelope);
+            observer({
+                event: argument.event,
+                eventType: <KernelEventType>argument.eventType,
+                command: {
+                    command: argument.command,
+                    commandType: <KernelCommandType>argument.commandType
+                }});
         }
     }
 }
