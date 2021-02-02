@@ -5,16 +5,10 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public sealed class ProxyKernel :
-        Kernel,
-        IKernelCommandHandler<SubmitCode>,
-        IKernelCommandHandler<RequestCompletions>,
-        IKernelCommandHandler<RequestDiagnostics>,
-        IKernelCommandHandler<RequestHoverText>
+    public sealed class ProxyKernel : Kernel
     {
         private readonly KernelClientBase _client;
 
@@ -30,27 +24,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             PublishEvent(kernelEvent);
         }
 
-        public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
-        {
-            return SendCommandToRemoteKernel(command);
-        }
-
-        public Task HandleAsync(RequestCompletions command, KernelInvocationContext context)
-        {
-            return SendCommandToRemoteKernel(command);
-        }
-
-        public Task HandleAsync(RequestDiagnostics command, KernelInvocationContext context)
-        {
-            return SendCommandToRemoteKernel(command);
-        }
-
-        public Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
-        {
-            return SendCommandToRemoteKernel(command);
-        }
-
-        private async Task SendCommandToRemoteKernel(KernelCommand command)
+        internal override async Task HandleAsync(KernelCommand command, KernelInvocationContext context)
         {
             var targetKernelName = command.TargetKernelName;
             command.TargetKernelName = null;
