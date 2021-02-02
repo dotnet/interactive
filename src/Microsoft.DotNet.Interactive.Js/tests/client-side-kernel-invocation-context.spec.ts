@@ -15,7 +15,7 @@ describe("dotnet-interactive", () => {
                 let events: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }[] = [];
                 return {
                     events,
-                    watcher: (argument: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }) => events.push(argument)
+                    watcher: (kernelEvent: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }) => events.push(kernelEvent)
                 };
             };
         function makeSubmitCode(code: string): { commandType: string, command: KernelCommand } {

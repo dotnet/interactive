@@ -126,7 +126,7 @@ describe("dotnet-interactive", () => {
         let kernel: Kernel = null;
         let commandsSentToKernel: { command: KernelCommand, commandType: string }[] = null;
         let kernelEventHandlers: KernelEventEnvelopeObserver[] = null
-        let registeredCommandHandlers: { [commandType: string]: ((argument: { command: KernelCommand, context: KernelInvocationContext }) => Promise<void>) } = null;
+        let registeredCommandHandlers: { [commandType: string]: ((kernelCommandInvocation: { command: KernelCommand, context: KernelInvocationContext }) => Promise<void>) } = null;
 
         let makeClient = () => {
             configureFetchForKernelDiscovery(rootUrl);    

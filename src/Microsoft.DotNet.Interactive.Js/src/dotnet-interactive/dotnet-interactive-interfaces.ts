@@ -22,24 +22,24 @@ export interface KernelClient {
 
 export interface KernelInvocationContext extends Disposable {
     subscribeToKernelEvents(observer: IKernelEventObserver): DisposableSubscription;
-    complete(commandEnvelope: KernelCommand): void;
+    complete(command: KernelCommand): void;
     fail(message?: string): void
-    publish(event: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }): void;
+    publish(kernelEvent: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }): void;
     command: KernelCommand;
 }
 
 export interface IKernelCommandHandler {
     commandType: string;
-    handle: (argument: { command: KernelCommand, context: KernelInvocationContext }) => Promise<void>
+    handle: (kernelCommandInvocation: { command: KernelCommand, context: KernelInvocationContext }) => Promise<void>
 }
 
 export interface IKernelEventObserver {
-    (argument: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }): void;
+    (kernelEvent: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }): void;
 }
 
 // Implemented by the client-side kernel.
 export interface Kernel {
-    send(argument: { command: KernelCommand, commandType: string }): Promise<void>;
+    send(kernelCommand: { command: KernelCommand, commandType: string }): Promise<void>;
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
     registerCommandHandler(handler: IKernelCommandHandler): void;
 }
