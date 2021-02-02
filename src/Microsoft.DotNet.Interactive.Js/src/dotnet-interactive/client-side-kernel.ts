@@ -8,22 +8,22 @@ import { TokenGenerator } from "./tokenGenerator";
 
 export class ClientSideKernel implements Kernel {
     private _commandHandlers: { [commandType: string]: IKernelCommandHandler } = {};
-    private readonly _eventSubscribers: { [token: string]: KernelEventEnvelopeObserver} = {};
+    private readonly _eventObservers: { [token: string]: KernelEventEnvelopeObserver} = {};
     private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
 
     // Is it worth us going to efforts to ensure that the Promise returned here accurately reflects
     // the command's progress? The only thing that actually calls this is the kernel transport, through
     // the callback set up by attachKernelToTransport, and the callback is expected to return void, so
     // nothing is ever going to look at the promise we return here.
-    send(argument: { command: KernelCommand, commandType: string }): Promise<void> {
+    send(kernelCommand: { command: KernelCommand, commandType: string }): Promise<void> {
 
-        let { command, commandType } = argument;
+        let { command, commandType } = kernelCommand;
         let handler = this._commandHandlers[commandType];
         if (handler) {
             let resolvePromise: () => void;
             let promise = new Promise<void>(r => resolvePromise = r);
                 let _: Promise<void> = (async () => {
-                let context = ClientSideKernelInvocationContext.establish(argument);
+                let context = ClientSideKernelInvocationContext.establish(kernelCommand);
 
                 let isRootCommand = context.command === command;
                 let contextEventsSubscription: Disposable = null;
@@ -53,11 +53,11 @@ export class ClientSideKernel implements Kernel {
         }
     }
 
-    subscribeToKernelEvents(handler: KernelEventEnvelopeObserver): DisposableSubscription {
+    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription {
         let subToken = this._tokenGenerator.GetNewToken();
-        this._eventSubscribers[subToken] = handler;
+        this._eventObservers[subToken] = observer;
         return {
-            dispose: () => { delete this._eventSubscribers[subToken]; }
+            dispose: () => { delete this._eventObservers[subToken]; }
         };
     }
 
@@ -68,16 +68,16 @@ export class ClientSideKernel implements Kernel {
         this._commandHandlers[handler.commandType] = handler;
     }
 
-    private publishEvent(argument: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }) {
-        let keys = Object.keys(this._eventSubscribers);
+    private publishEvent(kernelEvent: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }) {
+        let keys = Object.keys(this._eventObservers);
         for (let subToken of keys) {
-            let observer = this._eventSubscribers[subToken];
+            let observer = this._eventObservers[subToken];
             observer({
-                event: argument.event,
-                eventType: <KernelEventType>argument.eventType,
+                event: kernelEvent.event,
+                eventType: <KernelEventType>kernelEvent.eventType,
                 command: {
-                    command: argument.command,
-                    commandType: <KernelCommandType>argument.commandType
+                    command: kernelEvent.command,
+                    commandType: <KernelCommandType>kernelEvent.commandType
                 }});
         }
     }

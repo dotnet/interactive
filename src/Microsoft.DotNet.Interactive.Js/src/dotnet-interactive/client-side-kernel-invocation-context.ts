@@ -12,15 +12,15 @@ export class ClientSideKernelInvocationContext implements KernelInvocationContex
     private readonly _commandType: string;
     private readonly _childCommands: KernelCommand[] = [];
     private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
-    private readonly _eventSubscribers: { [token: string]: IKernelEventObserver} = {};
+    private readonly _eventObservers: { [token: string]: IKernelEventObserver} = {};
     private _isComplete = false;
 
-    static establish(argument: { command: KernelCommand, commandType: string }): KernelInvocationContext {
+    static establish(kernelCommandInvocation: { command: KernelCommand, commandType: string }): KernelInvocationContext {
         let current = ClientSideKernelInvocationContext._current;
         if (current === null || current._isComplete) {
-            ClientSideKernelInvocationContext._current = new ClientSideKernelInvocationContext(argument);
+            ClientSideKernelInvocationContext._current = new ClientSideKernelInvocationContext(kernelCommandInvocation);
         } else {
-            current._childCommands.push(argument.command);
+            current._childCommands.push(kernelCommandInvocation.command);
         }
 
         return ClientSideKernelInvocationContext._current;
@@ -29,16 +29,16 @@ export class ClientSideKernelInvocationContext implements KernelInvocationContex
     static get current(): KernelInvocationContext { return this._current; }
     get command(): KernelCommand { return this._command; }
 
-    constructor(argument: { command: KernelCommand, commandType: string }) {
-        this._command = argument.command;
-        this._commandType  = argument.commandType;
+    constructor(kernelCommandInvocation: { command: KernelCommand, commandType: string }) {
+        this._command = kernelCommandInvocation.command;
+        this._commandType  = kernelCommandInvocation.commandType;
     }
 
     subscribeToKernelEvents(observer: IKernelEventObserver) {
         let subToken = this._tokenGenerator.GetNewToken();
-        this._eventSubscribers[subToken] = observer;
+        this._eventObservers[subToken] = observer;
         return {
-            dispose: () => { delete this._eventSubscribers[subToken]; }
+            dispose: () => { delete this._eventObservers[subToken]; }
         };
     }
     complete(command: KernelCommand) {
@@ -82,16 +82,16 @@ export class ClientSideKernelInvocationContext implements KernelInvocationContex
         this._isComplete = true;
     }
 
-    publish(event: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }) {
+    publish(kernelEvent: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }) {
         if (!this._isComplete) {
-            let command = event.command;
+            let command = kernelEvent.command;
             if (command === null ||
                 command === this._command ||
                 this._childCommands.includes(command)) {
-                let keys = Object.keys(this._eventSubscribers);
+                let keys = Object.keys(this._eventObservers);
                 for (let subToken of keys) {
-                    let observer = this._eventSubscribers[subToken];
-                    observer(event);
+                    let observer = this._eventObservers[subToken];
+                    observer(kernelEvent);
                 }
             }
         }
