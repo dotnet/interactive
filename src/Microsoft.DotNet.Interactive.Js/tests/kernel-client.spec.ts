@@ -6,7 +6,7 @@ import { createDotnetInteractiveClient } from "../src/dotnet-interactive/kernel-
 import * as fetchMock from "fetch-mock";
 import { configureFetchForKernelDiscovery, createMockKernelTransport, MockKernelTransport, asKernelClientContainer } from "./testSupport";
 import { CodeSubmissionReceived, CodeSubmissionReceivedType, KernelCommand, KernelCommandEnvelope, KernelCommandEnvelopeObserver, KernelCommandType, KernelEventEnvelope, KernelEventEnvelopeObserver, SubmitCodeType } from "../src/dotnet-interactive/contracts";
-import { Kernel, KernelInvocationContext } from "../src/dotnet-interactive/dotnet-interactive-interfaces";
+import { IKernelCommandHandler, Kernel, KernelInvocationContext } from "../src/dotnet-interactive/dotnet-interactive-interfaces";
 import { attachKernelToTransport } from "../src/dotnet-interactive/client-side-kernel";
 
 
@@ -124,9 +124,9 @@ describe("dotnet-interactive", () => {
         const rootUrl = "https://dotnet.interactive.com:999";
         let transport: MockKernelTransport = null;
         let kernel: Kernel = null;
-        let commandsSentToKernel: KernelCommandEnvelope[] = null;
+        let commandsSentToKernel: { command: KernelCommand, commandType: string }[] = null;
         let kernelEventHandlers: KernelEventEnvelopeObserver[] = null
-        let registeredCommandHandlers: { [commandType: string]: ((envelope: KernelCommandEnvelope, context: KernelInvocationContext) => void) } = null;
+        let registeredCommandHandlers: { [commandType: string]: ((argument: { command: KernelCommand, context: KernelInvocationContext }) => Promise<void>) } = null;
 
         let makeClient = () => {
             configureFetchForKernelDiscovery(rootUrl);    
@@ -150,8 +150,8 @@ describe("dotnet-interactive", () => {
                             kernelEventHandlers.push(observer);
                             return { dispose: () => {} };
                         },
-                        registerCommandHandler: (commandType: string, observer: (envelope: KernelCommandEnvelope, context: KernelInvocationContext) => void) => {
-                            registeredCommandHandlers[commandType] = observer;
+                        registerCommandHandler: (handler: IKernelCommandHandler) => {
+                            registeredCommandHandlers[handler.commandType] = handler.handle;
                         }
                     };
                     attachKernelToTransport(kernel, kernelTransport);
@@ -233,24 +233,22 @@ describe("dotnet-interactive", () => {
                 moreData: "Test 2"
             };
 
-            let commandEnvelopesSentToHandler1: KernelCommandEnvelope[] = [];
-            let commandEnvelopesSentToHandler2: KernelCommandEnvelope[] = [];
-            client.registerCommandHandler(commandType1, async env => { commandEnvelopesSentToHandler1.push(env); })
-            client.registerCommandHandler(commandType2, async env => { commandEnvelopesSentToHandler2.push(env); })
+            let commandEnvelopesSentToHandler1: { command: KernelCommand, context: KernelInvocationContext }[] = [];
+            let commandEnvelopesSentToHandler2: { command: KernelCommand, context: KernelInvocationContext }[] = [];
+            client.registerCommandHandler({ commandType: commandType1, handle: async env => { commandEnvelopesSentToHandler1.push(env); } });
+            client.registerCommandHandler({ commandType: commandType2, handle: async env => { commandEnvelopesSentToHandler2.push(env); } });
 
             expect(Object.keys(registeredCommandHandlers).length).is.equal(2);
 
             let fakeContext1: KernelInvocationContext = makeContext();
-            registeredCommandHandlers[commandType1]({ commandType: commandType1, command: command1In }, fakeContext1);
+            registeredCommandHandlers[commandType1]({ command: command1In, context: fakeContext1 });
             expect(commandEnvelopesSentToHandler1.length).to.be.equal(1);
-            expect(commandEnvelopesSentToHandler1[0].commandType).to.be.equal(commandType1);
             let commandSentToHandler1 = <CustomCommand>commandEnvelopesSentToHandler1[0].command;
             expect(commandSentToHandler1.data).to.be.equal(command1In.data);
 
             let fakeContext2: KernelInvocationContext = makeContext();
-            registeredCommandHandlers[commandType2]({ commandType: commandType2, command: command2In }, fakeContext2);
+            registeredCommandHandlers[commandType2]({ command: command2In, context: fakeContext2 });
             expect(commandEnvelopesSentToHandler2.length).to.be.equal(1);
-            expect(commandEnvelopesSentToHandler2[0].commandType).to.be.equal(commandType2);
             let commandSentToHandler2 = <CustomCommand2>commandEnvelopesSentToHandler2[0].command;
             expect(commandSentToHandler2.moreData).to.be.equal(command2In.moreData);
         });

@@ -1,53 +1,56 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelEventEnvelopeObserver, KernelCommandEnvelope, CommandSucceeded, CommandSucceededType, KernelEventEnvelope, CommandFailed, CommandFailedType } from "./contracts";
-import { KernelInvocationContext } from "./dotnet-interactive-interfaces";
+import { CommandSucceeded, CommandSucceededType, CommandFailed, CommandFailedType, KernelCommand, KernelEvent } from "./contracts";
+import { IKernelEventObserver, KernelInvocationContext } from "./dotnet-interactive-interfaces";
 import { TokenGenerator } from "./tokenGenerator";
 
 
 export class ClientSideKernelInvocationContext implements KernelInvocationContext {
     private static _current: ClientSideKernelInvocationContext = null;
-    private readonly _command: KernelCommandEnvelope;
-    private readonly _childCommands: KernelCommandEnvelope[] = [];
+    private readonly _command: KernelCommand;
+    private readonly _commandType: string;
+    private readonly _childCommands: KernelCommand[] = [];
     private readonly _tokenGenerator: TokenGenerator = new TokenGenerator();
-    private readonly _eventSubscribers: { [token: string]: KernelEventEnvelopeObserver} = {};
+    private readonly _eventSubscribers: { [token: string]: IKernelEventObserver} = {};
     private _isComplete = false;
 
-    static establish(commandEnvelope: KernelCommandEnvelope): KernelInvocationContext {
+    static establish(argument: { command: KernelCommand, commandType: string }): KernelInvocationContext {
         let current = ClientSideKernelInvocationContext._current;
         if (current === null || current._isComplete) {
-            ClientSideKernelInvocationContext._current = new ClientSideKernelInvocationContext(commandEnvelope);
+            ClientSideKernelInvocationContext._current = new ClientSideKernelInvocationContext(argument);
         } else {
-            current._childCommands.push(commandEnvelope);
+            current._childCommands.push(argument.command);
         }
 
         return ClientSideKernelInvocationContext._current;
     }
 
     static get current(): KernelInvocationContext { return this._current; }
-    get command(): KernelCommandEnvelope { return this._command; }
+    get command(): KernelCommand { return this._command; }
 
-    constructor(commandEnvelope: KernelCommandEnvelope) {
-        this._command = commandEnvelope;
+    constructor(argument: { command: KernelCommand, commandType: string }) {
+        this._command = argument.command;
+        this._commandType  = argument.commandType;
     }
 
-    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver) {
+    subscribeToKernelEvents(observer: IKernelEventObserver) {
         let subToken = this._tokenGenerator.GetNewToken();
         this._eventSubscribers[subToken] = observer;
         return {
             dispose: () => { delete this._eventSubscribers[subToken]; }
         };
     }
-    complete(commandEnvelope: KernelCommandEnvelope) {
-        if (commandEnvelope === this._command) {
+    complete(command: KernelCommand) {
+        if (command === this._command) {
             let succeeded: CommandSucceeded = {};
-            let succeededEnvelope: KernelEventEnvelope = {
+            let succeededDetail = {
                 command: this._command,
+                commandType: this._commandType,
                 eventType: CommandSucceededType,
                 event: succeeded
             };
-            this.publish(succeededEnvelope);
+            this.publish(succeededDetail);
 
             // TODO: C# version has completion callbacks - do we need these?
             // if (!_events.IsDisposed)
@@ -58,7 +61,7 @@ export class ClientSideKernelInvocationContext implements KernelInvocationContex
         }
         else
         {
-            let pos = this._childCommands.indexOf(commandEnvelope);
+            let pos = this._childCommands.indexOf(command);
             delete this._childCommands[pos];
         }
     }
@@ -68,26 +71,27 @@ export class ClientSideKernelInvocationContext implements KernelInvocationContex
         // The C# code accepts a message and/or an exception. Do we need to add support
         // for exceptions? (The TS CommandFailed interface doesn't have a place for it right now.)
         let failed: CommandFailed = { message };
-        let failedEnvelope: KernelEventEnvelope = {
+        let failedDetail = {
             command: this._command,
+            commandType: this._commandType,
             eventType: CommandFailedType,
             event: failed
         };
-        this.publish(failedEnvelope);
+        this.publish(failedDetail);
 
         this._isComplete = true;
     }
 
-    publish(eventEnvelope: KernelEventEnvelope) {
+    publish(event: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }) {
         if (!this._isComplete) {
-            let command = eventEnvelope.command;
+            let command = event.command;
             if (command === null ||
                 command === this._command ||
                 this._childCommands.includes(command)) {
                 let keys = Object.keys(this._eventSubscribers);
                 for (let subToken of keys) {
                     let observer = this._eventSubscribers[subToken];
-                    observer(eventEnvelope);
+                    observer(event);
                 }
             }
         }

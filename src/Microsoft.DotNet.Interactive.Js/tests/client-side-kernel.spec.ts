@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import { describe } from "mocha";
 import { ClientSideKernel } from "../src/dotnet-interactive/client-side-kernel";
-import { KernelCommand, KernelCommandEnvelope, KernelCommandType } from "../src/dotnet-interactive/contracts";
+import { KernelCommand, KernelCommandType } from "../src/dotnet-interactive/contracts";
 import { KernelInvocationContext } from "../src/dotnet-interactive/dotnet-interactive-interfaces";
 
 interface CustomCommand1 extends KernelCommand {
@@ -34,10 +34,10 @@ describe("dotnet-interactive", () => {
                 moreData: "Test 2"
             };
 
-            let handler1Invocations: { envelope: KernelCommandEnvelope, context: KernelInvocationContext }[] = [];
-            let handler2Invocations: { envelope: KernelCommandEnvelope, context: KernelInvocationContext }[] = [];
-            kernel.registerCommandHandler(commandType1, async (envelope, context) => { handler1Invocations.push({ envelope, context }); })
-            kernel.registerCommandHandler(commandType2, async (envelope, context) => { handler2Invocations.push({ envelope, context }); })
+            let handler1Invocations: { command: KernelCommand, context: KernelInvocationContext }[] = [];
+            let handler2Invocations: { command: KernelCommand, context: KernelInvocationContext }[] = [];
+            kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: { command: KernelCommand, context: KernelInvocationContext }) => { handler1Invocations.push(a); } })
+            kernel.registerCommandHandler({ commandType: commandType2, handle: async (a: { command: KernelCommand, context: KernelInvocationContext }) => { handler2Invocations.push(a); } })
 
             await kernel.send({
                 commandType: commandType1,
@@ -50,17 +50,13 @@ describe("dotnet-interactive", () => {
 
             expect(handler1Invocations.length).to.be.equal(1);
             let handler1Invocation = handler1Invocations[0];
-            let handler1Envelope = handler1Invocation.envelope;
-            expect(handler1Envelope.commandType).to.be.equal(commandType1);
-            let commandSentToHandler1 = <CustomCommand1>handler1Envelope.command;
+            let commandSentToHandler1 = <CustomCommand1>handler1Invocation.command;
             expect(commandSentToHandler1).to.equal(command1In);
             expect(handler1Invocation.context).is.not.null;
 
             expect(handler2Invocations.length).to.be.equal(1);
             let handler2Invocation = handler2Invocations[0];
-            let handler2Envelope = handler2Invocation.envelope;
-            expect(handler2Envelope.commandType).to.be.equal(commandType2);
-            let commandSentToHandler2 = <CustomCommand2>handler2Envelope.command;
+            let commandSentToHandler2 = <CustomCommand2>handler2Invocation.command;
             expect(commandSentToHandler2).to.equal(command2In);
             expect(handler2Invocation.context).is.not.null;
         });
@@ -73,10 +69,10 @@ describe("dotnet-interactive", () => {
             let command1In: CustomCommand1 = {
                 data: "Test"
             };
-            let handler1Invocations: { envelope: KernelCommandEnvelope, context: KernelInvocationContext }[] = [];
-            let handler2Invocations: { envelope: KernelCommandEnvelope, context: KernelInvocationContext }[] = [];
-            kernel.registerCommandHandler(commandType1, async (envelope, context) => { handler1Invocations.push({ envelope, context }); })
-            kernel.registerCommandHandler(commandType1, async (envelope, context) => { handler2Invocations.push({ envelope, context }); })
+            let handler1Invocations: { command: KernelCommand, context: KernelInvocationContext }[] = [];
+            let handler2Invocations: { command: KernelCommand, context: KernelInvocationContext }[] = [];
+            kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: { command: KernelCommand, context: KernelInvocationContext }) => { handler1Invocations.push(a); } })
+            kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: { command: KernelCommand, context: KernelInvocationContext }) => { handler2Invocations.push(a); } })
 
             await kernel.send({
                 commandType: commandType1,
@@ -87,9 +83,7 @@ describe("dotnet-interactive", () => {
 
             expect(handler2Invocations.length).to.be.equal(1);
             let handler2Invocation = handler2Invocations[0];
-            let handler2Envelope = handler2Invocation.envelope;
-            expect(handler2Envelope.commandType).to.be.equal(commandType1);
-            let commandSentToHandler2 = <CustomCommand1>handler2Envelope.command;
+            let commandSentToHandler2 = <CustomCommand1>handler2Invocation.command;
             expect(commandSentToHandler2).to.equal(command1In);
             expect(handler2Invocation.context).is.not.null;
         });
@@ -104,8 +98,8 @@ describe("dotnet-interactive", () => {
                 moreData: "Test 2"
             };
 
-            let command1EnvelopesSentToKernel: KernelCommandEnvelope[] = [];
-            kernel.registerCommandHandler(commandType1, async env => { command1EnvelopesSentToKernel.push(env); })
+            let handlerInvocations: { command: KernelCommand, context: KernelInvocationContext }[] = [];
+            kernel.registerCommandHandler({ commandType: commandType1, handle: async (a: { command: KernelCommand, context: KernelInvocationContext }) => { handlerInvocations.push(a); } })
 
             let errorFromSend = null;
             await kernel.send({
@@ -114,7 +108,7 @@ describe("dotnet-interactive", () => {
             })
             .catch(e => { errorFromSend = e; });
 
-            expect(command1EnvelopesSentToKernel.length).to.be.equal(0);
+            expect(handlerInvocations.length).to.be.equal(0);
             expect(errorFromSend).is.not.null;
         });
 

@@ -1,10 +1,10 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch, Kernel } from "./dotnet-interactive-interfaces";
+import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch, Kernel, IKernelCommandHandler } from "./dotnet-interactive-interfaces";
 import { TokenGenerator } from "./tokenGenerator";
 import { signalTransportFactory } from "./signalr-client";
-import { KernelTransport, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType, KernelCommand, KernelCommandEnvelopeObserver, KernelCommandEnvelope } from "./contracts";
+import { KernelTransport, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType } from "./contracts";
 import { createDefaultClientFetch } from "./clientFetch";
 import { clientSideKernelFactory } from "./client-side-kernel";
 
@@ -40,8 +40,8 @@ export class KernelClientImpl implements DotnetInteractiveClient {
         return subscription;
     }
 
-    public registerCommandHandler(commandType: string, handler: (envelope: KernelCommandEnvelope) => Promise<void>): void {
-        this._clientSideKernel.registerCommandHandler(commandType, handler);
+    public registerCommandHandler(handler: IKernelCommandHandler): void {
+        this._clientSideKernel.registerCommandHandler(handler);
     }
 
     public async getVariable(kernelName: string, variableName: string): Promise<any> {

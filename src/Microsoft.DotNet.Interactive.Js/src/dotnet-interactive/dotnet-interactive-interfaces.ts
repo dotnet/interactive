@@ -21,23 +21,32 @@ export interface KernelClient {
 }
 
 export interface KernelInvocationContext extends Disposable {
-    subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
-    complete(commandEnvelope: KernelCommandEnvelope): void;
+    subscribeToKernelEvents(observer: IKernelEventObserver): DisposableSubscription;
+    complete(commandEnvelope: KernelCommand): void;
     fail(message?: string): void
-    publish(eventEnvelope: KernelEventEnvelope): void;
-    command: KernelCommandEnvelope;
+    publish(event: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }): void;
+    command: KernelCommand;
+}
+
+export interface IKernelCommandHandler {
+    commandType: string;
+    handle: (argument: { command: KernelCommand, context: KernelInvocationContext }) => Promise<void>
+}
+
+export interface IKernelEventObserver {
+    (argument: { event: KernelEvent, eventType: string, command: KernelCommand, commandType: string }): void;
 }
 
 // Implemented by the client-side kernel.
 export interface Kernel {
-    send(command: KernelCommandEnvelope): Promise<void>;
+    send(argument: { command: KernelCommand, commandType: string }): Promise<void>;
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
-    registerCommandHandler(commandType: string, observer: (envelope: KernelCommandEnvelope, context: KernelInvocationContext) => Promise<void>): void;
+    registerCommandHandler(handler: IKernelCommandHandler): void;
 }
 
 export interface DotnetInteractiveClient {
     subscribeToKernelEvents(observer: KernelEventEnvelopeObserver): DisposableSubscription;
-    registerCommandHandler(commandType: string, handler: (envelope: KernelCommandEnvelope) => Promise<void>): void;
+    registerCommandHandler(handler: IKernelCommandHandler): void;
     getVariable(kernelName: string, variableName: string): Promise<any>;
     getVariables(variableRequest: VariableRequest): Promise<VariableResponse>;
     getResource(resource: string): Promise<Response>;
