@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Connection
             KernelConnectionOptions options,
             KernelInvocationContext context)
         {
-            Kernel proxyKernel = new IndiscriminateProxyKernel(options.KernelName, _clientSideKernelClient);
+            Kernel proxyKernel = new ProxyKernel(options.KernelName, _clientSideKernelClient);
 
             return Task.FromResult(proxyKernel);
         }
