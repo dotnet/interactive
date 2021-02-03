@@ -23,9 +23,9 @@ open Microsoft.DotNet.Interactive.Commands
 open Microsoft.DotNet.Interactive.Events
 open Microsoft.DotNet.Interactive.Extensions
 open Microsoft.DotNet.Interactive.Formatting
+open Microsoft.DotNet.Interactive.FSharp.ScriptHelpers
 
 open FSharp.Compiler.Interactive.Shell
-open FSharp.Compiler.Scripting
 open FSharp.Compiler.SourceCodeServices
 open FSharp.Compiler.Text
 open FSharp.Compiler.Text.Pos

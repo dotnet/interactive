@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 using FluentAssertions;
 
-using FSharp.Compiler.Scripting;
+using Microsoft.DotNet.Interactive.FSharp.ScriptHelpers;
 
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.DotNet.Interactive.Utility;

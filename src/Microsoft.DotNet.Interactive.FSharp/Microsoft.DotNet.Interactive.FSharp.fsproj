@@ -33,6 +33,7 @@
     <Compile Include="FsAutoComplete\KeywordList.fs" />
     <Compile Include="FsAutoComplete\InteractiveDirectives.fs" />
     <Compile Include="FsAutoComplete\ParseAndCheckResults.fs" />
+    <Compile Include="FSharpScriptHelpers.fs" />
     <Compile Include="FSharpKernel.fs" />
     <Compile Include="FSharpHtml.fs" />
     <Compile Include="FSharpKernelHelpers.fs" />
@@ -45,7 +46,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FSharp.Compiler.Private.Scripting" />
+    <PackageReference Include="FSharp.Compiler.Service" />
     <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
     <PackageReference Include="XPlot.Plotly" Version="3.0.1" />
   </ItemGroup>

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using static Pocket.Logger;
-using Microsoft.DotNet.DependencyManager;
+using FSharp.Compiler.DependencyManager;
 using System.Globalization;
 
 namespace Microsoft.DotNet.Interactive
