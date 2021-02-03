@@ -1,0 +1,1 @@
+{"token":"the-token","commandType":"RequestSignatureHelp","command":{"code":"sig-help-contents","linePosition":{"line":1,"character":2},"targetKernelName":null}}

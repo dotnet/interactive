@@ -160,6 +160,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
                 yield return new RequestHoverText("document-contents", new LinePosition(1, 2));
 
+                yield return new RequestSignatureHelp("sig-help-contents", new LinePosition(1, 2));
+
                 yield return new SerializeNotebook("notebook.ipynb", new NotebookDocument(new[]
                 {
                     new NotebookCell("csharp", "user code", new NotebookCellOutput[]
@@ -311,6 +313,21 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     {
                         new FormattedValue("text/html", "<b>hi!</b>"),
                     });
+
+                yield return new SignatureHelpProduced(
+                    new RequestSignatureHelp("sig-help-contents", new LinePosition(1, 2)),
+                    new[]
+                    {
+                        new SignatureInformation("label",
+                            new FormattedValue("text/html", "sig-help-result"),
+                            new[]
+                            {
+                                new ParameterInformation("param1", new FormattedValue("text/html", "param1")),
+                                new ParameterInformation("param2", new FormattedValue("text/html", "param2"))
+                            })
+                    },
+                    0,
+                    1);
 
                 yield return new StandardErrorValueProduced(
                     submitCode,

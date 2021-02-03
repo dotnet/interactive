@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
             _parseOptions = new CSharpParseOptions(
                 LanguageVersion.Latest,
-                DocumentationMode.None,
+                DocumentationMode.Parse,
                 SourceCodeKind.Script);
 
             _disposables.Add(Disposable.Create(() =>

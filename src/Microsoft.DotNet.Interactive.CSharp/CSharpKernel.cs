@@ -17,6 +17,7 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.QuickInfo;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.CSharp.SignatureHelp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -35,6 +36,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<RequestHoverText>,
+        IKernelCommandHandler<RequestSignatureHelp>,
         IKernelCommandHandler<SubmitCode>
     {
         internal const string DefaultKernelName = "csharp";
@@ -170,6 +172,16 @@ namespace Microsoft.DotNet.Interactive.CSharp
                     correctedLinePosSpan));
             
             
+        }
+
+        public async Task HandleAsync(RequestSignatureHelp command, KernelInvocationContext context)
+        {
+            var document = _workspace.UpdateWorkingDocument(command.Code);
+            var signatureHelp = await SignatureHelpGenerator.GenerateSignatureInformation(document, command);
+            if (signatureHelp is { })
+            {
+                context.Publish(signatureHelp);
+            }
         }
 
         public async Task HandleAsync(SubmitCode submitCode, KernelInvocationContext context)
