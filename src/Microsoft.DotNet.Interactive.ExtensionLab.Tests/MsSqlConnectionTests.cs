@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         {
             var csharpKernel = new CSharpKernel().UseNugetDirective();
             await csharpKernel.SubmitCodeAsync(@$"
-#r ""nuget:microsoft.sqltoolsservice,3.0.0-release.52""
+#r ""nuget:microsoft.sqltoolsservice,3.0.0-release.53""
 ");
             
             var kernel = new CompositeKernel
