@@ -4,9 +4,61 @@
 import { expect } from 'chai';
 import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from '../../contracts';
 
-import { debounce, isDisplayOutput, isErrorOutput, isTextOutput, parse, processArguments, stringify } from '../../utilities';
+import { debounce, isDisplayOutput, isErrorOutput, isTextOutput, mergeObjects, parse, processArguments, stringify } from '../../utilities';
 
 describe('Miscellaneous tests', () => {
+    describe('JSON object merging', () => {
+        it(`two JSON objects can be merged`, () => {
+            const baseObject = {
+                key1: {
+                    key2: 'value 2'
+                },
+                key3: 1
+            };
+            const additionalData = {
+                key3: 3
+            };
+            const result = mergeObjects(baseObject, additionalData);
+            expect(result).to.deep.equal({
+                key1: {
+                    key2: 'value 2'
+                },
+                key3: 3
+            });
+        });
+
+        it(`objects can be merged if first is undefined`, () => {
+            const baseObject = undefined;
+            const additionalData = {
+                key3: 3
+            };
+            const result = mergeObjects(baseObject, additionalData);
+            expect(result).to.deep.equal({
+                key3: 3
+            });
+        });
+
+        it(`objects can be merged if second is undefined`, () => {
+            const baseObject = {
+                key1: {
+                    key2: 'value 2'
+                }
+            };
+            const additionalData = undefined;
+            const result = mergeObjects(baseObject, additionalData);
+            expect(result).to.deep.equal({
+                key1: {
+                    key2: 'value 2'
+                }
+            });
+        });
+
+        it(`objects can be merged if both are undefined`, () => {
+            const result = mergeObjects(undefined, undefined);
+            expect(result).to.deep.equal({});
+        });
+    });
+
     it(`verify command and argument replacement is as expected`, () => {
         let template = {
             args: [

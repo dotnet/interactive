@@ -125,6 +125,23 @@ export function stringify(value: any): string {
     });
 }
 
+export function mergeObjects(baseObject: { [key: string]: any } | undefined, additionalData: { [key: string]: any } | undefined): any {
+    let result: { [key: string]: any } = {};
+    if (baseObject) {
+        for (const key in baseObject) {
+            result[key] = baseObject[key];
+        }
+    }
+
+    if (additionalData) {
+        for (const key in additionalData) {
+            result[key] = additionalData[key];
+        }
+    }
+
+    return result;
+}
+
 export function isErrorOutput(arg: any): arg is NotebookCellErrorOutput {
     return arg
         && typeof arg.errorName === 'string'
