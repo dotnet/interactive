@@ -149,7 +149,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             
             var document = _workspace.UpdateWorkingDocument(command.Code);
             var text = await document.GetTextAsync();
-            var cursorPosition = text.Lines.GetPosition(command.LinePosition.AsCodeAnalysisLinePosition());
+            var cursorPosition = text.Lines.GetPosition(command.LinePosition.ToCodeAnalysisLinePosition());
             var service = QuickInfoService.GetService(document);
             var info = await service.GetQuickInfoAsync(document, cursorPosition);
             

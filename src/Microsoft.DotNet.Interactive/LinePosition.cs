@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive
             Character = character;
         }
 
-        public CodeAnalysis.Text.LinePosition AsCodeAnalysisLinePosition()
+        public CodeAnalysis.Text.LinePosition ToCodeAnalysisLinePosition()
         {
             return new CodeAnalysis.Text.LinePosition(Line, Character);
         }

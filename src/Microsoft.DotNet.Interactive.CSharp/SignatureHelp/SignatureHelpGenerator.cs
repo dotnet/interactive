@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
         private static async Task<InvocationContext> GetInvocation(Document document, LinePosition linePosition)
         {
             var text = await document.GetTextAsync();
-            var position = Math.Max(text.Lines.GetPosition(linePosition.AsCodeAnalysisLinePosition()) - 1, 0); // backtrack into the actual invocation
+            var position = Math.Max(text.Lines.GetPosition(linePosition.ToCodeAnalysisLinePosition()) - 1, 0); // backtrack into the actual invocation
             var tree = await document.GetSyntaxTreeAsync();
             var root = await tree.GetRootAsync();
             var node = root.FindToken(position).Parent;
