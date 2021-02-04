@@ -1,12 +1,12 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 
@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
         private static async Task<InvocationContext> GetInvocation(Document document, LinePosition linePosition)
         {
             var text = await document.GetTextAsync();
-            var position = text.Lines.GetPosition(linePosition) - 1; // backtrack into the actual invocation
+            var position = Math.Max(text.Lines.GetPosition(linePosition.AsCodeAnalysisLinePosition()) - 1, 0); // backtrack into the actual invocation
             var tree = await document.GetSyntaxTreeAsync();
             var root = await tree.GetRootAsync();
             var node = root.FindToken(position).Parent;

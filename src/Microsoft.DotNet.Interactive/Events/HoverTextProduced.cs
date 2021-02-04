@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Extensions;
 
@@ -11,9 +10,9 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public class HoverTextProduced : KernelEvent
     {
-        private readonly LinePositionSpan? _linePositionSpan;
+        private readonly LinePositionSpan _linePositionSpan;
 
-        public HoverTextProduced(RequestHoverText command, IReadOnlyCollection<FormattedValue> content, LinePositionSpan? linePositionSpan = null)
+        public HoverTextProduced(RequestHoverText command, IReadOnlyCollection<FormattedValue> content, LinePositionSpan linePositionSpan = null)
             : base(command)
         {
             if (content == null)
@@ -32,6 +31,6 @@ namespace Microsoft.DotNet.Interactive.Events
 
         public IReadOnlyCollection<FormattedValue> Content { get; }
 
-        public LinePositionSpan? LinePositionSpan => this.CalculateLineOffsetFromParentCommand(_linePositionSpan);
+        public LinePositionSpan LinePositionSpan => this.CalculateLineOffsetFromParentCommand(_linePositionSpan);
     }
 }

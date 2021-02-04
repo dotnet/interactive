@@ -396,7 +396,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 var requestPosition = SourceText.From(command.Code)
                                                 .Lines
-                                                .GetPosition(command.LinePosition);
+                                                .GetPosition(command.LinePosition.AsCodeAnalysisLinePosition());
 
                 var completions = GetDirectiveCompletionItems(
                     directiveNode,

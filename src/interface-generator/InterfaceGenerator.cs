@@ -36,6 +36,8 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
         private static readonly HashSet<string> OptionalFields = new HashSet<string>
         {
+            $"{nameof(CompletionsProduced)}.{nameof(CompletionsProduced.LinePositionSpan)}",
+            $"{nameof(HoverTextProduced)}.{nameof(HoverTextProduced.LinePositionSpan)}",
             $"{nameof(KernelCommand)}.{nameof(KernelCommand.TargetKernelName)}",
             $"{nameof(SubmitCode)}.{nameof(SubmitCode.SubmissionType)}"
         };

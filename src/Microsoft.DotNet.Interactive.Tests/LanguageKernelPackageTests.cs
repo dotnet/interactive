@@ -3,10 +3,11 @@
 
 using System;
 using System.IO;
-using FluentAssertions;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -17,8 +18,6 @@ using Newtonsoft.Json;
 using Recipes;
 using Xunit;
 using Xunit.Abstractions;
-using System.Runtime.InteropServices;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {

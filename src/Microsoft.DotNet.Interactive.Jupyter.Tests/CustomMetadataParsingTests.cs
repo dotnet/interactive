@@ -5,6 +5,7 @@ using System.Text.Json;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Jupyter.ZMQ;
 using Microsoft.DotNet.Interactive.Notebook;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
@@ -24,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                 .ContainKey("dotnet_interactive")
                 .WhichValue
                 .Should()
-                .BeEquivalentTo(new InputCellMetadata("fsharp"));
+                .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata("fsharp"));
         }
 
         [Fact]
@@ -40,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                 .ContainKey("dotnet_interactive")
                 .WhichValue
                 .Should()
-                .BeEquivalentTo(new InputCellMetadata() );
+                .BeEquivalentToRespectingRuntimeTypes(new InputCellMetadata() );
         }
 
         [Fact]

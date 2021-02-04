@@ -52,8 +52,8 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             {
                 if (completionsProduced.LinePositionSpan != null)
                 {
-                    startPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionsProduced.LinePositionSpan.GetValueOrDefault().Start);
-                    endPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionsProduced.LinePositionSpan.GetValueOrDefault().End);
+                    startPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionsProduced.LinePositionSpan.Start);
+                    endPosition = SourceUtilities.GetCursorOffsetFromPosition(command.Code, completionsProduced.LinePositionSpan.End);
                 }
                 else
                 {

@@ -15,6 +15,7 @@ using Microsoft.DotNet.Interactive.App.Commands;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -116,7 +117,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             options
                 .HttpPortRange
                 .Should()
-                .BeEquivalentTo(new HttpPortRange(3000, 4000));
+                .BeEquivalentToRespectingRuntimeTypes(new HttpPortRange(3000, 4000));
         }
 
         [Fact]
@@ -165,7 +166,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             options
                 .HttpPortRange
                 .Should()
-                .BeEquivalentTo(new HttpPortRange(3000, 4000));
+                .BeEquivalentToRespectingRuntimeTypes(new HttpPortRange(3000, 4000));
         }
 
         [Fact]

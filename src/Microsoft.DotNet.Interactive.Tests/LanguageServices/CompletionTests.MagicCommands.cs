@@ -1,13 +1,11 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using FluentAssertions;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Text;
+using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -77,7 +75,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                     .AllSatisfy(c =>
                                     c.LinePositionSpan
                                      .Should()
-                                     .BeEquivalentTo(new LinePositionSpan(
+                                     .BeEquivalentToRespectingRuntimeTypes(new LinePositionSpan(
                                                          new LinePosition(0, 8),
                                                          new LinePosition(0, 10))));
             }
@@ -97,7 +95,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                     .AllSatisfy(c =>
                                     c.LinePositionSpan
                                      .Should()
-                                     .BeEquivalentTo(new LinePositionSpan(
+                                     .BeEquivalentToRespectingRuntimeTypes(new LinePositionSpan(
                                                          new LinePosition(0, 0),
                                                          new LinePosition(0, 4))));
             }

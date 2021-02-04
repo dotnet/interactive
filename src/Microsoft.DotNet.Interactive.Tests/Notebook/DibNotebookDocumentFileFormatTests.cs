@@ -3,6 +3,7 @@
 
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Notebook;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -134,7 +135,7 @@ let x = 1
 let y = 2");
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("csharp", "var x = 1;\nvar y = 2;"),
                     new NotebookCell("fsharp", "let x = 1\nlet y = 2")
@@ -156,7 +157,7 @@ Get-Item
 ");
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("csharp", "//"),
                     new NotebookCell("pwsh", "Get-Item")
@@ -192,7 +193,7 @@ Get-Item
 ");
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("csharp", "// first line of C#\n\n\n\n// last line of C#"),
                     new NotebookCell("fsharp", "// first line of F#\n\n\n\n// last line of F#")
@@ -209,7 +210,7 @@ This is `markdown`.
 ");
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("markdown", "This is `markdown`.")
                 });
@@ -239,7 +240,7 @@ This is `markdown` with an alias.
 ");
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("csharp", "// this is csharp 1"),
                     new NotebookCell("csharp", "// this is csharp 2"),
@@ -268,7 +269,7 @@ This is `markdown` with an alias.
             var notebook = ParseDib(code);
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("csharp", "1+1"),
                     new NotebookCell("fsharp", "[1;2;3;4]\n|> List.sum")
@@ -307,7 +308,7 @@ var x = 1;
 2+2");
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("csharp", "1+1"),
                     new NotebookCell("fsharp", "2+2")

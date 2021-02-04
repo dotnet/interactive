@@ -4,8 +4,6 @@
 using System;
 using System.Threading.Tasks;
 using JetBrains.Profiler.Api;
-using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.Interactive.App;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.FSharp;

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Extensions;
 
@@ -11,12 +10,12 @@ namespace Microsoft.DotNet.Interactive.Events
 {
     public class CompletionsProduced : KernelEvent
     {
-        private readonly LinePositionSpan? _linePositionSpan;
+        private readonly LinePositionSpan _linePositionSpan;
 
         public CompletionsProduced(
             IEnumerable<CompletionItem> completions,
             RequestCompletions command,
-            LinePositionSpan? linePositionSpan = null) : base(command)
+            LinePositionSpan linePositionSpan = null) : base(command)
         {
             Completions = completions ?? throw new ArgumentNullException(nameof(completions));
             _linePositionSpan = linePositionSpan;
@@ -25,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Events
         /// <summary>
         /// The range of where to replace in a completion request.
         /// </summary>
-        public LinePositionSpan? LinePositionSpan => this.CalculateLineOffsetFromParentCommand(_linePositionSpan);
+        public LinePositionSpan LinePositionSpan => this.CalculateLineOffsetFromParentCommand(_linePositionSpan);
 
         /// <summary>
         /// The list of completions.
