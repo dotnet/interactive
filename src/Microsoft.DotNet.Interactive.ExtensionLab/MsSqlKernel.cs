@@ -189,11 +189,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private IEnumerable<IEnumerable<IEnumerable<(string, object)>>> GetEnumerableTable(ColumnInfo[] columnInfo, CellValue[][] rows)
         {
+            var displayTable = new List<(string, object)[]>();
             var columnNames = columnInfo.Select(info => info.ColumnName).ToArray();
 
             SqlKernelUtils.AliasDuplicateColumnNames(columnNames);
 
-            var displayTable = new List<(string, object)[]>();
             foreach (CellValue[] row in rows)
             {
                 var displayRow = new (string, object)[row.Length];
