@@ -7,7 +7,6 @@ open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive.Commands
 open Microsoft.DotNet.Interactive.FSharp
 open Microsoft.DotNet.Interactive.Formatting
-open XPlot.Plotly
 
 [<AbstractClass; Extension; Sealed>]
 type FSharpKernelExtensions private () =
@@ -22,7 +21,6 @@ type FSharpKernelExtensions private () =
                 referenceFromType typeof<IHtmlContent>
                 referenceFromType typeof<Kernel>
                 referenceFromType typeof<FSharpKernelHelpers.IMarker>
-                referenceFromType typeof<PlotlyChart>
                 referenceFromType typeof<Formatter>
 
                 openNamespaceOrType typeof<System.Console>.Namespace

@@ -4,7 +4,6 @@
 using System;
 using System.IO;
 using System.Management.Automation;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using System.Linq;
@@ -12,7 +11,6 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using XPlot.Plotly;
 using Xunit;
 using Xunit.Abstractions;
 using static Microsoft.DotNet.Interactive.PowerShell.Tests.Tags;
@@ -78,19 +76,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                                              .Should().Be(string.Empty),
                                        e => e.Should().BeOfType<CommandSucceeded>());
         }
-
-        [Fact]
-        public void PowerShell_type_accelerators_present()
-        {
-            CreateKernel(Language.PowerShell);
-
-            var accelerator = typeof(PSObject).Assembly.GetType("System.Management.Automation.TypeAccelerators");
-            dynamic typeAccelerators = accelerator.GetProperty("Get").GetValue(null);
-            Assert.Equal(typeAccelerators["Graph.Scatter"].FullName, $"{typeof(Graph).FullName}+Scatter");
-            Assert.Equal(typeAccelerators["Layout"].FullName, $"{typeof(Layout).FullName}+Layout");
-            Assert.Equal(typeAccelerators["Chart"].FullName, typeof(Chart).FullName);
-        }
-
+        
         [Fact]
         public async Task PowerShell_token_variables_work()
         {

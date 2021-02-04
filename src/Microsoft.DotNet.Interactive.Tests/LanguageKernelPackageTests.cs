@@ -315,8 +315,7 @@ catch (Exception e)
 ");
 
             await kernel.SubmitCodeAsync(@"
-using Microsoft.Data.Analysis;
-using XPlot.Plotly;");
+using Microsoft.Data.Analysis;");
 
             await kernel.SubmitCodeAsync(@"
 using Microsoft.AspNetCore.Html;
@@ -658,10 +657,10 @@ Formatter.Register<DataFrame>((df, writer) =>
 
             var command = new SubmitCode(@"#r ""nuget:Octokit, 0.32.0""
 #r ""nuget:NodaTime, 2.4.6""
+
 using Octokit;
 using NodaTime;
-using NodaTime.Extensions;
-using XPlot.Plotly;");
+using NodaTime.Extensions;");
 
             await kernel.SendAsync(command, CancellationToken.None);
 

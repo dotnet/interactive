@@ -23,7 +23,6 @@ using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Utility;
 
-using XPlot.Plotly;
 
 using CompletionItem = Microsoft.DotNet.Interactive.Events.CompletionItem;
 
@@ -68,8 +67,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              typeof(Task<>).Assembly,
                              typeof(Kernel).Assembly,
                              typeof(CSharpKernel).Assembly,
-                             typeof(PocketView).Assembly,
-                             typeof(PlotlyChart).Assembly);
+                             typeof(PocketView).Assembly);
 
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
         private string _currentDirectory;

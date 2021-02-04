@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Commands
                         errorId: "ShouldRunFromDefaultKernelRunspace",
                         errorCategory: ErrorCategory.InvalidOperation,
                         targetObject: null);
-                    this.ThrowTerminatingError(error);
+                    ThrowTerminatingError(error);
                 }
 
                 var azShell = ParameterSetName == TenantIdSetName

@@ -142,7 +142,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         }
                     }
 
-                    
                 });
 
             var verboseOption = new Option<bool>(
