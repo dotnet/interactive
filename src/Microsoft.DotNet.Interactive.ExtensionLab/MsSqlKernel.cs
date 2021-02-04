@@ -189,8 +189,31 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private IEnumerable<IEnumerable<IEnumerable<(string, object)>>> GetEnumerableTable(ColumnInfo[] columnInfo, CellValue[][] rows)
         {
-            var displayTable = new List<(string, object)[]>();
             var columnNames = columnInfo.Select(info => info.ColumnName).ToArray();
+
+            // Some column names can be duplicates, either due to deliberate aliasing
+            // with the AS keyword, or due to being unnamed columns. The Table Schema
+            // spec requires column names to be unique, so we have to iterate through
+            // the column names and append a number to the duplicates to distinguish
+            // them from the others.
+            var nameCounts = new Dictionary<string, int>(capacity: columnNames.Length);
+            for (int i = 0; i < columnNames.Length; i++)
+            {
+                string columnName = columnNames[i];
+                int count;
+                if (nameCounts.TryGetValue(columnName, out count))
+                {
+                    // Use the old count value so that duplicates start at 1. Example: "MyColumn (1)"
+                    columnNames[i] = columnName + $" ({count})";
+                    nameCounts[columnName] = count + 1;
+                }
+                else
+                {
+                    nameCounts[columnName] = 1;
+                }
+            }
+
+            var displayTable = new List<(string, object)[]>();
             foreach (CellValue[] row in rows)
             {
                 var displayRow = new (string, object)[row.Length];
