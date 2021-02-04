@@ -3,6 +3,7 @@
 #r "nuget:Microsoft.ML,1.5.1"
 #r "nuget:Microsoft.ML.AutoML,0.17.1"
 #r "nuget:Microsoft.Data.Analysis,0.4.0"
+#r "nuget:XPlot.Plotly.NET.Interactive.3.1.0"
 
 #!csharp
 

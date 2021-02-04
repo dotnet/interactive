@@ -17,7 +17,6 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.PowerShell.Host;
 using Microsoft.PowerShell;
 using Microsoft.PowerShell.Commands;
-using XPlot.Plotly;
 
 namespace Microsoft.DotNet.Interactive.PowerShell
 {
@@ -59,18 +58,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             // To workaround that, we rename 'Out-Default' to 'Out-Default2' to make sure the standard
             // output is captured.
             _outDefaultCommand = new CmdletInfo("Out-Default2", typeof(OutDefaultCommand));
-
-            // Register type accelerators for Plotly.
-            var accelerator = typeof(PSObject).Assembly.GetType("System.Management.Automation.TypeAccelerators");
-            MethodInfo addAccelerator = accelerator.GetMethod("Add", new Type[] { typeof(string), typeof(Type) });
-            foreach (Type type in typeof(Graph).GetNestedTypes())
-            {
-                addAccelerator.Invoke(null, new object[] { $"Graph.{type.Name}", type });
-            }
-
-            // Add accelerators that exist in other namespaces.
-            addAccelerator.Invoke(null, new object[] { "Layout", typeof(Layout.Layout) });
-            addAccelerator.Invoke(null, new object[] { "Chart", typeof(Chart) });
         }
 
         public PowerShellKernel() : base(DefaultKernelName)
