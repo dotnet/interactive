@@ -65,7 +65,7 @@
       },
       {
         "viewType": "dotnet-interactive-jupyter",
-        "displayName": ".NET Interactive for Jupyter Notebooks",
+        "displayName": ".NET Interactive for Jupyter",
         "selector": [
           {
             "filenamePattern": "*.ipynb"
@@ -120,7 +120,7 @@
         "dotnet-interactive.useJupyterExtensionForIpynbFiles": {
           "type": "boolean",
           "default": false,
-          "description": "(EXPERIMENTAL) Use the Jupyter extension to handle .ipynb notebook files if possible (requries restart)."
+          "description": "(EXPERIMENTAL) Use the Jupyter extension to handle .ipynb files if possible (requires restart)."
         }
       }
     },
