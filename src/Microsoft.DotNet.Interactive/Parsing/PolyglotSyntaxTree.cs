@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         public int GetAbsolutePosition(LinePosition linePosition)
         {
-            return _sourceText.Lines.GetPosition(linePosition);
+            return _sourceText.Lines.GetPosition(linePosition.ToCodeAnalysisLinePosition());
         }
     }
 }

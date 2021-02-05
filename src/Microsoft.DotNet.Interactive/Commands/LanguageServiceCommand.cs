@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Commands
@@ -35,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.Commands
         public LinePosition LinePosition { get; protected set; }
 
         internal abstract LanguageServiceCommand With(
-            LanguageNode languageNode, 
+            LanguageNode languageNode,
             LinePosition position);
 
         internal LanguageNode LanguageNode { get; }

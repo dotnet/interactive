@@ -4,24 +4,11 @@
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis.QuickInfo;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
     public static class LanguageServiceExtensions
     {
-        public static LinePosition SubtractLineOffset(this LinePosition linePos, LinePosition offset)
-        {
-            return new LinePosition(linePos.Line - offset.Line, linePos.Character);
-        }
-
-        public static LinePositionSpan SubtractLineOffset(this LinePositionSpan linePosSpan, LinePosition offset)
-        {
-            return new LinePositionSpan(
-                linePosSpan.Start.SubtractLineOffset(offset),
-                linePosSpan.End.SubtractLineOffset(offset));
-        }
-
         public static string ToMarkdownString(this QuickInfoItem info)
         {
             var stringBuilder = new StringBuilder();

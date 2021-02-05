@@ -13,25 +13,24 @@ namespace Microsoft.DotNet.Interactive.Extensions
 {
     internal static class EventExtensions
     {
-        public static LinePositionSpan? CalculateLineOffsetFromParentCommand(this KernelEvent @event, LinePositionSpan? initialRange)
+        public static LinePositionSpan CalculateLineOffsetFromParentCommand(this KernelEvent @event, LinePositionSpan initialRange)
         {
-            if (!initialRange.HasValue)
+            if (initialRange is null)
             {
                 return null;
             }
 
-            var range = initialRange.GetValueOrDefault();
             var requestCommand = @event.Command as LanguageServiceCommand;
             if (requestCommand?.Parent is LanguageServiceCommand parentRequest)
             {
                 var requestPosition = requestCommand.LinePosition;
                 var lineOffset = parentRequest.LinePosition.Line - requestPosition.Line;
                 return new LinePositionSpan(
-                    new LinePosition(range.Start.Line + lineOffset, range.Start.Character),
-                    new LinePosition(range.End.Line + lineOffset, range.End.Character));
+                    new LinePosition(initialRange.Start.Line + lineOffset, initialRange.Start.Character),
+                    new LinePosition(initialRange.End.Line + lineOffset, initialRange.End.Character));
             }
 
-            return range;
+            return initialRange;
         }
 
         public static IReadOnlyCollection<Diagnostic> RemapDiagnosticsFromRequestingCommand(this KernelEvent @event, IReadOnlyCollection<Diagnostic> diagnostics)

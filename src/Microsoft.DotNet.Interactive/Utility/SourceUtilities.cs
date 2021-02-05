@@ -3,7 +3,6 @@
 
 using System;
 using System.Text.RegularExpressions;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {

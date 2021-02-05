@@ -4,10 +4,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using FluentAssertions;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Text;
+using FluentAssertions;
 using Microsoft.Data.Analysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;

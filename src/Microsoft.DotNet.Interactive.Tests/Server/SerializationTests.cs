@@ -17,6 +17,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Notebook;
 using Microsoft.DotNet.Interactive.Server;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 
 using Pocket;
 
@@ -48,9 +49,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
             deserializedEnvelope
                 .Should()
-                .BeEquivalentTo(originalEnvelope,
-                                o => o.Excluding(e => e.Command.Properties)
-                                      .Excluding(e => e.Command.Handler));
+                .BeEquivalentToRespectingRuntimeTypes(
+                    originalEnvelope,
+                    o => o.Excluding(e => e.Command.Properties)
+                          .Excluding(e => e.Command.Handler));
         }
 
         [Theory]
@@ -65,10 +67,20 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
             var deserializedEnvelope = KernelEventEnvelope.Deserialize(json);
 
+            // ignore these specific properties because they're not serialized
+            var ignoredProperties = new HashSet<string>()
+            {
+                $"{nameof(CommandFailed)}.{nameof(CommandFailed.Exception)}",
+                $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.Value)}"
+            };
+
             deserializedEnvelope
                 .Should()
-                .BeEquivalentTo(originalEnvelope,
-                                o => o.Excluding(envelope => envelope.Event.Command.Properties));
+                .BeEquivalentToRespectingRuntimeTypes(
+                    originalEnvelope,
+                    o => o.Excluding(envelope => envelope.Event.Command.Properties)
+                          .Excluding(envelope => ignoredProperties.Contains($"{envelope.SelectedMemberInfo.DeclaringType.Name}.{envelope.SelectedMemberInfo.Name}"))
+                    );
         }
 
         [Theory]

@@ -149,7 +149,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             
             var document = _workspace.UpdateWorkingDocument(command.Code);
             var text = await document.GetTextAsync();
-            var cursorPosition = text.Lines.GetPosition(command.LinePosition);
+            var cursorPosition = text.Lines.GetPosition(command.LinePosition.ToCodeAnalysisLinePosition());
             var service = QuickInfoService.GetService(document);
             var info = await service.GetQuickInfoAsync(document, cursorPosition);
             
@@ -158,8 +158,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 return;
             }
 
-            var scriptSpanStart = text.Lines.GetLinePosition(0);
-            var linePosSpan = text.Lines.GetLinePositionSpan(info.Span);
+            var scriptSpanStart = LinePosition.FromCodeAnalysisLinePosition(text.Lines.GetLinePosition(0));
+            var linePosSpan = LinePositionSpan.FromCodeAnalysisLinePositionSpan(text.Lines.GetLinePositionSpan(info.Span));
             var correctedLinePosSpan = linePosSpan.SubtractLineOffset(scriptSpanStart);
 
             context.Publish(

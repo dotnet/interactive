@@ -3,14 +3,14 @@
 
 namespace Microsoft.DotNet.Interactive.FSharp.Tests
 
+open System.Collections.Generic
+
+open FluentAssertions
 open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive.FSharp
-open Xunit
-open FluentAssertions
 open Microsoft.DotNet.Interactive.Commands
-open Microsoft.CodeAnalysis.Text
 open Microsoft.DotNet.Interactive.Events
-open System.Collections.Generic
+open Xunit
 
 type KernelTests() =
     let withKernel (action : Kernel -> (unit -> seq<KernelEvent>) -> 'a) =

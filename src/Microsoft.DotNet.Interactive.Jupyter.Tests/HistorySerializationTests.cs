@@ -6,7 +6,7 @@ using System.Text.Json;
 using FluentAssertions;
 
 using Microsoft.DotNet.Interactive.Jupyter.Protocol;
-
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Jupyter.Tests
@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
             var serialized = @"{""history"":[[0,0,""input value""],[1,0,""input value""],[2,0,[""input value"",""output result""]]]}";
             var historyReply = JsonSerializer.Deserialize<HistoryReply>(serialized);
-            historyReply.Should().BeEquivalentTo(new HistoryReply(new HistoryElement[]
+            historyReply.Should().BeEquivalentToRespectingRuntimeTypes(new HistoryReply(new HistoryElement[]
             {
                 new InputHistoryElement(0, 0, "input value"),
                 new InputHistoryElement(1, 0, "input value"),
@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
 
             var serialized = @"{""history"":[]}";
             var historyReply = JsonSerializer.Deserialize<HistoryReply>(serialized);
-            historyReply.Should().BeEquivalentTo(new HistoryReply(new HistoryElement[]{}));
+            historyReply.Should().BeEquivalentToRespectingRuntimeTypes(new HistoryReply(new HistoryElement[]{}));
         }
 
         [Fact]
@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             var serialized = @"{""history"":null}";
             var historyReply = JsonSerializer.Deserialize<HistoryReply>(serialized);
-            historyReply.Should().BeEquivalentTo(new HistoryReply());
+            historyReply.Should().BeEquivalentToRespectingRuntimeTypes(new HistoryReply());
         }
     }
 }

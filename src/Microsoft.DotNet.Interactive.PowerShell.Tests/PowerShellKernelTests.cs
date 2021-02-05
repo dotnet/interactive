@@ -259,7 +259,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                 e => e.Should().BeOfType<CodeSubmissionReceived>(),
                 e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
                 e => e.Should().BeOfType<DiagnosticsProduced>().Which.Diagnostics.Count.Should().Be(0),
-                e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues.ElementAt(0).Should().BeEquivalentTo(fv),
+                e => e.Should().BeOfType<DisplayedValueProduced>().Which.FormattedValues.ElementAt(0).Should().BeEquivalentToRespectingRuntimeTypes(fv),
                 e => e.Should().BeOfType<CommandSucceeded>()
             );
         }
