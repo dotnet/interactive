@@ -170,7 +170,7 @@ describe('ipynb metadata tests', () => {
             });
         });
 
-        it(`doesn't set kernelspec data when already present`, () => {
+        it(`merges kernelspec data with existing`, () => {
             const documentMetadata = {
                 custom: {
                     metadata: {
@@ -185,7 +185,10 @@ describe('ipynb metadata tests', () => {
                 custom: {
                     metadata: {
                         kernelspec: {
-                            some_existing_key: 'some existing value'
+                            display_name: '.NET (C#)',
+                            language: 'C#',
+                            name: '.net-csharp',
+                            some_existing_key: 'some existing value',
                         }
                     }
                 }
@@ -246,6 +249,9 @@ describe('ipynb metadata tests', () => {
                 custom: {
                     metadata: {
                         kernelspec: {
+                            display_name: '.NET (C#)',
+                            language: 'C#',
+                            name: '.net-csharp',
                             some_existing_key: 'some existing value'
                         },
                         some_custom_metadata: {

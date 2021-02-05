@@ -124,14 +124,17 @@ export function withDotNetKernelMetadata(metadata: { [key: string]: any } | unde
 
     result.custom ||= {};
     result.custom.metadata ||= {};
+    result.custom.metadata.kernelspec ||= {};
 
-    // set kernelspec only if there's nothing present
-    if (!result.custom.metadata.kernelspec) {
-        result.custom.metadata.kernelspec = {
-            display_name: '.NET (C#)',
-            language: 'C#',
-            name: '.net-csharp',
-        };
+    const requiredKernelspecData: { [key: string]: any } = {
+        display_name: '.NET (C#)',
+        language: 'C#',
+        name: '.net-csharp',
+    };
+
+    // always set kernelspec data so that this notebook can be opened in Jupyter Lab
+    for (const key in requiredKernelspecData) {
+        result.custom.metadata.kernelspec[key] = requiredKernelspecData[key];
     }
 
     return result;
