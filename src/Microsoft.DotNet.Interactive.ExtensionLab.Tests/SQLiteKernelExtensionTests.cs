@@ -18,11 +18,11 @@ using Enumerable = System.Linq.Enumerable;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 {
-    public class SqlKernelsExtensionTests : IDisposable
+    public class SQLiteKernelExtensionTests : IDisposable
     {
         private readonly Configuration _configuration;
 
-        public SqlKernelsExtensionTests(ITestOutputHelper output)
+        public SQLiteKernelExtensionTests(ITestOutputHelper output)
         {
             _configuration = new Configuration()
                 .SetInteractive(Debugger.IsAttached)
@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 new KeyValueStoreKernel()
             };
 
-            var extension = new SqlKernelsExtension();
+            var extension = new SQLiteKernelExtension();
 
             await extension.OnLoadAsync(kernel);
 

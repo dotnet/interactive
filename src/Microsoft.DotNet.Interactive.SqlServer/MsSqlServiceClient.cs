@@ -11,7 +11,7 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using StreamJsonRpc;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab
+namespace Microsoft.DotNet.Interactive.SqlServer
 {
     public class MsSqlServiceClient : IDisposable
     {

@@ -4,10 +4,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using static Pocket.Logger;
 using FSharp.Compiler.DependencyManager;
@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private IEnumerable<string> NativeProbingRoots ()
+        private IEnumerable<string> NativeProbingRoots()
         {
             foreach (var package in _resolvedPackageReferences.Values)
             {
@@ -199,7 +199,7 @@ namespace Microsoft.DotNet.Interactive
             Log.Info("OnAssemblyLoad: {location}", args.LoadedAssembly.Location);
         }
 
-        private IResolveDependenciesResult Resolve(IEnumerable<Tuple<string, string>> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
+        private IResolveDependenciesResult ResolveAsync(IEnumerable<Tuple<string, string>> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
         {
             IDependencyManagerProvider iDependencyManager = _dependencies.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
             if (iDependencyManager == null)
@@ -209,7 +209,8 @@ namespace Microsoft.DotNet.Interactive
                 throw new InvalidOperationException("Internal error - unable to locate the nuget package manager, please try to reinstall.");
             }
 
-            return _dependencies.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm, default(string), default(string), default(string), default(string), _resolutionTimeout);        }
+            return _dependencies.Resolve(iDependencyManager, ".csx", packageManagerTextLines, reportError, executionTfm, default, default, default, default, _resolutionTimeout);
+        }
 
         public async Task<PackageRestoreResult> RestoreAsync()
         {
@@ -222,7 +223,7 @@ namespace Microsoft.DotNet.Interactive
 
             var result =
                 await Task.Run(() => 
-                     Resolve(GetPackageManagerLines(), restoreTfm, ReportError)
+                     ResolveAsync(GetPackageManagerLines(), restoreTfm, ReportError)
                 );
 
             PackageRestoreResult packageRestoreResult;
@@ -254,7 +255,7 @@ namespace Microsoft.DotNet.Interactive
                         resolvedReferences: _resolvedPackageReferences
                                             .Values
                                             .Except(previouslyResolved)
-                                            .ToList());
+                                            .ToImmutableArray());
             }
 
             return packageRestoreResult;

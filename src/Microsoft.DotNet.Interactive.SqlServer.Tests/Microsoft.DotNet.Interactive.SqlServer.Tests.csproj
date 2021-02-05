@@ -26,6 +26,7 @@
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.ExtensionLab\Microsoft.DotNet.Interactive.ExtensionLab.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.CSharp\Microsoft.DotNet.Interactive.CSharp.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp\Microsoft.DotNet.Interactive.FSharp.fsproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.SqlServer\Microsoft.DotNet.Interactive.SqlServer.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -5,7 +5,7 @@ using System;
 using Microsoft.Data.SqlClient;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
+namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 {
     public sealed class MsSqlFact : FactAttribute
     {
@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         {
             if (_skipReason != null)
             {
-                this.Skip = _skipReason;
+                Skip = _skipReason;
             }
         }
         

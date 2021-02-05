@@ -8,7 +8,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
-    public class SqlKernelsExtension : IKernelExtension
+    public class SQLiteKernelExtension : IKernelExtension
     {
         public Task OnLoadAsync(Kernel kernel)
         {
@@ -28,12 +28,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 }, HtmlFormatter.MimeType);
 
                 compositeKernel
-                    .UseKernelClientConnection(new SQLiteKernelConnection())
-                    .UseKernelClientConnection(new MsSqlKernelConnection());
+                    .UseKernelClientConnection(new SQLiteKernelConnection());
 
             KernelInvocationContext.Current?.Display(
                 $@"
-* Adds `mssql` and `sqlite` to the connection types available using the [`#!connect`](https://github.com/dotnet/interactive/blob/main/docs/connect.md) magic command.",
+* Adds and `sqlite` to the connection types available using the [`#!connect`](https://github.com/dotnet/interactive/blob/main/docs/connect.md) magic command.",
                 "text/markdown");
 
             }

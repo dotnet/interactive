@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab
+namespace Microsoft.DotNet.Interactive.SqlServer
 {
     public class MsSqlKernelConnection : ConnectKernelCommand<MsSqlConnectionOptions>
     {
@@ -157,10 +157,5 @@ var {options.KernelName} = new {options.KernelName}Context();";
 
             await csharpKernel.SubmitCodeAsync(submission3);
         }
-    }
-
-    public class MsSqlConnectionOptions : SqlConnectionOptions
-    {
-        public bool CreateDbContext { get; set; }
     }
 }

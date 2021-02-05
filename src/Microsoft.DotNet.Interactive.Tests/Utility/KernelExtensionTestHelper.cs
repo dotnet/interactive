@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -20,11 +21,13 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             string code,
             string packageName,
             string packageVersion,
+            IReadOnlyCollection<PackageReference> packageReferences = null, 
             params FileInfo[] filesToEmbed)
         {
             var msbuildFragment = GenerateEmbeddedResourceFragment(filesToEmbed);
 
             var extensionCode = filesToEmbed?.Length == 0 ? ExtensionCs(code) : FileProviderExtensionCs(code);
+
             projectDir.Populate(
                 extensionCode,
                 ("Extension.csproj", $@"

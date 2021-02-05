@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
@@ -16,8 +15,6 @@ using static Microsoft.DotNet.Interactive.Tests.Utility.KernelExtensionTestHelpe
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-
-    [LogTestNamesToPocketLogger]
     public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
     {
         public LanguageKernelExtensionLoadingTests(ITestOutputHelper output) : base(output)
@@ -45,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 code,
                 dllDir);
 
-            var kernel = (IExtensibleKernel) CreateKernel(language);
+            var kernel = CreateKernel(language);
 
             await using var context = KernelInvocationContext.Establish(new SubmitCode(""));
 
@@ -75,7 +72,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 "throw new Exception();",
                 dllDir);
 
-            var kernel = (IExtensibleKernel) CreateKernel(language);
+            var kernel = CreateKernel(language);
             await using var context = KernelInvocationContext.Establish(new SubmitCode(""));
 
             using var events = context.KernelEvents.ToSubscribedList();
@@ -109,7 +106,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             await kernel.SubmitCodeAsync($@"
 #i ""nuget:{nupkg.Directory.FullName}""
-#r ""nuget:{packageName},{packageVersion}""            ");
+#r ""nuget:{packageName},{packageVersion}""");
 
             KernelEvents.Should()
                         .ContainSingle<ReturnValueProduced>()
@@ -118,6 +115,49 @@ namespace Microsoft.DotNet.Interactive.Tests
                         .As<string>()
                         .Should()
                         .Contain(guid);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task It_does_not_try_to_load_the_same_extension_twice(Language language)
+        {
+            var projectDir = DirectoryUtility.CreateDirectory();
+
+            var packageVersion = "2.0.0-" + Guid.NewGuid().ToString("N");
+
+            var parent = await CreateExtensionNupkg(
+                             projectDir,
+                             "KernelInvocationContextExtensions.Display(KernelInvocationContext.Current, \"parent!\", \"text/plain\");",
+                             $"MyTestExtension.{Path.GetRandomFileName()}" + ".Parent",
+                             packageVersion);
+            
+            var child = await CreateExtensionNupkg(
+                            projectDir,
+                            "KernelInvocationContextExtensions.Display(KernelInvocationContext.Current, \"child!\", \"text/plain\");",
+                            $"{$"MyTestExtension.{Path.GetRandomFileName()}"}.Child",
+                            packageVersion);
+
+            var kernel = CreateKernel(language);
+
+            // FIX: (It_does_not_try_to_load_the_same_extension_twice) I think this test will only fail correctly if the second time the extension is loaded, it's a transitive dependency
+
+
+            var code = $@"
+#i ""nuget:{parent.Directory.FullName}""
+#i ""nuget:{child.Directory.FullName}""
+#r ""nuget:{$"MyTestExtension.{Path.GetRandomFileName()}"},{packageVersion}""";
+
+            await kernel.SubmitCodeAsync(code);
+            await kernel.SubmitCodeAsync(code);
+
+            KernelEvents.Should().NotContainErrors();
+
+            KernelEvents.Should()
+                        .ContainSingle<DisplayedValueProduced>(v => v.Value == "hi!");
+
+            // TODO-JOSEQU (It_does_not_try_to_load_the_same_extension_twice) write test
+            Assert.True(false, "Test It_does_not_try_to_load_the_same_extension_twice is not written yet.");
         }
     }
 }

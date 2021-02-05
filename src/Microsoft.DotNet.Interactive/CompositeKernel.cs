@@ -106,6 +106,7 @@ namespace Microsoft.DotNet.Interactive
 
         public NotebookDocument ParseNotebook(string fileName, byte[] rawData)
         {
+            // FIX: (ParseNotebook) make this internal, make name congruent with SerializeNotebook
             var kernelLanguageAliases = _kernelsByNameOrAlias.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name);
             kernelLanguageAliases.Remove(Name); // remove `.NET`
             var notebook = NotebookFileFormatHandler.Parse(fileName, rawData, DefaultKernelName, kernelLanguageAliases);
