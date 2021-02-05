@@ -152,18 +152,9 @@ export function isDotNetKernelPreferred(filename: string, fileMetadata: any): bo
             return true;
         // maybe preferred if the kernelspec data matches
         case '.ipynb':
-            const kernelspec = fileMetadata?.custom?.metadata?.kernelspec;
-            if (kernelspec) {
-                for (const key in requiredKernelspecData) {
-                    if (kernelspec[key] !== requiredKernelspecData[key]) {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            return false;
+            const kernelName = fileMetadata?.custom?.metadata?.kernelspec?.name;
+            return typeof kernelName === 'string'
+                && kernelName.toLowerCase().startsWith('.net-');
         // never preferred if it's an unknown extension
         default:
             return false;

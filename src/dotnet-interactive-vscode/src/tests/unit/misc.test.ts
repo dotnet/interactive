@@ -32,6 +32,70 @@ describe('Miscellaneous tests', () => {
             expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
         });
 
+        it(`.ipynb file extension is preferred for F# kernelspec`, () => {
+            const filename = 'notebook.ipynb';
+            const fileMetadata = {
+                custom: {
+                    metadata: {
+                        kernelspec: {
+                            display_name: '.NET (F#)',
+                            language: 'F#',
+                            name: '.net-fsharp',
+                        }
+                    }
+                }
+            };
+            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
+        });
+
+        it(`.ipynb file extension is preferred improperly-cased kernelspec`, () => {
+            const filename = 'notebook.ipynb';
+            const fileMetadata = {
+                custom: {
+                    metadata: {
+                        kernelspec: {
+                            display_name: '.NET (C#)',
+                            language: 'C#',
+                            name: '.NET-CSHARP',
+                        }
+                    }
+                }
+            };
+            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
+        });
+
+        it(`.ipynb file extension is preferred for alternate F# kernelspec`, () => {
+            const filename = 'notebook.ipynb';
+            const fileMetadata = {
+                custom: {
+                    metadata: {
+                        kernelspec: {
+                            display_name: '.NET (F#) (dev)',
+                            language: 'F#',
+                            name: '.net-fsharp-dev',
+                        }
+                    }
+                }
+            };
+            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
+        });
+
+        it(`.ipynb file extension is preferred for PowerShell kernelspec`, () => {
+            const filename = 'notebook.ipynb';
+            const fileMetadata = {
+                custom: {
+                    metadata: {
+                        kernelspec: {
+                            display_name: '.NET (PowerShell)',
+                            language: 'pwsh',
+                            name: '.net-powershell',
+                        }
+                    }
+                }
+            };
+            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
+        });
+
         it(`.ipynb file extension is not preferred if metadata kernelspec doesn't match`, () => {
             const filename = 'notebook.ipynb';
             const fileMetadata = {
