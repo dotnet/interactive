@@ -3,7 +3,6 @@
 
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;

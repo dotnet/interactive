@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -39,7 +38,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var fileLocation = diagnostic.Location.GetLineSpan();
             return new Diagnostic(
-                new LinePositionSpan(fileLocation.StartLinePosition, fileLocation.EndLinePosition),
+                new LinePositionSpan(LinePosition.FromCodeAnalysisLinePosition(fileLocation.StartLinePosition), LinePosition.FromCodeAnalysisLinePosition(fileLocation.EndLinePosition)),
                 diagnostic.Severity,
                 diagnostic.Id,
                 diagnostic.GetMessage());

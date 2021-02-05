@@ -16,18 +16,15 @@ open System.Threading.Tasks
 
 open Microsoft.CodeAnalysis
 open Microsoft.CodeAnalysis.Tags
-open Microsoft.CodeAnalysis.Text
 open Microsoft.DotNet.Interactive
 open Microsoft.DotNet.Interactive.Formatting
 open Microsoft.DotNet.Interactive.Commands
 open Microsoft.DotNet.Interactive.Events
 open Microsoft.DotNet.Interactive.Extensions
-open Microsoft.DotNet.Interactive.Formatting
+open Microsoft.DotNet.Interactive.FSharp.ScriptHelpers
 
 open FSharp.Compiler.Interactive.Shell
-open FSharp.Compiler.Scripting
 open FSharp.Compiler.SourceCodeServices
-open FSharp.Compiler.Text
 open FSharp.Compiler.Text.Pos
 open FsAutoComplete
 
@@ -332,14 +329,14 @@ type FSharpKernel () as this =
                 let sp = LinePosition(requestHoverText.LinePosition.Line, startCol)
                 let ep = LinePosition(requestHoverText.LinePosition.Line, endCol)
                 let lps = LinePositionSpan(sp, ep)
-                context.Publish(HoverTextProduced(requestHoverText, results, Nullable lps))
+                context.Publish(HoverTextProduced(requestHoverText, results, lps))
 
             | Result.Error err ->
                 let sp = LinePosition(requestHoverText.LinePosition.Line, col)
                 let ep = LinePosition(requestHoverText.LinePosition.Line, col)
                 let lps = LinePositionSpan(sp, ep)
                 let reply = [| FormattedValue("text/markdown", "") |]
-                context.Publish(HoverTextProduced(requestHoverText, reply, Nullable lps))
+                context.Publish(HoverTextProduced(requestHoverText, reply, lps))
                 ()
         }
 

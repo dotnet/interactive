@@ -1,11 +1,10 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
-using FluentAssertions;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using FluentAssertions.Collections;
 using FluentAssertions.Execution;
 using Microsoft.CodeAnalysis.Text;
@@ -26,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 markedUpCode.Span.Start,
                 markedUpCode.Span.Length + 1))
             {
-                var linePosition = markedUpCode.SourceText.Lines.GetLinePosition(position);
+                var linePosition = LinePosition.FromCodeAnalysisLinePosition(markedUpCode.SourceText.Lines.GetLinePosition(position));
 
                 yield return new MarkedUpCodeLinePosition(markedUpCode, linePosition);
             }

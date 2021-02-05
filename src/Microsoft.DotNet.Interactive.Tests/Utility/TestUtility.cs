@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 using FluentAssertions;
 using FluentAssertions.Collections;
+using FluentAssertions.Equivalency;
 using FluentAssertions.Execution;
 using FluentAssertions.Primitives;
 
@@ -38,10 +39,35 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             return assertions;
         }
 
+        public static void BeEquivalentToRespectingRuntimeTypes<TExpectation>(
+            this GenericCollectionAssertions<TExpectation> assertions,
+            params object[] expectations)
+        {
+            assertions.BeEquivalentTo(expectations, o => o.RespectingRuntimeTypes());
+        }
+
+        public static void BeEquivalentToRespectingRuntimeTypes<TExpectation>(
+            this ObjectAssertions assertions,
+            TExpectation expectation,
+            Func<EquivalencyAssertionOptions<TExpectation>, EquivalencyAssertionOptions<TExpectation>> config = null)
+        {
+            assertions.BeEquivalentTo(expectation, o =>
+            {
+                if (config is { })
+                {
+                    return config.Invoke(o).RespectingRuntimeTypes();
+                }
+                else
+                {
+                    return o.RespectingRuntimeTypes();
+                }
+            });
+        }
+
         public static void BeJsonEquivalentTo<T>(this StringAssertions assertion, T expected)
         {
             var obj = JsonConvert.DeserializeObject(assertion.Subject, expected.GetType());
-            obj.Should().BeEquivalentTo(expected);
+            obj.Should().BeEquivalentToRespectingRuntimeTypes(expected);
         }
 
         public static AndConstraint<GenericCollectionAssertions<T>> BeEquivalentSequenceTo<T>(
@@ -62,8 +88,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
                                       .Where(t => t.expected == null || t.expected.GetType().GetProperties().Any()))
                 {
                     tuple.actual
-                         .Should()
-                         .BeEquivalentTo(tuple.expected);
+                        .Should()
+                        .BeEquivalentToRespectingRuntimeTypes(tuple.expected);
                 }
             }
 

@@ -9,6 +9,7 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using FluentAssertions.Json;
 using Microsoft.DotNet.Interactive.Notebook;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -74,7 +75,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
             var notebook = ParseJupyter(jupyter);
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell(language, "// this is the code")
                 });
@@ -106,7 +107,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
             var notebook = ParseJupyter(jupyter);
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("csharp", "// this is assumed to be csharp"),
                     new NotebookCell("csharp", "// this is still assumed to be csharp")
@@ -234,7 +235,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
             var notebook = ParseJupyter(jupyter);
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("csharp", "// this is the code")
                 });
@@ -342,7 +343,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
             var notebook = ParseJupyter(jupyter);
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("csharp", "// this is csharp 1"),
                     new NotebookCell("csharp", "// this is csharp 2"),
@@ -390,7 +391,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
             var notebook = ParseJupyter(jupyter);
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("fsharp", "// this is the code")
                 });
@@ -434,7 +435,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
             var notebook = ParseJupyter(jupyter);
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("csharp", "// this is csharp\n#!fsharp\n// and this is fsharp")
                 });
@@ -478,7 +479,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
             var notebook = ParseJupyter(jupyter);
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("csharp", "#!probably-a-magic-command\n// but this is csharp")
                 });
@@ -502,7 +503,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
             var notebook = ParseJupyter(jupyter);
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("markdown", "This is `markdown`.")
                 });
@@ -530,7 +531,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
             var notebook = ParseJupyter(jupyter);
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("markdown", "This is `markdown`.\nSo is this.")
                 });
@@ -574,7 +575,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
             var notebook = ParseJupyter(jupyter);
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("csharp", "line 1\nline 2\nline 3\n")
                 });
@@ -625,7 +626,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
             var notebook = ParseJupyter(jupyter);
             notebook.Cells
                 .Should()
-                .BeEquivalentTo(new[]
+                .BeEquivalentToRespectingRuntimeTypes(new[]
                 {
                     new NotebookCell("csharp", "line 1\nline 2\nline 3\nline 4")
                 });
@@ -867,7 +868,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentTo(new NotebookCellTextOutput("this is text"));
+                .BeEquivalentToRespectingRuntimeTypes(new NotebookCellTextOutput("this is text"));
         }
 
         [Fact]
@@ -909,7 +910,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentTo(new NotebookCellTextOutput("this is text\nso is this"));
+                .BeEquivalentToRespectingRuntimeTypes(new NotebookCellTextOutput("this is text\nso is this"));
         }
 
         [Fact]
@@ -988,7 +989,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentTo(new NotebookCellDisplayOutput(new Dictionary<string, object>
+                .BeEquivalentToRespectingRuntimeTypes(new NotebookCellDisplayOutput(new Dictionary<string, object>
                 {
                     { "text/html", "this is html" }
                 }));
@@ -1070,7 +1071,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
                 .ContainSingle()
                 .Which
                 .Should()
-                .BeEquivalentTo(new NotebookCellErrorOutput("e-name", "e-value", new[]
+                .BeEquivalentToRespectingRuntimeTypes(new NotebookCellErrorOutput("e-name", "e-value", new[]
                 {
                     "at func1()",
                     "at func2()"

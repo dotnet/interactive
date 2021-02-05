@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Notebook;
+using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -43,7 +44,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
             var roundTrippedNotebook = ParseFromString(fileName, content);
             roundTrippedNotebook
                 .Should()
-                .BeEquivalentTo(originalNotebook);
+                .BeEquivalentToRespectingRuntimeTypes(originalNotebook);
         }
     }
 }
