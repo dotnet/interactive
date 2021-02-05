@@ -19,12 +19,13 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
     label: string;
     description?: string | undefined;
     detail?: string | undefined;
-    isPreferred: boolean = true;
+    isPreferred: boolean;
     preloads?: vscode.Uri[] | undefined;
 
-    constructor(readonly clientMapper: ClientMapper, apiBootstrapperUri: vscode.Uri) {
+    constructor(readonly clientMapper: ClientMapper, apiBootstrapperUri: vscode.Uri, isPreferred: boolean) {
         this.label = ".NET Interactive";
         this.preloads = [apiBootstrapperUri];
+        this.isPreferred = isPreferred;
     }
 
     async executeAllCells(document: vscode.NotebookDocument): Promise<void> {
@@ -113,7 +114,7 @@ export async function updateDocumentKernelspecMetadata(document: vscode.Notebook
     edit.replaceNotebookMetadata(document.uri, documentKernelMetadata);
 
     // this is the re-application for the workaround mentioned above
-    edit.replaceNotebookCells(document.uri, 0, document.cells.length - 1, cellData);
+    edit.replaceNotebookCells(document.uri, 0, document.cells.length, cellData);
 
     await vscode.workspace.applyEdit(edit);
 }

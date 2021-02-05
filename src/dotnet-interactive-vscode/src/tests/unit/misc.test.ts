@@ -3,10 +3,70 @@
 
 import { expect } from 'chai';
 import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from '../../contracts';
-
-import { debounce, isDisplayOutput, isErrorOutput, isTextOutput, mergeObjects, parse, processArguments, stringify } from '../../utilities';
+import { requiredKernelspecData } from '../../ipynbUtilities';
+import { debounce, isDisplayOutput, isDotNetKernelPreferred, isErrorOutput, isTextOutput, mergeObjects, parse, processArguments, stringify } from '../../utilities';
 
 describe('Miscellaneous tests', () => {
+    describe('preferred kernel selection', () => {
+        it(`.dib file extension is always preferred`, () => {
+            const filename = 'notebook.dib';
+            const fileMetadata = {};
+            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
+        });
+
+        it(`.dotnet-interactive file extension is always preferred`, () => {
+            const filename = 'notebook.dotnet-interactive';
+            const fileMetadata = {};
+            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
+        });
+
+        it(`.ipynb file extension is preferred if metadata kernelspec matches`, () => {
+            const filename = 'notebook.ipynb';
+            const fileMetadata = {
+                custom: {
+                    metadata: {
+                        kernelspec: requiredKernelspecData
+                    }
+                }
+            };
+            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
+        });
+
+        it(`.ipynb file extension is not preferred if metadata kernelspec doesn't match`, () => {
+            const filename = 'notebook.ipynb';
+            const fileMetadata = {
+                custom: {
+                    metadata: {
+                        kernelspec: {
+                            display_name: 'python',
+                            name: 'python',
+                            language: 'python',
+                        }
+                    }
+                }
+            };
+            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.false;
+        });
+
+        it(`.ipynb file extension is not preferred if metadata kernelspec is missing`, () => {
+            const filename = 'notebook.ipynb';
+            const fileMetadata = {};
+            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.false;
+        });
+
+        it(`unsupported file extension is not preferred even if metadata matches`, () => {
+            const filename = 'notebook.not-a-notebook-we-know-about';
+            const fileMetadata = {
+                custom: {
+                    metadata: {
+                        kernelspec: requiredKernelspecData
+                    }
+                }
+            };
+            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.false;
+        });
+    });
+
     describe('JSON object merging', () => {
         it(`two JSON objects can be merged`, () => {
             const baseObject = {

@@ -18,7 +18,7 @@ import compareVersions = require("compare-versions");
 import { DotNetCellMetadata, withDotNetMetadata } from '../ipynbUtilities';
 import { processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
-import { DotNetInteractiveNotebookKernel, KernelId, updateCellLanguages, updateDocumentKernelspecMetadata } from './notebookKernel';
+import { KernelId, updateCellLanguages, updateDocumentKernelspecMetadata } from './notebookKernel';
 import { DotNetInteractiveNotebookKernelProvider } from './notebookKernelProvider';
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -93,8 +93,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // notebook kernels
     const apiBootstrapperUri = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'kernelHttpApiBootstrapper.js'));
-    const notebookKernel = new DotNetInteractiveNotebookKernel(clientMapper, apiBootstrapperUri);
-    const notebookKernelProvider = new DotNetInteractiveNotebookKernelProvider(notebookKernel, clientMapper);
+    const notebookKernelProvider = new DotNetInteractiveNotebookKernelProvider(apiBootstrapperUri, clientMapper);
     context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorDib, notebookKernelProvider));
     if (useJupyterExtension) {
         context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorIpynbWithJupyter, notebookKernelProvider));

@@ -4,6 +4,7 @@
 import * as path from 'path';
 import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from "./contracts";
 import { ProcessStart } from "./interfaces";
+import { requiredKernelspecData } from './ipynbUtilities';
 import { Uri } from './interfaces/vscode';
 
 export function processArguments(template: { args: Array<string>, workingDirectory: string }, notebookPath: string, fallbackWorkingDirectory: string, dotnetPath: string, globalStoragePath: string): ProcessStart {
@@ -140,6 +141,33 @@ export function mergeObjects(baseObject: { [key: string]: any } | undefined, add
     }
 
     return result;
+}
+
+export function isDotNetKernelPreferred(filename: string, fileMetadata: any): boolean {
+    const extension = path.extname(filename);
+    switch (extension) {
+        // always preferred for our own extension
+        case '.dib':
+        case '.dotnet-interactive':
+            return true;
+        // maybe preferred if the kernelspec data matches
+        case '.ipynb':
+            const kernelspec = fileMetadata?.custom?.metadata?.kernelspec;
+            if (kernelspec) {
+                for (const key in requiredKernelspecData) {
+                    if (kernelspec[key] !== requiredKernelspecData[key]) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
+        // never preferred if it's an unknown extension
+        default:
+            return false;
+    }
 }
 
 export function isErrorOutput(arg: any): arg is NotebookCellErrorOutput {

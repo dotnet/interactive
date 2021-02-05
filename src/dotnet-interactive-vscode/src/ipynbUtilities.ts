@@ -113,6 +113,19 @@ export function getCellLanguage(cellText: string, cellMetadata: DotNetCellMetada
     return getNotebookSpecificLanguage(cellLanguageSpecifier || cellMetadata.language || documentMetadata.name || fallbackLanguage);
 }
 
+export interface KernelspecMetadata {
+    readonly display_name: string,
+    readonly language: string,
+    readonly name: string,
+    readonly [key: string]: any,
+}
+
+export const requiredKernelspecData: KernelspecMetadata = {
+    display_name: '.NET (C#)',
+    language: 'C#',
+    name: '.net-csharp',
+};
+
 export function withDotNetKernelMetadata(metadata: { [key: string]: any } | undefined): any | undefined {
     // clone the existing metadata
     let result: { [key: string]: any } = {};
@@ -125,12 +138,6 @@ export function withDotNetKernelMetadata(metadata: { [key: string]: any } | unde
     result.custom ||= {};
     result.custom.metadata ||= {};
     result.custom.metadata.kernelspec ||= {};
-
-    const requiredKernelspecData: { [key: string]: any } = {
-        display_name: '.NET (C#)',
-        language: 'C#',
-        name: '.net-csharp',
-    };
 
     // always set kernelspec data so that this notebook can be opened in Jupyter Lab
     for (const key in requiredKernelspecData) {
