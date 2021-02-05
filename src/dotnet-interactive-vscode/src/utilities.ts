@@ -4,7 +4,6 @@
 import * as path from 'path';
 import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from "./contracts";
 import { ProcessStart } from "./interfaces";
-import { requiredKernelspecData } from './ipynbUtilities';
 import { Uri } from './interfaces/vscode';
 
 export function processArguments(template: { args: Array<string>, workingDirectory: string }, notebookPath: string, fallbackWorkingDirectory: string, dotnetPath: string, globalStoragePath: string): ProcessStart {
@@ -124,23 +123,6 @@ export function stringify(value: any): string {
 
         return value;
     });
-}
-
-export function mergeObjects(baseObject: { [key: string]: any } | undefined, additionalData: { [key: string]: any } | undefined): any {
-    let result: { [key: string]: any } = {};
-    if (baseObject) {
-        for (const key in baseObject) {
-            result[key] = baseObject[key];
-        }
-    }
-
-    if (additionalData) {
-        for (const key in additionalData) {
-            result[key] = additionalData[key];
-        }
-    }
-
-    return result;
 }
 
 export function isDotNetKernelPreferred(filename: string, fileMetadata: any): boolean {

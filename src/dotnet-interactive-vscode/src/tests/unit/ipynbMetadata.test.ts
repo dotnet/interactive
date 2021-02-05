@@ -233,6 +233,7 @@ describe('ipynb metadata tests', () => {
                 custom: {
                     metadata: {
                         kernelspec: {
+                            name: 'this will be overwritten',
                             some_existing_key: 'some existing value'
                         },
                         some_custom_metadata: {

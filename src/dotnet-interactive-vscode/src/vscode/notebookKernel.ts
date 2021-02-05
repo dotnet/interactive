@@ -10,7 +10,6 @@ import { getDiagnosticCollection } from './diagnostics';
 import { getSimpleLanguage } from "../interactiveNotebook";
 import { Diagnostic, DiagnosticSeverity } from "../contracts";
 import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, withDotNetKernelMetadata } from '../ipynbUtilities';
-import { mergeObjects } from '../utilities';
 
 export const KernelId: string = 'dotnet-interactive';
 
@@ -80,7 +79,7 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
 export async function updateCellMetadata(document: vscode.NotebookDocument, cell: vscode.NotebookCell, metadata: vscode.NotebookCellMetadata): Promise<void> {
     const cellIndex = document.cells.findIndex(c => c === cell);
     if (cellIndex >= 0) {
-        const newMetadata = mergeObjects(cell.metadata, metadata);
+        const newMetadata = { ...cell.metadata, ...metadata };
         const edit = new vscode.WorkspaceEdit();
         edit.replaceNotebookCellMetadata(document.uri, cellIndex, newMetadata);
         await vscode.workspace.applyEdit(edit);

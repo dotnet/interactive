@@ -117,7 +117,6 @@ export interface KernelspecMetadata {
     readonly display_name: string,
     readonly language: string,
     readonly name: string,
-    readonly [key: string]: any,
 }
 
 export const requiredKernelspecData: KernelspecMetadata = {
@@ -137,12 +136,8 @@ export function withDotNetKernelMetadata(metadata: { [key: string]: any } | unde
 
     result.custom ||= {};
     result.custom.metadata ||= {};
-    result.custom.metadata.kernelspec ||= {};
 
     // always set kernelspec data so that this notebook can be opened in Jupyter Lab
-    for (const key in requiredKernelspecData) {
-        result.custom.metadata.kernelspec[key] = requiredKernelspecData[key];
-    }
-
+    result.custom.metadata.kernelspec = { ...result.custom.metadata.kernelspec, ...requiredKernelspecData };
     return result;
 }
