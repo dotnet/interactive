@@ -49,6 +49,7 @@
    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.8" />
    <PackageReference Include="StreamJsonRpc" Version="2.6.121" />
    <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.8" />
+   <PackageReference Include="Microsoft.SqlToolsService" Version="3.0.0-release.53" />
  </ItemGroup>
 
  <ItemGroup>
