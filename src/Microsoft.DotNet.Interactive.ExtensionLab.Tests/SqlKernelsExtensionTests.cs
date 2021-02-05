@@ -90,17 +90,6 @@ SELECT * FROM fruit
             } while (reader.NextResult());
         }
 
-        [Fact]
-        public void can_alias_duplicate_column_names_in_sql_results()
-        {
-            var testNames = new string[] { "apple", "banana", "apple", "orange", "orange", "BANANA", "orange", "BaNaNa" };
-            var expectedAliases = new string[] { "apple", "banana", "apple (1)", "orange", "orange (1)", "BANANA", "orange (2)", "BaNaNa" };
-
-            SqlKernelUtils.AliasDuplicateColumnNames(testNames);
-
-            Assert.Equal(expectedAliases, testNames);
-        }
-
         public void Dispose()
         {
             Formatter.ResetToDefault();
