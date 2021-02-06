@@ -12,7 +12,7 @@
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
-    "vscode": "^1.46.0"
+    "vscode": "^1.53.0"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
@@ -41,6 +41,7 @@
   ],
   "activationEvents": [
     "onNotebook:dotnet-interactive",
+    "onNotebook:dotnet-interactive-jupyter",
     "onNotebook:*",
     "onCommand:dotnet-interactive.acquire",
     "onCommand:dotnet-interactive.newNotebook",
@@ -49,8 +50,7 @@
   ],
   "main": "./out/vscode/extension.js",
   "extensionDependencies": [
-    "ms-dotnettools.vscode-dotnet-runtime",
-    "ms-toolsai.jupyter"
+    "ms-dotnettools.vscode-dotnet-runtime"
   ],
   "contributes": {
     "notebookProvider": [
@@ -62,6 +62,16 @@
             "filenamePattern": "*.{dib,dotnet-interactive}"
           }
         ]
+      },
+      {
+        "viewType": "dotnet-interactive-jupyter",
+        "displayName": ".NET Interactive for Jupyter",
+        "selector": [
+          {
+            "filenamePattern": "*.ipynb"
+          }
+        ],
+        "priority": "option"
       }
     ],
     "configuration": {
@@ -104,8 +114,13 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.207101",
+          "default": "1.0.210401",
           "description": "The minimum required version of the .NET Interactive tool."
+        },
+        "dotnet-interactive.useJupyterExtensionForIpynbFiles": {
+          "type": "boolean",
+          "default": false,
+          "description": "(EXPERIMENTAL) Use the Jupyter extension to handle .ipynb files if possible (requires restart)."
         }
       }
     },

@@ -6,15 +6,25 @@ import * as vscode from 'vscode';
 import { DotNetInteractiveNotebookKernel } from "./notebookKernel";
 import { configureWebViewMessaging } from "./vscodeUtilities";
 import { ClientMapper } from '../clientMapper';
+import { isDotNetKernelPreferred } from '../utilities';
 
 export class DotNetInteractiveNotebookKernelProvider implements vscode.NotebookKernelProvider<DotNetInteractiveNotebookKernel> {
-    constructor(readonly kernel: DotNetInteractiveNotebookKernel, readonly clientMapper: ClientMapper) {
+    private preferredKernel: DotNetInteractiveNotebookKernel;
+    private nonPreferredKernel: DotNetInteractiveNotebookKernel;
+
+    constructor(readonly apiBootstrapperUri: vscode.Uri, readonly clientMapper: ClientMapper) {
+        this.preferredKernel = new DotNetInteractiveNotebookKernel(clientMapper, this.apiBootstrapperUri, true);
+        this.nonPreferredKernel = new DotNetInteractiveNotebookKernel(clientMapper, this.apiBootstrapperUri, false);
     }
 
     onDidChangeKernels?: vscode.Event<vscode.NotebookDocument | undefined> | undefined;
 
     provideKernels(document: vscode.NotebookDocument, token: vscode.CancellationToken): vscode.ProviderResult<DotNetInteractiveNotebookKernel[]> {
-        return [this.kernel];
+        if (isDotNetKernelPreferred(document.uri.fsPath, document.metadata)) {
+            return [this.preferredKernel];
+        } else {
+            return [this.nonPreferredKernel];
+        }
     }
 
     resolveKernel(kernel: DotNetInteractiveNotebookKernel, document: vscode.NotebookDocument, webview: vscode.NotebookCommunication, token: vscode.CancellationToken): vscode.ProviderResult<void> {

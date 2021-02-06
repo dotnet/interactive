@@ -18,7 +18,7 @@ import compareVersions = require("compare-versions");
 import { DotNetCellMetadata, withDotNetMetadata } from '../ipynbUtilities';
 import { processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
-import { DotNetInteractiveNotebookKernel, KernelId, updateCellLanguages, updateDocumentKernelspecMetadata } from './notebookKernel';
+import { KernelId, updateCellLanguages, updateDocumentKernelspecMetadata } from './notebookKernel';
 import { DotNetInteractiveNotebookKernelProvider } from './notebookKernelProvider';
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -66,27 +66,46 @@ export async function activate(context: vscode.ExtensionContext) {
     });
 
     registerKernelCommands(context, clientMapper);
-    registerFileCommands(context, clientMapper);
+
+    const isInsidersBuild = vscode.version.indexOf('-insider') >= 0;
+    const jupyterExtensionIsPresent = vscode.extensions.getExtension('ms-toolsai.jupyter') !== undefined;
+    const useJupyterExtension = isInsidersBuild && jupyterExtensionIsPresent && (config.get<boolean>('useJupyterExtensionForIpynbFiles') || false);
+    registerFileCommands(context, clientMapper, useJupyterExtension);
 
     const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable
     const selectorDib = {
         viewType: ['dotnet-interactive'],
         filenamePattern: '*.{dib,dotnet-interactive}'
     };
-    const selectorJupyter = {
+    const selectorIpynbWithJupyter = {
         viewType: ['jupyter-notebook'],
         filenamePattern: '*.ipynb'
     };
+    const selectorIpynbWithDotNetInteractive = {
+        viewType: ['dotnet-interactive-jupyter'],
+        filenamePatter: '*.ipynb'
+    };
     const notebookContentProvider = new DotNetInteractiveNotebookContentProvider(clientMapper);
-    const apiBootstrapperUri = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'kernelHttpApiBootstrapper.js'));
-    const notebookKernel = new DotNetInteractiveNotebookKernel(clientMapper, apiBootstrapperUri);
-    const notebookKernelProvider = new DotNetInteractiveNotebookKernelProvider(notebookKernel, clientMapper);
+
+    // notebook content
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookContentProvider));
+    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive-jupyter', notebookContentProvider));
+
+    // notebook kernels
+    const apiBootstrapperUri = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'kernelHttpApiBootstrapper.js'));
+    const notebookKernelProvider = new DotNetInteractiveNotebookKernelProvider(apiBootstrapperUri, clientMapper);
     context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorDib, notebookKernelProvider));
-    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorJupyter, notebookKernelProvider));
+    if (useJupyterExtension) {
+        context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorIpynbWithJupyter, notebookKernelProvider));
+    } else {
+        context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorIpynbWithDotNetInteractive, notebookKernelProvider));
+    }
+
     context.subscriptions.push(vscode.notebook.onDidChangeActiveNotebookKernel(async e => await updateDocumentMetadata(e, clientMapper)));
-    context.subscriptions.push(vscode.notebook.onDidChangeCellLanguage(async e => await updateCellLanguageInMetadata(e)));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
+
+    // language registration
+    context.subscriptions.push(vscode.notebook.onDidChangeCellLanguage(async e => await updateCellLanguageInMetadata(e)));
     context.subscriptions.push(registerLanguageProviders(clientMapper, diagnosticDelay));
 }
 
