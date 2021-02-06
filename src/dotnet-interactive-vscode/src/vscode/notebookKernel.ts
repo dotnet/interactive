@@ -18,12 +18,13 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
     label: string;
     description?: string | undefined;
     detail?: string | undefined;
-    isPreferred: boolean = true;
+    isPreferred: boolean;
     preloads?: vscode.Uri[] | undefined;
 
-    constructor(readonly clientMapper: ClientMapper, apiBootstrapperUri: vscode.Uri) {
+    constructor(readonly clientMapper: ClientMapper, apiBootstrapperUri: vscode.Uri, isPreferred: boolean) {
         this.label = ".NET Interactive";
         this.preloads = [apiBootstrapperUri];
+        this.isPreferred = isPreferred;
     }
 
     async executeAllCells(document: vscode.NotebookDocument): Promise<void> {
@@ -78,8 +79,9 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
 export async function updateCellMetadata(document: vscode.NotebookDocument, cell: vscode.NotebookCell, metadata: vscode.NotebookCellMetadata): Promise<void> {
     const cellIndex = document.cells.findIndex(c => c === cell);
     if (cellIndex >= 0) {
+        const newMetadata = { ...cell.metadata, ...metadata };
         const edit = new vscode.WorkspaceEdit();
-        edit.replaceNotebookCellMetadata(document.uri, cellIndex, metadata);
+        edit.replaceNotebookCellMetadata(document.uri, cellIndex, newMetadata);
         await vscode.workspace.applyEdit(edit);
     }
 }
@@ -96,7 +98,23 @@ export async function updateCellOutputs(document: vscode.NotebookDocument, cell:
 export async function updateDocumentKernelspecMetadata(document: vscode.NotebookDocument): Promise<void> {
     const edit = new vscode.WorkspaceEdit();
     const documentKernelMetadata = withDotNetKernelMetadata(document.metadata);
+
+    // workaround for https://github.com/microsoft/vscode/issues/115912; capture all cell data so we can re-apply it at the end
+    const cellData: Array<vscode.NotebookCellData> = document.cells.map(c => {
+        return {
+            cellKind: c.cellKind,
+            source: c.document.getText(),
+            language: c.language,
+            outputs: c.outputs,
+            metadata: c.metadata
+        };
+    });
+
     edit.replaceNotebookMetadata(document.uri, documentKernelMetadata);
+
+    // this is the re-application for the workaround mentioned above
+    edit.replaceNotebookCells(document.uri, 0, document.cells.length, cellData);
+
     await vscode.workspace.applyEdit(edit);
 }
 

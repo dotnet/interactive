@@ -125,6 +125,24 @@ export function stringify(value: any): string {
     });
 }
 
+export function isDotNetKernelPreferred(filename: string, fileMetadata: any): boolean {
+    const extension = path.extname(filename);
+    switch (extension) {
+        // always preferred for our own extension
+        case '.dib':
+        case '.dotnet-interactive':
+            return true;
+        // maybe preferred if the kernelspec data matches
+        case '.ipynb':
+            const kernelName = fileMetadata?.custom?.metadata?.kernelspec?.name;
+            return typeof kernelName === 'string'
+                && kernelName.toLowerCase().startsWith('.net-');
+        // never preferred if it's an unknown extension
+        default:
+            return false;
+    }
+}
+
 export function isErrorOutput(arg: any): arg is NotebookCellErrorOutput {
     return arg
         && typeof arg.errorName === 'string'

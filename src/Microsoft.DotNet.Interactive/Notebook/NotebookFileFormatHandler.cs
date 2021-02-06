@@ -9,8 +9,6 @@ using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using ArgumentOutOfRangeException = System.ArgumentOutOfRangeException;
 
 namespace Microsoft.DotNet.Interactive.Notebook
 {
@@ -143,19 +141,19 @@ namespace Microsoft.DotNet.Interactive.Notebook
             };
 
             var cells = new List<NotebookCell>();
-            foreach (var cell in jupyter.GetProperty("cells").EnumerateArray())
+            foreach (var cell in jupyter.GetPropertyFromPath("cells").EnumerateArray())
             {
-                switch (cell.GetProperty("cell_type").GetString())
+                switch (cell.GetPropertyFromPath("cell_type").GetString())
                 {
                     case "code":
                         //
                         // figure out cell language and content
                         //
-                        var cellMetadata = cell.GetPropertyFromPath("metadata",MetadataNamespace);
+                        var cellMetadata = cell.GetPropertyFromPath("metadata", MetadataNamespace);
 
-                        var languageFromMetadata = cellMetadata?.GetProperty("language").GetString();
+                        var languageFromMetadata = cellMetadata?.GetPropertyFromPath("language").GetString();
 
-                        var sourceLines = GetTextLines(cell.GetProperty("source"));
+                        var sourceLines = GetTextLines(cell.GetPropertyFromPath("source"));
 
                         var possibleCellLanguage = sourceLines.Count > 0 && sourceLines[0].StartsWith("#!")
                             ? sourceLines[0].Substring(2)
@@ -190,15 +188,15 @@ namespace Microsoft.DotNet.Interactive.Notebook
                                             type == "display_data" ||
                                             type == "execute_result" => new NotebookCellDisplayOutput(
                                                 JsonSerializer.Deserialize<Dictionary<string, object>>(cellOutput
-                                                    .GetProperty("data").GetRawText(), serializerOptions)),
+                                                    .GetPropertyFromPath("data").GetRawText(), serializerOptions)),
 
                                         "stream" => new NotebookCellTextOutput(
-                                            GetTextAsSingleString(cellOutput.GetProperty("text"))),
+                                            GetTextAsSingleString(cellOutput.GetPropertyFromPath("text"))),
 
                                         "error" => new NotebookCellErrorOutput(
-                                            cellOutput.GetProperty("ename").GetString(),
-                                            cellOutput.GetProperty("evalue").GetString(),
-                                            cellOutput.GetProperty("traceback").EnumerateArray()
+                                            cellOutput.GetPropertyFromPath("ename").GetString(),
+                                            cellOutput.GetPropertyFromPath("evalue").GetString(),
+                                            cellOutput.GetPropertyFromPath("traceback").EnumerateArray()
                                                 .Select(s => s.GetString()).ToArray()),
 
                                         _ => null
@@ -211,7 +209,7 @@ namespace Microsoft.DotNet.Interactive.Notebook
                         cells.Add(new NotebookCell(cellLanguage, source, outputs.ToArray()));
                         break;
                     case "markdown":
-                        var markdown = GetTextAsSingleString(cell.GetProperty("source"));
+                        var markdown = GetTextAsSingleString(cell.GetPropertyFromPath("source"));
                         cells.Add(new NotebookCell("markdown", markdown));
                         break;
                 }
@@ -220,9 +218,9 @@ namespace Microsoft.DotNet.Interactive.Notebook
             return new NotebookDocument(cells.ToArray());
         }
 
-        private static List<string> GetTextLines(JsonElement jsonElement)
+        private static List<string> GetTextLines(JsonElement? jsonElement)
         {
-            var textLines = jsonElement.ValueKind switch
+            var textLines = jsonElement?.ValueKind switch
             {
                 JsonValueKind.Array => jsonElement.EnumerateArray().Select(element => element.GetString().TrimNewline()),
                 JsonValueKind.String => NotebookParsingExtensions.SplitAsLines(jsonElement.GetString()),
@@ -232,7 +230,7 @@ namespace Microsoft.DotNet.Interactive.Notebook
             return textLines.ToList();
         }
 
-        private static string GetTextAsSingleString(JsonElement jsonElement)
+        private static string GetTextAsSingleString(JsonElement? jsonElement)
         {
             var textLines = GetTextLines(jsonElement);
             return string.Join("\n", textLines);

@@ -633,6 +633,278 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         }
 
         [Fact]
+        public void file_without_cells_can_be_parsed()
+        {
+            var jupyter = new { };
+            var notebook = ParseJupyter(jupyter);
+            notebook.Cells
+                .Should()
+                .BeEmpty();
+        }
+
+        [Fact]
+        public void cell_without_cell_type_is_ignored_on_parse()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        source = new[]
+                        {
+                            "// line 1",
+                            "// line 2"
+                        }
+                    },
+                    new
+                    {
+                        not_a_cell_type = "code",
+                        source = new[]
+                        {
+                            "// line 3",
+                            "// line 4"
+                        }
+                    },
+                    new
+                    {
+                        cell_type = "code",
+                        source = new[]
+                        {
+                            "// line 5",
+                            "// line 6"
+                        }
+                    }
+                }
+            };
+            var notebook = ParseJupyter(jupyter);
+            notebook.Cells
+                .Should()
+                .BeEquivalentToRespectingRuntimeTypes(new[]
+                {
+                    new NotebookCell("csharp", "// line 1\n// line 2"),
+                    new NotebookCell("csharp", "// line 5\n// line 6")
+                });
+        }
+
+        [Fact]
+        public void cell_with_metadata_but_not_language_can_be_parsed()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        source = new[]
+                        {
+                            "// this is not really fsharp"
+                        },
+                        metadata = new
+                        {
+                            dotnet_interactive = new
+                            {
+                                not_a_language = "fsharp"
+                            }
+                        }
+                    }
+                }
+            };
+            var notebook = ParseJupyter(jupyter);
+            notebook.Cells
+                .Should()
+                .BeEquivalentToRespectingRuntimeTypes(new[]
+                {
+                    new NotebookCell("csharp", "// this is not really fsharp")
+                });
+        }
+
+        [Fact]
+        public void code_cell_without_source_can_be_parsed()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        not_source = new[]
+                        {
+                            "// this isn't code"
+                        }
+                    }
+                }
+            };
+            var notebook = ParseJupyter(jupyter);
+            notebook.Cells
+                .Should()
+                .BeEquivalentToRespectingRuntimeTypes(new[]
+                {
+                    new NotebookCell("csharp", "")
+                });
+        }
+
+        [Fact]
+        public void cell_displaly_output_without_data_member_can_be_parsed()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        execution_count = 1,
+                        metadata = new { },
+                        source = "//",
+                        outputs = new object[]
+                        {
+                            new
+                            {
+                                output_type = "execute_result",
+                                not_data = new Dictionary<string, string>()
+                                {
+                                    { "text/html", "this is html" }
+                                },
+                                execution_count = 1,
+                                metadata = new { }
+                            }
+                        }
+                    }
+                }
+            };
+            var notebook = ParseJupyter(jupyter);
+            notebook.Cells
+                .Should()
+                .ContainSingle()
+                .Which
+                .Outputs
+                .Should()
+                .ContainSingle()
+                .Which
+                .Should()
+                .BeOfType<NotebookCellDisplayOutput>()
+                .Which
+                .Data
+                .Should()
+                .BeEmpty();
+        }
+
+        [Fact]
+        public void cell_stream_output_without_text_member_can_be_parsed()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        execution_count = 1,
+                        metadata = new { },
+                        source = "//",
+                        outputs = new object[]
+                        {
+                            new
+                            {
+                                output_type = "stream",
+                                name = "stdout",
+                                not_text = "this is text"
+                            }
+                        }
+                    }
+                }
+            };
+            var notebook = ParseJupyter(jupyter);
+            notebook.Cells
+                .Should()
+                .ContainSingle()
+                .Which
+                .Outputs
+                .Should()
+                .ContainSingle()
+                .Which
+                .Should()
+                .BeOfType<NotebookCellTextOutput>()
+                .Which
+                .Text
+                .Should()
+                .BeEmpty();
+        }
+
+        [Fact]
+        public void cell_error_output_without_required_fields_can_be_parsed()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        execution_count = 1,
+                        metadata = new { },
+                        source = "//",
+                        outputs = new object[]
+                        {
+                            new
+                            {
+                                output_type = "error",
+                                not_ename = "e-name",
+                                not_evalue = "e-value",
+                                not_traceback = new[]
+                                {
+                                    "at func1()",
+                                    "at func2()"
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            var notebook = ParseJupyter(jupyter);
+            notebook.Cells
+                .Should()
+                .ContainSingle()
+                .Which
+                .Outputs
+                .Should()
+                .ContainSingle()
+                .Which
+                .Should()
+                .BeOfType<NotebookCellErrorOutput>()
+                .Which
+                .Should()
+                .BeEquivalentToRespectingRuntimeTypes(new NotebookCellErrorOutput(null, null, new string[0]));
+        }
+
+        [Fact]
+        public void markdown_cell_missing_source_field_can_be_parsed()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "markdown",
+                        not_source = "this isn't markdown"
+                    }
+                }
+            };
+            var notebook = ParseJupyter(jupyter);
+            notebook.Cells
+                .Should()
+                .ContainSingle()
+                .Which
+                .Should()
+                .BeEquivalentToRespectingRuntimeTypes(new NotebookCell("markdown", ""));
+        }
+
+        [Fact]
         public void serialized_notebook_has_appropriate_metadata()
         {
             var notebook = new NotebookDocument(Array.Empty<NotebookCell>());

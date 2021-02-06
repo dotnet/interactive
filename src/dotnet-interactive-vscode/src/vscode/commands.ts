@@ -3,10 +3,11 @@
 
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
+import * as path from 'path';
 import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
 import { ClientMapper } from '../clientMapper';
-import { getEol } from './vscodeUtilities';
+import { getEol, isUnsavedNotebook } from './vscodeUtilities';
 import { toNotebookDocument } from './notebookContentProvider';
 import { KernelId, updateCellMetadata } from './notebookKernel';
 
@@ -117,7 +118,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     }));
 }
 
-export function registerFileCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
+export function registerFileCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper, useJupyterExtension: boolean) {
 
     const eol = getEol();
 
@@ -126,9 +127,35 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
         '.NET Interactive Notebooks': ['dib', 'dotnet-interactive']
     };
 
+    function workspaceHasUnsavedNotebookWithName(fileName: string): boolean {
+        return vscode.workspace.textDocuments.findIndex(textDocument => {
+            if (textDocument.notebook) {
+                const notebookUri = textDocument.notebook.uri;
+                return isUnsavedNotebook(notebookUri) && path.basename(notebookUri.fsPath) === fileName;
+            }
+
+            return false;
+        }) >= 0;
+    }
+
+    function getNewNotebookName(): string {
+        let suffix = 1;
+        while (workspaceHasUnsavedNotebookWithName(`Untitled-${suffix}.ipynb`)) {
+            suffix++;
+        }
+
+        return `Untitled-${suffix}.ipynb`;
+    }
+
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebook', async () => {
-        await vscode.commands.executeCommand('jupyter.createnewnotebook');
-        await switchToInteractiveKernel();
+        if (useJupyterExtension) {
+            await vscode.commands.executeCommand('jupyter.createnewnotebook');
+            await switchToInteractiveKernel();
+        } else {
+            const fileName = getNewNotebookName();
+            const newUri = vscode.Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
+            await vscode.commands.executeCommand('vscode.openWith', newUri, 'dotnet-interactive-jupyter');
+        }
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
@@ -148,8 +175,12 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
             }
         }
 
-        await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'jupyter-notebook');
-        await switchToInteractiveKernel();
+        if (useJupyterExtension) {
+            await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'jupyter-notebook');
+            await switchToInteractiveKernel();
+        } else {
+            await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'dotnet-interactive-jupyter');
+        }
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {
