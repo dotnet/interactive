@@ -1,0 +1,41 @@
+{
+  "schema": {
+    "primaryKey": [],
+    "fields": [
+      {
+        "name": "Apples",
+        "type": "integer"
+      },
+      {
+        "name": "Bananas",
+        "type": "integer"
+      },
+      {
+        "name": "Apples (2)",
+        "type": "integer"
+      },
+      {
+        "name": "BANANAS",
+        "type": "integer"
+      },
+      {
+        "name": "Apples (3)",
+        "type": "integer"
+      },
+      {
+        "name": "BaNaNaS",
+        "type": "integer"
+      }
+    ]
+  },
+  "data": [
+    {
+      "Apples": 1,
+      "Bananas": 2,
+      "Apples (2)": 3,
+      "BANANAS": 4,
+      "Apples (3)": 5,
+      "BaNaNaS": 6
+    }
+  ]
+}

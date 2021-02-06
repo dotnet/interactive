@@ -29,7 +29,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 .UsingExtension("json");
         }
 
-
         [Fact]
         public async Task can_generate_tabular_json_from_database_table_result()
         {
@@ -88,6 +87,38 @@ SELECT * FROM fruit
 
                 yield return table;
             } while (reader.NextResult());
+        }
+
+        [Fact]
+        public async Task can_handle_duplicate_columns_in_query_results()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel().UseNugetDirective(),
+                new KeyValueStoreKernel()
+            };
+
+            var extension = new SqlKernelsExtension();
+
+            await extension.OnLoadAsync(kernel);
+
+            using var _ = SqlLiteConnectionTests.CreateInMemorySQLiteDb(out var connectionString);
+
+            await kernel.SubmitCodeAsync(
+                $"#!connect --kernel-name mydb sqlite \"{connectionString}\"");
+
+            var result = await kernel.SubmitCodeAsync(@"
+#!mydb
+SELECT 1 AS Apples, 2 AS Bananas, 3 AS Apples, 4 AS BANANAS, 5 AS Apples, 6 AS BaNaNaS
+");
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            var formattedData = events.OfType<DisplayedValueProduced>().Single()
+                .FormattedValues.Single(fm => fm.MimeType == HtmlFormatter.MimeType)
+                .Value;
+
+            this.Assent(formattedData, _configuration);
         }
 
         public void Dispose()
