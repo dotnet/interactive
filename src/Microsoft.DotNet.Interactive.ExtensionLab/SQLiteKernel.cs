@@ -57,6 +57,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 var values = new object[reader.FieldCount];
                 var names = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToArray();
 
+                SqlKernelUtils.AliasDuplicateColumnNames(names);
+
                 // holds the result of a single statement within the query
                 var table = new List<(string, object)[]>();
 

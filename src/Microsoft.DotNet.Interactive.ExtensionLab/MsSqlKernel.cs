@@ -191,6 +191,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             var displayTable = new List<(string, object)[]>();
             var columnNames = columnInfo.Select(info => info.ColumnName).ToArray();
+
+            SqlKernelUtils.AliasDuplicateColumnNames(columnNames);
+
             foreach (CellValue[] row in rows)
             {
                 var displayRow = new (string, object)[row.Length];
