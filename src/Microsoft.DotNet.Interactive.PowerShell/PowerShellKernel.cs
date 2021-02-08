@@ -10,6 +10,7 @@ using System.Management.Automation.Language;
 using System.Management.Automation.Runspaces;
 using System.Reflection;
 using System.Threading.Tasks;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -21,14 +22,19 @@ using Microsoft.PowerShell.Commands;
 namespace Microsoft.DotNet.Interactive.PowerShell
 {
     using System.Management.Automation;
+
     using Microsoft.DotNet.Interactive.Utility;
 
-    public class PowerShellKernel : 
+    public class PowerShellKernel :
         DotNetKernel,
         IKernelCommandHandler<RequestCompletions>,
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<SubmitCode>
     {
+        private const string PSTelemetryEnvName = "POWERSHELL_DISTRIBUTION_CHANNEL";
+        private const string PSTelemetryChannel = "dotnet-interactive-powershell";
+        private const string PSModulePathEnvName = "PSModulePath";
+
         internal const string DefaultKernelName = "pwsh";
 
         private static readonly CmdletInfo _outDefaultCommand;
@@ -37,6 +43,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         private readonly PSKernelHost _psHost;
         private readonly Lazy<PowerShell> _lazyPwsh;
+        private MethodInfo _addAccelerator;
         private PowerShell pwsh => _lazyPwsh.Value;
 
         public Func<string, string> ReadInput { get; set; }
@@ -49,7 +56,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             // Prepare for marking PSObject as error with 'WriteStream'.
             _writeStreamProperty = typeof(PSObject).GetProperty("WriteStream", BindingFlags.Instance | BindingFlags.NonPublic);
-            Type writeStreamType = typeof(PSObject).Assembly.GetType("System.Management.Automation.WriteStreamType");
+            var writeStreamType = typeof(PSObject).Assembly.GetType("System.Management.Automation.WriteStreamType");
             _errorStreamValue = Enum.Parse(writeStreamType, "Error");
 
             // When the downstream cmdlet of a native executable is 'Out-Default', PowerShell assumes
@@ -68,23 +75,19 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         private PowerShell CreatePowerShell()
         {
-            const string PSTelemetryEnvName = "POWERSHELL_DISTRIBUTION_CHANNEL";
-            const string PSTelemetryChannel = "dotnet-interactive-powershell";
-            const string PSModulePathEnvName = "PSModulePath";
-
             // Set the distribution channel so telemetry can be distinguished in PS7+ telemetry
             Environment.SetEnvironmentVariable(PSTelemetryEnvName, PSTelemetryChannel);
 
             // Create PowerShell instance
             var iss = InitialSessionState.CreateDefault2();
-            if(Platform.IsWindows)
+            if (Platform.IsWindows)
             {
                 // This sets the execution policy on Windows to RemoteSigned.
                 iss.ExecutionPolicy = ExecutionPolicy.RemoteSigned;
             }
 
             // Set $PROFILE.
-            PSObject profileValue = DollarProfileHelper.GetProfileValue();
+            var profileValue = DollarProfileHelper.GetProfileValue();
             iss.Variables.Add(new SessionStateVariableEntry("PROFILE", profileValue, "The $PROFILE."));
 
             var runspace = RunspaceFactory.CreateRunspace(_psHost, iss);
@@ -92,17 +95,37 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             var pwsh = PowerShell.Create(runspace);
 
             // Add Modules directory that contains the helper modules
-            string psModulePath = Environment.GetEnvironmentVariable(PSModulePathEnvName);
             string psJupyterModulePath = Path.Join(
-                Path.GetDirectoryName(typeof(PowerShellKernel).Assembly.Location),
-                "Modules");
+               Path.GetDirectoryName(typeof(PowerShellKernel).Assembly.Location),
+               "Modules");
 
-            Environment.SetEnvironmentVariable(
-                PSModulePathEnvName,
-                $"{psJupyterModulePath}{Path.PathSeparator}{psModulePath}");
+            AddModulePath(psJupyterModulePath);
+
+            // Get the AddAccelerator method
+            var acceleratorType = typeof(PSObject).Assembly.GetType("System.Management.Automation.TypeAccelerators");
+            _addAccelerator = acceleratorType?.GetMethod("Add", new[] { typeof(string), typeof(Type) });
 
             RegisterForDisposal(pwsh);
             return pwsh;
+        }
+
+        public void AddModulePath(string modulePath)
+        {
+            if (string.IsNullOrWhiteSpace(modulePath))
+            {
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(modulePath));
+            }
+
+            var psModulePath = Environment.GetEnvironmentVariable(PSModulePathEnvName);
+
+            Environment.SetEnvironmentVariable(
+                PSModulePathEnvName,
+                $"{modulePath}{Path.PathSeparator}{psModulePath}");
+        }
+
+        public void AddAccelerator(string name, Type type)
+        {
+            _addAccelerator?.Invoke(null, new object[] { name, type });
         }
 
         public override IReadOnlyCollection<string> GetVariableNames()
@@ -125,7 +148,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             {
                 object outVal = (variable.Value is PSObject psobject) ? psobject.Unwrap() : variable.Value;
 
-                if(outVal is T tObj)
+                if (outVal is T tObj)
                 {
                     value = tObj;
                     return true;
@@ -149,7 +172,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             // Acknowledge that we received the request.
             context.Publish(new CodeSubmissionReceived(submitCode));
 
-            string code = submitCode.Code;
+            var code = submitCode.Code;
 
             // Test is the code we got is actually able to run.
             if (IsCompleteSubmission(code, out ParseError[] parseErrors))
@@ -214,7 +237,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
             else
             {
-                CommandCompletion results = CommandCompletion.CompleteInput(
+                var results = CommandCompletion.CompleteInput(
                     requestCompletions.Code,
                     SourceUtilities.GetCursorOffsetFromPosition(requestCompletions.Code, requestCompletions.LinePosition),
                     options: null,
@@ -242,9 +265,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             RequestDiagnostics requestDiagnostics,
             KernelInvocationContext context)
         {
-            string code = requestDiagnostics.Code;
+            var code = requestDiagnostics.Code;
 
-            IsCompleteSubmission(code, out ParseError[] parseErrors);
+            IsCompleteSubmission(code, out var parseErrors);
 
             var diagnostics = parseErrors.Select(ToDiagnostic);
             context.Publish(new DiagnosticsProduced(diagnostics, requestDiagnostics));
@@ -255,7 +278,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         private async Task RunSubmitCodeInAzShell(string code)
         {
             code = code.Trim();
-            bool shouldDispose = false;
+            var shouldDispose = false;
 
             try
             {
@@ -307,7 +330,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             // Parse the PowerShell script. If there are any parse errors, check if the input was incomplete.
             // We only need to check if the first ParseError has incomplete input. This is consistant with
             // what PowerShell itself does today.
-            Parser.ParseInput(code, out Token[] tokens, out errors);
+            Parser.ParseInput(code, out _, out errors);
             return errors.Length == 0 || !errors[0].IncompleteInput;
         }
 
