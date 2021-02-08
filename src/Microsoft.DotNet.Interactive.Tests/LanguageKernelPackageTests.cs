@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -947,14 +948,17 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
             // (OSPlatform.OSX is not supported by this library
         }
 
-        [Fact]
-        public async Task Pound_r_nuget_works_immediately_after_a_language_selector()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell)]
+        public async Task Pound_r_nuget_works_immediately_after_a_language_selector(Language defaultLanguageKernel)
         {
-            var kernel = CreateCompositeKernel(defaultKernelLanguage: Language.CSharp);
+            var kernel = CreateCompositeKernel(defaultLanguageKernel);
 
             var code = @"
 #!csharp
-#r ""nuget: System.Text.Json, 4.6.0""
+#r ""nuget:Newtonsoft.Json,11.0.2""
 ";
 
             var command = new SubmitCode(code);
@@ -963,6 +967,8 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
 
             using var events = result.KernelEvents.ToSubscribedList();
 
+            using var _ = new AssertionScope();
+
             events
                 .Should()
                 .ContainSingle<PackageAdded>()
@@ -970,7 +976,12 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
                 .PackageReference
                 .PackageName
                 .Should()
-                .Be("System.Text.Json");
+                .Be("Newtonsoft.Json");
+
+            kernel.FindKernel("csharp").As<CSharpKernel>()
+                .RequestedPackageReferences
+                .Should()
+                .ContainSingle(p => p.PackageName == "Newtonsoft.Json");
         }
     }
 }
