@@ -1,11 +1,10 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Tags;
 using Microsoft.DotNet.Interactive.Events;
+using RoslynCompletionDescription = Microsoft.CodeAnalysis.Completion.CompletionDescription;
 using RoslynCompletionItem = Microsoft.CodeAnalysis.Completion.CompletionItem;
 
 namespace Microsoft.DotNet.Interactive.CSharp
@@ -50,14 +49,15 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return null;
         }
 
-        public static CompletionItem ToModel(this RoslynCompletionItem item)
+        public static CompletionItem ToModel(this RoslynCompletionItem item, RoslynCompletionDescription description)
         {
             return new CompletionItem(
                 displayText: item.DisplayText,
                 kind: item.GetKind(),
                 filterText: item.FilterText,
                 sortText: item.SortText,
-                insertText: item.FilterText);
+                insertText: item.FilterText,
+                documentation: description.Text);
         }
     }
 }

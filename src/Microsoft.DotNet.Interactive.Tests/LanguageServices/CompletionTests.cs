@@ -316,5 +316,130 @@ var y = x + 2;
                 .Should()
                 .Be(new LinePositionSpan(new LinePosition(line, 0), new LinePosition(line, 3)));
         }
+
+        [Theory]
+        [InlineData(Language.CSharp, "/// <summary>Adds two numbers.</summary>\nint Add(int a, int b) => a + b;", "Ad$$", "Adds two numbers.")]
+        [InlineData(Language.FSharp, "/// Adds two numbers.\nlet add a b = a + b", "ad$$", "Adds two numbers.")]
+        public async Task completion_doc_comments_can_be_loaded_from_source_in_a_previous_submission(Language language, string previousSubmission, string markupCode, string expectedCompletionSubString)
+        {
+            using var kernel = CreateKernel(language);
+
+            await SubmitCode(kernel, previousSubmission);
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionsProduced>()
+                .Which
+                .Completions
+                .Should()
+                .ContainSingle(ci => ci.Documentation != null && ci.Documentation.Contains(expectedCompletionSubString));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task completion_contains_doc_comments_from_individually_referenced_assemblies_with_xml_files(Language language)
+        {
+            using var assembly = new TestAssemblyReference("Project", "netstandard2.0", "Program.cs", @"
+public class C
+{
+    /// <summary>This is the answer.</summary>
+    public static int TheAnswer => 42;
+}
+");
+            var assemblyPath = await assembly.BuildAndGetPathToAssembly();
+
+            var assemblyReferencePath = language switch
+            {
+                Language.CSharp => assemblyPath,
+                Language.FSharp => assemblyPath.Replace("\\", "\\\\")
+            };
+
+            using var kernel = CreateKernel(language);
+
+            await SubmitCode(kernel, $"#r \"{assemblyReferencePath}\"");
+
+            var markupCode = "C.TheAns$$";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionsProduced>()
+                .Which
+                .Completions
+                .Should()
+                .ContainSingle(ci => ci.Documentation != null && ci.Documentation.Contains("This is the answer."));
+        }
+
+        [Fact]
+        public async Task csharp_completions_can_read_doc_comments_from_nuget_packages_after_forcing_the_assembly_to_load()
+        {
+            using var kernel = CreateKernel(Language.CSharp);
+
+            await SubmitCode(kernel, "#r \"nuget: Newtonsoft.Json, 12.0.3\"");
+
+            // The following line forces the assembly and the doc comments to be loaded
+            await SubmitCode(kernel, "var _unused = Newtonsoft.Json.JsonConvert.Null;");
+
+            var markupCode = "Newtonsoft.Json.JsonConvert.Nu$$";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionsProduced>()
+                .Which
+                .Completions
+                .Should()
+                .ContainSingle(ci => ci.Documentation != null && ci.Documentation.Contains("Represents JavaScript's null as a string. This field is read-only."));
+        }
+
+        [Fact(Skip = "https://github.com/dotnet/interactive/issues/1071  N.b., the preceeding test can be deleted when this one is fixed.")]
+        public async Task csharp_completions_can_read_doc_comments_from_nuget_packages()
+        {
+            using var kernel = CreateKernel(Language.CSharp);
+
+            await SubmitCode(kernel, "#r \"nuget: Newtonsoft.Json, 12.0.3\"");
+
+            var markupCode = "Newtonsoft.Json.JsonConvert.Nu$$";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionsProduced>()
+                .Which
+                .Completions
+                .Should()
+                .ContainSingle(ci => ci.Documentation != null && ci.Documentation.Contains("Represents JavaScript's null as a string. This field is read-only."));
+        }
+
+        [Fact]
+        public async Task fsharp_completions_can_read_doc_comments_from_nuget_packages()
+        {
+            using var kernel = CreateKernel(Language.FSharp);
+
+            await SubmitCode(kernel, "#r \"nuget: Newtonsoft.Json, 12.0.3\"");
+
+            var markupCode = "Newtonsoft.Json.JsonConvert.Nu$$";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionsProduced>()
+                .Which
+                .Completions
+                .Should()
+                .ContainSingle(ci => ci.Documentation != null && ci.Documentation.Contains("Represents JavaScript's null as a string. This field is read-only."));
+        }
     }
 }

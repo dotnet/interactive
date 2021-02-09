@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
             using var _ = new GCPressure(1024 * 1024);
-            
+
             var document = _workspace.UpdateWorkingDocument(command.Code);
             var text = await document.GetTextAsync();
             var cursorPosition = text.Lines.GetPosition(command.LinePosition.ToCodeAnalysisLinePosition());
@@ -352,7 +352,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 return Enumerable.Empty<CompletionItem>();
             }
 
-            var items = completionList.Items.Select(item => item.ToModel()).ToArray();
+            var items = new List<CompletionItem>();
+            foreach (var item in completionList.Items)
+            {
+                var description = await service.GetDescriptionAsync(document, item);
+                var completionItem = item.ToModel(description);
+                items.Add(completionItem);
+            }
+
             return items;
         }
 
@@ -407,7 +414,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
             var references = resolvedReferences
                              .SelectMany(r => r.AssemblyPaths)
-                             .Select(r => MetadataReference.CreateFromFile(r));
+                             .Select(r => CachingMetadataResolver.ResolveReferenceWithXmlDocumentationProvider(r))
+                             .ToArray();
 
             ScriptOptions = ScriptOptions.AddReferences(references);
         }
