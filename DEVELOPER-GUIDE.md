@@ -86,13 +86,7 @@ To get started, you'll need:
 
 4. Press F5 to launch the Visual Studio Code Extension Development Host.
 
-5. Open or create a file with a `.dib` extension
-
-    OR 
-
-   Open a Jupyter notebook using the VS Code command *Convert Jupyter notebook (.ipynb) to .NET Interactive notebook*.
-
-    ![image](https://user-images.githubusercontent.com/547415/84576252-147a8800-ad68-11ea-8315-07757291710f.png)
+5. Run `.NET Interactive: Create new blank notebook` or open a file with the `.ipynb` extension.
 
 ## Use a local build of the `dotnet-interactive` tool 
 
