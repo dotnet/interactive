@@ -122,6 +122,9 @@ If you've made changes to `dotnet-interactive` and want to try them out with Vis
       +  "/PATH/TO/REPO/ROOT/artifacts/bin/dotnet-interactive/Debug/net5.0/Microsoft.DotNet.Interactive.App.dll",
          "[vscode]",
          "stdio",
+      +  "--log-path",
+      +  "/path/to/a/folder/for/your/logs/",
+      +  "--verbose",
          "--working-dir",
          "{working_dir}"
        ]
