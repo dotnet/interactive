@@ -61,34 +61,6 @@ SELECT * FROM fruit
             this.Assent(formattedData, _configuration);
         }
 
-        private static IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> Execute(IDbCommand command)
-        {
-            using var reader = command.ExecuteReader();
-
-            do
-            {
-                var values = new object[reader.FieldCount];
-                var names = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToArray();
-
-                // holds the result of a single statement within the query
-                var table = new List<(string, object)[]>();
-
-                while (reader.Read())
-                {
-                    reader.GetValues(values);
-                    var row = new (string, object)[values.Length];
-                    for (var i = 0; i < values.Length; i++)
-                    {
-                        row[i] = (names[i], values[i]);
-                    }
-
-                    table.Add(row);
-                }
-
-                yield return table;
-            } while (reader.NextResult());
-        }
-
         [Fact]
         public async Task can_handle_duplicate_columns_in_query_results()
         {
@@ -114,9 +86,12 @@ SELECT 1 AS Apples, 2 AS Bananas, 3 AS Apples, 4 AS BANANAS, 5 AS Apples, 6 AS B
 
             var events = result.KernelEvents.ToSubscribedList();
 
-            var formattedData = events.OfType<DisplayedValueProduced>().Single()
-                .FormattedValues.Single(fm => fm.MimeType == HtmlFormatter.MimeType)
-                .Value;
+            var formattedData = events
+                                .OfType<DisplayedValueProduced>()
+                                .Single()
+                                .FormattedValues
+                                .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
+                                .Value;
 
             this.Assent(formattedData, _configuration);
         }

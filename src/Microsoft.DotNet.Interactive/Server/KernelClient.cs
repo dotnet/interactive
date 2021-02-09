@@ -5,7 +5,6 @@ using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 using Microsoft.DotNet.Interactive.Commands;
