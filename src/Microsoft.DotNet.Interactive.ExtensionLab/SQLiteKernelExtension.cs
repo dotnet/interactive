@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             KernelInvocationContext.Current?.Display(
                 $@"
-* Adds and `sqlite` to the connection types available using the [`#!connect`](https://github.com/dotnet/interactive/blob/main/docs/connect.md) magic command.",
+* Adds `sqlite` to the connection types available using the [`#!connect`](https://github.com/dotnet/interactive/blob/main/docs/connect.md) magic command.",
                 "text/markdown");
 
             }

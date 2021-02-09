@@ -88,9 +88,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 $"await kernel.SendAsync(new SubmitCode(\"\\\"{guid}\\\"\"));",
                 packageName,
                 packageVersion,
-                fileToEmbed);
-
-
+                fileToEmbed: fileToEmbed);
 
             await kernel.SubmitCodeAsync($@"
 #i ""nuget:{nupkg.Directory.FullName}""

@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
                 KernelInvocationContext.Current?.Display(
                     $@"
-* Adds and `sqlite` to the connection types available using the [`#!connect`](https://github.com/dotnet/interactive/blob/main/docs/connect.md) magic command.",
+* Adds `mssql` to the connection types available using the [`#!connect`](https://github.com/dotnet/interactive/blob/main/docs/connect.md) magic command.",
                     "text/markdown");
 
             }
