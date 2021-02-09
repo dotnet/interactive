@@ -98,7 +98,7 @@ SELECT * FROM fruit
                 new KeyValueStoreKernel()
             };
 
-            var extension = new SqlKernelsExtension();
+            var extension = new SQLiteKernelExtension();
 
             await extension.OnLoadAsync(kernel);
 

@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             try
             {
-                var queryResult = await _serviceClient.ExecuteQueryStringAsync(_tempFileUri, command.Code);
+                await _serviceClient.ExecuteQueryStringAsync(_tempFileUri, command.Code);
                 await completion.Task;
             }
             finally

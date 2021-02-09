@@ -38,7 +38,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive.ExtensionLab\SqlKernelUtils.cs" Link="Utility\SqlKernelUtils.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="$(OutputPath)/Microsoft.DotNet.Interactive.SqlServer.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Utility\" />
   </ItemGroup>
 
 </Project>
