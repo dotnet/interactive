@@ -40,10 +40,11 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         private static readonly CmdletInfo _outDefaultCommand;
         private static readonly PropertyInfo _writeStreamProperty;
         private static readonly object _errorStreamValue;
+        private static readonly MethodInfo _addAccelerator;
 
         private readonly PSKernelHost _psHost;
         private readonly Lazy<PowerShell> _lazyPwsh;
-        private MethodInfo _addAccelerator;
+        
         private PowerShell pwsh => _lazyPwsh.Value;
 
         public Func<string, string> ReadInput { get; set; }
@@ -65,6 +66,10 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             // To workaround that, we rename 'Out-Default' to 'Out-Default2' to make sure the standard
             // output is captured.
             _outDefaultCommand = new CmdletInfo("Out-Default2", typeof(OutDefaultCommand));
+
+            // Get the AddAccelerator method
+            var acceleratorType = typeof(PSObject).Assembly.GetType("System.Management.Automation.TypeAccelerators");
+            _addAccelerator = acceleratorType?.GetMethod("Add", new[] { typeof(string), typeof(Type) });
         }
 
         public PowerShellKernel() : base(DefaultKernelName)
@@ -100,11 +105,6 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                "Modules");
 
             AddModulePath(psJupyterModulePath);
-
-            // Get the AddAccelerator method
-            var acceleratorType = typeof(PSObject).Assembly.GetType("System.Management.Automation.TypeAccelerators");
-            _addAccelerator = acceleratorType?.GetMethod("Add", new[] { typeof(string), typeof(Type) });
-
             RegisterForDisposal(pwsh);
             return pwsh;
         }

@@ -27,7 +27,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)Modules\**" Link="Modules\%(RecursiveDir)%(FileName)%(Extension)" PackagePath="contentFiles/any/any/Modules" PackageCopyToOutput="true" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)Modules\**" 
+    	Link="Modules\%(RecursiveDir)%(FileName)%(Extension)" 
+    	PackagePath="contentFiles/any/any/Modules" 
+    	PackageCopyToOutput="true" 
+    	CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
