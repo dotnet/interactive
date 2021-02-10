@@ -309,11 +309,18 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(command));
             }
 
-            UndeferCommands();
-
             var tcs = new TaskCompletionSource<KernelCommandResult>();
-
+            
             var operation = new KernelOperation(command, tcs);
+            
+            switch (command)
+            {
+                case Quit _:
+                    ClearPendingCommands();
+                    break;
+            }
+
+            UndeferCommands();
 
             _commandQueue.Enqueue(operation);
 
@@ -342,6 +349,12 @@ namespace Microsoft.DotNet.Interactive
             {
                 onDone?.Invoke();
             }
+        }
+
+        internal void ClearPendingCommands()
+        {
+            _deferredCommands.Clear();
+            _commandQueue.Clear();
         }
 
         internal Task RunDeferredCommandsAsync()

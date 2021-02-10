@@ -35,6 +35,7 @@ namespace Microsoft.DotNet.Interactive
             CommandToSignalCompletion = command;
             Result = new KernelCommandResult(_events);
 
+            _disposables.Add(_cancellationTokenSource);
             _disposables.Add(ConsoleOutput.Subscribe(c =>
                 {
                     return new CompositeDisposable
@@ -77,6 +78,7 @@ namespace Microsoft.DotNet.Interactive
             Publish(new CommandFailed(exception, Command, message));
 
             _events.OnCompleted();
+            _cancellationTokenSource.Cancel(false);
             IsComplete = true;
         }
 

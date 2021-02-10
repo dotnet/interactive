@@ -8,6 +8,7 @@ using System.CommandLine.Invocation;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -422,6 +423,96 @@ new [] {1,2,3}");
                 .ContainInOrder(
                     typeof(CodeSubmissionReceived),
                     typeof(CompleteCodeSubmissionReceived),
+                    typeof(CommandSucceeded));
+        }
+
+        [Fact]
+        public async Task Deferred_commands_on_composite_kernel_are_not_executed_when_quit_command_is_submitted()
+        {
+            var deferredCommandExecuted = false;
+            var quitCommandHandled = false;
+
+            var subKernel = new CSharpKernel();
+
+            using var compositeKernel = new CompositeKernel
+            {
+                subKernel
+            };
+
+            compositeKernel.DefaultKernelName = subKernel.Name;
+
+            var deferred = new SubmitCode("placeholder")
+            {
+                Handler = (command, context) =>
+                {
+                    deferredCommandExecuted = true;
+                    return Task.CompletedTask;
+                }
+            };
+
+            compositeKernel.DeferCommand(deferred);
+            
+            var events = compositeKernel.KernelEvents.ToSubscribedList();
+
+            await compositeKernel.SendAsync(new Quit(() =>
+            {
+                quitCommandHandled = true;
+            }));
+
+            using var _ = new AssertionScope();
+
+            deferredCommandExecuted.Should().BeFalse();
+            quitCommandHandled.Should().BeTrue();
+
+            events
+                .Select(e => e.GetType())
+                .Should()
+                .ContainInOrder(
+                    typeof(CommandSucceeded));
+        }
+
+        [Fact]
+        public async Task Deferred_commands_on_subkernels_are_not_executed_when_quit_command_is_submitted()
+        {
+            var deferredCommandExecuted = false;
+            var quitCommandHandled = false;
+
+            var subKernel = new CSharpKernel();
+
+            using var compositeKernel = new CompositeKernel
+            {
+                subKernel
+            };
+
+            compositeKernel.DefaultKernelName = subKernel.Name;
+
+            var deferred = new SubmitCode("placeholder")
+            {
+                Handler = (command, context) =>
+                {
+                    deferredCommandExecuted = true;
+                    return Task.CompletedTask;
+                }
+            };
+
+            subKernel.DeferCommand(deferred);
+            
+            var events = compositeKernel.KernelEvents.ToSubscribedList();
+
+            await compositeKernel.SendAsync(new Quit(() =>
+            {
+                quitCommandHandled = true;
+            }));
+
+            using var _ = new AssertionScope();
+
+            deferredCommandExecuted.Should().BeFalse();
+            quitCommandHandled.Should().BeTrue();
+
+            events
+                .Select(e => e.GetType())
+                .Should()
+                .ContainInOrder(
                     typeof(CommandSucceeded));
         }
 
