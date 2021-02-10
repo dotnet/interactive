@@ -4,6 +4,7 @@
 
 using System;
 using System.Reactive.Disposables;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Commands
@@ -20,13 +21,25 @@ namespace Microsoft.DotNet.Interactive.Commands
             }
         }
     
-        public Quit(string targetKernelName = null): base(targetKernelName)
+        [JsonConstructor]
+        public Quit(string targetKernelName = null): this(() =>
         {
+            Environment.Exit(0);
+        }, targetKernelName)
+        {
+        }
+
+        public Quit(Action onQuit, string targetKernelName = null) : base(targetKernelName)
+        {
+            if (onQuit == null)
+            {
+                throw new ArgumentNullException(nameof(onQuit));
+            }
             Handler = (_, context) =>
             {
-                context.Complete(context.Command);
+                context?.Complete(context.Command);
                 DisposeOnQuit?.Dispose();
-                Environment.Exit(0);
+                onQuit();
                 return Task.CompletedTask;
             };
         }
