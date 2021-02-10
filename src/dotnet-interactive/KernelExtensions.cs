@@ -4,28 +4,18 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.Threading;
-using Microsoft.DotNet.Interactive.App.Commands;
+
 using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Server;
+
 using Recipes;
+
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.App
 {
     public static class KernelExtensions
     {
-        public static T UseQuitCommand<T>(this T kernel, IDisposable disposeOnQuit, CancellationToken cancellationToken) where T : Kernel
-        {
-            Quit.RegisterForDisposalOnQuit(disposeOnQuit);
-            cancellationToken.Register(async () =>
-            {
-                await kernel.SendAsync(new Quit());
-            });
-            return kernel;
-        }
-
-        public static T UseAboutMagicCommand<T>(this T kernel)
+        public static T UseAbout<T>(this T kernel)
             where T : Kernel
         {
             var about = new Command("#!about", "Show version and build information")
@@ -56,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.App
                 PocketView html = table(
                     tbody(
                         tr(
-                            td(img[src: encodedImage, width:"125em"]),
+                            td(img[src: encodedImage, width: "125em"]),
                             td[style: "line-height:.8em"](
                                 p[style: "font-size:1.5em"](b(".NET Interactive")),
                                 p("© 2020 Microsoft Corporation"),
