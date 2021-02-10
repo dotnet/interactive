@@ -3,17 +3,25 @@
 
 
 using System;
+using System.Reactive.Disposables;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Commands;
 
-namespace Microsoft.DotNet.Interactive.App.Commands
+namespace Microsoft.DotNet.Interactive.Commands
 {
     public class Quit : KernelCommand
     {
-        internal static IDisposable DisposeOnQuit { get; set; }
+        private static readonly CompositeDisposable DisposeOnQuit = new CompositeDisposable();
+        public static void RegisterForDisposalOnQuit(IDisposable disposable)
+        {
+            if (disposable is not null)
+            {
+                DisposeOnQuit.Add(disposable);
+            }
+        }
+    
         public Quit(string targetKernelName = null): base(targetKernelName)
         {
-            Handler = (command, context) =>
+            Handler = (_, context) =>
             {
                 context.Complete(context.Command);
                 DisposeOnQuit?.Dispose();
