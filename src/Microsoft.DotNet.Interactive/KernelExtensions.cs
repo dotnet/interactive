@@ -22,6 +22,16 @@ namespace Microsoft.DotNet.Interactive
 {
     public static class KernelExtensions
     {
+        public static T UseQuitCommand<T>(this T kernel, IDisposable disposeOnQuit, CancellationToken cancellationToken) where T : Kernel
+        {
+            Quit.RegisterForDisposalOnQuit(disposeOnQuit);
+            cancellationToken.Register(async () =>
+            {
+                await kernel.SendAsync(new Quit());
+            });
+            return kernel;
+        }
+
         public static Kernel FindKernel(this Kernel kernel, string name)
         {
             var root = kernel

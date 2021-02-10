@@ -11,6 +11,7 @@ namespace Microsoft.DotNet.Interactive.Commands
     public class Quit : KernelCommand
     {
         private static readonly CompositeDisposable DisposeOnQuit = new CompositeDisposable();
+
         public static void RegisterForDisposalOnQuit(IDisposable disposable)
         {
             if (disposable is not null)
