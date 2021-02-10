@@ -196,6 +196,8 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 yield return new UpdateDisplayedValue(
                     new FormattedValue("text/html", "<b>hi!</b>"),
                     "the-value-id");
+                
+                yield return new Quit();
             }
         }
 

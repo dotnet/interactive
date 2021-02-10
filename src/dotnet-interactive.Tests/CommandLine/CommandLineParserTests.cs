@@ -8,16 +8,17 @@ using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+
 using FluentAssertions;
 using FluentAssertions.Execution;
+
 using Microsoft.DotNet.Interactive.App.CommandLine;
-using Microsoft.DotNet.Interactive.App.Commands;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Telemetry;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Microsoft.DotNet.Interactive.Utility;
 using Microsoft.Extensions.DependencyInjection;
+
 using Xunit;
 using Xunit.Abstractions;
 
@@ -86,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             var logPath = new DirectoryInfo(Path.GetTempPath());
 
             await _parser.InvokeAsync($"jupyter --log-path {logPath} {_connectionFile}", _console);
-            
+
             _startOptions
                 .LogPath
                 .FullName
@@ -132,7 +133,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         public void jupyter_install_command_parses_path_option()
         {
             Directory.CreateDirectory(_kernelSpecInstallPath.FullName);
-            
+
             _parser.InvokeAsync($"jupyter install --path {_kernelSpecInstallPath}");
 
             var installedKernels = _kernelSpecInstallPath.GetDirectories();
@@ -204,7 +205,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         public async Task jupyter_command_returns_error_if_connection_file_path_is_not_passed()
         {
             var testConsole = new TestConsole();
-            
+
             await _parser.InvokeAsync("jupyter", testConsole);
 
             testConsole.Error.ToString().Should().Contain("Required argument missing for command: jupyter");
@@ -224,7 +225,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         [Fact]
         public async Task jupyter_command_enables_http_api_when_http_port_range_is_specified()
         {
-            await  _parser.InvokeAsync($"jupyter --http-port-range 3000-5000 {_connectionFile}");
+            await _parser.InvokeAsync($"jupyter --http-port-range 3000-5000 {_connectionFile}");
 
             _startOptions.EnableHttpApi.Should().BeTrue();
         }
@@ -248,7 +249,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         [Fact]
         public async Task jupyter_command_enables_http_api_by_default()
         {
-            await  _parser.InvokeAsync($"jupyter {_connectionFile}");
+            await _parser.InvokeAsync($"jupyter {_connectionFile}");
 
             _startOptions.EnableHttpApi.Should().BeTrue();
         }
@@ -369,7 +370,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
         public async Task stdio_command_requires_api_bootstrapping_when_http_is_enabled()
         {
             await _parser.InvokeAsync("stdio --http-port-range 3000-4000");
-            
+
             var kernel = GetKernel();
 
             kernel.FrontendEnvironment.As<HtmlNotebookFrontedEnvironment>()
@@ -417,17 +418,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
             var options = (StdIOOptions)binder.CreateInstance(new BindingContext(result));
 
             options.DefaultKernel.Should().Be("bsharp");
-        }
-
-        [Fact]
-        public async Task stdio_command_extends_the_protocol_with_quit_command()
-        {
-            await _parser.InvokeAsync("stdio");
-
-            var envelope = KernelCommandEnvelope.Deserialize(@"{ ""commandType"": ""Quit"", ""command"" : { } }");
-            
-            envelope.Command.Should()
-                .BeOfType<Quit>();
         }
     }
 }
