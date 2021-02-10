@@ -3,25 +3,16 @@
 
 using System;
 using System.Threading.Tasks;
-
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
+namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 {
     public class MsSqlConnectionTests
     {
-        private readonly ITestOutputHelper _output;
-
-        public MsSqlConnectionTests(ITestOutputHelper output)
-        {
-            _output = output;
-        }
-
         private async Task<CompositeKernel> CreateKernel()
         {
             var csharpKernel = new CSharpKernel().UseNugetDirective();
@@ -36,6 +27,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
             kernel.UseKernelClientConnection(new MsSqlKernelConnection());
+
             return kernel;
         }
 

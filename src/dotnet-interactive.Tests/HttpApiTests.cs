@@ -357,9 +357,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
                 $"await kernel.SendAsync(new SubmitCode(\"\\\"{guid}\\\"\"));",
                 packageName,
                 packageVersion,
-                fileToEmbed);
-
-
+                fileToEmbed: fileToEmbed);
 
             await kernel.SubmitCodeAsync($@"
 #i ""nuget:{nupkg.Directory.FullName}""

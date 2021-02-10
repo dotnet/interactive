@@ -2,14 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using System.Collections.Generic;
+using Microsoft.DotNet.Interactive.ExtensionLab;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab
+namespace Microsoft.DotNet.Interactive.SqlServer
 {
     public class MsSqlKernel :
         Kernel,
@@ -177,7 +178,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             try
             {
-                var queryResult = await _serviceClient.ExecuteQueryStringAsync(_tempFileUri, command.Code);
+                await _serviceClient.ExecuteQueryStringAsync(_tempFileUri, command.Code);
                 await completion.Task;
             }
             finally

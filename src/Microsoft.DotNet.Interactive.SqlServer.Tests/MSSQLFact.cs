@@ -5,11 +5,11 @@ using System;
 using Microsoft.Data.SqlClient;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
+namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 {
     public sealed class MsSqlFact : FactAttribute
     {
-        private const string TEST_MSSQL_CONNECTION_STRING = "TEST_MSSQL_CONNECTION_STRING";
+        private const string TEST_MSSQL_CONNECTION_STRING = nameof(TEST_MSSQL_CONNECTION_STRING);
         private static readonly string _skipReason;
         
         static MsSqlFact()
@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         {
             if (_skipReason != null)
             {
-                this.Skip = _skipReason;
+                Skip = _skipReason;
             }
         }
         

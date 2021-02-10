@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
-using Microsoft.DotNet.Interactive.Extensions;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
@@ -16,8 +15,6 @@ using static Microsoft.DotNet.Interactive.Tests.Utility.KernelExtensionTestHelpe
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-
-    [LogTestNamesToPocketLogger]
     public class LanguageKernelExtensionLoadingTests : LanguageKernelTestBase
     {
         public LanguageKernelExtensionLoadingTests(ITestOutputHelper output) : base(output)
@@ -45,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 code,
                 dllDir);
 
-            var kernel = (IExtensibleKernel) CreateKernel(language);
+            var kernel = CreateKernel(language);
 
             await using var context = KernelInvocationContext.Establish(new SubmitCode(""));
 
@@ -75,7 +72,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 "throw new Exception();",
                 dllDir);
 
-            var kernel = (IExtensibleKernel) CreateKernel(language);
+            var kernel = CreateKernel(language);
             await using var context = KernelInvocationContext.Establish(new SubmitCode(""));
 
             using var events = context.KernelEvents.ToSubscribedList();
@@ -109,7 +106,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             await kernel.SubmitCodeAsync($@"
 #i ""nuget:{nupkg.Directory.FullName}""
-#r ""nuget:{packageName},{packageVersion}""            ");
+#r ""nuget:{packageName},{packageVersion}""");
 
             KernelEvents.Should()
                         .ContainSingle<ReturnValueProduced>()

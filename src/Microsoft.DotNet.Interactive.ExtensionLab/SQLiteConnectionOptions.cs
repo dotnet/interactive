@@ -5,7 +5,7 @@ using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
-    public class SqlConnectionOptions : KernelConnectionOptions
+    public class SQLiteConnectionOptions : KernelConnectionOptions
     {
         public string ConnectionString { get; set; }
     }

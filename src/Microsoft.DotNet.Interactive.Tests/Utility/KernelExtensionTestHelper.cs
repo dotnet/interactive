@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -20,11 +21,16 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             string code,
             string packageName,
             string packageVersion,
-            params FileInfo[] filesToEmbed)
+            IReadOnlyCollection<PackageReference> packageReferences = null, 
+            FileInfo fileToEmbed = null)
         {
-            var msbuildFragment = GenerateEmbeddedResourceFragment(filesToEmbed);
+            var packageReferencesXml = GeneratePackageReferencesFragment(packageReferences);
+            var embeddedResourcesXml = GenerateEmbeddedResourceFragment(fileToEmbed);
 
-            var extensionCode = filesToEmbed?.Length == 0 ? ExtensionCs(code) : FileProviderExtensionCs(code);
+            var extensionCode = fileToEmbed is null 
+                                    ? ExtensionCs(code) 
+                                    : FileProviderExtensionCs(code);
+
             projectDir.Populate(
                 extensionCode,
                 ("Extension.csproj", $@"
@@ -42,7 +48,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
     <None Include=""$(OutputPath)/{packageName}.dll"" Pack=""true"" PackagePath=""interactive-extensions/dotnet"" />
   </ItemGroup>
 
-{msbuildFragment}
+  {packageReferencesXml}
+
+  {embeddedResourcesXml}
 
   <ItemGroup>
     <Reference Include=""Microsoft.DotNet.Interactive"">
@@ -59,8 +67,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
     ""rollForward"": ""latestMinor""
   }
 }
-")
-            );
+"));
 
             var dotnet = new Dotnet(projectDir);
 
@@ -73,19 +80,37 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
                    .Single();
         }
 
-        private static string GenerateEmbeddedResourceFragment(FileInfo[] filesToEmbed)
+        private static string GeneratePackageReferencesFragment(IReadOnlyCollection<PackageReference> packageReferences = null)
         {
-            if (filesToEmbed?.Length == 0)
+            if (packageReferences is null)
+            {
+                return string.Empty;
+            }
+
+            var builder = new StringBuilder();
+
+            builder.AppendLine(@"   <ItemGroup>");
+
+            foreach (var @ref in packageReferences)
+            {
+                builder.AppendLine($@"    <PackageReference Include=""{@ref.PackageName}"" Version=""{@ref.PackageVersion}"" />");
+            }
+
+            builder.AppendLine(@"   </ItemGroup>");
+
+            return builder.ToString();
+        }
+
+        private static string GenerateEmbeddedResourceFragment(FileInfo filesToEmbed)
+        {
+            if (filesToEmbed is null)
             {
                 return string.Empty;
             }
 
             var builder = new StringBuilder();
             builder.AppendLine(@"   <ItemGroup>");
-            foreach (var fileInfo in filesToEmbed)
-            {
-                builder.AppendLine($@"      <FilesToEmbed Include=""{fileInfo.FullName}"" />");
-            }
+            builder.AppendLine($@"      <FilesToEmbed Include=""{filesToEmbed.FullName}"" />");
             builder.AppendLine(@"      <EmbeddedResource Include=""@(FilesToEmbed)"" LogicalName=""$(AssemblyName).resources.%(FileName)%(Extension)""  />");
             builder.AppendLine(@"   </ItemGroup>");
 

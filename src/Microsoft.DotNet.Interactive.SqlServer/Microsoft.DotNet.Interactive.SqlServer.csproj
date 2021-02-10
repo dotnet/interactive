@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+ <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageDescription>Support for dotnet-interactive</PackageDescription>
+    <PackageTags>dotnet-interactive SQL EF Data EFCore EntityFramework</PackageTags>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
+    <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn><!-- dll outside of lib/ folder -->
+  </PropertyGroup>
+
+ <ItemGroup>
+   <Compile Remove="bin\**" />
+   <EmbeddedResource Remove="bin\**" />
+   <None Remove="bin\**" />
+ </ItemGroup>
+
+ <ItemGroup>
+   <PackageReference Include="Microsoft.SqlToolsService" Version="3.0.0-release.53" />
+   <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.8" />
+   <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.8">
+     <PrivateAssets>all</PrivateAssets>
+     <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+   </PackageReference>
+   <PackageReference Include="StreamJsonRpc" Version="2.6.121" />
+ </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" PrivateAssets="All" />
+    <ProjectReference Include="..\Microsoft.DotNet.Interactive.ExtensionLab\Microsoft.DotNet.Interactive.ExtensionLab.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Interactive.ExtensionLab\SqlKernelUtils.cs" Link="Utility\SqlKernelUtils.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="bin\Debug\net5.0\/Microsoft.DotNet.Interactive.SqlServer.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(OutputPath)/Microsoft.DotNet.Interactive.SqlServer.dll" Pack="true" PackagePath="interactive-extensions/dotnet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Utility\" />
+  </ItemGroup>
+
+</Project>
