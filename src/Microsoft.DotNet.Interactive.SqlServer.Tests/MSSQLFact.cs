@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 {
     public sealed class MsSqlFact : FactAttribute
     {
-        private const string TEST_MSSQL_CONNECTION_STRING = "TEST_MSSQL_CONNECTION_STRING";
+        private const string TEST_MSSQL_CONNECTION_STRING = nameof(TEST_MSSQL_CONNECTION_STRING);
         private static readonly string _skipReason;
         
         static MsSqlFact()

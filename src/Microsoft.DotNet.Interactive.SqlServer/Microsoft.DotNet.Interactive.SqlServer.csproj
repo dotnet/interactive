@@ -26,6 +26,7 @@
      <PrivateAssets>all</PrivateAssets>
      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
    </PackageReference>
+   <PackageReference Include="StreamJsonRpc" Version="2.6.121" />
  </ItemGroup>
 
   <ItemGroup>
@@ -34,11 +35,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="bin\Debug\net5.0\/Microsoft.DotNet.Interactive.SqlServer.dll" />
+    <Compile Include="..\Microsoft.DotNet.Interactive.ExtensionLab\SqlKernelUtils.cs" Link="Utility\SqlKernelUtils.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Microsoft.DotNet.Interactive.ExtensionLab\SqlKernelUtils.cs" Link="Utility\SqlKernelUtils.cs" />
+    <None Remove="bin\Debug\net5.0\/Microsoft.DotNet.Interactive.SqlServer.dll" />
   </ItemGroup>
 
   <ItemGroup>

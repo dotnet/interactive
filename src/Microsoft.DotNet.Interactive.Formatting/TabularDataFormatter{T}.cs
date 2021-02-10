@@ -27,7 +27,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public override bool Format(FormatContext context, T value, TextWriter writer)
         {
-
             return _format(context, value, writer);
         }
 

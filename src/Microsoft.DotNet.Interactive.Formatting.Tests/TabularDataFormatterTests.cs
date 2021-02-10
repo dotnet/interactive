@@ -28,8 +28,8 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 new { Name = "Q", IsValid = false, Cost = 10.0 },
                 new { Name = "U", IsValid = false, Cost = 5.0 },
                 new { Name = "E", IsValid = true, Cost = 10.2 },
-                new { Name = "S", IsValid = false, Cost = 10.0},
-                new { Name = "T", IsValid = false, Cost = 10.0}
+                new { Name = "S", IsValid = false, Cost = 10.0 },
+                new { Name = "T", IsValid = false, Cost = 10.0 }
             };
 
             var formattedData = data.ToDisplayString(TabularDataFormatter.MimeType);
