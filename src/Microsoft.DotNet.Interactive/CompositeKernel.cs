@@ -213,6 +213,14 @@ namespace Microsoft.DotNet.Interactive
                 throw new NoSuitableKernelException(command);
             }
 
+            switch (command)
+            {
+                case Quit _:
+                    ClearPendingCommands();
+                    kernel.ClearPendingCommands();
+                    break;
+            }
+
             await kernel.RunDeferredCommandsAsync();
 
             if (kernel != this)
