@@ -10,6 +10,7 @@ export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
 export const ParseNotebookType = "ParseNotebook";
+export const QuitType = "Quit";
 export const RequestCompletionsType = "RequestCompletions";
 export const RequestDiagnosticsType = "RequestDiagnostics";
 export const RequestHoverTextType = "RequestHoverText";
@@ -24,6 +25,7 @@ export type KernelCommandType =
     | typeof DisplayErrorType
     | typeof DisplayValueType
     | typeof ParseNotebookType
+    | typeof QuitType
     | typeof RequestCompletionsType
     | typeof RequestDiagnosticsType
     | typeof RequestHoverTextType
@@ -56,6 +58,9 @@ export interface DisplayValue extends KernelCommand {
 export interface ParseNotebook extends KernelCommand {
     fileName: string;
     rawData: Uint8Array;
+}
+
+export interface Quit extends KernelCommand {
 }
 
 export interface RequestCompletions extends LanguageServiceCommand {
