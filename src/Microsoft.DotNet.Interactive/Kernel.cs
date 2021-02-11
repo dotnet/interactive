@@ -360,12 +360,14 @@ namespace Microsoft.DotNet.Interactive
 
         internal void ClearPendingCommands()
         {
+            using var disposables = new CompositeDisposable();
             KernelInvocationContext currentContext = null;
             var inFlightOperation = _commandQueue.FirstOrDefault(c => !c.IsDeferredOperation);
             if (inFlightOperation is not null
                 )
             {
                 currentContext = KernelInvocationContext.Current?? KernelInvocationContext.Establish(inFlightOperation.Command);
+                disposables.Add( currentContext.KernelEvents.Subscribe(PublishEvent));
                 inFlightOperation.TaskCompletionSource.SetResult(currentContext.Result);
             }
 
