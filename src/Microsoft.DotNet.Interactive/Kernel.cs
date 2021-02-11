@@ -232,10 +232,12 @@ namespace Microsoft.DotNet.Interactive
         {
             public KernelOperation(
                 KernelCommand command,
-                TaskCompletionSource<KernelCommandResult> taskCompletionSource)
+                TaskCompletionSource<KernelCommandResult> taskCompletionSource,
+                bool IsDeferredOperation)
             {
                 Command = command;
                 TaskCompletionSource = taskCompletionSource;
+                this.IsDeferredOperation = IsDeferredOperation;
 
                 AsyncContext.TryEstablish(out var id);
                 AsyncContextId = id;
@@ -244,6 +246,7 @@ namespace Microsoft.DotNet.Interactive
             public KernelCommand Command { get; }
 
             public TaskCompletionSource<KernelCommandResult> TaskCompletionSource { get; }
+            public bool IsDeferredOperation { get; }
 
             public int AsyncContextId { get; }
         }
@@ -311,18 +314,19 @@ namespace Microsoft.DotNet.Interactive
 
             var tcs = new TaskCompletionSource<KernelCommandResult>();
             
-            var operation = new KernelOperation(command, tcs);
+            var operation = new KernelOperation(command, tcs, false);
             
             switch (command)
             {
                 case Quit _:
                     ClearPendingCommands();
+                    _commandQueue.Enqueue(operation);
+                    break;
+                default:
+                    UndeferCommands();
+                    _commandQueue.Enqueue(operation);
                     break;
             }
-
-            UndeferCommands();
-
-            _commandQueue.Enqueue(operation);
 
             ProcessCommandQueue(_commandQueue, cancellationToken, onDone);
 
@@ -353,8 +357,20 @@ namespace Microsoft.DotNet.Interactive
 
         internal void ClearPendingCommands()
         {
+            KernelInvocationContext currentContext = null;
+            var inFlightOperation = _commandQueue.FirstOrDefault(c => !c.IsDeferredOperation);
+            if (inFlightOperation is not null
+                )
+            {
+                currentContext = KernelInvocationContext.Current?? KernelInvocationContext.Establish(inFlightOperation.Command);
+                inFlightOperation.TaskCompletionSource.SetResult(currentContext.Result);
+            }
+
             _deferredCommands.Clear();
             _commandQueue.Clear();
+
+            currentContext?.Fail(new OperationCanceledException("Command has been cancelled"));
+
         }
 
         internal Task RunDeferredCommandsAsync()
@@ -372,7 +388,11 @@ namespace Microsoft.DotNet.Interactive
         {
             while (_deferredCommands.TryDequeue(out var initCommand))
             {
-                _commandQueue.Enqueue(new KernelOperation(initCommand, new TaskCompletionSource<KernelCommandResult>()));
+                _commandQueue.Enqueue(
+                    new KernelOperation(
+                        initCommand,
+                        new TaskCompletionSource<KernelCommandResult>(),
+                        true));
             }
         }
 
