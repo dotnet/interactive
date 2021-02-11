@@ -1264,5 +1264,52 @@ Console.Write(2);
             succeeded.Should().BeTrue();
             x.Should().Be("hello");
         }
+
+        [Theory]
+        [InlineData(Language.CSharp,"System.Threading.Thread.Sleep(3000);")]
+        [InlineData(Language.FSharp, "System.Threading.Thread.Sleep(3000)")]
+        [InlineData(Language.PowerShell, "Start-Sleep -Milliseconds 3000")]
+        public void Quit_command_cause_current_command_to_fail(Language language, string code)
+        {
+            var kernel = CreateKernel(language);
+
+            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
+            var quitCommandExecuted = false;
+
+            var quitCommand = new Quit(() => {
+                quitCommandExecuted = true;
+            });
+
+            var submitCodeCommand = new SubmitCode(code);
+
+            Task.WhenAll( 
+                Task.Run( () => languageKernel.SendAsync(submitCodeCommand)),
+                Task.Run(async () =>
+                {
+                    await Task.Delay(2000);
+                    await languageKernel.SendAsync(quitCommand);
+                }))
+                .Wait(TimeSpan.FromSeconds(20));
+
+            using var _ = new AssertionScope();
+            
+            quitCommandExecuted.Should().BeTrue();
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CommandSucceeded>()
+                .Which
+                .Command
+                .Should()
+                .Be(quitCommand);
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CommandFailed>()
+                .Which
+                .Command
+                .Should()
+                .Be(submitCodeCommand);
+        }
     }
 }
