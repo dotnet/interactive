@@ -1283,10 +1283,14 @@ Console.Write(2);
             var submitCodeCommand = new SubmitCode(code);
 
             Task.WhenAll( 
-                Task.Run( () => languageKernel.SendAsync(submitCodeCommand)),
                 Task.Run(async () =>
                 {
-                    await Task.Delay(2000);
+                    await Task.Delay(20);
+                    await languageKernel.SendAsync(submitCodeCommand);
+                }),
+                Task.Run(async () =>
+                {
+                    await Task.Delay(100);
                     await languageKernel.SendAsync(quitCommand);
                 }))
                 .Wait(TimeSpan.FromSeconds(20));
@@ -1307,9 +1311,9 @@ Console.Write(2);
                 .Should()
                 .ContainSingle<CommandFailed>()
                 .Which
-                .Command
+                .Exception
                 .Should()
-                .Be(submitCodeCommand);
+                .BeOfType<OperationCanceledException>();
         }
     }
 }
