@@ -748,6 +748,63 @@ namespace Microsoft.DotNet.Interactive.Tests.Notebook
         }
 
         [Fact]
+        public void cell_display_output_with_string_array_can_be_parsed()
+        {
+            var jupyter = new
+            {
+                cells = new object[]
+                {
+                    new
+                    {
+                        cell_type = "code",
+                        execution_count = 1,
+                        metadata = new { },
+                        source = "",
+                        outputs = new []
+                        {
+                            new
+                            {
+                                data = new Dictionary<string, object>()
+                                {
+                                    { "text/html", new object[] { "line 1", new { the_answer = 42 } } }
+                                },
+                                metadata = new { },
+                                output_type = "display_data",
+                            }
+                        }
+                    }
+                }
+            };
+            var notebook = ParseJupyter(jupyter);
+            notebook.Cells
+                .Should()
+                .ContainSingle()
+                .Which
+                .Outputs
+                .Should()
+                .ContainSingle()
+                .Which
+                .Should()
+                .BeOfType<NotebookCellDisplayOutput>()
+                .Which
+                .Data
+                .Should()
+                .ContainKey("text/html")
+                .WhichValue
+                .Should()
+                .BeEquivalentToRespectingRuntimeTypes(
+                    new object[]
+                    {
+                        "line 1",
+                        new Dictionary<string, object>()
+                        {
+                            { "the_answer", 42 }
+                        }
+                    }
+                );
+        }
+
+        [Fact]
         public void cell_displaly_output_without_data_member_can_be_parsed()
         {
             var jupyter = new
