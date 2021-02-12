@@ -7,13 +7,16 @@ using System.CommandLine.Invocation;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+
 using FluentAssertions;
 using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+
 using Xunit;
 using Xunit.Abstractions;
 
@@ -294,9 +297,9 @@ f();"
                 .Which
                 .Diagnostics
                 .Should()
-                .ContainSingle(diag => 
-                    diag.LinePositionSpan == diagnosticRange && 
-                    diag.Code == code && 
+                .ContainSingle(diag =>
+                    diag.LinePositionSpan == diagnosticRange &&
+                    diag.Code == code &&
                     diag.Message == diagnosticMessage);
 
             // The FormattedValues are populated of DiagnosticsProduced event are populated
@@ -374,7 +377,7 @@ f();"
                 .Should()
                 .ContainSingle(d =>
                     d.LinePositionSpan == diagnosticRange &&
-                    d.Code == "ExpectedExpression" && 
+                    d.Code == "ExpectedExpression" &&
                     d.Message == "An expression was expected after '('.");
 
             KernelEvents
@@ -1038,7 +1041,7 @@ Console.Write(2);
                 .Select(e => e.Value as StandardOutputValueProduced)
                 .SelectMany(e => e.FormattedValues.Select(v => v.Value))
                 .Should()
-                .BeEquivalentTo(new [] {"1", "2"});
+                .BeEquivalentTo(new[] { "1", "2" });
 
         }
 
@@ -1222,7 +1225,7 @@ Console.Write(2);
             succeeded.Should().BeTrue();
             x.Should().Be(123);
         }
-        
+
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
@@ -1265,38 +1268,39 @@ Console.Write(2);
             x.Should().Be("hello");
         }
 
+
         [Theory]
-        [InlineData(Language.CSharp,"System.Threading.Thread.Sleep(3000);")]
+        [InlineData(Language.CSharp, "System.Threading.Thread.Sleep(3000);")]
         [InlineData(Language.FSharp, "System.Threading.Thread.Sleep(3000)")]
         [InlineData(Language.PowerShell, "Start-Sleep -Milliseconds 3000", Skip = "to address later")]
-        public void Quit_command_cause_current_command_to_fail(Language language, string code)
+        public void Quit_command_is_handled(Language language, string code)
         {
             var kernel = CreateKernel(language);
 
-            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
             var quitCommandExecuted = false;
 
-            var quitCommand = new Quit(() => {
+            var quitCommand = new Quit(() =>
+            {
                 quitCommandExecuted = true;
             });
 
             var submitCodeCommand = new SubmitCode(code);
 
-            Task.WhenAll( 
-                Task.Run(async () =>
-                {
-                    await Task.Delay(20);
-                    await languageKernel.SendAsync(submitCodeCommand);
-                }),
-                Task.Run(async () =>
-                {
-                    await Task.Delay(100);
-                    await languageKernel.SendAsync(quitCommand);
-                }))
+            Task.WhenAll(
+                    Task.Run(async () =>
+                    {
+                        await Task.Delay(20);
+                        await kernel.SendAsync(submitCodeCommand);
+                    }),
+                    Task.Run(async () =>
+                    {
+                        await Task.Delay(100);
+                        await kernel.SendAsync(quitCommand);
+                    }))
                 .Wait(TimeSpan.FromSeconds(20));
 
             using var _ = new AssertionScope();
-            
+
             quitCommandExecuted.Should().BeTrue();
 
             KernelEvents
@@ -1306,32 +1310,165 @@ Console.Write(2);
                 .Command
                 .Should()
                 .Be(quitCommand);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "System.Threading.Thread.Sleep(3000);")]
+        [InlineData(Language.FSharp, "System.Threading.Thread.Sleep(3000)")]
+        [InlineData(Language.PowerShell, "Start-Sleep -Milliseconds 3000", Skip = "to address later")]
+        public void Quit_command_cause_the_running_command_to_fail(Language language, string code)
+        {
+            var kernel = CreateKernel(language);
+
+            var quitCommand = new Quit(() => { });
+
+            var submitCodeCommand = new SubmitCode(code);
+
+            Task.WhenAll(
+                Task.Run(async () =>
+                {
+                    await Task.Delay(20);
+                    await kernel.SendAsync(submitCodeCommand);
+                }),
+                Task.Run(async () =>
+                {
+                    await Task.Delay(100);
+                    await kernel.SendAsync(quitCommand);
+                }))
+                .Wait(TimeSpan.FromSeconds(20));
+
+            using var _ = new AssertionScope();
 
             KernelEvents
                 .Should()
-                .ContainSingle<CommandFailed>()
+                .ContainSingle<CommandFailed>(c => c.Command == submitCodeCommand)
                 .Which
                 .Exception
                 .Should()
                 .BeOfType<OperationCanceledException>();
         }
 
-        [Fact]
-        public void user_code_can_react_to_cancel_command_using_cancellation_token()
+
+        [Theory]
+        [InlineData(Language.CSharp, "await Task.Delay(Microsoft.DotNet.Interactive.KernelInvocationContext.Current.Token); Console.WriteLine(\"done c#\")", "done c#")]
+        [InlineData(Language.FSharp, @"
+System.Threading.Thread.Sleep(3000)
+Console.WriteLine(""done c#"")", "done f#")]
+        public async Task user_code_can_react_to_cancel_command_using_cancellation_token(Language language, string code, string expectedValue)
         {
-            throw new NotImplementedException();
+            var kernel = CreateKernel(language);
+            var cancelCommand = new Cancel();
+            var submitCodeCommand = new SubmitCode(code);
+
+            Task.Run(async () => await kernel.SendAsync(submitCodeCommand));
+            await Task.Delay(100);
+            await kernel.SendAsync(cancelCommand);
+
+
+            KernelEvents
+                .Should()
+                .ContainSingle<StandardOutputValueProduced>()
+                .Which
+                .Value
+                .Should()
+                .Be(expectedValue);
+
         }
 
-        [Fact]
-        public void cancel_command_cancels_the_running_command()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell, Skip = "to address later")]
+        public void cancel_command_cancels_the_running_command(Language language)
         {
-            throw new NotImplementedException();
+            var submitCodeCommandCancelled = false;
+            var submitCodeCommandStarted = false;
+            var kernel = CreateKernel(language);
+
+            var cancelCommand = new Cancel();
+
+            var submitCodeCommand = new SubmitCode("placeholder")
+            {
+                Handler = (command, context) =>
+                {
+                    submitCodeCommandStarted = true;
+
+                    while (!context.CancellationToken.IsCancellationRequested)
+                    {
+
+                    }
+
+                    submitCodeCommandCancelled = true;
+
+                    return Task.CompletedTask;
+                }
+            };
+
+            Task.WhenAll(
+                    Task.Run(async () =>
+                    {
+                        await kernel.SendAsync(submitCodeCommand);
+                    }),
+                    Task.Run(async () =>
+                    {
+                        await Task.Delay(100);
+                        await kernel.SendAsync(cancelCommand);
+                    })).Wait();
+              //  .Wait(TimeSpan.FromSeconds(20));
+
+
+            using var _ = new AssertionScope();
+
+            submitCodeCommandStarted.Should().BeTrue();
+            submitCodeCommandCancelled.Should().BeTrue();
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CommandFailed>(c => c.Command == submitCodeCommand)
+                .Which
+                .Exception
+                .Should()
+                .BeOfType<OperationCanceledException>();
         }
 
-        [Fact]
-        public void cancel_command_cancels_all_deferred_commands()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task cancel_command_cancels_all_deferred_commands(Language language)
         {
-            throw new NotImplementedException();
+            var deferredCommandExecuted = false;
+
+            var kernel = CreateKernel(language);
+            var languageKernel = kernel.ChildKernels.OfType<DotNetKernel>().Single();
+
+
+            var deferred = new SubmitCode("placeholder")
+            {
+                Handler = (command, context) =>
+                {
+                    deferredCommandExecuted = true;
+                    return Task.CompletedTask;
+                }
+            };
+
+            var cancelCommand = new Cancel();
+
+            languageKernel.DeferCommand(deferred);
+
+            var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SendAsync(cancelCommand);
+
+            using var _ = new AssertionScope();
+
+            deferredCommandExecuted.Should().BeFalse();
+
+            events
+                .Should().ContainSingle<CommandSucceeded>()
+                .Which
+                .Command
+                .Should()
+                .Be(cancelCommand);
         }
     }
 }

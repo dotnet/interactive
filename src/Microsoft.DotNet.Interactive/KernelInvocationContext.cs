@@ -2,7 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -16,15 +18,16 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KernelInvocationContext : IAsyncDisposable
     {
-        private static readonly AsyncLocal<KernelInvocationContext> _current = new AsyncLocal<KernelInvocationContext>();
+        internal static ConcurrentBag<KernelInvocationContext> ActiveContexts { get; private set; } = new();
+        private static readonly AsyncLocal<KernelInvocationContext> _current = new();
 
-        private readonly ReplaySubject<KernelEvent> _events = new ReplaySubject<KernelEvent>();
+        private readonly ReplaySubject<KernelEvent> _events = new();
 
-        private readonly HashSet<KernelCommand> _childCommands = new HashSet<KernelCommand>();
+        private readonly HashSet<KernelCommand> _childCommands = new();
 
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
 
-        private readonly List<Func<KernelInvocationContext, Task>> _onCompleteActions = new List<Func<KernelInvocationContext, Task>>();
+        private readonly List<Func<KernelInvocationContext, Task>> _onCompleteActions = new();
 
         private readonly CancellationTokenSource _cancellationTokenSource;
 
@@ -71,15 +74,27 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+        public void Cancel()
+        {
+            if (!IsComplete)
+            {
+                _cancellationTokenSource.Cancel(false);
+                Fail(new OperationCanceledException($"Command :{Command} cancelled."));
+            }
+        }
+
         public void Fail(
             Exception exception = null,
             string message = null)
         {
-            Publish(new CommandFailed(exception, Command, message));
+            if (!IsComplete)
+            {
+                Publish(new CommandFailed(exception, Command, message));
 
-            _events.OnCompleted();
-            _cancellationTokenSource.Cancel(false);
-            IsComplete = true;
+                _events.OnCompleted();
+                _cancellationTokenSource.Cancel(false);
+                IsComplete = true;
+            }
         }
 
         public void OnComplete(Func<KernelInvocationContext, Task> onComplete)
@@ -113,6 +128,8 @@ namespace Microsoft.DotNet.Interactive
             if (_current.Value == null || _current.Value.IsComplete)
             {
                 var context = new KernelInvocationContext(command);
+                
+                ActiveContexts.Add(context);
 
                 _current.Value = context;
             }
@@ -140,6 +157,8 @@ namespace Microsoft.DotNet.Interactive
         {
             if (_current.Value is { } active)
             {
+                ActiveContexts =
+                    new ConcurrentBag<KernelInvocationContext>(ActiveContexts.Except(new[] {_current.Value}));
                 _current.Value = null;
 
                 if (_onCompleteActions.Count > 0)
