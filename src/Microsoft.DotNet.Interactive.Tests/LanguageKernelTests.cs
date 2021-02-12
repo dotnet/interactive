@@ -1268,7 +1268,7 @@ Console.Write(2);
         [Theory]
         [InlineData(Language.CSharp,"System.Threading.Thread.Sleep(3000);")]
         [InlineData(Language.FSharp, "System.Threading.Thread.Sleep(3000)")]
-        [InlineData(Language.PowerShell, "Start-Sleep -Milliseconds 3000")]
+        [InlineData(Language.PowerShell, "Start-Sleep -Milliseconds 3000", Skip = "to address later")]
         public void Quit_command_cause_current_command_to_fail(Language language, string code)
         {
             var kernel = CreateKernel(language);
@@ -1314,6 +1314,24 @@ Console.Write(2);
                 .Exception
                 .Should()
                 .BeOfType<OperationCanceledException>();
+        }
+
+        [Fact]
+        public void user_code_can_react_to_cancel_command_using_cancellation_token()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public void cancel_command_cancels_the_running_command()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public void cancel_command_cancels_all_deferred_commands()
+        {
+            throw new NotImplementedException();
         }
     }
 }

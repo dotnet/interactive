@@ -24,14 +24,12 @@ namespace Microsoft.DotNet.Interactive
 {
     public abstract partial class Kernel : IDisposable
     {
-        private readonly Subject<KernelEvent> _kernelEvents = new Subject<KernelEvent>();
+        private readonly Subject<KernelEvent> _kernelEvents = new();
         private readonly CompositeDisposable _disposables;
-        private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new ConcurrentQueue<KernelCommand>();
+        private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
 
-        private readonly ConcurrentQueue<KernelOperation> _commandQueue =
-            new ConcurrentQueue<KernelOperation>();
-        private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers =
-            new Dictionary<Type, KernelCommandInvocation>();
+        private readonly ConcurrentQueue<KernelOperation> _commandQueue = new();
+        private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
 
@@ -141,15 +139,9 @@ namespace Microsoft.DotNet.Interactive
         {
             return command switch
             {
-                SubmitCode submitCode
-                when submitCode.LanguageNode is null => SubmissionParser.SplitSubmission(submitCode),
-
-                RequestDiagnostics requestDiagnostics
-                when requestDiagnostics.LanguageNode is null => SubmissionParser.SplitSubmission(requestDiagnostics),
-
-                LanguageServiceCommand languageServiceCommand
-                when languageServiceCommand.LanguageNode is null => PreprocessLanguageServiceCommand(languageServiceCommand),
-
+                SubmitCode {LanguageNode: null} submitCode => SubmissionParser.SplitSubmission(submitCode),
+                RequestDiagnostics {LanguageNode: null} requestDiagnostics => SubmissionParser.SplitSubmission(requestDiagnostics),
+                LanguageServiceCommand {LanguageNode: null} languageServiceCommand => PreprocessLanguageServiceCommand(languageServiceCommand),
                 _ => new[] { command }
             };
         }
@@ -236,11 +228,11 @@ namespace Microsoft.DotNet.Interactive
             public KernelOperation(
                 KernelCommand command,
                 TaskCompletionSource<KernelCommandResult> taskCompletionSource,
-                bool IsDeferredOperation)
+                bool isDeferred)
             {
                 Command = command;
                 TaskCompletionSource = taskCompletionSource;
-                this.IsDeferredOperation = IsDeferredOperation;
+                IsDeferred = isDeferred;
 
                 AsyncContext.TryEstablish(out var id);
                 AsyncContextId = id;
@@ -249,7 +241,7 @@ namespace Microsoft.DotNet.Interactive
             public KernelCommand Command { get; }
 
             public TaskCompletionSource<KernelCommandResult> TaskCompletionSource { get; }
-            public bool IsDeferredOperation { get; }
+            public bool IsDeferred { get; }
 
             public int AsyncContextId { get; }
         }
@@ -322,6 +314,8 @@ namespace Microsoft.DotNet.Interactive
             switch (command)
             {
                 case Quit _:
+                case Cancel _:
+                    CancelInflightCommand();
                     ClearPendingCommands();
                     _commandQueue.Enqueue(operation);
                     break;
@@ -358,24 +352,26 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        internal void ClearPendingCommands()
+        internal void CancelInflightCommand()
         {
             using var disposables = new CompositeDisposable();
             KernelInvocationContext currentContext = null;
-            var inFlightOperation = _commandQueue.FirstOrDefault(c => !c.IsDeferredOperation);
+            var inFlightOperation = _commandQueue.FirstOrDefault(operation => !operation.IsDeferred);
             if (inFlightOperation is not null
-                )
+            )
             {
-                currentContext = KernelInvocationContext.Current?? KernelInvocationContext.Establish(inFlightOperation.Command);
-                disposables.Add( currentContext.KernelEvents.Subscribe(PublishEvent));
+                currentContext = KernelInvocationContext.Current ?? KernelInvocationContext.Establish(inFlightOperation.Command);
+                disposables.Add(currentContext.KernelEvents.Subscribe(PublishEvent));
                 inFlightOperation.TaskCompletionSource.SetResult(currentContext.Result);
             }
 
-            _deferredCommands.Clear();
-            _commandQueue.Clear();
-
             currentContext?.Fail(new OperationCanceledException("Command has been cancelled"));
 
+        }
+        internal void ClearPendingCommands()
+        {
+            _deferredCommands.Clear();
+            _commandQueue.Clear();
         }
 
         internal Task RunDeferredCommandsAsync()

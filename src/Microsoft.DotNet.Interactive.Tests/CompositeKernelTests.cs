@@ -427,7 +427,7 @@ new [] {1,2,3}");
         }
 
         [Fact]
-        public async Task Deferred_commands_on_composite_kernel_are_not_executed_when_quit_command_is_submitted()
+        public async Task quit_command_cancels_all_deferred_commands_on_composite_kernel()
         {
             var deferredCommandExecuted = false;
             var quitCommandHandled = false;
@@ -449,15 +449,18 @@ new [] {1,2,3}");
                     return Task.CompletedTask;
                 }
             };
+
+
+            var quitCommand = new Quit(() =>
+            {
+                quitCommandHandled = true;
+            });
 
             compositeKernel.DeferCommand(deferred);
             
             var events = compositeKernel.KernelEvents.ToSubscribedList();
 
-            await compositeKernel.SendAsync(new Quit(() =>
-            {
-                quitCommandHandled = true;
-            }));
+            await compositeKernel.SendAsync(quitCommand);
 
             using var _ = new AssertionScope();
 
@@ -465,14 +468,15 @@ new [] {1,2,3}");
             quitCommandHandled.Should().BeTrue();
 
             events
-                .Select(e => e.GetType())
+                .Should().ContainSingle<CommandSucceeded>()
+                .Which
+                .Command
                 .Should()
-                .ContainInOrder(
-                    typeof(CommandSucceeded));
+                .Be(quitCommand);
         }
 
         [Fact]
-        public async Task Deferred_commands_on_subkernels_are_not_executed_when_quit_command_is_submitted()
+        public async Task quit_command_cancels_all_deferred_commands_on_subkernels()
         {
             var deferredCommandExecuted = false;
             var quitCommandHandled = false;
@@ -495,14 +499,16 @@ new [] {1,2,3}");
                 }
             };
 
-            subKernel.DeferCommand(deferred);
-            
-            var events = compositeKernel.KernelEvents.ToSubscribedList();
-
-            await compositeKernel.SendAsync(new Quit(() =>
+            var quitCommand = new Quit(() =>
             {
                 quitCommandHandled = true;
-            }));
+            });
+
+            subKernel.DeferCommand(deferred);
+
+            var events = compositeKernel.KernelEvents.ToSubscribedList();
+
+            await compositeKernel.SendAsync(quitCommand);
 
             using var _ = new AssertionScope();
 
@@ -510,10 +516,97 @@ new [] {1,2,3}");
             quitCommandHandled.Should().BeTrue();
 
             events
-                .Select(e => e.GetType())
+                .Should().ContainSingle<CommandSucceeded>()
+                .Which
+                .Command
                 .Should()
-                .ContainInOrder(
-                    typeof(CommandSucceeded));
+                .Be(quitCommand);
+        }
+
+        [Fact]
+        public async Task cancel_command_cancels_all_deferred_commands_on_composite_kernel()
+        {
+            var deferredCommandExecuted = false;
+
+            var subKernel = new CSharpKernel();
+
+            using var compositeKernel = new CompositeKernel
+            {
+                subKernel
+            };
+
+            compositeKernel.DefaultKernelName = subKernel.Name;
+
+            var deferred = new SubmitCode("placeholder")
+            {
+                Handler = (command, context) =>
+                {
+                    deferredCommandExecuted = true;
+                    return Task.CompletedTask;
+                }
+            };
+
+            var cancelCommand = new Cancel();
+
+            compositeKernel.DeferCommand(deferred);
+
+            var events = compositeKernel.KernelEvents.ToSubscribedList();
+
+            await compositeKernel.SendAsync(cancelCommand);
+
+            using var _ = new AssertionScope();
+
+            deferredCommandExecuted.Should().BeFalse();
+
+            events
+                .Should().ContainSingle<CommandSucceeded>()
+                .Which
+                .Command
+                .Should()
+                .Be(cancelCommand);
+        }
+
+        [Fact]
+        public async Task cancel_command_cancels_all_deferred_commands_on_subkernels()
+        {
+            var deferredCommandExecuted = false;
+
+            var subKernel = new CSharpKernel();
+
+            using var compositeKernel = new CompositeKernel
+            {
+                subKernel
+            };
+
+            compositeKernel.DefaultKernelName = subKernel.Name;
+
+            var deferred = new SubmitCode("placeholder")
+            {
+                Handler = (command, context) =>
+                {
+                    deferredCommandExecuted = true;
+                    return Task.CompletedTask;
+                }
+            };
+
+            var cancelCommand = new Cancel();
+
+            subKernel.DeferCommand(deferred);
+
+            var events = compositeKernel.KernelEvents.ToSubscribedList();
+
+            await compositeKernel.SendAsync(cancelCommand);
+
+            using var _ = new AssertionScope();
+
+            deferredCommandExecuted.Should().BeFalse();
+
+            events
+                .Should().ContainSingle<CommandSucceeded>()
+                .Which
+                .Command
+                .Should()
+                .Be(cancelCommand);
         }
 
         [Fact]
