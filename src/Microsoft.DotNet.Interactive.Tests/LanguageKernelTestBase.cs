@@ -96,8 +96,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                  "open " + typeof(System.Threading.Tasks.Task).Namespace + Environment.NewLine +
                  "open " + typeof(System.Linq.Enumerable).Namespace + Environment.NewLine +
                  "open " + typeof(Microsoft.AspNetCore.Html.IHtmlContent).Namespace + Environment.NewLine +
-                 "open " + typeof(Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html).FullName + Environment.NewLine +
-                 "open " + typeof(XPlot.Plotly.PlotlyChart).Namespace + Environment.NewLine;
+                 "open " + typeof(Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html).FullName + Environment.NewLine;
 
             kernel.DeferCommand(new SubmitCode(code));
             return kernel;

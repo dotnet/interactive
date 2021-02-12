@@ -77,7 +77,6 @@
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Jupyter\Microsoft.DotNet.Interactive.Jupyter.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Telemetry\Microsoft.DotNet.Interactive.Telemetry.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
-    <ProjectReference Include="..\XPlot.DotNet.Interactive.KernelExtensions\XPlot.DotNet.Interactive.KernelExtensions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

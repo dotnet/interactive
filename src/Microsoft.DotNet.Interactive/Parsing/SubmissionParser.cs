@@ -149,6 +149,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         else
                         {
                             commands.Add(directiveCommand);
+                            if (directiveNode is KernelNameDirectiveNode)
+                            {
+                                hoistedCommandsIndex = commands.Count;
+                            }
                         }
 
                         break;

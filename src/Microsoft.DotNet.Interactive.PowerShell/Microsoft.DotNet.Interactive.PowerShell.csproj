@@ -27,11 +27,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)Modules\**"
-            Link="Modules\%(RecursiveDir)%(FileName)%(Extension)"
-            PackagePath="contentFiles/any/any/Modules"
-            PackageCopyToOutput="true"
-            CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)Modules\**" 
+    	Link="Modules\%(RecursiveDir)%(FileName)%(Extension)" 
+    	PackagePath="contentFiles/any/any/Modules" 
+    	PackageCopyToOutput="true" 
+    	CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -77,7 +77,6 @@
   <ItemGroup>
     <PackageReference Include="System.IO.Pipelines" Version="4.7.2" />
     <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.1.1" />
-    <PackageReference Include="XPlot.Plotly" Version="3.0.1" />
   </ItemGroup>
 
 </Project>

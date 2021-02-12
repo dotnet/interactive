@@ -30,7 +30,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Pocket;
 using Recipes;
-using XPlot.DotNet.Interactive.KernelExtensions;
 using static Pocket.Logger;
 
 using CommandHandler = System.CommandLine.Invocation.CommandHandler;
@@ -143,7 +142,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         }
                     }
 
-                    
                 });
 
             var verboseOption = new Option<bool>(
@@ -471,7 +469,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseKernelHelpers()
                     .UseJupyterHelpers()
                     .UseWho()
-                    .UseXplot()
                     .UseMathAndLaTeX()
                     .UseDotNetVariableSharing()
                     .UseAspNetCore(),
@@ -484,7 +481,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     .UseKernelHelpers()
                     .UseWho()
                     .UseDefaultNamespaces()
-                    .UseXplot()
                     .UseMathAndLaTeX()
                     .UseDotNetVariableSharing(),
                 new[] { "f#", "F#" });
@@ -492,7 +488,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             compositeKernel.Add(
                 new PowerShellKernel()
                     .UseJupyterHelpers()
-                    .UseXplot()
                     .UseProfiles()
                     .UseDotNetVariableSharing(),
                 new[] { "powershell" });

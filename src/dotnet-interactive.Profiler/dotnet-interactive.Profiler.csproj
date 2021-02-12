@@ -17,7 +17,6 @@
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.FSharp\Microsoft.DotNet.Interactive.FSharp.fsproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Jupyter\Microsoft.DotNet.Interactive.Jupyter.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Interactive\Microsoft.DotNet.Interactive.csproj" />
-    <ProjectReference Include="..\XPlot.DotNet.Interactive.KernelExtensions\XPlot.DotNet.Interactive.KernelExtensions.csproj" />
   </ItemGroup>
 
 </Project>
