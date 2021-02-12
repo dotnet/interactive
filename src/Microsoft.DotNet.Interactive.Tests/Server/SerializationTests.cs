@@ -197,7 +197,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new FormattedValue("text/html", "<b>hi!</b>"),
                     "the-value-id");
                 
-                yield return new Quit();
+                yield return new Quit("csharp");
+
+                yield return new Cancel("csharp");
             }
         }
 
