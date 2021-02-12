@@ -6,6 +6,7 @@
 // --------------------------------------------- Kernel Commands
 
 export const AddPackageType = "AddPackage";
+export const CancelType = "Cancel";
 export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
@@ -21,6 +22,7 @@ export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 
 export type KernelCommandType =
       typeof AddPackageType
+    | typeof CancelType
     | typeof ChangeWorkingDirectoryType
     | typeof DisplayErrorType
     | typeof DisplayValueType
@@ -40,6 +42,9 @@ export interface AddPackage extends KernelCommand {
 
 export interface KernelCommand {
     targetKernelName?: string;
+}
+
+export interface Cancel extends KernelCommand {
 }
 
 export interface ChangeWorkingDirectory extends KernelCommand {
