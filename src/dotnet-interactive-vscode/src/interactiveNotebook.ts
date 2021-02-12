@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { debounce } from './utilities';
-import { CellKind, Document, NotebookDocumentBackup } from "./interfaces/vscode";
+import { CellKind, Document, NotebookDocumentBackup } from 'vscode-interfaces/out/notebook';
 import { ClientMapper } from './clientMapper';
 import { Diagnostic } from './contracts';
 

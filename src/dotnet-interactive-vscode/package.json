@@ -261,8 +261,21 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "lint": "eslint src --ext ts",
+    "compile:interfaces": "npm --prefix ./src/interfaces run compile",
+    "compile:insiders": "npm --prefix ./src/vscode/insiders run compile",
+    "compile:stable": "npm --prefix ./src/vscode/stable run compile",
+    "compile:this": "tsc -p ./",
+    "compile": "npm run compile:interfaces && npm run compile:insiders && npm run compile:stable && npm run compile:this",
+    "install:interfaces": "npm install ./src/interfaces",
+    "install:insiders": "npm install ./src/vscode/insiders",
+    "install:stable": "npm install ./src/vscode/stable",
+    "install:this": "npm install",
+    "install:all": "npm run install:interfaces && npm run install:insiders && npm run install:stable && npm run install:this",
+    "lint:interfaces": "npm --prefix ./src/interfaces run lint",
+    "lint:insiders": "npm --prefix ./src/vscode/insiders run lint",
+    "lint:stable": "npm --prefix ./src/vscode/stable run lint",
+    "lint:this": "eslint src --ext ts",
+    "lint": "npm run lint:interfaces && npm run lint:insiders && npm run lint:stable && npm run lint:this",
     "watch": "tsc -watch -p ./",
     "integration-test": "node ./out/tests/integration/runTest.js",
     "pretest": "npm run compile && npm run lint",
@@ -279,6 +292,7 @@
     "@types/node": "13.11.0",
     "@types/node-fetch": "^2.5.7",
     "@types/tmp": "0.2.0",
+    "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "2.26.0",
     "@typescript-eslint/parser": "2.26.0",
     "chai": "4.2.0",
@@ -297,6 +311,9 @@
   },
   "dependencies": {
     "compare-versions": "3.6.0",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "vscode-insiders": "file:src/vscode/insiders",
+    "vscode-interfaces": "file:src/interfaces",
+    "vscode-stable": "file:src/vscode/stable"
   }
 }

@@ -7,6 +7,10 @@ import { Eol, WindowsEol, NonWindowsEol } from "../interfaces";
 import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan } from "../contracts";
 import { ClientMapper } from '../clientMapper';
 
+export function isInsidersBuild(): boolean {
+    return vscode.version.indexOf('-insider') >= 0;
+}
+
 function convertToPosition(linePosition: LinePosition): vscode.Position {
     return new vscode.Position(linePosition.line, linePosition.character);
 }

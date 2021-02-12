@@ -8,30 +8,18 @@ export enum CellKind {
     Code = 2
 }
 
-export enum CellOutputKind {
-    Text = 1,
-    Error = 2,
-    Rich = 3
+export const ErrorOutputMimeType = 'application/x.notebook.error-traceback';
+
+export interface NotebookCellOutputItem {
+    readonly mime: string;
+    readonly value: unknown;
+    readonly metadata?: Record<string, string | number | boolean | unknown>;
 }
 
-export interface CellStreamOutput {
-    outputKind: CellOutputKind.Text;
-    text: string;
+export interface NotebookCellOutput {
+    readonly id: string;
+    readonly outputs: NotebookCellOutputItem[];
 }
-
-export interface CellErrorOutput {
-    outputKind: CellOutputKind.Error;
-    ename: string;
-    evalue: string;
-    traceback: string[];
-}
-
-export interface CellDisplayOutput {
-    outputKind: CellOutputKind.Rich;
-    data: { [key: string]: any };
-}
-
-export type CellOutput = CellStreamOutput | CellErrorOutput | CellDisplayOutput;
 
 export interface Uri {
     fsPath: string;
@@ -47,7 +35,7 @@ export interface NotebookCell {
     cellKind: CellKind;
     document: Document;
     readonly language: string;
-    outputs: CellOutput[];
+    //outputs: CellOutput[];
 }
 
 export interface NotebookDocument {

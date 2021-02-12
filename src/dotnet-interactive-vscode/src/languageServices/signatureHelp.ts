@@ -3,7 +3,7 @@
 
 import { ClientMapper } from './../clientMapper';
 import { PositionLike } from './interfaces';
-import { Document } from '../interfaces/vscode';
+import { Document } from 'vscode-interfaces/out/notebook';
 import { SignatureHelpProduced } from '../contracts';
 
 export async function provideSignatureHelp(clientMapper: ClientMapper, language: string, document: Document, position: PositionLike, token?: string | undefined): Promise<SignatureHelpProduced> {

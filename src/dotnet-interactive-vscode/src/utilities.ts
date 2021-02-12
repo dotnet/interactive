@@ -4,7 +4,7 @@
 import * as path from 'path';
 import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from "./contracts";
 import { ProcessStart } from "./interfaces";
-import { Uri } from './interfaces/vscode';
+import { Uri } from 'vscode-interfaces/out/notebook';
 
 export function processArguments(template: { args: Array<string>, workingDirectory: string }, notebookPath: string, fallbackWorkingDirectory: string, dotnetPath: string, globalStoragePath: string): ProcessStart {
     let workingDirectory = path.parse(notebookPath).dir;
