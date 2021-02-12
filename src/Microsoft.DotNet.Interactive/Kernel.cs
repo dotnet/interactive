@@ -313,18 +313,19 @@ namespace Microsoft.DotNet.Interactive
             
             switch (command)
             {
-                case Quit _:
                 case Cancel _:
-                    CancelInflightCommand();
+                    CancelInflightCommands();
+                    ClearPendingCommands(); 
+                    break;
+                case Quit _:
+                    CancelInflightCommands();
                     ClearPendingCommands();
-                    _commandQueue.Enqueue(operation);
                     break;
                 default:
                     UndeferCommands();
-                    _commandQueue.Enqueue(operation);
                     break;
             }
-
+            _commandQueue.Enqueue(operation);
             ProcessCommandQueue(_commandQueue, cancellationToken, onDone);
 
             return tcs.Task;
@@ -352,22 +353,44 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        internal void CancelInflightCommand()
+        private static bool CanCancel(KernelCommand command)
         {
-            using var disposables = new CompositeDisposable();
-            KernelInvocationContext currentContext = null;
-            var inFlightOperation = _commandQueue.FirstOrDefault(operation => !operation.IsDeferred);
-            if (inFlightOperation is not null
-            )
+            return command switch
             {
-                currentContext = KernelInvocationContext.Current ?? KernelInvocationContext.Establish(inFlightOperation.Command);
-                disposables.Add(currentContext.KernelEvents.Subscribe(PublishEvent));
-                inFlightOperation.TaskCompletionSource.SetResult(currentContext.Result);
+                Quit _ => false,
+                Cancel _ => false,
+                _ => true
+            };
+        }
+        
+
+        internal void CancelInflightCommands()
+        {
+            foreach (var kernelInvocationContext in KernelInvocationContext.ActiveContexts.Where(c => !c.IsComplete && CanCancel(c.Command)))
+            {
+                kernelInvocationContext.Cancel();
+
             }
 
-            currentContext?.Fail(new OperationCanceledException("Command has been cancelled"));
+            using var disposables = new CompositeDisposable();
+            var inFlightOperations = _commandQueue.Where(operation => !operation.IsDeferred && CanCancel(operation.Command)).ToList();
+            foreach (var inFlightOperation in inFlightOperations)
+            {
+                KernelInvocationContext currentContext = null;
 
+
+                if (inFlightOperation is not null
+                )
+                {
+                    currentContext = KernelInvocationContext.Establish(inFlightOperation.Command);
+                    disposables.Add(currentContext.KernelEvents.Subscribe(PublishEvent));
+                    inFlightOperation.TaskCompletionSource.SetResult(currentContext.Result);
+                }
+
+                currentContext?.Cancel();
+            }
         }
+
         internal void ClearPendingCommands()
         {
             _deferredCommands.Clear();
