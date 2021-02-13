@@ -261,14 +261,13 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile:interfaces": "npm --prefix ./src/interfaces run compile",
-    "compile:insiders": "npm --prefix ./src/vscode/insiders run compile",
-    "compile:stable": "npm --prefix ./src/vscode/stable run compile",
-    "compile:this": "tsc -p ./",
-    "compile": "npm run compile:interfaces && npm run compile:insiders && npm run compile:stable && npm run compile:this",
-    "install:interfaces": "npm install ./src/interfaces",
-    "install:insiders": "npm install ./src/vscode/insiders",
-    "install:stable": "npm install ./src/vscode/stable",
+    "pack:interfaces": "cd ./src/interfaces && npm run compile && npm pack && cd ../..",
+    "pack:insiders": "cd ./src/vscode/insiders && npm run compile && npm pack && cd ../../..",
+    "pack:stable": "cd ./src/vscode/stable && npm run compile && npm pack && cd ../../..",
+    "compile": "tsc -p ./",
+    "install:interfaces": "npm run pack:interfaces && npm install ./src/interfaces/vscode-interfaces-1.0.0.tgz",
+    "install:insiders": "npm run pack:insiders && npm install ./src/vscode/insiders/vscode-insiders-1.0.0.tgz",
+    "install:stable": "npm run pack:stable && npm install ./src/vscode/stable/vscode-stable-1.0.0.tgz",
     "install:this": "npm install",
     "install:all": "npm run install:interfaces && npm run install:insiders && npm run install:stable && npm run install:this",
     "lint:interfaces": "npm --prefix ./src/interfaces run lint",
@@ -312,8 +311,8 @@
   "dependencies": {
     "compare-versions": "3.6.0",
     "node-fetch": "^2.6.1",
-    "vscode-insiders": "file:src/vscode/insiders",
-    "vscode-interfaces": "file:src/interfaces",
-    "vscode-stable": "file:src/vscode/stable"
+    "vscode-insiders": "file:src/vscode/insiders/vscode-insiders-1.0.0.tgz",
+    "vscode-interfaces": "file:src/interfaces/vscode-interfaces-1.0.0.tgz",
+    "vscode-stable": "file:src/vscode/stable/vscode-stable-1.0.0.tgz"
   }
 }
