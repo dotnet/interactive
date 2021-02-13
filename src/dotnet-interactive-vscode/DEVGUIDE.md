@@ -3,8 +3,12 @@ The organization of this extension is a bit complicated.
 
 # tl;dr -
 
+0. Requirements:
+  - nodejs v12.16.1.
+  - npm v6.14.11.
+  - Latest stable [PowerShell 7](https://github.com/PowerShell/PowerShell/releases/tag/v7.1.2) on the path to enable the `pwsh` command.
 1. Open a terminal in this directory.
-2. `npm run install:all`
+2. `npm install`
 3. Open this directory in VS Code (Stable or Insiders is fine.)
 4. F5.
 
@@ -24,7 +28,7 @@ change or debug anything in one of the 3 sub-projects (`src/insiders`, `src/vsco
 then you'll have to perform the following steps:
 
 1. Make the appropriate code change.
-2. Re-run `npm run install:all` to rebuild and re-install the sub-project packages.
+2. Re-run `npm install` to rebuild and re-install the sub-project packages.
 3. **The most important bit**: your breakpoints won't bind in the original source files; you'll have to open the
 generated `.js` files in `node_modules`.  E.g., if you wanted to step through the file `src/vscode/stable/functions.ts`
 then after performing steps 1 and 2, you'll need to open the file `node_modules/vscode-stable/out/functions.js`.
