@@ -11,5 +11,6 @@ typings.json
 update-proposed-api.ps1
 .eslintignore
 .eslintrc.json
+vscode-*.tgz
 **/*.map
 **/*.ts

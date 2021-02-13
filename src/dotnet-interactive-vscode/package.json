@@ -260,10 +260,11 @@
     ]
   },
   "scripts": {
+    "clean-packages": "npx del-cli --force \"node_modules/**/vscode-*-1.0.0.tgz\"",
     "vscode:prepublish": "npm run compile",
     "pack:interfaces": "cd ./src/interfaces && npm i && npm run compile && npm pack && cd ../..",
-    "pack:insiders": "cd ./src/vscode/insiders && npm i && npm run compile && npm pack && cd ../../..",
-    "pack:stable": "cd ./src/vscode/stable && npm i && npm run compile && npm pack && cd ../../..",
+    "pack:insiders": "cd ./src/vscode/insiders && npm install ../../interfaces/vscode-interfaces-1.0.0.tgz && npm install && npm run compile && npm pack && cd ../../..",
+    "pack:stable": "cd ./src/vscode/stable && npm install ../../interfaces/vscode-interfaces-1.0.0.tgz && npm install && npm run compile && npm pack && cd ../../..",
     "compile": "tsc -p ./",
     "install:interfaces": "npm run pack:interfaces && npm install ./src/interfaces/vscode-interfaces-1.0.0.tgz",
     "install:insiders": "npm run pack:insiders && npm install ./src/vscode/insiders/vscode-insiders-1.0.0.tgz",
@@ -281,7 +282,7 @@
     "test": "mocha --opts mocha.opts",
     "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json",
     "tdd": "npm test -- --watch",
-    "package": "npx vsce package"
+    "package": "npm run clean-packages && npx vsce package"
   },
   "devDependencies": {
     "@types/chai": "4.2.11",
@@ -296,6 +297,7 @@
     "@typescript-eslint/parser": "2.26.0",
     "chai": "4.2.0",
     "chai-fs": "2.0.0",
+    "del-cli": "^3.0.1",
     "eslint": "6.8.0",
     "glob": "7.1.6",
     "mocha": "7.1.1",

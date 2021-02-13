@@ -6,7 +6,7 @@
         "compile": "tsc -p ./"
     },
     "dependencies": {
-        "vscode-interfaces": "file:../../interfaces"
+        "vscode-interfaces": "file:../../interfaces/vscode-interfaces-1.0.0.tgz"
     },
     "devDependencies": {
         "@typescript-eslint/eslint-plugin": "2.26.0",
