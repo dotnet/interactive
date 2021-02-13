@@ -261,9 +261,9 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "pack:interfaces": "cd ./src/interfaces && npm run compile && npm pack && cd ../..",
-    "pack:insiders": "cd ./src/vscode/insiders && npm run compile && npm pack && cd ../../..",
-    "pack:stable": "cd ./src/vscode/stable && npm run compile && npm pack && cd ../../..",
+    "pack:interfaces": "cd ./src/interfaces && npm i && npm run compile && npm pack && cd ../..",
+    "pack:insiders": "cd ./src/vscode/insiders && npm i && npm run compile && npm pack && cd ../../..",
+    "pack:stable": "cd ./src/vscode/stable && npm i && npm run compile && npm pack && cd ../../..",
     "compile": "tsc -p ./",
     "install:interfaces": "npm run pack:interfaces && npm install ./src/interfaces/vscode-interfaces-1.0.0.tgz",
     "install:insiders": "npm run pack:insiders && npm install ./src/vscode/insiders/vscode-insiders-1.0.0.tgz",
