@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         public async Task SendTextChangeNotificationAsync(Uri ownerUri, string newText, string oldText)
         {
-            var oldTextLines = oldText.Split(Environment.NewLine);
+            var oldTextLines = oldText.Split('\n').Select(text => text.EndsWith('\r') ? text[0..^1] : text).ToArray();
             var lastLineNum = Math.Max(0, oldTextLines.Length - 1);
             var lastLine = oldTextLines.Length > 0 ? oldTextLines[lastLineNum] : string.Empty;
             var lastCharacterNum = lastLine.Length;
