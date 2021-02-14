@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.Interactive
     public class KernelInvocationContext : IAsyncDisposable
     {
         internal static ConcurrentBag<KernelInvocationContext> ActiveContexts { get; private set; } = new();
+        
         private static readonly AsyncLocal<KernelInvocationContext> _current = new();
 
         private readonly ReplaySubject<KernelEvent> _events = new();
