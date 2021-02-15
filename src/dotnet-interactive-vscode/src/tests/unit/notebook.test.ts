@@ -21,7 +21,7 @@ import {
     DisplayedValueUpdatedType,
     ReturnValueProducedType,
     StandardOutputValueProducedType,
-} from '../../contracts';
+} from 'vscode-interfaces/out/contracts';
 import { withFakeGlobalStorageLocation } from './utilities';
 import { backupNotebook, languageToCellKind } from '../../interactiveNotebook';
 import * as interfaces from 'vscode-interfaces/out/notebook';

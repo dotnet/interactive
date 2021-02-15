@@ -48,7 +48,7 @@ import {
     SubmissionType,
     SubmitCode,
     SubmitCodeType,
-} from './contracts';
+} from 'vscode-interfaces/out/contracts';
 import { Eol } from './interfaces';
 import { debounce } from './utilities';
 

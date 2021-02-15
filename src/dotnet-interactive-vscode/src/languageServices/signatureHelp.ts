@@ -4,9 +4,10 @@
 import { ClientMapper } from './../clientMapper';
 import { PositionLike } from './interfaces';
 import { Document } from 'vscode-interfaces/out/notebook';
-import { SignatureHelpProduced } from '../contracts';
 
-export async function provideSignatureHelp(clientMapper: ClientMapper, language: string, document: Document, position: PositionLike, token?: string | undefined): Promise<SignatureHelpProduced> {
+import * as contracts from 'vscode-interfaces/out/contracts';
+
+export async function provideSignatureHelp(clientMapper: ClientMapper, language: string, document: Document, position: PositionLike, token?: string | undefined): Promise<contracts.SignatureHelpProduced> {
     let client = await clientMapper.getOrAddClient(document.uri);
     let sigHelp = await client.signatureHelp(language, document.getText(), position.line, position.character, token);
     return sigHelp;

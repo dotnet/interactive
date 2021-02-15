@@ -6,10 +6,11 @@ import * as vscode from 'vscode';
 import { ClientMapper } from '../clientMapper';
 import { notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook } from '../interactiveNotebook';
 import { Eol } from '../interfaces';
-import { NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookCellTextOutput, NotebookDocument } from '../contracts';
-import { configureWebViewMessaging, getEol, isUnsavedNotebook } from './vscodeUtilities';
+import { NotebookCell, NotebookCellOutput, NotebookDocument } from 'vscode-interfaces/out/contracts';
+import { configureWebViewMessaging, getEol, isInsidersBuild, isUnsavedNotebook } from './vscodeUtilities';
 
-import { isDisplayOutput, isErrorOutput, isTextOutput } from '../utilities';
+import * as vscodeInsiders from 'vscode-insiders/out/functions';
+import * as vscodeStable from 'vscode-stable/out/functions';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
 
@@ -115,30 +116,11 @@ function toVsCodeNotebookCellData(cell: NotebookCell): vscode.NotebookCellData {
 }
 
 function toVsCodeNotebookCellOutput(output: NotebookCellOutput): vscode.CellOutput {
-    if (isDisplayOutput(output)) {
-        return {
-            outputKind: vscode.CellOutputKind.Rich,
-            data: output.data
-        };
-    } else if (isErrorOutput(output)) {
-        return {
-            outputKind: vscode.CellOutputKind.Error,
-            ename: output.errorName,
-            evalue: output.errorValue,
-            traceback: output.stackTrace
-        };
-    } else if (isTextOutput(output)) {
-        return {
-            outputKind: vscode.CellOutputKind.Text,
-            text: output.text
-        };
+    if (isInsidersBuild()) {
+        return <vscode.CellOutput><any>vscodeInsiders.contractCellOutputToVsCodeCellOutput(output);
+    } else {
+        return vscodeStable.contractCellOutputToVsCodeCellOutput(output);
     }
-
-    // unknown, better to return _something_ than to fail entirely
-    return {
-        outputKind: vscode.CellOutputKind.Rich,
-        data: {}
-    };
 }
 
 export function toNotebookDocument(document: vscode.NotebookDocument): NotebookDocument {
@@ -156,23 +138,9 @@ function toNotebookCell(cell: vscode.NotebookCell): NotebookCell {
 }
 
 function toNotebookCellOutput(output: vscode.CellOutput): NotebookCellOutput {
-    switch (output.outputKind) {
-        case vscode.CellOutputKind.Error:
-            const error: NotebookCellErrorOutput = {
-                errorName: output.ename,
-                errorValue: output.evalue,
-                stackTrace: output.traceback
-            };
-            return error;
-        case vscode.CellOutputKind.Rich:
-            const rich: NotebookCellDisplayOutput = {
-                data: output.data
-            };
-            return rich;
-        case vscode.CellOutputKind.Text:
-            const text: NotebookCellTextOutput = {
-                text: output.text
-            };
-            return text;
+    if (isInsidersBuild()) {
+        return vscodeInsiders.vsCodeCellOutputToContractCellOutput(<vscode.NotebookCellOutput><any>output);
+    } else {
+        return vscodeStable.vsCodeCellOutputToContractCellOutput(output);
     }
 }
