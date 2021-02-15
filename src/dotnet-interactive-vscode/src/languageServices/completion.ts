@@ -4,7 +4,7 @@
 import { ClientMapper } from './../clientMapper';
 import { CompletionsProduced } from './../contracts';
 import { PositionLike } from './interfaces';
-import { Document } from '../interfaces/vscode';
+import { Document } from 'vscode-interfaces/out/notebook';
 
 export async function provideCompletion(clientMapper: ClientMapper, language: string, document: Document, position: PositionLike, token?: string | undefined): Promise<CompletionsProduced> {
     let client = await clientMapper.getOrAddClient(document.uri);

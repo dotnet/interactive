@@ -9,7 +9,6 @@ use(require('chai-fs'));
 
 import { ClientMapper } from './../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
-import { CellKind, CellOutput, CellOutputKind, NotebookDocument } from '../../interfaces/vscode';
 import {
     CodeSubmissionReceivedType,
     CommandFailedType,
@@ -25,6 +24,7 @@ import {
 } from '../../contracts';
 import { withFakeGlobalStorageLocation } from './utilities';
 import { backupNotebook, languageToCellKind } from '../../interactiveNotebook';
+import * as interfaces from 'vscode-interfaces/out/notebook';
 
 describe('Notebook tests', () => {
     for (let language of ['csharp', 'fsharp']) {
@@ -68,14 +68,17 @@ describe('Notebook tests', () => {
                 ]
             }));
             let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
-            let result: Array<CellOutput> = [];
+            let result: Array<interfaces.NotebookCellOutput> = [];
             await client.execute(code, language, outputs => result = outputs, _ => { }, { token });
             expect(result).to.deep.equal([
                 {
-                    outputKind: CellOutputKind.Rich,
-                    data: {
-                        'text/html': '2'
-                    }
+                    id: '1',
+                    outputs: [
+                        {
+                            mime: 'text/html',
+                            value: '2',
+                        }
+                    ]
                 }
             ]);
         });
@@ -151,26 +154,35 @@ Console.WriteLine(1);
             ]
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
-        let result: Array<CellOutput> = [];
+        let result: Array<interfaces.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
             {
-                outputKind: CellOutputKind.Rich,
-                data: {
-                    'text/plain': '1\r\n'
-                }
+                id: '1',
+                outputs: [
+                    {
+                        mime: 'text/plain',
+                        value: '1\r\n',
+                    }
+                ],
             },
             {
-                outputKind: CellOutputKind.Rich,
-                data: {
-                    'text/plain': '2\r\n'
-                }
+                id: '2',
+                outputs: [
+                    {
+                        mime: 'text/plain',
+                        value: '2\r\n',
+                    }
+                ]
             },
             {
-                outputKind: CellOutputKind.Rich,
-                data: {
-                    'text/plain': '3\r\n'
-                }
+                id: '3',
+                outputs: [
+                    {
+                        mime: 'text/plain',
+                        value: '3\r\n',
+                    }
+                ]
             }
         ]);
     });
@@ -236,25 +248,31 @@ Console.WriteLine(1);
             ]
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
-        let result: Array<CellOutput> = [];
+        let result: Array<interfaces.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
             {
-                outputKind: CellOutputKind.Rich,
-                data: {
-                    'text/plain': 'Installed package Newtonsoft.Json version 1.2.3.4'
-                }
+                id: '2',
+                outputs: [
+                    {
+                        mime: 'text/plain',
+                        value: 'Installed package Newtonsoft.Json version 1.2.3.4',
+                    }
+                ]
             },
             {
-                outputKind: CellOutputKind.Rich,
-                data: {
-                    'text/plain': 'sentinel'
-                }
+                id: '3',
+                outputs: [
+                    {
+                        mime: 'text/plain',
+                        value: 'sentinel',
+                    }
+                ]
             },
         ]);
     });
 
-    it('returned json is property parsed', async () => {
+    it('returned json is properly parsed', async () => {
         let token = '123';
         let code = 'JObject.FromObject(new { a = 1, b = false })';
         let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
@@ -294,17 +312,20 @@ Console.WriteLine(1);
             ]
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
-        let result: Array<CellOutput> = [];
+        let result: Array<interfaces.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
             {
-                outputKind: CellOutputKind.Rich,
-                data: {
-                    'application/json': {
-                        a: 1,
-                        b: false
+                id: '1',
+                outputs: [
+                    {
+                        mime: 'application/json',
+                        value: {
+                            a: 1,
+                            b: false,
+                        }
                     }
-                }
+                ]
             }
         ]);
     });
@@ -560,7 +581,7 @@ Console.WriteLine(1);
             'pwsh'
         ];
         for (let language of codeLanguages) {
-            expect(languageToCellKind(language)).to.equal(CellKind.Code);
+            expect(languageToCellKind(language)).to.equal(interfaces.CellKind.Code);
         }
     });
 
@@ -569,7 +590,7 @@ Console.WriteLine(1);
             'markdown'
         ];
         for (let language of markdownLanguages) {
-            expect(languageToCellKind(language)).to.equal(CellKind.Markdown);
+            expect(languageToCellKind(language)).to.equal(interfaces.CellKind.Markdown);
         }
     });
 });

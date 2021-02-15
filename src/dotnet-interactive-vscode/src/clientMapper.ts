@@ -3,7 +3,7 @@
 
 import { KernelTransport } from "./contracts";
 import { InteractiveClient } from "./interactiveClient";
-import { Uri } from "./interfaces/vscode";
+import { Uri } from "vscode-interfaces/out/notebook";
 
 export class ClientMapper {
     private clientMap: Map<string, Promise<InteractiveClient>> = new Map();

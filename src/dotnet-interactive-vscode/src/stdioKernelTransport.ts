@@ -16,7 +16,7 @@ import {
     KernelCommandEnvelopeObserver
 } from "./contracts";
 import { ProcessStart } from './interfaces';
-import { ReportChannel, Uri } from './interfaces/vscode';
+import { ReportChannel, Uri } from 'vscode-interfaces/out/notebook';
 import { LineReader } from './lineReader';
 import { isNotNull, parse, stringify, wait } from './utilities';
 import fetch from 'node-fetch';

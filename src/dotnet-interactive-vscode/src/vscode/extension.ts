@@ -11,7 +11,7 @@ import { registerLanguageProviders } from './languageProvider';
 import { execute, registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
 
 import { getSimpleLanguage, isDotnetInteractiveLanguage, notebookCellLanguages } from '../interactiveNotebook';
-import { IDotnetAcquireResult } from '../interfaces/dotnet';
+import { IDotnetAcquireResult } from 'vscode-interfaces/out/dotnet';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
 import compareVersions = require("compare-versions");
@@ -20,6 +20,8 @@ import { processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 import { KernelId, updateCellLanguages, updateDocumentKernelspecMetadata } from './notebookKernel';
 import { DotNetInteractiveNotebookKernelProvider } from './notebookKernelProvider';
+
+import { isInsidersBuild } from './vscodeUtilities';
 
 export async function activate(context: vscode.ExtensionContext) {
     // this must happen first, because some following functions use the acquisition command
@@ -67,9 +69,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
     registerKernelCommands(context, clientMapper);
 
-    const isInsidersBuild = vscode.version.indexOf('-insider') >= 0;
+    const hostVersionSuffix = isInsidersBuild() ? 'Insiders' : 'Stable';
+    diagnosticsChannel.appendLine(`Extension started for VS Code ${hostVersionSuffix}.`);
+
     const jupyterExtensionIsPresent = vscode.extensions.getExtension('ms-toolsai.jupyter') !== undefined;
-    const useJupyterExtension = isInsidersBuild && jupyterExtensionIsPresent && (config.get<boolean>('useJupyterExtensionForIpynbFiles') || false);
+    const useJupyterExtension = isInsidersBuild() && jupyterExtensionIsPresent && (config.get<boolean>('useJupyterExtensionForIpynbFiles') || false);
     registerFileCommands(context, clientMapper, useJupyterExtension);
 
     const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable
