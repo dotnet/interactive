@@ -7,7 +7,7 @@ import { isInsidersBuild, toVsCodeDiagnostic } from "./vscodeUtilities";
 import { ClientMapper } from "../clientMapper";
 import { getDiagnosticCollection } from './diagnostics';
 import { getSimpleLanguage, notebookCellLanguages } from "../interactiveNotebook";
-import { Diagnostic, DiagnosticSeverity } from "../contracts";
+import { Diagnostic, DiagnosticSeverity } from 'vscode-interfaces/out/contracts';
 import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, withDotNetKernelMetadata } from '../ipynbUtilities';
 
 import * as interfaces from 'vscode-interfaces/out/notebook';

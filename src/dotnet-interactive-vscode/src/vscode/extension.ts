@@ -134,8 +134,10 @@ async function updateCellLanguageInMetadata(languageChangeEvent: { cell: vscode.
 
 async function updateDocumentMetadata(e: { document: vscode.NotebookDocument, kernel: vscode.NotebookKernel | undefined }, clientMapper: ClientMapper) {
     if (e.kernel?.id === KernelId) {
-        // update document language
-        e.document.languages = notebookCellLanguages;
+        if (!isInsidersBuild()) {
+            // update document language (not supported on Insiders)
+            e.document.languages = notebookCellLanguages;
+        }
 
         // update various metadata
         await updateDocumentKernelspecMetadata(e.document);

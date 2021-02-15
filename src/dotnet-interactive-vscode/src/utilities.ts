@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as path from 'path';
-import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from "./contracts";
 import { ProcessStart } from "./interfaces";
 import { Uri } from 'vscode-interfaces/out/notebook';
 
@@ -141,21 +140,4 @@ export function isDotNetKernelPreferred(filename: string, fileMetadata: any): bo
         default:
             return false;
     }
-}
-
-export function isErrorOutput(arg: any): arg is NotebookCellErrorOutput {
-    return arg
-        && typeof arg.errorName === 'string'
-        && typeof arg.errorValue === 'string'
-        && Array.isArray(arg.stackTrace);
-}
-
-export function isDisplayOutput(arg: any): arg is NotebookCellDisplayOutput {
-    return arg
-        && typeof arg.data === 'object';
-}
-
-export function isTextOutput(arg: any): arg is NotebookCellTextOutput {
-    return arg
-        && typeof arg.text === 'string';
 }

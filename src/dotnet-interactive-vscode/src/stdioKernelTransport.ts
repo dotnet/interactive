@@ -14,13 +14,12 @@ import {
     DiagnosticLogEntryProduced,
     KernelReadyType,
     KernelCommandEnvelopeObserver
-} from "./contracts";
+} from 'vscode-interfaces/out/contracts';
 import { ProcessStart } from './interfaces';
 import { ReportChannel, Uri } from 'vscode-interfaces/out/notebook';
 import { LineReader } from './lineReader';
-import { isNotNull, parse, stringify, wait } from './utilities';
+import { isNotNull, parse, stringify } from './utilities';
 import fetch from 'node-fetch';
-import { extname } from "path";
 
 export class StdioKernelTransport implements KernelTransport {
     private childProcess: cp.ChildProcessWithoutNullStreams | null;
