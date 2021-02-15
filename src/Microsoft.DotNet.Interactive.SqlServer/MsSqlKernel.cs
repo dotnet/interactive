@@ -3,12 +3,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine;
+using System.CommandLine.Invocation;
+using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
@@ -28,13 +32,16 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         private Func<QueryCompleteParams, Task> _queryCompletionHandler = null;
         private Func<MessageParams, Task> _queryMessageHandler = null;
 
-        public MsSqlKernel(string pathToService, string name, string connectionString) : base(name)
+        public MsSqlKernel(
+            string name,
+            string connectionString,
+            MsSqlServiceClient client) : base(name)
         {
-             var filePath = Path.GetTempFileName();
+            var filePath = Path.GetTempFileName();
             _tempFileUri = new Uri(filePath);
             _connectionString = connectionString;
 
-            _serviceClient = new MsSqlServiceClient(pathToService);
+            _serviceClient = client;
             _serviceClient.Initialize();
 
             _serviceClient.OnConnectionComplete += HandleConnectionComplete;
@@ -150,6 +157,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                             }
                         }
                     }
+
                     completion.SetResult(true);
                 }
                 catch (Exception e)
@@ -202,8 +210,10 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 {
                     displayRow[i] = (columnNames[i], row[i].DisplayValue);
                 }
+
                 displayTable.Add(displayRow);
             }
+
             yield return displayTable;
         }
 
@@ -213,8 +223,39 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             {
                 return;
             }
+
             var completionItems = await _serviceClient.ProvideCompletionItemsAsync(_tempFileUri, command);
             context.Publish(new CompletionsProduced(completionItems, command));
+        }
+
+        protected override ChooseKernelDirective CreateChooseKernelDirective() => 
+            new ChooseMsSqlKernelDirective(this);
+
+        private class ChooseMsSqlKernelDirective : ChooseKernelDirective
+        {
+            public ChooseMsSqlKernelDirective(Kernel kernel) : base(kernel, $"Run a T-SQL query using the \"{kernel.Name}\" connection.")
+            {
+                Add(MimeTypeOption);
+            }
+
+            private Option<string> MimeTypeOption { get; } = new Option<string>(
+                "--mime-type",
+                description: "Specify the MIME type to use for the data.",
+                getDefaultValue: () => HtmlFormatter.MimeType);
+
+            protected override async Task Handle(KernelInvocationContext kernelInvocationContext, InvocationContext commandLineInvocationContext)
+            {
+                await base.Handle(kernelInvocationContext, commandLineInvocationContext);
+
+                switch (kernelInvocationContext.Command)
+                {
+                    case SubmitCode c:
+                        var mimeType = commandLineInvocationContext.ParseResult.FindResultFor(MimeTypeOption)?.GetValueOrDefault();
+
+                        c.Properties.Add("mime-type", mimeType);
+                        break;
+                }
+            }
         }
     }
 }

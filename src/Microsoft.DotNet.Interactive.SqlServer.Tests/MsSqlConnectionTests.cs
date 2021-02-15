@@ -8,6 +8,7 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Xunit;
 
 namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 {
@@ -87,6 +88,39 @@ SELECT TOP 100 * FROM Person.Person
                   .As<int>()
                   .Should()
                   .Be(6);
+        }
+
+        [MsSqlFact]
+        public async Task BUGGGGGG()
+        {
+            var connectionString = MsSqlFact.GetConnectionStringForTests();
+            using var kernel = await CreateKernel();
+            var result = await kernel.SubmitCodeAsync(
+                             $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
+
+            result.KernelEvents
+                  .ToSubscribedList()
+                  .Should()
+                  .NotContainErrors();
+
+            result = await kernel.SubmitCodeAsync($@"
+#!adventureworks --mime-type {TabularDataFormatter.MimeType}
+select * from sys.databases
+");
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should().NotContainErrors();
+
+            events.Should()
+                  .ContainSingle<DisplayedValueProduced>()
+                  .Which
+                  .FormattedValues
+                  .Should()
+                  .ContainSingle(f => f.MimeType == HtmlFormatter.MimeType);
+
+            // TODO-JOSEQU (testname) write test
+            Assert.True(false, "Test testname is not written yet.");
         }
     }
 }

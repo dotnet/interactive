@@ -15,16 +15,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _format = format;
         }
 
-        public TabularDataFormatter(Action<T, TextWriter> format)
-        {
-            _format = (context, instance, writer) => { format(instance, writer); return true; };
-        }
-
-        public TabularDataFormatter(Func<T, string> format)
-        {
-            _format = (context, instance, writer) => { writer.Write(format(instance)); return true; };
-        }
-
         public override bool Format(FormatContext context, T value, TextWriter writer)
         {
             return _format(context, value, writer);
