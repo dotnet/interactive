@@ -173,7 +173,7 @@ public class SampleClass
         }
 
         [Fact(Skip = "https://github.com/dotnet/interactive/issues/1071  N.b., the preceeding test can be deleted when this one is fixed.")]
-        public async Task csharp_signature_hep_can_read_doc_comments_from_nuget_packages()
+        public async Task csharp_signature_help_can_read_doc_comments_from_nuget_packages()
         {
             using var kernel = CreateKernel(Language.CSharp);
 
