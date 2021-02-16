@@ -156,6 +156,12 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         public async Task SendTextChangeNotificationAsync(Uri ownerUri, string newText, string oldText)
         {
+            var textChangeParams = GetDocumentChangeForText(ownerUri, newText, oldText);
+            await _rpc.NotifyWithParameterObjectAsync("textDocument/didChange", textChangeParams);
+        }
+
+        public static DidChangeTextDocumentParams GetDocumentChangeForText(Uri ownerUri, string newText, string oldText)
+        {
             var oldTextLines = oldText.Split('\n').Select(text => text.EndsWith('\r') ? text[0..^1] : text).ToArray();
             var lastLineNum = Math.Max(0, oldTextLines.Length - 1);
             var lastLine = oldTextLines.Length > 0 ? oldTextLines[lastLineNum] : string.Empty;
@@ -168,9 +174,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             var changeRange = new Range() { Start = startPosition, End = endPosition };
             var docChange = new TextDocumentChangeEvent() { Text = newText, Range = changeRange };
             var changes = new TextDocumentChangeEvent[] { docChange };
-            var textChangeParams = new DidChangeTextDocumentParams() { TextDocument = textDoc, ContentChanges = changes };
 
-            await _rpc.NotifyWithParameterObjectAsync("textDocument/didChange", textChangeParams);
+            return new DidChangeTextDocumentParams() { TextDocument = textDoc, ContentChanges = changes };
         }
 
         public void HandleConnectionCompletion(ConnectionCompleteParams connParams)
