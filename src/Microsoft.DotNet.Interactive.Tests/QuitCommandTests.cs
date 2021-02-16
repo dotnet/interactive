@@ -15,40 +15,22 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    public class QuitCommandTests : IDisposable
+    public class QuitCommandTests : LanguageKernelTestBase
     {
-        private readonly CompositeDisposable _disposables = new();
-
-        public QuitCommandTests(ITestOutputHelper output)
+        public QuitCommandTests(ITestOutputHelper output) : base(output)
         {
-            _disposables.Add(output.SubscribeToPocketLogger());
-        }
-
-        public void Dispose()
-        {
-            _disposables.Dispose();
         }
 
         [Fact]
         public async Task quit_command_fails_when_not_configured()
         {
-
-            var subKernel = new CSharpKernel();
-
-            using var compositeKernel = new CompositeKernel
-            {
-                subKernel
-            };
-
-            compositeKernel.DefaultKernelName = subKernel.Name;
-
-
+            var kernel = CreateKernel();
 
             var quitCommand = new Quit();
 
-            var events = compositeKernel.KernelEvents.ToSubscribedList();
+            var events = kernel.KernelEvents.ToSubscribedList();
 
-            await compositeKernel.SendAsync(quitCommand);
+            await kernel.SendAsync(quitCommand);
 
             using var _ = new AssertionScope();
 
@@ -65,6 +47,89 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Exception
                 .Should()
                 .BeOfType<InvalidOperationException>();
+        }
+
+        [Fact]
+        public async Task quit_command_cancels_all_deferred_commands_on_composite_kernel()
+        {
+            var deferredCommandExecuted = false;
+
+            var quitCommandExecuted = false;
+
+            var kernel = CreateKernel();
+
+            var deferred = new SubmitCode("placeholder")
+            {
+                Handler = (command, context) =>
+                {
+                    deferredCommandExecuted = true;
+                    return Task.CompletedTask;
+                }
+            };
+
+
+            Quit.OnQuit(() => { quitCommandExecuted = true; });
+
+            var quitCommand = new Quit();
+
+            kernel.DeferCommand(deferred);
+
+            var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SendAsync(quitCommand);
+
+            using var _ = new AssertionScope();
+
+            deferredCommandExecuted.Should().BeFalse();
+            quitCommandExecuted.Should().BeTrue();
+
+            events
+                .Should().ContainSingle<CommandSucceeded>()
+                .Which
+                .Command
+                .Should()
+                .Be(quitCommand);
+        }
+
+        [Fact]
+        public async Task quit_command_cancels_all_deferred_commands_on_subkernels()
+        {
+            var deferredCommandExecuted = false;
+
+            var quitCommandExecuted = false;
+
+            var kernel = CreateKernel();
+
+            var deferred = new SubmitCode("placeholder")
+            {
+                Handler = (command, context) =>
+                {
+                    deferredCommandExecuted = true;
+                    return Task.CompletedTask;
+                }
+            };
+
+            Quit.OnQuit(() => { quitCommandExecuted = true; });
+
+            var quitCommand = new Quit();
+
+            kernel.ChildKernels[0].DeferCommand(deferred);
+
+            var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SendAsync(quitCommand);
+
+            using var _ = new AssertionScope();
+
+            deferredCommandExecuted.Should().BeFalse();
+            quitCommandExecuted.Should().BeTrue();
+
+            events
+                .Should().ContainSingle<CommandSucceeded>()
+                .Which
+                .Command
+                .Should()
+                .Be(quitCommand);
         }
     }
 }
