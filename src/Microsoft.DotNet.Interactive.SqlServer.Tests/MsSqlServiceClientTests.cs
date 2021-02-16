@@ -10,19 +10,10 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 {
     public class MsSqlServiceClientTests
     {
-        [Fact]
-        public void Should_parse_doc_change_correctly_with_windows_line_endings()
-        {
-            RunDocumentChangeTest("\r\n");
-        }
-
-        [Fact]
-        public void Should_parse_doc_change_correctly_with_unix_line_endings()
-        {
-            RunDocumentChangeTest("\n");
-        }
-
-        private void RunDocumentChangeTest(string lineEnding)
+        [Theory]
+        [InlineData("\r\n")]
+        [InlineData("\n")]
+        public void Should_parse_doc_change_correctly_with_different_line_endings(string lineEnding)
         {
             string oldText = string.Join(lineEnding, "abc", "def", "", "abc", "abcdef");
             int oldTextLineCount = 5;
@@ -34,28 +25,28 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 
             docChange.ContentChanges.Length
                 .Should()
-                .Equals(1);
+                .Be(1);
             docChange.ContentChanges[0].Range.End.Line
                 .Should()
-                .Equals(oldTextLineCount - 1);
+                .Be(oldTextLineCount - 1);
             docChange.ContentChanges[0].Range.End.Character
                 .Should()
-                .Equals(oldTextLastCharacterNum);
+                .Be(oldTextLastCharacterNum);
             docChange.ContentChanges[0].Range.Start.Line
                 .Should()
-                .Equals(0);
+                .Be(0);
             docChange.ContentChanges[0].Range.Start.Character
                 .Should()
-                .Equals(0);
+                .Be(0);
             docChange.ContentChanges[0].Text
                 .Should()
-                .Equals(newText);
+                .Be(newText);
             docChange.TextDocument.Uri
                 .Should()
-                .Equals(testUri.ToString());
+                .Be(testUri.ToString());
             docChange.TextDocument.Version
                 .Should()
-                .Equals(1);
+                .Be(1);
         }
     }
 }
