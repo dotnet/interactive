@@ -9,6 +9,7 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
+#pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 {
     public class HoverTextTests : LanguageKernelTestBase
@@ -114,6 +115,139 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .Content
                 .Should()
                 .ContainEquivalentOf(new FormattedValue(expectedMimeType, expectedContent));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "/// <summary>Adds two numbers.</summary>\nint Add(int a, int b) => a + b;", "Ad$$d(1, 2)", "Adds two numbers.")]
+        [InlineData(Language.FSharp, "/// Adds two numbers.\nlet add a b = a + b", "ad$$d 1 2", "Adds two numbers.")]
+        public async Task hover_text_doc_comments_can_be_loaded_from_source_in_a_previous_submission(Language language, string previousSubmission, string markupCode, string expectedHoverTextSubString)
+        {
+            using var kernel = CreateKernel(language);
+
+            await SubmitCode(kernel, previousSubmission);
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            var commandResult = await SendHoverRequest(kernel, code, line, character);
+
+            var events = commandResult.KernelEvents.ToSubscribedList();
+
+            events
+                .Should()
+                .ContainSingle<HoverTextProduced>()
+                .Which
+                .Content
+                .Should()
+                .ContainSingle(fv => fv.Value.Contains(expectedHoverTextSubString));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "var s = new Sample$$Class();")]
+        [InlineData(Language.FSharp, "let s = Sample$$Class()")]
+        public async Task hover_text_can_read_doc_comments_from_individually_referenced_assemblies_with_xml_files(Language language, string markupCode)
+        {
+            using var assembly = new TestAssemblyReference("Project", "netstandard2.0", "Program.cs", @"
+public class SampleClass
+{
+    /// <summary>A sample class constructor.</summary>
+    public SampleClass() { }
+}
+");
+            var assemblyPath = await assembly.BuildAndGetPathToAssembly();
+
+            var assemblyReferencePath = language switch
+            {
+                Language.CSharp => assemblyPath,
+                Language.FSharp => assemblyPath.Replace("\\", "\\\\")
+            };
+
+            using var kernel = CreateKernel(language);
+
+            await SubmitCode(kernel, $"#r \"{assemblyReferencePath}\"");
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            var commandResult = await SendHoverRequest(kernel, code, line, character);
+
+            var events = commandResult.KernelEvents.ToSubscribedList();
+
+            events
+                .Should()
+                .ContainSingle<HoverTextProduced>()
+                .Which
+                .Content
+                .Should()
+                .ContainSingle(fv => fv.Value.Contains("A sample class constructor."));
+        }
+
+        [Fact]
+        public async Task csharp_hover_text_can_read_doc_comments_from_nuget_packages_after_forcing_the_assembly_to_load()
+        {
+            using var kernel = CreateKernel(Language.CSharp);
+
+            await SubmitCode(kernel, "#r \"nuget: Newtonsoft.Json, 12.0.3\"");
+
+            // The following line forces the assembly and the doc comments to be loaded
+            await SubmitCode(kernel, "var _unused = Newtonsoft.Json.JsonConvert.Null;");
+
+            var markupCode = "Newtonsoft.Json.JsonConvert.Nu$$ll";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            var commandResult = await SendHoverRequest(kernel, code, line, character);
+
+            var events = commandResult.KernelEvents.ToSubscribedList();
+
+            events
+                .Should()
+                .ContainSingle<HoverTextProduced>()
+                .Which
+                .Content
+                .Should()
+                .ContainSingle(fv => fv.Value.Contains("Represents JavaScript's null as a string. This field is read-only."));
+        }
+
+        [Fact(Skip = "https://github.com/dotnet/interactive/issues/1071  N.b., the preceeding test can be deleted when this one is fixed.")]
+        public async Task csharp_hover_text_can_read_doc_comments_from_nuget_packages()
+        {
+            using var kernel = CreateKernel(Language.CSharp);
+
+            await SubmitCode(kernel, "#r \"nuget: Newtonsoft.Json, 12.0.3\"");
+
+            var markupCode = "Newtonsoft.Json.JsonConvert.Nu$$ll";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            var commandResult = await SendHoverRequest(kernel, code, line, character);
+
+            var events = commandResult.KernelEvents.ToSubscribedList();
+
+            events
+                .Should()
+                .ContainSingle<HoverTextProduced>()
+                .Which
+                .Content
+                .Should()
+                .ContainSingle(fv => fv.Value.Contains("Represents JavaScript's null as a string. This field is read-only."));
+        }
+
+        [Fact]
+        public async Task fsharp_hover_text_can_read_doc_comments_from_nuget_packages()
+        {
+            using var kernel = CreateKernel(Language.FSharp);
+
+            await SubmitCode(kernel, "#r \"nuget: Newtonsoft.Json, 12.0.3\"");
+
+            var markupCode = "Newtonsoft.Json.JsonConvert.Nu$$ll";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            var commandResult = await SendHoverRequest(kernel, code, line, character);
+
+            var events = commandResult.KernelEvents.ToSubscribedList();
+
+            events
+                .Should()
+                .ContainSingle<HoverTextProduced>()
+                .Which
+                .Content
+                .Should()
+                .ContainSingle(fv => fv.Value.Contains("Represents JavaScript's `null` as a string. This field is read-only."));
         }
 
         [Theory]
