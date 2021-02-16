@@ -149,7 +149,7 @@ public class SampleClass
         }
 
         [Fact]
-        public async Task csharp_signature_hep_can_read_doc_comments_from_nuget_packages_after_forcing_the_assembly_to_load()
+        public async Task csharp_signature_help_can_read_doc_comments_from_nuget_packages_after_forcing_the_assembly_to_load()
         {
             using var kernel = CreateKernel(Language.CSharp);
 
