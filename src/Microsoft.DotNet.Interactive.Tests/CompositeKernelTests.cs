@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 {
     public class CompositeKernelTests : IDisposable
     {
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
 
         public CompositeKernelTests(ITestOutputHelper output)
         {
@@ -426,11 +426,13 @@ new [] {1,2,3}");
                     typeof(CommandSucceeded));
         }
 
+        
+
         [Fact]
         public async Task quit_command_cancels_all_deferred_commands_on_composite_kernel()
         {
             var deferredCommandExecuted = false;
-            var quitCommandHandled = false;
+            var quitCommandExecuted = false;
 
             var subKernel = new CSharpKernel();
 
@@ -451,10 +453,9 @@ new [] {1,2,3}");
             };
 
 
-            var quitCommand = new Quit(() =>
-            {
-                quitCommandHandled = true;
-            });
+            Quit.OnQuit(() => { quitCommandExecuted = true; });
+
+            var quitCommand = new Quit();
 
             compositeKernel.DeferCommand(deferred);
             
@@ -465,7 +466,7 @@ new [] {1,2,3}");
             using var _ = new AssertionScope();
 
             deferredCommandExecuted.Should().BeFalse();
-            quitCommandHandled.Should().BeTrue();
+            quitCommandExecuted.Should().BeTrue();
 
             events
                 .Should().ContainSingle<CommandSucceeded>()
@@ -479,7 +480,7 @@ new [] {1,2,3}");
         public async Task quit_command_cancels_all_deferred_commands_on_subkernels()
         {
             var deferredCommandExecuted = false;
-            var quitCommandHandled = false;
+            var quitCommandExecuted = false;
 
             var subKernel = new CSharpKernel();
 
@@ -499,10 +500,9 @@ new [] {1,2,3}");
                 }
             };
 
-            var quitCommand = new Quit(() =>
-            {
-                quitCommandHandled = true;
-            });
+            Quit.OnQuit(() => { quitCommandExecuted = true; });
+
+            var quitCommand = new Quit();
 
             subKernel.DeferCommand(deferred);
 
@@ -513,7 +513,7 @@ new [] {1,2,3}");
             using var _ = new AssertionScope();
 
             deferredCommandExecuted.Should().BeFalse();
-            quitCommandHandled.Should().BeTrue();
+            quitCommandExecuted.Should().BeTrue();
 
             events
                 .Should().ContainSingle<CommandSucceeded>()

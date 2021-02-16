@@ -24,7 +24,12 @@ namespace Microsoft.DotNet.Interactive
     {
         public static T UseQuitCommand<T>(this T kernel, IDisposable disposeOnQuit, CancellationToken cancellationToken) where T : Kernel
         {
-            Quit.RegisterForDisposalOnQuit(disposeOnQuit);
+            Quit.OnQuit(() =>
+            {
+                disposeOnQuit?.Dispose();
+                Environment.Exit(0);
+            });
+
             cancellationToken.Register(async () =>
             {
                 await kernel.SendAsync(new Quit());
