@@ -1316,7 +1316,7 @@ Console.Write(2);
         [InlineData(Language.CSharp, "System.Threading.Thread.Sleep(3000);")]
         [InlineData(Language.FSharp, "System.Threading.Thread.Sleep(3000)")]
         [InlineData(Language.PowerShell, "Start-Sleep -Milliseconds 3000", Skip = "to address later")]
-        public void Quit_command_cause_the_running_command_to_fail(Language language, string code)
+        public void Quit_command_causes_the_running_command_to_fail(Language language, string code)
         {
             var kernel = CreateKernel(language);
 
