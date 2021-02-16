@@ -15,10 +15,12 @@ using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
 using Pocket;
-
+using Xunit;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.LanguageKernelTestBase>;
 
 using Xunit.Abstractions;
+
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace Microsoft.DotNet.Interactive.Tests
 {

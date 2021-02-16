@@ -317,10 +317,6 @@ namespace Microsoft.DotNet.Interactive
                     CancelInflightCommands();
                     ClearPendingCommands(); 
                     break;
-                case Quit _:
-                    CancelInflightCommands();
-                    ClearPendingCommands();
-                    break;
                 default:
                     UndeferCommands();
                     break;
