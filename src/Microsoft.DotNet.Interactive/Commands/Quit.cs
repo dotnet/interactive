@@ -3,7 +3,6 @@
 
 
 using System;
-using System.Reactive.Disposables;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
@@ -11,37 +10,31 @@ namespace Microsoft.DotNet.Interactive.Commands
 {
     public class Quit : KernelCommand
     {
-        private static readonly CompositeDisposable DisposeOnQuit = new();
+        private static Action _onQuit;
+        private static readonly Action DefaultOnQuit = () => throw new InvalidOperationException("Quit command is not configured");
 
-        public static void RegisterForDisposalOnQuit(IDisposable disposable)
+        static Quit()
         {
-            if (disposable is not null)
-            {
-                DisposeOnQuit.Add(disposable);
-            }
+            _onQuit = DefaultOnQuit;
+        }
+
+        public static void OnQuit(Action onQuit)
+        {
+            _onQuit = onQuit ?? DefaultOnQuit;
         }
     
         [JsonConstructor]
-        public Quit(string targetKernelName = null): this(() =>
-        {
-            Environment.Exit(0);
-        }, targetKernelName)
+        public Quit(string targetKernelName = null): base(targetKernelName)
         {
         }
 
-        public Quit(Action onQuit, string targetKernelName = null) : base(targetKernelName)
+        public override Task InvokeAsync(KernelInvocationContext context)
         {
-            if (onQuit == null)
-            {
-                throw new ArgumentNullException(nameof(onQuit));
-            }
-            Handler = (_, context) =>
-            {
-                context?.Complete(context.Command);
-                DisposeOnQuit?.Dispose();
-                onQuit();
-                return Task.CompletedTask;
-            };
+            _onQuit();
+            context?.Complete(context.Command);
+            return Task.CompletedTask;
         }
+
+       
     }
 }
