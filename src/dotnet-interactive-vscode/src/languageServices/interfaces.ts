@@ -1,12 +1,12 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { LinePositionSpan } from './../contracts';
+import * as contracts from 'vscode-interfaces/out/contracts';
 
 export interface HoverResult {
     contents: string,
     isMarkdown: boolean;
-    range: LinePositionSpan | undefined,
+    range: contracts.LinePositionSpan | undefined,
 }
 
 export interface PositionLike {

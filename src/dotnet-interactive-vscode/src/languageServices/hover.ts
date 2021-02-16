@@ -3,7 +3,7 @@
 
 import { ClientMapper } from './../clientMapper';
 import { HoverResult, PositionLike } from './interfaces';
-import { Document } from '../interfaces/vscode';
+import { Document } from 'vscode-interfaces/out/notebook';
 
 export async function provideHover(clientMapper: ClientMapper, language: string, document: Document, position: PositionLike, token?: string | undefined): Promise<HoverResult> {
     let client = await clientMapper.getOrAddClient(document.uri);

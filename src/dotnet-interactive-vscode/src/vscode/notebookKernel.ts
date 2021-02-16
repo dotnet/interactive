@@ -3,13 +3,16 @@
 
 import * as vscode from 'vscode';
 
-import { toVsCodeDiagnostic } from "./vscodeUtilities";
+import { isInsidersBuild, toVsCodeDiagnostic } from "./vscodeUtilities";
 import { ClientMapper } from "../clientMapper";
-import { CellOutput } from '../interfaces/vscode';
 import { getDiagnosticCollection } from './diagnostics';
-import { getSimpleLanguage } from "../interactiveNotebook";
-import { Diagnostic, DiagnosticSeverity } from "../contracts";
+import { getSimpleLanguage, notebookCellLanguages } from "../interactiveNotebook";
+import { Diagnostic, DiagnosticSeverity } from 'vscode-interfaces/out/contracts';
 import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, withDotNetKernelMetadata } from '../ipynbUtilities';
+
+import * as interfaces from 'vscode-interfaces/out/notebook';
+import * as vscodeInsiders from 'vscode-insiders/out/functions';
+import * as vscodeStable from 'vscode-stable/out/functions';
 
 export const KernelId: string = 'dotnet-interactive';
 
@@ -20,11 +23,13 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
     detail?: string | undefined;
     isPreferred: boolean;
     preloads?: vscode.Uri[] | undefined;
+    supportedLanguages: Array<string>;
 
     constructor(readonly clientMapper: ClientMapper, apiBootstrapperUri: vscode.Uri, isPreferred: boolean) {
         this.label = ".NET Interactive";
         this.preloads = [apiBootstrapperUri];
         this.isPreferred = isPreferred;
+        this.supportedLanguages = notebookCellLanguages;
     }
 
     async executeAllCells(document: vscode.NotebookDocument): Promise<void> {
@@ -42,7 +47,7 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
         await updateCellOutputs(document, cell, []);
         let client = await this.clientMapper.getOrAddClient(document.uri);
         let source = cell.document.getText();
-        function outputObserver(outputs: Array<CellOutput>) {
+        function outputObserver(outputs: Array<interfaces.NotebookCellOutput>) {
             updateCellOutputs(document, cell, outputs).then(() => { });
         }
 
@@ -86,12 +91,14 @@ export async function updateCellMetadata(document: vscode.NotebookDocument, cell
     }
 }
 
-export async function updateCellOutputs(document: vscode.NotebookDocument, cell: vscode.NotebookCell, outputs: vscode.CellOutput[]): Promise<void> {
+export async function updateCellOutputs(document: vscode.NotebookDocument, cell: vscode.NotebookCell, outputs: Array<interfaces.NotebookCellOutput>): Promise<void> {
     const cellIndex = document.cells.findIndex(c => c === cell);
     if (cellIndex >= 0) {
-        const edit = new vscode.WorkspaceEdit();
-        edit.replaceNotebookCellOutput(document.uri, cellIndex, outputs);
-        await vscode.workspace.applyEdit(edit);
+        if (isInsidersBuild()) {
+            await vscodeInsiders.updateCellOutputs(document, cellIndex, outputs);
+        } else {
+            await vscodeStable.updateCellOutputs(document, cellIndex, outputs);
+        }
     }
 }
 

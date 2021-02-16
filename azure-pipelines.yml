@@ -114,7 +114,7 @@ stages:
           displayName: NPM tests
           workingDirectory: "$(Build.SourcesDirectory)/src/Microsoft.DotNet.Interactive.Js"
 
-        - script: npm i
+        - script: npm install
           displayName: Install NPM packages for VS Code extension
           workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode"
 

@@ -1,2 +1,5 @@
+src/interfaces/
+src/vscode/insiders/
+src/vscode/stable/
 vscode.proposed.d.ts
 vscode.d.ts

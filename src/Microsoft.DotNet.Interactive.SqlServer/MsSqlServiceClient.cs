@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         public async Task<IEnumerable<CompletionItem>> ProvideCompletionItemsAsync(Uri fileUri, RequestCompletions command)
         {
-            string oldFileContents = await UpdateFileContentsAsync(fileUri, command.Code);
+            await UpdateFileContentsAsync(fileUri, command.Code);
 
             TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = fileUri.ToString() };
             Position position = new Position() { Line = command.LinePosition.Line, Character = command.LinePosition.Character };
@@ -129,20 +129,18 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         }
 
         /// <summary>
-        /// Updates the contents of the file at the provided path with the provided string,
-        /// and then returns the old file contents as a string. If the file contents have
-        /// changed, then a text change notification is also sent to the tools service.
+        /// Updates the contents of the file at the provided path with the provided string.
+        /// If the file contents have changed, then a text change notification is also sent
+        /// to the tools service.
         /// </summary>
-        private async Task<string> UpdateFileContentsAsync(Uri fileUri, string newContents)
+        private async Task UpdateFileContentsAsync(Uri fileUri, string newContents)
         {
             string oldFileContents = await File.ReadAllTextAsync(fileUri.LocalPath);
             if (!oldFileContents.Equals(newContents))
             {
                 await File.WriteAllTextAsync(fileUri.LocalPath, newContents);
-
                 await SendTextChangeNotificationAsync(fileUri, newContents, oldFileContents);
             }
-            return oldFileContents;
         }
 
         public async Task<QueryExecuteResult> ExecuteQueryStringAsync(Uri ownerUri, string queryString)
@@ -158,10 +156,16 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         public async Task SendTextChangeNotificationAsync(Uri ownerUri, string newText, string oldText)
         {
-            var oldTextLines = oldText.Split('\n');
+            var textChangeParams = GetDocumentChangeForText(ownerUri, newText, oldText);
+            await _rpc.NotifyWithParameterObjectAsync("textDocument/didChange", textChangeParams);
+        }
+
+        public static DidChangeTextDocumentParams GetDocumentChangeForText(Uri ownerUri, string newText, string oldText)
+        {
+            var oldTextLines = oldText.Split('\n').Select(text => text.EndsWith('\r') ? text[0..^1] : text).ToArray();
             var lastLineNum = Math.Max(0, oldTextLines.Length - 1);
-            var lastLine = oldTextLines[lastLineNum];
-            var lastCharacterNum = Math.Max(0, lastLine.Length - 1);
+            var lastLine = oldTextLines.Length > 0 ? oldTextLines[lastLineNum] : string.Empty;
+            var lastCharacterNum = lastLine.Length;
 
             var startPosition = new Position() { Line = 0, Character = 0 };
             var endPosition = new Position() { Line = lastLineNum, Character = lastCharacterNum };
@@ -170,9 +174,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             var changeRange = new Range() { Start = startPosition, End = endPosition };
             var docChange = new TextDocumentChangeEvent() { Text = newText, Range = changeRange };
             var changes = new TextDocumentChangeEvent[] { docChange };
-            var textChangeParams = new DidChangeTextDocumentParams() { TextDocument = textDoc, ContentChanges = changes };
 
-            await _rpc.NotifyWithParameterObjectAsync("textDocument/didChange", textChangeParams);
+            return new DidChangeTextDocumentParams() { TextDocument = textDoc, ContentChanges = changes };
         }
 
         public void HandleConnectionCompletion(ConnectionCompleteParams connParams)

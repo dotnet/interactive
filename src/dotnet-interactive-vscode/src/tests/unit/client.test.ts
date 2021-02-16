@@ -5,9 +5,9 @@ import { expect } from 'chai';
 
 import { ClientMapper } from '../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
-import { CellOutput, CellOutputKind } from '../../interfaces/vscode';
-import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandSucceededType, DisplayedValueProducedType, ReturnValueProducedType, DisplayedValueUpdatedType, CommandFailedType } from '../../contracts';
+import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandSucceededType, DisplayedValueProducedType, ReturnValueProducedType, DisplayedValueUpdatedType, CommandFailedType } from 'vscode-interfaces/out/contracts';
 import { debounce, wait } from '../../utilities';
+import * as interfaces from 'vscode-interfaces/out/notebook';
 
 describe('InteractiveClient tests', () => {
     it('command execution returns deferred events', async () => {
@@ -66,20 +66,26 @@ describe('InteractiveClient tests', () => {
             ]
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
-        let result: Array<CellOutput> = [];
+        let result: Array<interfaces.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
             {
-                outputKind: CellOutputKind.Rich,
-                data: {
-                    'text/plain': 'deferred output'
-                }
+                id: '1',
+                outputs: [
+                    {
+                        mime: 'text/plain',
+                        value: 'deferred output',
+                    }
+                ]
             },
             {
-                outputKind: CellOutputKind.Rich,
-                data: {
-                    'text/html': '2'
-                }
+                id: '2',
+                outputs: [
+                    {
+                        mime: 'text/html',
+                        value: '2',
+                    }
+                ]
             }
         ]);
     });
@@ -140,20 +146,26 @@ describe('InteractiveClient tests', () => {
             ]
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
-        let result: Array<CellOutput> = [];
+        let result: Array<interfaces.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
             {
-                outputKind: CellOutputKind.Rich,
-                data: {
-                    'text/plain': 'deferred output'
-                }
+                id: '1',
+                outputs: [
+                    {
+                        mime: 'text/plain',
+                        value: 'deferred output',
+                    }
+                ]
             },
             {
-                outputKind: CellOutputKind.Rich,
-                data: {
-                    'text/html': '2'
-                }
+                id: '3',
+                outputs: [
+                    {
+                        mime: 'text/html',
+                        value: '2',
+                    }
+                ]
             }
         ]);
     });
@@ -229,26 +241,35 @@ describe('InteractiveClient tests', () => {
             ]
         }));
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
-        let result: Array<CellOutput> = [];
+        let result: Array<interfaces.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
             {
-                outputKind: CellOutputKind.Rich,
-                data: {
-                    'text/plain': 'deferred output 1'
-                }
+                id: '1',
+                outputs: [
+                    {
+                        mime: 'text/plain',
+                        value: 'deferred output 1',
+                    }
+                ]
             },
             {
-                outputKind: CellOutputKind.Rich,
-                data: {
-                    'text/html': '2'
-                }
+                id: '4',
+                outputs: [
+                    {
+                        mime: 'text/html',
+                        value: '2',
+                    }
+                ]
             },
             {
-                outputKind: CellOutputKind.Rich,
-                data: {
-                    'text/plain': 'deferred output 2'
-                }
+                id: '3',
+                outputs: [
+                    {
+                        mime: 'text/plain',
+                        value: 'deferred output 2',
+                    }
+                ]
             }
         ]);
     });
@@ -302,29 +323,35 @@ describe('InteractiveClient tests', () => {
         let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
 
         // execute first command
-        let result1: Array<CellOutput> = [];
+        let result1: Array<interfaces.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result1 = outputs, _ => { }, { token: 'token 1' });
         expect(result1).to.deep.equal([
             {
-                outputKind: CellOutputKind.Rich,
-                data: {
-                    'text/html': '1'
-                }
+                id: '1',
+                outputs: [
+                    {
+                        mime: 'text/html',
+                        value: '1',
+                    }
+                ]
             }
         ]);
 
         // execute second command
-        let result2: Array<CellOutput> = [];
+        let result2: Array<interfaces.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result2 = outputs, _ => { }, { token: 'token 2' });
         expect(result2).to.deep.equal([]);
 
         // ensure first result array was updated
         expect(result1).to.deep.equal([
             {
-                outputKind: CellOutputKind.Rich,
-                data: {
-                    'text/html': '2'
-                }
+                id: '2',
+                outputs: [
+                    {
+                        mime: 'text/html',
+                        value: '2',
+                    }
+                ]
             }
         ]);
     });

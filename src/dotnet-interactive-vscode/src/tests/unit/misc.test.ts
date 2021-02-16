@@ -2,9 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { expect } from 'chai';
-import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from '../../contracts';
+import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from 'vscode-interfaces/out/contracts';
+import { isDisplayOutput, isErrorOutput, isTextOutput } from 'vscode-interfaces/out/utilities';
 import { requiredKernelspecData } from '../../ipynbUtilities';
-import { debounce, isDisplayOutput, isDotNetKernelPreferred, isErrorOutput, isTextOutput, parse, processArguments, stringify } from '../../utilities';
+import { debounce, isDotNetKernelPreferred, parse, processArguments, stringify } from '../../utilities';
 
 describe('Miscellaneous tests', () => {
     describe('preferred kernel selection', () => {

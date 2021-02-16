@@ -1,5 +1,8 @@
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 import * as vscode from 'vscode';
-import { ReportChannel } from "../interfaces/vscode";
+import { ReportChannel } from 'vscode-interfaces/out/notebook';
 
 export class OutputChannelAdapter implements ReportChannel {
 

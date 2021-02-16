@@ -48,16 +48,18 @@ import {
     SubmissionType,
     SubmitCode,
     SubmitCodeType,
-} from './contracts';
-import { CellOutput, CellErrorOutput, CellOutputKind, CellDisplayOutput } from './interfaces/vscode';
+} from 'vscode-interfaces/out/contracts';
 import { Eol } from './interfaces';
 import { debounce } from './utilities';
 
+import * as interfaces from 'vscode-interfaces/out/notebook';
+
 export class InteractiveClient {
+    private nextOutputId: number = 1;
     private nextToken: number = 1;
     private tokenEventObservers: Map<string, Array<KernelEventEnvelopeObserver>> = new Map<string, Array<KernelEventEnvelopeObserver>>();
-    private deferredOutput: Array<CellOutput> = [];
-    private valueIdMap: Map<string, { idx: number, outputs: Array<CellOutput>, observer: { (outputs: Array<CellOutput>): void } }> = new Map<string, { idx: number, outputs: Array<CellOutput>, observer: { (outputs: Array<CellOutput>): void } }>();
+    private deferredOutput: Array<interfaces.NotebookCellOutput> = [];
+    private valueIdMap: Map<string, { idx: number, outputs: Array<interfaces.NotebookCellOutput>, observer: { (outputs: Array<interfaces.NotebookCellOutput>): void } }> = new Map<string, { idx: number, outputs: Array<interfaces.NotebookCellOutput>, observer: { (outputs: Array<interfaces.NotebookCellOutput>): void } }>();
 
     constructor(readonly kernelTransport: KernelTransport) {
         kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
@@ -92,13 +94,13 @@ export class InteractiveClient {
         return serializedNotebook.rawData;
     }
 
-    async execute(source: string, language: string, outputObserver: { (outputs: Array<CellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, configuration: { token?: string | undefined, id?: string | undefined } | undefined): Promise<void> {
+    async execute(source: string, language: string, outputObserver: { (outputs: Array<interfaces.NotebookCellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, configuration: { token?: string | undefined, id?: string | undefined } | undefined): Promise<void> {
         if (configuration !== undefined && configuration.id !== undefined) {
             debounce(configuration.id, 0, () => { });
         }
         return new Promise(async (resolve, reject) => {
             let diagnostics: Array<Diagnostic> = [];
-            let outputs: Array<CellOutput> = [];
+            let outputs: Array<interfaces.NotebookCellOutput> = [];
 
             let reportDiagnostics = () => {
                 diagnosticObserver(diagnostics);
@@ -121,12 +123,14 @@ export class InteractiveClient {
                         break;
                     case CommandFailedType:
                         {
-                            let err = <CommandFailed>eventEnvelope.event;
-                            let output: CellErrorOutput = {
-                                outputKind: CellOutputKind.Error,
-                                ename: 'Error',
-                                evalue: err.message,
-                                traceback: [],
+                            const err = <CommandFailed>eventEnvelope.event;
+                            const outputItem: interfaces.NotebookCellOutputItem = {
+                                mime: interfaces.ErrorOutputMimeType,
+                                value: err.message,
+                            };
+                            const output: interfaces.NotebookCellOutput = {
+                                id: this.getNextOutputId(),
+                                outputs: [outputItem]
                             };
                             outputs.push(output);
                             reportOutputs();
@@ -144,7 +148,7 @@ export class InteractiveClient {
                     case StandardOutputValueProducedType:
                         {
                             let disp = <DisplayEvent>eventEnvelope.event;
-                            let output = displayEventToCellOutput(disp);
+                            let output = this.displayEventToCellOutput(disp);
                             outputs.push(output);
                             reportOutputs();
                         }
@@ -154,7 +158,7 @@ export class InteractiveClient {
                     case ReturnValueProducedType:
                         {
                             let disp = <DisplayEvent>eventEnvelope.event;
-                            let output = displayEventToCellOutput(disp);
+                            let output = this.displayEventToCellOutput(disp);
 
                             if (disp.valueId) {
                                 let valueId = this.valueIdMap.get(disp.valueId);
@@ -319,7 +323,7 @@ export class InteractiveClient {
                     case DisplayedValueUpdatedType:
                     case ReturnValueProducedType:
                         let disp = <DisplayEvent>eventEnvelope.event;
-                        let output = displayEventToCellOutput(disp);
+                        let output = this.displayEventToCellOutput(disp);
                         this.deferredOutput.push(output);
                         break;
                 }
@@ -327,26 +331,33 @@ export class InteractiveClient {
         }
     }
 
+    private displayEventToCellOutput(disp: DisplayEvent): interfaces.NotebookCellOutput {
+        let outputItems: Array<interfaces.NotebookCellOutputItem> = [];
+        if (disp.formattedValues && disp.formattedValues.length > 0) {
+            for (let formatted of disp.formattedValues) {
+                let value: any = formatted.mimeType === 'application/json'
+                    ? JSON.parse(formatted.value)
+                    : formatted.value;
+                outputItems.push({
+                    mime: formatted.mimeType,
+                    value,
+                });
+            }
+        }
+
+        const output: interfaces.NotebookCellOutput = {
+            id: this.getNextOutputId(),
+            outputs: outputItems,
+        };
+
+        return output;
+    }
+
+    private getNextOutputId(): string {
+        return (this.nextOutputId++).toString();
+    }
+
     private getNextToken(): string {
         return (this.nextToken++).toString();
     }
-}
-
-export function displayEventToCellOutput(disp: DisplayEvent): CellDisplayOutput {
-    let data: { [key: string]: any; } = {};
-    if (disp.formattedValues && disp.formattedValues.length > 0) {
-        for (let formatted of disp.formattedValues) {
-            let value: any = formatted.mimeType === 'application/json'
-                ? JSON.parse(formatted.value)
-                : formatted.value;
-            data[formatted.mimeType] = value;
-        }
-    }
-
-    let output: CellDisplayOutput = {
-        outputKind: CellOutputKind.Rich,
-        data: data,
-    };
-
-    return output;
 }

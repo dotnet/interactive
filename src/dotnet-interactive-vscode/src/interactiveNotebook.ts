@@ -4,9 +4,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { debounce } from './utilities';
-import { CellKind, Document, NotebookDocumentBackup } from "./interfaces/vscode";
+import { CellKind, Document, NotebookDocumentBackup } from 'vscode-interfaces/out/notebook';
 import { ClientMapper } from './clientMapper';
-import { Diagnostic } from './contracts';
+import { Diagnostic } from 'vscode-interfaces/out/contracts';
 
 export const notebookCellLanguages: Array<string> = [
     'dotnet-interactive.csharp',
