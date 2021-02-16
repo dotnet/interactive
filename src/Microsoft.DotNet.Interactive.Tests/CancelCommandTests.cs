@@ -2,13 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
+
 using FluentAssertions;
 using FluentAssertions.Execution;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+
 using Xunit;
 using Xunit.Abstractions;
 
@@ -26,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             var deferredCommandExecuted = false;
 
             var kernel = CreateKernel();
-            
+
             var deferred = new SubmitCode("placeholder")
             {
                 Handler = (command, context) =>
@@ -134,7 +136,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                     {
                         await Task.Delay(100);
                         await kernel.SendAsync(cancelCommand);
-                    })) 
+                    }))
                 .Wait(TimeSpan.FromSeconds(20));
 
 
