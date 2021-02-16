@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task quit_command_fails_when_not_configured()
         {
             var kernel = CreateKernel();
-
+            Quit.OnQuit(null);
             var quitCommand = new Quit();
             
             await kernel.SendAsync(quitCommand);
