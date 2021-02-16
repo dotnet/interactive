@@ -13,6 +13,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
+    [Collection("Do not parallelize")]
     public class QuitCommandTests : LanguageKernelTestBase
     {
         public QuitCommandTests(ITestOutputHelper output) : base(output)
@@ -25,21 +26,19 @@ namespace Microsoft.DotNet.Interactive.Tests
             var kernel = CreateKernel();
 
             var quitCommand = new Quit();
-
-            var events = kernel.KernelEvents.ToSubscribedList();
-
+            
             await kernel.SendAsync(quitCommand);
 
             using var _ = new AssertionScope();
 
-            events
+            KernelEvents
                 .Should().ContainSingle<CommandFailed>()
                 .Which
                 .Command
                 .Should()
                 .Be(quitCommand);
 
-            events
+            KernelEvents
                 .Should().ContainSingle<CommandFailed>()
                 .Which
                 .Exception

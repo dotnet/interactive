@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class Quit : KernelCommand
+    public class Quit : Cancel
     {
         private static Action _onQuit;
         private static readonly Action DefaultOnQuit = () => throw new InvalidOperationException("Quit command is not configured");
@@ -34,7 +34,5 @@ namespace Microsoft.DotNet.Interactive.Commands
             context?.Complete(context.Command);
             return Task.CompletedTask;
         }
-
-       
     }
 }
