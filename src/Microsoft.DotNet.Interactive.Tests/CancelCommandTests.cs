@@ -134,8 +134,8 @@ namespace Microsoft.DotNet.Interactive.Tests
                     {
                         await Task.Delay(100);
                         await kernel.SendAsync(cancelCommand);
-                    })).Wait();
-            //  .Wait(TimeSpan.FromSeconds(20));
+                    })) 
+                .Wait(TimeSpan.FromSeconds(20));
 
 
             using var _ = new AssertionScope();
