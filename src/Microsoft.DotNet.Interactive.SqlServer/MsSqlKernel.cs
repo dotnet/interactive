@@ -129,25 +129,31 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                 return;
                             }
 
-                            var subsetParams = new QueryExecuteSubsetParams()
+                            CellValue[][] rows = null;
+                            if (resultSummary.RowCount > 0)
                             {
-                                OwnerUri = _tempFileUri.ToString(),
-                                BatchIndex = batchSummary.Id,
-                                ResultSetIndex = resultSummary.Id,
-                                RowsStartIndex = 0,
-                                RowsCount = Convert.ToInt32(resultSummary.RowCount)
-                            };
-                            var subsetResult = await _serviceClient.ExecuteQueryExecuteSubsetAsync(subsetParams);
+                                var subsetParams = new QueryExecuteSubsetParams()
+                                {
+                                    OwnerUri = _tempFileUri.ToString(),
+                                    BatchIndex = batchSummary.Id,
+                                    ResultSetIndex = resultSummary.Id,
+                                    RowsStartIndex = 0,
+                                    RowsCount = Convert.ToInt32(resultSummary.RowCount)
+                                };
+                                var subsetResult = await _serviceClient.ExecuteQueryExecuteSubsetAsync(subsetParams);
+                                if (subsetResult.Message != null)
+                                {
+                                    context.Fail(message: subsetResult.Message);
+                                    continue;
+                                }
+                                else
+                                {
+                                    rows = subsetResult.ResultSubset.Rows;
+                                }
+                            }
 
-                            if (subsetResult.Message != null)
-                            {
-                                context.Fail(message: subsetResult.Message);
-                            }
-                            else
-                            {
-                                var table = GetEnumerableTable(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
-                                context.Display(table);
-                            }
+                            var table = GetEnumerableTable(resultSummary.ColumnInfo, rows);
+                            context.Display(table);
                         }
                     }
                     completion.SetResult(true);
@@ -195,14 +201,27 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             SqlKernelUtils.AliasDuplicateColumnNames(columnNames);
 
-            foreach (CellValue[] row in rows)
+            if (rows == null || rows.Length == 0)
             {
-                var displayRow = new (string, object)[row.Length];
-                for (int i = 0; i < row.Length; i++)
+                // If there are no rows, then add an empty row so that we at least display column names
+                var displayRow = new (string, object)[columnNames.Length];
+                for (int i = 0; i < columnNames.Length; i++)
                 {
-                    displayRow[i] = (columnNames[i], row[i].DisplayValue);
+                    displayRow[i] = (columnNames[i], null);
                 }
                 displayTable.Add(displayRow);
+            }
+            else
+            {
+                foreach (CellValue[] row in rows)
+                {
+                    var displayRow = new (string, object)[row.Length];
+                    for (int i = 0; i < row.Length; i++)
+                    {
+                        displayRow[i] = (columnNames[i], row[i].DisplayValue);
+                    }
+                    displayTable.Add(displayRow);
+                }
             }
             yield return displayTable;
         }
