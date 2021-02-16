@@ -1278,11 +1278,10 @@ Console.Write(2);
             var kernel = CreateKernel(language);
 
             var quitCommandExecuted = false;
+            
+            Quit.OnQuit(() => { quitCommandExecuted = true; });
 
-            var quitCommand = new Quit(() =>
-            {
-                quitCommandExecuted = true;
-            });
+            var quitCommand = new Quit();
 
             var submitCodeCommand = new SubmitCode(code);
 
@@ -1320,7 +1319,9 @@ Console.Write(2);
         {
             var kernel = CreateKernel(language);
 
-            var quitCommand = new Quit(() => { });
+            Quit.OnQuit(() => { });
+
+            var quitCommand = new Quit();
 
             var submitCodeCommand = new SubmitCode(code);
 
