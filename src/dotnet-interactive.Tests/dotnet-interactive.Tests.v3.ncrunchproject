@@ -1,8 +1,8 @@
 ﻿<ProjectConfiguration>
   <Settings>
     <AdditionalFilesToIncludeForProject>
-      <Value>..\dotnet-interactive-vscode\src\contracts.ts</Value>
       <Value>..\Microsoft.DotNet.Interactive.Js\src\dotnet-interactive\contracts.ts</Value>
+      <Value>..\dotnet-interactive-vscode\src\interfaces\src\contracts.ts</Value>
     </AdditionalFilesToIncludeForProject>
     <IgnoredTests>
       <NamedTestSelector>
