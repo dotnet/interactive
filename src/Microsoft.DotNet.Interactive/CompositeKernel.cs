@@ -216,10 +216,8 @@ namespace Microsoft.DotNet.Interactive
             switch (command)
             {
                 case Cancel _:
-                    CancelInflightCommands();
-                    ClearPendingCommands();
-                    kernel.CancelInflightCommands();
-                    kernel.ClearPendingCommands();
+                    CancelCommands();
+                    kernel.CancelCommands();
                     break;
             }
 

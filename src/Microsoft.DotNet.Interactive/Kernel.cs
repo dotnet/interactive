@@ -13,6 +13,7 @@ using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -139,9 +140,9 @@ namespace Microsoft.DotNet.Interactive
         {
             return command switch
             {
-                SubmitCode {LanguageNode: null} submitCode => SubmissionParser.SplitSubmission(submitCode),
-                RequestDiagnostics {LanguageNode: null} requestDiagnostics => SubmissionParser.SplitSubmission(requestDiagnostics),
-                LanguageServiceCommand {LanguageNode: null} languageServiceCommand => PreprocessLanguageServiceCommand(languageServiceCommand),
+                SubmitCode { LanguageNode: null } submitCode => SubmissionParser.SplitSubmission(submitCode),
+                RequestDiagnostics { LanguageNode: null } requestDiagnostics => SubmissionParser.SplitSubmission(requestDiagnostics),
+                LanguageServiceCommand { LanguageNode: null } languageServiceCommand => PreprocessLanguageServiceCommand(languageServiceCommand),
                 _ => new[] { command }
             };
         }
@@ -308,14 +309,13 @@ namespace Microsoft.DotNet.Interactive
             }
 
             var tcs = new TaskCompletionSource<KernelCommandResult>();
-            
+
             var operation = new KernelOperation(command, tcs, false);
-            
+
             switch (command)
             {
                 case Cancel _:
-                    CancelInflightCommands();
-                    ClearPendingCommands(); 
+                    CancelCommands();
                     break;
                 default:
                     UndeferCommands();
@@ -358,9 +358,8 @@ namespace Microsoft.DotNet.Interactive
                 _ => true
             };
         }
-        
 
-        internal void CancelInflightCommands()
+        protected internal void CancelCommands()
         {
             foreach (var kernelInvocationContext in KernelInvocationContext.ActiveContexts.Where(c => !c.IsComplete && CanCancel(c.Command)))
             {
@@ -385,10 +384,7 @@ namespace Microsoft.DotNet.Interactive
 
                 currentContext?.Cancel();
             }
-        }
 
-        internal void ClearPendingCommands()
-        {
             _deferredCommands.Clear();
             _commandQueue.Clear();
         }
@@ -472,7 +468,7 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
-        private IReadOnlyList<CompletionItem> GetDirectiveCompletionItems(
+        private IEnumerable<CompletionItem> GetDirectiveCompletionItems(
             DirectiveNode directiveNode,
             int requestPosition)
         {
@@ -584,7 +580,7 @@ namespace Microsoft.DotNet.Interactive
 
         protected virtual ChooseKernelDirective CreateChooseKernelDirective()
         {
-            return new ChooseKernelDirective(this);
+            return new(this);
         }
 
         internal ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= CreateChooseKernelDirective();
