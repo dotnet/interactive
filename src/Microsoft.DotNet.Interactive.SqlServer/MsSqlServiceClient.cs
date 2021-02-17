@@ -94,14 +94,14 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             connectionOptions.Add("ConnectionString", connectionStr);
 
             var connectionDetails = new ConnectionDetails() { Options = connectionOptions };
-            var connectionParams = new ConnectParams() { OwnerUri = ownerUri.ToString(), Connection = connectionDetails };
+            var connectionParams = new ConnectParams() { OwnerUri = ownerUri.AbsolutePath, Connection = connectionDetails };
 
             return await _rpc.InvokeWithParameterObjectAsync<bool>("connection/connect", connectionParams);
         }
 
         public async Task<bool> DisconnectAsync(Uri ownerUri)
         {
-            var disconnectParams = new DisconnectParams() { OwnerUri = ownerUri.ToString() };
+            var disconnectParams = new DisconnectParams() { OwnerUri = ownerUri.AbsolutePath };
             return await _rpc.InvokeWithParameterObjectAsync<bool>("connection/disconnect", disconnectParams);
         }
 
@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         {
             await UpdateFileContentsAsync(fileUri, command.Code);
 
-            TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = fileUri.ToString() };
+            TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = fileUri.AbsolutePath };
             Position position = new Position() { Line = command.LinePosition.Line, Character = command.LinePosition.Character };
             CompletionContext context = new CompletionContext() { TriggerKind = (int)CompletionTriggerKind.Invoked };
             var completionParams = new CompletionParams() { TextDocument = docId, Position = position, Context = context };
@@ -145,7 +145,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         public async Task<QueryExecuteResult> ExecuteQueryStringAsync(Uri ownerUri, string queryString)
         {
-            var queryParams = new QueryExecuteStringParams() { Query = queryString, OwnerUri = ownerUri.ToString() };
+            var queryParams = new QueryExecuteStringParams() { Query = queryString, OwnerUri = ownerUri.AbsolutePath };
             return await _rpc.InvokeWithParameterObjectAsync<QueryExecuteResult>("query/executeString", queryParams);
         }
 
@@ -170,7 +170,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             var startPosition = new Position() { Line = 0, Character = 0 };
             var endPosition = new Position() { Line = lastLineNum, Character = lastCharacterNum };
 
-            var textDoc = new VersionedTextDocumentIdentifier() { Uri = ownerUri.ToString(), Version = 1 };
+            var textDoc = new VersionedTextDocumentIdentifier() { Uri = ownerUri.AbsolutePath, Version = 1 };
             var changeRange = new Range() { Start = startPosition, End = endPosition };
             var docChange = new TextDocumentChangeEvent() { Text = newText, Range = changeRange };
             var changes = new TextDocumentChangeEvent[] { docChange };
