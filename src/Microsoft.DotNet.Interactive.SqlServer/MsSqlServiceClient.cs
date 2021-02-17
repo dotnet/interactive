@@ -89,9 +89,9 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             public AnonymousTraceListener(Action<string> trace) => _trace = trace;
 
-            public override void Write(string? message) => _trace(message);
+            public override void Write(string message) => _trace(message);
 
-            public override void WriteLine(string? message) => _trace(message);
+            public override void WriteLine(string message) => _trace(message);
         }
 
         private void AddLocalRpcMethod(string localMethodName, string rpcMethodName)
