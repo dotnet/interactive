@@ -154,6 +154,79 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .BeOfType<OperationCanceledException>();
         }
 
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell, Skip = "to address later")]
+        public void commands_issued_after_cancel_command_are_executed(Language language)
+        {
+            var commandToCancelHasRun = false;
+            var commandToCancelHasBeenCancelled = false;
+            var commandToRunHasRun = false;
+            var kernel = CreateKernel(language);
+
+            var cancelCommand = new Cancel();
+
+            var commandToCancel = new SubmitCode("placeholder")
+            {
+                Handler = (command, context) =>
+                {
+                    commandToCancelHasRun = true;
+
+                    while (!context.CancellationToken.IsCancellationRequested)
+                    {
+
+                    }
+
+                    commandToCancelHasBeenCancelled = true;
+
+                    return Task.CompletedTask;
+                }
+            };
+
+            var commandToRun = new SubmitCode("placeholder")
+            {
+                Handler = (command, context) =>
+                {
+                    commandToRunHasRun = true;
+
+                    return Task.CompletedTask;
+                }
+            };
+
+            Task.WhenAll(
+                    Task.Run(async () =>
+                    {
+                        await kernel.SendAsync(commandToCancel);
+                    }),
+                    Task.Run(async () =>
+                    {
+                        await Task.Delay(40);
+                        await kernel.SendAsync(cancelCommand);
+                    }),
+                    Task.Run(async () =>
+                    {
+                        await Task.Delay(100);
+                        await kernel.SendAsync(commandToRun);
+                    }))
+                .Wait(TimeSpan.FromSeconds(20));
+
+
+            using var _ = new AssertionScope();
+
+            commandToRunHasRun.Should().BeTrue();
+            commandToCancelHasRun.Should().BeTrue();
+            commandToCancelHasBeenCancelled.Should().BeTrue();
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CommandFailed>(c => c.Command == commandToCancel)
+                .Which
+                .Exception
+                .Should()
+                .BeOfType<OperationCanceledException>();
+        }
+
 
         [Theory]
         [InlineData(Language.CSharp, "await Task.Delay(Microsoft.DotNet.Interactive.KernelInvocationContext.Current.Token); Console.WriteLine(\"done c#\")", "done c#")]
