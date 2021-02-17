@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
@@ -49,6 +48,8 @@ namespace Microsoft.DotNet.Interactive
 
             Pipeline = new KernelCommandPipeline(this);
 
+            Scheduler = new KernelCommandScheduler();
+
             AddSetKernelMiddleware();
 
             AddDirectiveMiddlewareAndCommonCommandHandlers();
@@ -57,6 +58,8 @@ namespace Microsoft.DotNet.Interactive
                 () => _kernelEvents.OnCompleted()
                 ));
         }
+
+        internal KernelCommandScheduler Scheduler { get; }
 
         internal KernelCommandPipeline Pipeline { get; }
 
@@ -76,7 +79,7 @@ namespace Microsoft.DotNet.Interactive
             }
 
             command.SetToken($"deferredCommand::{Guid.NewGuid():N}");
-            _deferredCommands.Enqueue(command);
+            Scheduler.DeferCommand(command, this);
         }
 
         private void AddSetKernelMiddleware()
@@ -247,41 +250,7 @@ namespace Microsoft.DotNet.Interactive
             public int AsyncContextId { get; }
         }
 
-        private async Task ExecuteCommand(KernelOperation operation)
-        {
-            var context = KernelInvocationContext.Establish(operation.Command);
-
-            // only subscribe for the root command 
-            using var _ =
-                context.Command == operation.Command
-                ? context.KernelEvents.Subscribe(PublishEvent)
-                : Disposable.Empty;
-
-            try
-            {
-                await Pipeline.SendAsync(operation.Command, context);
-
-                if (operation.Command == context.Command)
-                {
-                    await context.DisposeAsync();
-                }
-                else
-                {
-                    context.Complete(operation.Command);
-                }
-
-                operation.TaskCompletionSource.SetResult(context.Result);
-            }
-            catch (Exception exception)
-            {
-                if (!context.IsComplete)
-                {
-                    context.Fail(exception);
-                }
-
-                operation.TaskCompletionSource.SetException(exception);
-            }
-        }
+     
 
         internal virtual async Task HandleAsync(
             KernelCommand command,
@@ -308,110 +277,22 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(command));
             }
 
-            var tcs = new TaskCompletionSource<KernelCommandResult>();
+            return Scheduler.Schedule(command, this, cancellationToken, onDone);
 
-            var operation = new KernelOperation(command, tcs, false);
-
-            switch (command)
-            {
-                case Cancel _:
-                    CancelCommands();
-                    break;
-                default:
-                    UndeferCommands();
-                    break;
-            }
-            _commandQueue.Enqueue(operation);
-            ProcessCommandQueue(_commandQueue, cancellationToken, onDone);
-
-            return tcs.Task;
-        }
-
-        private void ProcessCommandQueue(
-            ConcurrentQueue<KernelOperation> commandQueue,
-            CancellationToken cancellationToken,
-            Action onDone)
-        {
-            if (commandQueue.TryDequeue(out var currentOperation))
-            {
-                Task.Run(async () =>
-                {
-                    AsyncContext.Id = currentOperation.AsyncContextId;
-
-                    await ExecuteCommand(currentOperation);
-
-                    ProcessCommandQueue(commandQueue, cancellationToken, onDone);
-                }, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                onDone?.Invoke();
-            }
-        }
-
-        private static bool CanCancel(KernelCommand command)
-        {
-            return command switch
-            {
-                Quit _ => false,
-                Cancel _ => false,
-                _ => true
-            };
         }
 
         protected internal void CancelCommands()
         {
-            foreach (var kernelInvocationContext in KernelInvocationContext.ActiveContexts.Where(c => !c.IsComplete && CanCancel(c.Command)))
-            {
-                kernelInvocationContext.Cancel();
-            }
-
-            using var disposables = new CompositeDisposable();
-            var inFlightOperations = _commandQueue.Where(operation => !operation.IsDeferred && CanCancel(operation.Command)).ToList();
-            foreach (var inFlightOperation in inFlightOperations)
-            {
-                KernelInvocationContext currentContext = null;
-
-
-                if (inFlightOperation is not null
-                )
-                {
-                    currentContext = KernelInvocationContext.Establish(inFlightOperation.Command);
-                    disposables.Add(currentContext.KernelEvents.Subscribe(PublishEvent));
-                    inFlightOperation.TaskCompletionSource.SetResult(currentContext.Result);
-                }
-
-                currentContext?.Cancel();
-            }
-
-            _deferredCommands.Clear();
-            _commandQueue.Clear();
+            Scheduler.CancelCommands();
         }
 
         internal Task RunDeferredCommandsAsync()
         {
-            var tcs = new TaskCompletionSource<Unit>();
-            UndeferCommands();
-            ProcessCommandQueue(
-                _commandQueue,
-                CancellationToken.None,
-                () => tcs.SetResult(Unit.Default));
-            return tcs.Task;
+            return Scheduler.RunDeferredCommandsAsync();
+
         }
 
-        private void UndeferCommands()
-        {
-            while (_deferredCommands.TryDequeue(out var initCommand))
-            {
-                _commandQueue.Enqueue(
-                    new KernelOperation(
-                        initCommand,
-                        new TaskCompletionSource<KernelCommandResult>(),
-                        true));
-            }
-        }
-
-        protected void PublishEvent(KernelEvent kernelEvent)
+        protected internal void PublishEvent(KernelEvent kernelEvent)
         {
             if (kernelEvent == null)
             {
