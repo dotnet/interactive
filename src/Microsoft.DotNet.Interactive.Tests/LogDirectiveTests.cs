@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task It_outputs_diagnostic_log_events()
         {
             using var kernel = new CSharpKernel()
-                .UseLog();
+                .UseLogMagicCommand();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 

@@ -10,19 +10,11 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 {
-    public class SqlLiteConnectionTests
+    public class SQLiteConnectionTests
     {
-        private readonly ITestOutputHelper _output;
-
-        public SqlLiteConnectionTests(ITestOutputHelper output)
-        {
-            _output = output;
-        }
-
         [Fact]
         public async Task It_can_connect_and_query_data()
         {

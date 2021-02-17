@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.App
             return kernel;
         }
 
-        public static T UseAbout<T>(this T kernel)
+        public static T UseAboutMagicCommand<T>(this T kernel)
             where T : Kernel
         {
             var about = new Command("#!about", "Show version and build information")

@@ -17,8 +17,12 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         public MsSqlKernelConnection()
             : base("mssql", "Connects to a Microsoft SQL Server database")
         {
-            Add(new Argument<string>("connectionString", "The connection string used to connect to the database"));
-            Add(new Option<bool>("--create-dbcontext", "Scaffold a DbContext in the C# kernel."));
+            Add(new Argument<string>(
+                    "connectionString",
+                    "The connection string used to connect to the database"));
+            Add(new Option<bool>(
+                    "--create-dbcontext",
+                    "Scaffold a DbContext in the C# kernel."));
         }
 
         public override async Task<Kernel> CreateKernelAsync(
@@ -54,11 +58,13 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                     }
                 }
             }
-            
+
+            var sqlClient = new MsSqlServiceClient(pathToService);
+
             var kernel = new MsSqlKernel(
-                pathToService,
                 options.KernelName,
-                options.ConnectionString);
+                options.ConnectionString, 
+                sqlClient);
 
             await kernel.ConnectAsync();
 

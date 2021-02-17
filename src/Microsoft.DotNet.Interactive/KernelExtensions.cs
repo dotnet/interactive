@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.Interactive
             return kernel.SendAsync(new SubmitCode(code), CancellationToken.None);
         }
 
-        public static T UseLog<T>(this T kernel)
+        public static T UseLogMagicCommand<T>(this T kernel)
             where T : Kernel
         {
             var command = new Command("#!log", "Enables session logging.");
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Interactive
 
                 kernel.AddMiddleware(async (kernelCommand, c, next) =>
                 {
-                    Log(c, kernelCommand.ToLogString());
+                    PublishLogEvent(c, kernelCommand.ToLogString());
 
                     await next(kernelCommand, c);
                 });
@@ -105,23 +105,23 @@ namespace Microsoft.DotNet.Interactive
                                 return;
                             }
 
-                            Log(currentContext, e.ToLogString());
+                            PublishLogEvent(currentContext, e.ToLogString());
                         }
                     }),
                     LogEvents.Subscribe(e =>
                     {
                         if (KernelInvocationContext.Current is {} currentContext)
                         {
-                            Log(currentContext, e.ToLogString());
+                            PublishLogEvent(currentContext, e.ToLogString());
                         }
                     })
                 };
 
                 kernel.RegisterForDisposal(disposable);
 
-                Log(context, "Logging enabled");
+                PublishLogEvent(context, "Logging enabled");
 
-                static void Log(KernelInvocationContext c, string message) => c.Publish(new DiagnosticLogEntryProduced(message, c.Command));
+                static void PublishLogEvent(KernelInvocationContext c, string message) => c.Publish(new DiagnosticLogEntryProduced(message, c.Command));
             });
 
             kernel.AddDirective(command);

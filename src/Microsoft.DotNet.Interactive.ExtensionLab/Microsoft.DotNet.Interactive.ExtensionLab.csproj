@@ -66,7 +66,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="bin\Debug\net5.0\Microsoft.DotNet.Interactive.ExtensionLab.dll" />
+    <None Remove="bin\Debug\net5.0\/Microsoft.DotNet.Interactive.ExtensionLab.dll" />
   </ItemGroup>
 
   <ItemGroup>

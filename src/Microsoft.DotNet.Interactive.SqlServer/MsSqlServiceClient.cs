@@ -41,19 +41,19 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         {
             if (!_initialized)
             {
-                StartProcessAndRedirectIO();
+                StartSqlToolsService();
                 _initialized = true;
             }
         }
 
-        private void StartProcessAndRedirectIO()
+        private void StartSqlToolsService()
         {
             var startInfo = new ProcessStartInfo(_serviceExePath)
             {
                 UseShellExecute = false,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
-                RedirectStandardError = true,
+                RedirectStandardError = false,
                 Arguments = $"--parent-pid {Process.GetCurrentProcess().Id}"
             };
             _process = new Process
@@ -62,7 +62,12 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             };
             _process.Start();
 
-            _rpc = new JsonRpc(_process.StandardInput.BaseStream, _process.StandardOutput.BaseStream);
+            StartRpc(_process.StandardInput.BaseStream, _process.StandardOutput.BaseStream);
+        }
+
+        private void StartRpc(Stream stdIn, Stream stdOut)
+        {
+            _rpc = new JsonRpc(stdIn, stdOut);
 
             AddLocalRpcMethod(nameof(HandleConnectionCompletion), "connection/complete");
             AddLocalRpcMethod(nameof(HandleQueryCompletion), "query/complete");
@@ -70,6 +75,23 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             AddLocalRpcMethod(nameof(HandleIntellisenseReady), "textDocument/intelliSenseReady");
 
             _rpc.StartListening();
+        }
+
+        internal void StartTracing(Action<string> trace)
+        {
+            _rpc.TraceSource.Switch.Level = SourceLevels.Verbose;
+            _rpc.TraceSource.Listeners.Add(new AnonymousTraceListener(trace));
+        }
+
+        internal class AnonymousTraceListener : TraceListener
+        {
+            private readonly Action<string> _trace;
+
+            public AnonymousTraceListener(Action<string> trace) => _trace = trace;
+
+            public override void Write(string message) => _trace(message);
+
+            public override void WriteLine(string message) => _trace(message);
         }
 
         private void AddLocalRpcMethod(string localMethodName, string rpcMethodName)
@@ -136,6 +158,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         private async Task UpdateFileContentsAsync(Uri fileUri, string newContents)
         {
             string oldFileContents = await File.ReadAllTextAsync(fileUri.LocalPath);
+
             if (!oldFileContents.Equals(newContents))
             {
                 await File.WriteAllTextAsync(fileUri.LocalPath, newContents);

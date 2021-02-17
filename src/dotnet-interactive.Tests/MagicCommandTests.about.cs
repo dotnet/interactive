@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             public async Task it_shows_the_product_name_and_version_information()
             {
                 using var kernel = new CompositeKernel()
-                    .UseAbout();
+                    .UseAboutMagicCommand();
 
                 using var events = kernel.KernelEvents.ToSubscribedList();
 

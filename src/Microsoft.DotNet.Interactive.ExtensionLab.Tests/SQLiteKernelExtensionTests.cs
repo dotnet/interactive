@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             await extension.OnLoadAsync(kernel);
 
-            using var _ = SqlLiteConnectionTests.CreateInMemorySQLiteDb(out var connectionString);
+            using var _ = SQLiteConnectionTests.CreateInMemorySQLiteDb(out var connectionString);
 
             await kernel.SubmitCodeAsync(
                 $"#!connect --kernel-name mydb sqlite \"{connectionString}\"");
@@ -74,7 +74,7 @@ SELECT * FROM fruit
 
             await extension.OnLoadAsync(kernel);
 
-            using var _ = SqlLiteConnectionTests.CreateInMemorySQLiteDb(out var connectionString);
+            using var _ = SQLiteConnectionTests.CreateInMemorySQLiteDb(out var connectionString);
 
             await kernel.SubmitCodeAsync(
                 $"#!connect --kernel-name mydb sqlite \"{connectionString}\"");
