@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -37,11 +38,16 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             string connectionString,
             MsSqlServiceClient client) : base(name)
         {
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(connectionString));
+            }
+
             var filePath = Path.GetTempFileName();
             _tempFileUri = new Uri(filePath);
             _connectionString = connectionString;
 
-            _serviceClient = client;
+            _serviceClient = client ?? throw new ArgumentNullException(nameof(client));
             _serviceClient.Initialize();
 
             _serviceClient.OnConnectionComplete += HandleConnectionComplete;
@@ -136,7 +142,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                 return;
                             }
 
-                            var subsetParams = new QueryExecuteSubsetParams()
+                            var subsetParams = new QueryExecuteSubsetParams
                             {
                                 OwnerUri = _tempFileUri.ToString(),
                                 BatchIndex = batchSummary.Id,
@@ -152,8 +158,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                             }
                             else
                             {
-                                var table = GetEnumerableTable(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
-                                context.Display(table);
+                                var tables = GetEnumerableTables(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
+                                context.Display(tables);
                             }
                         }
                     }
@@ -196,19 +202,41 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             }
         }
 
-        private IEnumerable<IEnumerable<IEnumerable<(string, object)>>> GetEnumerableTable(ColumnInfo[] columnInfo, CellValue[][] rows)
+        private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> GetEnumerableTables(ColumnInfo[] columnInfos, CellValue[][] rows)
         {
             var displayTable = new List<(string, object)[]>();
-            var columnNames = columnInfo.Select(info => info.ColumnName).ToArray();
+            var columnNames = columnInfos.Select(info => info.ColumnName).ToArray();
 
             SqlKernelUtils.AliasDuplicateColumnNames(columnNames);
 
             foreach (CellValue[] row in rows)
             {
                 var displayRow = new (string, object)[row.Length];
-                for (int i = 0; i < row.Length; i++)
+
+                for (var colIndex = 0; colIndex < row.Length; colIndex++)
                 {
-                    displayRow[i] = (columnNames[i], row[i].DisplayValue);
+                    object convertedValue = default;
+
+                    try
+                    {
+                        var columnInfo = columnInfos[colIndex];
+
+                        var expectedType = Type.GetType(columnInfo.DataType);
+
+                        if (TypeDescriptor.GetConverter(expectedType) is { } typeConverter)
+                        {
+                            if (typeConverter.CanConvertFrom(typeof(string)))
+                            {
+                                convertedValue = typeConverter.ConvertFromInvariantString(row[colIndex].DisplayValue);
+                            }
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        convertedValue = row[colIndex].DisplayValue;
+                    }
+
+                    displayRow[colIndex] = (columnNames[colIndex], convertedValue);
                 }
 
                 displayTable.Add(displayRow);

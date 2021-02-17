@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 }
             }
 
-            var sqlClient = new MsSqlServiceClient();
+            var sqlClient = new MsSqlServiceClient(pathToService);
 
             var kernel = new MsSqlKernel(
                 options.KernelName,

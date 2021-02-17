@@ -2,13 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-using Xunit;
 
 namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 {
@@ -91,7 +92,7 @@ SELECT TOP 100 * FROM Person.Person
         }
 
         [MsSqlFact]
-        public async Task BUGGGGGG()
+        public async Task Field_types_are_deserialized_correctly()
         {
             var connectionString = MsSqlFact.GetConnectionStringForTests();
             using var kernel = await CreateKernel();
@@ -112,15 +113,18 @@ select * from sys.databases
 
             events.Should().NotContainErrors();
 
-            events.Should()
-                  .ContainSingle<DisplayedValueProduced>()
-                  .Which
-                  .FormattedValues
-                  .Should()
-                  .ContainSingle(f => f.MimeType == HtmlFormatter.MimeType);
+            var value = events.Should()
+                              .ContainSingle<DisplayedValueProduced>()
+                              .Which;
 
-            // TODO-JOSEQU (testname) write test
-            Assert.True(false, "Test testname is not written yet.");
+            var tables = (IEnumerable<IEnumerable<IEnumerable<(string, object)>>>) value.Value;
+
+            var table = tables.Single().ToTable();
+
+            foreach (var row in table)
+            {
+                row["database_id"].Should().BeOfType<int>();
+            }
         }
     }
 }
