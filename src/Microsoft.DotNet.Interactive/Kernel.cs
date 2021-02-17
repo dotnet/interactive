@@ -364,7 +364,6 @@ namespace Microsoft.DotNet.Interactive
             foreach (var kernelInvocationContext in KernelInvocationContext.ActiveContexts.Where(c => !c.IsComplete && CanCancel(c.Command)))
             {
                 kernelInvocationContext.Cancel();
-
             }
 
             using var disposables = new CompositeDisposable();
