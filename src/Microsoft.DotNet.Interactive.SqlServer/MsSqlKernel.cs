@@ -231,7 +231,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                             }
                         }
                     }
-                    catch (Exception exception)
+                    catch (Exception)
                     {
                         convertedValue = row[colIndex].DisplayValue;
                     }
