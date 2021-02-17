@@ -90,10 +90,15 @@ namespace Microsoft.DotNet.Interactive
         {
             if (!IsComplete)
             {
+               
                 Publish(new CommandFailed(exception, Command, message));
-
                 _events.OnCompleted();
-                _cancellationTokenSource.Cancel(false);
+
+                if (_cancellationTokenSource.IsCancellationRequested)
+                {
+                    _cancellationTokenSource.Cancel(false);
+                }
+
                 IsComplete = true;
             }
         }
