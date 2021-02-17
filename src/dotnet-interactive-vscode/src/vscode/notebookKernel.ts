@@ -84,10 +84,11 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
 export async function updateCellMetadata(document: vscode.NotebookDocument, cell: vscode.NotebookCell, metadata: vscode.NotebookCellMetadata): Promise<void> {
     const cellIndex = document.cells.findIndex(c => c === cell);
     if (cellIndex >= 0) {
-        const newMetadata = { ...cell.metadata, ...metadata };
-        const edit = new vscode.WorkspaceEdit();
-        edit.replaceNotebookCellMetadata(document.uri, cellIndex, newMetadata);
-        await vscode.workspace.applyEdit(edit);
+        if (isInsidersBuild()) {
+            await vscodeInsiders.updateNotebookCellMetadata(document, cellIndex, metadata);
+        } else {
+            await vscodeStable.updateNotebookCellMetadata(document, cellIndex, metadata);
+        }
     }
 }
 
