@@ -18,7 +18,7 @@
     <SystemRuntimeLoaderVersion>4.3.0</SystemRuntimeLoaderVersion>	
     <SystemCollectionsImmutableVersion>5.0.0</SystemCollectionsImmutableVersion>	
     <SystemReflectionMetadataVersion>5.0.0</SystemReflectionMetadataVersion>	
-    <SystemCommandLineVersion>2.0.0-beta1.21116.1</SystemCommandLineVersion>	
+    <SystemCommandLineVersion>2.0.0-beta1.21118.1</SystemCommandLineVersion>	
   </PropertyGroup>
 
   <ItemGroup>
