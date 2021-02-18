@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
                     ColumnName = "oranges"
                 }
             };
-            var enumerableTable = MsSqlKernel.GetEnumerableTable(columnInfo, rows);
+            var enumerableTable = MsSqlKernel.GetEnumerableTables(columnInfo, rows);
             
             int tableCount = 0;
             int rowsCount = 0;

@@ -219,9 +219,9 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             {
                 // If there are no rows, then add an empty row so that we at least display column names
                 var displayRow = new (string, object)[columnNames.Length];
-                for (int i = 0; i < columnNames.Length; i++)
+                for (int colIndex = 0; colIndex < columnNames.Length; colIndex++)
                 {
-                    displayRow[i] = (columnNames[i], null);
+                    displayRow[colIndex] = (columnNames[colIndex], null);
                 }
                 displayTable.Add(displayRow);
             }
@@ -230,17 +230,13 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 foreach (CellValue[] row in rows)
                 {
                     var displayRow = new (string, object)[row.Length];
-
                     for (var colIndex = 0; colIndex < row.Length; colIndex++)
                     {
                         object convertedValue = default;
-
                         try
                         {
                             var columnInfo = columnInfos[colIndex];
-
                             var expectedType = Type.GetType(columnInfo.DataType);
-
                             if (TypeDescriptor.GetConverter(expectedType) is { } typeConverter)
                             {
                                 if (typeConverter.CanConvertFrom(typeof(string)))
@@ -253,14 +249,11 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                         {
                             convertedValue = row[colIndex].DisplayValue;
                         }
-
                         displayRow[colIndex] = (columnNames[colIndex], convertedValue);
                     }
-
                     displayTable.Add(displayRow);
                 }
             }
-
             yield return displayTable;
         }
 
