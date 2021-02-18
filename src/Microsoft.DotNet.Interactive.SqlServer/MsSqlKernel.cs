@@ -147,7 +147,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                             {
                                 var subsetParams = new QueryExecuteSubsetParams
                                 {
-                                    OwnerUri = _tempFileUri.ToString(),
+                                    OwnerUri = _tempFileUri.AbsolutePath,
                                     BatchIndex = batchSummary.Id,
                                     ResultSetIndex = resultSummary.Id,
                                     RowsStartIndex = 0,
