@@ -125,7 +125,7 @@ namespace Microsoft.DotNet.Interactive
                     }
                     else if (!File.Exists(filePath))
                     {
-                        result.ErrorMessage = ValidationMessages.Instance.FileDoesNotExist(filePath);
+                        result.ErrorMessage = Resources.Instance.FileDoesNotExist(filePath);
                         return null;
                     }
                     else
