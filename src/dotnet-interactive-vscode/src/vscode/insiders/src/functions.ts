@@ -23,6 +23,14 @@ export async function updateCellOutputs(document: vscode.NotebookDocument, cellI
     await vscode.workspace.applyEdit(edit);
 }
 
+export async function updateNotebookCellMetadata(document: vscode.NotebookDocument, cellIndex: number, metadata: vscode.NotebookCellMetadata) {
+    const cell = document.cells[cellIndex];
+    const newMetadata = cell.metadata.with(metadata);
+    const edit = new vscode.WorkspaceEdit();
+    edit.replaceNotebookCellMetadata(document.uri, cellIndex, newMetadata);
+    await vscode.workspace.applyEdit(edit);
+}
+
 export function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCellOutput): contracts.NotebookCellOutput {
     const errorOutputItems = output.outputs.filter(oi => oi.mime === interfaces.ErrorOutputMimeType || oi.metadata?.mimeType === interfaces.ErrorOutputMimeType);
     if (errorOutputItems.length > 0) {

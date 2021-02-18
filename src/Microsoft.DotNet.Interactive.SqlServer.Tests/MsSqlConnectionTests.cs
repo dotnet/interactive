@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -87,6 +89,42 @@ SELECT TOP 100 * FROM Person.Person
                   .As<int>()
                   .Should()
                   .Be(6);
+        }
+
+        [MsSqlFact]
+        public async Task Field_types_are_deserialized_correctly()
+        {
+            var connectionString = MsSqlFact.GetConnectionStringForTests();
+            using var kernel = await CreateKernel();
+            var result = await kernel.SubmitCodeAsync(
+                             $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
+
+            result.KernelEvents
+                  .ToSubscribedList()
+                  .Should()
+                  .NotContainErrors();
+
+            result = await kernel.SubmitCodeAsync($@"
+#!adventureworks --mime-type {TabularDataFormatter.MimeType}
+select * from sys.databases
+");
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should().NotContainErrors();
+
+            var value = events.Should()
+                              .ContainSingle<DisplayedValueProduced>()
+                              .Which;
+
+            var tables = (IEnumerable<IEnumerable<IEnumerable<(string, object)>>>) value.Value;
+
+            var table = tables.Single().ToTable();
+
+            foreach (var row in table)
+            {
+                row["database_id"].Should().BeOfType<int>();
+            }
         }
     }
 }

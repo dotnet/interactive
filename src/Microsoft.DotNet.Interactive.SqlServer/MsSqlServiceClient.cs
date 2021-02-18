@@ -41,19 +41,19 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         {
             if (!_initialized)
             {
-                StartProcessAndRedirectIO();
+                StartSqlToolsService();
                 _initialized = true;
             }
         }
 
-        private void StartProcessAndRedirectIO()
+        private void StartSqlToolsService()
         {
             var startInfo = new ProcessStartInfo(_serviceExePath)
             {
                 UseShellExecute = false,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
-                RedirectStandardError = true,
+                RedirectStandardError = false,
                 Arguments = $"--parent-pid {Process.GetCurrentProcess().Id}"
             };
             _process = new Process
@@ -62,7 +62,12 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             };
             _process.Start();
 
-            _rpc = new JsonRpc(_process.StandardInput.BaseStream, _process.StandardOutput.BaseStream);
+            StartRpc(_process.StandardInput.BaseStream, _process.StandardOutput.BaseStream);
+        }
+
+        private void StartRpc(Stream stdIn, Stream stdOut)
+        {
+            _rpc = new JsonRpc(stdIn, stdOut);
 
             AddLocalRpcMethod(nameof(HandleConnectionCompletion), "connection/complete");
             AddLocalRpcMethod(nameof(HandleQueryCompletion), "query/complete");
@@ -70,6 +75,23 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             AddLocalRpcMethod(nameof(HandleIntellisenseReady), "textDocument/intelliSenseReady");
 
             _rpc.StartListening();
+        }
+
+        internal void StartTracing(Action<string> trace)
+        {
+            _rpc.TraceSource.Switch.Level = SourceLevels.Verbose;
+            _rpc.TraceSource.Listeners.Add(new AnonymousTraceListener(trace));
+        }
+
+        internal class AnonymousTraceListener : TraceListener
+        {
+            private readonly Action<string> _trace;
+
+            public AnonymousTraceListener(Action<string> trace) => _trace = trace;
+
+            public override void Write(string message) => _trace(message);
+
+            public override void WriteLine(string message) => _trace(message);
         }
 
         private void AddLocalRpcMethod(string localMethodName, string rpcMethodName)
@@ -94,14 +116,14 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             connectionOptions.Add("ConnectionString", connectionStr);
 
             var connectionDetails = new ConnectionDetails() { Options = connectionOptions };
-            var connectionParams = new ConnectParams() { OwnerUri = ownerUri.ToString(), Connection = connectionDetails };
+            var connectionParams = new ConnectParams() { OwnerUri = ownerUri.AbsolutePath, Connection = connectionDetails };
 
             return await _rpc.InvokeWithParameterObjectAsync<bool>("connection/connect", connectionParams);
         }
 
         public async Task<bool> DisconnectAsync(Uri ownerUri)
         {
-            var disconnectParams = new DisconnectParams() { OwnerUri = ownerUri.ToString() };
+            var disconnectParams = new DisconnectParams() { OwnerUri = ownerUri.AbsolutePath };
             return await _rpc.InvokeWithParameterObjectAsync<bool>("connection/disconnect", disconnectParams);
         }
 
@@ -109,7 +131,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         {
             await UpdateFileContentsAsync(fileUri, command.Code);
 
-            TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = fileUri.ToString() };
+            TextDocumentIdentifier docId = new TextDocumentIdentifier() { Uri = fileUri.AbsolutePath };
             Position position = new Position() { Line = command.LinePosition.Line, Character = command.LinePosition.Character };
             CompletionContext context = new CompletionContext() { TriggerKind = (int)CompletionTriggerKind.Invoked };
             var completionParams = new CompletionParams() { TextDocument = docId, Position = position, Context = context };
@@ -136,6 +158,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         private async Task UpdateFileContentsAsync(Uri fileUri, string newContents)
         {
             string oldFileContents = await File.ReadAllTextAsync(fileUri.LocalPath);
+
             if (!oldFileContents.Equals(newContents))
             {
                 await File.WriteAllTextAsync(fileUri.LocalPath, newContents);
@@ -145,7 +168,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         public async Task<QueryExecuteResult> ExecuteQueryStringAsync(Uri ownerUri, string queryString)
         {
-            var queryParams = new QueryExecuteStringParams() { Query = queryString, OwnerUri = ownerUri.ToString() };
+            var queryParams = new QueryExecuteStringParams() { Query = queryString, OwnerUri = ownerUri.AbsolutePath };
             return await _rpc.InvokeWithParameterObjectAsync<QueryExecuteResult>("query/executeString", queryParams);
         }
 
@@ -170,7 +193,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             var startPosition = new Position() { Line = 0, Character = 0 };
             var endPosition = new Position() { Line = lastLineNum, Character = lastCharacterNum };
 
-            var textDoc = new VersionedTextDocumentIdentifier() { Uri = ownerUri.ToString(), Version = 1 };
+            var textDoc = new VersionedTextDocumentIdentifier() { Uri = ownerUri.AbsolutePath, Version = 1 };
             var changeRange = new Range() { Start = startPosition, End = endPosition };
             var docChange = new TextDocumentChangeEvent() { Text = newText, Range = changeRange };
             var changes = new TextDocumentChangeEvent[] { docChange };

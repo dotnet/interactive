@@ -9,6 +9,7 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
+#pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 {
     public class SignatureHelpTests : LanguageKernelTestBase
@@ -114,6 +115,82 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .Documentation.Value
                 .Should()
                 .Be(expectedMethodDocumentation);
+        }
+
+        [Fact]
+        public async Task csharp_signature_help_contains_doc_comments_from_individually_referenced_assemblies_with_xml_files()
+        {
+            using var assembly = new TestAssemblyReference("Project", "netstandard2.0", "Program.cs", @"
+public class SampleClass
+{
+    /// <summary>A sample class constructor.</summary>
+    public SampleClass() { }
+}
+");
+            var assemblyPath = await assembly.BuildAndGetPathToAssembly();
+
+            using var kernel = CreateKernel(Language.CSharp);
+
+            await SubmitCode(kernel, $"#r \"{assemblyPath}\"");
+
+            var markupCode = "new SampleClass($$";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var column);
+
+            await kernel.SendAsync(new RequestSignatureHelp(code, new LinePosition(line, column)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<SignatureHelpProduced>()
+                .Which
+                .Signatures
+                .Should()
+                .ContainSingle(sh => sh.Documentation.Value.Contains("A sample class constructor."));
+        }
+
+        [Fact]
+        public async Task csharp_signature_help_can_read_doc_comments_from_nuget_packages_after_forcing_the_assembly_to_load()
+        {
+            using var kernel = CreateKernel(Language.CSharp);
+
+            await SubmitCode(kernel, "#r \"nuget: Newtonsoft.Json, 12.0.3\"");
+
+            // The following line forces the assembly and the doc comments to be loaded
+            await SubmitCode(kernel, "var _unused = Newtonsoft.Json.JsonConvert.Null;");
+
+            var markupCode = "Newtonsoft.Json.JsonConvert.DeserializeObject($$";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            await kernel.SendAsync(new RequestSignatureHelp(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<SignatureHelpProduced>()
+                .Which
+                .Signatures
+                .Should()
+                .ContainSingle(sh => sh.Documentation.Value.Contains("Deserializes the JSON to a .NET object."));
+        }
+
+        [Fact(Skip = "https://github.com/dotnet/interactive/issues/1071  N.b., the preceeding test can be deleted when this one is fixed.")]
+        public async Task csharp_signature_help_can_read_doc_comments_from_nuget_packages()
+        {
+            using var kernel = CreateKernel(Language.CSharp);
+
+            await SubmitCode(kernel, "#r \"nuget: Newtonsoft.Json, 12.0.3\"");
+
+            var markupCode = "Newtonsoft.Json.JsonConvert.DeserializeObject($$";
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            await kernel.SendAsync(new RequestSignatureHelp(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<SignatureHelpProduced>()
+                .Which
+                .Signatures
+                .Should()
+                .ContainSingle(sh => sh.Documentation.Value.Contains("Deserializes the JSON to a .NET object."));
         }
     }
 }

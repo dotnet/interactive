@@ -1,14 +1,13 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
-
+using System.IO;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Scripting;
-
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
@@ -26,7 +25,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public override ImmutableArray<PortableExecutableReference> ResolveReference(string reference, string baseFilePath, MetadataReferenceProperties properties)
         {
-            return _resolver.ResolveReference(reference, baseFilePath, properties);
+            var resolvedReferences = _resolver.ResolveReference(reference, baseFilePath, properties);
+            var xmlResolvedReferences = resolvedReferences.Select(r => ResolveReferenceWithXmlDocumentationProvider(r.FilePath, properties)).ToImmutableArray();
+            return xmlResolvedReferences;
         }
 
         public override bool ResolveMissingAssemblies => _resolver.ResolveMissingAssemblies;
@@ -39,11 +40,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public CachingMetadataResolver WithBaseDirectory(string baseDirectory)
         {
-
             if (BaseDirectory == baseDirectory)
             {
                 return this;
             }
+
             return new CachingMetadataResolver(SearchPaths, baseDirectory);
         }
 
@@ -51,11 +52,16 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public string BaseDirectory => _resolver.BaseDirectory;
 
+        internal static PortableExecutableReference ResolveReferenceWithXmlDocumentationProvider(string path, MetadataReferenceProperties properties = default(MetadataReferenceProperties))
+        {
+            var peReference = MetadataReference.CreateFromFile(path, properties, XmlDocumentationProvider.CreateFromFile(Path.ChangeExtension(path, ".xml")));
+            return peReference;
+        }
+
         public bool Equals(ScriptMetadataResolver other) => _resolver.Equals(other);
 
         public override bool Equals(object other) => Equals(other as ScriptMetadataResolver);
 
         public override int GetHashCode() => _resolver.GetHashCode();
-
     }
 }
