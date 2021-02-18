@@ -7,7 +7,6 @@ If you want to share notebooks you have made using the .NET Jupyter kernel, one 
 
 * A GitHub repo and at least one notebook to share
 * **Dockerfile** to create the Binder image
-* A **Nuget.Config** file to provide package sources needed by your notebooks
 
 You can use the Dockerfile and Nuget.Config files from the folder `samples/my binder` to get started.
 
@@ -17,19 +16,24 @@ The repo file structure should look something like this:
 
 <img src ="https://user-images.githubusercontent.com/375556/67017073-19137180-f0f1-11e9-9744-b5f8ec532e32.png" width = "30%">
 
-The Dockerfile will install the .NET SDK, then copy the notebooks and Nuget.config to the notebooks folder.
+The Dockerfile will install the .NET SDK, then copy the notebooks to the notebooks folder.
 
 ```docker
 # Copy notebooks
 
 COPY ./notebooks/ ${HOME}/notebooks/
 
-# Copy package sources
-
-COPY ./NuGet.config ${HOME}/nuget.config
-
 RUN chown -R ${NB_UID} ${HOME}
 USER ${USER}
+```
+
+The Dockerfile install some nuget source, if you require any additional source modify this part
+
+```docker
+# Add package sources
+RUN dotnet nuget add source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" -n "dotnet-tools"
+RUN dotnet nuget add source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json" -n "dotnet5"
+RUN dotnet nuget add source "https://pkgs.dev.azure.com/dnceng/public/_packaging/MachineLearning/nuget/v3/index.json" -n "MachineLearning"
 ```
 
 Now push your changes to [github](https://github.com/).
