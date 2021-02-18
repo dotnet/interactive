@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
@@ -18,7 +17,6 @@ using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Server;
-using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -26,9 +24,7 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly Subject<KernelEvent> _kernelEvents = new();
         private readonly CompositeDisposable _disposables;
-        private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
-
-        private readonly ConcurrentQueue<KernelOperation> _commandQueue = new();
+        
         private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
@@ -227,31 +223,6 @@ namespace Microsoft.DotNet.Interactive
             KernelCommandEnvelope.RegisterCommandTypeReplacingIfNecessary<TCommand>();
         }
 
-        private class KernelOperation
-        {
-            public KernelOperation(
-                KernelCommand command,
-                TaskCompletionSource<KernelCommandResult> taskCompletionSource,
-                bool isDeferred)
-            {
-                Command = command;
-                TaskCompletionSource = taskCompletionSource;
-                IsDeferred = isDeferred;
-
-                AsyncContext.TryEstablish(out var id);
-                AsyncContextId = id;
-            }
-
-            public KernelCommand Command { get; }
-
-            public TaskCompletionSource<KernelCommandResult> TaskCompletionSource { get; }
-            public bool IsDeferred { get; }
-
-            public int AsyncContextId { get; }
-        }
-
-     
-
         internal virtual async Task HandleAsync(
             KernelCommand command,
             KernelInvocationContext context)
@@ -288,7 +259,7 @@ namespace Microsoft.DotNet.Interactive
 
         internal Task RunDeferredCommandsAsync()
         {
-            return Scheduler.RunDeferredCommandsAsync();
+            return Scheduler.RunDeferredCommandsAsync(this);
 
         }
 
