@@ -154,15 +154,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                     RowsCount = Convert.ToInt32(resultSummary.RowCount)
                                 };
                                 var subsetResult = await _serviceClient.ExecuteQueryExecuteSubsetAsync(subsetParams);
-                                if (subsetResult.Message != null)
-                                {
-                                    context.Fail(message: subsetResult.Message);
-                                    continue;
-                                }
-                                else
-                                {
-                                    rows = subsetResult.ResultSubset.Rows;
-                                }
+                                rows = subsetResult.ResultSubset.Rows;
                             }
 
                             var tables = GetEnumerableTables(resultSummary.ColumnInfo, rows);
