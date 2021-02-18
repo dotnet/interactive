@@ -114,7 +114,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.210803",
+          "default": "1.0.211604",
           "description": "The minimum required version of the .NET Interactive tool."
         },
         "dotnet-interactive.useJupyterExtensionForIpynbFiles": {
