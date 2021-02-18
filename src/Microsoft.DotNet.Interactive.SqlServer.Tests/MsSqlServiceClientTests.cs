@@ -4,7 +4,6 @@
 using System;
 using Xunit;
 using FluentAssertions;
-using System.IO;
 
 namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 {

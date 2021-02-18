@@ -194,7 +194,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             }
         }
 
-        private IEnumerable<IEnumerable<IEnumerable<(string, object)>>> GetEnumerableTable(ColumnInfo[] columnInfo, CellValue[][] rows)
+        public static IEnumerable<IEnumerable<IEnumerable<(string, object)>>> GetEnumerableTable(ColumnInfo[] columnInfo, CellValue[][] rows)
         {
             var displayTable = new List<(string, object)[]>();
             var columnNames = columnInfo.Select(info => info.ColumnName).ToArray();
