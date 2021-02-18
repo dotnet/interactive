@@ -156,14 +156,9 @@ drop table dbo.EmptyTable;
                               .ContainSingle<DisplayedValueProduced>()
                               .Which;
 
-            var tables = (IEnumerable<IEnumerable<IEnumerable<(string, object)>>>) value.Value;
-            var table = tables.Single().ToTable();
-
-            table.Count.Should().Be(1);
-            table[0].Count.Should().Be(3);
-            table[0]["column1"].Should().Be(null);
-            table[0]["column2"].Should().Be(null);
-            table[0]["column3"].Should().Be(null);
+            var message = (string) value.Value;
+            message.Should().StartWith("Info");
+            message.Should().NotContain("Error");
         }
     }
 }
