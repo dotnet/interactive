@@ -126,5 +126,44 @@ select * from sys.databases
                 row["database_id"].Should().BeOfType<int>();
             }
         }
+
+        [MsSqlFact]
+        public async Task Empty_results_are_displayed_correctly()
+        {
+            var connectionString = MsSqlFact.GetConnectionStringForTests();
+            using var kernel = await CreateKernel();
+            var result = await kernel.SubmitCodeAsync(
+                             $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
+
+            result.KernelEvents
+                  .ToSubscribedList()
+                  .Should()
+                  .NotContainErrors();
+
+            result = await kernel.SubmitCodeAsync($@"
+#!adventureworks --mime-type {TabularDataFormatter.MimeType}
+use tempdb;
+create table dbo.EmptyTable(column1 int, column2 int, column3 int);
+select * from dbo.EmptyTable;
+drop table dbo.EmptyTable;
+");
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should().NotContainErrors();
+
+            var value = events.Should()
+                              .ContainSingle<DisplayedValueProduced>()
+                              .Which;
+
+            var tables = (IEnumerable<IEnumerable<IEnumerable<(string, object)>>>) value.Value;
+            var table = tables.Single().ToTable();
+
+            table.Count.Should().Be(1);
+            table[0].Count.Should().Be(3);
+            table[0]["column1"].Should().Be(null);
+            table[0]["column2"].Should().Be(null);
+            table[0]["column3"].Should().Be(null);
+        }
     }
 }
