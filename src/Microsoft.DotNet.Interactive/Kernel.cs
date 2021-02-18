@@ -28,6 +28,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
+        private readonly KernelCommandScheduler _scheduler;
 
         protected Kernel(string name)
         {
@@ -44,7 +45,7 @@ namespace Microsoft.DotNet.Interactive
 
             Pipeline = new KernelCommandPipeline(this);
 
-            Scheduler = new KernelCommandScheduler();
+            _scheduler = new KernelCommandScheduler();
 
             AddSetKernelMiddleware();
 
@@ -55,7 +56,7 @@ namespace Microsoft.DotNet.Interactive
                 ));
         }
 
-        internal KernelCommandScheduler Scheduler { get; }
+        internal KernelCommandScheduler Scheduler => _scheduler;
 
         internal KernelCommandPipeline Pipeline { get; }
 
