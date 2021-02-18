@@ -11,7 +11,7 @@ import { registerLanguageProviders } from './languageProvider';
 import { execute, registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
 
 import { getSimpleLanguage, isDotnetInteractiveLanguage, notebookCellLanguages } from '../interactiveNotebook';
-import { IDotnetAcquireResult } from 'vscode-interfaces/out/dotnet';
+import { IDotnetAcquireResult } from 'dotnet-interactive-vscode-interfaces/out/dotnet';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
 import compareVersions = require("compare-versions");

@@ -4,10 +4,18 @@
 Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
 
+function Clear-PackageSha([string] $projectJsonLockPath, [string] $packageName) {
+    $packageJsonLockContents = Get-Content $projectJsonLockPath | Out-String | ConvertFrom-Json
+    $packageJsonLockContents."dependencies"."$packageName".PSObject.Properties.Remove("integrity")
+    $packageJsonLockContents | ConvertTo-Json -depth 100 | Out-File $projectJsonLockPath
+}
+
 try {
-    . "$PSScriptRoot/Clear-PackageSha.ps1" -projectJsonLockPath "$PSScriptRoot/package-lock.json" -packageName "vscode-interfaces"; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    . "$PSScriptRoot/Clear-PackageSha.ps1" -projectJsonLockPath "$PSScriptRoot/package-lock.json" -packageName "vscode-insiders"; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    . "$PSScriptRoot/Clear-PackageSha.ps1" -projectJsonLockPath "$PSScriptRoot/package-lock.json" -packageName "vscode-stable"; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Clear-PackageSha -projectJsonLockPath "$PSScriptRoot/src/vscode/insiders/package-lock.json" -packageName "dotnet-interactive-vscode-interfaces"
+    Clear-PackageSha -projectJsonLockPath "$PSScriptRoot/src/vscode/stable/package-lock.json" -packageName "dotnet-interactive-vscode-interfaces"
+    Clear-PackageSha -projectJsonLockPath "$PSScriptRoot/package-lock.json" -packageName "dotnet-interactive-vscode-interfaces"
+    Clear-PackageSha -projectJsonLockPath "$PSScriptRoot/package-lock.json" -packageName "dotnet-interactive-vscode-insiders"
+    Clear-PackageSha -projectJsonLockPath "$PSScriptRoot/package-lock.json" -packageName "dotnet-interactive-vscode-stable"
 }
 catch {
     Write-Host $_

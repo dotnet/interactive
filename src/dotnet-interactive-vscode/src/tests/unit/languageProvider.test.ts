@@ -8,7 +8,7 @@ import { TestKernelTransport } from './testKernelTransport';
 import { provideCompletion } from './../../languageServices/completion';
 import { provideHover } from './../../languageServices/hover';
 import { provideSignatureHelp } from '../../languageServices/signatureHelp';
-import { CommandSucceededType, CompletionsProducedType, HoverTextProducedType, SignatureHelpProducedType } from 'vscode-interfaces/out/contracts';
+import { CommandSucceededType, CompletionsProducedType, HoverTextProducedType, SignatureHelpProducedType } from 'dotnet-interactive-vscode-interfaces/out/contracts';
 
 describe('LanguageProvider tests', () => {
     it('CompletionProvider', async () => {

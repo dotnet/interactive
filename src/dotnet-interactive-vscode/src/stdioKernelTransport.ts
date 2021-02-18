@@ -14,9 +14,9 @@ import {
     DiagnosticLogEntryProduced,
     KernelReadyType,
     KernelCommandEnvelopeObserver
-} from 'vscode-interfaces/out/contracts';
+} from 'dotnet-interactive-vscode-interfaces/out/contracts';
 import { ProcessStart } from './interfaces';
-import { ReportChannel, Uri } from 'vscode-interfaces/out/notebook';
+import { ReportChannel, Uri } from 'dotnet-interactive-vscode-interfaces/out/notebook';
 import { LineReader } from './lineReader';
 import { isNotNull, parse, stringify } from './utilities';
 import fetch from 'node-fetch';

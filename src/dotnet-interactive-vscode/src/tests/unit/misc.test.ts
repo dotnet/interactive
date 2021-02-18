@@ -2,8 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { expect } from 'chai';
-import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from 'vscode-interfaces/out/contracts';
-import { isDisplayOutput, isErrorOutput, isTextOutput } from 'vscode-interfaces/out/utilities';
+import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from 'dotnet-interactive-vscode-interfaces/out/contracts';
+import { isDisplayOutput, isErrorOutput, isTextOutput } from 'dotnet-interactive-vscode-interfaces/out/utilities';
 import { requiredKernelspecData } from '../../ipynbUtilities';
 import { debounce, isDotNetKernelPreferred, parse, processArguments, stringify } from '../../utilities';
 

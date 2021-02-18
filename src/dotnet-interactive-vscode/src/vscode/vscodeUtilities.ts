@@ -4,7 +4,7 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
 import { Eol, WindowsEol, NonWindowsEol } from "../interfaces";
-import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan } from 'vscode-interfaces/out/contracts';
+import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan } from 'dotnet-interactive-vscode-interfaces/out/contracts';
 import { ClientMapper } from '../clientMapper';
 
 export function isInsidersBuild(): boolean {

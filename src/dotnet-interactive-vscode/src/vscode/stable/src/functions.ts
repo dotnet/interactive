@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
-import * as contracts from 'vscode-interfaces/out/contracts';
-import * as interfaces from 'vscode-interfaces/out/notebook';
-import * as utilities from 'vscode-interfaces/out/utilities';
+import * as contracts from 'dotnet-interactive-vscode-interfaces/out/contracts';
+import * as interfaces from 'dotnet-interactive-vscode-interfaces/out/notebook';
+import * as utilities from 'dotnet-interactive-vscode-interfaces/out/utilities';
 
 export async function updateCellOutputs(document: vscode.NotebookDocument, cellIndex: number, outputs: Array<interfaces.NotebookCellOutput>) {
     const edit = new vscode.WorkspaceEdit();
