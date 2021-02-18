@@ -8,6 +8,7 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Utility;
 
@@ -18,7 +19,14 @@ namespace Microsoft.DotNet.Interactive
         private readonly ConcurrentQueue<(KernelCommand command, Kernel kernel)> _deferredCommands = new();
 
         private readonly ConcurrentQueue<KernelOperation> _commandQueue = new();
-        public Task<KernelCommandResult> Schedule(KernelCommand command, Kernel kernel, CancellationToken  cancellationToken, Action onDone)
+
+        public Task<KernelCommandResult> Schedule(KernelCommand command, Kernel kernel)
+        {
+            return Schedule(command, kernel, CancellationToken.None, () => { });
+        }
+
+
+        public Task<KernelCommandResult> Schedule(KernelCommand command, Kernel kernel, CancellationToken cancellationToken, Action onDone)
         {
 
 
@@ -28,15 +36,15 @@ namespace Microsoft.DotNet.Interactive
                     CancelCommands();
                     break;
                 default:
-                    UndeferCommands();
+                    UndeferCommandsFor(kernel);
                     break;
             }
 
             var kernelCommandResultSource = new TaskCompletionSource<KernelCommandResult>();
 
-            var operation = new KernelOperation(command, kernelCommandResultSource, kernel,false);
+            var operation = new KernelOperation(command, kernelCommandResultSource, kernel, false);
             _commandQueue.Enqueue(operation);
-            
+
             ProcessCommandQueue(_commandQueue, cancellationToken, onDone);
 
             return kernelCommandResultSource.Task;
@@ -127,13 +135,13 @@ namespace Microsoft.DotNet.Interactive
 
         public void DeferCommand(KernelCommand command, Kernel kernel)
         {
-            _deferredCommands.Enqueue((command,kernel));
+            _deferredCommands.Enqueue((command, kernel));
         }
 
-        internal Task RunDeferredCommandsAsync()
+        internal Task RunDeferredCommandsAsync(Kernel kernel)
         {
             var tcs = new TaskCompletionSource<Unit>();
-            UndeferCommands();
+            UndeferCommandsFor(kernel);
             ProcessCommandQueue(
                 _commandQueue,
                 CancellationToken.None,
@@ -154,7 +162,46 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+        private void UndeferCommandsFor(Kernel kernel)
+        {
+            var commandsToKeepInDeferredList = new ConcurrentQueue<(KernelCommand command, Kernel kernel)>();
+            while (_deferredCommands.TryDequeue(out var deferredCommand))
+            {
+                if (IsInPath(kernel, deferredCommand.kernel))
+                {
+                    _commandQueue.Enqueue(
+                        new KernelOperation(
+                            deferredCommand.command,
+                            new TaskCompletionSource<KernelCommandResult>(),
+                            deferredCommand.kernel,
+                            true));
+                }
+                else
+                {
+                    commandsToKeepInDeferredList.Enqueue(deferredCommand);
+                }
+            }
 
+            while (commandsToKeepInDeferredList.TryDequeue(out var deferredCommand))
+            {
+                _deferredCommands.Enqueue(deferredCommand);
+            }
+           
+            
+            bool IsInPath(Kernel toTest, Kernel deferredCommandKernel)
+            {
+                while (toTest is not null)
+                {
+                    if (toTest == deferredCommandKernel)
+                    {
+                        return true;
+                    }
+
+                    toTest = toTest.ParentKernel;
+                }
+                return false;
+            }
+        }
 
         private static bool CanCancel(KernelCommand command)
         {

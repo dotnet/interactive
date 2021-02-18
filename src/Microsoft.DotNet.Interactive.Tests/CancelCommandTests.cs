@@ -14,6 +14,7 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
+
 namespace Microsoft.DotNet.Interactive.Tests
 {
     public class CancelCommandTests : LanguageKernelTestBase
@@ -64,18 +65,10 @@ namespace Microsoft.DotNet.Interactive.Tests
         [InlineData(Language.PowerShell)]
         public async Task cancel_command_cancels_all_deferred_commands_on_subkernels(Language language)
         {
-            var deferredCommandExecuted = false;
 
             var kernel = CreateKernel(language);
 
-            var deferred = new SubmitCode("placeholder")
-            {
-                Handler = (command, context) =>
-                {
-                    deferredCommandExecuted = true;
-                    return Task.CompletedTask;
-                }
-            };
+            var deferred = new CancellableCommand();
 
             var cancelCommand = new Cancel();
 
@@ -88,7 +81,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             using var _ = new AssertionScope();
 
-            deferredCommandExecuted.Should().BeFalse();
+            deferred.HasRun.Should().BeFalse();
 
             KernelEvents
                 .Should().ContainSingle<CommandSucceeded>()
@@ -104,28 +97,12 @@ namespace Microsoft.DotNet.Interactive.Tests
         [InlineData(Language.PowerShell, Skip = "to address later")]
         public void cancel_command_cancels_the_running_command(Language language)
         {
-            var submitCodeCommandCancelled = false;
-            var submitCodeCommandStarted = false;
+
             var kernel = CreateKernel(language);
 
             var cancelCommand = new Cancel();
 
-            var submitCodeCommand = new SubmitCode("placeholder")
-            {
-                Handler = (command, context) =>
-                {
-                    submitCodeCommandStarted = true;
-
-                    while (!context.CancellationToken.IsCancellationRequested)
-                    {
-
-                    }
-
-                    submitCodeCommandCancelled = true;
-
-                    return Task.CompletedTask;
-                }
-            };
+            var submitCodeCommand = new CancellableCommand();
 
             Task.WhenAll(
                     Task.Run(async () =>
@@ -142,8 +119,8 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             using var _ = new AssertionScope();
 
-            submitCodeCommandStarted.Should().BeTrue();
-            submitCodeCommandCancelled.Should().BeTrue();
+            submitCodeCommand.HasRun.Should().BeTrue();
+            submitCodeCommand.HasBeenCancelled.Should().BeTrue();
 
             KernelEvents
                 .Should()
@@ -190,7 +167,14 @@ namespace Microsoft.DotNet.Interactive.Tests
 
 
         [Theory]
-        [InlineData(Language.CSharp, "await Task.Delay(Microsoft.DotNet.Interactive.KernelInvocationContext.Current.CancellationToken); Console.WriteLine(\"done c#\")", "done c#")]
+        [InlineData(Language.CSharp, @"while(true){
+    if(Microsoft.DotNet.Interactive.KernelInvocationContext.Current.CancellationToken.IsCancellationRequested)
+    {
+        Console.WriteLine(""done c#"");
+        break;
+    }
+} 
+", "done c#")]
         [InlineData(Language.FSharp, @"
 System.Threading.Thread.Sleep(3000)
 Console.WriteLine(""done c#"")", "done f#", Skip = "for the moment")]
@@ -200,11 +184,10 @@ Console.WriteLine(""done c#"")", "done f#", Skip = "for the moment")]
             var cancelCommand = new Cancel();
             var submitCodeCommand = new SubmitCode(code);
        
-            Task.Run(async () => await kernel.SendAsync(submitCodeCommand));
-            await Task.Delay(100);
+            kernel.SendAsync(submitCodeCommand);
+            await Task.Delay(4000);
             await kernel.SendAsync(cancelCommand);
-
-
+            
             KernelEvents
                 .Should()
                 .ContainSingle<StandardOutputValueProduced>()
@@ -216,28 +199,5 @@ Console.WriteLine(""done c#"")", "done f#", Skip = "for the moment")]
         }
     }
 
-    public class CancellableCommand : KernelCommand
-    {
-        public CancellableCommand(string targetKernelName = null, KernelCommand parent = null) : base(targetKernelName, parent)
-        {
-        }
 
-        public override Task InvokeAsync(KernelInvocationContext context)
-        {
-            HasRun = true;
-
-            while (!context.CancellationToken.IsCancellationRequested)
-            {
-
-            }
-
-            HasBeenCancelled = true;
-
-            return Task.CompletedTask;
-        }
-
-        public bool HasBeenCancelled { get; private set; }
-
-        public bool HasRun { get; private set; }
-    }
 }

@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Tests
     [LogTestNamesToPocketLogger]
     public abstract class LanguageKernelTestBase : IDisposable
     {
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
 
         protected LanguageKernelTestBase(ITestOutputHelper output)
         {
@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             }
             catch (Exception ex) 
             {
-                Log.Error(exception: ex);
+                Log.Error(ex);
             }
         }
 
