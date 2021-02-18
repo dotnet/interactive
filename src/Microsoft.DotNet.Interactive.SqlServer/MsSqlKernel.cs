@@ -208,45 +208,39 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             SqlKernelUtils.AliasDuplicateColumnNames(columnNames);
 
-            if (rows == null || rows.Length == 0)
+            foreach (CellValue[] row in rows)
             {
-                // If there are no rows, then add an empty row so that we at least display column names
-                var displayRow = new (string, object)[columnNames.Length];
-                for (int colIndex = 0; colIndex < columnNames.Length; colIndex++)
+                var displayRow = new (string, object)[row.Length];
+
+                for (var colIndex = 0; colIndex < row.Length; colIndex++)
                 {
-                    displayRow[colIndex] = (columnNames[colIndex], null);
-                }
-                displayTable.Add(displayRow);
-            }
-            else
-            {
-                foreach (CellValue[] row in rows)
-                {
-                    var displayRow = new (string, object)[row.Length];
-                    for (var colIndex = 0; colIndex < row.Length; colIndex++)
+                    object convertedValue = default;
+
+                    try
                     {
-                        object convertedValue = default;
-                        try
+                        var columnInfo = columnInfos[colIndex];
+
+                        var expectedType = Type.GetType(columnInfo.DataType);
+
+                        if (TypeDescriptor.GetConverter(expectedType) is { } typeConverter)
                         {
-                            var columnInfo = columnInfos[colIndex];
-                            var expectedType = Type.GetType(columnInfo.DataType);
-                            if (TypeDescriptor.GetConverter(expectedType) is { } typeConverter)
+                            if (typeConverter.CanConvertFrom(typeof(string)))
                             {
-                                if (typeConverter.CanConvertFrom(typeof(string)))
-                                {
-                                    convertedValue = typeConverter.ConvertFromInvariantString(row[colIndex].DisplayValue);
-                                }
+                                convertedValue = typeConverter.ConvertFromInvariantString(row[colIndex].DisplayValue);
                             }
                         }
-                        catch (Exception)
-                        {
-                            convertedValue = row[colIndex].DisplayValue;
-                        }
-                        displayRow[colIndex] = (columnNames[colIndex], convertedValue);
                     }
-                    displayTable.Add(displayRow);
+                    catch (Exception)
+                    {
+                        convertedValue = row[colIndex].DisplayValue;
+                    }
+
+                    displayRow[colIndex] = (columnNames[colIndex], convertedValue);
                 }
+
+                displayTable.Add(displayRow);
             }
+
             yield return displayTable;
         }
 
