@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
                 .Be(newText);
             docChange.TextDocument.Uri
                 .Should()
-                .Be(testUri.ToString());
+                .Be(testUri.AbsolutePath);
             docChange.TextDocument.Version
                 .Should()
                 .Be(1);

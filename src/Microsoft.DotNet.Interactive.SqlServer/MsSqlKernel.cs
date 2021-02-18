@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         private void HandleConnectionComplete(object sender, ConnectionCompleteParams connParams)
         {
-            if (connParams.OwnerUri.Equals(_tempFileUri.ToString()))
+            if (connParams.OwnerUri.Equals(_tempFileUri.AbsolutePath))
             {
                 if (connParams.ErrorMessage != null)
                 {
@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         private void HandleIntellisenseReady(object sender, IntelliSenseReadyParams readyParams)
         {
-            if (readyParams.OwnerUri.Equals(_tempFileUri.ToString()))
+            if (readyParams.OwnerUri.Equals(_tempFileUri.AbsolutePath))
             {
                 _intellisenseReady = true;
             }
@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
                             var subsetParams = new QueryExecuteSubsetParams
                             {
-                                OwnerUri = _tempFileUri.ToString(),
+                                OwnerUri = _tempFileUri.AbsolutePath,
                                 BatchIndex = batchSummary.Id,
                                 ResultSetIndex = resultSummary.Id,
                                 RowsStartIndex = 0,
