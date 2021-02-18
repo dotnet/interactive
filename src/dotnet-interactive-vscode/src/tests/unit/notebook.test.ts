@@ -21,10 +21,10 @@ import {
     DisplayedValueUpdatedType,
     ReturnValueProducedType,
     StandardOutputValueProducedType,
-} from 'vscode-interfaces/out/contracts';
+} from 'dotnet-interactive-vscode-interfaces/out/contracts';
 import { withFakeGlobalStorageLocation } from './utilities';
 import { backupNotebook, languageToCellKind } from '../../interactiveNotebook';
-import * as interfaces from 'vscode-interfaces/out/notebook';
+import * as interfaces from 'dotnet-interactive-vscode-interfaces/out/notebook';
 
 describe('Notebook tests', () => {
     for (let language of ['csharp', 'fsharp']) {

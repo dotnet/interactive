@@ -1,9 +1,9 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { KernelTransport } from 'vscode-interfaces/out/contracts';
+import { KernelTransport } from 'dotnet-interactive-vscode-interfaces/out/contracts';
 import { InteractiveClient } from "./interactiveClient";
-import { Uri } from "vscode-interfaces/out/notebook";
+import { Uri } from "dotnet-interactive-vscode-interfaces/out/notebook";
 
 export class ClientMapper {
     private clientMap: Map<string, Promise<InteractiveClient>> = new Map();

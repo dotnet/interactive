@@ -6,11 +6,11 @@ import * as vscode from 'vscode';
 import { ClientMapper } from '../clientMapper';
 import { notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook } from '../interactiveNotebook';
 import { Eol } from '../interfaces';
-import { NotebookCell, NotebookCellOutput, NotebookDocument } from 'vscode-interfaces/out/contracts';
+import { NotebookCell, NotebookCellOutput, NotebookDocument } from 'dotnet-interactive-vscode-interfaces/out/contracts';
 import { configureWebViewMessaging, getEol, isInsidersBuild, isUnsavedNotebook } from './vscodeUtilities';
 
-import * as vscodeInsiders from 'vscode-insiders/out/functions';
-import * as vscodeStable from 'vscode-stable/out/functions';
+import * as vscodeInsiders from 'dotnet-interactive-vscode-insiders/out/functions';
+import * as vscodeStable from 'dotnet-interactive-vscode-stable/out/functions';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
 

@@ -1,12 +1,12 @@
 {
-  "name": "vscode-stable",
+  "name": "dotnet-interactive-vscode-stable",
   "version": "1.0.0",
   "scripts": {
     "lint": "eslint src --ext ts",
     "compile": "tsc -p ./"
   },
   "dependencies": {
-    "vscode-interfaces": "file:../../interfaces/vscode-interfaces-1.0.0.tgz"
+    "dotnet-interactive-vscode-interfaces": "file:../../interfaces/dotnet-interactive-vscode-interfaces-1.0.0.tgz"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "2.26.0",

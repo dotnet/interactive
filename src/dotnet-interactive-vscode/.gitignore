@@ -4,4 +4,4 @@ dotnet-interactive-vscode-*.vsix
 
 .fake
 .ionide
-vscode-*.tgz
+dotnet-interactive-vscode-*.tgz

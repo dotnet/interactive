@@ -5,9 +5,9 @@ import { expect } from 'chai';
 
 import { ClientMapper } from '../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
-import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandSucceededType, DisplayedValueProducedType, ReturnValueProducedType, DisplayedValueUpdatedType, CommandFailedType } from 'vscode-interfaces/out/contracts';
+import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandSucceededType, DisplayedValueProducedType, ReturnValueProducedType, DisplayedValueUpdatedType, CommandFailedType } from 'dotnet-interactive-vscode-interfaces/out/contracts';
 import { debounce, wait } from '../../utilities';
-import * as interfaces from 'vscode-interfaces/out/notebook';
+import * as interfaces from 'dotnet-interactive-vscode-interfaces/out/notebook';
 
 describe('InteractiveClient tests', () => {
     it('command execution returns deferred events', async () => {

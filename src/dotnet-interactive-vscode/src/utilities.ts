@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import { ProcessStart } from "./interfaces";
-import { Uri } from 'vscode-interfaces/out/notebook';
+import { Uri } from 'dotnet-interactive-vscode-interfaces/out/notebook';
 
 export function processArguments(template: { args: Array<string>, workingDirectory: string }, notebookPath: string, fallbackWorkingDirectory: string, dotnetPath: string, globalStoragePath: string): ProcessStart {
     let workingDirectory = path.parse(notebookPath).dir;

@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
-import * as contracts from 'vscode-interfaces/out/contracts';
-import * as interfaces from 'vscode-interfaces/out/notebook';
-import * as utilities from 'vscode-interfaces/out/utilities';
+import * as contracts from 'dotnet-interactive-vscode-interfaces/out/contracts';
+import * as interfaces from 'dotnet-interactive-vscode-interfaces/out/notebook';
+import * as utilities from 'dotnet-interactive-vscode-interfaces/out/utilities';
 
 // The current insiders build doesn't honor the error mime type, so we're temporarily reverting to `text/plain`.
 // To ensure we can still detect error cells, we're also stuffing the original mime type into the output's metadata.

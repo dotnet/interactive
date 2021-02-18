@@ -7,12 +7,12 @@ import { isInsidersBuild, toVsCodeDiagnostic } from "./vscodeUtilities";
 import { ClientMapper } from "../clientMapper";
 import { getDiagnosticCollection } from './diagnostics';
 import { getSimpleLanguage, notebookCellLanguages } from "../interactiveNotebook";
-import { Diagnostic, DiagnosticSeverity } from 'vscode-interfaces/out/contracts';
+import { Diagnostic, DiagnosticSeverity } from 'dotnet-interactive-vscode-interfaces/out/contracts';
 import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, withDotNetKernelMetadata } from '../ipynbUtilities';
 
-import * as interfaces from 'vscode-interfaces/out/notebook';
-import * as vscodeInsiders from 'vscode-insiders/out/functions';
-import * as vscodeStable from 'vscode-stable/out/functions';
+import * as interfaces from 'dotnet-interactive-vscode-interfaces/out/notebook';
+import * as vscodeInsiders from 'dotnet-interactive-vscode-insiders/out/functions';
+import * as vscodeStable from 'dotnet-interactive-vscode-stable/out/functions';
 
 export const KernelId: string = 'dotnet-interactive';
 

@@ -260,7 +260,7 @@
     ]
   },
   "scripts": {
-    "clean-packages": "npx del-cli --force \"node_modules/**/vscode-*-1.0.0.tgz\"",
+    "clean-packages": "npx del-cli --force \"node_modules/**/dotnet-interactive-vscode-*-1.0.0.tgz\"",
     "vscode:prepublish": "npm run compile && npm run clean-packages",
     "preinstall": "pwsh ./build-deps.ps1",
     "postshrinkwrap": "pwsh ./clean-deps.ps1",
@@ -307,8 +307,8 @@
   "dependencies": {
     "compare-versions": "3.6.0",
     "node-fetch": "^2.6.1",
-    "vscode-insiders": "file:src/vscode/insiders/vscode-insiders-1.0.0.tgz",
-    "vscode-interfaces": "file:src/interfaces/vscode-interfaces-1.0.0.tgz",
-    "vscode-stable": "file:src/vscode/stable/vscode-stable-1.0.0.tgz"
+    "dotnet-interactive-vscode-insiders": "file:src/vscode/insiders/dotnet-interactive-vscode-insiders-1.0.0.tgz",
+    "dotnet-interactive-vscode-interfaces": "file:src/interfaces/dotnet-interactive-vscode-interfaces-1.0.0.tgz",
+    "dotnet-interactive-vscode-stable": "file:src/vscode/stable/dotnet-interactive-vscode-stable-1.0.0.tgz"
   }
 }
