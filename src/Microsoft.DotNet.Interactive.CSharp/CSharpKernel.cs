@@ -254,13 +254,16 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 // Publish the compilation diagnostics. This doesn't include the exception.
                 var kernelDiagnostics = diagnostics.Select(Diagnostic.FromCodeAnalysisDiagnostic).ToImmutableArray();
 
-                var formattedDiagnostics =
-                    diagnostics
-                        .Select(d => d.ToString())
-                        .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
-                        .ToImmutableArray();
+                if (kernelDiagnostics.Length > 0)
+                {
+                    var formattedDiagnostics =
+                        diagnostics
+                            .Select(d => d.ToString())
+                            .Select(text => new FormattedValue(PlainTextFormatter.MimeType, text))
+                            .ToImmutableArray();
 
-                context.Publish(new DiagnosticsProduced(kernelDiagnostics, submitCode, formattedDiagnostics));
+                    context.Publish(new DiagnosticsProduced(kernelDiagnostics, submitCode, formattedDiagnostics));
+                }
 
                 // Report the compilation failure or exception
                 if (exception != null)
