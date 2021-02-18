@@ -142,7 +142,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                 return;
                             }
 
-                            CellValue[][] rows = null;
                             if (resultSummary.RowCount > 0)
                             {
                                 var subsetParams = new QueryExecuteSubsetParams
@@ -154,11 +153,13 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                     RowsCount = Convert.ToInt32(resultSummary.RowCount)
                                 };
                                 var subsetResult = await _serviceClient.ExecuteQueryExecuteSubsetAsync(subsetParams);
-                                rows = subsetResult.ResultSubset.Rows;
+                                var tables = GetEnumerableTables(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
+                                context.Display(tables);
                             }
-
-                            var tables = GetEnumerableTables(resultSummary.ColumnInfo, rows);
-                            context.Display(tables);
+                            else
+                            {
+                                context.Display($"Info: No rows were returned for query {resultSummary.Id} in batch {batchSummary.Id}.");
+                            }
                         }
                     }
 
