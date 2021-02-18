@@ -42,7 +42,8 @@ namespace Microsoft.DotNet.Interactive
 
             var kernelCommandResultSource = new TaskCompletionSource<KernelCommandResult>();
 
-            var operation = new KernelOperation(command, kernelCommandResultSource, kernel, false);
+            var operation = new KernelOperation(command, kernelCommandResultSource, kernel);
+
             _commandQueue.Enqueue(operation);
 
             ProcessCommandQueue(_commandQueue, cancellationToken, onDone);
@@ -112,13 +113,11 @@ namespace Microsoft.DotNet.Interactive
             public KernelOperation(
                 KernelCommand command,
                 TaskCompletionSource<KernelCommandResult> taskCompletionSource,
-                Kernel kernel,
-                bool isDeferred)
+                Kernel kernel)
             {
                 Command = command;
                 TaskCompletionSource = taskCompletionSource;
                 Kernel = kernel;
-                IsDeferred = isDeferred;
 
                 AsyncContext.TryEstablish(out var id);
                 AsyncContextId = id;
@@ -128,7 +127,6 @@ namespace Microsoft.DotNet.Interactive
 
             public TaskCompletionSource<KernelCommandResult> TaskCompletionSource { get; }
             public Kernel Kernel { get; }
-            public bool IsDeferred { get; }
 
             public int AsyncContextId { get; }
         }
@@ -157,8 +155,7 @@ namespace Microsoft.DotNet.Interactive
                     new KernelOperation(
                         initCommand.command,
                         new TaskCompletionSource<KernelCommandResult>(),
-                        initCommand.kernel,
-                        true));
+                        initCommand.kernel));
             }
         }
 
@@ -173,8 +170,7 @@ namespace Microsoft.DotNet.Interactive
                         new KernelOperation(
                             deferredCommand.command,
                             new TaskCompletionSource<KernelCommandResult>(),
-                            deferredCommand.kernel,
-                            true));
+                            deferredCommand.kernel));
                 }
                 else
                 {
@@ -221,7 +217,7 @@ namespace Microsoft.DotNet.Interactive
             }
 
             using var disposables = new CompositeDisposable();
-            var inFlightOperations = _commandQueue.Where(operation => !operation.IsDeferred && CanCancel(operation.Command)).ToList();
+            var inFlightOperations = _commandQueue.Where(operation =>  CanCancel(operation.Command)).ToList();
             foreach (var inFlightOperation in inFlightOperations)
             {
                 KernelInvocationContext currentContext = null;
