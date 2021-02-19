@@ -193,11 +193,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer
     public class QueryExecuteSubsetResult
     {
         /// <summary>
-        /// Subset request error messages. Optional, can be set to null to indicate no errors
-        /// </summary>
-        public string Message { get; set; }
-
-        /// <summary>
         /// The requested subset of results. Optional, can be set to null to indicate an error
         /// </summary>
         public ResultSetSubset ResultSubset { get; set; }

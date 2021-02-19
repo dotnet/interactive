@@ -142,24 +142,23 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                 return;
                             }
 
-                            var subsetParams = new QueryExecuteSubsetParams
+                            if (resultSummary.RowCount > 0)
                             {
-                                OwnerUri = _tempFileUri.AbsolutePath,
-                                BatchIndex = batchSummary.Id,
-                                ResultSetIndex = resultSummary.Id,
-                                RowsStartIndex = 0,
-                                RowsCount = Convert.ToInt32(resultSummary.RowCount)
-                            };
-                            var subsetResult = await _serviceClient.ExecuteQueryExecuteSubsetAsync(subsetParams);
-
-                            if (subsetResult.Message != null)
-                            {
-                                context.Fail(message: subsetResult.Message);
+                                var subsetParams = new QueryExecuteSubsetParams
+                                {
+                                    OwnerUri = _tempFileUri.AbsolutePath,
+                                    BatchIndex = batchSummary.Id,
+                                    ResultSetIndex = resultSummary.Id,
+                                    RowsStartIndex = 0,
+                                    RowsCount = Convert.ToInt32(resultSummary.RowCount)
+                                };
+                                var subsetResult = await _serviceClient.ExecuteQueryExecuteSubsetAsync(subsetParams);
+                                var tables = GetEnumerableTables(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
+                                context.Display(tables);
                             }
                             else
                             {
-                                var tables = GetEnumerableTables(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
-                                context.Display(tables);
+                                context.Display($"Info: No rows were returned for query {resultSummary.Id} in batch {batchSummary.Id}.");
                             }
                         }
                     }
