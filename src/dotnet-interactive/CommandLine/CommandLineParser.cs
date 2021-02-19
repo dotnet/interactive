@@ -467,7 +467,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
             compositeKernel.Add(
                 new CSharpKernel()
-                    .UseDefaultFormatting()
                     .UseNugetDirective()
                     .UseKernelHelpers()
                     .UseJupyterHelpers()

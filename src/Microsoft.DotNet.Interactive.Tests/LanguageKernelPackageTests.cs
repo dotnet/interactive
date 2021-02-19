@@ -12,6 +12,7 @@ using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.FSharp;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -315,8 +316,10 @@ catch (Exception e)
 #r ""nuget:Microsoft.Data.Analysis,0.4.0""
 ");
 
-            await kernel.SubmitCodeAsync(@"
-using Microsoft.Data.Analysis;");
+            await kernel.SubmitCodeAsync(@$"
+using Microsoft.Data.Analysis;
+using static {typeof(PocketViewTags).FullName};
+using {typeof(PocketView).Namespace};");
 
             await kernel.SubmitCodeAsync(@"
 using Microsoft.AspNetCore.Html;
@@ -631,7 +634,6 @@ Formatter.Register<DataFrame>((df, writer) =>
         {
             var csk =
                     new CSharpKernel()
-                        .UseDefaultFormatting()
                         .UseNugetDirective()
                         .UseKernelHelpers()
                         .UseWho()
