@@ -55,16 +55,14 @@ RUN dotnet_sdk_version=5.0.102 \
 # Copy notebooks
 COPY ./samples/notebooks/ ${HOME}/Notebooks/
 
+# Copy package sources
+COPY ./NuGet.config ${HOME}/nuget.config
+
 RUN chown -R ${NB_UID} ${HOME}
 USER ${USER}
 
-# Install nteract 
+#Install nteract 
 RUN pip install nteract_on_jupyter
-
-# Add package sources
-RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json -n dotnet-tools
-RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json -n dotnet5
-RUN dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/MachineLearning/nuget/v3/index.json -n MachineLearning
 
 # Install lastest build from main branch of Microsoft.DotNet.Interactive
 RUN dotnet tool install -g Microsoft.dotnet-interactive --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json"

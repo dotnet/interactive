@@ -56,13 +56,11 @@ RUN dotnet_sdk_version=5.0.102 \
 
 COPY ./notebooks/ ${HOME}/notebooks/
 
+# Copy package sources
+COPY ./NuGet.config ${HOME}/nuget.config
+
 RUN chown -R ${NB_UID} ${HOME}
 USER ${USER}
-
-# Add package sources
-RUN dotnet nuget add source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" -n "dotnet-tools"
-RUN dotnet nuget add source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json" -n "dotnet5"
-RUN dotnet nuget add source "https://pkgs.dev.azure.com/dnceng/public/_packaging/MachineLearning/nuget/v3/index.json" -n "MachineLearning"
 
 
 # Install nteract 
