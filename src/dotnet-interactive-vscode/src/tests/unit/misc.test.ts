@@ -3,9 +3,11 @@
 
 import { expect } from 'chai';
 import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from 'dotnet-interactive-vscode-interfaces/out/contracts';
-import { isDisplayOutput, isErrorOutput, isTextOutput } from 'dotnet-interactive-vscode-interfaces/out/utilities';
+import { isDisplayOutput, isErrorOutput, isTextOutput, reshapeOutputValueForVsCode } from 'dotnet-interactive-vscode-interfaces/out/utilities';
 import { requiredKernelspecData } from '../../ipynbUtilities';
 import { debounce, isDotNetKernelPreferred, parse, processArguments, stringify } from '../../utilities';
+
+import * as notebook from 'dotnet-interactive-vscode-interfaces/out/notebook';
 
 describe('Miscellaneous tests', () => {
     describe('preferred kernel selection', () => {
@@ -261,5 +263,37 @@ describe('Miscellaneous tests', () => {
         });
         const expectedBase64 = Buffer.from(numbers).toString('base64');
         expect(text).to.equal(`{"rawData":"${expectedBase64}"}`);
+    });
+
+    describe('vs code output value reshaping', () => {
+        it('error string is reshaped', () => {
+            const reshaped = reshapeOutputValueForVsCode(notebook.ErrorOutputMimeType, 'some error message');
+            expect(reshaped).to.deep.equal({
+                ename: 'Error',
+                evalue: 'some error message',
+                traceback: [],
+            });
+        });
+
+        it(`properly shaped output isn't reshaped`, () => {
+            const reshaped = reshapeOutputValueForVsCode(notebook.ErrorOutputMimeType, { ename: 'Error2', evalue: 'some error message', traceback: [] });
+            expect(reshaped).to.deep.equal({
+                ename: 'Error2',
+                evalue: 'some error message',
+                traceback: [],
+            });
+        });
+
+        it('non-string error message is not reshaped', () => {
+            const reshaped = reshapeOutputValueForVsCode(notebook.ErrorOutputMimeType, { some_deep_value: 'some error message' });
+            expect(reshaped).to.deep.equal({
+                some_deep_value: 'some error message',
+            });
+        });
+
+        it(`non-error mime type doesn't reshape output`, () => {
+            const reshaped = reshapeOutputValueForVsCode('text/plain', 'some error message');
+            expect(reshaped).to.equal('some error message');
+        });
     });
 });
