@@ -181,6 +181,10 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                         context.Fail(message: messageParams.Message.Message);
                         completion.SetResult(true);
                     }
+                    else
+                    {
+                        context.Display(messageParams.Message.Message.ToString());
+                    }
                 }
                 catch (Exception e)
                 {
