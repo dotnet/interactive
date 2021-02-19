@@ -72,8 +72,15 @@ export async function activate(context: vscode.ExtensionContext) {
     const hostVersionSuffix = isInsidersBuild() ? 'Insiders' : 'Stable';
     diagnosticsChannel.appendLine(`Extension started for VS Code ${hostVersionSuffix}.`);
 
+    // Default to using the Jupyter extension for .ipynb handling if the extension is present, unless the user has
+    // specified otherwise.
     const jupyterExtensionIsPresent = vscode.extensions.getExtension('ms-toolsai.jupyter') !== undefined;
-    const useJupyterExtension = isInsidersBuild() && jupyterExtensionIsPresent && (config.get<boolean>('useJupyterExtensionForIpynbFiles') || false);
+    let useJupyterExtension = jupyterExtensionIsPresent;
+    const forceDotNetIpynbHandling = config.get<boolean>('useDotNetInteractiveExtensionForIpynbFiles') || false;
+    if (forceDotNetIpynbHandling) {
+        useJupyterExtension = false;
+    }
+
     registerFileCommands(context, clientMapper, useJupyterExtension);
 
     const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable

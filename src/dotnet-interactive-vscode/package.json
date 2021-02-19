@@ -117,10 +117,10 @@
           "default": "1.0.211604",
           "description": "The minimum required version of the .NET Interactive tool."
         },
-        "dotnet-interactive.useJupyterExtensionForIpynbFiles": {
+        "dotnet-interactive.useDotNetInteractiveExtensionForIpynbFiles": {
           "type": "boolean",
           "default": false,
-          "description": "(EXPERIMENTAL) Use the Jupyter extension to handle .ipynb files if possible (requires restart)."
+          "description": "(LEGACY) Use the .NET Interactive extension to handle .ipynb files (requires restart)."
         }
       }
     },
