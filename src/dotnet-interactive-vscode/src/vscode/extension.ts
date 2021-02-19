@@ -164,7 +164,7 @@ async function getDotnetPath(outputChannel: OutputChannelAdapter): Promise<strin
     if (await isDotnetUpToDate(minDotNetSdkVersion!)) {
         dotnetPath = 'dotnet';
     } else {
-        const commandResult = await vscode.commands.executeCommand<IDotnetAcquireResult>('dotnet.acquire', { version: minDotNetSdkVersion, requestingExtensionId: 'ms-dotnettools.dotnet-interactive-vscode' });
+        const commandResult = await vscode.commands.executeCommand<IDotnetAcquireResult>('dotnet-sdk.acquire', { version: minDotNetSdkVersion, requestingExtensionId: 'ms-dotnettools.dotnet-interactive-vscode' });
         dotnetPath = commandResult!.dotnetPath;
     }
 
