@@ -6,6 +6,7 @@ import {
     NotebookCellErrorOutput,
     NotebookCellTextOutput,
 } from './contracts';
+import * as notebook from './notebook';
 
 export function isErrorOutput(arg: any): arg is NotebookCellErrorOutput {
     return arg
@@ -22,4 +23,19 @@ export function isDisplayOutput(arg: any): arg is NotebookCellDisplayOutput {
 export function isTextOutput(arg: any): arg is NotebookCellTextOutput {
     return arg
         && typeof arg.text === 'string';
+}
+
+export function reshapeOutputValueForVsCode(mimeType: string, value: unknown): unknown {
+    if (mimeType === notebook.ErrorOutputMimeType &&
+        typeof value === 'string') {
+        // this looks suspiciously like an error message; make sure it's the shape that vs code expects
+        return {
+            ename: 'Error',
+            evalue: value,
+            traceback: [],
+        };
+    }
+
+    // no change
+    return value;
 }

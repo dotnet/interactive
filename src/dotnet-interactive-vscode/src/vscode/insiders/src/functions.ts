@@ -6,13 +6,9 @@ import * as contracts from 'dotnet-interactive-vscode-interfaces/out/contracts';
 import * as interfaces from 'dotnet-interactive-vscode-interfaces/out/notebook';
 import * as utilities from 'dotnet-interactive-vscode-interfaces/out/utilities';
 
-// The current insiders build doesn't honor the error mime type, so we're temporarily reverting to `text/plain`.
-// To ensure we can still detect error cells, we're also stuffing the original mime type into the output's metadata.
-// https://github.com/dotnet/interactive/issues/1063
 function generateVsCodeNotebookCellOutputItem(mimeType: string, value: unknown): vscode.NotebookCellOutputItem {
-    const metadata = { mimeType };
-    const newMimeType = mimeType === interfaces.ErrorOutputMimeType ? 'text/plain' : mimeType;
-    return new vscode.NotebookCellOutputItem(newMimeType, value, metadata);
+    const displayValue = utilities.reshapeOutputValueForVsCode(mimeType, value);
+    return new vscode.NotebookCellOutputItem(mimeType, displayValue);
 }
 
 export async function updateCellOutputs(document: vscode.NotebookDocument, cellIndex: number, outputs: Array<interfaces.NotebookCellOutput>) {

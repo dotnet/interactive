@@ -11,10 +11,9 @@ export async function updateCellOutputs(document: vscode.NotebookDocument, cellI
     edit.replaceNotebookCellOutput(document.uri, cellIndex, outputs.map(o => {
         return new vscode.NotebookCellOutput(o.outputs.map(oi => {
             // Stable vs code doesn't support the error mime type, so we force the display to `text/plain` to ensure something shows up.
-            // To ensure we can still detect error cells, we're also stuffing the original mime type into the output's metadata.
+            // https://github.com/dotnet/interactive/issues/1063
             const mimeType = oi.mime === interfaces.ErrorOutputMimeType ? 'text/plain' : oi.mime;
-            const metadata = { mimeType: oi.mime };
-            return new vscode.NotebookCellOutputItem(mimeType, oi.value, metadata);
+            return new vscode.NotebookCellOutputItem(mimeType, oi.value);
         }));
     }));
     await vscode.workspace.applyEdit(edit);
