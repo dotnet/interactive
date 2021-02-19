@@ -394,6 +394,23 @@ describe('InteractiveClient tests', () => {
         });
     });
 
+    it('clientMapper reassociate does nothing for an untracked file', async () => {
+        let transportCreated = false;
+        const clientMapper = new ClientMapper(async (_notebookPath) => {
+            if (transportCreated) {
+                throw 'transport already created; this function should not have been called again';
+            }
+
+            transportCreated = true;
+            return new TestKernelTransport({});
+        });
+        await clientMapper.getOrAddClient({ fsPath: 'test-path.dib' });
+        clientMapper.reassociateClient({ fsPath: 'not-a-tracked-file.txt' }, { fsPath: 'also-not-a-tracked-file.txt' });
+        const _existingClient = await clientMapper.getOrAddClient({ fsPath: 'test-path.dib' });
+        expect(clientMapper.isDotNetClient({ fsPath: 'not-a-tracked-file.txt' })).to.be.false;
+        expect(clientMapper.isDotNetClient({ fsPath: 'also-not-a-tracked-file.txt' })).to.be.false;
+    });
+
     it('execution prevents diagnostics request forwarding', async () => {
         let token = 'test-token';
 

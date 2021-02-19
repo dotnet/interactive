@@ -114,6 +114,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.notebook.onDidChangeActiveNotebookKernel(async e => await updateDocumentMetadata(e, clientMapper)));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
+    context.subscriptions.push(vscode.workspace.onDidRenameFiles(e => handleFileRenames(e, clientMapper)));
 
     // language registration
     context.subscriptions.push(vscode.notebook.onDidChangeCellLanguage(async e => await updateCellLanguageInMetadata(e)));
@@ -152,6 +153,12 @@ async function updateDocumentMetadata(e: { document: vscode.NotebookDocument, ke
 
         // force creation of the client so we don't have to wait for the user to execute a cell to get the tool
         await clientMapper.getOrAddClient(e.document.uri);
+    }
+}
+
+function handleFileRenames(e: vscode.FileRenameEvent, clientMapper: ClientMapper) {
+    for (const fileRename of e.files) {
+        clientMapper.reassociateClient(fileRename.oldUri, fileRename.newUri);
     }
 }
 
