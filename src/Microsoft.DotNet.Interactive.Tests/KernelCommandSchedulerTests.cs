@@ -96,11 +96,24 @@ namespace Microsoft.DotNet.Interactive.Tests
             var scheduler = new KernelScheduler<int, int>();
 
 
-            await scheduler.Schedule(1, (v) => executionList.Add(v));
-            await scheduler.Schedule(2, (v) => executionList.Add(v));
-            scheduler.Schedule(3, (v) => executionList.Add(v));
+            await scheduler.Schedule(1, async (v) =>
+            {
+                await Task.Delay(10);
+                executionList.Add(v);
+            });
+            await scheduler.Schedule(2, async (v) =>
+            {
+                await Task.Delay(10);
+                executionList.Add(v);
+            });
 
-            executionList.Should().BeEquivalentSequenceTo(10, 1, 20, 20, 2);
+            scheduler.Schedule(3, async (v) =>
+            {
+                await Task.Delay(200);
+                executionList.Add(v);
+            });
+
+            executionList.Should().BeEquivalentSequenceTo( 1, 2);
         }
 
         [Fact]
