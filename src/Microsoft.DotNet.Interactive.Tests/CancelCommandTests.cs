@@ -14,6 +14,8 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
+#pragma warning disable 4014
+
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
