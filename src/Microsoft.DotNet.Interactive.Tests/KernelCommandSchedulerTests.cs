@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using FluentAssertions;
@@ -68,9 +69,32 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public void scheduled_work_does_not_execute_in_parallel()
+        public async Task scheduled_work_does_not_execute_in_parallel()
         {
-            throw new NotImplementedException();
+            using var scheduler = new KernelScheduler<int, int>();
+            var concurrencyCounter = 0;
+            var maxObservedParallelism = 0;
+            var tasks = new Task[3];
+            
+            for (var i = 0; i < 3; i++)
+            {
+                var task = scheduler.Schedule(i, async _ => 
+                {
+                    Interlocked.Increment(ref concurrencyCounter);
+
+                    await Task.Delay(100);
+                    maxObservedParallelism = Math.Max(concurrencyCounter, maxObservedParallelism);
+
+                    Interlocked.Decrement(ref concurrencyCounter);
+                } );
+                tasks[i] = task;
+            }
+           
+            await Task.WhenAll(tasks);
+
+            maxObservedParallelism.Should().Be(1);
+
+          
         }
 
         [Fact]
@@ -82,9 +106,10 @@ namespace Microsoft.DotNet.Interactive.Tests
             scheduler.RegisterDeferredOperationSource(
                 v => Enumerable.Repeat(v * 10, v), PerformWork);
 
-            await scheduler.Schedule(1, PerformWork);
-            await scheduler.Schedule(2, PerformWork);
-            await scheduler.Schedule(3, PerformWork);
+            for (var i = 1; i <= 3; i++)
+            {
+                await scheduler.Schedule(i, PerformWork);
+            }
 
             executionList.Should().BeEquivalentSequenceTo(10,1,20,20, 2,30,30,30, 3);
             
