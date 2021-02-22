@@ -7,8 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using FluentAssertions;
-
-using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
 using Pocket;
@@ -56,12 +54,17 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var executionList = new List<int>();
 
-            await scheduler.Schedule(1, (v) => executionList.Add(v));
-            await scheduler.Schedule(2, (v) => executionList.Add(v));
-            await scheduler.Schedule(3, (v) => executionList.Add(v));
+            await scheduler.Schedule(1, PerformWork);
+            await scheduler.Schedule(2, PerformWork);
+            await scheduler.Schedule(3, PerformWork);
 
 
             executionList.Should().BeEquivalentSequenceTo(1, 2, 3);
+
+            void PerformWork(int v)
+            {
+                executionList.Add(v);
+            }
         }
 
         [Fact]
@@ -77,25 +80,31 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var scheduler = new KernelScheduler<int, int>();
             scheduler.RegisterDeferredOperationSource(
-                v => Enumerable.Repeat(v * 10, v), (v) => executionList.Add(v));
+                v => Enumerable.Repeat(v * 10, v), PerformWork);
 
-            await scheduler.Schedule(1, (v) => executionList.Add(v));
-            await scheduler.Schedule(2, (v) => executionList.Add(v));
-            await scheduler.Schedule(3, (v) => executionList.Add(v));
+            await scheduler.Schedule(1, PerformWork);
+            await scheduler.Schedule(2, PerformWork);
+            await scheduler.Schedule(3, PerformWork);
 
             executionList.Should().BeEquivalentSequenceTo(10,1,20,20, 2,30,30,30, 3);
+            
+            void PerformWork(int v)
+            {
+                executionList.Add(v);
+            }
         }
 
         [Fact]
         public async Task cancel_scheduler_operation_prevents_execution()
         {
+            var executionList = new List<int>();
             var scheduler = new KernelScheduler<int, int>();
             scheduler.RegisterDeferredOperationSource(
-                v => Enumerable.Repeat(v * 10, v), async (v) => await Task.Delay(1000));
+                v => Enumerable.Repeat(v * 10, v), onExecuteAsync: PerformWorkAsync);
 
-            var t1 = scheduler.Schedule(1, (v) => Task.Delay(10000));
-            var t2 = scheduler.Schedule(2, (v) => Task.Delay(10000));
-            var t3 = scheduler.Schedule(3, (v) => Task.Delay(10000));
+            var t1 = scheduler.Schedule(1, PerformWorkAsync);
+            var t2 = scheduler.Schedule(2, PerformWorkAsync);
+            var t3 = scheduler.Schedule(3, PerformWorkAsync);
 
             await Task.Delay(100);
 
@@ -111,6 +120,13 @@ namespace Microsoft.DotNet.Interactive.Tests
             }
 
             exception.Should().NotBeNull();
+            executionList.Should().BeEmpty();
+
+            async Task PerformWorkAsync(int v)
+            {
+                await Task.Delay(1000);
+                executionList.Add(v);
+            }
         }
 
         [Fact]
@@ -120,25 +136,18 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var scheduler = new KernelScheduler<int, int>();
 
+            await scheduler.Schedule(1, PerformWorkAsync);
+            await scheduler.Schedule(2, PerformWorkAsync);
 
-            await scheduler.Schedule(1, async (v) =>
-            {
-                await Task.Delay(10);
-                executionList.Add(v);
-            });
-            await scheduler.Schedule(2, async (v) =>
-            {
-                await Task.Delay(10);
-                executionList.Add(v);
-            });
-
-            _ = scheduler.Schedule(3, async (v) =>
-              {
-                  await Task.Delay(200);
-                  executionList.Add(v);
-              });
+            _ = scheduler.Schedule(3, PerformWorkAsync);
 
             executionList.Should().BeEquivalentSequenceTo( 1, 2);
+
+            async Task PerformWorkAsync(int v)
+            {
+                await Task.Delay(200);
+                executionList.Add(v);
+            }
         }
 
         [Fact]
