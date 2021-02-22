@@ -54,20 +54,20 @@ namespace Microsoft.DotNet.Interactive
                     foreach (var deferred in deferredOperationRegistration.GetDeferredOperations(operation.Value))
                     {
                         var deferredOperation = new ScheduledOperation(deferred, deferredOperationRegistration.OnExecute);
-                        _executionScheduler.Schedule(() => DoWork(deferredOperation));
+                        _executionScheduler.Schedule(async () => await DoWork(deferredOperation));
                     }
                 }
 
-                _executionScheduler.Schedule(() => DoWork(operation) );
+                _executionScheduler.Schedule(async () => await DoWork(operation) );
             }
 
             _executionScheduler.Schedule(ProcessScheduledOperations);
 
-            static void DoWork(ScheduledOperation operation)
+            static async Task DoWork(ScheduledOperation operation)
             {
                 try
                 {
-                    operation.OnExecuteAsync(operation.Value);
+                    await operation.OnExecuteAsync(operation.Value);
                     operation.CompletionSource.SetResult(default);
                 }
                 catch (Exception e)
@@ -112,29 +112,6 @@ namespace Microsoft.DotNet.Interactive
         public void RegisterDeferredOperationSource(GetDeferredOperationsDelegate getDeferredOperations, OnExecuteDelegate onExecuteAsync)
         {
             _deferredOperationRegistrations.Add(new DeferredOperation(onExecuteAsync,getDeferredOperations));
-        }
-    }
-
-   
-
-    public static class KernelSchedulerExtensions
-    {
-        public static Task<U> Schedule<T,U>(this KernelScheduler<T,U> kernelScheduler, T value, Action<T> onExecute)
-        {
-            return kernelScheduler.Schedule(value, v =>
-            {
-                onExecute(v);
-                return Task.CompletedTask;
-            });
-        }
-
-        public static void RegisterDeferredOperationSource<T,U>(this KernelScheduler<T, U> kernelScheduler, KernelScheduler<T,U>.GetDeferredOperationsDelegate getDeferredOperations, Action<T> onExecute)
-        {
-            kernelScheduler.RegisterDeferredOperationSource(getDeferredOperations, v =>
-            {
-                onExecute(v);
-                return Task.CompletedTask;
-            });
         }
     }
 }
