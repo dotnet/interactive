@@ -183,7 +183,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                     }
                     else
                     {
-                        context.Display(messageParams.Message.Message.ToString());
+                        context.Display(messageParams.Message.Message);
                     }
                 }
                 catch (Exception e)
