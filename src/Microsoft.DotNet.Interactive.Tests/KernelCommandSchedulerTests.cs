@@ -87,6 +87,39 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
+        public void cancel_scheduler_operation_prevents_execution()
+        {
+            var executionList = new List<int>();
+
+            var scheduler = new KernelScheduler<int, int>();
+            scheduler.RegisterDeferredOperationSource(
+                v => Enumerable.Repeat(v * 10, v), (v) => executionList.Add(v));
+
+            var t1 = scheduler.Schedule(1, async (v) =>
+            {
+                await Task.Delay(1000);
+                executionList.Add(v);
+            });
+            var t2 = scheduler.Schedule(2, async (v) =>
+            {
+                await Task.Delay(10000);
+                executionList.Add(v);
+            });
+            var t3 = scheduler.Schedule(3, async (v) =>
+            {
+                await Task.Delay(1000);
+                executionList.Add(v);
+            });
+
+            scheduler.Cancel();
+
+            var allTask = Task.WhenAll(t1, t2, t3);
+                allTask.Wait(2000);
+
+                allTask.Exception.InnerExceptions.Should().ContainSingle(e => e is OperationCanceledException);
+        }
+
+        [Fact]
         public async Task awaiting_one_operation_does_not_wait_all()
         {
             var executionList = new List<int>();
