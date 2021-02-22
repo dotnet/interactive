@@ -14,8 +14,6 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
 
-#pragma warning disable 4014
-
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -148,7 +146,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var commandToRun = new SubmitCode("1");
 
-            kernel.SendAsync(commandToCancel);
+            var _ = kernel.SendAsync(commandToCancel);
             await Task.Delay(4000);
             await kernel.SendAsync(cancelCommand);
             await kernel.SendAsync(commandToRun);
@@ -186,7 +184,7 @@ Console.WriteLine(""done c#"")", "done f#", Skip = "for the moment")]
             var cancelCommand = new Cancel();
             var submitCodeCommand = new SubmitCode(code);
        
-            kernel.SendAsync(submitCodeCommand);
+            var _ = kernel.SendAsync(submitCodeCommand);
             await Task.Delay(4000);
             await kernel.SendAsync(cancelCommand);
             
