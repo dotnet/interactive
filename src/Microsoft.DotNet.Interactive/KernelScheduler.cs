@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Concurrency;
 using System.Threading.Tasks;
 
@@ -14,7 +13,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly IScheduler _executionScheduler = TaskPoolScheduler.Default;
 
         private readonly List<ScheduledOperation> _scheduledOperations = new();
-        private readonly List<(Func<T, IEnumerable<T>> source , OnExecuteDelegate handler)> _deferredOperationSources = new();
+        private readonly List<DeferredOperation> _deferredOperationRegistrations = new();
 
         public Task<U> Schedule(T value, OnExecuteDelegate onExecuteAsync)
         {
@@ -50,18 +49,21 @@ namespace Microsoft.DotNet.Interactive
             if(operation is not null)
             {
                 // get all deferred operations and pump in
-                foreach (var deferred in _deferredOperationSources.SelectMany(ds =>  ds.source(operation.Value).Select(d => (value:d, onExecuteAsync: ds.handler))))
+                foreach (var deferredOperationRegistration in _deferredOperationRegistrations)
                 {
-                    var deferredOperation = new ScheduledOperation(deferred.value, deferred.onExecuteAsync);
-                    _executionScheduler.Schedule(() => doWork(deferredOperation));
+                    foreach (var deferred in deferredOperationRegistration.GetDeferredOperations(operation.Value))
+                    {
+                        var deferredOperation = new ScheduledOperation(deferred, deferredOperationRegistration.OnExecute);
+                        _executionScheduler.Schedule(() => DoWork(deferredOperation));
+                    }
                 }
 
-                _executionScheduler.Schedule(() => doWork(operation) );
+                _executionScheduler.Schedule(() => DoWork(operation) );
             }
 
             _executionScheduler.Schedule(ProcessScheduledOperations);
 
-            static void doWork(ScheduledOperation operation)
+            static void DoWork(ScheduledOperation operation)
             {
                 try
                 {
@@ -77,6 +79,8 @@ namespace Microsoft.DotNet.Interactive
 
         public delegate Task OnExecuteDelegate(T value);
 
+        public delegate IEnumerable<T> GetDeferredOperationsDelegate(T operationToExecute);
+
         private class ScheduledOperation
         {
             public T Value { get; }
@@ -87,18 +91,27 @@ namespace Microsoft.DotNet.Interactive
             public ScheduledOperation(T value, OnExecuteDelegate onExecuteAsync)
             {
                 Value = value;
-              
                 CompletionSource = new TaskCompletionSource<U>();
-
                 OnExecuteAsync = onExecuteAsync;
             }
 
             public TaskCompletionSource<U> CompletionSource { get;  }
         }
 
-        public void RegisterDeferredOperationSource(Func<T, IEnumerable<T>> deferredOperationSource, OnExecuteDelegate onExecuteAsync)
+        private class DeferredOperation
         {
-            _deferredOperationSources.Add((deferredOperationSource, onExecuteAsync));
+            public GetDeferredOperationsDelegate GetDeferredOperations { get; }
+            public OnExecuteDelegate OnExecute { get; }
+            public DeferredOperation(OnExecuteDelegate onExecute, GetDeferredOperationsDelegate getDeferredOperations)
+            {
+                OnExecute = onExecute;
+                GetDeferredOperations = getDeferredOperations;
+            }
+        }
+
+        public void RegisterDeferredOperationSource(GetDeferredOperationsDelegate getDeferredOperations, OnExecuteDelegate onExecuteAsync)
+        {
+            _deferredOperationRegistrations.Add(new DeferredOperation(onExecuteAsync,getDeferredOperations));
         }
     }
 
@@ -115,9 +128,9 @@ namespace Microsoft.DotNet.Interactive
             });
         }
 
-        public static void RegisterDeferredOperationSource<T,U>(this KernelScheduler<T, U> kernelScheduler, Func<T, IEnumerable<T>> deferredOperationSource, Action<T> onExecute)
+        public static void RegisterDeferredOperationSource<T,U>(this KernelScheduler<T, U> kernelScheduler, KernelScheduler<T,U>.GetDeferredOperationsDelegate getDeferredOperations, Action<T> onExecute)
         {
-            kernelScheduler.RegisterDeferredOperationSource(deferredOperationSource, v =>
+            kernelScheduler.RegisterDeferredOperationSource(getDeferredOperations, v =>
             {
                 onExecute(v);
                 return Task.CompletedTask;
