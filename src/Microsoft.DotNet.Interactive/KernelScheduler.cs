@@ -4,12 +4,30 @@
 using System;
 using System.Collections.Generic;
 using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class KernelScheduler<T,U>
+    public class DisposableStack : Stack<IDisposable>, IDisposable
     {
+        public void Dispose()
+        {
+            while (Count>0)
+            {
+                try
+                {
+                   Pop().Dispose();
+                }
+                catch (ObjectDisposedException)
+                {
+                }
+            }
+        }
+    }
+    public class KernelScheduler<T,U> : IDisposable
+    {
+        private CompositeDisposable _disposables = new();
         private readonly IScheduler _executionScheduler = TaskPoolScheduler.Default;
 
         private readonly List<ScheduledOperation> _scheduledOperations = new();
@@ -48,17 +66,29 @@ namespace Microsoft.DotNet.Interactive
 
             if(operation is not null)
             {
+                var disposableStack = new DisposableStack();
                 // get all deferred operations and pump in
                 foreach (var deferredOperationRegistration in _deferredOperationRegistrations)
                 {
                     foreach (var deferred in deferredOperationRegistration.GetDeferredOperations(operation.Value))
                     {
                         var deferredOperation = new ScheduledOperation(deferred, deferredOperationRegistration.OnExecute);
-                        _executionScheduler.Schedule(async () => await DoWork(deferredOperation));
+                        disposableStack.Push( _executionScheduler.Schedule(async () => await DoWork(deferredOperation)));
                     }
                 }
 
-                _executionScheduler.Schedule(async () => await DoWork(operation) );
+                var disposableOperation = new CompositeDisposable
+                {
+                    Disposable.Create(() =>
+                    {
+                        operation.CompletionSource.SetException(new OperationCanceledException());
+                    }),
+                    _executionScheduler.Schedule(async () => await DoWork(operation))
+                };
+
+                disposableStack.Push(disposableOperation);
+                
+                _disposables.Add(disposableStack);
             }
 
             _executionScheduler.Schedule(ProcessScheduledOperations);
@@ -112,6 +142,18 @@ namespace Microsoft.DotNet.Interactive
         public void RegisterDeferredOperationSource(GetDeferredOperationsDelegate getDeferredOperations, OnExecuteDelegate onExecuteAsync)
         {
             _deferredOperationRegistrations.Add(new DeferredOperation(onExecuteAsync,getDeferredOperations));
+        }
+
+        public void Cancel()
+        {
+            var disposables = _disposables;
+            _disposables = new CompositeDisposable();
+            disposables.Dispose();
+        }
+
+        public void Dispose()
+        {
+            _disposables.Dispose();
         }
     }
 }
