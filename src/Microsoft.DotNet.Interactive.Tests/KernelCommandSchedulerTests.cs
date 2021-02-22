@@ -87,36 +87,30 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public void cancel_scheduler_operation_prevents_execution()
+        public async Task cancel_scheduler_operation_prevents_execution()
         {
-            var executionList = new List<int>();
-
             var scheduler = new KernelScheduler<int, int>();
             scheduler.RegisterDeferredOperationSource(
-                v => Enumerable.Repeat(v * 10, v), (v) => executionList.Add(v));
+                v => Enumerable.Repeat(v * 10, v), async (v) => await Task.Delay(1000));
 
-            var t1 = scheduler.Schedule(1, async (v) =>
-            {
-                await Task.Delay(1000);
-                executionList.Add(v);
-            });
-            var t2 = scheduler.Schedule(2, async (v) =>
-            {
-                await Task.Delay(10000);
-                executionList.Add(v);
-            });
-            var t3 = scheduler.Schedule(3, async (v) =>
-            {
-                await Task.Delay(1000);
-                executionList.Add(v);
-            });
+            var t1 = scheduler.Schedule(1, (v) => Task.Delay(10000));
+            var t2 = scheduler.Schedule(2, (v) => Task.Delay(10000));
+            var t3 = scheduler.Schedule(3, (v) => Task.Delay(10000));
+
+            await Task.Delay(100);
 
             scheduler.Cancel();
+            Exception exception = null;
+            try
+            {
+                await Task.WhenAll(t1, t2, t3);
+            }
+            catch (Exception e)
+            {
+                exception = e;
+            }
 
-            var allTask = Task.WhenAll(t1, t2, t3);
-                allTask.Wait(2000);
-
-                allTask.Exception.InnerExceptions.Should().ContainSingle(e => e is OperationCanceledException);
+            exception.Should().NotBeNull();
         }
 
         [Fact]

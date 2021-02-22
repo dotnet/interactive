@@ -9,22 +9,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class DisposableStack : Stack<IDisposable>, IDisposable
-    {
-        public void Dispose()
-        {
-            while (Count>0)
-            {
-                try
-                {
-                   Pop().Dispose();
-                }
-                catch (ObjectDisposedException)
-                {
-                }
-            }
-        }
-    }
+   
     public class KernelScheduler<T,U> : IDisposable
     {
         private CompositeDisposable _disposables = new();
@@ -81,7 +66,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     Disposable.Create(() =>
                     {
-                        operation.CompletionSource.SetException(new OperationCanceledException());
+                        operation.CompletionSource.TrySetCanceled();
                     }),
                     _executionScheduler.Schedule(async () => await DoWork(operation))
                 };
@@ -95,47 +80,18 @@ namespace Microsoft.DotNet.Interactive
 
             static async Task DoWork(ScheduledOperation operation)
             {
-                try
+                if (!operation.CompletionSource.Task.IsCanceled)
                 {
-                    await operation.OnExecuteAsync(operation.Value);
-                    operation.CompletionSource.SetResult(default);
+                    try
+                    {
+                        await operation.OnExecuteAsync(operation.Value);
+                        operation.CompletionSource.SetResult(default);
+                    }
+                    catch (Exception e)
+                    {
+                        operation.CompletionSource.SetException(e);
+                    }
                 }
-                catch (Exception e)
-                {
-                    operation.CompletionSource.SetException(e);
-                }
-            }
-        }
-
-        public delegate Task OnExecuteDelegate(T value);
-
-        public delegate IEnumerable<T> GetDeferredOperationsDelegate(T operationToExecute);
-
-        private class ScheduledOperation
-        {
-            public T Value { get; }
-            public OnExecuteDelegate OnExecuteAsync { get; }
-            public Task<U> Task => CompletionSource.Task;
-
-         
-            public ScheduledOperation(T value, OnExecuteDelegate onExecuteAsync)
-            {
-                Value = value;
-                CompletionSource = new TaskCompletionSource<U>();
-                OnExecuteAsync = onExecuteAsync;
-            }
-
-            public TaskCompletionSource<U> CompletionSource { get;  }
-        }
-
-        private class DeferredOperation
-        {
-            public GetDeferredOperationsDelegate GetDeferredOperations { get; }
-            public OnExecuteDelegate OnExecute { get; }
-            public DeferredOperation(OnExecuteDelegate onExecute, GetDeferredOperationsDelegate getDeferredOperations)
-            {
-                OnExecute = onExecute;
-                GetDeferredOperations = getDeferredOperations;
             }
         }
 
@@ -155,5 +111,55 @@ namespace Microsoft.DotNet.Interactive
         {
             _disposables.Dispose();
         }
+
+        private class DisposableStack : Stack<IDisposable>, IDisposable
+        {
+            public void Dispose()
+            {
+                while (Count > 0)
+                {
+                    try
+                    {
+                        Pop().Dispose();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                    }
+                }
+            }
+        }
+
+        public delegate Task OnExecuteDelegate(T value);
+
+        public delegate IEnumerable<T> GetDeferredOperationsDelegate(T operationToExecute);
+
+        private class ScheduledOperation
+        {
+            public T Value { get; }
+            public OnExecuteDelegate OnExecuteAsync { get; }
+            public Task<U> Task => CompletionSource.Task;
+
+
+            public ScheduledOperation(T value, OnExecuteDelegate onExecuteAsync)
+            {
+                Value = value;
+                CompletionSource = new TaskCompletionSource<U>();
+                OnExecuteAsync = onExecuteAsync;
+            }
+
+            public TaskCompletionSource<U> CompletionSource { get; }
+        }
+
+        private class DeferredOperation
+        {
+            public GetDeferredOperationsDelegate GetDeferredOperations { get; }
+            public OnExecuteDelegate OnExecute { get; }
+            public DeferredOperation(OnExecuteDelegate onExecute, GetDeferredOperationsDelegate getDeferredOperations)
+            {
+                OnExecute = onExecute;
+                GetDeferredOperations = getDeferredOperations;
+            }
+        }
+
     }
 }
