@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as path from 'path';
-import { ProcessStart } from "./interfaces";
+import { InstallInteractiveArgs, ProcessStart } from "./interfaces";
 import { Uri } from 'dotnet-interactive-vscode-interfaces/out/notebook';
 
 export function processArguments(template: { args: Array<string>, workingDirectory: string }, notebookPath: string, fallbackWorkingDirectory: string, dotnetPath: string, globalStoragePath: string): ProcessStart {
@@ -140,4 +140,19 @@ export function isDotNetKernelPreferred(filename: string, fileMetadata: any): bo
         default:
             return false;
     }
+}
+
+export function computeToolInstallArguments(args: InstallInteractiveArgs | string | undefined): InstallInteractiveArgs {
+    let installArgs: InstallInteractiveArgs = {
+        dotnetPath: 'dotnet', // if nothing is specified, we have to fall back to _something_
+        toolVersion: undefined,
+    };
+
+    if (typeof args === 'string') {
+        installArgs.dotnetPath = args;
+    } else if (typeof args === 'object' && typeof args.dotnetPath === 'string') {
+        installArgs = args;
+    }
+
+    return installArgs;
 }

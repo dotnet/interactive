@@ -9,6 +9,7 @@ use(require('chai-fs'));
 
 import { acquireDotnetInteractive } from '../../acquisition';
 import { InstallInteractiveArgs } from '../../interfaces';
+import { computeToolInstallArguments } from '../../utilities';
 import { withFakeGlobalStorageLocation } from './utilities';
 
 describe('Acquisition tests', () => {
@@ -322,6 +323,33 @@ describe('Acquisition tests', () => {
                 expect(globalStoragePath).to.be.a.directory();
                 resolve();
             });
+        });
+    });
+
+    it('install arguments are computed from `undefined`', () => {
+        const installArgs = computeToolInstallArguments(undefined);
+        expect(installArgs).to.deep.equal({
+            dotnetPath: 'dotnet',
+            toolVersion: undefined,
+        });
+    });
+
+    it('install arguments are computed from `string`', () => {
+        const installArgs = computeToolInstallArguments('some/path/to/dotnet');
+        expect(installArgs).to.deep.equal({
+            dotnetPath: 'some/path/to/dotnet',
+            toolVersion: undefined,
+        });
+    });
+
+    it('install arguments are computed from an existing install arguments object', () => {
+        const installArgs = computeToolInstallArguments({
+            dotnetPath: 'some/path/to/dotnet',
+            toolVersion: 'some-tool-version',
+        });
+        expect(installArgs).to.deep.equal({
+            dotnetPath: 'some/path/to/dotnet',
+            toolVersion: 'some-tool-version',
         });
     });
 });
