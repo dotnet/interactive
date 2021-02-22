@@ -10,6 +10,8 @@ import { ClientMapper } from '../clientMapper';
 import { getEol, isUnsavedNotebook } from './vscodeUtilities';
 import { toNotebookDocument } from './notebookContentProvider';
 import { KernelId, updateCellMetadata } from './notebookKernel';
+import { setGlobalDotnetPath } from './extension';
+import { computeToolInstallArguments } from '../utilities';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
@@ -17,20 +19,11 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext) {
     const interactiveToolSource = config.get<string>('interactiveToolSource');
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.acquire', async (args?: InstallInteractiveArgs | string | undefined): Promise<InteractiveLaunchOptions> => {
-        if (!args) {
-            // unspecified; the best we can do is hope it's on the path
-            args = 'dotnet';
-        }
-
-        if (typeof args === 'string') {
-            args = {
-                dotnetPath: args,
-                toolVersion: undefined,
-            };
-        }
+        const installArgs = computeToolInstallArguments(args);
+        setGlobalDotnetPath(installArgs.dotnetPath);
 
         const launchOptions = await acquireDotnetInteractive(
-            args,
+            installArgs,
             minDotNetInteractiveVersion!,
             context.globalStorageUri.fsPath,
             getInteractiveVersion,

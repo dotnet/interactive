@@ -50,7 +50,7 @@
   ],
   "main": "./out/vscode/extension.js",
   "extensionDependencies": [
-    "ms-dotnettools.vscode-dotnet-sdk"
+    "ms-dotnettools.vscode-dotnet-runtime"
   ],
   "contributes": {
     "notebookProvider": [

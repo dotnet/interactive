@@ -23,6 +23,12 @@ import { DotNetInteractiveNotebookKernelProvider } from './notebookKernelProvide
 
 import { isInsidersBuild } from './vscodeUtilities';
 
+let cachedDotnetPath = 'dotnet'; // default to global tool if possible
+
+export function setGlobalDotnetPath(dotnetPath: string) {
+    cachedDotnetPath = dotnetPath;
+}
+
 export async function activate(context: vscode.ExtensionContext) {
     // this must happen first, because some following functions use the acquisition command
     registerAcquisitionCommands(context);
@@ -31,13 +37,13 @@ export async function activate(context: vscode.ExtensionContext) {
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive : diagnostics'));
 
     // n.b., this is _not_ resolved here because it's potentially really slow, but needs to be chained off of later
-    const dotnetPromise = getDotnetPath(diagnosticsChannel);
+    const dotnetPromise = computeDotnetPath(diagnosticsChannel);
 
     // register with VS Code
     const clientMapper = new ClientMapper(async (notebookPath) => {
         diagnosticsChannel.appendLine(`Creating client for notebook "${notebookPath}"`);
-        const dotnetPath = await dotnetPromise;
-        const launchOptions = await getInteractiveLaunchOptions(dotnetPath);
+        await dotnetPromise;
+        const launchOptions = await getInteractiveLaunchOptions(cachedDotnetPath);
 
         // prepare kernel transport launch arguments and working directory using a fresh config item so we don't get cached values
 
@@ -52,7 +58,7 @@ export async function activate(context: vscode.ExtensionContext) {
             ? vscode.workspace.workspaceFolders[0].uri.fsPath
             : '.';
 
-        const processStart = processArguments(argsTemplate, notebookPath, fallbackWorkingDirectory, dotnetPath, launchOptions!.workingDirectory);
+        const processStart = processArguments(argsTemplate, notebookPath, fallbackWorkingDirectory, cachedDotnetPath, launchOptions!.workingDirectory);
         let notification = {
             displayError: async (message: string) => { await vscode.window.showErrorMessage(message, { modal: false }); },
             displayInfo: async (message: string) => { await vscode.window.showInformationMessage(message, { modal: false }); },
@@ -163,7 +169,7 @@ function handleFileRenames(e: vscode.FileRenameEvent, clientMapper: ClientMapper
 }
 
 // this function can be slow and should only be called once
-async function getDotnetPath(outputChannel: OutputChannelAdapter): Promise<string> {
+async function computeDotnetPath(outputChannel: OutputChannelAdapter): Promise<void> {
     // use global dotnet or install
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
     const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion');
@@ -171,12 +177,12 @@ async function getDotnetPath(outputChannel: OutputChannelAdapter): Promise<strin
     if (await isDotnetUpToDate(minDotNetSdkVersion!)) {
         dotnetPath = 'dotnet';
     } else {
-        const commandResult = await vscode.commands.executeCommand<IDotnetAcquireResult>('dotnet-sdk.acquire', { version: minDotNetSdkVersion, requestingExtensionId: 'ms-dotnettools.dotnet-interactive-vscode' });
+        const commandResult = await vscode.commands.executeCommand<IDotnetAcquireResult>('dotnet.acquire', { version: minDotNetSdkVersion, requestingExtensionId: 'ms-dotnettools.dotnet-interactive-vscode' });
         dotnetPath = commandResult!.dotnetPath;
     }
 
+    cachedDotnetPath = dotnetPath;
     outputChannel.appendLine(`Using dotnet from "${dotnetPath}"`);
-    return dotnetPath;
 }
 
 async function getInteractiveLaunchOptions(dotnetPath: string): Promise<InteractiveLaunchOptions> {

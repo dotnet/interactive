@@ -398,7 +398,7 @@ describe('InteractiveClient tests', () => {
         let transportCreated = false;
         const clientMapper = new ClientMapper(async (_notebookPath) => {
             if (transportCreated) {
-                throw 'transport already created; this function should not have been called again';
+                throw new Error('transport already created; this function should not have been called again');
             }
 
             transportCreated = true;
