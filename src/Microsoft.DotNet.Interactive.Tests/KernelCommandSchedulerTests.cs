@@ -79,8 +79,6 @@ namespace Microsoft.DotNet.Interactive.Tests
             scheduler.RegisterDeferredOperationSource(
                 v => Enumerable.Repeat(v * 10, v), (v) => executionList.Add(v));
 
-           
-
             await scheduler.Schedule(1, (v) => executionList.Add(v));
             await scheduler.Schedule(2, (v) => executionList.Add(v));
             await scheduler.Schedule(3, (v) => executionList.Add(v));
@@ -107,11 +105,11 @@ namespace Microsoft.DotNet.Interactive.Tests
                 executionList.Add(v);
             });
 
-            scheduler.Schedule(3, async (v) =>
-            {
-                await Task.Delay(200);
-                executionList.Add(v);
-            });
+            _ = scheduler.Schedule(3, async (v) =>
+              {
+                  await Task.Delay(200);
+                  executionList.Add(v);
+              });
 
             executionList.Should().BeEquivalentSequenceTo( 1, 2);
         }
