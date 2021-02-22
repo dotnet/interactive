@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         [Fact]
         public async Task scheduled_work_is_completed_in_order()
         {
-            var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>();
 
             var executionList = new List<int>();
 
@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             var executionList = new List<int>();
 
-            var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>();
             scheduler.RegisterDeferredOperationSource(
                 v => Enumerable.Repeat(v * 10, v), PerformWork);
 
@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task cancel_scheduler_operation_prevents_execution()
         {
             var executionList = new List<int>();
-            var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>();
             scheduler.RegisterDeferredOperationSource(
                 v => Enumerable.Repeat(v * 10, v), onExecuteAsync: PerformWorkAsync);
 
@@ -134,7 +134,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             var executionList = new List<int>();
 
-            var scheduler = new KernelScheduler<int, int>();
+            using var scheduler = new KernelScheduler<int, int>();
 
             await scheduler.Schedule(1, PerformWorkAsync);
             await scheduler.Schedule(2, PerformWorkAsync);
