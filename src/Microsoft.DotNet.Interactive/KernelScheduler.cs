@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -73,37 +74,43 @@ namespace Microsoft.DotNet.Interactive
                 }
                 else
                 {
-
                     return;
                 }
             }
 
-            if (operation is not null)
+            try
             {
-                // get all deferred operations and pump in
-                foreach (var deferredOperationRegistration in _deferredOperationRegistrations)
+                if (operation is not null)
                 {
-                    foreach (var deferred in deferredOperationRegistration.GetDeferredOperations(operation.Value, operation.Scope))
+                    // get all deferred operations and pump in
+                    foreach (var deferredOperationRegistration in _deferredOperationRegistrations)
                     {
-                        var deferredOperation = new ScheduledOperation(deferred, deferredOperationRegistration.OnExecute, operation.Scope);
-                        
-                        cancellationToken.Register(() =>
+                        foreach (var deferred in deferredOperationRegistration.GetDeferredOperations(operation.Value,
+                            operation.Scope))
                         {
-                            if (!deferredOperation.CompletionSource.Task.IsCompleted)
+                            var deferredOperation = new ScheduledOperation(deferred,
+                                deferredOperationRegistration.OnExecute, operation.Scope);
+
+                            cancellationToken.Register(() =>
                             {
-                                deferredOperation.CompletionSource.SetCanceled();
-                            }
-                        });
+                                if (!deferredOperation.CompletionSource.Task.IsCompleted)
+                                {
+                                    deferredOperation.CompletionSource.SetCanceled();
+                                }
+                            });
 
-                        await DoWork(deferredOperation);
+                            await DoWork(deferredOperation);
+                        }
                     }
+
+                    await DoWork(operation);
                 }
-
-
-                await DoWork(operation);
             }
-
-
+            catch
+            {
+                Cancel();
+                throw;
+            }
 
             async Task DoWork(ScheduledOperation scheduleOperation)
             {
@@ -118,6 +125,7 @@ namespace Microsoft.DotNet.Interactive
                     catch (Exception e)
                     {
                         scheduleOperation.CompletionSource.SetException(e);
+                        throw;
                     }
                 }
             }
