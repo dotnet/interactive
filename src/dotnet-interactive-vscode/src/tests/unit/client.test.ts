@@ -1,15 +1,20 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { expect } from 'chai';
+import * as chai from 'chai';
+import * as chai_as_promised from 'chai-as-promised';
+chai.use(chai_as_promised);
+const expect = chai.expect;
 
 import { ClientMapper } from '../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
+import { CallbackTestKernelTransport } from './callbackTestKernelTransport';
 import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandSucceededType, DisplayedValueProducedType, ReturnValueProducedType, DisplayedValueUpdatedType, CommandFailedType } from 'dotnet-interactive-vscode-interfaces/out/contracts';
 import { debounce, wait } from '../../utilities';
 import * as interfaces from 'dotnet-interactive-vscode-interfaces/out/notebook';
 
 describe('InteractiveClient tests', () => {
+
     it('command execution returns deferred events', async () => {
         let token = 'test-token';
         let code = '1 + 1';
@@ -435,4 +440,43 @@ describe('InteractiveClient tests', () => {
         await wait(1000);
         expect(diagnosticsCallbackFired).to.be.false;
     });
+
+    it('exception in submit code properly rejects all promises', done => {
+        const token = 'test-token';
+        const clientMapper = new ClientMapper(async (_notebookPath) => new CallbackTestKernelTransport({
+            'SubmitCode': () => {
+                throw new Error('expected exception during submit');
+            },
+        }));
+        clientMapper.getOrAddClient({ fsPath: 'test-path.dib' }).then(client => {
+            expect(client.execute("1+1", "csharp", _outputs => { }, _diagnostics => { }, { token, id: '' })).eventually.rejectedWith('expected exception during submit').notify(done);
+        });
+    });
+
+    it('exception in submit code properly generates error outputs', done => {
+        const token = 'test-token';
+        const clientMapper = new ClientMapper(async (_notebookPath) => new CallbackTestKernelTransport({
+            'SubmitCode': () => {
+                throw new Error('expected exception during submit');
+            },
+        }));
+        let seenOutputs: Array<interfaces.NotebookCellOutput> = [];
+        clientMapper.getOrAddClient({ fsPath: 'test-path.dib' }).then(client => {
+            expect(client.execute("1+1", "csharp", outputs => { seenOutputs = outputs; }, _diagnostics => { }, { token, id: '' })).eventually.rejected.then(() => {
+                try {
+                    expect(seenOutputs).to.deep.equal([{
+                        id: '1',
+                        outputs: [{
+                            mime: interfaces.ErrorOutputMimeType,
+                            value: 'Error: expected exception during submit',
+                        }]
+                    }]);
+                    done();
+                } catch (e) {
+                    done(e);
+                }
+            });
+        });
+    });
+
 });

@@ -49,7 +49,6 @@ export class StdioKernelTransport implements KernelTransport {
             this.diagnosticChannel.appendLine(`Kernel started with pid ${childProcess.pid}.`);
 
             childProcess.on('exit', (code: number, signal: string) => {
-
                 let message = `Kernel pid ${childProcess.pid} ended`;
                 let messageCodeSuffix = (code && code !== 0)
                     ? ` with code ${code}`
@@ -153,8 +152,6 @@ export class StdioKernelTransport implements KernelTransport {
         });
     }
 
-
-
     private handleLine(line: string) {
         let obj = parse(line);
         let envelope = <KernelEventEnvelope>obj;
@@ -195,13 +192,16 @@ export class StdioKernelTransport implements KernelTransport {
 
             let str = stringify(submit);
             if (isNotNull(this.childProcess)) {
-                this.childProcess.stdin.write(str);
-                this.childProcess.stdin.write('\n');
-
-                resolve();
+                try {
+                    this.childProcess.stdin.write(str);
+                    this.childProcess.stdin.write('\n');
+                    resolve();
+                } catch (e) {
+                    reject(e);
+                }
             }
             else {
-                reject();
+                reject('Kernel process is `null`.');
             }
         });
     }
