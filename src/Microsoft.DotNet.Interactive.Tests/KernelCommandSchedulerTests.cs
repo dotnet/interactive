@@ -63,9 +63,10 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             executionList.Should().BeEquivalentSequenceTo(1, 2, 3);
 
-            void PerformWork(int v)
+            Task<int> PerformWork(int v)
             {
                 executionList.Add(v);
+                return Task.FromResult(v);
             }
         }
 
@@ -79,7 +80,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             for (var i = 0; i < 3; i++)
             {
-                var task = scheduler.Schedule(i, async _ =>
+                var task = scheduler.Schedule(i, async v =>
                 {
                     Interlocked.Increment(ref concurrencyCounter);
 
@@ -87,6 +88,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                     maxObservedParallelism = Math.Max(concurrencyCounter, maxObservedParallelism);
 
                     Interlocked.Decrement(ref concurrencyCounter);
+                    return v;
                 });
                 tasks[i] = task;
             }
@@ -101,9 +103,10 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             var executionList = new List<int>();
 
-            void PerformWork(int v)
+            Task<int> PerformWork(int v)
             {
                 executionList.Add(v);
+                return Task.FromResult(v);
             }
 
             using var scheduler = new KernelScheduler<int, int>();
@@ -124,17 +127,26 @@ namespace Microsoft.DotNet.Interactive.Tests
             var executionList = new List<int>();
             using var scheduler = new KernelScheduler<int, int>();
             var barrier = new Barrier(2);
-            void PerformWork(int v)
+            Task<int> PerformWork(int v)
             {
                 barrier.SignalAndWait(5000);
                 executionList.Add(v);
+                return Task.FromResult(v);
             }
 
             var scheduledWork = new List<Task>
             {
                 scheduler.Schedule(1, PerformWork),
-                scheduler.Schedule(2, executionList.Add),
-                scheduler.Schedule(3, executionList.Add)
+                scheduler.Schedule(2, v =>
+                {
+                    executionList.Add(v);
+                    return Task.FromResult(v);
+                }),
+                scheduler.Schedule(3, v =>
+                {
+                    executionList.Add(v);
+                    return Task.FromResult(v);
+                })
             };
 
             barrier.SignalAndWait();
@@ -152,18 +164,27 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var scheduler = new KernelScheduler<int, int>();
             var barrier = new Barrier(2);
 
-            async Task PerformWork(int v)
+            async Task<int> PerformWork(int v)
             {
                 barrier.SignalAndWait();
                 await Task.Delay(3000);
                 executionList.Add(v);
+                return v;
             }
 
             var scheduledWork = new List<Task>
             {
                 scheduler.Schedule(1, PerformWork),
-                scheduler.Schedule(2, executionList.Add),
-                scheduler.Schedule(3, executionList.Add)
+                scheduler.Schedule(2, v =>
+                {
+                    executionList.Add(v);
+                    return Task.FromResult(v);
+                }),
+                scheduler.Schedule(3, v =>
+                {
+                    executionList.Add(v);
+                    return Task.FromResult(v);
+                })
             };
 
             barrier.SignalAndWait();
@@ -187,18 +208,27 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var scheduler = new KernelScheduler<int, int>();
             var barrier = new Barrier(2);
 
-            async Task PerformWork(int v)
+            async Task<int> PerformWork(int v)
             {
                 barrier.SignalAndWait();
                 await Task.Delay(3000);
                 executionList.Add(v);
+                return v;
             }
 
             var scheduledWork = new List<Task>
             {
                 scheduler.Schedule(1, PerformWork),
-                scheduler.Schedule(2, executionList.Add),
-                scheduler.Schedule(3, executionList.Add)
+                scheduler.Schedule(2, v =>
+                {
+                    executionList.Add(v);
+                    return Task.FromResult(v);
+                }),
+                scheduler.Schedule(3, v =>
+                {
+                    executionList.Add(v);
+                    return Task.FromResult(v);
+                })
             };
 
             barrier.SignalAndWait();
@@ -215,7 +245,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var scheduler = new KernelScheduler<int, int>();
             var barrier = new Barrier(2);
 
-            void PerformWork(int v)
+            Task<int> PerformWork(int v)
             {
                 barrier.SignalAndWait();
                 throw new InvalidOperationException("test exception");
@@ -224,8 +254,16 @@ namespace Microsoft.DotNet.Interactive.Tests
             var scheduledWork = new List<Task>
             {
                 scheduler.Schedule(1, PerformWork),
-                scheduler.Schedule(2, executionList.Add),
-                scheduler.Schedule(3, executionList.Add)
+                scheduler.Schedule(2, v =>
+                {
+                    executionList.Add(v);
+                    return Task.FromResult(v);
+                }),
+                scheduler.Schedule(3, v =>
+                {
+                    executionList.Add(v);
+                    return Task.FromResult(v);
+                })
             };
 
             barrier.SignalAndWait();
@@ -248,7 +286,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var scheduler = new KernelScheduler<int, int>();
             var barrier = new Barrier(2);
 
-            void PerformWork(int v)
+            Task<int> PerformWork(int v)
             {
                 barrier.SignalAndWait();
                 throw new InvalidOperationException("test exception");
@@ -257,8 +295,16 @@ namespace Microsoft.DotNet.Interactive.Tests
             var scheduledWork = new List<Task>
             {
                 scheduler.Schedule(1, PerformWork),
-                scheduler.Schedule(2, executionList.Add),
-                scheduler.Schedule(3, executionList.Add)
+                scheduler.Schedule(2, v =>
+                {
+                    executionList.Add(v);
+                    return Task.FromResult(v);
+                }),
+                scheduler.Schedule(3, v =>
+                {
+                    executionList.Add(v);
+                    return Task.FromResult(v);
+                })
             };
 
             barrier.SignalAndWait();
@@ -278,10 +324,11 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             using var scheduler = new KernelScheduler<int, int>();
 
-            async Task PerformWorkAsync(int v)
+            async Task<int> PerformWorkAsync(int v)
             {
                 await Task.Delay(200);
                 executionList.Add(v);
+                return v;
             }
 
             await scheduler.Schedule(1, PerformWorkAsync);
@@ -299,9 +346,10 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             var executionList = new List<int>();
 
-            void PerformWork(int v)
+            Task<int> PerformWork(int v)
             {
                 executionList.Add(v);
+                return Task.FromResult(v);
             }
 
             using var scheduler = new KernelScheduler<int, int>();
