@@ -118,8 +118,8 @@ namespace Microsoft.DotNet.Interactive
                 {
                     try
                     {
-                        await scheduleOperation.OnExecuteAsync(scheduleOperation.Value);
-                        scheduleOperation.CompletionSource.SetResult(default);
+                        var operationResult = await scheduleOperation.OnExecuteAsync(scheduleOperation.Value);
+                        scheduleOperation.CompletionSource.SetResult(operationResult);
                     }
                     catch (Exception e)
                     {
@@ -159,9 +159,7 @@ namespace Microsoft.DotNet.Interactive
             Cancel();
         }
 
-
-
-        public delegate Task OnExecuteDelegate(T value);
+        public delegate Task<U> OnExecuteDelegate(T value);
 
         public delegate IEnumerable<T> GetDeferredOperationsDelegate(T operationToExecute, string queueName);
 
