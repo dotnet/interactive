@@ -102,7 +102,7 @@ export async function activate(context: vscode.ExtensionContext) {
         viewType: ['dotnet-interactive-jupyter'],
         filenamePatter: '*.ipynb'
     };
-    const notebookContentProvider = new DotNetInteractiveNotebookContentProvider(clientMapper);
+    const notebookContentProvider = new DotNetInteractiveNotebookContentProvider(diagnosticsChannel, clientMapper);
 
     // notebook content
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookContentProvider));

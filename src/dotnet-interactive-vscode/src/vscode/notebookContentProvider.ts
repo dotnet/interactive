@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ClientMapper } from '../clientMapper';
@@ -11,13 +12,14 @@ import { configureWebViewMessaging, getEol, isInsidersBuild, isUnsavedNotebook }
 
 import * as vscodeInsiders from 'dotnet-interactive-vscode-insiders/out/functions';
 import * as vscodeStable from 'dotnet-interactive-vscode-stable/out/functions';
+import { OutputChannelAdapter } from './OutputChannelAdapter';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
 
     private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
     eol: Eol;
 
-    constructor(readonly clientMapper: ClientMapper) {
+    constructor(readonly outputChannel: OutputChannelAdapter, readonly clientMapper: ClientMapper) {
         this.eol = getEol();
     }
 
@@ -34,21 +36,19 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         }
 
         const client = await this.clientMapper.getOrAddClient(uri);
-        let notebookCells: Array<NotebookCell>;
-        if (fileUri) {
+        let notebookCells: Array<NotebookCell> = [];
+        if (fileUri && fs.existsSync(fileUri.fsPath)) {
             // file on disk
-            let buffer = new Uint8Array();
             try {
-                buffer = Buffer.from(await vscode.workspace.fs.readFile(fileUri));
-            } catch {
+                const buffer = Buffer.from(await vscode.workspace.fs.readFile(fileUri));
+                const fileName = path.basename(fileUri.fsPath);
+                const notebook = await client.parseNotebook(fileName, buffer);
+                notebookCells = notebook.cells;
+            } catch (e) {
+                this.outputChannel.appendLine(`Error opening file '${fileUri.fsPath}':\n${e}`);
             }
-
-            const fileName = path.basename(fileUri.fsPath);
-            const notebook = await client.parseNotebook(fileName, buffer);
-            notebookCells = notebook.cells;
         } else {
-            // new empty/blank notebook
-            notebookCells = [];
+            // new empty/blank notebook, nothing to do
         }
 
         const notebookData = this.createNotebookData(notebookCells);
