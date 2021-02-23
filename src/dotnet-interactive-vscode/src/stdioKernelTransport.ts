@@ -29,7 +29,12 @@ export class StdioKernelTransport implements KernelTransport {
     public httpPort: Number;
     public externalUri: Uri | null;
 
-    constructor(processStart: ProcessStart, private diagnosticChannel: ReportChannel, private parseUri: (uri: string) => Uri, private notification: { displayError: (message: string) => Promise<void>, displayInfo: (message: string) => Promise<void> }) {
+    constructor(
+        processStart: ProcessStart,
+        private diagnosticChannel: ReportChannel,
+        private parseUri: (uri: string) => Uri,
+        private notification: { displayError: (message: string) => Promise<void>, displayInfo: (message: string) => Promise<void> },
+        private processExited: (pid: number, code: number | undefined, signal: string | undefined) => void) {
         // prepare root event handler
         this.lineReader = new LineReader();
         this.lineReader.subscribe(line => this.handleLine(line));
@@ -49,19 +54,11 @@ export class StdioKernelTransport implements KernelTransport {
             this.diagnosticChannel.appendLine(`Kernel started with pid ${childProcess.pid}.`);
 
             childProcess.on('exit', (code: number, signal: string) => {
-                let message = `Kernel pid ${childProcess.pid} ended`;
-                let messageCodeSuffix = (code && code !== 0)
-                    ? ` with code ${code}`
-                    : '';
-                let messageSignalSuffix = signal
-                    ? ` with signal ${signal}`
-                    : '';
-                this.diagnosticChannel.appendLine(message + messageCodeSuffix + messageSignalSuffix);
+                this.processExited(pid, code, signal);
             });
 
             childProcess.stdout.on('data', data => this.lineReader.onData(data));
             childProcess.stderr.on('data', data => this.diagnosticChannel.appendLine(`kernel (${pid}) stderr: ${data.toString('utf-8')}`));
-
 
             const readySubscriber = this.subscribeToKernelEvents(eventEnvelope => {
                 if (eventEnvelope.eventType === KernelReadyType) {
