@@ -8,13 +8,13 @@ namespace Microsoft.DotNet.Interactive
 {
     public static class KernelSchedulerExtensions
     {
-        public static Task<U> Schedule<T,U>(this KernelScheduler<T,U> kernelScheduler, T value, Action<T> onExecute)
+        public static Task<U> Schedule<T,U>(this KernelScheduler<T,U> kernelScheduler, T value, Action<T> onExecute, string scope = "default")
         {
             return kernelScheduler.Schedule(value, v =>
             {
                 onExecute(v);
                 return Task.CompletedTask;
-            });
+            },scope);
         }
 
         public static void RegisterDeferredOperationSource<T,U>(this KernelScheduler<T, U> kernelScheduler, KernelScheduler<T,U>.GetDeferredOperationsDelegate getDeferredOperations, Action<T> onExecute)

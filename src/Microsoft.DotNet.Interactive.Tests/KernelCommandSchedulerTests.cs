@@ -93,8 +93,6 @@ namespace Microsoft.DotNet.Interactive.Tests
             await Task.WhenAll(tasks);
 
             maxObservedParallelism.Should().Be(1);
-
-          
         }
 
         [Fact]
@@ -102,64 +100,62 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             var executionList = new List<int>();
 
+            void PerformWork(int v)
+            {
+                executionList.Add(v);
+            }
+
             using var scheduler = new KernelScheduler<int, int>();
             scheduler.RegisterDeferredOperationSource(
-                v => Enumerable.Repeat(v * 10, v), PerformWork);
+                (v,_) => Enumerable.Repeat(v * 10, v), PerformWork);
 
             for (var i = 1; i <= 3; i++)
             {
                 await scheduler.Schedule(i, PerformWork);
             }
 
-            executionList.Should().BeEquivalentSequenceTo(10,1,20,20, 2,30,30,30, 3);
-            
-            void PerformWork(int v)
-            {
-                executionList.Add(v);
-            }
+            executionList.Should().BeEquivalentSequenceTo(10, 1, 20, 20, 2, 30, 30, 30, 3);
         }
 
         [Fact]
-        public async Task cancel_scheduler_operation_prevents_execution()
+        public void cancel_scheduler_work_prevents_any_scheduled_work_from_executing()
         {
             var executionList = new List<int>();
             using var scheduler = new KernelScheduler<int, int>();
-            scheduler.RegisterDeferredOperationSource(
-                v => Enumerable.Repeat(v * 10, v), onExecuteAsync: PerformWorkAsync);
+            var barrier = new Barrier(2);
+            void PerformWork(int v)
+            {
+                barrier.SignalAndWait(5000);
+                executionList.Add(v);
+            }
 
-            var t1 = scheduler.Schedule(1, PerformWorkAsync);
-            var t2 = scheduler.Schedule(2, PerformWorkAsync);
-            var t3 = scheduler.Schedule(3, PerformWorkAsync);
+            var scheduledWork = new List<Task>
+            {
+                scheduler.Schedule(1, PerformWork),
+                scheduler.Schedule(2, executionList.Add),
+                scheduler.Schedule(3, executionList.Add)
+            };
 
-            await Task.Delay(100);
-
+            barrier.SignalAndWait();
             scheduler.Cancel();
-            Exception exception = null;
-            try
-            {
-                await Task.WhenAll(t1, t2, t3);
-            }
-            catch (Exception e)
-            {
-                exception = e;
-            }
+            Task.WhenAll(scheduledWork);
 
-            exception.Should().NotBeNull();
-            executionList.Should().BeEmpty();
+
+            executionList.Should().BeEquivalentTo(1);
+        }
+
+        [Fact]
+        public async Task awaiting_for_work_to_complete_does_not_wait_for_subsequent_work()
+        {
+            var executionList = new List<int>();
+
+            using var scheduler = new KernelScheduler<int, int>();
 
             async Task PerformWorkAsync(int v)
             {
-                await Task.Delay(1000);
+                await Task.Delay(200);
                 executionList.Add(v);
             }
-        }
-
-        [Fact]
-        public async Task awaiting_one_operation_does_not_wait_all()
-        {
-            var executionList = new List<int>();
-
-            using var scheduler = new KernelScheduler<int, int>();
 
             await scheduler.Schedule(1, PerformWorkAsync);
             await scheduler.Schedule(2, PerformWorkAsync);
@@ -168,17 +164,29 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             executionList.Should().BeEquivalentSequenceTo( 1, 2);
 
-            async Task PerformWorkAsync(int v)
-            {
-                await Task.Delay(200);
-                executionList.Add(v);
-            }
+           
         }
 
         [Fact]
-        public void new_work_is_executed_after_all_require()
+        public async Task deferred_work_is_done_based_on_the_scope_of_scheduled_work()
         {
-            throw new NotImplementedException();
+            var executionList = new List<int>();
+
+            void PerformWork(int v)
+            {
+                executionList.Add(v);
+            }
+
+            using var scheduler = new KernelScheduler<int, int>();
+            scheduler.RegisterDeferredOperationSource(
+                (v, scope) => scope == "scope2" ? Enumerable.Repeat(v * 10, v) : Enumerable.Empty<int>(), PerformWork);
+
+            for (var i = 1; i <= 3; i++)
+            {
+                await scheduler.Schedule(i, PerformWork, $"scope{i}");
+            }
+
+            executionList.Should().BeEquivalentSequenceTo( 1, 20, 20, 2,3);
         }
 
         //[Fact]
