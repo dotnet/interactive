@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,7 +31,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 _cancellationTokenSource.Token.Register(() =>
                 {
-                    if(!operation.CompletionSource.Task.IsCompleted)
+                    if (!operation.CompletionSource.Task.IsCompleted)
                     {
                         operation.CompletionSource.SetCanceled();
                     }
@@ -43,7 +42,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     var previousSynchronizationContext = SynchronizationContext.Current;
                     var synchronizationContext = new ClockwiseSynchronizationContext();
-                    
+
                     SynchronizationContext.SetSynchronizationContext(synchronizationContext);
                     Task.Run(async () =>
                     {
@@ -150,7 +149,7 @@ namespace Microsoft.DotNet.Interactive
                 _scheduledOperations = new List<ScheduledOperation>();
                 _deferredOperationRegistrations = new List<DeferredOperation>();
 
-                _cancellationTokenSource.Cancel(); 
+                _cancellationTokenSource.Cancel();
                 _cancellationTokenSource = new CancellationTokenSource();
             }
         }
