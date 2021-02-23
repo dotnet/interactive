@@ -94,11 +94,11 @@ export class InteractiveClient {
         return serializedNotebook.rawData;
     }
 
-    async execute(source: string, language: string, outputObserver: { (outputs: Array<interfaces.NotebookCellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, configuration: { token?: string | undefined, id?: string | undefined } | undefined): Promise<void> {
+    execute(source: string, language: string, outputObserver: { (outputs: Array<interfaces.NotebookCellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, configuration: { token?: string | undefined, id?: string | undefined } | undefined): Promise<void> {
         if (configuration !== undefined && configuration.id !== undefined) {
             debounce(configuration.id, 0, () => { });
         }
-        return new Promise(async (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             let diagnostics: Array<Diagnostic> = [];
             let outputs: Array<interfaces.NotebookCellOutput> = [];
 
@@ -110,7 +110,7 @@ export class InteractiveClient {
                 outputObserver(outputs);
             };
 
-            await this.submitCode(source, language, eventEnvelope => {
+            return this.submitCode(source, language, eventEnvelope => {
                 if (this.deferredOutput.length > 0) {
                     outputs.push(...this.deferredOutput);
                     this.deferredOutput = [];
@@ -124,15 +124,8 @@ export class InteractiveClient {
                     case CommandFailedType:
                         {
                             const err = <CommandFailed>eventEnvelope.event;
-                            const outputItem: interfaces.NotebookCellOutputItem = {
-                                mime: interfaces.ErrorOutputMimeType,
-                                value: err.message,
-                            };
-                            const output: interfaces.NotebookCellOutput = {
-                                id: this.getNextOutputId(),
-                                outputs: [outputItem]
-                            };
-                            outputs.push(output);
+                            const errorOutput = this.createErrorOutput(err.message);
+                            outputs.push(errorOutput);
                             reportOutputs();
                             reject(err);
                         }
@@ -186,7 +179,12 @@ export class InteractiveClient {
                         }
                         break;
                 }
-            }, configuration?.token);
+            }, configuration?.token).catch(e => {
+                const errorOutput = this.createErrorOutput('' + e);
+                outputs.push(errorOutput);
+                reportOutputs();
+                reject(e);
+            });
         });
     }
 
@@ -249,6 +247,19 @@ export class InteractiveClient {
 
     dispose() {
         this.kernelTransport.dispose();
+    }
+
+    private createErrorOutput(message: string): interfaces.NotebookCellOutput {
+        const outputItem: interfaces.NotebookCellOutputItem = {
+            mime: interfaces.ErrorOutputMimeType,
+            value: message,
+        };
+        const output: interfaces.NotebookCellOutput = {
+            id: this.getNextOutputId(),
+            outputs: [outputItem]
+        };
+
+        return output;
     }
 
     private submitCommandAndGetResult<TEvent extends KernelEvent>(command: KernelCommand, commandType: KernelCommandType, expectedEventType: KernelEventType, token: string | undefined): Promise<TEvent> {

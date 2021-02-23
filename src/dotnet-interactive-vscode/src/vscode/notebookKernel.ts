@@ -57,18 +57,18 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
             diagnosticCollection.set(cell.uri, diags.filter(d => d.severity !== DiagnosticSeverity.Hidden).map(toVsCodeDiagnostic));
         }
 
-        return client.execute(source, getSimpleLanguage(cell.language), outputObserver, diagnosticObserver, { id: document.uri.toString() }).then(async () => {
-            await updateCellMetadata(document, cell, {
+        return client.execute(source, getSimpleLanguage(cell.language), outputObserver, diagnosticObserver, { id: document.uri.toString() }).then(() => {
+            return updateCellMetadata(document, cell, {
                 runState: vscode.NotebookCellRunState.Success,
                 lastRunDuration: Date.now() - startTime,
             });
-        }).catch(async () => {
-            await updateCellMetadata(document, cell, {
+        }).catch(() => {
+            return updateCellMetadata(document, cell, {
                 runState: vscode.NotebookCellRunState.Error,
                 lastRunDuration: Date.now() - startTime,
             });
-        }).then(async () => {
-            await updateCellLanguages(document);
+        }).then(() => {
+            return updateCellLanguages(document);
         });
     }
 
