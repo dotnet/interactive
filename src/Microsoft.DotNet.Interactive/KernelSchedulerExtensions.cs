@@ -11,16 +11,6 @@ namespace Microsoft.DotNet.Interactive
     public static class KernelSchedulerExtensions
     {
 
-
-        public static void RegisterDeferredOperationSource<T,U>(this KernelScheduler<T, U> kernelScheduler, KernelScheduler<T,U>.GetDeferredOperationsDelegate getDeferredOperations, Action<T> onExecute)
-        {
-            kernelScheduler.RegisterDeferredOperationSource(getDeferredOperations, v =>
-            {
-                onExecute(v);
-                return Task.FromResult(default(U));
-            });
-        }
-
         internal static Task<KernelCommandResult> Schedule(this KernelScheduler<KernelCommand, KernelCommandResult> kernelScheduler, KernelCommand kernelCommand, Kernel kernel)
         {
 
