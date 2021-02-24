@@ -83,6 +83,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             var tree = Parse(code, originalCommand.TargetKernelName);
             var nodes = tree.GetRoot().ChildNodes.ToArray();
             var targetKernelName = originalCommand.TargetKernelName ?? KernelLanguage;
+            var kernelUri = originalCommand.KernelUri;
             KernelNameDirectiveNode lastKernelNameNode = null;
 
             foreach (var node in nodes)
@@ -123,6 +124,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                         if (directiveNode is KernelNameDirectiveNode kernelNameNode)
                         {
+                            kernelUri = _kernel.Uri.Append(kernelNameNode.KernelName);
                             targetKernelName = kernelNameNode.KernelName;
                             lastKernelNameNode = kernelNameNode;
                         }
@@ -143,6 +145,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         }
                         else if (parseResult.CommandResult.Command.Name == "#i")
                         {
+                            directiveCommand.KernelUri = kernelUri;
                             directiveCommand.TargetKernelName = targetKernelName;
                             AddHoistedCommand(directiveCommand);
                         }

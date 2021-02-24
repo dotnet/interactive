@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive
                 ));
         }
 
-        public static bool UseNewScheduler { get; set; } = false;
+        public static bool UseNewScheduler { get; set; } = true;
 
         internal KernelCommandScheduler Scheduler => _scheduler;
 
@@ -167,13 +167,20 @@ namespace Microsoft.DotNet.Interactive
 
         private IReadOnlyList<KernelCommand> PreprocessCommands(KernelCommand command)
         {
-            return command switch
+            var commands =  command switch
             {
                 SubmitCode { LanguageNode: null } submitCode => SubmissionParser.SplitSubmission(submitCode),
                 RequestDiagnostics { LanguageNode: null } requestDiagnostics => SubmissionParser.SplitSubmission(requestDiagnostics),
                 LanguageServiceCommand { LanguageNode: null } languageServiceCommand => PreprocessLanguageServiceCommand(languageServiceCommand),
                 _ => new[] { command }
             };
+
+            foreach (var kernelCommand in commands)
+            {
+                EnsureHandlingKernelUri(kernelCommand);
+            }
+            
+            return commands;
         }
 
         private IReadOnlyList<KernelCommand> PreprocessLanguageServiceCommand(LanguageServiceCommand command)
@@ -236,14 +243,10 @@ namespace Microsoft.DotNet.Interactive
 
         public string Name { get; set; }
         
-        internal KernelUri Uri  {
-            get
-            {
-                return ParentKernel is null
-                    ? KernelUri.Parse(Name)
-                    : ParentKernel.Uri.Append($"{Name}");
-            }
-        }
+        internal KernelUri Uri =>
+            ParentKernel is null
+                ? KernelUri.Parse(Name)
+                : ParentKernel.Uri.Append($"{Name}");
 
         public IReadOnlyCollection<ICommand> Directives => SubmissionParser.Directives;
 
@@ -328,7 +331,7 @@ namespace Microsoft.DotNet.Interactive
             
             foreach (var command in commands)
             {
-                EnsureHandlingKernelUri(command);
+              
                 await scheduler.Schedule(command, InvokePipelineAndCommandHandler, command.KernelUri.ToString());
             }
 
@@ -353,14 +356,19 @@ namespace Microsoft.DotNet.Interactive
 
             IEnumerable<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
             {
-                if (scope != Name)
+             
+                if (!command.KernelUri.Contains(Uri))
                 {
                     yield break;
                 }
 
                 while (_deferredCommands.TryDequeue(out var kernelCommand))
                 {
-                    yield return kernelCommand;
+                    var commands = PreprocessCommands(kernelCommand);
+                    foreach (var cmd in commands)
+                    {
+                        yield return cmd;
+                    }
                 }
             }
 
@@ -595,6 +603,24 @@ namespace Microsoft.DotNet.Interactive
 
     internal class KernelUri
     {
+        protected bool Equals(KernelUri other)
+        {
+            return StringComparer.Ordinal.Equals( _stringValue, other._stringValue);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((KernelUri) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (_stringValue != null ? _stringValue.GetHashCode() : 0);
+        }
+
         private readonly string _stringValue;
 
         private KernelUri(string kernelUri)
@@ -624,6 +650,24 @@ namespace Microsoft.DotNet.Interactive
         public KernelUri Append(string part)
         {
             return new KernelUri($"{_stringValue}/{part}");
+        }
+
+
+        public bool Contains(KernelUri uri)
+        {
+            if (uri.Parts.Length > Parts.Length){
+                return false;
+            }
+
+            for (var i = 0; i < uri.Parts.Length; i++)
+            {
+                if(!StringComparer.Ordinal.Equals(Parts[i],uri.Parts[i]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
