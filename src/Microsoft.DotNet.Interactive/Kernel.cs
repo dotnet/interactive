@@ -51,14 +51,23 @@ namespace Microsoft.DotNet.Interactive
 
             _scheduler = new KernelCommandScheduler();
 
-            AddSetKernelMiddleware();
+            if (!UseNewScheduler)
+            {
+                AddSetKernelMiddleware();
 
-            AddDirectiveMiddlewareAndCommonCommandHandlers();
+                AddDirectiveMiddlewareAndCommonCommandHandlers();
+            }
+            else
+            {
+
+            }
 
             _disposables.Add(Disposable.Create(
                 () => _kernelEvents.OnCompleted()
                 ));
         }
+
+        public bool UseNewScheduler { get; set; } = false;
 
         internal KernelCommandScheduler Scheduler => _scheduler;
 
@@ -80,8 +89,14 @@ namespace Microsoft.DotNet.Interactive
             }
 
             command.SetToken($"deferredCommand::{Guid.NewGuid():N}");
-            OldDeferCommand(command);
-            
+            if (UseNewScheduler)
+            {
+                NewDeferCommand(command);
+            }
+            else
+            {
+                OldDeferCommand(command);
+            }
         }
 
         private void OldDeferCommand(KernelCommand command)
@@ -257,17 +272,27 @@ namespace Microsoft.DotNet.Interactive
             }
 
             var handlingKernelName = GetHandlingKernelName(command);
-            
-            return OldScheduleCommand(command, handlingKernelName, cancellationToken);
+
+            if (UseNewScheduler)
+            {
+                return NewScheduleCommand(command, handlingKernelName, cancellationToken);
+            }
+            else
+            {
+                return OldScheduleCommand(command, cancellationToken);
+            }
+
         }
 
-        private Task<KernelCommandResult> OldScheduleCommand(KernelCommand command, string handlingKernelName, CancellationToken cancellationToken)
+        private Task<KernelCommandResult> OldScheduleCommand(KernelCommand command, CancellationToken cancellationToken)
         {
             return Scheduler.Schedule(command, this, cancellationToken, null);
         }
 
         private Task<KernelCommandResult> NewScheduleCommand(KernelCommand command, string handlingKernelName, CancellationToken cancellationToken)
         {
+           
+
             var scheduler = GetOrCreateScheduler();
             return scheduler.Schedule(command, InvokePipelineAndCommandHandler, handlingKernelName);
         }
