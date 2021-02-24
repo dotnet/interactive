@@ -316,7 +316,7 @@ catch (Exception e)
 #r ""nuget:Microsoft.Data.Analysis,0.4.0""
 ");
 
-            await kernel.SubmitCodeAsync(@$"
+            await kernel.SubmitCodeAsync($@"
 using Microsoft.Data.Analysis;
 using static {typeof(PocketViewTags).FullName};
 using {typeof(PocketView).Namespace};");
