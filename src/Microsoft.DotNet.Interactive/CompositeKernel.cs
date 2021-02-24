@@ -237,7 +237,16 @@ namespace Microsoft.DotNet.Interactive
         {
             if (UseNewScheduler)
             {
-                await base.HandleAsync(command, context);
+                if (!command.KernelUri.Equals( Uri))
+                {
+                    // route to a subkernel
+                    var kernel = ChildKernels.Single(ck => ck.Uri.Equals(command.KernelUri));
+                    await kernel.Pipeline.SendAsync(command, context);
+                }
+                else
+                {
+                    await base.HandleAsync(command, context);
+                }
             }
             else
             {
