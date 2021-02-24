@@ -33,87 +33,7 @@ declare module 'vscode' {
 		readonly removed: ReadonlyArray<AuthenticationProviderInformation>;
 	}
 
-	/**
-	* An [event](#Event) which fires when an [AuthenticationSession](#AuthenticationSession) is added, removed, or changed.
-	*/
-	export interface AuthenticationProviderAuthenticationSessionsChangeEvent {
-		/**
-		 * The [AuthenticationSession](#AuthenticationSession)s of the [AuthenticationProvider](#AuthentiationProvider) that have been added.
-		*/
-		readonly added: ReadonlyArray<AuthenticationSession>;
-
-		/**
-		 * The [AuthenticationSession](#AuthenticationSession)s of the [AuthenticationProvider](#AuthentiationProvider) that have been removed.
-		 */
-		readonly removed: ReadonlyArray<AuthenticationSession>;
-
-		/**
-		 * The [AuthenticationSession](#AuthenticationSession)s of the [AuthenticationProvider](#AuthentiationProvider) that have been changed.
-		 */
-		readonly changed: ReadonlyArray<AuthenticationSession>;
-	}
-
-	/**
-	 * A provider for performing authentication to a service.
-	 */
-	export interface AuthenticationProvider {
-		/**
-		 * An [event](#Event) which fires when the array of sessions has changed, or data
-		 * within a session has changed.
-		 */
-		readonly onDidChangeSessions: Event<AuthenticationProviderAuthenticationSessionsChangeEvent>;
-
-		/**
-		 * Get a list of sessions.
-		 * @param scopes An optional list of scopes. If provided, the sessions returned should match
-		 * these permissions, otherwise all sessions should be returned.
-		 * @returns A promise that resolves to an array of authentication sessions.
-		 */
-		// eslint-disable-next-line vscode-dts-provider-naming
-		getSessions(scopes?: string[]): Thenable<ReadonlyArray<AuthenticationSession>>;
-
-		/**
-		 * Prompts a user to login.
-		 * @param scopes A list of scopes, permissions, that the new session should be created with.
-		 * @returns A promise that resolves to an authentication session.
-		 */
-		// eslint-disable-next-line vscode-dts-provider-naming
-		createSession(scopes: string[]): Thenable<AuthenticationSession>;
-
-		/**
-		 * Removes the session corresponding to session id.
-		 * @param sessionId The id of the session to remove.
-		 */
-		// eslint-disable-next-line vscode-dts-provider-naming
-		removeSession(sessionId: string): Thenable<void>;
-	}
-
-	/**
-	 * Options for creating an [AuthenticationProvider](#AuthentcationProvider).
-	 */
-	export interface AuthenticationProviderOptions {
-		/**
-		 * Whether it is possible to be signed into multiple accounts at once with this provider.
-		 * If not specified, will default to false.
-		*/
-		readonly supportsMultipleAccounts?: boolean;
-	}
-
 	export namespace authentication {
-		/**
-		 * Register an authentication provider.
-		 *
-		 * There can only be one provider per id and an error is being thrown when an id
-		 * has already been used by another provider. Ids are case-sensitive.
-		 *
-		 * @param id The unique identifier of the provider.
-		 * @param label The human-readable name of the provider.
-		 * @param provider The authentication provider provider.
-		 * @params options Additional options for the provider.
-		 * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
-		 */
-		export function registerAuthenticationProvider(id: string, label: string, provider: AuthenticationProvider, options?: AuthenticationProviderOptions): Disposable;
-
 		/**
 		 * @deprecated - getSession should now trigger extension activation.
 		 * Fires with the provider id that was registered or unregistered.
@@ -121,16 +41,18 @@ declare module 'vscode' {
 		export const onDidChangeAuthenticationProviders: Event<AuthenticationProvidersChangeEvent>;
 
 		/**
+		 * @deprecated
 		 * An array of the information of authentication providers that are currently registered.
 		 */
 		export const providers: ReadonlyArray<AuthenticationProviderInformation>;
 
 		/**
-		* Logout of a specific session.
-		* @param providerId The id of the provider to use
-		* @param sessionId The session id to remove
-		* provider
-		*/
+		 * @deprecated
+		 * Logout of a specific session.
+		 * @param providerId The id of the provider to use
+		 * @param sessionId The session id to remove
+		 * provider
+		 */
 		export function logout(providerId: string, sessionId: string): Thenable<void>;
 	}
 
@@ -773,7 +695,7 @@ declare module 'vscode' {
 	}
 
 	/**
-	 * An open ended information bag passed to the inline value provider.
+	 * A value-object that contains additional information when requesting inline values from a InlineValuesProvider.
 	 * A minimal context containes just the document location where the debugger has stopped.
 	 * Additional optional information might be scope information or variables and their values.
 	 */
@@ -801,74 +723,81 @@ declare module 'vscode' {
 	 */
 	export class InlineValueText {
 		/**
+		 * The document range for which the inline value applies.
+		 */
+		readonly range: Range;
+		/**
 		 * The text of the inline value.
 		 */
 		readonly text: string;
 		/**
-		 * The range of the inline value.
-		 */
-		readonly range: Range;
-		/**
 		 * Creates a new InlineValueText object.
 		 *
-		 * @param text The value to be shown for the line.
 		 * @param range The document line where to show the inline value.
+		 * @param text The value to be shown for the line.
 		 */
-		constructor(text: string, range: Range);
+		constructor(range: Range, text: string);
 	}
 
 	/**
 	 * Provide inline value through a variable lookup.
+	 * If only a range is specified, the variable name will be extracted from the underlying document.
+	 * An optional variable name can be used to override the extracted name.
 	 */
 	export class InlineValueVariableLookup {
 		/**
-		 * The name of the variable to look up.
+		 * The document range for which the inline value applies.
+		 * The range is used to extract the variable name from the underlying document.
 		 */
-		readonly variableName: string;
+		readonly range: Range;
+		/**
+		 * If specified the name of the variable to look up.
+		 */
+		readonly variableName?: string;
 		/**
 		 * How to perform the lookup.
 		 */
 		readonly caseSensitiveLookup: boolean;
 		/**
-		 * The range of the inline value.
-		 */
-		readonly range: Range;
-		/**
 		 * Creates a new InlineValueVariableLookup object.
 		 *
-		 * @param variableName The name of the variable to look up.
 		 * @param range The document line where to show the inline value.
+		 * @param variableName The name of the variable to look up.
 		 * @param caseSensitiveLookup How to perform the lookup. If missing lookup is case sensitive.
 		 */
-		constructor(variableName: string, range: Range, caseSensitiveLookup?: boolean);
+		constructor(range: Range, variableName?: string, caseSensitiveLookup?: boolean);
 	}
 
 	/**
-	 * Provide inline value through an expression evaluation.
+	 * Provide an inline value through an expression evaluation.
+	 * If only a range is specified, the expression will be extracted from the underlying document.
+	 * An optional expression can be used to override the extracted expression.
 	 */
 	export class InlineValueEvaluatableExpression {
 		/**
-		 * The expression to evaluate.
-		 */
-		readonly expression: string;
-		/**
-		 * The range of the inline value.
+		 * The document range for which the inline value applies.
+		 * The range is used to extract the evaluatable expression from the underlying document.
 		 */
 		readonly range: Range;
 		/**
+		 * If specified the expression overrides the extracted expression.
+		 */
+		readonly expression?: string;
+		/**
 		 * Creates a new InlineValueEvaluatableExpression object.
 		 *
-		 * @param expression The expression to evaluate.
-		 * @param range The document line where to show the inline value.
+		 * @param range The range in the underlying document from which the evaluatable expression is extracted.
+		 * @param expression If specified overrides the extracted expression.
 		 */
-		constructor(expression: string, range: Range);
+		constructor(range: Range, expression?: string);
 	}
 
 	export namespace languages {
 
 		/**
-		 * Register a provider that returns inline values for text documents.
-		 * If debugging has stopped VS Code shows inline values in the editor at the end of lines.
+		 * Register a provider that returns data for the debugger's 'inline value' feature.
+		 * Whenever the generic VS Code debugger has stopped in a source file, providers registered for the language of the file
+		 * are called to return textual data that will be shown in the editor at the end of lines.
 		 *
 		 * Multiple providers can be registered for a language. In that case providers are asked in
 		 * parallel and the results are merged. A failing provider (rejected promise or exception) will
@@ -1057,43 +986,43 @@ declare module 'vscode' {
 
 	//#region Status bar item with ID and Name: https://github.com/microsoft/vscode/issues/74972
 
-	export namespace window {
+	/**
+	 * Options to configure the status bar item.
+	 */
+	export interface StatusBarItemOptions {
 
 		/**
-		 * Options to configure the status bar item.
+		 * A unique identifier of the status bar item. The identifier
+		 * is for example used to allow a user to show or hide the
+		 * status bar item in the UI.
 		 */
-		export interface StatusBarItemOptions {
+		id: string;
 
-			/**
-			 * A unique identifier of the status bar item. The identifier
-			 * is for example used to allow a user to show or hide the
-			 * status bar item in the UI.
-			 */
-			id: string;
+		/**
+		 * A human readable name of the status bar item. The name is
+		 * for example used as a label in the UI to show or hide the
+		 * status bar item.
+		 */
+		name: string;
 
-			/**
-			 * A human readable name of the status bar item. The name is
-			 * for example used as a label in the UI to show or hide the
-			 * status bar item.
-			 */
-			name: string;
+		/**
+		 * Accessibility information used when screen reader interacts with this status bar item.
+		 */
+		accessibilityInformation?: AccessibilityInformation;
 
-			/**
-			 * Accessibility information used when screen reader interacts with this status bar item.
-			 */
-			accessibilityInformation?: AccessibilityInformation;
+		/**
+		 * The alignment of the status bar item.
+		 */
+		alignment?: StatusBarAlignment;
 
-			/**
-			 * The alignment of the status bar item.
-			 */
-			alignment?: StatusBarAlignment;
+		/**
+		 * The priority of the status bar item. Higher value means the item should
+		 * be shown more to the left.
+		 */
+		priority?: number;
+	}
 
-			/**
-			 * The priority of the status bar item. Higher value means the item should
-			 * be shown more to the left.
-			 */
-			priority?: number;
-		}
+	export namespace window {
 
 		/**
 		 * Creates a status bar [item](#StatusBarItem).
@@ -1198,8 +1127,7 @@ declare module 'vscode' {
 
 		constructor(editable?: boolean, breakpointMargin?: boolean, runnable?: boolean, hasExecutionOrder?: boolean, executionOrder?: number, runState?: NotebookCellRunState, runStartTime?: number, statusMessage?: string, lastRunDuration?: number, inputCollapsed?: boolean, outputCollapsed?: boolean, custom?: Record<string, any>)
 
-		// todo@API write a proper signature
-		with(change: Partial<Omit<NotebookCellMetadata, 'with'>>): NotebookCellMetadata;
+		with(change: { editable?: boolean | null, breakpointMargin?: boolean | null, runnable?: boolean | null, hasExecutionOrder?: boolean | null, executionOrder?: number | null, runState?: NotebookCellRunState | null, runStartTime?: number | null, statusMessage?: string | null, lastRunDuration?: number | null, inputCollapsed?: boolean | null, outputCollapsed?: boolean | null, custom?: Record<string, any> | null, }): NotebookCellMetadata;
 	}
 
 	// todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
@@ -1251,8 +1179,7 @@ declare module 'vscode' {
 
 		constructor(editable?: boolean, runnable?: boolean, cellEditable?: boolean, cellRunnable?: boolean, cellHasExecutionOrder?: boolean, displayOrder?: GlobPattern[], custom?: { [key: string]: any; }, runState?: NotebookRunState, trusted?: boolean);
 
-		// TODO@API make this a proper signature
-		with(change: Partial<Omit<NotebookDocumentMetadata, 'with'>>): NotebookDocumentMetadata;
+		with(change: { editable?: boolean | null, runnable?: boolean | null, cellEditable?: boolean | null, cellRunnable?: boolean | null, cellHasExecutionOrder?: boolean | null, displayOrder?: GlobPattern[] | null, custom?: { [key: string]: any; } | null, runState?: NotebookRunState | null, trusted?: boolean | null, }): NotebookDocumentMetadata
 	}
 
 	export interface NotebookDocumentContentOptions {
@@ -1281,6 +1208,15 @@ declare module 'vscode' {
 		readonly cells: ReadonlyArray<NotebookCell>;
 		readonly contentOptions: NotebookDocumentContentOptions;
 		readonly metadata: NotebookDocumentMetadata;
+
+		/**
+		 * Save the document. The saving will be handled by the corresponding content provider
+		 *
+		 * @return A promise that will resolve to true when the document
+		 * has been saved. If the file was not dirty or the save failed,
+		 * will return false.
+		 */
+		save(): Thenable<boolean>;
 	}
 
 	// todo@API maybe have a NotebookCellPosition sibling
@@ -1328,11 +1264,13 @@ declare module 'vscode' {
 		// todo@API should not be undefined, rather a default
 		readonly selection?: NotebookCell;
 
-		// @rebornix
-		// todo@API should replace selection
-		// never empty!
-		// primary/secondary selections
-		// readonly selections: NotebookCellRange[];
+		/**
+		 * todo@API should replace selection
+		 * The selections on this notebook editor.
+		 *
+		 * The primary selection (or focused range) is `selections[0]`. When the document has no cells, the primary selection is empty `{ start: 0, end: 0 }`;
+		 */
+		readonly selections: NotebookCellRange[];
 
 		/**
 		 * The current visible ranges in the editor (vertically).
@@ -2152,6 +2090,20 @@ declare module 'vscode' {
 
 	export interface ExtensionContext {
 		readonly extensionRuntime: ExtensionRuntime;
+
+		/**
+		 * Indicates that this is a fresh install of VS Code.
+		 */
+		readonly isNewInstall: boolean;
+	}
+
+	//#endregion
+
+	//#region https://github.com/microsoft/vscode/issues/116906
+
+	export interface ExtensionContext {
+		readonly extensionId: string;
+		readonly extensionVersion: string;
 	}
 
 	//#endregion
@@ -2203,22 +2155,31 @@ declare module 'vscode' {
 		export function createDocumentTestObserver(document: TextDocument): TestObserver;
 
 		/**
-		 * The last or selected test run. Cleared when a new test run starts.
+		 * Inserts custom test results into the VS Code UI. The results are
+		 * inserted and sorted based off the `completedAt` timestamp. If the
+		 * results are being read from a file, for example, the `completedAt`
+		 * time should generally be the modified time of the file if not more
+		 * specific time is available.
+		 *
+		 * This will no-op if the inserted results are deeply equal to an
+		 * existing result.
+		 *
+		 * @param results test results
+		 * @param persist whether the test results should be saved by VS Code
+		 * and persisted across reloads. Defaults to true.
 		 */
-		export const testResults: TestResults | undefined;
+		export function publishTestResult(results: TestResults, persist?: boolean): void;
 
 		/**
-		 * Event that fires when the testResults are updated.
-		 */
+		* List of test results stored by VS Code, sorted in descnding
+		* order by their `completedAt` time.
+		*/
+		export const testResults: ReadonlyArray<TestResults>;
+
+		/**
+		* Event that fires when the {@link testResults} array is updated.
+		*/
 		export const onDidChangeTestResults: Event<void>;
-	}
-
-	export interface TestResults {
-		/**
-		 * The results from the latest test run. The array contains a snapshot of
-		 * all tests involved in the run at the moment when it completed.
-		 */
-		readonly tests: ReadonlyArray<RequiredTestItem> | undefined;
 	}
 
 	export interface TestObserver {
@@ -2279,21 +2240,20 @@ declare module 'vscode' {
 	 */
 	export interface TestHierarchy<T extends TestItem> {
 		/**
-		 * Root node for tests. The `testRoot` instance must not be replaced over
+		 * Root node for tests. The root instance must not be replaced over
 		 * the lifespan of the TestHierarchy, since you will need to reference it
-		 * in `onDidChangeTest` when a test is added or removed.
+		 * in {@link onDidChangeTest} when a test is added or removed.
 		 */
 		readonly root: T;
 
 		/**
-		 * An event that fires when an existing test under the `root` changes.
-		 * This can be a result of a state change in a test run, a property update,
-		 * or an update to its children. Changes made to tests will not be visible
-		 * to {@link TestObserver} instances until this event is fired.
+		 * An event that fires when an existing test `root` changes.  This can be
+		 * a result of a property update, or an update to its children. Changes
+		 * made to tests will not be visible to {@link TestObserver} instances until this event is fired.
 		 *
-		 * This will signal a change recursively to all children of the given node.
-		 * For example, firing the event with the {@link testRoot} will refresh
-		 * all tests.
+		 * When a change is signalled, VS Code will check for any new or removed
+		 * direct children of the changed ite, For example, firing the event with
+		 * the {@link testRoot} will detect any new children in `root.children`.
 		 */
 		readonly onDidChangeTest: Event<T>;
 
@@ -2306,7 +2266,7 @@ declare module 'vscode' {
 
 		/**
 		 * An event that fires when a test becomes outdated, as a result of
-		 * file changes, for example. In "watch" mode, tests that are outdated
+		 * file changes, for example. In "auto run" mode, tests that are outdated
 		 * will be automatically re-run after a short delay. Firing a test
 		 * with children will mark the entire subtree as outdated.
 		 */
@@ -2320,10 +2280,7 @@ declare module 'vscode' {
 	}
 
 	/**
-	 * Discovers and provides tests. It's expected that the TestProvider will
-	 * ambiently listen to {@link vscode.window.onDidChangeVisibleTextEditors} to
-	 * provide test information about the open files for use in code lenses and
-	 * other file-specific UI.
+	 * Discovers and provides tests.
 	 *
 	 * Additionally, the UI may request it to discover tests for the workspace
 	 * via `addWorkspaceTests`.
@@ -2333,19 +2290,31 @@ declare module 'vscode' {
 	export interface TestProvider<T extends TestItem = TestItem> {
 		/**
 		 * Requests that tests be provided for the given workspace. This will
-		 * generally be called when tests need to be enumerated for the
-		 * workspace.
+		 * be called when tests need to be enumerated for the workspace, such as
+		 * when the user opens the test explorer.
 		 *
 		 * It's guaranteed that this method will not be called again while
 		 * there is a previous undisposed watcher for the given workspace folder.
+		 *
+		 * @param workspace The workspace in which to observe tests
 		 */
 		// eslint-disable-next-line vscode-dts-provider-naming
 		createWorkspaceTestHierarchy?(workspace: WorkspaceFolder): TestHierarchy<T> | undefined;
 
 		/**
-		 * Requests that tests be provided for the given document. This will
-		 * be called when tests need to be enumerated for a single open file,
-		 * for instance by code lens UI.
+		 * Requests that tests be provided for the given document. This will be
+		 * called when tests need to be enumerated for a single open file, for
+		 * instance by code lens UI.
+		 *
+		 * It's suggested that the provider listen to change events for the text
+		 * document to provide information for test that might not yet be
+		 * saved, if possible.
+		 *
+		 * If the test system is not able to provide or estimate for tests on a
+		 * per-file basis, this method may not be implemented. In that case, VS
+		 * Code will request and use the information from the workspace hierarchy.
+		 *
+		 * @param document The document in which to observe tests
 		 */
 		// eslint-disable-next-line vscode-dts-provider-naming
 		createDocumentTestHierarchy?(document: TextDocument): TestHierarchy<T> | undefined;
@@ -2354,13 +2323,15 @@ declare module 'vscode' {
 		 * Starts a test run. This should cause {@link onDidChangeTest} to
 		 * fire with update test states during the run.
 		 * @todo this will eventually need to be able to return a summary report, coverage for example.
+		 * @param options Options for this test run
+		 * @param cancellationToken Token that signals the used asked to abort the test run.
 		 */
 		// eslint-disable-next-line vscode-dts-provider-naming
 		runTests?(options: TestRun<T>, cancellationToken: CancellationToken): ProviderResult<void>;
 	}
 
 	/**
-	 * Options given to {@link test.runTests}
+	 * Options given to {@link test.runTests}.
 	 */
 	export interface TestRunOptions<T extends TestItem = TestItem> {
 		/**
@@ -2368,6 +2339,13 @@ declare module 'vscode' {
 		 * be provided as an indication to run all tests.
 		 */
 		tests: T[];
+
+		/**
+		 * An array of tests the user has marked as excluded in VS Code. May be
+		 * omitted if no exclusions were requested. Test providers should not run
+		 * excluded tests or any children of excluded tests.
+		 */
+		exclude?: T[];
 
 		/**
 		 * Whether or not tests in this run should be debugged.
@@ -2382,6 +2360,12 @@ declare module 'vscode' {
 		/**
 		 * Updates the state of the test in the run. By default, all tests involved
 		 * in the run will have a "queued" state until they are updated by this method.
+		 *
+		 * Calling with method with nodes outside the {@link tests} or in the
+		 * {@link exclude} array will no-op.
+		 *
+		 * @param test The test to update
+		 * @param state The state to assign to the test
 		 */
 		setState(test: T, state: TestState): void;
 	}
@@ -2392,19 +2376,17 @@ declare module 'vscode' {
 	 */
 	export interface TestItem {
 		/**
+		 * Unique identifier for the TestItem. This is used to correlate
+		 * test results and tests in the document with those in the workspace
+		 * (test explorer). This must not change for the
+		 * lifetime of a test instance.
+		 */
+		readonly id: string;
+
+		/**
 		 * Display name describing the test case.
 		 */
 		label: string;
-
-		/**
-		 * Optional unique identifier for the TestItem. This is used to correlate
-		 * test results and tests in the document with those in the workspace
-		 * (test explorer). This must not change for the lifetime of a test item.
-		 *
-		 * If the ID is not provided, it defaults to the concatenation of the
-		 * item's label and its parent's ID, if any.
-		 */
-		readonly id?: string;
 
 		/**
 		 * Optional description that appears next to the label.
@@ -2421,12 +2403,14 @@ declare module 'vscode' {
 		runnable?: boolean;
 
 		/**
-		 * Whether this test item can be debugged. Defaults to `false` if not provided.
+		 * Whether this test item can be debugged.
+		 * Defaults to `false` if not provided.
 		 */
 		debuggable?: boolean;
 
 		/**
-		 * VS Code location.
+		 * Location of the test in the workspace. This is used to show line
+		 * decorations and code lenses for the test.
 		 */
 		location?: Location;
 
@@ -2445,6 +2429,9 @@ declare module 'vscode' {
 		: (K extends 'description' | 'location' ? TestItem[K] : Required<TestItem>[K])
 	};
 
+	/**
+	 * Possible states of tests in a test run.
+	 */
 	export enum TestRunState {
 		// Initial state
 		Unset = 0,
@@ -2463,10 +2450,7 @@ declare module 'vscode' {
 	}
 
 	/**
-	 * TestState includes a test and its run state. This is included in the
-	 * {@link TestItem} and is immutable; it should be replaced in th TestItem
-	 * in order to update it. This allows consumers to quickly and easily check
-	 * for changes via object identity.
+	 * TestState associated with a test in its results.
 	 */
 	export interface TestState {
 		/**
@@ -2525,6 +2509,45 @@ declare module 'vscode' {
 		 * Associated file location.
 		 */
 		location?: Location;
+	}
+
+	/**
+	 * TestResults can be provided to VS Code, or read from it.
+	 *
+	 * The results contain a 'snapshot' of the tests at the point when the test
+	 * run is complete. Therefore, information such as {@link Location} instances
+	 * may be out of date. If the test still exists in the workspace, consumers
+	 * can use its `id` to correlate the result instance with the living test.
+	 *
+	 * @todo coverage and other info may eventually be provided here
+	 */
+	export interface TestResults {
+		/**
+		 * Unix milliseconds timestamp at which the tests were completed.
+		 */
+		completedAt: number;
+
+		/**
+		 * List of test results. The items in this array are the items that
+		 * were passed in the {@link test.runTests} method.
+		 */
+		results: ReadonlyArray<Readonly<TestItemWithResults>>;
+	}
+
+	/**
+	 * A {@link TestItem} with an associated result, which appear or can be
+	 * provided in {@link TestResult} interfaces.
+	 */
+	export interface TestItemWithResults extends TestItem {
+		/**
+		 * Current result of the test.
+		 */
+		result: TestState;
+
+		/**
+		 * Optional list of nested tests for this item.
+		 */
+		children?: Readonly<TestItemWithResults>[];
 	}
 
 	//#endregion
@@ -2748,9 +2771,11 @@ declare module 'vscode' {
 
 		/**
 		 * Prompt the user to chose whether to trust the current workspace
-		 * @param message Optional message which would be displayed in the prompt
+		 * @param modal When true, a modal dialog is used to prompt the user for workspace
+		 * trust, otherwise a badge will be shown on the Settings activity bar item.
+		 * Default value is true.
 		 */
-		export function requireWorkspaceTrust(message?: string): Thenable<WorkspaceTrustState>;
+		export function requireWorkspaceTrust(modal?: boolean): Thenable<WorkspaceTrustState>;
 
 		/**
 		 * Event that fires when the trust state of the current workspace changes

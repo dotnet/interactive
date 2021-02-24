@@ -12,6 +12,8 @@ import { KernelId, updateCellMetadata } from './notebookKernel';
 import { DotNetPathManager } from './extension';
 import { computeToolInstallArguments, executeSafe } from '../utilities';
 
+import * as jupyter from './jupyter';
+
 export function registerAcquisitionCommands(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
     const minDotNetInteractiveVersion = config.get<string>('minimumInteractiveToolVersion');
@@ -114,7 +116,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     }));
 }
 
-export function registerFileCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper, useJupyterExtension: boolean) {
+export function registerFileCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper, jupyterApi: jupyter.IJupyterExtensionApi | undefined) {
 
     const eol = getEol();
 
@@ -144,9 +146,8 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
     }
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebook', async () => {
-        if (useJupyterExtension) {
-            await vscode.commands.executeCommand('jupyter.createnewnotebook');
-            await switchToInteractiveKernel();
+        if (jupyterApi) {
+            jupyterApi.createBlankNotebook({ defaultCellLanguage: 'dotnet-interactive.csharp' });
         } else {
             const fileName = getNewNotebookName();
             const newUri = vscode.Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
@@ -171,7 +172,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
             }
         }
 
-        if (useJupyterExtension) {
+        if (jupyterApi) {
             await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'jupyter-notebook');
             await switchToInteractiveKernel();
         } else {
