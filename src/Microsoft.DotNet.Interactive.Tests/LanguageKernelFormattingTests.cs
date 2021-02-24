@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             var cSharpKernel = base.CreateCSharpKernel();
 
-            cSharpKernel.DeferCommand(new SubmitCode(@$"
+            cSharpKernel.DeferCommand(new SubmitCode($@"
 using static {typeof(PocketViewTags).FullName};
 using {typeof(PocketView).Namespace};
 "));
