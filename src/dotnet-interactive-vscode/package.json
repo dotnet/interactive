@@ -214,6 +214,13 @@
           "PowerShell (.NET Interactive)"
         ],
         "configuration": "./syntaxes/powershell.language-configuration.json"
+      },
+      {
+        "id": "dotnet-interactive.sql",
+        "aliases": [
+          "SQL (.NET Interactive)"
+        ],
+        "configuration": "./syntaxes/sql.language-configuration.json"
       }
     ],
     "grammars": [
@@ -256,6 +263,11 @@
         "language": "dotnet-interactive.pwsh",
         "scopeName": "source.dotnet-interactive.powershell",
         "path": "./syntaxes/source.dotnet-interactive.powershell.tmGrammar.json"
+      },
+      {
+        "language": "dotnet-interactive.sql",
+        "scopeName": "source.dotnet-interactive.sql",
+        "path": "./syntaxes/source.dotnet-interactive.sql.tmGrammar.json"
       }
     ]
   },

@@ -88,7 +88,8 @@ describe('TextMate grammar tests', async () => {
             '#!markdown',
             '#!md',
             '#!powershell',
-            '#!pwsh'
+            '#!pwsh',
+            '#!sql',
         ];
         const tokens = await getTokens(text);
         expect(tokens).to.deep.equal([
@@ -157,7 +158,13 @@ describe('TextMate grammar tests', async () => {
                     tokenText: '#!pwsh',
                     scopes: ['source.dotnet-interactive', 'language.switch.powershell']
                 }
-            ]
+            ],
+            [
+                {
+                    tokenText: '#!sql',
+                    scopes: ['source.dotnet-interactive', 'language.switch.sql']
+                }
+            ],
         ]);
     });
 
@@ -207,7 +214,8 @@ describe('TextMate grammar tests', async () => {
         'html',
         'javascript',
         'markdown',
-        'powershell'
+        'powershell',
+        'sql',
     ];
 
     for (const language of allLanguages) {
