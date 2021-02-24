@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
@@ -24,11 +25,12 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly Subject<KernelEvent> _kernelEvents = new();
         private readonly CompositeDisposable _disposables;
-        
+        private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
         private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
-        private readonly KernelCommandScheduler _scheduler;
+
+        private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler = null;
 
         protected Kernel(string name)
         {
@@ -45,8 +47,7 @@ namespace Microsoft.DotNet.Interactive
 
             Pipeline = new KernelCommandPipeline(this);
 
-            _scheduler = new KernelCommandScheduler();
-
+          
             AddSetKernelMiddleware();
 
             AddDirectiveMiddlewareAndCommonCommandHandlers();
@@ -56,7 +57,17 @@ namespace Microsoft.DotNet.Interactive
                 ));
         }
 
-        internal KernelCommandScheduler Scheduler => _scheduler;
+        internal KernelScheduler<KernelCommand, KernelCommandResult> Scheduler
+        {
+            get
+            {
+                if(_commandScheduler is null)
+                {
+                    SetScheduler(new ());
+                }
+                return _commandScheduler;
+            }
+        }
 
         internal KernelCommandPipeline Pipeline { get; }
 
@@ -76,7 +87,13 @@ namespace Microsoft.DotNet.Interactive
             }
 
             command.SetToken($"deferredCommand::{Guid.NewGuid():N}");
-            Scheduler.DeferCommand(command, this);
+            
+            if(string.IsNullOrWhiteSpace(command.TargetKernelName))
+            {
+                command.TargetKernelName = Name;
+            }
+
+            _deferredCommands.Enqueue(command);
         }
 
         private void AddSetKernelMiddleware()
@@ -236,34 +253,19 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             CancellationToken cancellationToken)
         {
-            return SendAsync(command, cancellationToken, null);
-        }
-
-        internal Task<KernelCommandResult> SendAsync(
-            KernelCommand command,
-            CancellationToken cancellationToken,
-            Action onDone)
-        {
             if (command == null)
             {
                 throw new ArgumentNullException(nameof(command));
             }
 
-            return Scheduler.Schedule(command, this, cancellationToken, onDone);
-
+            return Scheduler.Schedule(command, OnExecuteAsync, Name);
+            
         }
 
         protected internal void CancelCommands()
         {
-            Scheduler.CancelCommands();
+            Scheduler.Cancel();
         }
-
-        internal Task RunDeferredCommandsAsync()
-        {
-            return Scheduler.RunDeferredCommandsAsync(this);
-
-        }
-
         protected internal void PublishEvent(KernelEvent kernelEvent)
         {
             if (kernelEvent == null)
@@ -436,5 +438,61 @@ namespace Microsoft.DotNet.Interactive
         }
 
         internal ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= CreateChooseKernelDirective();
+
+        internal void SetScheduler(KernelScheduler<KernelCommand, KernelCommandResult> scheduler)
+        {
+
+            _commandScheduler = scheduler;
+
+            IEnumerable<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
+            {
+                if (scope != Name)
+                {
+                    yield break;
+                }
+
+                while (_deferredCommands.TryDequeue(out var kernelCommand))
+                {
+                    yield return kernelCommand;
+                }
+            }
+
+            Scheduler.RegisterDeferredOperationSource(GetDeferredOperations, OnExecuteAsync);
+        }
+
+        internal  async Task<KernelCommandResult> OnExecuteAsync(KernelCommand command)
+        {
+            var context = KernelInvocationContext.Establish(command);
+
+            // only subscribe for the root command 
+            using var _ = context.Command == command
+                ? context.KernelEvents.Subscribe(PublishEvent)
+                : Disposable.Empty;
+
+            try
+            {
+                await Pipeline.SendAsync(command, context);
+
+                if (command == context.Command)
+                {
+                    await context.DisposeAsync();
+                }
+                else
+                {
+                    context.Complete(command);
+                }
+
+                return context.Result;
+            }
+            catch (Exception exception)
+            {
+                if (!context.IsComplete)
+                {
+                    context.Fail(exception);
+                }
+
+                throw;
+            }
+        }
     }
 }

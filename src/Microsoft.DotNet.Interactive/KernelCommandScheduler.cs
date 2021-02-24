@@ -20,15 +20,10 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly ConcurrentQueue<KernelOperation> _commandQueue = new();
 
-        public Task<KernelCommandResult> Schedule(KernelCommand command, Kernel kernel)
+
+
+        public Task<KernelCommandResult> Schedule(KernelCommand command, Kernel kernel, CancellationToken cancellationToken)
         {
-            return Schedule(command, kernel, CancellationToken.None, () => { });
-        }
-
-
-        public Task<KernelCommandResult> Schedule(KernelCommand command, Kernel kernel, CancellationToken cancellationToken, Action onDone)
-        {
-
 
             switch (command)
             {
@@ -46,15 +41,14 @@ namespace Microsoft.DotNet.Interactive
 
             _commandQueue.Enqueue(operation);
 
-            ProcessCommandQueue(_commandQueue, cancellationToken, onDone);
+            ProcessCommandQueue(_commandQueue, cancellationToken);
 
             return kernelCommandResultSource.Task;
         }
 
         private void ProcessCommandQueue(
             ConcurrentQueue<KernelOperation> commandQueue,
-            CancellationToken cancellationToken,
-            Action onDone)
+            CancellationToken cancellationToken)
         {
             if (commandQueue.TryDequeue(out var currentOperation))
             {
@@ -64,12 +58,8 @@ namespace Microsoft.DotNet.Interactive
 
                     await ExecuteCommand(currentOperation);
 
-                    ProcessCommandQueue(commandQueue, cancellationToken, onDone);
+                    ProcessCommandQueue(commandQueue, cancellationToken);
                 }, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                onDone?.Invoke();
             }
         }
 
@@ -142,8 +132,7 @@ namespace Microsoft.DotNet.Interactive
             UndeferCommandsFor(kernel);
             ProcessCommandQueue(
                 _commandQueue,
-                CancellationToken.None,
-                () => tcs.SetResult(Unit.Default));
+                CancellationToken.None);
             return tcs.Task;
         }
 

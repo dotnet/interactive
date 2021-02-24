@@ -73,6 +73,7 @@ namespace Microsoft.DotNet.Interactive
             }
 
             kernel.ParentKernel = this;
+            kernel.SetScheduler(Scheduler);
             kernel.AddMiddleware(LoadExtensions);
 
             AddChooseKernelDirective(kernel, aliases);
@@ -200,38 +201,6 @@ namespace Microsoft.DotNet.Interactive
             }
 
             return kernel ?? this;
-        }
-
-        internal override async Task HandleAsync(
-            KernelCommand command,
-            KernelInvocationContext context)
-        {
-            var kernel = context.HandlingKernel;
-
-            if (kernel is null)
-            {
-                throw new NoSuitableKernelException(command);
-            }
-
-            switch (command)
-            {
-                case Cancel _:
-                    CancelCommands();
-                    kernel.CancelCommands();
-                    break;
-            }
-
-            await kernel.RunDeferredCommandsAsync();
-
-            if (kernel != this)
-            {
-                // route to a subkernel
-                await kernel.Pipeline.SendAsync(command, context);
-            }
-            else
-            {
-                await base.HandleAsync(command, context);
-            }
         }
 
         private protected override IEnumerable<Parser> GetDirectiveParsersForCompletion(

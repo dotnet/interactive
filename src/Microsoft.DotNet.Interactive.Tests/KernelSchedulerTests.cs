@@ -18,11 +18,11 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    public class KernelCommandSchedulerTests : IDisposable
+    public class KernelSchedulerTests : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();
 
-        public KernelCommandSchedulerTests(ITestOutputHelper output)
+        public KernelSchedulerTests(ITestOutputHelper output)
         {
             DisposeAfterTest(output.SubscribeToPocketLogger());
         }
@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             }
             catch (Exception ex)
             {
-                Logger<KernelCommandSchedulerTests>.Log.Error(exception: ex);
+                Logger<KernelSchedulerTests>.Log.Error(exception: ex);
             }
         }
 

@@ -161,7 +161,7 @@ namespace Microsoft.DotNet.Interactive
 
         public delegate Task<U> OnExecuteDelegate(T value);
 
-        public delegate IEnumerable<T> GetDeferredOperationsDelegate(T operationToExecute, string queueName);
+        public delegate IEnumerable<T> GetDeferredOperationsDelegate(T state, string scope);
 
         private class ScheduledOperation
         {
