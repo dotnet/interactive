@@ -11,7 +11,6 @@ using Pocket;
 
 namespace Microsoft.DotNet.Interactive
 {
-
     public class KernelScheduler<T, U> : IDisposable
     {
         private CancellationTokenSource _cancellationTokenSource = new();

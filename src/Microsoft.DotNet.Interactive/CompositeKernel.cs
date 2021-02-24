@@ -203,6 +203,35 @@ namespace Microsoft.DotNet.Interactive
             return kernel ?? this;
         }
 
+        private string GetHandlingKernelName(
+            KernelCommand command,
+            KernelInvocationContext context)
+        {
+            var targetKernelName = command switch
+            {
+                { } kcb => kcb.TargetKernelName ?? DefaultKernelName,
+                _ => DefaultKernelName
+            };
+
+            Kernel kernel;
+
+            if (targetKernelName != null)
+            {
+                _kernelsByNameOrAlias.TryGetValue(targetKernelName, out kernel);
+            }
+            else
+            {
+                kernel = _childKernels.Count switch
+                {
+                    0 => this,
+                    1 => _childKernels[0],
+                    _ => context.HandlingKernel
+                };
+            }
+
+            return (kernel ?? this).Name;
+        }
+
         internal override async Task HandleAsync(
             KernelCommand command,
             KernelInvocationContext context)
