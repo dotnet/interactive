@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
 
-        protected Kernel(string name)
+        protected Kernel(string name, string language = null)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
@@ -43,6 +43,8 @@ namespace Microsoft.DotNet.Interactive
             }
 
             Name = name;
+
+            Language = language;
 
             SubmissionParser = new SubmissionParser(this);
 
@@ -213,6 +215,8 @@ namespace Microsoft.DotNet.Interactive
         public IObservable<KernelEvent> KernelEvents => _kernelEvents;
 
         public string Name { get; set; }
+
+        public string Language { get; private set; }
 
         public IReadOnlyCollection<ICommand> Directives => SubmissionParser.Directives;
 

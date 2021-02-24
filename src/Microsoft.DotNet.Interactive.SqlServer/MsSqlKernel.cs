@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         public MsSqlKernel(
             string name,
             string connectionString,
-            MsSqlServiceClient client) : base(name)
+            MsSqlServiceClient client) : base(name, "SQL")
         {
             if (string.IsNullOrWhiteSpace(connectionString))
             {

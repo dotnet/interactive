@@ -500,6 +500,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 new HtmlKernel());
 
             compositeKernel.Add(
+                new SqlKernel());
+
+            compositeKernel.Add(
                 new KeyValueStoreKernel()
                     .UseWho());
 

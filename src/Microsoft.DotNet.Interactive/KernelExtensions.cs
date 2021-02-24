@@ -45,6 +45,29 @@ namespace Microsoft.DotNet.Interactive
             };
         }
 
+        public static Kernel FindKernel(this Kernel kernel, Func<Kernel, bool> selector)
+        {
+            var root = kernel
+                       .RecurseWhileNotNull(k => k switch
+                       {
+                           { } kb => kb.ParentKernel,
+                           _ => null
+                       })
+                       .LastOrDefault();
+
+            return root switch
+            {
+                _ when selector(kernel) => kernel,
+                CompositeKernel c =>
+                c.Directives
+                 .OfType<ChooseKernelDirective>()
+                 .Where(d => selector(d.Kernel))
+                 .Select(d => d.Kernel)
+                 .SingleOrDefault(),
+                _ => null
+            };
+        }
+
         public static Task<KernelCommandResult> SendAsync(
             this Kernel kernel,
             KernelCommand command)
