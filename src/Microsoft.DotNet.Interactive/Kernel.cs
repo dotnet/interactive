@@ -51,15 +51,14 @@ namespace Microsoft.DotNet.Interactive
 
             _scheduler = new KernelCommandScheduler();
 
-            if (!UseNewScheduler)
+            if (UseNewScheduler)
             {
-                AddSetKernelMiddleware();
-
-                AddDirectiveMiddlewareAndCommonCommandHandlers();
+              
             }
             else
             {
-
+                AddSetKernelMiddleware();
+                AddDirectiveMiddlewareAndCommonCommandHandlers();
             }
 
             _disposables.Add(Disposable.Create(
@@ -67,7 +66,7 @@ namespace Microsoft.DotNet.Interactive
                 ));
         }
 
-        public bool UseNewScheduler { get; set; } = false;
+        public static bool UseNewScheduler { get; set; } = false;
 
         internal KernelCommandScheduler Scheduler => _scheduler;
 
@@ -271,11 +270,33 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(command));
             }
 
-            var handlingKernelName = GetHandlingKernelName(command);
+            var commands = PreprocessCommands(command);
+            foreach (var generatedCommand in commands)
+            {
+             
+                var handlingKernelName = GetHandlingKernelName(generatedCommand);
+                if (!string.IsNullOrEmpty(command.TargetKernelName))
+                {
+                    if (generatedCommand.TargetKernelName != handlingKernelName)
+                    {
+                        generatedCommand.TargetKernelName = handlingKernelName;
+                    }
+                    else
+                    {
+
+                    }
+                }
+
+                else
+                {
+
+                }
+            }
+            
 
             if (UseNewScheduler)
             {
-                return NewScheduleCommand(command, handlingKernelName, cancellationToken);
+                return NewScheduleCommand(commands, command, cancellationToken);
             }
             else
             {
@@ -289,12 +310,19 @@ namespace Microsoft.DotNet.Interactive
             return Scheduler.Schedule(command, this, cancellationToken, null);
         }
 
-        private Task<KernelCommandResult> NewScheduleCommand(KernelCommand command, string handlingKernelName, CancellationToken cancellationToken)
+        private async Task<KernelCommandResult> NewScheduleCommand(IReadOnlyList<KernelCommand> commands, KernelCommand originalCommand, CancellationToken cancellationToken)
         {
-           
-
             var scheduler = GetOrCreateScheduler();
-            return scheduler.Schedule(command, InvokePipelineAndCommandHandler, handlingKernelName);
+            var originalCommandContext = KernelInvocationContext.Establish(originalCommand);
+            
+            foreach (var command in commands)
+            {
+                var handlingKernelName = GetHandlingKernelName(command);
+                command.TargetKernelName = handlingKernelName;
+                await scheduler.Schedule(command, InvokePipelineAndCommandHandler, handlingKernelName);
+            }
+
+            return originalCommandContext.Result;
         }
 
         protected KernelScheduler<KernelCommand, KernelCommandResult> GetOrCreateScheduler()
