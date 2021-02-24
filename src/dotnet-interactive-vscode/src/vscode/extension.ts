@@ -19,6 +19,8 @@ import { OutputChannelAdapter } from './OutputChannelAdapter';
 import { KernelId, updateCellLanguages, updateDocumentKernelspecMetadata } from './notebookKernel';
 import { DotNetInteractiveNotebookKernelProvider } from './notebookKernelProvider';
 
+import * as jupyter from './jupyter';
+
 import { isInsidersBuild } from './vscodeUtilities';
 
 export class CachedDotNetPathManager {
@@ -111,16 +113,22 @@ export async function activate(context: vscode.ExtensionContext) {
     const hostVersionSuffix = isInsidersBuild() ? 'Insiders' : 'Stable';
     diagnosticsChannel.appendLine(`Extension started for VS Code ${hostVersionSuffix}.`);
 
+    const jupyterExtension = vscode.extensions.getExtension('ms-toolsai.jupyter');
+
     // Default to using the Jupyter extension for .ipynb handling if the extension is present, unless the user has
     // specified otherwise.
-    const jupyterExtensionIsPresent = vscode.extensions.getExtension('ms-toolsai.jupyter') !== undefined;
+    const jupyterExtensionIsPresent = jupyterExtension !== undefined;
     let useJupyterExtension = jupyterExtensionIsPresent;
     const forceDotNetIpynbHandling = config.get<boolean>('useDotNetInteractiveExtensionForIpynbFiles') || false;
     if (forceDotNetIpynbHandling) {
         useJupyterExtension = false;
     }
 
-    registerFileCommands(context, clientMapper, useJupyterExtension);
+    let jupyterApi: jupyter.IJupyterExtensionApi | undefined = undefined;
+    if (useJupyterExtension) {
+        jupyterApi = <jupyter.IJupyterExtensionApi>await jupyterExtension!.activate();
+        jupyterApi.registerNewNotebookContent({ defaultCellLanguage: 'dotnet-interactive.csharp' });
+    }
 
     const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable
     const selectorDib = {
@@ -150,6 +158,8 @@ export async function activate(context: vscode.ExtensionContext) {
     } else {
         context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorIpynbWithDotNetInteractive, notebookKernelProvider));
     }
+
+    registerFileCommands(context, clientMapper, jupyterApi);
 
     context.subscriptions.push(vscode.notebook.onDidChangeActiveNotebookKernel(async e => await updateDocumentMetadata(e, clientMapper)));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
