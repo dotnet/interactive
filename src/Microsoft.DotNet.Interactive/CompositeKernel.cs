@@ -236,31 +236,38 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             KernelInvocationContext context)
         {
-            var kernel = context.HandlingKernel;
-
-            if (kernel is null)
+            if (UseNewScheduler)
             {
-                throw new NoSuitableKernelException(command);
-            }
-
-            switch (command)
-            {
-                case Cancel _:
-                    CancelCommands();
-                    kernel.CancelCommands();
-                    break;
-            }
-
-            await kernel.RunDeferredCommandsAsync();
-
-            if (kernel != this)
-            {
-                // route to a subkernel
-                await kernel.Pipeline.SendAsync(command, context);
+                await base.HandleAsync(command, context);
             }
             else
             {
-                await base.HandleAsync(command, context);
+                var kernel = context.HandlingKernel;
+
+                if (kernel is null)
+                {
+                    throw new NoSuitableKernelException(command);
+                }
+
+                switch (command)
+                {
+                    case Cancel _:
+                        CancelCommands();
+                        kernel.CancelCommands();
+                        break;
+                }
+
+                await kernel.RunDeferredCommandsAsync();
+
+                if (kernel != this)
+                {
+                    // route to a subkernel
+                    await kernel.Pipeline.SendAsync(command, context);
+                }
+                else
+                {
+                    await base.HandleAsync(command, context);
+                }
             }
         }
 
