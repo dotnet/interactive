@@ -75,6 +75,7 @@ namespace Microsoft.DotNet.Interactive
 
             kernel.ParentKernel = this;
             kernel.AddMiddleware(LoadExtensions);
+            kernel.SetScheduler(GetOrCreateScheduler());
 
             AddChooseKernelDirective(kernel, aliases);
 
@@ -203,9 +204,8 @@ namespace Microsoft.DotNet.Interactive
             return kernel ?? this;
         }
 
-        private string GetHandlingKernelName(
-            KernelCommand command,
-            KernelInvocationContext context)
+        protected override string GetHandlingKernelName(
+            KernelCommand command)
         {
             var targetKernelName = command switch
             {
@@ -225,7 +225,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     0 => this,
                     1 => _childKernels[0],
-                    _ => context.HandlingKernel
+                    _ => null
                 };
             }
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
@@ -29,6 +30,9 @@ namespace Microsoft.DotNet.Interactive
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
         private readonly KernelCommandScheduler _scheduler;
+        private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
+
+        private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
 
         protected Kernel(string name)
         {
@@ -76,7 +80,18 @@ namespace Microsoft.DotNet.Interactive
             }
 
             command.SetToken($"deferredCommand::{Guid.NewGuid():N}");
+            OldDeferCommand(command);
+            
+        }
+
+        private void OldDeferCommand(KernelCommand command)
+        {
             Scheduler.DeferCommand(command, this);
+        }
+
+        private void NewDeferCommand(KernelCommand command)
+        {
+           _deferredCommands.Enqueue(command);
         }
 
         private void AddSetKernelMiddleware()
@@ -236,22 +251,100 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             CancellationToken cancellationToken)
         {
-            return SendAsync(command, cancellationToken, null);
-        }
-
-        internal Task<KernelCommandResult> SendAsync(
-            KernelCommand command,
-            CancellationToken cancellationToken,
-            Action onDone)
-        {
             if (command == null)
             {
                 throw new ArgumentNullException(nameof(command));
             }
 
-            return Scheduler.Schedule(command, this, cancellationToken, onDone);
-
+            var handlingKernelName = GetHandlingKernelName(command);
+            
+            return OldScheduleCommand(command, handlingKernelName, cancellationToken);
         }
+
+        private Task<KernelCommandResult> OldScheduleCommand(KernelCommand command, string handlingKernelName, CancellationToken cancellationToken)
+        {
+            return Scheduler.Schedule(command, this, cancellationToken, null);
+        }
+
+        private Task<KernelCommandResult> NewScheduleCommand(KernelCommand command, string handlingKernelName, CancellationToken cancellationToken)
+        {
+            var scheduler = GetOrCreateScheduler();
+            return scheduler.Schedule(command, InvokePipelineAndCommandHandler, handlingKernelName);
+        }
+
+        protected KernelScheduler<KernelCommand, KernelCommandResult> GetOrCreateScheduler()
+        {
+             ;
+            if(_commandScheduler is null)
+            {
+                SetScheduler(new KernelScheduler<KernelCommand, KernelCommandResult>());
+            }
+
+            return _commandScheduler;
+        }
+
+        internal void SetScheduler(KernelScheduler<KernelCommand, KernelCommandResult> scheduler)
+        {
+
+            _commandScheduler = scheduler;
+
+            IEnumerable<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
+            {
+                if (scope != Name)
+                {
+                    yield break;
+                }
+
+                while (_deferredCommands.TryDequeue(out var kernelCommand))
+                {
+                    yield return kernelCommand;
+                }
+            }
+
+            _commandScheduler.RegisterDeferredOperationSource(GetDeferredOperations, InvokePipelineAndCommandHandler);
+        }
+
+        protected virtual string GetHandlingKernelName(
+            KernelCommand command)
+        {
+            return Name;
+        }
+
+        internal async Task<KernelCommandResult> InvokePipelineAndCommandHandler(KernelCommand command)
+        {
+            var context = KernelInvocationContext.Establish(command);
+
+            // only subscribe for the root command 
+            using var _ = context.Command == command
+                ? context.KernelEvents.Subscribe(PublishEvent)
+                : Disposable.Empty;
+
+            try
+            {
+                await Pipeline.SendAsync(command, context);
+
+                if (command == context.Command)
+                {
+                    await context.DisposeAsync();
+                }
+                else
+                {
+                    context.Complete(command);
+                }
+
+                return context.Result;
+            }
+            catch (Exception exception)
+            {
+                if (!context.IsComplete)
+                {
+                    context.Fail(exception);
+                }
+
+                throw;
+            }
+        }
+
 
         protected internal void CancelCommands()
         {
