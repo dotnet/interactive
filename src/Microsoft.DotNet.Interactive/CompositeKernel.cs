@@ -203,7 +203,7 @@ namespace Microsoft.DotNet.Interactive
             return kernel ?? this;
         }
 
-        protected override string GetHandlingKernelName(
+        private protected override KernelUri GetHandlingKernelUri(
             KernelCommand command)
         {
             var targetKernelName = command switch
@@ -228,7 +228,7 @@ namespace Microsoft.DotNet.Interactive
                 };
             }
 
-            return (kernel ?? this).Name;
+            return (kernel ?? this).Uri;
         }
 
         internal override async Task HandleAsync(
