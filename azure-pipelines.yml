@@ -167,7 +167,8 @@ stages:
       jobs:
       - job: Linux
         pool:
-          vmImage: ubuntu-16.04
+          name: NetCorePublic-Pool
+          queue: BuildPool.Ubuntu.1604.amd64.Open
         variables:
         # Enable signing for internal, non-PR builds
         - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -227,7 +228,7 @@ stages:
       jobs:
       - job: Dockerfile_official_image
         pool:
-          vmImage: ubuntu-16.04
+          vmImage: ubuntu-latest
         steps:
         - checkout: self
           clean: true
@@ -243,7 +244,7 @@ stages:
       jobs:
       - job: Dockerfile_Main
         pool:
-          vmImage: ubuntu-16.04
+          vmImage: ubuntu-latest
         steps:
         - checkout: self
           clean: true
@@ -259,7 +260,7 @@ stages:
       jobs:
       - job: Dockerfile_Binder_Dependency
         pool:
-          vmImage: ubuntu-16.04
+          vmImage: ubuntu-latest
         steps:
         - checkout: self
           clean: true
@@ -277,7 +278,7 @@ stages:
         dependsOn: Windows_NT
         condition: succeeded()
         pool:
-          vmImage: ubuntu-16.04
+          vmImage: ubuntu-latest
         variables:
         - name: DOTNET_INTERACTIVE_CLI_TELEMETRY_OPTOUT
           value: 1
