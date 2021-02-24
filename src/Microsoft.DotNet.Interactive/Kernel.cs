@@ -354,7 +354,6 @@ namespace Microsoft.DotNet.Interactive
         internal Task RunDeferredCommandsAsync()
         {
             return Scheduler.RunDeferredCommandsAsync(this);
-
         }
 
         protected internal void PublishEvent(KernelEvent kernelEvent)
