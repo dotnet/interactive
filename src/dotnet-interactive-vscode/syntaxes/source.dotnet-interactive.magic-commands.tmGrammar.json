@@ -4,7 +4,7 @@
     "patterns": [
         {
             "name": "comment.line.magic-commands",
-            "begin": "^(#!)(?!([cf](#|s(harp)?)|powershell|pwsh|html|javascript|js|markdown|md))",
+            "begin": "^(#!)(?!([cf](#|s(harp)?)|powershell|pwsh|html|javascript|js|markdown|md|sql))",
             "end": "(?<=$)",
             "beginCaptures": {
                 "1": {

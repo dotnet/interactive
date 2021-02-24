@@ -3,7 +3,7 @@
     "patterns": [
         {
             "begin": "^#!cs(harp)?\\s+$",
-            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
+            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql)\\s+$)",
             "name": "language.switch.csharp",
             "patterns": [
                 {
@@ -13,7 +13,7 @@
         },
         {
             "begin": "^#!fs(harp)?\\s+$",
-            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
+            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql)\\s+$)",
             "name": "language.switch.fsharp",
             "patterns": [
                 {
@@ -23,7 +23,7 @@
         },
         {
             "begin": "^#!html\\s+$",
-            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
+            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql)\\s+$)",
             "name": "language.switch.html",
             "patterns": [
                 {
@@ -33,7 +33,7 @@
         },
         {
             "begin": "^#!(javascript|js)\\s+$",
-            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
+            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql)\\s+$)",
             "name": "language.switch.javascript",
             "patterns": [
                 {
@@ -43,7 +43,7 @@
         },
         {
             "begin": "^#!(markdown|md)\\s+$",
-            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
+            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql)\\s+$)",
             "name": "language.switch.markdown",
             "patterns": [
                 {
@@ -53,11 +53,21 @@
         },
         {
             "begin": "^#!(powershell|pwsh)\\s+$",
-            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh)\\s+$)",
+            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql)\\s+$)",
             "name": "language.switch.powershell",
             "patterns": [
                 {
                     "include": "source.dotnet-interactive.powershell"
+                }
+            ]
+        },
+        {
+            "begin": "^#!sql\\s+$",
+            "end": "(?=^#!(cs(harp)?|fs(harp)?|html|javascript|js|markdown|md|powershell|pwsh|sql)\\s+$)",
+            "name": "language.switch.sql",
+            "patterns": [
+                {
+                    "include": "source.dotnet-interactive.sql"
                 }
             ]
         }
