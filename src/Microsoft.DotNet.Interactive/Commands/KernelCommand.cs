@@ -40,6 +40,9 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         internal static KernelCommand None { get; } = new NoCommand();
 
+        [JsonIgnore]
+        internal KernelUri KernelUri { get; set; }
+
         public virtual Task InvokeAsync(KernelInvocationContext context)
         {
             if (Handler == null)

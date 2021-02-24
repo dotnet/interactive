@@ -235,6 +235,15 @@ namespace Microsoft.DotNet.Interactive
         public IObservable<KernelEvent> KernelEvents => _kernelEvents;
 
         public string Name { get; set; }
+        
+        internal KernelUri Uri  {
+            get
+            {
+                return ParentKernel is null
+                    ? KernelUri.Parse(Name)
+                    : ParentKernel.Uri.Append($"{Name}");
+            }
+        }
 
         public IReadOnlyCollection<ICommand> Directives => SubmissionParser.Directives;
 
@@ -274,17 +283,11 @@ namespace Microsoft.DotNet.Interactive
             foreach (var generatedCommand in commands)
             {
              
-                var handlingKernelName = GetHandlingKernelName(generatedCommand);
+                var handlingKernelName = GetHandlingKernelUri(generatedCommand);
+                EnsureHandlingKernelUri(generatedCommand);
                 if (!string.IsNullOrEmpty(command.TargetKernelName))
                 {
-                    if (generatedCommand.TargetKernelName != handlingKernelName)
-                    {
-                        generatedCommand.TargetKernelName = handlingKernelName;
-                    }
-                    else
-                    {
-
-                    }
+                   
                 }
 
                 else
@@ -305,6 +308,14 @@ namespace Microsoft.DotNet.Interactive
 
         }
 
+        private void EnsureHandlingKernelUri(KernelCommand command)
+        {
+            if (command.KernelUri is null)
+            {
+                command.KernelUri = GetHandlingKernelUri(command);
+            }
+        }
+
         private Task<KernelCommandResult> OldScheduleCommand(KernelCommand command, CancellationToken cancellationToken)
         {
             return Scheduler.Schedule(command, this, cancellationToken, null);
@@ -317,9 +328,8 @@ namespace Microsoft.DotNet.Interactive
             
             foreach (var command in commands)
             {
-                var handlingKernelName = GetHandlingKernelName(command);
-                command.TargetKernelName = handlingKernelName;
-                await scheduler.Schedule(command, InvokePipelineAndCommandHandler, handlingKernelName);
+                EnsureHandlingKernelUri(command);
+                await scheduler.Schedule(command, InvokePipelineAndCommandHandler, command.KernelUri.ToString());
             }
 
             return originalCommandContext.Result;
@@ -357,10 +367,10 @@ namespace Microsoft.DotNet.Interactive
             _commandScheduler.RegisterDeferredOperationSource(GetDeferredOperations, InvokePipelineAndCommandHandler);
         }
 
-        protected virtual string GetHandlingKernelName(
+        private protected virtual KernelUri GetHandlingKernelUri(
             KernelCommand command)
         {
-            return Name;
+            return Uri;
         }
 
         internal async Task<KernelCommandResult> InvokePipelineAndCommandHandler(KernelCommand command)
@@ -581,5 +591,39 @@ namespace Microsoft.DotNet.Interactive
         }
 
         internal ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= CreateChooseKernelDirective();
+    }
+
+    internal class KernelUri
+    {
+        private readonly string _stringValue;
+
+        private KernelUri(string kernelUri)
+        {
+            if (string.IsNullOrWhiteSpace(kernelUri))
+            {
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(kernelUri));
+            }
+
+            Parts = kernelUri.Split('/');
+            _stringValue = kernelUri;
+        }
+
+        public override string ToString()
+        {
+            return _stringValue;
+        }
+
+        public static KernelUri Parse(string kernelUri)
+        {
+            return new(kernelUri);
+
+        }
+
+        public string[] Parts { get; }
+
+        public KernelUri Append(string part)
+        {
+            return new KernelUri($"{_stringValue}/{part}");
+        }
     }
 }
