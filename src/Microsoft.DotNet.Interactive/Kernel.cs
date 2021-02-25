@@ -391,6 +391,7 @@ namespace Microsoft.DotNet.Interactive
 
             try
             {
+                SetHandlingKernel(command,context);
                 await Pipeline.SendAsync(command, context);
 
                 if (command == context.Command)
