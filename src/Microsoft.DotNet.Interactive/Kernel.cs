@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -320,16 +320,8 @@ namespace Microsoft.DotNet.Interactive
                 SetHandlingKernel(command,context);
 
                 await Pipeline.SendAsync(command, context);
-
-                // FIX: (InvokePipelineAndCommandHandler) clean up
-                if (command == context.Command)
-                {
-                   // await context.DisposeAsync();
-                }
-                else
-                {
-                    context.Complete(command);
-                }
+                
+                context.Complete(command);
 
                 return context.Result;
             }
