@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.Interactive
             if(command.LinePosition.Line < 0 
                || command.LinePosition.Line >= lines.Count
                || command.LinePosition.Character < 0
-               || command.LinePosition.Character >= lines[command.LinePosition.Line].Span.Length)
+               || command.LinePosition.Character > lines[command.LinePosition.Line].Span.Length)
             {
                 context.Fail(message:$"The specified position {command.LinePosition}");
                 commands = null;
