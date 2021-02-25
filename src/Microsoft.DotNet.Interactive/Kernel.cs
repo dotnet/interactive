@@ -395,7 +395,7 @@ namespace Microsoft.DotNet.Interactive
 
                 if (command == context.Command)
                 {
-                    await context.DisposeAsync();
+                   // await context.DisposeAsync();
                 }
                 else
                 {
