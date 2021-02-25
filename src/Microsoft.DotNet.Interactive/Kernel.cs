@@ -285,9 +285,6 @@ namespace Microsoft.DotNet.Interactive
             var commands = PreprocessCommands(command);
             foreach (var generatedCommand in commands)
             {
-             
-                var handlingKernelName = GetHandlingKernelUri(generatedCommand);
-                EnsureHandlingKernelUri(generatedCommand);
                 if (!string.IsNullOrEmpty(command.TargetKernelName))
                 {
                    
@@ -327,15 +324,22 @@ namespace Microsoft.DotNet.Interactive
         private async Task<KernelCommandResult> NewScheduleCommand(IReadOnlyList<KernelCommand> commands, KernelCommand originalCommand, CancellationToken cancellationToken)
         {
             var scheduler = GetOrCreateScheduler();
-            var originalCommandContext = KernelInvocationContext.Establish(originalCommand);
+            var context = KernelInvocationContext.Establish(originalCommand);
             
+            // only subscribe for the root command 
+            using var disposable = context.Command == originalCommand
+                ? context.KernelEvents.Subscribe(PublishEvent)
+                : Disposable.Empty;
+
             foreach (var command in commands)
             {
               
                 await scheduler.Schedule(command, InvokePipelineAndCommandHandler, command.KernelUri.ToString());
             }
 
-            return originalCommandContext.Result;
+            context.Complete(originalCommand);
+
+            return context.Result;
         }
 
         protected KernelScheduler<KernelCommand, KernelCommandResult> GetOrCreateScheduler()
@@ -384,11 +388,6 @@ namespace Microsoft.DotNet.Interactive
         internal async Task<KernelCommandResult> InvokePipelineAndCommandHandler(KernelCommand command)
         {
             var context = KernelInvocationContext.Establish(command);
-
-            // only subscribe for the root command 
-            using var _ = context.Command == command
-                ? context.KernelEvents.Subscribe(PublishEvent)
-                : Disposable.Empty;
 
             try
             {

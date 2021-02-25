@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             var tree = Parse(code, originalCommand.TargetKernelName);
             var nodes = tree.GetRoot().ChildNodes.ToArray();
             var targetKernelName = originalCommand.TargetKernelName ?? KernelLanguage;
-            var kernelUri = originalCommand.KernelUri;
+            var lastKernelUri = originalCommand.KernelUri;
             KernelNameDirectiveNode lastKernelNameNode = null;
 
             foreach (var node in nodes)
@@ -124,7 +124,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
                         if (directiveNode is KernelNameDirectiveNode kernelNameNode)
                         {
-                            kernelUri = _kernel.Uri.Append(kernelNameNode.KernelName);
                             targetKernelName = kernelNameNode.KernelName;
                             lastKernelNameNode = kernelNameNode;
                         }
@@ -145,7 +144,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         }
                         else if (parseResult.CommandResult.Command.Name == "#i")
                         {
-                            directiveCommand.KernelUri = kernelUri;
+                            directiveCommand.KernelUri = lastKernelUri;
                             directiveCommand.TargetKernelName = targetKernelName;
                             AddHoistedCommand(directiveCommand);
                         }
@@ -224,14 +223,14 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
         }
 
-        internal IDictionary<string, Func<Parser>> GetSubkernelDirectiveParsers()
+        internal IDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)> GetSubkernelDirectiveParsers()
         {
             if (!(_kernel is CompositeKernel compositeKernel))
             {
                 return null;
             }
 
-            var dict = new Dictionary<string, Func<Parser>>();
+            var dict = new Dictionary<string, (KernelUri , Func<Parser>)>();
 
             for (var i = 0; i < compositeKernel.ChildKernels.Count; i++)
             {
@@ -241,11 +240,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 {
                     foreach (var alias in chooseKernelDirective.Aliases)
                     {
-                        dict.Add(alias[2..], GetParser);
+                        dict.Add(alias[2..], GetParser());
                     }
                 }
 
-                Parser GetParser() => childKernel.SubmissionParser.GetDirectiveParser();
+                (KernelUri, Func<Parser>) GetParser() => (childKernel.Uri,() => childKernel.SubmissionParser.GetDirectiveParser());
             }
 
             return dict;
