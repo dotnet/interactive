@@ -297,7 +297,7 @@ describe('Miscellaneous tests', () => {
         });
     });
 
-    it('executing a non-existant process still returns', async () => {
+    it('executing a non-existent process still returns', async () => {
         const result = await executeSafe('this-is-a-command-that-will-fail', []);
         expect(result).to.deep.equal({
             code: -1,
