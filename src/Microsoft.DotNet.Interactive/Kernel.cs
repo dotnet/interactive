@@ -51,23 +51,11 @@ namespace Microsoft.DotNet.Interactive
 
             _scheduler = new KernelCommandScheduler();
 
-            if (UseNewScheduler)
-            {
-              
-            }
-            else
-            {
-                AddSetKernelMiddleware();
-                AddDirectiveMiddlewareAndCommonCommandHandlers();
-            }
-
             _disposables.Add(Disposable.Create(
                 () => _kernelEvents.OnCompleted()
                 ));
         }
-
-        public static bool UseNewScheduler { get; set; } = true;
-
+        
         internal KernelCommandScheduler Scheduler => _scheduler;
 
         internal KernelCommandPipeline Pipeline { get; }
@@ -88,19 +76,9 @@ namespace Microsoft.DotNet.Interactive
             }
 
             command.SetToken($"deferredCommand::{Guid.NewGuid():N}");
-            if (UseNewScheduler)
-            {
-                NewDeferCommand(command);
-            }
-            else
-            {
-                OldDeferCommand(command);
-            }
-        }
-
-        private void OldDeferCommand(KernelCommand command)
-        {
-            Scheduler.DeferCommand(command, this);
+          
+            
+            NewDeferCommand(command);
         }
 
         private void NewDeferCommand(KernelCommand command)
@@ -108,72 +86,27 @@ namespace Microsoft.DotNet.Interactive
            _deferredCommands.Enqueue(command);
         }
 
-        private void AddSetKernelMiddleware()
+        private bool TryPreprocessCommands(KernelCommand command,
+            KernelInvocationContext context, out IReadOnlyList<KernelCommand> commands)
         {
-            AddMiddleware(SetKernel);
-        }
-
-        private void AddDirectiveMiddlewareAndCommonCommandHandlers()
-        {
-            AddMiddleware(
-                async (originalCommand, context, next) =>
-                {
-                    var commands = PreprocessCommands(originalCommand);
-
-                    if (!commands.Contains(originalCommand) && commands.Any())
-                    {
-                        context.CommandToSignalCompletion = commands.Last();
-                    }
-
-                    foreach (var command in commands)
-                    {
-                        if (context.IsComplete)
-                        {
-                            break;
-                        }
-
-                        if (command == originalCommand)
-                        {
-                            // no new context is needed
-                            await next(originalCommand, context);
-                        }
-                        else
-                        {
-                            switch (command)
-                            {
-                                case AnonymousKernelCommand _:
-                                case DirectiveCommand _:
-                                    await command.InvokeAsync(context);
-                                    break;
-                                default:
-                                    SetHandlingKernel(command, context);
-                                    var kernel = context.HandlingKernel;
-                                    if (kernel == this)
-                                    {
-                                        var c = KernelInvocationContext.Establish(command);
-                                        await next(command, c);
-                                    }
-                                    else
-                                    {
-                                        // forward to appropriate kernel
-                                        await kernel.SendAsync(command);
-                                    }
-                                    break;
-                            }
-                        }
-                    }
-                });
-        }
-
-        private IReadOnlyList<KernelCommand> PreprocessCommands(KernelCommand command)
-        {
-            var commands =  command switch
+            switch (command)
             {
-                SubmitCode { LanguageNode: null } submitCode => SubmissionParser.SplitSubmission(submitCode),
-                RequestDiagnostics { LanguageNode: null } requestDiagnostics => SubmissionParser.SplitSubmission(requestDiagnostics),
-                LanguageServiceCommand { LanguageNode: null } languageServiceCommand => PreprocessLanguageServiceCommand(languageServiceCommand),
-                _ => new[] { command }
-            };
+                case SubmitCode {LanguageNode: null} submitCode:
+                    commands = SubmissionParser.SplitSubmission(submitCode);
+                    break;
+                case RequestDiagnostics {LanguageNode: null} requestDiagnostics:
+                    commands = SubmissionParser.SplitSubmission(requestDiagnostics);
+                    break;
+                case LanguageServiceCommand {LanguageNode: null} languageServiceCommand:
+                    if (!TryPreprocessLanguageServiceCommand(languageServiceCommand, context, out commands))
+                    {
+                        return false;
+                    }
+                    break;
+                default:
+                    commands = new[] {command};
+                    break;
+            }
 
             foreach (var kernelCommand in commands)
             {
@@ -183,18 +116,29 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
             
-            return commands;
+            return true;
         }
 
-        private IReadOnlyList<KernelCommand> PreprocessLanguageServiceCommand(LanguageServiceCommand command)
+        private bool TryPreprocessLanguageServiceCommand(LanguageServiceCommand command, KernelInvocationContext context, out IReadOnlyList<KernelCommand> commands)
         {
-            var commands = new List<KernelCommand>();
+            var postProcessCommands = new List<KernelCommand>();
             var tree = SubmissionParser.Parse(command.Code, command.TargetKernelName);
             var rootNode = tree.GetRoot();
             var sourceText = SourceText.From(command.Code);
-
+            var lines = sourceText.Lines;
+            if(command.LinePosition.Line < 0 
+               || command.LinePosition.Line >= lines.Count
+               || command.LinePosition.Character < 0
+               || command.LinePosition.Character >= lines[command.LinePosition.Line].Span.Length)
+            {
+                context.Fail(message:$"The specified position {command.LinePosition}");
+                commands = null;
+                return false;
+            }
+            
             // TextSpan.Contains only checks `[start, end)`, but we need to allow for `[start, end]`
             var absolutePosition = tree.GetAbsolutePosition(command.LinePosition);
+
             if (absolutePosition >= tree.Length)
             {
                 absolutePosition--;
@@ -214,18 +158,19 @@ namespace Microsoft.DotNet.Interactive
                 var offsetLanguageServiceCommand = command.With(
                     node,
                     position);
-                offsetLanguageServiceCommand.Parent = command;
-
+               
                 offsetLanguageServiceCommand.TargetKernelName = node switch
                 {
                     DirectiveNode => Name,
                     _ => node.KernelName,
                 };
 
-                commands.Add(offsetLanguageServiceCommand);
+                postProcessCommands.Add(offsetLanguageServiceCommand);
             }
 
-            return commands;
+            commands = postProcessCommands;
+
+            return true;
         }
 
         private async Task SetKernel(KernelCommand command, KernelInvocationContext context, KernelPipelineContinuation next)
@@ -285,44 +230,36 @@ namespace Microsoft.DotNet.Interactive
             {
                 throw new ArgumentNullException(nameof(command));
             }
-
-            if (UseNewScheduler)
-            {
-                var commands = PreprocessCommands(command);
-
-                return NewScheduleCommand(commands, command, cancellationToken);
-            }
-            else
-            {
-                return OldScheduleCommand(command, cancellationToken);
-            }
+            
+            return NewScheduleCommand(command, cancellationToken);
         }
 
-        private Task<KernelCommandResult> OldScheduleCommand(KernelCommand command, CancellationToken cancellationToken)
-        {
-            return Scheduler.Schedule(command, this, cancellationToken, null);
-        }
 
-        private async Task<KernelCommandResult> NewScheduleCommand(IReadOnlyList<KernelCommand> commands, KernelCommand originalCommand, CancellationToken cancellationToken)
+
+        private async Task<KernelCommandResult> NewScheduleCommand(
+            KernelCommand originalCommand, CancellationToken cancellationToken)
         {
             var scheduler = GetOrCreateScheduler();
             var context = KernelInvocationContext.Establish(originalCommand);
-
             // only subscribe for the root command 
             var currentCommandOwnsContext = context.Command == originalCommand;
 
             using var disposable = currentCommandOwnsContext
-                                       ? context.KernelEvents.Subscribe(PublishEvent)
-                                       : Disposable.Empty;
+                ? context.KernelEvents.Subscribe(PublishEvent)
+                : Disposable.Empty;
 
-            foreach (var command in commands)
-            {
-                await scheduler.Schedule(command, InvokePipelineAndCommandHandler, command.KernelUri.ToString());
-            }
 
-            if (currentCommandOwnsContext)
+            if (TryPreprocessCommands(originalCommand, context, out var commands))
             {
-                await context.DisposeAsync();
+                foreach (var command in commands)
+                {
+                    await scheduler.Schedule(command, InvokePipelineAndCommandHandler, command.KernelUri.ToString());
+                }
+
+                if (currentCommandOwnsContext)
+                {
+                    await context.DisposeAsync();
+                }
             }
 
             return context.Result;
@@ -354,7 +291,10 @@ namespace Microsoft.DotNet.Interactive
 
                 while (_deferredCommands.TryDequeue(out var kernelCommand))
                 {
-                    var commands = PreprocessCommands(kernelCommand);
+                    if (!TryPreprocessCommands(kernelCommand, null, out var commands))
+                    {
+
+                    }
                     foreach (var cmd in commands)
                     {
                         yield return cmd;

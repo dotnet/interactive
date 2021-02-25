@@ -23,11 +23,6 @@ namespace Microsoft.DotNet.Interactive
 
         protected virtual Task Handle(KernelInvocationContext kernelInvocationContext, InvocationContext commandLineInvocationContext)
         {
-            if (!Kernel.UseNewScheduler)
-            {
-                kernelInvocationContext.HandlingKernel = Kernel;
-            }
-
             return Task.CompletedTask;
         }
     }
