@@ -8,10 +8,27 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.CommandLineParserTests.kernel_server_honors_log_path</TestName>
       </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.App.Tests.TypeScriptInterfacesContractTests.vscode_generated_TypeScript_interfaces_file_has_known_shape</TestName>
-      </NamedTestSelector>
-      <AllTestsSelector />
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.CommandLineParserTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.FirstTimeUseSentinelTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.TelemetryTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.FileProviderTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.HttpApiTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.MagicCommandTests+about</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.AspNetCoreTests</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
