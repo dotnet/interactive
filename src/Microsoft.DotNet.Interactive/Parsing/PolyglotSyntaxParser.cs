@@ -56,8 +56,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
         private void ParseSubmission(PolyglotSubmissionNode rootNode)
         {
             var currentKernelName = DefaultLanguage;
-            _subkernelInfoByKernelName.TryGetValue(currentKernelName??string.Empty, out var currentKernelInfo);
-            
+            _subkernelInfoByKernelName.TryGetValue(currentKernelName ?? "", out var currentKernelInfo);
 
             for (var i = 0; i < _tokens!.Count; i++)
             {
@@ -83,7 +82,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             directiveNode = new ActionDirectiveNode(
                                 directiveToken,
                                 _sourceText,
-                                currentKernelName,
+                                currentKernelName ?? DefaultLanguage,
                                 rootNode.SyntaxTree);
                         }
 
@@ -165,7 +164,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 else
                 {
                     var languageNode = new LanguageNode(
-                        currentKernelName,
+                        currentKernelName ?? DefaultLanguage,
                         _sourceText,
                         rootNode.SyntaxTree);
                     languageNode.KernelUri = currentKernelInfo.kernelUri;

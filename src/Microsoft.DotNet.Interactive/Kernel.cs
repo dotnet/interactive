@@ -177,7 +177,10 @@ namespace Microsoft.DotNet.Interactive
 
             foreach (var kernelCommand in commands)
             {
-                EnsureHandlingKernelUri(kernelCommand);
+                if (kernelCommand.KernelUri is null)
+                {
+                    kernelCommand.KernelUri = GetHandlingKernelUri(kernelCommand);
+                }
             }
             
             return commands;
@@ -214,7 +217,7 @@ namespace Microsoft.DotNet.Interactive
 
                 offsetLanguageServiceCommand.TargetKernelName = node switch
                 {
-                    DirectiveNode _ => Name,
+                    DirectiveNode => Name,
                     _ => node.KernelName,
                 };
 
@@ -282,37 +285,15 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(command));
             }
 
-            var commands = PreprocessCommands(command);
-            foreach (var generatedCommand in commands)
-            {
-                if (!string.IsNullOrEmpty(command.TargetKernelName))
-                {
-                   
-                }
-
-                else
-                {
-
-                }
-            }
-            
-
             if (UseNewScheduler)
             {
+                var commands = PreprocessCommands(command);
+
                 return NewScheduleCommand(commands, command, cancellationToken);
             }
             else
             {
                 return OldScheduleCommand(command, cancellationToken);
-            }
-
-        }
-
-        private void EnsureHandlingKernelUri(KernelCommand command)
-        {
-            if (command.KernelUri is null)
-            {
-                command.KernelUri = GetHandlingKernelUri(command);
             }
         }
 
@@ -325,23 +306,24 @@ namespace Microsoft.DotNet.Interactive
         {
             var scheduler = GetOrCreateScheduler();
             var context = KernelInvocationContext.Establish(originalCommand);
-            
+
             // only subscribe for the root command 
-            using var disposable = context.Command == originalCommand
-                ? context.KernelEvents.Subscribe(PublishEvent)
-                : Disposable.Empty;
+            var currentCommandOwnsContext = context.Command == originalCommand;
+
+            using var disposable = currentCommandOwnsContext
+                                       ? context.KernelEvents.Subscribe(PublishEvent)
+                                       : Disposable.Empty;
 
             foreach (var command in commands)
             {
-              
                 await scheduler.Schedule(command, InvokePipelineAndCommandHandler, command.KernelUri.ToString());
             }
 
-           // context.Complete(originalCommand);
-            if(context.Command == originalCommand)
+            if (currentCommandOwnsContext)
             {
                 await context.DisposeAsync();
             }
+
             return context.Result;
         }
 
@@ -395,8 +377,10 @@ namespace Microsoft.DotNet.Interactive
             try
             {
                 SetHandlingKernel(command,context);
+
                 await Pipeline.SendAsync(command, context);
 
+                // FIX: (InvokePipelineAndCommandHandler) clean up
                 if (command == context.Command)
                 {
                    // await context.DisposeAsync();
@@ -418,7 +402,6 @@ namespace Microsoft.DotNet.Interactive
                 throw;
             }
         }
-
 
         protected internal void CancelCommands()
         {
@@ -569,13 +552,13 @@ namespace Microsoft.DotNet.Interactive
                         break;
 
                     default:
-                        TrySetDynamicHandler(command, context);
+                        TrySetDynamicHandler(command);
                         break;
                 }
             }
         }
 
-        private void TrySetDynamicHandler(KernelCommand command, KernelInvocationContext context)
+        private void TrySetDynamicHandler(KernelCommand command)
         {
             if (_dynamicHandlers.TryGetValue(command.GetType(), out KernelCommandInvocation handler))
             {
@@ -602,75 +585,5 @@ namespace Microsoft.DotNet.Interactive
         }
 
         internal ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= CreateChooseKernelDirective();
-    }
-
-    internal class KernelUri
-    {
-        protected bool Equals(KernelUri other)
-        {
-            return StringComparer.Ordinal.Equals( _stringValue, other._stringValue);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((KernelUri) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return (_stringValue != null ? _stringValue.GetHashCode() : 0);
-        }
-
-        private readonly string _stringValue;
-
-        private KernelUri(string kernelUri)
-        {
-            if (string.IsNullOrWhiteSpace(kernelUri))
-            {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(kernelUri));
-            }
-
-            Parts = kernelUri.Split('/');
-            _stringValue = kernelUri;
-        }
-
-        public override string ToString()
-        {
-            return _stringValue;
-        }
-
-        public static KernelUri Parse(string kernelUri)
-        {
-            return new(kernelUri);
-
-        }
-
-        public string[] Parts { get; }
-
-        public KernelUri Append(string part)
-        {
-            return new KernelUri($"{_stringValue}/{part}");
-        }
-
-
-        public bool Contains(KernelUri uri)
-        {
-            if (uri.Parts.Length > Parts.Length){
-                return false;
-            }
-
-            for (var i = 0; i < uri.Parts.Length; i++)
-            {
-                if(!StringComparer.Ordinal.Equals(Parts[i],uri.Parts[i]))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
     }
 }
