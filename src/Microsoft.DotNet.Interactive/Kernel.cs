@@ -337,7 +337,7 @@ namespace Microsoft.DotNet.Interactive
                 await scheduler.Schedule(command, InvokePipelineAndCommandHandler, command.KernelUri.ToString());
             }
 
-            context.Complete(originalCommand);
+           // context.Complete(originalCommand);
             if(context.Command == originalCommand)
             {
                 await context.DisposeAsync();
