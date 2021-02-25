@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
-import * as cp from 'child_process';
 import * as path from 'path';
 import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
@@ -11,7 +10,7 @@ import { getEol, isUnsavedNotebook } from './vscodeUtilities';
 import { toNotebookDocument } from './notebookContentProvider';
 import { KernelId, updateCellMetadata } from './notebookKernel';
 import { setGlobalDotnetPath } from './extension';
-import { computeToolInstallArguments } from '../utilities';
+import { computeToolInstallArguments, executeSafe } from '../utilities';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
@@ -41,7 +40,7 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext) {
             'uninstall',
             'Microsoft.dotnet-interactive'
         ];
-        await execute(args.dotnetPath, uninstallArgs, globalStoragePath);
+        await executeSafe(args.dotnetPath, uninstallArgs, globalStoragePath);
 
         let toolArgs = [
             'tool',
@@ -56,7 +55,7 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext) {
         }
 
         return new Promise(async (resolve, reject) => {
-            const result = await execute(args.dotnetPath, toolArgs, globalStoragePath);
+            const result = await executeSafe(args.dotnetPath, toolArgs, globalStoragePath);
             if (result.code === 0) {
                 resolve();
             } else {
@@ -204,7 +203,7 @@ async function switchToInteractiveKernel() {
 // callbacks used to install interactive tool
 
 async function getInteractiveVersion(dotnetPath: string, globalStoragePath: string): Promise<string | undefined> {
-    const result = await execute(dotnetPath, ['tool', 'run', 'dotnet-interactive', '--', '--version'], globalStoragePath);
+    const result = await executeSafe(dotnetPath, ['tool', 'run', 'dotnet-interactive', '--', '--version'], globalStoragePath);
     if (result.code === 0) {
         return result.output;
     }
@@ -213,26 +212,8 @@ async function getInteractiveVersion(dotnetPath: string, globalStoragePath: stri
 }
 
 async function createToolManifest(dotnetPath: string, globalStoragePath: string): Promise<void> {
-    const result = await execute(dotnetPath, ['new', 'tool-manifest'], globalStoragePath);
+    const result = await executeSafe(dotnetPath, ['new', 'tool-manifest'], globalStoragePath);
     if (result.code !== 0) {
         throw new Error(`Unable to create local tool manifest.  Command failed with code ${result.code}.\n\nSTDOUT:\n${result.output}\n\nSTDERR:\n${result.error}`);
     }
-}
-
-export function execute(command: string, args: Array<string>, workingDirectory?: string | undefined): Promise<{ code: number, output: string, error: string }> {
-    return new Promise<{ code: number, output: string, error: string }>((resolve, reject) => {
-        let output = '';
-        let error = '';
-
-        let childProcess = cp.spawn(command, args, { cwd: workingDirectory });
-        childProcess.stdout.on('data', data => output += data);
-        childProcess.stderr.on('data', data => error += data);
-        childProcess.on('exit', (code: number, _signal: string) => {
-            resolve({
-                code: code,
-                output: output.trim(),
-                error: error.trim()
-            });
-        });
-    });
 }

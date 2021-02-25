@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from 'dotnet-interactive-vscode-interfaces/out/contracts';
 import { isDisplayOutput, isErrorOutput, isTextOutput, reshapeOutputValueForVsCode } from 'dotnet-interactive-vscode-interfaces/out/utilities';
 import { requiredKernelspecData } from '../../ipynbUtilities';
-import { debounce, isDotNetKernelPreferred, parse, processArguments, stringify } from '../../utilities';
+import { debounce, executeSafe, isDotNetKernelPreferred, parse, processArguments, stringify } from '../../utilities';
 
 import * as notebook from 'dotnet-interactive-vscode-interfaces/out/notebook';
 
@@ -294,6 +294,15 @@ describe('Miscellaneous tests', () => {
         it(`non-error mime type doesn't reshape output`, () => {
             const reshaped = reshapeOutputValueForVsCode('text/plain', 'some error message');
             expect(reshaped).to.equal('some error message');
+        });
+    });
+
+    it('executing a non-existant process still returns', async () => {
+        const result = await executeSafe('this-is-a-command-that-will-fail', []);
+        expect(result).to.deep.equal({
+            code: -1,
+            output: '',
+            error: 'Error: spawn this-is-a-command-that-will-fail ENOENT',
         });
     });
 });

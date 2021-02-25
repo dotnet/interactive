@@ -8,7 +8,7 @@ import { ClientMapper } from '../clientMapper';
 import { DotNetInteractiveNotebookContentProvider } from './notebookContentProvider';
 import { StdioKernelTransport } from '../stdioKernelTransport';
 import { registerLanguageProviders } from './languageProvider';
-import { execute, registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
+import { registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
 
 import { getSimpleLanguage, isDotnetInteractiveLanguage, notebookCellLanguages } from '../interactiveNotebook';
 import { IDotnetAcquireResult } from 'dotnet-interactive-vscode-interfaces/out/dotnet';
@@ -16,7 +16,7 @@ import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces'
 
 import compareVersions = require("compare-versions");
 import { DotNetCellMetadata, withDotNetMetadata } from '../ipynbUtilities';
-import { processArguments } from '../utilities';
+import { executeSafe, processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 import { KernelId, updateCellLanguages, updateDocumentKernelspecMetadata } from './notebookKernel';
 import { DotNetInteractiveNotebookKernelProvider } from './notebookKernelProvider';
@@ -186,7 +186,7 @@ async function computeDotnetPath(outputChannel: OutputChannelAdapter): Promise<v
     const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion');
     let dotnetPath: string;
     if (await isDotnetUpToDate(minDotNetSdkVersion!)) {
-        dotnetPath = 'dotnet';
+        dotnetPath = cachedDotnetPath;
     } else {
         const commandResult = await vscode.commands.executeCommand<IDotnetAcquireResult>('dotnet.acquire', { version: minDotNetSdkVersion, requestingExtensionId: 'ms-dotnettools.dotnet-interactive-vscode' });
         dotnetPath = commandResult!.dotnetPath;
@@ -206,6 +206,6 @@ async function getInteractiveLaunchOptions(dotnetPath: string): Promise<Interact
 }
 
 async function isDotnetUpToDate(minVersion: string): Promise<boolean> {
-    const result = await execute('dotnet', ['--version']);
+    const result = await executeSafe(cachedDotnetPath, ['--version']);
     return result.code === 0 && compareVersions.compare(result.output, minVersion, '>=');
 }

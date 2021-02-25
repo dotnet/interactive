@@ -1,9 +1,46 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import * as cp from 'child_process';
 import * as path from 'path';
 import { InstallInteractiveArgs, ProcessStart } from "./interfaces";
 import { Uri } from 'dotnet-interactive-vscode-interfaces/out/notebook';
+
+export function executeSafe(command: string, args: Array<string>, workingDirectory?: string | undefined): Promise<{ code: number, output: string, error: string }> {
+    return new Promise<{ code: number, output: string, error: string }>(resolve => {
+        try {
+            let output = '';
+            let error = '';
+
+            function exitOrClose(code: number, _signal: string) {
+                resolve({
+                    code,
+                    output: output.trim(),
+                    error: error.trim(),
+                });
+            }
+
+            let childProcess = cp.spawn(command, args, { cwd: workingDirectory });
+            childProcess.stdout.on('data', data => output += data);
+            childProcess.stderr.on('data', data => error += data);
+            childProcess.on('error', err => {
+                resolve({
+                    code: -1,
+                    output: '',
+                    error: '' + err,
+                });
+            });
+            childProcess.on('close', exitOrClose);
+            childProcess.on('exit', exitOrClose);
+        } catch (err) {
+            resolve({
+                code: -1,
+                output: '',
+                error: '' + err,
+            });
+        }
+    });
+}
 
 export function processArguments(template: { args: Array<string>, workingDirectory: string }, notebookPath: string, fallbackWorkingDirectory: string, dotnetPath: string, globalStoragePath: string): ProcessStart {
     let workingDirectory = path.parse(notebookPath).dir;
