@@ -235,47 +235,15 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             KernelInvocationContext context)
         {
-            if (UseNewScheduler)
+            if (!command.KernelUri.Equals(Uri))
             {
-                if (!command.KernelUri.Equals( Uri))
-                {
-                    // route to a subkernel
-                    var kernel = ChildKernels.Single(ck => ck.Uri.Equals(command.KernelUri));
-                    await kernel.Pipeline.SendAsync(command, context);
-                }
-                else
-                {
-                    await base.HandleAsync(command, context);
-                }
+                // route to a subkernel
+                var kernel = ChildKernels.Single(ck => ck.Uri.Equals(command.KernelUri));
+                await kernel.Pipeline.SendAsync(command, context);
             }
             else
             {
-                var kernel = context.HandlingKernel;
-
-                if (kernel is null)
-                {
-                    throw new NoSuitableKernelException(command);
-                }
-
-                switch (command)
-                {
-                    case Cancel _:
-                        CancelCommands();
-                        kernel.CancelCommands();
-                        break;
-                }
-
-                await kernel.RunDeferredCommandsAsync();
-
-                if (kernel != this)
-                {
-                    // route to a subkernel
-                    await kernel.Pipeline.SendAsync(command, context);
-                }
-                else
-                {
-                    await base.HandleAsync(command, context);
-                }
+                await base.HandleAsync(command, context);
             }
         }
 
