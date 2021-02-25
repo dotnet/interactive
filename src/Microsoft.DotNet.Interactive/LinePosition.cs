@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Interactive
 
         public override string ToString()
         {
-            return $"{nameof(LinePosition)}: ({Line}, {Character})";
+            return $"{nameof(LinePosition)}: {{{Line}, {Character}}})";
         }
 
         public static bool operator ==(LinePosition a, LinePosition b)

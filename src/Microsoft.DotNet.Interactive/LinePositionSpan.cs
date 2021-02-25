@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive
 
         public override string ToString()
         {
-            return $"{Start}-{End}";
+            return $"[{Start}-{End})";
         }
 
         public static bool operator ==(LinePositionSpan a, LinePositionSpan b)
