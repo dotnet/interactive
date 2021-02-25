@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -171,13 +171,6 @@ namespace Microsoft.DotNet.Interactive
             commands = postProcessCommands;
 
             return true;
-        }
-
-        private async Task SetKernel(KernelCommand command, KernelInvocationContext context, KernelPipelineContinuation next)
-        {
-            SetHandlingKernel(command, context);
-
-            await next(command, context);
         }
 
         public FrontendEnvironment FrontendEnvironment
