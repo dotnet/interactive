@@ -38,6 +38,11 @@ namespace Microsoft.DotNet.Interactive
             return HashCode.Combine(Start, End);
         }
 
+        public override string ToString()
+        {
+            return $"{Start}-{End}";
+        }
+
         public static bool operator ==(LinePositionSpan a, LinePositionSpan b)
         {
             if (a is null && b is null)
