@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
@@ -18,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
         public string DefaultLanguage { get; }
         private readonly SourceText _sourceText;
         private readonly Parser _rootKernelDirectiveParser;
-        private readonly IDictionary<string, Func<Parser>> _subkernelDirectiveParsersByKernelName;
+        private readonly IDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)> _subkernelInfoByKernelName;
         private IReadOnlyList<SyntaxToken>? _tokens;
         private HashSet<string>? _kernelChooserDirectives;
 
@@ -26,12 +27,12 @@ namespace Microsoft.DotNet.Interactive.Parsing
             SourceText sourceText,
             string defaultLanguage,
             Parser rootKernelDirectiveParser,
-            IDictionary<string, Func<Parser>> subkernelDirectiveParsersByKernelName)
+            IDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)> subkernelInfoByKernelName)
         {
             DefaultLanguage = defaultLanguage;
             _sourceText = sourceText;
             _rootKernelDirectiveParser = rootKernelDirectiveParser;
-            _subkernelDirectiveParsersByKernelName = subkernelDirectiveParsersByKernelName;
+            _subkernelInfoByKernelName = subkernelInfoByKernelName ?? new ConcurrentDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)>();
         }
 
         public PolyglotSyntaxTree Parse()
@@ -55,6 +56,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
         private void ParseSubmission(PolyglotSubmissionNode rootNode)
         {
             var currentKernelName = DefaultLanguage;
+            _subkernelInfoByKernelName.TryGetValue(currentKernelName, out var currentKernelInfo);
+            
 
             for (var i = 0; i < _tokens!.Count; i++)
             {
@@ -70,6 +73,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         {
                             directiveNode = new KernelNameDirectiveNode(directiveToken, _sourceText, rootNode.SyntaxTree);
                             currentKernelName = directiveToken.DirectiveName;
+                            if (_subkernelInfoByKernelName.TryGetValue(currentKernelName, out currentKernelInfo))
+                            {
+                                directiveNode.KernelUri = currentKernelInfo.kernelUri;
+                            }
                         }
                         else
                         {
@@ -102,10 +109,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         {
                             directiveNode.DirectiveParser = _rootKernelDirectiveParser;
                         }
-                        else if (_subkernelDirectiveParsersByKernelName != null &&
-                                 _subkernelDirectiveParsersByKernelName.TryGetValue(currentKernelName, out var getParser))
+                        else if (_subkernelInfoByKernelName.TryGetValue(currentKernelName, out var info))
                         {
-                            directiveNode.DirectiveParser = getParser();
+                            directiveNode.DirectiveParser = info.getParser();
                         }
                         else
                         {
@@ -162,7 +168,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         currentKernelName,
                         _sourceText,
                         rootNode.SyntaxTree);
-
+                    languageNode.KernelUri = currentKernelInfo.kernelUri;
                     languageNode.Add(nodeOrToken);
 
                     rootNode.Add(languageNode);

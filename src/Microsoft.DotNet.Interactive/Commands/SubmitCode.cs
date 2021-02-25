@@ -29,6 +29,7 @@ namespace Microsoft.DotNet.Interactive.Commands
             LanguageNode = languageNode;
             SubmissionType = submissionType;
             KernelNameDirectiveNode = kernelNameDirectiveNode;
+            KernelUri = languageNode.KernelUri;
 
             if (languageNode is ActionDirectiveNode actionDirectiveNode)
             {
