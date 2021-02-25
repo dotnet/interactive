@@ -338,7 +338,7 @@ namespace Microsoft.DotNet.Interactive
             }
 
             context.Complete(originalCommand);
-
+            await context.DisposeAsync();
             return context.Result;
         }
 
