@@ -214,6 +214,7 @@ namespace Microsoft.DotNet.Interactive
                 var offsetLanguageServiceCommand = command.With(
                     node,
                     position);
+                offsetLanguageServiceCommand.Parent = command;
 
                 offsetLanguageServiceCommand.TargetKernelName = node switch
                 {
