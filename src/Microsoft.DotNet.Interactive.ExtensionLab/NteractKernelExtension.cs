@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             var divId = Guid.NewGuid().ToString("N");
             var code = new StringBuilder();
-            code.AppendLine("<div>");
+            code.AppendLine("<div style=\"background-color:white;\">");
             code.AppendLine($"<div id=\"{divId}\" style=\"height: 100ch ;margin: 2px;\">");
             code.AppendLine("</div>");
             code.AppendLine(@"<script type=""text/javascript"">");

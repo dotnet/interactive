@@ -55,7 +55,7 @@ Once installed, you can find more info about creating a SQL kernel and running q
             else if(!string.IsNullOrWhiteSpace(command.Code))
             {
                 context.Display($@"
-Submit your code to one of the following SQL kernels.
+Submit your SQL statements to one of the following SQL kernels.
 
 - {string.Join("\n- ",mssqlKernelNames.Select(n => $"`#!{n}`"))}
 ", "text/markdown");
