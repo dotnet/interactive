@@ -313,8 +313,11 @@ namespace Microsoft.DotNet.Interactive
                 SetHandlingKernel(command,context);
 
                 await Pipeline.SendAsync(command, context);
-                
-                context.Complete(command);
+
+                if (command != context.Command)
+                {
+                    context.Complete(command);
+                }
 
                 return context.Result;
             }

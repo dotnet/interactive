@@ -197,14 +197,12 @@ namespace Microsoft.DotNet.Interactive
     internal sealed class ClockwiseSynchronizationContext : SynchronizationContext, IDisposable
     {
         private static readonly Logger Logger = new Logger("SynchronizationContext");
-
+        private bool _running = false;
         private readonly BlockingCollection<WorkItem> _queue = new();
 
         public ClockwiseSynchronizationContext()
         {
-            var thread = new Thread(Run);
-
-            thread.Start();
+            SetSynchronizationContext(this);
         }
 
         public override void Post(SendOrPostCallback callback, object state)
@@ -219,6 +217,8 @@ namespace Microsoft.DotNet.Interactive
             try
             {
                 _queue.Add(workItem);
+
+                RunUntilQueueIsEmpty();
             }
             catch (InvalidOperationException)
             {
@@ -236,9 +236,14 @@ namespace Microsoft.DotNet.Interactive
 
         public bool Cancelled { get; private set; }
 
-        private void Run()
+        private void RunUntilQueueIsEmpty()
         {
-            SetSynchronizationContext(this);
+            if (_running)
+            {
+                return;
+            }
+
+            _running = true;
 
             foreach (var workItem in _queue.GetConsumingEnumerable())
             {
@@ -246,7 +251,6 @@ namespace Microsoft.DotNet.Interactive
                 {
                     workItem.Run();
                 }
-
             }
         }
 
