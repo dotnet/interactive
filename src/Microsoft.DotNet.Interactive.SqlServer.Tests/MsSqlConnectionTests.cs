@@ -1,11 +1,12 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -21,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
             await csharpKernel.SubmitCodeAsync(@$"
 #r ""nuget:microsoft.sqltoolsservice,3.0.0-release.53""
 ");
-            
+
             var kernel = new CompositeKernel
             {
                 csharpKernel,
@@ -47,27 +48,28 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync(@"
-#!adventureworks
+#!mssql-adventureworks
 SELECT TOP 100 * FROM Person.Person
 ");
 
             var events = result.KernelEvents.ToSubscribedList();
 
-            events.Should().NotContainErrors();
+            events.Should()
+                .NotContainErrors()
+                .And
+                .ContainSingle<DisplayedValueProduced>(e =>
+                    e.FormattedValues.Any(f => f.MimeType == PlainTextFormatter.MimeType));
 
             events.Should()
-                  .ContainSingle<DisplayedValueProduced>()
-                  .Which
-                  .FormattedValues
-                  .Should()
-                  .ContainSingle(f => f.MimeType == HtmlFormatter.MimeType);
+                .ContainSingle<DisplayedValueProduced>(e =>
+                    e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType));
         }
 
         [MsSqlFact]
         public async Task It_can_scaffold_a_DbContext_in_a_CSharpKernel()
         {
             var connectionString = MsSqlFact.GetConnectionStringForTests();
-            
+
             using var kernel = await CreateKernel();
             var result = await kernel.SubmitCodeAsync(
                              $"#!connect --kernel-name adventureworks mssql \"{connectionString}\" --create-dbcontext");
@@ -105,7 +107,7 @@ SELECT TOP 100 * FROM Person.Person
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!adventureworks --mime-type {TabularDataFormatter.MimeType}
+#!mssql-adventureworks --mime-type {TabularDataFormatter.MimeType}
 select * from sys.databases
 ");
 
@@ -114,10 +116,11 @@ select * from sys.databases
             events.Should().NotContainErrors();
 
             var value = events.Should()
-                              .ContainSingle<DisplayedValueProduced>()
+                    .ContainSingle<DisplayedValueProduced>(e =>
+                        e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
                               .Which;
 
-            var tables = (IEnumerable<IEnumerable<IEnumerable<(string, object)>>>) value.Value;
+            var tables = (IEnumerable<IEnumerable<IEnumerable<(string, object)>>>)value.Value;
 
             var table = tables.Single().ToTable();
 
@@ -141,7 +144,7 @@ select * from sys.databases
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!adventureworks --mime-type {TabularDataFormatter.MimeType}
+#!mssql-adventureworks --mime-type {TabularDataFormatter.MimeType}
 use tempdb;
 create table dbo.EmptyTable(column1 int, column2 int, column3 int);
 select * from dbo.EmptyTable;
@@ -150,15 +153,11 @@ drop table dbo.EmptyTable;
 
             var events = result.KernelEvents.ToSubscribedList();
 
-            events.Should().NotContainErrors();
-
-            var value = events.Should()
-                              .ContainSingle<DisplayedValueProduced>()
-                              .Which;
-
-            var message = (string) value.Value;
-            message.Should().StartWith("Info");
-            message.Should().NotContain("Error");
+            events.Should()
+                .NotContainErrors()
+                .And
+                    .ContainSingle<DisplayedValueProduced>(e =>
+                        e.FormattedValues.Any(f => f.MimeType == PlainTextFormatter.MimeType && f.Value.ToString().StartsWith("Info")));
         }
     }
 }
