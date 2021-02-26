@@ -7,7 +7,7 @@ using Microsoft.DotNet.Interactive.Commands;
 namespace Microsoft.DotNet.Interactive
 {
     /* This kernel is used as a placeholder for the MSSQL kernel in order to enable SQL language coloring
-    * in the editor. Language grammars can only defined for fixed kernel names, but MSSQL subkernels
+    * in the editor. Language grammars can only be defined for fixed kernel names, but MSSQL subkernels
     * are user-defined via the #!connect magic command. So, this kernel is specified in addition to the
     * user-defined kernel as a kind of "styling" kernel.
     */
