@@ -7,9 +7,6 @@
     </HiddenComponentWarnings>
     <IgnoredTests>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageKernelExtensionLoadingTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.Tests.QuitCommandTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
