@@ -24,6 +24,7 @@ namespace Microsoft.DotNet.Interactive
 {
     public abstract partial class Kernel : IDisposable
     {
+        public string theme = "light";
         private readonly Subject<KernelEvent> _kernelEvents = new Subject<KernelEvent>();
         private readonly CompositeDisposable _disposables;
         private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new ConcurrentQueue<KernelCommand>();
@@ -504,11 +505,26 @@ namespace Microsoft.DotNet.Interactive
                         SetHandler(requestSignatureHelpHandler, requestSignatureHelp);
                         break;
 
+                    case (UpdateDisplayedValue updateDisplayedValue, _):
+                        if (updateDisplayedValue.Theme != null) 
+                        {
+                            HandleUpdateDisplayedValue(updateDisplayedValue);
+                        }
+                        else
+                        {
+                            TrySetDynamicHandler(command, context);
+                        }
+                        break;
+
                     default:
                         TrySetDynamicHandler(command, context);
                         break;
                 }
             }
+        }
+
+        private void HandleUpdateDisplayedValue(UpdateDisplayedValue updateDisplayedValue) {
+            this.theme = updateDisplayedValue.Theme;
         }
 
         private void TrySetDynamicHandler(KernelCommand command, KernelInvocationContext context)

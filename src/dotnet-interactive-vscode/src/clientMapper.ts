@@ -16,6 +16,14 @@ export class ClientMapper {
         return uri.fsPath;
     }
 
+    updateTheme(theme: string): void {
+        this.clientMap.forEach(client => {
+            client.then(client => {
+                client.updateTheme(theme);
+            })
+        })
+    }
+
     getOrAddClient(uri: Uri): Promise<InteractiveClient> {
         let key = ClientMapper.keyFromUri(uri);
         let clientPromise = this.clientMap.get(key);

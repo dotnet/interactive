@@ -33,20 +33,20 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public static T UseDataExplorer<T>(this T kernel) where T : Kernel
         {
-            RegisterFormatters();
+            RegisterFormatters(kernel);
             return kernel;
         }
 
-        public static void RegisterFormatters()
+        public static void RegisterFormatters(Kernel kernel)
         {
             Formatter.Register<TabularJsonString>((explorer, writer) =>
             {
-                var html = explorer.RenderDataExplorer();
+                var html = explorer.RenderDataExplorer(kernel.theme);
                 writer.Write(html);
             }, HtmlFormatter.MimeType);
         }
 
-        private static HtmlString RenderDataExplorer(this TabularJsonString data)
+        private static HtmlString RenderDataExplorer(this TabularJsonString data, string theme)
         {
             var divId = Guid.NewGuid().ToString("N");
             var code = new StringBuilder();
@@ -54,16 +54,16 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             code.AppendLine($"<div id=\"{divId}\" style=\"height: 100ch ;margin: 2px;\">");
             code.AppendLine("</div>");
             code.AppendLine(@"<script type=""text/javascript"">");
-            GenerateCode(data, code, divId, "https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js");
+            GenerateCode(data, code, divId, "https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js", theme);
             code.AppendLine(" </script>");
             code.AppendLine("</div>");
             return new HtmlString(code.ToString());
         }
 
-        private static void GenerateCode(TabularJsonString data, StringBuilder code, string divId, string requireUri)
+        private static void GenerateCode(TabularJsonString data, StringBuilder code, string divId, string requireUri, string theme)
         {
             var functionName = $"renderDataExplorer_{divId}";
-            GenerateFunctionCode(data, code, divId, functionName);
+            GenerateFunctionCode(data, code, divId, functionName, theme);
             GenerateRequireLoader(code, functionName, requireUri);
         }
 
@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         }
 
 
-        private static void GenerateFunctionCode(TabularJsonString data, StringBuilder code, string divId, string functionName)
+        private static void GenerateFunctionCode(TabularJsonString data, StringBuilder code, string divId, string functionName, string theme)
         {
             var context = Settings.Context ?? "1.0.0";
             code.AppendLine($@"
@@ -94,6 +94,7 @@ let {functionName} = () => {{");
             code.AppendLine($@"
         nteract.createDataExplorer({{
             data: {data},
+            theme: ""{theme}"",
             container: document.getElementById(""{divId}"")
         }});
     }},
