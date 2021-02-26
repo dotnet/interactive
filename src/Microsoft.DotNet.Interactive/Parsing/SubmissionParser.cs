@@ -120,7 +120,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         var directiveCommand = new DirectiveCommand(
                             parseResult,
                             originalCommand,
-                            directiveNode);
+                            directiveNode)
+                        {
+                            TargetKernelName = targetKernelName
+                        };
 
                         if (directiveNode is KernelNameDirectiveNode kernelNameNode)
                         {
@@ -138,6 +141,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             }
                             else
                             {
+                                directiveCommand.KernelUri = lastKernelUri;
+                                directiveCommand.TargetKernelName = targetKernelName;
                                 AddHoistedCommand(directiveCommand);
                                 nugetRestoreOnKernels.Add(targetKernelName);
                             }
@@ -176,7 +181,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 {
                     var restore = new DirectiveCommand(
                         parser.Parse("#!nuget-restore"),
-                        originalCommand);
+                        originalCommand)
+                    {
+                        KernelUri = kernel.Uri,
+                        TargetKernelName = kernelName
+                    };
                     AddHoistedCommand(restore);
                 }
             }
