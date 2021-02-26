@@ -14,11 +14,13 @@ namespace Microsoft.DotNet.Interactive
 
         private List<ScheduledOperation> _scheduledOperations = new();
         private List<DeferredOperation> _deferredOperationRegistrations = new();
-
+        private bool _disposed;
         private readonly object _operationsLock = new();
 
         public Task<U> Schedule(T value, OnExecuteDelegate onExecuteAsync, string scope = "default")
         {
+            ThrowIfDisposed();
+
             var operation = new ScheduledOperation(value, onExecuteAsync, scope);
 
             lock (_operationsLock)
@@ -36,6 +38,12 @@ namespace Microsoft.DotNet.Interactive
                 if (_scheduledOperations.Count == 1)
                 {
                     var previousSynchronizationContext = SynchronizationContext.Current;
+
+                    if (previousSynchronizationContext is KernelSynchronizationContext)
+                    {
+                        // FIX: 
+                    }
+
                     var synchronizationContext = new KernelSynchronizationContext();
 
                     SynchronizationContext.SetSynchronizationContext(synchronizationContext);
@@ -91,7 +99,7 @@ namespace Microsoft.DotNet.Interactive
                             operation.Scope))
                         {
                             var deferredOperation = new ScheduledOperation(deferred,
-                                deferredOperationRegistration.OnExecute, operation.Scope);
+                                deferredOperationRegistration.OnExecuteAsync, operation.Scope);
 
                             cancellationToken.Register(() =>
                             {
@@ -134,6 +142,8 @@ namespace Microsoft.DotNet.Interactive
 
         public void RegisterDeferredOperationSource(GetDeferredOperationsDelegate getDeferredOperations, OnExecuteDelegate onExecuteAsync)
         {
+            ThrowIfDisposed();
+
             _deferredOperationRegistrations.Add(new DeferredOperation(onExecuteAsync, getDeferredOperations));
         }
 
@@ -141,8 +151,6 @@ namespace Microsoft.DotNet.Interactive
         {
             lock (_operationsLock)
             {
-
-
                 if (SynchronizationContext.Current is KernelSynchronizationContext synchronizationContext)
                 {
                     synchronizationContext.Cancel();
@@ -158,7 +166,16 @@ namespace Microsoft.DotNet.Interactive
 
         public void Dispose()
         {
+            _disposed = true;
             Cancel();
+        }
+        
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException($"{nameof(KernelScheduler<T, U>)} has been disposed.");
+            }
         }
 
         public delegate Task<U> OnExecuteDelegate(T value);
@@ -171,7 +188,6 @@ namespace Microsoft.DotNet.Interactive
             public OnExecuteDelegate OnExecuteAsync { get; }
             public string Scope { get; }
             public Task<U> Task => CompletionSource.Task;
-
 
             public ScheduledOperation(T value, OnExecuteDelegate onExecuteAsync, string scope)
             {
@@ -187,13 +203,12 @@ namespace Microsoft.DotNet.Interactive
         private class DeferredOperation
         {
             public GetDeferredOperationsDelegate GetDeferredOperations { get; }
-            public OnExecuteDelegate OnExecute { get; }
-            public DeferredOperation(OnExecuteDelegate onExecute, GetDeferredOperationsDelegate getDeferredOperations)
+            public OnExecuteDelegate OnExecuteAsync { get; }
+            public DeferredOperation(OnExecuteDelegate onExecuteAsync, GetDeferredOperationsDelegate getDeferredOperations)
             {
-                OnExecute = onExecute;
+                OnExecuteAsync = onExecuteAsync;
                 GetDeferredOperations = getDeferredOperations;
             }
         }
-
     }
 }
