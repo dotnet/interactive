@@ -160,10 +160,10 @@ hello!
                 {
                     CreateKernel = (options, context) =>
                     {
-                        var kernel = fakeKernel ?? new FakeKernel
-                        {
-                            Name = options.KernelName
-                        };
+                        var kernel = fakeKernel ?? new FakeKernel();
+
+                        kernel.Name = options.KernelName;
+                       
                         return Task.FromResult<Kernel>(kernel);
                     }
                 });
