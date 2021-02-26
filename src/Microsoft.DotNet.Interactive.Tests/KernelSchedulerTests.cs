@@ -162,7 +162,6 @@ namespace Microsoft.DotNet.Interactive.Tests
             scheduler.Cancel();
             Task.WhenAll(scheduledWork);
 
-
             executionList.Should().BeEquivalentTo(1);
         }
 
