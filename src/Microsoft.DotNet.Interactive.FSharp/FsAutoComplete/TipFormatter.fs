@@ -467,7 +467,7 @@ module private Format =
     ///
     /// For now, we only consider text between <td></td> to be invalid
     /// We can add more in the future if needed, but I want to keep this as minimal as possible to avoid capturing false positive
-    /// /<remarks>
+    /// </remarks>
     let private removeInvalidOrBlock (text : string) =
         let invalidOrBlockPattern = """<td(\s+[^>])*>(?'or_text'(?:(?!<td)[\s\S])*-or-(?:(?!<\/td)[\s\S])*)<\/td(\s+[^>])*>"""
 
