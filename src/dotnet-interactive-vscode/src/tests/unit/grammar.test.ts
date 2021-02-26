@@ -90,6 +90,7 @@ describe('TextMate grammar tests', async () => {
             '#!powershell',
             '#!pwsh',
             '#!sql',
+            '#!sql-adventureworks'
         ];
         const tokens = await getTokens(text);
         expect(tokens).to.deep.equal([
@@ -165,6 +166,12 @@ describe('TextMate grammar tests', async () => {
                     scopes: ['source.dotnet-interactive', 'language.switch.sql']
                 }
             ],
+            [
+                {
+                    tokenText: '#!sql-adventureworks',
+                    scopes: ['source.dotnet-interactive', 'language.switch.sql']
+                }
+            ],
         ]);
     });
 
@@ -209,31 +216,32 @@ describe('TextMate grammar tests', async () => {
     });
 
     const allLanguages = [
-        'csharp',
-        'fsharp',
-        'html',
-        'javascript',
-        'markdown',
-        'powershell',
-        'sql',
+        ['csharp', 'csharp'],
+        ['fsharp', 'fsharp'],
+        ['html', 'html'],
+        ['javascript', 'javascript'],
+        ['markdown', 'markdown'],
+        ['powershell', 'powershell'],
+        ['sql', 'sql'],
+        ['sql-adventureworks', 'sql'],
     ];
 
-    for (const language of allLanguages) {
+    for (const [magicCommand, language] of allLanguages) {
         it(`language ${language} can switch to all other languages`, async () => {
-            let text = [`#!${language}`];
+            let text = [`#!${magicCommand}`];
             let expected = [
                 [
                     {
-                        tokenText: `#!${language}`,
+                        tokenText: `#!${magicCommand}`,
                         scopes: ['source.dotnet-interactive', `language.switch.${language}`]
                     }
                 ]
             ];
-            for (const otherLanguage of allLanguages) {
-                text.push(`#!${otherLanguage}`);
+            for (const [otherMagicCommand, otherLanguage] of allLanguages) {
+                text.push(`#!${otherMagicCommand}`);
                 expected.push([
                     {
-                        tokenText: `#!${otherLanguage}`,
+                        tokenText: `#!${otherMagicCommand}`,
                         scopes: ['source.dotnet-interactive', `language.switch.${otherLanguage}`]
                     }
                 ]);

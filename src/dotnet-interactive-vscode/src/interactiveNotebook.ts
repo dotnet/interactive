@@ -13,7 +13,8 @@ export const notebookCellLanguages: Array<string> = [
     'dotnet-interactive.fsharp',
     'dotnet-interactive.html',
     'dotnet-interactive.javascript',
-    'dotnet-interactive.pwsh'
+    'dotnet-interactive.pwsh',
+    'dotnet-interactive.sql'
 ];
 
 const notebookLanguagePrefix = 'dotnet-interactive.';
