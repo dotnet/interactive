@@ -52,7 +52,6 @@ namespace Microsoft.DotNet.Interactive.Tests
             await scheduler.Schedule(2, PerformWork);
             await scheduler.Schedule(3, PerformWork);
 
-
             executionList.Should().BeEquivalentSequenceTo(1, 2, 3);
 
             Task<int> PerformWork(int v)

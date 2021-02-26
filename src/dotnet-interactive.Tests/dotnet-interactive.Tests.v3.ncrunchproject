@@ -8,6 +8,12 @@
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.CommandLineParserTests.kernel_server_honors_log_path</TestName>
       </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Microsoft.DotNet.Interactive.App.Tests.AspNetCoreTests</FixtureName>
+      </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>Microsoft.DotNet.Interactive.App.Tests.HttpApiTests.can_get_static_content_from_extensions</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
