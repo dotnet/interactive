@@ -49,9 +49,7 @@
     "onCommand:dotnet-interactive.saveAsNotebook"
   ],
   "main": "./out/vscode/extension.js",
-  "extensionDependencies": [
-    "ms-dotnettools.vscode-dotnet-runtime"
-  ],
+  "extensionDependencies": [],
   "contributes": {
     "notebookProvider": [
       {

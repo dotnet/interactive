@@ -11,23 +11,37 @@ import { registerLanguageProviders } from './languageProvider';
 import { registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
 
 import { getSimpleLanguage, isDotnetInteractiveLanguage, notebookCellLanguages } from '../interactiveNotebook';
-import { IDotnetAcquireResult } from 'dotnet-interactive-vscode-interfaces/out/dotnet';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
-import compareVersions = require("compare-versions");
 import { DotNetCellMetadata, withDotNetMetadata } from '../ipynbUtilities';
-import { executeSafe, processArguments } from '../utilities';
+import { executeSafe, isDotNetUpToDate, processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 import { KernelId, updateCellLanguages, updateDocumentKernelspecMetadata } from './notebookKernel';
 import { DotNetInteractiveNotebookKernelProvider } from './notebookKernelProvider';
 
 import { isInsidersBuild } from './vscodeUtilities';
 
-let cachedDotnetPath = 'dotnet'; // default to global tool if possible
+export class CachedDotNetPathManager {
+    private dotNetPath: string = 'dotnet'; // default to global tool if possible
+    private outputChannelAdapter: OutputChannelAdapter | undefined = undefined;
 
-export function setGlobalDotnetPath(dotnetPath: string) {
-    cachedDotnetPath = dotnetPath;
+    getDotNetPath(): string {
+        return this.dotNetPath;
+    }
+
+    setDotNetPath(dotNetPath: string) {
+        this.dotNetPath = dotNetPath;
+        if (this.outputChannelAdapter) {
+            this.outputChannelAdapter.appendLine(`dotnet path set to '${this.dotNetPath}'`);
+        }
+    }
+
+    setOutputChannelAdapter(outputChannelAdapter: OutputChannelAdapter) {
+        this.outputChannelAdapter = outputChannelAdapter;
+    }
 }
+
+export const DotNetPathManager = new CachedDotNetPathManager();
 
 export async function activate(context: vscode.ExtensionContext) {
     // this must happen first, because some following functions use the acquisition command
@@ -35,15 +49,23 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive : diagnostics'));
-
-    // n.b., this is _not_ resolved here because it's potentially really slow, but needs to be chained off of later
-    const dotnetPromise = computeDotnetPath(diagnosticsChannel);
+    DotNetPathManager.setOutputChannelAdapter(diagnosticsChannel);
 
     // register with VS Code
     const clientMapper = new ClientMapper(async (notebookPath) => {
+        const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion');
+        if (!await checkForDotNetSdk(minDotNetSdkVersion!)) {
+            const message = 'Unable to find appropriate .NET SDK.';
+            vscode.window.showErrorMessage(message);
+            throw new Error(message);
+        }
+
+        console.log('dotnet version was good');
         diagnosticsChannel.appendLine(`Creating client for notebook "${notebookPath}"`);
-        await dotnetPromise;
-        const launchOptions = await getInteractiveLaunchOptions(cachedDotnetPath);
+        const launchOptions = await getInteractiveLaunchOptions();
+        if (!launchOptions) {
+            throw new Error('Unable to get interactive launch options; .NET SDK must be installed first.');
+        }
 
         // prepare kernel transport launch arguments and working directory using a fresh config item so we don't get cached values
 
@@ -58,7 +80,7 @@ export async function activate(context: vscode.ExtensionContext) {
             ? vscode.workspace.workspaceFolders[0].uri.fsPath
             : '.';
 
-        const processStart = processArguments(argsTemplate, notebookPath, fallbackWorkingDirectory, cachedDotnetPath, launchOptions!.workingDirectory);
+        const processStart = processArguments(argsTemplate, notebookPath, fallbackWorkingDirectory, DotNetPathManager.getDotNetPath(), launchOptions!.workingDirectory);
         let notification = {
             displayError: async (message: string) => { await vscode.window.showErrorMessage(message, { modal: false }); },
             displayInfo: async (message: string) => { await vscode.window.showInformationMessage(message, { modal: false }); },
@@ -179,33 +201,17 @@ function handleFileRenames(e: vscode.FileRenameEvent, clientMapper: ClientMapper
     }
 }
 
-// this function can be slow and should only be called once
-async function computeDotnetPath(outputChannel: OutputChannelAdapter): Promise<void> {
-    // use global dotnet or install
-    const config = vscode.workspace.getConfiguration('dotnet-interactive');
-    const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion');
-    let dotnetPath: string;
-    if (await isDotnetUpToDate(minDotNetSdkVersion!)) {
-        dotnetPath = cachedDotnetPath;
-    } else {
-        const commandResult = await vscode.commands.executeCommand<IDotnetAcquireResult>('dotnet.acquire', { version: minDotNetSdkVersion, requestingExtensionId: 'ms-dotnettools.dotnet-interactive-vscode' });
-        dotnetPath = commandResult!.dotnetPath;
-    }
-
-    cachedDotnetPath = dotnetPath;
-    outputChannel.appendLine(`Using dotnet from "${dotnetPath}"`);
-}
-
-async function getInteractiveLaunchOptions(dotnetPath: string): Promise<InteractiveLaunchOptions> {
+async function getInteractiveLaunchOptions(): Promise<InteractiveLaunchOptions | undefined> {
     // use dotnet-interactive or install
     const installArgs: InstallInteractiveArgs = {
-        dotnetPath,
+        dotnetPath: DotNetPathManager.getDotNetPath(),
     };
     const launchOptions = await vscode.commands.executeCommand<InteractiveLaunchOptions>('dotnet-interactive.acquire', installArgs);
-    return launchOptions!;
+    return launchOptions;
 }
 
-async function isDotnetUpToDate(minVersion: string): Promise<boolean> {
-    const result = await executeSafe(cachedDotnetPath, ['--version']);
-    return result.code === 0 && compareVersions.compare(result.output, minVersion, '>=');
+async function checkForDotNetSdk(minVersion: string): Promise<boolean> {
+    const result = await executeSafe(DotNetPathManager.getDotNetPath(), ['--version']);
+    const checkResult = isDotNetUpToDate(minVersion, result);
+    return checkResult;
 }
