@@ -60,7 +60,7 @@ SELECT TOP 100 * FROM Person.Person
                 .FormattedValues
                 .First()
                 .MimeType
-                .Equals(PlainTextFormatter.MimeType));
+                .Should().Be(PlainTextFormatter.MimeType));
 
             events.Should()
                 .Contain(e => e is DisplayedValueProduced && e.As<DisplayedValueProduced>()
