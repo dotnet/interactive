@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
             await csharpKernel.SubmitCodeAsync(@$"
 #r ""nuget:microsoft.sqltoolsservice,3.0.0-release.53""
 ");
-            
+
             var kernel = new CompositeKernel
             {
                 csharpKernel,
@@ -56,11 +56,18 @@ SELECT TOP 100 * FROM Person.Person
             events.Should().NotContainErrors();
 
             events.Should()
-                  .ContainSingle<DisplayedValueProduced>()
-                  .Which
-                  .FormattedValues
-                  .Should()
-                  .ContainSingle(f => f.MimeType == HtmlFormatter.MimeType);
+                .Contain(e => e is DisplayedValueProduced && e.As<DisplayedValueProduced>()
+                .FormattedValues
+                .First()
+                .MimeType
+                .Equals(PlainTextFormatter.MimeType));
+
+            events.Should()
+                .Contain(e => e is DisplayedValueProduced && e.As<DisplayedValueProduced>()
+                .FormattedValues
+                .First()
+                .MimeType
+                .Equals(HtmlFormatter.MimeType));
         }
 
         [MsSqlFact]
@@ -113,9 +120,14 @@ select * from sys.databases
 
             events.Should().NotContainErrors();
 
-            var value = events.Should()
-                              .ContainSingle<DisplayedValueProduced>()
-                              .Which;
+            var value = events.Where(e => e is DisplayedValueProduced && e.As<DisplayedValueProduced>()
+                .FormattedValues
+                .First()
+                .MimeType
+                .Equals(HtmlFormatter.MimeType))
+                .First()
+                .As<DisplayedValueProduced>();
+
 
             var tables = (IEnumerable<IEnumerable<IEnumerable<(string, object)>>>) value.Value;
 
@@ -152,9 +164,13 @@ drop table dbo.EmptyTable;
 
             events.Should().NotContainErrors();
 
-            var value = events.Should()
-                              .ContainSingle<DisplayedValueProduced>()
-                              .Which;
+            var value = events.Where(e => e is DisplayedValueProduced && e.As<DisplayedValueProduced>()
+                .FormattedValues
+                .First()
+                .MimeType
+                .Equals(PlainTextFormatter.MimeType))
+                .Last()
+                .As<DisplayedValueProduced>();
 
             var message = (string) value.Value;
             message.Should().StartWith("Info");
