@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
@@ -80,7 +81,7 @@ namespace Microsoft.DotNet.Interactive
             _childKernels.Add(kernel);
 
             _kernelsByNameOrAlias.Add(kernel.Name, kernel);
-            if (aliases is {})
+            if (aliases is { })
             {
                 foreach (var alias in aliases)
                 {
@@ -126,7 +127,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var chooseKernelCommand = kernel.ChooseKernelDirective;
 
-            if (aliases is {})
+            if (aliases is { })
             {
                 foreach (var alias in aliases)
                 {
@@ -154,7 +155,7 @@ namespace Microsoft.DotNet.Interactive
                          packageRootDir,
                          "interactive-extensions",
                          "dotnet"));
-                
+
                 if (extensionDir.Exists)
                 {
                     await LoadExtensionsFromDirectoryAsync(
@@ -227,7 +228,7 @@ namespace Microsoft.DotNet.Interactive
         }
 
         private protected override IEnumerable<Parser> GetDirectiveParsersForCompletion(
-            DirectiveNode directiveNode, 
+            DirectiveNode directiveNode,
             int requestPosition)
         {
             var upToCursor =
@@ -259,7 +260,7 @@ namespace Microsoft.DotNet.Interactive
                     yield return compositeKernelDirectiveParser;
                 }
 
-                bool IsDirectiveDefinedIn(Parser parser) => 
+                bool IsDirectiveDefinedIn(Parser parser) =>
                     parser.Configuration.RootCommand.Children.GetByAlias(directiveName) is { };
             }
             else
@@ -305,7 +306,7 @@ namespace Microsoft.DotNet.Interactive
             if (_connectDirective == null)
             {
                 _connectDirective = new Command(
-                    "#!connect", 
+                    "#!connect",
                     "Connects additional subkernels");
 
                 _connectDirective.Add(kernelNameOption);
@@ -319,7 +320,10 @@ namespace Microsoft.DotNet.Interactive
                 {
                     var connectedKernel = await connectionCommand.CreateKernelAsync(options, context);
 
-                    connectedKernel.Name = options.KernelName;
+                    if (string.IsNullOrWhiteSpace(connectedKernel.Name))
+                    {
+                        connectedKernel.Name = options.KernelName;
+                    }
 
                     Add(connectedKernel);
 
