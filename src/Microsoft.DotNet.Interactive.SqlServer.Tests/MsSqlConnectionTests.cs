@@ -56,7 +56,7 @@ SELECT TOP 100 * FROM Person.Person
             events.Should().NotContainErrors();
 
             events.Should().ContainSingle<DisplayedValueProduced>(e => e.FormattedValues.Any(f => f.MimeType == PlainTextFormatter.MimeType))
-            .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == PlainTextFormatter.MimeType)
+            .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == PlainTextFormatter.MimeType);
 
             events.Should().ContainSingle<DisplayedValueProduced>(e => e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
             .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == HtmlFormatter.MimeType);
