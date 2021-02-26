@@ -386,6 +386,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
             kernels.Should()
                    .BeEquivalentTo(
                        ".NET",
+                       "sql",
                        "csharp",
                        "fsharp",
                        "pwsh",
