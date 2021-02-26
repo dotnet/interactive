@@ -120,7 +120,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
                         if (directiveToken.Text == "#r")
                         {
                             var parseResult = directiveNode.GetDirectiveParseResult();
-
+                            if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty, out currentKernelInfo))
+                            {
+                                directiveNode.KernelUri = currentKernelInfo.kernelUri;
+                            }
                             if (parseResult.Errors.Count == 0)
                             {
                                 var value = parseResult.ValueForArgument<PackageReferenceOrFileInfo>("package");

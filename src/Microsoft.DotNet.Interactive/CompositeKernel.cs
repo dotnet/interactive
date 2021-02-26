@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -170,9 +170,7 @@ namespace Microsoft.DotNet.Interactive
 
         protected override void SetHandlingKernel(KernelCommand command, KernelInvocationContext context)
         {
-            var kernel = GetHandlingKernel(command, context);
-
-            context.HandlingKernel = kernel;
+            context.HandlingKernel = GetHandlingKernel(command, context);
         }
 
         private Kernel GetHandlingKernel(
@@ -181,7 +179,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var targetKernelName = command switch
             {
-                { } kcb => kcb.TargetKernelName ?? DefaultKernelName,
+                { } _ => GetKernelNameFromCommand() ?? DefaultKernelName,
                 _ => DefaultKernelName
             };
 
@@ -202,6 +200,11 @@ namespace Microsoft.DotNet.Interactive
             }
 
             return kernel ?? this;
+
+            string GetKernelNameFromCommand()
+            {
+                return _childKernels.FirstOrDefault(k => k.Uri.Equals(command.KernelUri))?.Name;
+            }
         }
 
         private protected override KernelUri GetHandlingKernelUri(
