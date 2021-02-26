@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             using var kernel = new CompositeKernel
             {
-                new SqlKernel()
+                new SQLKernel()
             };
 
             using var events = kernel.KernelEvents.ToSubscribedList();
@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             using var kernel = new CompositeKernel
             {
-                new SqlKernel()
+                new SQLKernel()
             };
 
             using var events = kernel.KernelEvents.ToSubscribedList();

@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using FluentAssertions;
-
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -23,11 +22,15 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 #r ""nuget:microsoft.sqltoolsservice,3.0.0-release.53""
 ");
 
+            // TODO: remove SQLKernel it is used to test current patch
             var kernel = new CompositeKernel
             {
+                new SQLKernel(),
                 csharpKernel,
                 new KeyValueStoreKernel()
             };
+
+            kernel.DefaultKernelName = csharpKernel.Name;
 
             kernel.UseKernelClientConnection(new MsSqlKernelConnection());
 
@@ -63,6 +66,40 @@ SELECT TOP 100 * FROM Person.Person
             events.Should()
                 .ContainSingle<DisplayedValueProduced>(e =>
                     e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType));
+        }
+
+
+
+        [MsSqlFact]
+        public async Task sending_query_to_sql_will_generate_suggestions()
+        {
+            var connectionString = MsSqlFact.GetConnectionStringForTests();
+            using var kernel = await CreateKernel();
+            var result = await kernel.SubmitCodeAsync(
+                $"#!connect --kernel-name adventureworks mssql \"{connectionString}\"");
+
+            result.KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .NotContainErrors();
+
+            result = await kernel.SubmitCodeAsync(@"
+#!sql
+SELECT TOP 100 * FROM Person.Person
+");
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should()
+                .NotContainErrors()
+                .And
+                .ContainSingle<DisplayedValueProduced>(e =>
+                    e.FormattedValues.Any(f => f.MimeType == "text/markdown"))
+                .Which.FormattedValues.Single(f => f.MimeType == "text/markdown")
+                .Value
+                .Should()
+                .Contain("- `#!sql-adventureworks`");
+
         }
 
         [MsSqlFact]
