@@ -46,10 +46,15 @@ namespace Microsoft.DotNet.Interactive
             Cancelled = true;
         }
 
-        public bool Cancelled { get; private set; }
+        internal bool Cancelled { get; private set; }
 
         private void RunUntilQueueIsEmpty()
         {
+            if (Cancelled)
+            {
+                return;
+            }
+
             if (_running)
             {
                 return;
