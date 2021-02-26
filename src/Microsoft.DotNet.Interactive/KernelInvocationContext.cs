@@ -131,6 +131,7 @@ namespace Microsoft.DotNet.Interactive
 
         public static KernelInvocationContext Establish(KernelCommand command)
         {
+        
             if (_current.Value == null || _current.Value.IsComplete)
             {
                 var context = new KernelInvocationContext(command);
@@ -141,7 +142,14 @@ namespace Microsoft.DotNet.Interactive
             }
             else
             {
-                _current.Value._childCommands.Add(command);
+                if(_current.Value.Command == command)
+                {
+
+                }
+                else
+                {
+                    _current.Value._childCommands.Add(command);
+                }
             }
 
             return _current.Value;
