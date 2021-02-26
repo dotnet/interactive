@@ -63,11 +63,6 @@ namespace Microsoft.DotNet.Interactive.Utility
         {
             if (GetCurrentWriter() is IObservable<string> observable)
             {
-                if (_defaultWriter is IObservable<string> observable2)
-                {
-                   // return observable2.Merge(observable);
-                }
-
                 return observable;
             }
 

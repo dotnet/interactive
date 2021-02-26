@@ -86,10 +86,12 @@ namespace Microsoft.DotNet.Interactive
            _deferredCommands.Enqueue(command);
         }
 
-        private bool TryPreprocessCommands(KernelCommand command,
-            KernelInvocationContext context, out IReadOnlyList<KernelCommand> commands)
+        private bool TryPreprocessCommands(
+            KernelCommand originalCommand,
+            KernelInvocationContext context, 
+            out IReadOnlyList<KernelCommand> commands)
         {
-            switch (command)
+            switch (originalCommand)
             {
                 case SubmitCode {LanguageNode: null} submitCode:
                     commands = SubmissionParser.SplitSubmission(submitCode);
@@ -104,15 +106,21 @@ namespace Microsoft.DotNet.Interactive
                     }
                     break;
                 default:
-                    commands = new[] {command};
+                    commands = new[] {originalCommand};
                     break;
             }
 
-            foreach (var kernelCommand in commands)
+            foreach (var command in commands)
             {
-                if (kernelCommand.KernelUri is null)
+                if (command.KernelUri is null)
                 {
-                    kernelCommand.KernelUri = GetHandlingKernelUri(kernelCommand);
+                    command.KernelUri = GetHandlingKernelUri(command);
+                }
+
+                if (command.Parent is null && 
+                    command != originalCommand)
+                {
+                    command.Parent = originalCommand;
                 }
             }
             
@@ -241,7 +249,6 @@ namespace Microsoft.DotNet.Interactive
                 ? context.KernelEvents.Subscribe(PublishEvent)
                 : Disposable.Empty;
 
-
             if (TryPreprocessCommands(originalCommand, context, out var commands))
             {
                 foreach (var command in commands)
@@ -260,8 +267,7 @@ namespace Microsoft.DotNet.Interactive
 
         protected KernelScheduler<KernelCommand, KernelCommandResult> GetOrCreateScheduler()
         {
-             ;
-            if(_commandScheduler is null)
+            if (_commandScheduler is null)
             {
                 SetScheduler(new KernelScheduler<KernelCommand, KernelCommandResult>());
             }
@@ -271,12 +277,10 @@ namespace Microsoft.DotNet.Interactive
 
         internal void SetScheduler(KernelScheduler<KernelCommand, KernelCommandResult> scheduler)
         {
-
             _commandScheduler = scheduler;
 
             IEnumerable<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
             {
-             
                 if (!command.KernelUri.Contains(Uri))
                 {
                     yield break;
@@ -284,13 +288,13 @@ namespace Microsoft.DotNet.Interactive
 
                 while (_deferredCommands.TryDequeue(out var kernelCommand))
                 {
-                    if (!TryPreprocessCommands(kernelCommand, null, out var commands))
+                    var currentInvocationContext = KernelInvocationContext.Current;
+                    if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
                     {
-
-                    }
-                    foreach (var cmd in commands)
-                    {
-                        yield return cmd;
+                        foreach (var cmd in commands)
+                        {
+                            yield return cmd;
+                        }
                     }
                 }
             }

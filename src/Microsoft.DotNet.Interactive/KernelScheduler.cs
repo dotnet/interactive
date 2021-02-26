@@ -2,19 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Pocket;
 
 namespace Microsoft.DotNet.Interactive
 {
     public class KernelScheduler<T, U> : IDisposable
     {
         private CancellationTokenSource _cancellationTokenSource = new();
-        private static readonly Logger Logger = new Logger("Scheduler");
 
         private List<ScheduledOperation> _scheduledOperations = new();
         private List<DeferredOperation> _deferredOperationRegistrations = new();
@@ -24,7 +20,6 @@ namespace Microsoft.DotNet.Interactive
         public Task<U> Schedule(T value, OnExecuteDelegate onExecuteAsync, string scope = "default")
         {
             var operation = new ScheduledOperation(value, onExecuteAsync, scope);
-
 
             lock (_operationsLock)
             {
@@ -37,17 +32,26 @@ namespace Microsoft.DotNet.Interactive
                 });
 
                 _scheduledOperations.Add(operation);
+
                 if (_scheduledOperations.Count == 1)
                 {
                     var previousSynchronizationContext = SynchronizationContext.Current;
-                    var synchronizationContext = new ClockwiseSynchronizationContext();
+                    var synchronizationContext = new KernelSynchronizationContext();
 
                     SynchronizationContext.SetSynchronizationContext(synchronizationContext);
+
                     Task.Run(async () =>
                     {
-                        while (_scheduledOperations.Count > 0)
+                        try
                         {
-                            await ProcessScheduledOperations(_cancellationTokenSource.Token);
+                            while (_scheduledOperations.Count > 0)
+                            {
+                                await ProcessScheduledOperations(_cancellationTokenSource.Token);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            throw;
                         }
                     }).ContinueWith(_ =>
                     {
@@ -61,8 +65,8 @@ namespace Microsoft.DotNet.Interactive
 
         private async Task ProcessScheduledOperations(CancellationToken cancellationToken)
         {
-            using var _ = Logger.OnEnterAndExit();
             ScheduledOperation operation;
+
             lock (_operationsLock)
             {
                 if (_scheduledOperations.Count > 0)
@@ -112,7 +116,6 @@ namespace Microsoft.DotNet.Interactive
 
             async Task DoWork(ScheduledOperation scheduleOperation)
             {
-                using var _ = Logger.OnEnterAndExit("DoWork");
                 if (!scheduleOperation.CompletionSource.Task.IsCanceled)
                 {
                     try
@@ -140,7 +143,7 @@ namespace Microsoft.DotNet.Interactive
             {
 
 
-                if (SynchronizationContext.Current is ClockwiseSynchronizationContext synchronizationContext)
+                if (SynchronizationContext.Current is KernelSynchronizationContext synchronizationContext)
                 {
                     synchronizationContext.Cancel();
                 }
@@ -192,83 +195,5 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-    }
-
-    internal sealed class ClockwiseSynchronizationContext : SynchronizationContext, IDisposable
-    {
-        private static readonly Logger Logger = new Logger("SynchronizationContext");
-        private bool _running = false;
-        private readonly BlockingCollection<WorkItem> _queue = new();
-
-        public ClockwiseSynchronizationContext()
-        {
-            SetSynchronizationContext(this);
-        }
-
-        public override void Post(SendOrPostCallback callback, object state)
-        {
-            if (callback == null)
-            {
-                throw new ArgumentNullException(nameof(callback));
-            }
-
-            var workItem = new WorkItem(callback, state);
-
-            try
-            {
-                _queue.Add(workItem);
-
-                RunUntilQueueIsEmpty();
-            }
-            catch (InvalidOperationException)
-            {
-                throw new ObjectDisposedException($"The {nameof(ClockwiseSynchronizationContext)} has been disposed.");
-            }
-        }
-
-        public override void Send(SendOrPostCallback callback, object state) =>
-            throw new NotSupportedException($"Synchronous Send is not supported by {nameof(ClockwiseSynchronizationContext)}.");
-
-        public void Cancel()
-        {
-            Cancelled = true;
-        }
-
-        public bool Cancelled { get; private set; }
-
-        private void RunUntilQueueIsEmpty()
-        {
-            if (_running)
-            {
-                return;
-            }
-
-            _running = true;
-
-            foreach (var workItem in _queue.GetConsumingEnumerable())
-            {
-                if (!Cancelled)
-                {
-                    workItem.Run();
-                }
-            }
-        }
-
-        public void Dispose() => _queue.CompleteAdding();
-
-        private struct WorkItem
-        {
-            public WorkItem(SendOrPostCallback callback, object state)
-            {
-                Callback = callback;
-                State = state;
-            }
-
-            private readonly SendOrPostCallback Callback;
-
-            private readonly object State;
-
-            public void Run() => Callback(State);
-        }
     }
 }

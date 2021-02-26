@@ -131,7 +131,6 @@ namespace Microsoft.DotNet.Interactive
 
         public static KernelInvocationContext Establish(KernelCommand command)
         {
-        
             if (_current.Value == null || _current.Value.IsComplete)
             {
                 var context = new KernelInvocationContext(command);
@@ -142,11 +141,7 @@ namespace Microsoft.DotNet.Interactive
             }
             else
             {
-                if(_current.Value.Command == command)
-                {
-
-                }
-                else
+                if (_current.Value.Command != command)
                 {
                     _current.Value._childCommands.Add(command);
                 }
@@ -159,8 +154,7 @@ namespace Microsoft.DotNet.Interactive
 
         public Kernel HandlingKernel { get; internal set; }
 
-        public async Task QueueAction(
-            KernelCommandInvocation action)
+        public async Task QueueAction(KernelCommandInvocation action)
         {
             var command = new AnonymousKernelCommand(action);
 
