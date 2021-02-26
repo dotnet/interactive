@@ -158,9 +158,16 @@ export async function activate(context: vscode.ExtensionContext) {
     // language registration
     context.subscriptions.push(vscode.notebook.onDidChangeCellLanguage(async e => await updateCellLanguageInMetadata(e)));
     context.subscriptions.push(registerLanguageProviders(clientMapper, diagnosticDelay));
+
+    context.subscriptions.push(vscode.window.onDidChangeActiveColorTheme(theme => updateTheme(theme, clientMapper)));
 }
 
 export function deactivate() {
+}
+
+function updateTheme(theme: vscode.ColorTheme, clientMapper: ClientMapper) {
+    let themeString: string = theme.kind === 2 ? 'dark' : 'light';
+    clientMapper.updateTheme(themeString);
 }
 
 // keep the cell's language in metadata in sync with what VS Code thinks it is
@@ -192,6 +199,7 @@ async function updateDocumentMetadata(e: { document: vscode.NotebookDocument, ke
 
         // force creation of the client so we don't have to wait for the user to execute a cell to get the tool
         await clientMapper.getOrAddClient(e.document.uri);
+        updateTheme(vscode.window.activeColorTheme, clientMapper);
     }
 }
 

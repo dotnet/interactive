@@ -7,7 +7,8 @@ import React from 'react';
 
 export interface DataExplorerSettings {
     container: HTMLDivElement,
-    data: DataProps
+    data: DataProps,
+    theme: string
 }
 
 export interface DataProps {
@@ -41,5 +42,5 @@ export interface TabularDataResource {
 }
 
 export function createDataExplorer(settings: DataExplorerSettings) {
-    ReactDOM.render(React.createElement(DataExplorer, { data: settings.data }), settings.container);
+    ReactDOM.render(React.createElement(DataExplorer, { data: settings.data, theme: settings.theme }), settings.container);
 }

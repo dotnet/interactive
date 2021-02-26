@@ -48,6 +48,8 @@ import {
     SubmissionType,
     SubmitCode,
     SubmitCodeType,
+    UpdateDisplayedValue,
+    UpdateDisplayedValueType,
 } from 'dotnet-interactive-vscode-interfaces/out/contracts';
 import { Eol } from './interfaces';
 import { debounce } from './utilities';
@@ -243,6 +245,16 @@ export class InteractiveClient {
         let disposable = this.subscribeToKernelTokenEvents(token, observer);
         await this.kernelTransport.submitCommand(command, SubmitCodeType, token);
         return disposable;
+    }
+
+    async updateTheme(theme: string): Promise<void> {
+        let command: UpdateDisplayedValue = {
+            targetKernelName: ".NET",
+            valueId: "-1",
+            theme: theme
+        }
+        let token: string = this.getNextToken();
+        await this.kernelTransport.submitCommand(command, UpdateDisplayedValueType, token);
     }
 
     dispose() {

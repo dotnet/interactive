@@ -88,8 +88,9 @@ export interface SubmitCode extends KernelCommand {
 }
 
 export interface UpdateDisplayedValue extends KernelCommand {
-    formattedValue: FormattedValue;
     valueId: string;
+    formattedValue?: FormattedValue;
+    theme?: string;
 }
 
 // --------------------------------------------- Kernel events

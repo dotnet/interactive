@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.Commands
 {
     public class UpdateDisplayedValue : KernelCommand
     {
-        public UpdateDisplayedValue(FormattedValue formattedValue, string valueId)
+        public UpdateDisplayedValue(FormattedValue formattedValue, string valueId, string targetKernelName = null, string theme = null)
         {
             if (string.IsNullOrWhiteSpace(valueId))
             {
@@ -18,11 +18,15 @@ namespace Microsoft.DotNet.Interactive.Commands
 
             FormattedValue = formattedValue;
             ValueId = valueId;
+            TargetKernelName = targetKernelName;
+            Theme = theme;
         }
 
         public FormattedValue FormattedValue { get; }
         
         public string ValueId { get; }
+
+        public string Theme { get; }
 
         public override Task InvokeAsync(KernelInvocationContext context)
         {
