@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from 'dotnet-interactive-vscode-interfaces/out/contracts';
 import { isDisplayOutput, isErrorOutput, isTextOutput, reshapeOutputValueForVsCode } from 'dotnet-interactive-vscode-interfaces/out/utilities';
 import { requiredKernelspecData } from '../../ipynbUtilities';
-import { debounce, executeSafe, isDotNetKernelPreferred, parse, processArguments, stringify } from '../../utilities';
+import { debounce, executeSafe, isDotNetKernelPreferred, isDotNetUpToDate, parse, processArguments, stringify } from '../../utilities';
 
 import * as notebook from 'dotnet-interactive-vscode-interfaces/out/notebook';
 
@@ -303,6 +303,28 @@ describe('Miscellaneous tests', () => {
             code: -1,
             output: '',
             error: 'Error: spawn this-is-a-command-that-will-fail ENOENT',
+        });
+    });
+
+    describe('dotnet version sufficiency tests', () => {
+        it('supported version is allowed', () => {
+            const isSupported = isDotNetUpToDate('5.0', { code: 0, output: '5.0.101' });
+            expect(isSupported).to.be.true;
+        });
+
+        it(`version number acquisition passes, but version isn't sufficient`, () => {
+            const isSupported = isDotNetUpToDate('5.0', { code: 0, output: '3.1.403' });
+            expect(isSupported).to.be.false;
+        });
+
+        it(`version number looks good, but return code wasn't`, () => {
+            const isSupported = isDotNetUpToDate('5.0', { code: 1, output: '5.0.101' });
+            expect(isSupported).to.be.false;
+        });
+
+        it('version number check crashed', () => {
+            const isSupported = isDotNetUpToDate('5.0', { code: -1, output: '' });
+            expect(isSupported).to.be.false;
         });
     });
 });

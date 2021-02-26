@@ -20,16 +20,20 @@ export class ClientMapper {
         let key = ClientMapper.keyFromUri(uri);
         let clientPromise = this.clientMap.get(key);
         if (clientPromise === undefined) {
-            clientPromise = new Promise<InteractiveClient>(async resolve => {
-                const transport = await this.kernelTransportCreator(uri.fsPath);
-                const client = new InteractiveClient(transport);
+            clientPromise = new Promise<InteractiveClient>(async (resolve, reject) => {
+                try {
+                    const transport = await this.kernelTransportCreator(uri.fsPath);
+                    const client = new InteractiveClient(transport);
 
-                let onCreate = this.clientCreationCallbackMap.get(key);
-                if (onCreate) {
-                    await onCreate(client);
+                    let onCreate = this.clientCreationCallbackMap.get(key);
+                    if (onCreate) {
+                        await onCreate(client);
+                    }
+
+                    resolve(client);
+                } catch (err) {
+                    reject(err);
                 }
-
-                resolve(client);
             });
             this.clientMap.set(key, clientPromise);
         }

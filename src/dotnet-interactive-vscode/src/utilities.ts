@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import * as compareVersions from 'compare-versions';
 import * as cp from 'child_process';
 import * as path from 'path';
 import { InstallInteractiveArgs, ProcessStart } from "./interfaces";
@@ -40,6 +41,10 @@ export function executeSafe(command: string, args: Array<string>, workingDirecto
             });
         }
     });
+}
+
+export function isDotNetUpToDate(minVersion: string, commandResult: { code: number, output: string }): boolean {
+    return commandResult.code === 0 && compareVersions.compare(commandResult.output, minVersion, '>=');
 }
 
 export function processArguments(template: { args: Array<string>, workingDirectory: string }, notebookPath: string, fallbackWorkingDirectory: string, dotnetPath: string, globalStoragePath: string): ProcessStart {
