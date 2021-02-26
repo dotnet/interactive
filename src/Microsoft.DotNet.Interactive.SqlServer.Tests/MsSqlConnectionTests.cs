@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync(@"
-#!mssql-adventureworks
+#!sql-adventureworks
 SELECT TOP 100 * FROM Person.Person
 ");
 
@@ -107,7 +107,7 @@ SELECT TOP 100 * FROM Person.Person
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!mssql-adventureworks --mime-type {TabularDataFormatter.MimeType}
+#!sql-adventureworks --mime-type {TabularDataFormatter.MimeType}
 select * from sys.databases
 ");
 
@@ -144,7 +144,7 @@ select * from sys.databases
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!mssql-adventureworks --mime-type {TabularDataFormatter.MimeType}
+#!sql-adventureworks --mime-type {TabularDataFormatter.MimeType}
 use tempdb;
 create table dbo.EmptyTable(column1 int, column2 int, column3 int);
 select * from dbo.EmptyTable;
