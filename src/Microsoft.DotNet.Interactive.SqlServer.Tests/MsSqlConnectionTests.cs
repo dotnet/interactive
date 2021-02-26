@@ -55,19 +55,11 @@ SELECT TOP 100 * FROM Person.Person
 
             events.Should().NotContainErrors();
 
-            events.Should()
-                .Contain(e => e is DisplayedValueProduced && e.As<DisplayedValueProduced>()
-                .FormattedValues
-                .First()
-                .MimeType
-                .Equals(PlainTextFormatter.MimeType));
+            events.Should().ContainSingle<DisplayedValueProduced>(e => e.FormattedValues.Any(f => f.MimeType == PlainTextFormatter.MimeType))
+            .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == PlainTextFormatter.MimeType)
 
-            events.Should()
-                .Contain(e => e is DisplayedValueProduced && e.As<DisplayedValueProduced>()
-                .FormattedValues
-                .First()
-                .MimeType
-                .Equals(HtmlFormatter.MimeType));
+            events.Should().ContainSingle<DisplayedValueProduced>(e => e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
+            .Which.FormattedValues.Should().ContainSingle(f => f.MimeType == HtmlFormatter.MimeType);
         }
 
         [MsSqlFact]
@@ -119,15 +111,10 @@ select * from sys.databases
             var events = result.KernelEvents.ToSubscribedList();
 
             events.Should().NotContainErrors();
-
-            var value = events.Where(e => e is DisplayedValueProduced && e.As<DisplayedValueProduced>()
-                .FormattedValues
-                .First()
-                .MimeType
-                .Equals(HtmlFormatter.MimeType))
-                .First()
-                .As<DisplayedValueProduced>();
-
+                
+            var value = events.Should()
+                .ContainSingle<DisplayedValueProduced>(e => e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
+                .Which;
 
             var tables = (IEnumerable<IEnumerable<IEnumerable<(string, object)>>>) value.Value;
 
@@ -163,18 +150,9 @@ drop table dbo.EmptyTable;
             var events = result.KernelEvents.ToSubscribedList();
 
             events.Should().NotContainErrors();
-
-            var value = events.Where(e => e is DisplayedValueProduced && e.As<DisplayedValueProduced>()
-                .FormattedValues
-                .First()
-                .MimeType
-                .Equals(PlainTextFormatter.MimeType))
-                .Last()
-                .As<DisplayedValueProduced>();
-
-            var message = (string) value.Value;
-            message.Should().StartWith("Info");
-            message.Should().NotContain("Error");
+                
+            events.Should()
+                .ContainSingle<DisplayedValueProduced>(e => e.FormattedValues.Any(f => f.Value == "Info: No rows were returned for query 0 in batch 0."));
         }
     }
 }
