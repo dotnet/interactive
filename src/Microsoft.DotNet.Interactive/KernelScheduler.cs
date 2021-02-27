@@ -67,7 +67,6 @@ namespace Microsoft.DotNet.Interactive
                     // FIX: (RunScheduledOperations) 
                     using var __ = KernelSynchronizationContext.Establish(
                         this, 
-                        operation.ExecutionContext, 
                         out var ctx);
                     
                     ExecutionContext.Run(operation.ExecutionContext, DoTheThing, operation);
@@ -222,7 +221,6 @@ namespace Microsoft.DotNet.Interactive
 
             public static IDisposable Establish(
                 KernelScheduler<T, U> scheduler,
-                ExecutionContext executionContext,
                 out KernelSynchronizationContext ctx)
             {
                 var context = new KernelSynchronizationContext(scheduler);
@@ -245,6 +243,10 @@ namespace Microsoft.DotNet.Interactive
                         operation.ExecutionContext,
                         _ => Scheduler.Run(operation),
                         operation);
+                }
+                else if (PreviousContext is not null)
+                {
+                    PreviousContext.Post(d, state);
                 }
                 else
                 {
