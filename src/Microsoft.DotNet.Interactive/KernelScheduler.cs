@@ -38,10 +38,7 @@ namespace Microsoft.DotNet.Interactive
 
             _queue.Enqueue(operation);
 
-            lock (_lockObj)
-            {
-                _mre.Set();
-            }
+            _mre.Set();
 
             return operation.TaskCompletionSource.Task;
         }
