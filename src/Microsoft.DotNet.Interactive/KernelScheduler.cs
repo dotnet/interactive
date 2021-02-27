@@ -44,9 +44,15 @@ namespace Microsoft.DotNet.Interactive
                 scope, 
                 cancellationToken);
 
-            _queue.Enqueue(operation);
-
-            _mre.Set();
+            if (SynchronizationContext.Current is KernelSynchronizationContext ctx)
+            {
+                ctx.Post(state => Run(operation), operation);
+            }
+            else
+            {
+                _queue.Enqueue(operation);
+                _mre.Set();
+            }
 
             return operation.TaskCompletionSource.Task;
         }
@@ -61,7 +67,7 @@ namespace Microsoft.DotNet.Interactive
                        _queue.TryDequeue(out var operation))
                 {
                     // FIX: (RunScheduledOperations) 
-                    // using var ctx = KernelSynchronizationContext.Establish(this);
+                    using var ctx = KernelSynchronizationContext.Establish(this);
                     // AsyncContext.TryEstablish(out var id);
 
                     ExecutionContext.Run(operation.ExecutionContext, DoTheThing, operation);
