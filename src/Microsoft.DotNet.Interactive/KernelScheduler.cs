@@ -7,8 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 
 namespace Microsoft.DotNet.Interactive
@@ -38,15 +36,15 @@ namespace Microsoft.DotNet.Interactive
             ThrowIfDisposed();
 
             var operation = new ScheduledOperation(
-                value, 
-                onExecuteAsync, 
+                value,
+                onExecuteAsync,
                 ExecutionContext.Capture(),
-                scope, 
+                scope,
                 cancellationToken);
 
             if (SynchronizationContext.Current is KernelSynchronizationContext ctx)
             {
-                ctx.Post(state => Run(operation), operation);
+                ctx.Post(_ => Run(operation), operation);
             }
             else
             {
@@ -67,9 +65,11 @@ namespace Microsoft.DotNet.Interactive
                        _queue.TryDequeue(out var operation))
                 {
                     // FIX: (RunScheduledOperations) 
-                    using var ctx = KernelSynchronizationContext.Establish(this);
-                    // AsyncContext.TryEstablish(out var id);
-
+                    using var __ = KernelSynchronizationContext.Establish(
+                        this, 
+                        operation.ExecutionContext, 
+                        out var ctx);
+                    
                     ExecutionContext.Run(operation.ExecutionContext, DoTheThing, operation);
 
                     void DoTheThing(object state)
@@ -181,10 +181,7 @@ namespace Microsoft.DotNet.Interactive
 
                 if (cancellationToken != default)
                 {
-                    cancellationToken.Register(() =>
-                    {
-                        TaskCompletionSource.SetCanceled();
-                    });
+                    cancellationToken.Register(() => { TaskCompletionSource.SetCanceled(); });
                 }
             }
 
@@ -223,13 +220,36 @@ namespace Microsoft.DotNet.Interactive
 
             public KernelScheduler<T, U> Scheduler { get; }
 
-            public static IDisposable Establish(KernelScheduler<T, U> scheduler)
+            public static IDisposable Establish(
+                KernelScheduler<T, U> scheduler,
+                ExecutionContext executionContext,
+                out KernelSynchronizationContext ctx)
             {
                 var context = new KernelSynchronizationContext(scheduler);
 
                 SetSynchronizationContext(context);
 
-                return Disposable.Create(() => { SetSynchronizationContext(context.PreviousContext); });
+                ctx = context;
+
+                return Disposable.Create(() =>
+                {
+                    SetSynchronizationContext(context.PreviousContext);
+                });
+            }
+
+            public override void Post(SendOrPostCallback d, object state)
+            {
+                if (state is ScheduledOperation operation)
+                {
+                    ExecutionContext.Run(
+                        operation.ExecutionContext,
+                        _ => Scheduler.Run(operation),
+                        operation);
+                }
+                else
+                {
+                    base.Post(d, state);
+                }
             }
         }
     }

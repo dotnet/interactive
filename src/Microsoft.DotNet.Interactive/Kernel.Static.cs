@@ -56,9 +56,8 @@ namespace Microsoft.DotNet.Interactive
 
             var kernel = context.HandlingKernel;
 
-            Task.Run(() =>
-                         kernel.SendAsync(new DisplayValue(formatted)))
-                .Wait(context.CancellationToken);
+            kernel.SendAsync(new DisplayValue(formatted))
+                  .Wait(context.CancellationToken);
         }
 
         public static Kernel GetKernel(string name) =>
