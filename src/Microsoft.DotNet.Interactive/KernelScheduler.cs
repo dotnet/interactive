@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,7 +16,6 @@ namespace Microsoft.DotNet.Interactive
         private readonly ConcurrentQueue<ScheduledOperation> _queue = new();
         private readonly Task _loop;
         private readonly CancellationTokenSource _schedulerDisposalSource = new();
-        private KernelSynchronizationContext _synchronizationContext;
         private readonly ManualResetEventSlim _mre = new(false);
         private readonly object _lockObj = new();
 
@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Interactive
                 while (!_schedulerDisposalSource.IsCancellationRequested &&
                        _queue.TryDequeue(out var operation))
                 {
-                    var deferredOperations = GetDeferredOperationsToRunBefore(operation);
+                    var deferredOperations = GetDeferredOperationsToRunBefore(operation).ToArray();
 
                     foreach (var deferredOperation in deferredOperations)
                     {
@@ -157,7 +157,10 @@ namespace Microsoft.DotNet.Interactive
 
                 if (cancellationToken != default)
                 {
-                    cancellationToken.Register(() => { TaskCompletionSource.SetCanceled(); });
+                    cancellationToken.Register(() =>
+                    {
+                        TaskCompletionSource.SetCanceled();
+                    });
                 }
             }
 

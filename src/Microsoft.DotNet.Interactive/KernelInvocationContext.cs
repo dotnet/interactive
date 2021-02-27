@@ -36,8 +36,6 @@ namespace Microsoft.DotNet.Interactive
             _cancellationTokenSource = new CancellationTokenSource();
             Command = command;
            
-
-            CommandToSignalCompletion = command;
             Result = new KernelCommandResult(_events);
 
             _disposables.Add(_cancellationTokenSource);
@@ -50,6 +48,7 @@ namespace Microsoft.DotNet.Interactive
                 };
             }));
 
+            // FIX: (KernelInvocationContext) why?
             var previousSynchronizationContext = SynchronizationContext.Current;
 
             _disposables.Add(Disposable.Create(() =>
@@ -63,8 +62,6 @@ namespace Microsoft.DotNet.Interactive
         public bool IsComplete { get; private set; }
 
         public CancellationToken CancellationToken => _cancellationTokenSource.Token;
-
-        internal KernelCommand CommandToSignalCompletion { get; set; }
 
         public void Complete(KernelCommand command)
         {
