@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.VisualBasic;
 using Pocket;
 
 namespace Microsoft.DotNet.Interactive
@@ -35,19 +36,25 @@ namespace Microsoft.DotNet.Interactive
         {
             ThrowIfDisposed();
 
-            var operation = new ScheduledOperation(
-                value,
-                onExecuteAsync,
-                ExecutionContext.Capture(),
-                scope,
-                cancellationToken);
-
+            ScheduledOperation operation;
             if (SynchronizationContext.Current is KernelSynchronizationContext ctx)
             {
+                operation = new ScheduledOperation(
+                    value,
+                    onExecuteAsync,
+                    null,
+                    scope,
+                    cancellationToken);
                 ctx.Post(_ => Run(operation), operation);
             }
             else
             {
+                operation = new ScheduledOperation(
+                    value,
+                    onExecuteAsync,
+                    ExecutionContext.Capture(),
+                    scope,
+                    cancellationToken);
                 _queue.Enqueue(operation);
                 _mre.Set();
             }
@@ -57,6 +64,8 @@ namespace Microsoft.DotNet.Interactive
 
         private void RunScheduledOperations(object _)
         {
+            ExecutionContext.SuppressFlow();
+
             while (!_schedulerDisposalSource.IsCancellationRequested)
             {
                 _mre.Wait(_schedulerDisposalSource.Token);
@@ -68,8 +77,15 @@ namespace Microsoft.DotNet.Interactive
                     using var __ = KernelSynchronizationContext.Establish(
                         this, 
                         out var ctx);
-                    
-                    ExecutionContext.Run(operation.ExecutionContext, DoTheThing, operation);
+
+                    if (operation.ExecutionContext is { } executionContext)
+                    {
+                        ExecutionContext.Run(executionContext, DoTheThing, operation);
+                    }
+                    else
+                    {
+                        Run(operation);
+                    }
 
                     void DoTheThing(object state)
                     {
@@ -229,15 +245,13 @@ namespace Microsoft.DotNet.Interactive
 
                 ctx = context;
 
-                return Disposable.Create(() =>
-                {
-                    SetSynchronizationContext(context.PreviousContext);
-                });
+                return Disposable.Create(() => { SetSynchronizationContext(context.PreviousContext); });
             }
 
             public override void Post(SendOrPostCallback d, object state)
             {
-                if (state is ScheduledOperation operation)
+                if (state is ScheduledOperation operation &&
+                    operation.ExecutionContext is { })
                 {
                     ExecutionContext.Run(
                         operation.ExecutionContext,
@@ -250,7 +264,7 @@ namespace Microsoft.DotNet.Interactive
                 }
                 else
                 {
-                    base.Post(d, state);
+                    d(state);
                 }
             }
         }
