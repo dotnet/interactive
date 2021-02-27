@@ -350,5 +350,25 @@ namespace Microsoft.DotNet.Interactive.Tests
                              "outer 2"
                          );
         }
+
+        [Fact]
+        public async Task schedulers_do_not_interfere_with_one_another()
+        {
+            var participantCount = 5;
+            var barrier = new Barrier(participantCount);
+            var schedulers = Enumerable.Range(0, participantCount)
+                                       .Select(_ => new KernelScheduler<int, int>());
+
+            var tasks = schedulers.Select((s, i) => s.ScheduleAndWaitForCompletionAsync(i, async value =>
+                                              {
+                                                  barrier.SignalAndWait();
+                                                  return value;
+                                              }
+                                          ));
+
+            var xs = await Task.WhenAll(tasks);
+
+            xs.Should().BeEquivalentTo(0, 1, 2, 3, 4);
+        }
     }
 }

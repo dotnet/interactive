@@ -129,12 +129,12 @@ namespace Microsoft.DotNet.Interactive
             var rootNode = tree.GetRoot();
             var sourceText = SourceText.From(command.Code);
             var lines = sourceText.Lines;
-            if(command.LinePosition.Line < 0 
-               || command.LinePosition.Line >= lines.Count
-               || command.LinePosition.Character < 0
-               || command.LinePosition.Character > lines[command.LinePosition.Line].Span.Length)
+            if (command.LinePosition.Line < 0
+                || command.LinePosition.Line >= lines.Count
+                || command.LinePosition.Character < 0
+                || command.LinePosition.Character > lines[command.LinePosition.Line].Span.Length)
             {
-                context.Fail(message:$"The specified position {command.LinePosition}");
+                context.Fail(message: $"The specified position {command.LinePosition}");
                 commands = null;
                 return false;
             }

@@ -202,6 +202,7 @@ namespace Microsoft.DotNet.Interactive
         private IResolveDependenciesResult ResolveAsync(IEnumerable<Tuple<string, string>> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
         {
             IDependencyManagerProvider iDependencyManager = _dependencies.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
+
             if (iDependencyManager == null)
             {
                 // If this happens it is because of a bug in the Dependency provider. or deployment failed to deploy the nuget provider dll.
@@ -221,10 +222,7 @@ namespace Microsoft.DotNet.Interactive
 
             var errors = new List<string>();
 
-            var result =
-                await Task.Run(() => 
-                     ResolveAsync(GetPackageManagerLines(), restoreTfm, ReportError)
-                );
+            var result = ResolveAsync(GetPackageManagerLines(), restoreTfm, ReportError);
 
             PackageRestoreResult packageRestoreResult;
 
