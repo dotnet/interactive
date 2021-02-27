@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,169 +11,130 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KernelScheduler<T, U> : IDisposable
     {
-        private CancellationTokenSource _cancellationTokenSource = new();
+        private readonly List<DeferredOperation> _deferredOperationSources = new();
+        private readonly ConcurrentQueue<ScheduledOperation> _queue = new();
+        private readonly Task _loop;
+        private readonly CancellationTokenSource _schedulerDisposalSource = new();
+        private KernelSynchronizationContext _synchronizationContext;
+        private readonly ManualResetEventSlim _mre = new(false);
+        private readonly object _lockObj = new();
 
-        private List<ScheduledOperation> _scheduledOperations = new();
-        private List<DeferredOperation> _deferredOperationRegistrations = new();
-        private bool _disposed;
-        private readonly object _operationsLock = new();
+        public KernelScheduler()
+        {
+            _loop = Task.Factory.StartNew(RunScheduledOperations,
+                                          TaskCreationOptions.LongRunning,
+                                          _schedulerDisposalSource.Token);
+        }
 
-        public Task<U> Schedule(T value, OnExecuteDelegate onExecuteAsync, string scope = "default")
+        public Task<U> ScheduleAndWaitForCompletionAsync(
+            T value,
+            OnExecuteDelegate onExecuteAsync,
+            string scope = "default",
+            CancellationToken cancellationToken = default)
         {
             ThrowIfDisposed();
 
-            var operation = new ScheduledOperation(value, onExecuteAsync, scope);
+            var operation = new ScheduledOperation(value, onExecuteAsync, scope, cancellationToken);
 
-            lock (_operationsLock)
+            _queue.Enqueue(operation);
+
+            lock (_lockObj)
             {
-                _cancellationTokenSource.Token.Register(() =>
-                {
-                    if (!operation.CompletionSource.Task.IsCompleted)
-                    {
-                        operation.CompletionSource.SetCanceled();
-                    }
-                });
-
-                _scheduledOperations.Add(operation);
-
-                if (_scheduledOperations.Count == 1)
-                {
-                    var previousSynchronizationContext = SynchronizationContext.Current;
-
-                    if (previousSynchronizationContext is KernelSynchronizationContext)
-                    {
-                        // FIX: 
-                    }
-
-                    var synchronizationContext = new KernelSynchronizationContext();
-
-                    SynchronizationContext.SetSynchronizationContext(synchronizationContext);
-
-                    Task.Run(async () =>
-                    {
-                        try
-                        {
-                            while (_scheduledOperations.Count > 0)
-                            {
-                                await ProcessScheduledOperations(_cancellationTokenSource.Token);
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            throw;
-                        }
-                    }).ContinueWith(_ =>
-                    {
-                        SynchronizationContext.SetSynchronizationContext(previousSynchronizationContext);
-                    });
-                }
+                _mre.Set();
             }
 
-            return operation.Task;
+            return operation.TaskCompletionSource.Task;
         }
 
-        private async Task ProcessScheduledOperations(CancellationToken cancellationToken)
+        private void RunScheduledOperations(object _)
         {
-            ScheduledOperation operation;
+            var cancellationToken = _schedulerDisposalSource.Token;
 
-            lock (_operationsLock)
-            {
-                if (_scheduledOperations.Count > 0)
-                {
-                    operation = _scheduledOperations[0];
-                    _scheduledOperations.RemoveAt(0);
-                }
-                else
-                {
-                    return;
-                }
-            }
+            // var previousContext = SynchronizationContext.Current;
+            //
+            // _synchronizationContext = new KernelSynchronizationContext(cancellationToken);
+            //
+            // SynchronizationContext.SetSynchronizationContext(_synchronizationContext);
 
             try
             {
-                if (operation is not null)
+                while (!_schedulerDisposalSource.IsCancellationRequested)
                 {
-                    // get all deferred operations and pump in
-                    foreach (var deferredOperationRegistration in _deferredOperationRegistrations)
-                    {
-                        foreach (var deferred in deferredOperationRegistration.GetDeferredOperations(operation.Value,
-                            operation.Scope))
-                        {
-                            var deferredOperation = new ScheduledOperation(deferred,
-                                deferredOperationRegistration.OnExecuteAsync, operation.Scope);
+                    _mre.Wait(_schedulerDisposalSource.Token);
 
-                            cancellationToken.Register(() =>
+                    while (!_schedulerDisposalSource.IsCancellationRequested && 
+                           _queue.TryDequeue(out var operation))
+                    {
+                        try
+                        {
+                            var operationTask = operation.ExecuteAsync();
+
+                            operationTask.ContinueWith(t =>
                             {
-                                if (!deferredOperation.CompletionSource.Task.IsCompleted)
+                                if (t.IsCompletedSuccessfully)
                                 {
-                                    deferredOperation.CompletionSource.SetCanceled();
+                                    operation.TaskCompletionSource.SetResult(t.Result);
+                                }
+                                else
+                                {
+                                    operation.TaskCompletionSource.SetException(t.Exception);
                                 }
                             });
 
-                            await DoWork(deferredOperation);
+                            operationTask.Wait(cancellationToken);
+                        }
+                        catch (Exception exception)
+                        {
+                            operation.TaskCompletionSource.SetException(exception);
+
+                            _queue.Clear();
                         }
                     }
-
-                    await DoWork(operation);
                 }
             }
-            catch
+            finally
             {
-                Cancel();
-                throw;
-            }
-
-            async Task DoWork(ScheduledOperation scheduleOperation)
-            {
-                if (!scheduleOperation.CompletionSource.Task.IsCanceled)
-                {
-                    try
-                    {
-                        var operationResult = await scheduleOperation.OnExecuteAsync(scheduleOperation.Value);
-                        scheduleOperation.CompletionSource.SetResult(operationResult);
-                    }
-                    catch (Exception e)
-                    {
-                        scheduleOperation.CompletionSource.SetException(e);
-                        throw;
-                    }
-                }
+                // SynchronizationContext.SetSynchronizationContext(previousContext);
             }
         }
 
-        public void RegisterDeferredOperationSource(GetDeferredOperationsDelegate getDeferredOperations, OnExecuteDelegate onExecuteAsync)
+        private void ProcessDeferredOperation(ScheduledOperation operation)
+        {
+            // get all deferred operations and pump in
+            foreach (var source in _deferredOperationSources)
+            {
+                foreach (var deferred in source.GetDeferredOperations(
+                    operation.Value,
+                    operation.Scope))
+                {
+                    var deferredOperation = new ScheduledOperation(
+                        deferred,
+                        source.OnExecuteAsync, operation.Scope);
+
+                    // DoWork(deferredOperation, cancellationToken);
+                }
+            }
+
+            // DoWork(operation, cancellationToken);
+        }
+
+        public void RegisterDeferredOperationSource(
+            GetDeferredOperationsDelegate getDeferredOperations,
+            OnExecuteDelegate onExecuteAsync)
         {
             ThrowIfDisposed();
 
-            _deferredOperationRegistrations.Add(new DeferredOperation(onExecuteAsync, getDeferredOperations));
-        }
-
-        public void Cancel()
-        {
-            lock (_operationsLock)
-            {
-                if (SynchronizationContext.Current is KernelSynchronizationContext synchronizationContext)
-                {
-                    synchronizationContext.Cancel();
-                }
-
-                _scheduledOperations = new List<ScheduledOperation>();
-                _deferredOperationRegistrations = new List<DeferredOperation>();
-
-                _cancellationTokenSource.Cancel();
-                _cancellationTokenSource = new CancellationTokenSource();
-            }
+            _deferredOperationSources.Add(new DeferredOperation(onExecuteAsync, getDeferredOperations));
         }
 
         public void Dispose()
         {
-            _disposed = true;
-            Cancel();
+            _schedulerDisposalSource.Cancel();
         }
-        
+
         private void ThrowIfDisposed()
         {
-            if (_disposed)
+            if (_schedulerDisposalSource.IsCancellationRequested)
             {
                 throw new ObjectDisposedException($"{nameof(KernelScheduler<T, U>)} has been disposed.");
             }
@@ -184,31 +146,49 @@ namespace Microsoft.DotNet.Interactive
 
         private class ScheduledOperation
         {
-            public T Value { get; }
-            public OnExecuteDelegate OnExecuteAsync { get; }
-            public string Scope { get; }
-            public Task<U> Task => CompletionSource.Task;
+            private readonly OnExecuteDelegate _onExecuteAsync;
 
-            public ScheduledOperation(T value, OnExecuteDelegate onExecuteAsync, string scope)
+            public ScheduledOperation(
+                T value, 
+                OnExecuteDelegate onExecuteAsync, 
+                string scope,
+                CancellationToken cancellationToken = default)
             {
                 Value = value;
-                CompletionSource = new TaskCompletionSource<U>();
-                OnExecuteAsync = onExecuteAsync;
+                _onExecuteAsync = onExecuteAsync;
                 Scope = scope;
+
+                TaskCompletionSource = new();
+
+                if (cancellationToken != default)
+                {
+                    cancellationToken.Register(() =>
+                    {
+                        TaskCompletionSource.SetCanceled();
+                    });
+                }
             }
 
-            public TaskCompletionSource<U> CompletionSource { get; }
+            public TaskCompletionSource<U> TaskCompletionSource { get; }
+
+            public T Value { get; }
+
+            public string Scope { get; }
+
+            public Task<U> ExecuteAsync() => _onExecuteAsync(Value);
         }
 
         private class DeferredOperation
         {
-            public GetDeferredOperationsDelegate GetDeferredOperations { get; }
-            public OnExecuteDelegate OnExecuteAsync { get; }
             public DeferredOperation(OnExecuteDelegate onExecuteAsync, GetDeferredOperationsDelegate getDeferredOperations)
             {
                 OnExecuteAsync = onExecuteAsync;
                 GetDeferredOperations = getDeferredOperations;
             }
+
+            public GetDeferredOperationsDelegate GetDeferredOperations { get; }
+
+            public OnExecuteDelegate OnExecuteAsync { get; }
         }
     }
 }
