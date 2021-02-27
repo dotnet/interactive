@@ -9,7 +9,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
@@ -36,18 +35,27 @@ namespace Microsoft.DotNet.Interactive
         {
             _cancellationTokenSource = new CancellationTokenSource();
             Command = command;
+           
+
             CommandToSignalCompletion = command;
             Result = new KernelCommandResult(_events);
 
             _disposables.Add(_cancellationTokenSource);
             _disposables.Add(ConsoleOutput.Subscribe(c =>
+            {
+                return new CompositeDisposable
                 {
-                    return new CompositeDisposable
-                    {
-                        c.Out.Subscribe(s => this.DisplayStandardOut(s, command)),
-                        c.Error.Subscribe(s => this.DisplayStandardError(s, command))
-                    };
-                }));
+                    c.Out.Subscribe(s => this.DisplayStandardOut(s, command)),
+                    c.Error.Subscribe(s => this.DisplayStandardError(s, command))
+                };
+            }));
+
+            var previousSynchronizationContext = SynchronizationContext.Current;
+
+            _disposables.Add(Disposable.Create(() =>
+            {
+                SynchronizationContext.SetSynchronizationContext(previousSynchronizationContext);
+            }));
         }
 
         public KernelCommand Command { get; }

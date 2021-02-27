@@ -223,7 +223,7 @@ namespace Microsoft.DotNet.Interactive
             await command.InvokeAsync(context);
         }
 
-        public Task<KernelCommandResult> SendAsync(
+        public async Task<KernelCommandResult> SendAsync(
             KernelCommand command,
             CancellationToken cancellationToken)
         {
@@ -231,29 +231,22 @@ namespace Microsoft.DotNet.Interactive
             {
                 throw new ArgumentNullException(nameof(command));
             }
-            
-            return NewScheduleCommand(command, cancellationToken);
-        }
 
-
-
-        private async Task<KernelCommandResult> NewScheduleCommand(
-            KernelCommand originalCommand, CancellationToken cancellationToken)
-        {
             var scheduler = GetOrCreateScheduler();
-            var context = KernelInvocationContext.Establish(originalCommand);
+            var context = KernelInvocationContext.Establish(command);
+
             // only subscribe for the root command 
-            var currentCommandOwnsContext = context.Command == originalCommand;
+            var currentCommandOwnsContext = context.Command == command;
 
             using var disposable = currentCommandOwnsContext
-                ? context.KernelEvents.Subscribe(PublishEvent)
-                : Disposable.Empty;
+                                       ? context.KernelEvents.Subscribe(PublishEvent)
+                                       : Disposable.Empty;
 
-            if (TryPreprocessCommands(originalCommand, context, out var commands))
+            if (TryPreprocessCommands(command, context, out var commands))
             {
-                foreach (var command in commands)
+                foreach (var command1 in commands)
                 {
-                    await scheduler.Schedule(command, InvokePipelineAndCommandHandler, command.KernelUri.ToString());
+                    await scheduler.ScheduleAndWaitForCompletionAsync(command1, InvokePipelineAndCommandHandler, command1.KernelUri.ToString());
                 }
 
                 if (currentCommandOwnsContext)

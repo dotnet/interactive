@@ -3,15 +3,16 @@
 
 using System;
 using System.Collections.Generic;
+using FluentAssertions;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.KernelSchedulerTests>;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -32,7 +33,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             }
             catch (Exception ex)
             {
-                Logger<KernelSchedulerTests>.Log.Error(exception: ex);
+                Log.Error(exception: ex);
             }
         }
 
@@ -48,9 +49,9 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var executionList = new List<int>();
 
-            await scheduler.Schedule(1, PerformWork);
-            await scheduler.Schedule(2, PerformWork);
-            await scheduler.Schedule(3, PerformWork);
+            await scheduler.ScheduleAndWaitForCompletionAsync(1, PerformWork);
+            await scheduler.ScheduleAndWaitForCompletionAsync(2, PerformWork);
+            await scheduler.ScheduleAndWaitForCompletionAsync(3, PerformWork);
 
             executionList.Should().BeEquivalentSequenceTo(1, 2, 3);
 
@@ -62,16 +63,60 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public async Task AsyncContext_is_maintained_across_async_operations()
+        public async Task AsyncContext_is_maintained_across_async_operations_within_a_scheduled_work_item()
         {
             using var scheduler = new KernelScheduler<int, int>();
             int asyncId1 = default;
             int asyncId2 = default;
 
-            await scheduler.Schedule(0, async value =>
+            await scheduler.ScheduleAndWaitForCompletionAsync(0, async value =>
             {
                 AsyncContext.TryEstablish(out asyncId1);
                 await Task.Yield();
+                AsyncContext.TryEstablish(out asyncId2);
+                return value;
+            });
+
+            asyncId2.Should().Be(asyncId1);
+        }
+
+        [Fact]
+        public async Task AsyncContext_is_maintained_across_scheduled_operations()
+        {
+            using var scheduler = new KernelScheduler<int, int>();
+            int asyncId1 = default;
+            int asyncId2 = default;
+
+            await scheduler.ScheduleAndWaitForCompletionAsync(0, async value =>
+            {
+                AsyncContext.TryEstablish(out asyncId1);
+
+                return value;
+            });
+            await scheduler.ScheduleAndWaitForCompletionAsync(0, async value =>
+            {
+                AsyncContext.TryEstablish(out asyncId2);
+                return value;
+            });
+
+            asyncId2.Should().Be(asyncId1);
+        }
+
+        [Fact]
+        public async Task AsyncContext_is_maintained_across_scheduled_and_deferred_operations()
+        {
+            using var scheduler = new KernelScheduler<int, int>();
+            int asyncId1 = default;
+            int asyncId2 = default;
+
+            scheduler.RegisterDeferredOperationSource(
+                (v, _) => Enumerable.Repeat(1, 1), i =>
+                {
+                    AsyncContext.TryEstablish(out asyncId1);
+                    return Task.FromResult(i);
+                });
+            await scheduler.ScheduleAndWaitForCompletionAsync(0, async value =>
+            {
                 AsyncContext.TryEstablish(out asyncId2);
                 return value;
             });
@@ -85,11 +130,10 @@ namespace Microsoft.DotNet.Interactive.Tests
             using var scheduler = new KernelScheduler<int, int>();
             var concurrencyCounter = 0;
             var maxObservedParallelism = 0;
-            var tasks = new Task[3];
 
-            for (var i = 0; i < 3; i++)
+            var tasks = Enumerable.Range(1, 3).Select(i =>
             {
-                var task = scheduler.Schedule(i, async v =>
+                return scheduler.ScheduleAndWaitForCompletionAsync(i, async v =>
                 {
                     Interlocked.Increment(ref concurrencyCounter);
 
@@ -99,8 +143,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                     Interlocked.Decrement(ref concurrencyCounter);
                     return v;
                 });
-                tasks[i] = task;
-            }
+            });
 
             await Task.WhenAll(tasks);
 
@@ -124,205 +167,172 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             for (var i = 1; i <= 3; i++)
             {
-                await scheduler.Schedule(i, PerformWork);
+                await scheduler.ScheduleAndWaitForCompletionAsync(i, PerformWork);
             }
 
             executionList.Should().BeEquivalentSequenceTo(10, 1, 20, 20, 2, 30, 30, 30, 3);
         }
 
         [Fact]
-        public void cancel_scheduler_work_prevents_any_scheduled_work_from_executing()
+        public async Task disposing_scheduler_prevents_later_scheduled_work_from_executing()
         {
-            var executionList = new List<int>();
             using var scheduler = new KernelScheduler<int, int>();
             var barrier = new Barrier(2);
-            Task<int> PerformWork(int v)
+            var laterWorkWasExecuted = false;
+
+            var t1 = scheduler.ScheduleAndWaitForCompletionAsync(1, async v =>
             {
-                barrier.SignalAndWait(5000);
-                executionList.Add(v);
+                barrier.SignalAndWait();
+                await Task.Delay(3000);
+                return v;
+            });
+            var t2 = scheduler.ScheduleAndWaitForCompletionAsync(2, v =>
+            {
+                laterWorkWasExecuted = true;
                 return Task.FromResult(v);
-            }
-
-            var scheduledWork = new List<Task>
-            {
-                scheduler.Schedule(1, PerformWork),
-                scheduler.Schedule(2, v =>
-                {
-                    executionList.Add(v);
-                    return Task.FromResult(v);
-                }),
-                scheduler.Schedule(3, v =>
-                {
-                    executionList.Add(v);
-                    return Task.FromResult(v);
-                })
-            };
+            });
 
             barrier.SignalAndWait();
-            scheduler.Cancel();
-            Task.WhenAll(scheduledWork);
+            scheduler.Dispose();
 
-            executionList.Should().BeEquivalentTo(1);
+            t2.Status.Should().Be(TaskStatus.WaitingForActivation);
+            laterWorkWasExecuted.Should().BeFalse();
         }
 
         [Fact]
-        public async Task cancelled_work_prevents_any_scheduled_work_from_executing()
+        public async Task cancelling_work_in_progress_prevents_later_scheduled_work_from_executing()
         {
-            var executionList = new List<int>();
             using var scheduler = new KernelScheduler<int, int>();
+            var cts = new CancellationTokenSource();
             var barrier = new Barrier(2);
+            var laterWorkWasExecuted = false;
 
-            async Task<int> PerformWork(int v)
+            var t1 = scheduler.ScheduleAndWaitForCompletionAsync(1, async v =>
             {
                 barrier.SignalAndWait();
                 await Task.Delay(3000);
-                executionList.Add(v);
                 return v;
-            }
+            }, cancellationToken: cts.Token);
 
-            var scheduledWork = new List<Task>
+            var t2 = scheduler.ScheduleAndWaitForCompletionAsync(2, v =>
             {
-                scheduler.Schedule(1, PerformWork),
-                scheduler.Schedule(2, v =>
-                {
-                    executionList.Add(v);
-                    return Task.FromResult(v);
-                }),
-                scheduler.Schedule(3, v =>
-                {
-                    executionList.Add(v);
-                    return Task.FromResult(v);
-                })
-            };
+                laterWorkWasExecuted = true;
+                return Task.FromResult(v);
+            });
 
             barrier.SignalAndWait();
-            scheduler.Cancel();
-            try
-            {
-                await Task.WhenAll(scheduledWork);
-            }
-            catch (TaskCanceledException)
-            {
+            cts.Cancel();
 
-            }
-
-            executionList.Should().BeEmpty();
+            t2.Status.Should().Be(TaskStatus.WaitingForActivation);
+            laterWorkWasExecuted.Should().BeFalse();
         }
 
         [Fact]
-        public void cancelling_work_throws_exception()
+        public void cancelling_work_in_progress_throws_exception()
         {
-            var executionList = new List<int>();
             using var scheduler = new KernelScheduler<int, int>();
+            var cts = new CancellationTokenSource();
+
             var barrier = new Barrier(2);
 
-            async Task<int> PerformWork(int v)
+            var work = scheduler.ScheduleAndWaitForCompletionAsync(1, async v =>
             {
                 barrier.SignalAndWait();
                 await Task.Delay(3000);
-                executionList.Add(v);
                 return v;
-            }
-
-            var scheduledWork = new List<Task>
-            {
-                scheduler.Schedule(1, PerformWork),
-                scheduler.Schedule(2, v =>
-                {
-                    executionList.Add(v);
-                    return Task.FromResult(v);
-                }),
-                scheduler.Schedule(3, v =>
-                {
-                    executionList.Add(v);
-                    return Task.FromResult(v);
-                })
-            };
+            }, cancellationToken: cts.Token);
 
             barrier.SignalAndWait();
-            scheduler.Cancel();
-            var operation = new Action( () =>  Task.WhenAll(scheduledWork).Wait(5000));
+            cts.Cancel();
 
-            operation.Should().Throw<TaskCanceledException>();
+            work.Invoking(async w => await w)
+                .Should()
+                .Throw<OperationCanceledException>();
         }
 
         [Fact]
-        public async Task exception_in_scheduled_work_halts_execution()
+        public void disposing_scheduler_throws_exception()
         {
-            var executionList = new List<int>();
             using var scheduler = new KernelScheduler<int, int>();
+
             var barrier = new Barrier(2);
 
-            Task<int> PerformWork(int v)
+            var work = scheduler.ScheduleAndWaitForCompletionAsync(1, async v =>
             {
                 barrier.SignalAndWait();
-                throw new InvalidOperationException("test exception");
-            }
-
-            var scheduledWork = new List<Task>
-            {
-                scheduler.Schedule(1, PerformWork),
-                scheduler.Schedule(2, v =>
-                {
-                    executionList.Add(v);
-                    return Task.FromResult(v);
-                }),
-                scheduler.Schedule(3, v =>
-                {
-                    executionList.Add(v);
-                    return Task.FromResult(v);
-                })
-            };
+                await Task.Delay(3000);
+                return v;
+            });
 
             barrier.SignalAndWait();
+            scheduler.Dispose();
+
+            work.Invoking(async w => await w)
+                .Should()
+                .Throw<OperationCanceledException>();
+        }
+
+        [Fact]
+        public async Task exception_in_scheduled_work_halts_execution_of_work_already_queued()
+        {
+            using var scheduler = new KernelScheduler<int, int>();
+            var barrier = new Barrier(2);
+            var laterWorkWasExecuted = false;
+
+            var t1 = scheduler.ScheduleAndWaitForCompletionAsync(1, _ =>
+            {
+                barrier.SignalAndWait();
+                throw new DataMisalignedException();
+            });
+            var t2 = scheduler.ScheduleAndWaitForCompletionAsync(2, v =>
+            {
+                laterWorkWasExecuted = true;
+                return Task.FromResult(v);
+            });
+
+            barrier.SignalAndWait();
+
+            t2.Status.Should().Be(TaskStatus.WaitingForActivation);
+            laterWorkWasExecuted.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task after_an_exception_in_scheduled_work_more_work_can_be_scheduled()
+        {
+            using var scheduler = new KernelScheduler<int, int>();
+
             try
             {
-                await Task.WhenAll(scheduledWork);
+                await scheduler.ScheduleAndWaitForCompletionAsync(1, _ => throw new DataMisalignedException());
             }
-            catch(InvalidOperationException)
+            catch (DataMisalignedException)
             {
-
             }
 
-            executionList.Should().BeEmpty();
+            var next = await scheduler.ScheduleAndWaitForCompletionAsync(2, _ => Task.FromResult(2));
+
+            next.Should().Be(2);
         }
 
         [Fact]
         public void exception_in_scheduled_work_is_propagated()
         {
-            var executionList = new List<int>();
             using var scheduler = new KernelScheduler<int, int>();
             var barrier = new Barrier(2);
 
-            Task<int> PerformWork(int v)
+            Task<int> Throw(int v)
             {
                 barrier.SignalAndWait();
-                throw new InvalidOperationException("test exception");
+                throw new DataMisalignedException();
             }
 
-            var scheduledWork = new List<Task>
-            {
-                scheduler.Schedule(1, PerformWork),
-                scheduler.Schedule(2, v =>
-                {
-                    executionList.Add(v);
-                    return Task.FromResult(v);
-                }),
-                scheduler.Schedule(3, v =>
-                {
-                    executionList.Add(v);
-                    return Task.FromResult(v);
-                })
-            };
+            var work = scheduler.ScheduleAndWaitForCompletionAsync(1, Throw);
 
             barrier.SignalAndWait();
-            var operation = new Action(() => Task.WhenAll(scheduledWork).Wait(5000));
 
-            operation.Should().Throw<InvalidOperationException>()
-                .Which
-                .Message
+            work.Invoking(async w => await w)
                 .Should()
-                .Be("test exception");
+                .Throw<DataMisalignedException>();
         }
 
         [Fact]
@@ -339,14 +349,13 @@ namespace Microsoft.DotNet.Interactive.Tests
                 return v;
             }
 
-            await scheduler.Schedule(1, PerformWorkAsync);
-            await scheduler.Schedule(2, PerformWorkAsync);
+            var one = scheduler.ScheduleAndWaitForCompletionAsync(1, PerformWorkAsync);
+            var two = scheduler.ScheduleAndWaitForCompletionAsync(2, PerformWorkAsync);
+            var three = scheduler.ScheduleAndWaitForCompletionAsync(3, PerformWorkAsync);
 
-            _ = scheduler.Schedule(3, PerformWorkAsync);
+            await two;
 
             executionList.Should().BeEquivalentSequenceTo(1, 2);
-
-
         }
 
         [Fact]
@@ -366,7 +375,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             for (var i = 1; i <= 3; i++)
             {
-                await scheduler.Schedule(i, PerformWork, $"scope{i}");
+                await scheduler.ScheduleAndWaitForCompletionAsync(i, PerformWork, $"scope{i}");
             }
 
             executionList.Should().BeEquivalentSequenceTo(1, 20, 20, 2, 3);

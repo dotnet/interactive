@@ -4,17 +4,20 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive
 {
-    internal sealed class KernelSynchronizationContext : SynchronizationContext, IDisposable
+    internal sealed class KernelSynchronizationContext : SynchronizationContext
     {
-        private bool _running = false;
+        private readonly CancellationToken _cancellationToken;
+        private int _running = 0;
         private readonly BlockingCollection<WorkItem> _queue = new();
 
-        public KernelSynchronizationContext()
+        public KernelSynchronizationContext(CancellationToken cancellationToken)
         {
-            SetSynchronizationContext(this);
+            _cancellationToken = cancellationToken;
         }
 
         public override void Post(SendOrPostCallback callback, object state)
@@ -28,9 +31,9 @@ namespace Microsoft.DotNet.Interactive
 
             try
             {
-                _queue.Add(workItem);
+                EnsureWorkerIsRunning();
 
-                RunUntilQueueIsEmpty();
+                _queue.Add(workItem, _cancellationToken);
             }
             catch (InvalidOperationException)
             {
@@ -41,39 +44,55 @@ namespace Microsoft.DotNet.Interactive
         public override void Send(SendOrPostCallback callback, object state) =>
             throw new NotSupportedException($"Synchronous Send is not supported by {nameof(KernelSynchronizationContext)}.");
 
-        public void Cancel()
+        private void EnsureWorkerIsRunning()
         {
-            Cancelled = true;
-        }
-
-        internal bool Cancelled { get; private set; }
-
-        private void RunUntilQueueIsEmpty()
-        {
-            if (Cancelled)
+            if (_cancellationToken.IsCancellationRequested)
             {
                 return;
             }
 
-            if (_running)
+            if (Interlocked.CompareExchange(ref _running, 1, 0) == 1)
             {
                 return;
             }
 
-            _running = true;
-
-            foreach (var workItem in _queue.GetConsumingEnumerable())
+            Task.Run(() =>
             {
-                if (!Cancelled)
+                foreach (var workItem in _queue.GetConsumingEnumerable(_cancellationToken))
                 {
-                    workItem.Run();
+                    if (!_cancellationToken.IsCancellationRequested)
+                    {
+                        workItem.Run();
+                    }
                 }
+            }, _cancellationToken);
+        }
+
+        public static void Run(Func<Task> func, CancellationToken cancellationToken = default)
+        {
+            var previousContext = Current;
+
+            try
+            {
+                var syncCtx = new KernelSynchronizationContext(cancellationToken);
+
+                SetSynchronizationContext(syncCtx);
+
+                var t = func();
+
+                t.ContinueWith(
+                    _ => SetSynchronizationContext(previousContext),
+                    TaskScheduler.Default);
+
+                t.WaitAndUnwrapException();
+            }
+            catch (Exception)
+            {
+                SetSynchronizationContext(previousContext);
             }
         }
 
-        public void Dispose() => _queue.CompleteAdding();
-
-        private struct WorkItem
+        private readonly struct WorkItem
         {
             public WorkItem(SendOrPostCallback callback, object state)
             {
