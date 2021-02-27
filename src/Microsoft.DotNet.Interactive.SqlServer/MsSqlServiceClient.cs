@@ -166,15 +166,21 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             }
         }
 
-        public async Task<QueryExecuteResult> ExecuteQueryStringAsync(Uri ownerUri, string queryString)
+        public async Task<QueryExecuteResult> ExecuteQueryStringAsync(Uri ownerUri, string queryString, System.Threading.CancellationToken cancellationToken = default)
         {
             var queryParams = new QueryExecuteStringParams() { Query = queryString, OwnerUri = ownerUri.AbsolutePath };
-            return await _rpc.InvokeWithParameterObjectAsync<QueryExecuteResult>("query/executeString", queryParams);
+            return await _rpc.InvokeWithParameterObjectAsync<QueryExecuteResult>("query/executeString", queryParams, cancellationToken);
         }
 
         public async Task<QueryExecuteSubsetResult> ExecuteQueryExecuteSubsetAsync(QueryExecuteSubsetParams subsetParams)
         {
             return await _rpc.InvokeWithParameterObjectAsync<QueryExecuteSubsetResult>("query/subset", subsetParams);
+        }
+
+        public async Task<QueryCancelResult> CancelQueryExecutionAsync(Uri ownerUri)
+        {
+            var cancelParams = new QueryCancelParams() { OwnerUri = ownerUri.AbsolutePath };
+            return await _rpc.InvokeWithParameterObjectAsync<QueryCancelResult>("query/cancel", cancelParams);
         }
 
         public async Task SendTextChangeNotificationAsync(Uri ownerUri, string newText, string oldText)
