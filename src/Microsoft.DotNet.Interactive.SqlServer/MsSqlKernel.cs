@@ -22,16 +22,16 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         IKernelCommandHandler<SubmitCode>,
         IKernelCommandHandler<RequestCompletions>
     {
-        private bool _connected = false;
-        private bool _intellisenseReady = false;
+        private bool _connected;
+        private bool _intellisenseReady;
         private readonly Uri _tempFileUri;
         private readonly string _connectionString;
         private readonly MsSqlServiceClient _serviceClient;
 
-        private readonly TaskCompletionSource<ConnectionCompleteParams> _connectionCompleted = new TaskCompletionSource<ConnectionCompleteParams>();
+        private readonly TaskCompletionSource<ConnectionCompleteParams> _connectionCompleted = new();
 
-        private Func<QueryCompleteParams, Task> _queryCompletionHandler = null;
-        private Func<MessageParams, Task> _queryMessageHandler = null;
+        private Func<QueryCompleteParams, Task> _queryCompletionHandler;
+        private Func<MessageParams, Task> _queryMessageHandler;
 
         public MsSqlKernel(
             string name,
@@ -240,7 +240,18 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                         {
                             if (typeConverter.CanConvertFrom(typeof(string)))
                             {
-                                convertedValue = typeConverter.ConvertFromInvariantString(row[colIndex].DisplayValue);
+                                // TODO:fix handling target boolean type when the column is bit type with numeric value
+                                if ((expectedType == typeof(bool) || expectedType == typeof(bool?)) &&
+
+                                    decimal.TryParse(row[colIndex].DisplayValue, out var numericValue))
+                                {
+                                    convertedValue = numericValue != 0;
+                                }
+                                else
+                                {
+                                    convertedValue =
+                                        typeConverter.ConvertFromInvariantString(row[colIndex].DisplayValue);
+                                }
                             }
                         }
                     }
@@ -279,7 +290,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 Add(MimeTypeOption);
             }
 
-            private Option<string> MimeTypeOption { get; } = new Option<string>(
+            private Option<string> MimeTypeOption { get; } = new (
                 "--mime-type",
                 description: "Specify the MIME type to use for the data.",
                 getDefaultValue: () => HtmlFormatter.MimeType);

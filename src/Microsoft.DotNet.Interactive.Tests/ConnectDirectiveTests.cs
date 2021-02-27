@@ -106,7 +106,7 @@ hello!
             compositeKernel.UseKernelClientConnection(
                 new ConnectFakeKernel("fake", "Connects the fake kernel")
                 {
-                    CreateKernel = (options, context) => Task.FromResult<Kernel>(new FakeKernel())
+                    CreateKernel = (options, context) => Task.FromResult<Kernel>(new FakeKernel(options.KernelName))
                 });
 
             await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake-kernel");
@@ -135,7 +135,7 @@ hello!
             compositeKernel.UseKernelClientConnection(
                 new ConnectFakeKernel("fake", "Connects the fake kernel")
                 {
-                    CreateKernel = (options, context) => Task.FromResult<Kernel>(new FakeKernel())
+                    CreateKernel = (options, context) => Task.FromResult<Kernel>(new FakeKernel(options.KernelName))
                 });
 
             await compositeKernel.SubmitCodeAsync("#!connect fake --kernel-name fake1");
@@ -158,7 +158,14 @@ hello!
             compositeKernel.UseKernelClientConnection(
                 new ConnectFakeKernel("fake", "Connects the fake kernel")
                 {
-                    CreateKernel = (options, context) => Task.FromResult<Kernel>(fakeKernel ?? new FakeKernel())
+                    CreateKernel = (options, context) =>
+                    {
+                        var kernel = fakeKernel ?? new FakeKernel();
+
+                        kernel.Name = options.KernelName;
+                       
+                        return Task.FromResult<Kernel>(kernel);
+                    }
                 });
 
             return compositeKernel;

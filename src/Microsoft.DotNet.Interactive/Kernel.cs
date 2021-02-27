@@ -24,14 +24,14 @@ namespace Microsoft.DotNet.Interactive
 {
     public abstract partial class Kernel : IDisposable
     {
-        private readonly Subject<KernelEvent> _kernelEvents = new Subject<KernelEvent>();
+        private readonly Subject<KernelEvent> _kernelEvents = new();
         private readonly CompositeDisposable _disposables;
-        private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new ConcurrentQueue<KernelCommand>();
+        private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
 
         private readonly ConcurrentQueue<KernelOperation> _commandQueue =
-            new ConcurrentQueue<KernelOperation>();
+            new();
         private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers =
-            new Dictionary<Type, KernelCommandInvocation>();
+            new();
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
 
@@ -141,14 +141,11 @@ namespace Microsoft.DotNet.Interactive
         {
             return command switch
             {
-                SubmitCode submitCode
-                when submitCode.LanguageNode is null => SubmissionParser.SplitSubmission(submitCode),
+                SubmitCode {LanguageNode: null} submitCode => SubmissionParser.SplitSubmission(submitCode),
 
-                RequestDiagnostics requestDiagnostics
-                when requestDiagnostics.LanguageNode is null => SubmissionParser.SplitSubmission(requestDiagnostics),
+                RequestDiagnostics {LanguageNode: null} requestDiagnostics => SubmissionParser.SplitSubmission(requestDiagnostics),
 
-                LanguageServiceCommand languageServiceCommand
-                when languageServiceCommand.LanguageNode is null => PreprocessLanguageServiceCommand(languageServiceCommand),
+                LanguageServiceCommand {LanguageNode: null} languageServiceCommand => PreprocessLanguageServiceCommand(languageServiceCommand),
 
                 _ => new[] { command }
             };
