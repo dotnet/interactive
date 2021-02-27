@@ -121,6 +121,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 return;
             }
 
+            // If a query handler is already defined, then it means another query is already running in parallel.
+            // We only want to run one query at a time, so we display an error here instead.
             if (_queryCompletionHandler != null)
             {
                 context.Display("Error: Another query is currently running. Please wait for that query to complete before re-running this cell.");
@@ -196,7 +198,15 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             try
             {
                 await _serviceClient.ExecuteQueryStringAsync(_tempFileUri, command.Code);
+                context.CancellationToken.Register(() => {
+                    completion.SetCanceled(context.CancellationToken);
+                    _serviceClient.CancelQueryExecutionAsync(_tempFileUri).Wait();
+                });
                 await completion.Task;
+            }
+            catch (OperationCanceledException)
+            {
+                context.Display("Query cancelled.");
             }
             finally
             {

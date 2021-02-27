@@ -177,6 +177,12 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             return await _rpc.InvokeWithParameterObjectAsync<QueryExecuteSubsetResult>("query/subset", subsetParams);
         }
 
+        public async Task<QueryCancelResult> CancelQueryExecutionAsync(Uri ownerUri)
+        {
+            var cancelParams = new QueryCancelParams() { OwnerUri = ownerUri.AbsolutePath };
+            return await _rpc.InvokeWithParameterObjectAsync<QueryCancelResult>("query/cancel", cancelParams);
+        }
+
         public async Task SendTextChangeNotificationAsync(Uri ownerUri, string newText, string oldText)
         {
             var textChangeParams = GetDocumentChangeForText(ownerUri, newText, oldText);
