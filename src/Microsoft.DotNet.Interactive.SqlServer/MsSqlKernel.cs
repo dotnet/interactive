@@ -197,7 +197,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             try
             {
-                await _serviceClient.ExecuteQueryStringAsync(_tempFileUri, command.Code, context.CancellationToken);
+                await _serviceClient.ExecuteQueryStringAsync(_tempFileUri, command.Code);
                 context.CancellationToken.Register(() => {
                     completion.SetCanceled(context.CancellationToken);
                     _serviceClient.CancelQueryExecutionAsync(_tempFileUri).Wait();

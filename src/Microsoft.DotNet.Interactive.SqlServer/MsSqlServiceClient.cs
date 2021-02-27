@@ -166,10 +166,10 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             }
         }
 
-        public async Task<QueryExecuteResult> ExecuteQueryStringAsync(Uri ownerUri, string queryString, System.Threading.CancellationToken cancellationToken = default)
+        public async Task<QueryExecuteResult> ExecuteQueryStringAsync(Uri ownerUri, string queryString)
         {
             var queryParams = new QueryExecuteStringParams() { Query = queryString, OwnerUri = ownerUri.AbsolutePath };
-            return await _rpc.InvokeWithParameterObjectAsync<QueryExecuteResult>("query/executeString", queryParams, cancellationToken);
+            return await _rpc.InvokeWithParameterObjectAsync<QueryExecuteResult>("query/executeString", queryParams);
         }
 
         public async Task<QueryExecuteSubsetResult> ExecuteQueryExecuteSubsetAsync(QueryExecuteSubsetParams subsetParams)
