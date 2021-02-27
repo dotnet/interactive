@@ -2,9 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -17,8 +15,6 @@ namespace Microsoft.DotNet.Interactive
 {
     public class KernelInvocationContext : IAsyncDisposable
     {
-        internal static ConcurrentBag<KernelInvocationContext> ActiveContexts { get; private set; } = new();
-        
         private static readonly AsyncLocal<KernelInvocationContext> _current = new();
 
         private readonly ReplaySubject<KernelEvent> _events = new();
@@ -46,14 +42,6 @@ namespace Microsoft.DotNet.Interactive
                     c.Out.Subscribe(s => this.DisplayStandardOut(s, command)),
                     c.Error.Subscribe(s => this.DisplayStandardError(s, command))
                 };
-            }));
-
-            // FIX: (KernelInvocationContext) why?
-            var previousSynchronizationContext = SynchronizationContext.Current;
-
-            _disposables.Add(Disposable.Create(() =>
-            {
-                SynchronizationContext.SetSynchronizationContext(previousSynchronizationContext);
             }));
         }
 
@@ -95,7 +83,6 @@ namespace Microsoft.DotNet.Interactive
         {
             if (!IsComplete)
             {
-               
                 Publish(new CommandFailed(exception, Command, message));
                 _events.OnCompleted();
 
@@ -140,8 +127,6 @@ namespace Microsoft.DotNet.Interactive
             {
                 var context = new KernelInvocationContext(command);
                 
-                ActiveContexts.Add(context);
-
                 _current.Value = context;
             }
             else
@@ -170,8 +155,6 @@ namespace Microsoft.DotNet.Interactive
         {
             if (_current.Value is { } active)
             {
-                ActiveContexts =
-                    new ConcurrentBag<KernelInvocationContext>(ActiveContexts.Except(new[] {_current.Value}));
                 _current.Value = null;
 
                 if (_onCompleteActions.Count > 0)

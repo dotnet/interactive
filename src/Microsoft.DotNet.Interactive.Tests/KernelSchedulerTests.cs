@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             asyncId2.Should().Be(asyncId1);
         }
-        
+
         [Fact]
         public async Task AsyncContext_is_maintained_across_scheduled_and_deferred_operations()
         {
@@ -88,15 +88,17 @@ namespace Microsoft.DotNet.Interactive.Tests
             int asyncId2 = default;
 
             scheduler.RegisterDeferredOperationSource(
-                (v, _) => Enumerable.Repeat(1, 1), i =>
+                (v, _) => Enumerable.Repeat(1, 1), async i =>
                 {
+                    await Task.Yield();
                     AsyncContext.TryEstablish(out asyncId1);
-                    return Task.FromResult(i);
+                    return i;
                 });
-            await scheduler.ScheduleAndWaitForCompletionAsync(0, value =>
+            await scheduler.ScheduleAndWaitForCompletionAsync(0, async value =>
             {
+                await Task.Yield();
                 AsyncContext.TryEstablish(out asyncId2);
-                return Task.FromResult(value);
+                return value;
             });
 
             asyncId2.Should().Be(asyncId1);

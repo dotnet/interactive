@@ -7,6 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Utility;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -34,7 +37,12 @@ namespace Microsoft.DotNet.Interactive
         {
             ThrowIfDisposed();
 
-            var operation = new ScheduledOperation(value, onExecuteAsync, scope, cancellationToken);
+            var operation = new ScheduledOperation(
+                value, 
+                onExecuteAsync, 
+                ExecutionContext.Capture(),
+                scope, 
+                cancellationToken);
 
             _queue.Enqueue(operation);
 
@@ -52,14 +60,23 @@ namespace Microsoft.DotNet.Interactive
                 while (!_schedulerDisposalSource.IsCancellationRequested &&
                        _queue.TryDequeue(out var operation))
                 {
-                    var deferredOperations = GetDeferredOperationsToRunBefore(operation).ToArray();
+                    // FIX: (RunScheduledOperations) 
+                    // using var ctx = KernelSynchronizationContext.Establish(this);
+                    // AsyncContext.TryEstablish(out var id);
 
-                    foreach (var deferredOperation in deferredOperations)
+                    ExecutionContext.Run(operation.ExecutionContext, DoTheThing, operation);
+
+                    void DoTheThing(object state)
                     {
-                        Run(deferredOperation);
-                    }
+                        var deferredOperations = GetDeferredOperationsToRunBefore(operation).ToArray();
 
-                    Run(operation);
+                        foreach (var deferredOperation in deferredOperations)
+                        {
+                            Run(deferredOperation);
+                        }
+
+                        Run(operation);
+                    }
                 }
             }
         }
@@ -92,7 +109,8 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private IEnumerable<ScheduledOperation> GetDeferredOperationsToRunBefore(ScheduledOperation operation)
+        private IEnumerable<ScheduledOperation> GetDeferredOperationsToRunBefore(
+            ScheduledOperation operation)
         {
             // get all deferred operations and pump in
             foreach (var source in _deferredOperationSources)
@@ -103,7 +121,8 @@ namespace Microsoft.DotNet.Interactive
                 {
                     var deferredOperation = new ScheduledOperation(
                         deferred,
-                        source.OnExecuteAsync, operation.Scope);
+                        source.OnExecuteAsync,
+                        scope: operation.Scope);
 
                     yield return deferredOperation;
                 }
@@ -143,10 +162,12 @@ namespace Microsoft.DotNet.Interactive
             public ScheduledOperation(
                 T value,
                 OnExecuteDelegate onExecuteAsync,
-                string scope,
+                ExecutionContext executionContext = default,
+                string scope = "default",
                 CancellationToken cancellationToken = default)
             {
                 Value = value;
+                ExecutionContext = executionContext;
                 _onExecuteAsync = onExecuteAsync;
                 Scope = scope;
 
@@ -164,6 +185,7 @@ namespace Microsoft.DotNet.Interactive
             public TaskCompletionSource<U> TaskCompletionSource { get; }
 
             public T Value { get; }
+            public ExecutionContext ExecutionContext { get; }
 
             public string Scope { get; }
 
@@ -181,6 +203,28 @@ namespace Microsoft.DotNet.Interactive
             public GetDeferredOperationsDelegate GetDeferredOperations { get; }
 
             public OnExecuteDelegate OnExecuteAsync { get; }
+        }
+
+        private class KernelSynchronizationContext : SynchronizationContext
+        {
+            private KernelSynchronizationContext(KernelScheduler<T, U> scheduler)
+            {
+                Scheduler = scheduler;
+                PreviousContext = Current;
+            }
+
+            public SynchronizationContext PreviousContext { get; }
+
+            public KernelScheduler<T, U> Scheduler { get; }
+
+            public static IDisposable Establish(KernelScheduler<T, U> scheduler)
+            {
+                var context = new KernelSynchronizationContext(scheduler);
+
+                SetSynchronizationContext(context);
+
+                return Disposable.Create(() => { SetSynchronizationContext(context.PreviousContext); });
+            }
         }
     }
 }
