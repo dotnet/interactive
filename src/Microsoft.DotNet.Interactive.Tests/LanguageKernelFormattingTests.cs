@@ -68,7 +68,7 @@ using {typeof(PocketView).Namespace};
                                    v.MimeType == "text/html" &&
                                    v.Value.ToString().Contains(expectedContent));
         }
-        
+
         [Theory]
         [InlineData(Language.CSharp, "display(\"<test></test>\")", "<test></test>")]
         [InlineData(Language.FSharp, "display(\"<test></test>\")", "<test></test>")]
@@ -81,18 +81,16 @@ using {typeof(PocketView).Namespace};
 
             var result = await kernel.SendAsync(new SubmitCode(submission));
 
-            var valueProduced = await result
-                                      .KernelEvents
-                                      .OfType<DisplayedValueProduced>()
-                                      .Timeout(5.Seconds())
-                                      .FirstAsync();
+            var events = result.KernelEvents.ToSubscribedList();
 
-            valueProduced
-                .FormattedValues
-                .Should()
-                .ContainSingle(v =>
-                                   v.MimeType == "text/plain" &&
-                                   v.Value.ToString().Contains(expectedContent));
+            events.Should()
+                  .ContainSingle<DisplayedValueProduced>()
+                  .Which
+                  .FormattedValues
+                  .Should()
+                  .ContainSingle(v =>
+                                     v.MimeType == "text/plain" &&
+                                     v.Value.ToString().Contains(expectedContent));
         }
 
         [Theory]

@@ -29,7 +29,6 @@ namespace Microsoft.DotNet.Interactive
         private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
-        private readonly KernelCommandScheduler _scheduler;
         private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
 
         private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
@@ -49,15 +48,11 @@ namespace Microsoft.DotNet.Interactive
 
             Pipeline = new KernelCommandPipeline(this);
 
-            _scheduler = new KernelCommandScheduler();
-
             _disposables.Add(Disposable.Create(
                 () => _kernelEvents.OnCompleted()
                 ));
         }
         
-        internal KernelCommandScheduler Scheduler => _scheduler;
-
         internal KernelCommandPipeline Pipeline { get; }
 
         public CompositeKernel ParentKernel { get; internal set; }
@@ -331,16 +326,6 @@ namespace Microsoft.DotNet.Interactive
 
                 throw;
             }
-        }
-
-        protected internal void CancelCommands()
-        {
-            Scheduler.CancelCommands();
-        }
-
-        internal Task RunDeferredCommandsAsync()
-        {
-            return Scheduler.RunDeferredCommandsAsync(this);
         }
 
         protected internal void PublishEvent(KernelEvent kernelEvent)
