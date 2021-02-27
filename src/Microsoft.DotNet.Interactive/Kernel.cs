@@ -244,9 +244,13 @@ namespace Microsoft.DotNet.Interactive
 
             if (TryPreprocessCommands(command, context, out var commands))
             {
-                foreach (var command1 in commands)
+                foreach (var c in commands)
                 {
-                    await scheduler.ScheduleAndWaitForCompletionAsync(command1, InvokePipelineAndCommandHandler, command1.KernelUri.ToString());
+                    await scheduler.ScheduleAndWaitForCompletionAsync(
+                        c, 
+                        InvokePipelineAndCommandHandler,
+                        c.KernelUri.ToString(), 
+                        cancellationToken);
                 }
 
                 if (currentCommandOwnsContext)

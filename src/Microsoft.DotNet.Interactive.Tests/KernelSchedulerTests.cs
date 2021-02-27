@@ -93,10 +93,10 @@ namespace Microsoft.DotNet.Interactive.Tests
                     AsyncContext.TryEstablish(out asyncId1);
                     return Task.FromResult(i);
                 });
-            await scheduler.ScheduleAndWaitForCompletionAsync(0, async value =>
+            await scheduler.ScheduleAndWaitForCompletionAsync(0, value =>
             {
                 AsyncContext.TryEstablish(out asyncId2);
-                return value;
+                return Task.FromResult(value);
             });
 
             asyncId2.Should().Be(asyncId1);
@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public async Task disposing_scheduler_prevents_later_scheduled_work_from_executing()
+        public void disposing_scheduler_prevents_later_scheduled_work_from_executing()
         {
             using var scheduler = new KernelScheduler<int, int>();
             var barrier = new Barrier(2);
@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public async Task cancelling_work_in_progress_prevents_later_scheduled_work_from_executing()
+        public void cancelling_work_in_progress_prevents_later_scheduled_work_from_executing()
         {
             using var scheduler = new KernelScheduler<int, int>();
             var cts = new CancellationTokenSource();
@@ -251,7 +251,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public async Task exception_in_scheduled_work_halts_execution_of_work_already_queued()
+        public void exception_in_scheduled_work_halts_execution_of_work_already_queued()
         {
             using var scheduler = new KernelScheduler<int, int>();
             var barrier = new Barrier(2);
