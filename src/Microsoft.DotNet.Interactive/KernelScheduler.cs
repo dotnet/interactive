@@ -48,57 +48,54 @@ namespace Microsoft.DotNet.Interactive
 
         private void RunScheduledOperations(object _)
         {
-            var cancellationToken = _schedulerDisposalSource.Token;
-
-            // var previousContext = SynchronizationContext.Current;
-            //
-            // _synchronizationContext = new KernelSynchronizationContext(cancellationToken);
-            //
-            // SynchronizationContext.SetSynchronizationContext(_synchronizationContext);
-
-            try
+            while (!_schedulerDisposalSource.IsCancellationRequested)
             {
-                while (!_schedulerDisposalSource.IsCancellationRequested)
+                _mre.Wait(_schedulerDisposalSource.Token);
+
+                while (!_schedulerDisposalSource.IsCancellationRequested &&
+                       _queue.TryDequeue(out var operation))
                 {
-                    _mre.Wait(_schedulerDisposalSource.Token);
+                    var deferredOperations = GetDeferredOperationsToRunBefore(operation);
 
-                    while (!_schedulerDisposalSource.IsCancellationRequested && 
-                           _queue.TryDequeue(out var operation))
+                    foreach (var deferredOperation in deferredOperations)
                     {
-                        try
-                        {
-                            var operationTask = operation.ExecuteAsync();
-
-                            operationTask.ContinueWith(t =>
-                            {
-                                if (t.IsCompletedSuccessfully)
-                                {
-                                    operation.TaskCompletionSource.SetResult(t.Result);
-                                }
-                                else
-                                {
-                                    operation.TaskCompletionSource.SetException(t.Exception);
-                                }
-                            });
-
-                            operationTask.Wait(cancellationToken);
-                        }
-                        catch (Exception exception)
-                        {
-                            operation.TaskCompletionSource.SetException(exception);
-
-                            _queue.Clear();
-                        }
+                        Run(deferredOperation);
                     }
+
+                    Run(operation);
                 }
-            }
-            finally
-            {
-                // SynchronizationContext.SetSynchronizationContext(previousContext);
             }
         }
 
-        private void ProcessDeferredOperation(ScheduledOperation operation)
+        private void Run(ScheduledOperation operation)
+        {
+            try
+            {
+                var operationTask = operation.ExecuteAsync();
+
+                operationTask.ContinueWith(t =>
+                {
+                    if (t.IsCompletedSuccessfully)
+                    {
+                        operation.TaskCompletionSource.SetResult(t.Result);
+                    }
+                    else
+                    {
+                        operation.TaskCompletionSource.SetException(t.Exception);
+                    }
+                });
+
+                operationTask.Wait(_schedulerDisposalSource.Token);
+            }
+            catch (Exception exception)
+            {
+                operation.TaskCompletionSource.SetException(exception);
+
+                _queue.Clear();
+            }
+        }
+
+        private IEnumerable<ScheduledOperation> GetDeferredOperationsToRunBefore(ScheduledOperation operation)
         {
             // get all deferred operations and pump in
             foreach (var source in _deferredOperationSources)
@@ -111,11 +108,9 @@ namespace Microsoft.DotNet.Interactive
                         deferred,
                         source.OnExecuteAsync, operation.Scope);
 
-                    // DoWork(deferredOperation, cancellationToken);
+                    yield return deferredOperation;
                 }
             }
-
-            // DoWork(operation, cancellationToken);
         }
 
         public void RegisterDeferredOperationSource(
@@ -149,8 +144,8 @@ namespace Microsoft.DotNet.Interactive
             private readonly OnExecuteDelegate _onExecuteAsync;
 
             public ScheduledOperation(
-                T value, 
-                OnExecuteDelegate onExecuteAsync, 
+                T value,
+                OnExecuteDelegate onExecuteAsync,
                 string scope,
                 CancellationToken cancellationToken = default)
             {
@@ -162,10 +157,7 @@ namespace Microsoft.DotNet.Interactive
 
                 if (cancellationToken != default)
                 {
-                    cancellationToken.Register(() =>
-                    {
-                        TaskCompletionSource.SetCanceled();
-                    });
+                    cancellationToken.Register(() => { TaskCompletionSource.SetCanceled(); });
                 }
             }
 

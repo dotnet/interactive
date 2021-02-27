@@ -79,29 +79,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             asyncId2.Should().Be(asyncId1);
         }
-
-        [Fact]
-        public async Task AsyncContext_is_maintained_across_scheduled_operations()
-        {
-            using var scheduler = new KernelScheduler<int, int>();
-            int asyncId1 = default;
-            int asyncId2 = default;
-
-            await scheduler.ScheduleAndWaitForCompletionAsync(0, async value =>
-            {
-                AsyncContext.TryEstablish(out asyncId1);
-
-                return value;
-            });
-            await scheduler.ScheduleAndWaitForCompletionAsync(0, async value =>
-            {
-                AsyncContext.TryEstablish(out asyncId2);
-                return value;
-            });
-
-            asyncId2.Should().Be(asyncId1);
-        }
-
+        
         [Fact]
         public async Task AsyncContext_is_maintained_across_scheduled_and_deferred_operations()
         {
