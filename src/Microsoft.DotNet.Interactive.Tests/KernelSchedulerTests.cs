@@ -63,48 +63,6 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public async Task AsyncContext_is_maintained_across_async_operations_within_a_scheduled_work_item()
-        {
-            using var scheduler = new KernelScheduler<int, int>();
-            int asyncId1 = default;
-            int asyncId2 = default;
-
-            await scheduler.ScheduleAndWaitForCompletionAsync(0, async value =>
-            {
-                AsyncContext.TryEstablish(out asyncId1);
-                await Task.Yield();
-                AsyncContext.TryEstablish(out asyncId2);
-                return value;
-            });
-
-            asyncId2.Should().Be(asyncId1);
-        }
-
-        [Fact]
-        public async Task AsyncContext_is_maintained_across_scheduled_and_deferred_operations()
-        {
-            using var scheduler = new KernelScheduler<int, int>();
-            int asyncId1 = default;
-            int asyncId2 = default;
-
-            scheduler.RegisterDeferredOperationSource(
-                (v, _) => Enumerable.Repeat(1, 1), async i =>
-                {
-                    await Task.Yield();
-                    AsyncContext.TryEstablish(out asyncId1);
-                    return i;
-                });
-            await scheduler.ScheduleAndWaitForCompletionAsync(0, async value =>
-            {
-                await Task.Yield();
-                AsyncContext.TryEstablish(out asyncId2);
-                return value;
-            });
-
-            asyncId2.Should().Be(asyncId1);
-        }
-
-        [Fact]
         public async Task scheduled_work_does_not_execute_in_parallel()
         {
             using var scheduler = new KernelScheduler<int, int>();
@@ -359,6 +317,39 @@ namespace Microsoft.DotNet.Interactive.Tests
             }
 
             executionList.Should().BeEquivalentSequenceTo(1, 20, 20, 2, 3);
+        }
+
+        [Fact]
+        public async Task work_can_be_scheduled_from_within_scheduled_work()
+        {
+            var executionList = new List<string>();
+
+            using var scheduler = new KernelScheduler<string, string>();
+
+            await scheduler.ScheduleAndWaitForCompletionAsync("outer", async _ =>
+            {
+                executionList.Add("outer 1");
+
+                await scheduler.ScheduleAndWaitForCompletionAsync("inner", async _ =>
+                {
+                    executionList.Add("inner 1");
+                    await Task.Yield();
+                    executionList.Add("inner 2");
+                    return default;
+                });
+
+                executionList.Add("outer 2");
+
+                return default;
+            });
+
+            executionList.Should()
+                         .BeEquivalentSequenceTo(
+                             "outer 1",
+                             "inner 1",
+                             "inner 2",
+                             "outer 2"
+                         );
         }
     }
 }
