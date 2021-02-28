@@ -352,7 +352,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public async Task schedulers_do_not_interfere_with_one_another()
+        public async Task concurrent_schedulers_do_not_interfere_with_one_another()
         {
             var participantCount = 5;
             var barrier = new Barrier(participantCount);
@@ -370,5 +370,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             xs.Should().BeEquivalentTo(0, 1, 2, 3, 4);
         }
+
+      
     }
 }

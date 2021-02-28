@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.VisualBasic;
 using Pocket;
 
 namespace Microsoft.DotNet.Interactive
@@ -52,9 +51,9 @@ namespace Microsoft.DotNet.Interactive
                 operation = new ScheduledOperation(
                     value,
                     onExecuteAsync,
-                    ExecutionContext.Capture(),
-                    scope,
-                    cancellationToken);
+                    //  ExecutionContext.Capture(),
+                    scope: scope,
+                    cancellationToken: cancellationToken);
                 _queue.Enqueue(operation);
                 _mre.Set();
             }
@@ -64,8 +63,6 @@ namespace Microsoft.DotNet.Interactive
 
         private void RunScheduledOperations(object _)
         {
-            ExecutionContext.SuppressFlow();
-
             while (!_schedulerDisposalSource.IsCancellationRequested)
             {
                 _mre.Wait(_schedulerDisposalSource.Token);
@@ -75,7 +72,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     // FIX: (RunScheduledOperations) 
                     using var __ = KernelSynchronizationContext.Establish(
-                        this, 
+                        this,
                         out var ctx);
 
                     if (operation.ExecutionContext is { } executionContext)
@@ -250,13 +247,19 @@ namespace Microsoft.DotNet.Interactive
 
             public override void Post(SendOrPostCallback d, object state)
             {
-                if (state is ScheduledOperation operation &&
-                    operation.ExecutionContext is { })
+                if (state is ScheduledOperation operation)
                 {
-                    ExecutionContext.Run(
-                        operation.ExecutionContext,
-                        _ => Scheduler.Run(operation),
-                        operation);
+                    if (operation.ExecutionContext is { })
+                    {
+                        ExecutionContext.Run(
+                            operation.ExecutionContext,
+                            _ => Scheduler.Run(operation),
+                            operation);
+                    }
+                    else
+                    {
+                        Scheduler.Run(operation);
+                    }
                 }
                 else if (PreviousContext is not null)
                 {
@@ -264,7 +267,7 @@ namespace Microsoft.DotNet.Interactive
                 }
                 else
                 {
-                    d(state);
+                    base.Post(d, state);
                 }
             }
         }
