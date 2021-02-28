@@ -48,9 +48,9 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var executionList = new List<int>();
 
-            await scheduler.ScheduleAndWaitForCompletionAsync(1, PerformWork);
-            await scheduler.ScheduleAndWaitForCompletionAsync(2, PerformWork);
-            await scheduler.ScheduleAndWaitForCompletionAsync(3, PerformWork);
+            await scheduler.RunAsync(1, PerformWork);
+            await scheduler.RunAsync(2, PerformWork);
+            await scheduler.RunAsync(3, PerformWork);
 
             executionList.Should().BeEquivalentSequenceTo(1, 2, 3);
 
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var tasks = Enumerable.Range(1, 3).Select(i =>
             {
-                return scheduler.ScheduleAndWaitForCompletionAsync(i, async v =>
+                return scheduler.RunAsync(i, async v =>
                 {
                     Interlocked.Increment(ref concurrencyCounter);
 
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             for (var i = 1; i <= 3; i++)
             {
-                await scheduler.ScheduleAndWaitForCompletionAsync(i, PerformWork);
+                await scheduler.RunAsync(i, PerformWork);
             }
 
             executionList.Should().BeEquivalentSequenceTo(10, 1, 20, 20, 2, 30, 30, 30, 3);
@@ -117,13 +117,13 @@ namespace Microsoft.DotNet.Interactive.Tests
             var barrier = new Barrier(2);
             var laterWorkWasExecuted = false;
 
-            var t1 = scheduler.ScheduleAndWaitForCompletionAsync(1, async v =>
+            var t1 = scheduler.RunAsync(1, async v =>
             {
                 barrier.SignalAndWait();
                 await Task.Delay(3000);
                 return v;
             });
-            var t2 = scheduler.ScheduleAndWaitForCompletionAsync(2, v =>
+            var t2 = scheduler.RunAsync(2, v =>
             {
                 laterWorkWasExecuted = true;
                 return Task.FromResult(v);
@@ -144,14 +144,14 @@ namespace Microsoft.DotNet.Interactive.Tests
             var barrier = new Barrier(2);
             var laterWorkWasExecuted = false;
 
-            var t1 = scheduler.ScheduleAndWaitForCompletionAsync(1, async v =>
+            var t1 = scheduler.RunAsync(1, async v =>
             {
                 barrier.SignalAndWait();
                 await Task.Delay(3000);
                 return v;
             }, cancellationToken: cts.Token);
 
-            var t2 = scheduler.ScheduleAndWaitForCompletionAsync(2, v =>
+            var t2 = scheduler.RunAsync(2, v =>
             {
                 laterWorkWasExecuted = true;
                 return Task.FromResult(v);
@@ -172,7 +172,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var barrier = new Barrier(2);
 
-            var work = scheduler.ScheduleAndWaitForCompletionAsync(1, async v =>
+            var work = scheduler.RunAsync(1, async v =>
             {
                 barrier.SignalAndWait();
                 await Task.Delay(3000);
@@ -194,7 +194,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var barrier = new Barrier(2);
 
-            var work = scheduler.ScheduleAndWaitForCompletionAsync(1, async v =>
+            var work = scheduler.RunAsync(1, async v =>
             {
                 barrier.SignalAndWait();
                 await Task.Delay(3000);
@@ -216,12 +216,12 @@ namespace Microsoft.DotNet.Interactive.Tests
             var barrier = new Barrier(2);
             var laterWorkWasExecuted = false;
 
-            var t1 = scheduler.ScheduleAndWaitForCompletionAsync(1, _ =>
+            var t1 = scheduler.RunAsync(1, _ =>
             {
                 barrier.SignalAndWait();
                 throw new DataMisalignedException();
             });
-            var t2 = scheduler.ScheduleAndWaitForCompletionAsync(2, v =>
+            var t2 = scheduler.RunAsync(2, v =>
             {
                 laterWorkWasExecuted = true;
                 return Task.FromResult(v);
@@ -240,13 +240,13 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             try
             {
-                await scheduler.ScheduleAndWaitForCompletionAsync(1, _ => throw new DataMisalignedException());
+                await scheduler.RunAsync(1, _ => throw new DataMisalignedException());
             }
             catch (DataMisalignedException)
             {
             }
 
-            var next = await scheduler.ScheduleAndWaitForCompletionAsync(2, _ => Task.FromResult(2));
+            var next = await scheduler.RunAsync(2, _ => Task.FromResult(2));
 
             next.Should().Be(2);
         }
@@ -263,7 +263,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 throw new DataMisalignedException();
             }
 
-            var work = scheduler.ScheduleAndWaitForCompletionAsync(1, Throw);
+            var work = scheduler.RunAsync(1, Throw);
 
             barrier.SignalAndWait();
 
@@ -286,9 +286,9 @@ namespace Microsoft.DotNet.Interactive.Tests
                 return v;
             }
 
-            var one = scheduler.ScheduleAndWaitForCompletionAsync(1, PerformWorkAsync);
-            var two = scheduler.ScheduleAndWaitForCompletionAsync(2, PerformWorkAsync);
-            var three = scheduler.ScheduleAndWaitForCompletionAsync(3, PerformWorkAsync);
+            var one = scheduler.RunAsync(1, PerformWorkAsync);
+            var two = scheduler.RunAsync(2, PerformWorkAsync);
+            var three = scheduler.RunAsync(3, PerformWorkAsync);
 
             await two;
 
@@ -312,7 +312,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             for (var i = 1; i <= 3; i++)
             {
-                await scheduler.ScheduleAndWaitForCompletionAsync(i, PerformWork, $"scope{i}");
+                await scheduler.RunAsync(i, PerformWork, $"scope{i}");
             }
 
             executionList.Should().BeEquivalentSequenceTo(1, 20, 20, 2, 3);
@@ -325,11 +325,11 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             using var scheduler = new KernelScheduler<string, string>();
 
-            await scheduler.ScheduleAndWaitForCompletionAsync("outer", async _ =>
+            await scheduler.RunAsync("outer", async _ =>
             {
                 executionList.Add("outer 1");
 
-                await scheduler.ScheduleAndWaitForCompletionAsync("inner", async _ =>
+                await scheduler.RunAsync("inner", async _ =>
                 {
                     executionList.Add("inner 1");
                     await Task.Yield();
@@ -359,7 +359,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             var schedulers = Enumerable.Range(0, participantCount)
                                        .Select(_ => new KernelScheduler<int, int>());
 
-            var tasks = schedulers.Select((s, i) => s.ScheduleAndWaitForCompletionAsync(i, async value =>
+            var tasks = schedulers.Select((s, i) => s.RunAsync(i, async value =>
                                               {
                                                   barrier.SignalAndWait();
                                                   return value;
