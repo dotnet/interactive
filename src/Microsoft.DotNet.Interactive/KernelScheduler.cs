@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly ConcurrentQueue<ScheduledOperation> _queue = new();
         private readonly Task _loop;
         private readonly CancellationTokenSource _schedulerDisposalSource = new();
-        private readonly ManualResetEventSlim _mre = new(false);
+        private readonly ManualResetEventSlim _scheduledOperationMonitor = new(false);
         private readonly object _lockObj = new();
 
         public KernelScheduler()
@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Interactive
                     scope: scope,
                     cancellationToken: cancellationToken);
                 _queue.Enqueue(operation);
-                _mre.Set();
+                _scheduledOperationMonitor.Set();
             }
 
             return operation.TaskCompletionSource.Task;
@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Interactive
         {
             while (!_schedulerDisposalSource.IsCancellationRequested)
             {
-                _mre.Wait(_schedulerDisposalSource.Token);
+                _scheduledOperationMonitor.Wait(_schedulerDisposalSource.Token);
 
                 while (!_schedulerDisposalSource.IsCancellationRequested &&
                        _queue.TryDequeue(out var operation))
@@ -99,8 +99,17 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+        private int _concurrency = 0;
+
         private void Run(ScheduledOperation operation)
         {
+            if (_concurrency > 0)
+            {
+                
+            }
+            Interlocked.Increment(ref _concurrency);
+            using var _ = Disposable.Create(() => Interlocked.Decrement(ref _concurrency));
+
             try
             {
                 var operationTask = operation.ExecuteAsync();
@@ -125,6 +134,8 @@ namespace Microsoft.DotNet.Interactive
 
                 _queue.Clear();
             }
+
+
         }
 
         private IEnumerable<ScheduledOperation> GetDeferredOperationsToRunBefore(
@@ -247,8 +258,23 @@ namespace Microsoft.DotNet.Interactive
 
             public override void Post(SendOrPostCallback d, object state)
             {
+                switch (Scheduler._concurrency)
+                {
+                    case 0: 
+                        break;
+                    case 1: 
+                        break;
+                    case 2: 
+                        break;
+                    default:
+                        break;
+                }
+
                 if (state is ScheduledOperation operation)
                 {
+                    
+
+
                     if (operation.ExecutionContext is { })
                     {
                         ExecutionContext.Run(
