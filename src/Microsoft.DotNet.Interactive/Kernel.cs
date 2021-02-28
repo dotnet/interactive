@@ -241,7 +241,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 foreach (var c in commands)
                 {
-                    await scheduler.ScheduleAndWaitForCompletionAsync(
+                    await scheduler.RunAsync(
                         c, 
                         InvokePipelineAndCommandHandler,
                         c.KernelUri.ToString(), 

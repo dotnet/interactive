@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive
                                           _schedulerDisposalSource.Token);
         }
 
-        public Task<U> ScheduleAndWaitForCompletionAsync(
+        public Task<U> RunAsync(
             T value,
             OnExecuteDelegate onExecuteAsync,
             string scope = "default",
@@ -101,47 +101,52 @@ namespace Microsoft.DotNet.Interactive
 
         private int _concurrency = 0;
 
-        private void Run(ScheduledOperation operation)
+        private void Run(ScheduledOperation operation, bool waitForComplete = false)
         {
             // FIX: (Run) 
             if (_concurrency > 0)
             {
-
             }
             else
             {
-
             }
 
-            Interlocked.Increment(ref _concurrency);
-            using var _ = Disposable.Create(() => Interlocked.Decrement(ref _concurrency));
-
-            try
+            lock (_lockObj)
             {
-                var operationTask = operation.ExecuteAsync();
+                Interlocked.Increment(ref _concurrency);
+                using var _ = Disposable.Create(() => Interlocked.Decrement(ref _concurrency));
 
-                operationTask.ContinueWith(t =>
+                try
                 {
-                    if (t.IsCompletedSuccessfully)
+                    var operationTask = operation.ExecuteAsync();
+
+                    operationTask.ContinueWith(t =>
                     {
-                        operation.TaskCompletionSource.SetResult(t.Result);
+                        if (t.IsCompletedSuccessfully)
+                        {
+                            operation.TaskCompletionSource.SetResult(t.Result);
+                        }
+                        else
+                        {
+                            operation.TaskCompletionSource.SetException(t.Exception);
+                        }
+                    });
+
+                    if (!waitForComplete)
+                    {
+                        operationTask.Wait(_schedulerDisposalSource.Token);
                     }
                     else
                     {
-                        operation.TaskCompletionSource.SetException(t.Exception);
                     }
-                });
+                }
+                catch (Exception exception)
+                {
+                    operation.TaskCompletionSource.SetException(exception);
 
-                operationTask.Wait(_schedulerDisposalSource.Token);
+                    _queue.Clear();
+                }
             }
-            catch (Exception exception)
-            {
-                operation.TaskCompletionSource.SetException(exception);
-
-                _queue.Clear();
-            }
-
-
         }
 
         private IEnumerable<ScheduledOperation> GetDeferredOperationsToRunBefore(
@@ -266,11 +271,11 @@ namespace Microsoft.DotNet.Interactive
             {
                 switch (Scheduler._concurrency)
                 {
-                    case 0: 
+                    case 0:
                         break;
-                    case 1: 
+                    case 1:
                         break;
-                    case 2: 
+                    case 2:
                         break;
                     default:
                         break;
@@ -278,9 +283,6 @@ namespace Microsoft.DotNet.Interactive
 
                 if (state is ScheduledOperation operation)
                 {
-                    
-
-
                     if (operation.ExecutionContext is { })
                     {
                         ExecutionContext.Run(
@@ -293,13 +295,25 @@ namespace Microsoft.DotNet.Interactive
                         Scheduler.Run(operation);
                     }
                 }
-                else if (PreviousContext is not null)
+                else if (PreviousContext is { } previous)
                 {
-                    PreviousContext.Post(d, state);
+                    previous.Post(d, state);
                 }
                 else
                 {
                     base.Post(d, state);
+                }
+            }
+
+            public override void Send(SendOrPostCallback d, object state)
+            {
+                if (PreviousContext is { } previous)
+                {
+                    previous.Send(d, state);
+                }
+                else
+                {
+                    base.Send(d, state);
                 }
             }
         }
