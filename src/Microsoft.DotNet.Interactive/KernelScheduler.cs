@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Interactive
                 operation = new ScheduledOperation(
                     value,
                     onExecuteAsync,
-                    //  ExecutionContext.Capture(),
+                    ExecutionContext.Capture(),
                     scope: scope,
                     cancellationToken: cancellationToken);
                 _queue.Enqueue(operation);
@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.Interactive
                     }
                     else
                     {
-                        Run(operation);
+                        DoTheThing(operation);
                     }
 
                     void DoTheThing(object state)
@@ -103,10 +103,16 @@ namespace Microsoft.DotNet.Interactive
 
         private void Run(ScheduledOperation operation)
         {
+            // FIX: (Run) 
             if (_concurrency > 0)
             {
-                
+
             }
+            else
+            {
+
+            }
+
             Interlocked.Increment(ref _concurrency);
             using var _ = Disposable.Create(() => Interlocked.Decrement(ref _concurrency));
 
