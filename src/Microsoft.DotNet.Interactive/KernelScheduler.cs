@@ -14,17 +14,19 @@ namespace Microsoft.DotNet.Interactive
     public class KernelScheduler<T, U> : IDisposable
     {
         private readonly List<DeferredOperation> _deferredOperationSources = new();
-        private readonly ConcurrentQueue<ScheduledOperation> _queue = new();
-        private readonly Task _loop;
+        private readonly ConcurrentQueue<ScheduledOperation> _scheduledQueue = new();
+        private readonly ConcurrentQueue<ScheduledOperation> _immediateQueue = new();
         private readonly CancellationTokenSource _schedulerDisposalSource = new();
         private readonly ManualResetEventSlim _scheduledOperationMonitor = new(false);
         private readonly object _lockObj = new();
+        private readonly Task _runLoopTask;
 
         public KernelScheduler()
         {
-            _loop = Task.Factory.StartNew(RunScheduledOperations,
-                                          TaskCreationOptions.LongRunning,
-                                          _schedulerDisposalSource.Token);
+            _runLoopTask = Task.Factory.StartNew(
+                ScheduledOperationRunLoop,
+                TaskCreationOptions.LongRunning,
+                _schedulerDisposalSource.Token);
         }
 
         public Task<U> RunAsync(
@@ -54,41 +56,42 @@ namespace Microsoft.DotNet.Interactive
                     ExecutionContext.Capture(),
                     scope: scope,
                     cancellationToken: cancellationToken);
-                _queue.Enqueue(operation);
+                _scheduledQueue.Enqueue(operation);
                 _scheduledOperationMonitor.Set();
             }
 
             return operation.TaskCompletionSource.Task;
         }
 
-        private void RunScheduledOperations(object _)
+        private void ScheduledOperationRunLoop(object _)
         {
+            using var __ = KernelSynchronizationContext.Establish(this);
+
             while (!_schedulerDisposalSource.IsCancellationRequested)
             {
+
                 _scheduledOperationMonitor.Wait(_schedulerDisposalSource.Token);
 
                 while (!_schedulerDisposalSource.IsCancellationRequested &&
-                       _queue.TryDequeue(out var operation))
+                       _scheduledQueue.TryDequeue(out var operation))
                 {
                     // FIX: (RunScheduledOperations) 
-                    using var __ = KernelSynchronizationContext.Establish(
-                        this,
-                        out var ctx);
 
                     if (operation.ExecutionContext is { } executionContext)
                     {
-                        ExecutionContext.Run(executionContext, DoTheThing, operation);
+                        ExecutionContext.Run(
+                            executionContext, 
+                            RunScheduledOperationAndDeferredOperations, 
+                            operation);
                     }
                     else
                     {
-                        DoTheThing(operation);
+                        RunScheduledOperationAndDeferredOperations(operation);
                     }
 
-                    void DoTheThing(object state)
+                    void RunScheduledOperationAndDeferredOperations(object _)
                     {
-                        var deferredOperations = GetDeferredOperationsToRunBefore(operation).ToArray();
-
-                        foreach (var deferredOperation in deferredOperations)
+                        foreach (var deferredOperation in OperationsToRunBefore(operation))
                         {
                             Run(deferredOperation);
                         }
@@ -144,12 +147,17 @@ namespace Microsoft.DotNet.Interactive
                 {
                     operation.TaskCompletionSource.SetException(exception);
 
-                    _queue.Clear();
+                    _scheduledQueue.Clear();
                 }
             }
         }
 
-        private IEnumerable<ScheduledOperation> GetDeferredOperationsToRunBefore(
+        private void RunNext(ScheduledOperation operation)
+        {
+            _immediateQueue.Enqueue(operation);
+        }
+
+        private IEnumerable<ScheduledOperation> OperationsToRunBefore(
             ScheduledOperation operation)
         {
             // get all deferred operations and pump in
@@ -165,6 +173,11 @@ namespace Microsoft.DotNet.Interactive
                         scope: operation.Scope);
 
                     yield return deferredOperation;
+
+                    while (_immediateQueue.TryDequeue(out var newOperation))
+                    {
+                        yield return newOperation;
+                    }
                 }
             }
         }
@@ -254,17 +267,16 @@ namespace Microsoft.DotNet.Interactive
 
             public KernelScheduler<T, U> Scheduler { get; }
 
-            public static IDisposable Establish(
-                KernelScheduler<T, U> scheduler,
-                out KernelSynchronizationContext ctx)
+            public static IDisposable Establish(KernelScheduler<T, U> scheduler)
             {
                 var context = new KernelSynchronizationContext(scheduler);
 
                 SetSynchronizationContext(context);
 
-                ctx = context;
-
-                return Disposable.Create(() => { SetSynchronizationContext(context.PreviousContext); });
+                return Disposable.Create(() =>
+                {
+                    SetSynchronizationContext(context.PreviousContext);
+                });
             }
 
             public override void Post(SendOrPostCallback d, object state)
@@ -301,7 +313,16 @@ namespace Microsoft.DotNet.Interactive
                 }
                 else
                 {
-                    base.Post(d, state);
+                    Scheduler.RunNext(
+                        new ScheduledOperation(
+                            default,
+                            value =>
+                            {
+                                Send(d, state);
+                                return Task.FromResult(default(U));
+                            },
+                            default,
+                            default));
                 }
             }
 
