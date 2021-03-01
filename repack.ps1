@@ -1,6 +1,6 @@
 
 # clean up the previously-cached NuGet packages
-Remove-Item -Recurse ~\.nuget\packages\microsoft.dotnet.interactive*
+Remove-Item -Recurse ~\.nuget\packages\microsoft.dotnet.interactive* -Force
 
 # build and pack dotnet-interactive 
 dotnet clean
