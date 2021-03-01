@@ -20,6 +20,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly ManualResetEventSlim _scheduledOperationMonitor = new(false);
         private readonly object _lockObj = new();
         private readonly Task _runLoopTask;
+        private readonly AsyncLocal<ScheduledOperation> _currentTopLevelOperation = new();
 
         public KernelScheduler()
         {
@@ -48,6 +49,17 @@ namespace Microsoft.DotNet.Interactive
                     cancellationToken);
                 ctx.Post(_ => Run(operation), operation);
             }
+            else if (_currentTopLevelOperation.Value is { })
+            {
+                operation = new ScheduledOperation(
+                    value,
+                    onExecuteAsync,
+                    null,
+                    scope,
+                    cancellationToken);
+                RunNext(operation);
+                // _scheduledOperationMonitor.Set();
+            }
             else
             {
                 operation = new ScheduledOperation(
@@ -65,23 +77,35 @@ namespace Microsoft.DotNet.Interactive
 
         private void ScheduledOperationRunLoop(object _)
         {
-            using var __ = KernelSynchronizationContext.Establish(this);
+            // using var __ = KernelSynchronizationContext.Establish(this);
 
             while (!_schedulerDisposalSource.IsCancellationRequested)
             {
-
                 _scheduledOperationMonitor.Wait(_schedulerDisposalSource.Token);
 
                 while (!_schedulerDisposalSource.IsCancellationRequested &&
                        _scheduledQueue.TryDequeue(out var operation))
                 {
-                    // FIX: (RunScheduledOperations) 
+                    ExecutionContext executionContext;
 
-                    if (operation.ExecutionContext is { } executionContext)
+                    // FIX: (RunScheduledOperations) 
+                    if (_currentTopLevelOperation.Value is {} parentOperation)
+                    {
+                        executionContext
+                         = parentOperation.ExecutionContext;
+                    }
+                    else
+                    {
+                        _currentTopLevelOperation.Value = operation;
+                        executionContext
+                         = operation.ExecutionContext;
+                    }
+
+                    if (executionContext is { })
                     {
                         ExecutionContext.Run(
-                            executionContext, 
-                            RunScheduledOperationAndDeferredOperations, 
+                            executionContext,
+                            _ => RunScheduledOperationAndDeferredOperations(operation),
                             operation);
                     }
                     else
@@ -89,17 +113,19 @@ namespace Microsoft.DotNet.Interactive
                         RunScheduledOperationAndDeferredOperations(operation);
                     }
 
-                    void RunScheduledOperationAndDeferredOperations(object _)
-                    {
-                        foreach (var deferredOperation in OperationsToRunBefore(operation))
-                        {
-                            Run(deferredOperation);
-                        }
-
-                        Run(operation);
-                    }
+                    _currentTopLevelOperation.Value = null;
                 }
             }
+        }
+
+        private void RunScheduledOperationAndDeferredOperations(ScheduledOperation operation)
+        {
+            foreach (var deferredOperation in OperationsToRunBefore(operation))
+            {
+                Run(deferredOperation);
+            }
+
+            Run(operation);
         }
 
         private int _concurrency = 0;
@@ -107,11 +133,16 @@ namespace Microsoft.DotNet.Interactive
         private void Run(ScheduledOperation operation, bool waitForComplete = false)
         {
             // FIX: (Run) 
-            if (_concurrency > 0)
+            switch (_concurrency)
             {
-            }
-            else
-            {
+                case 0:
+                    break;
+                case 1:
+                    break;
+                case 2:
+                    break;
+                default:
+                    break;
             }
 
             lock (_lockObj)
@@ -160,7 +191,6 @@ namespace Microsoft.DotNet.Interactive
         private IEnumerable<ScheduledOperation> OperationsToRunBefore(
             ScheduledOperation operation)
         {
-            // get all deferred operations and pump in
             foreach (var source in _deferredOperationSources)
             {
                 foreach (var deferred in source.GetDeferredOperations(
@@ -171,6 +201,11 @@ namespace Microsoft.DotNet.Interactive
                         deferred,
                         source.OnExecuteAsync,
                         scope: operation.Scope);
+
+                    while (_immediateQueue.TryDequeue(out var newOperation))
+                    {
+                        yield return newOperation;
+                    }
 
                     yield return deferredOperation;
 
@@ -273,10 +308,7 @@ namespace Microsoft.DotNet.Interactive
 
                 SetSynchronizationContext(context);
 
-                return Disposable.Create(() =>
-                {
-                    SetSynchronizationContext(context.PreviousContext);
-                });
+                return Disposable.Create(() => { SetSynchronizationContext(context.PreviousContext); });
             }
 
             public override void Post(SendOrPostCallback d, object state)
