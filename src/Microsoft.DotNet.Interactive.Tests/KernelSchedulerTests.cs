@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using Xunit;
 using Xunit.Abstractions;
@@ -371,6 +372,22 @@ namespace Microsoft.DotNet.Interactive.Tests
             xs.Should().BeEquivalentTo(0, 1, 2, 3, 4);
         }
 
-      
+        [Fact]
+        public async Task AsyncContext_is_maintained_across_async_operations()
+        {
+            using var scheduler = new KernelScheduler<int, int>();
+            int asyncId1 = default;
+            int asyncId2 = default;
+
+            await scheduler.RunAsync(0, async value =>
+            {
+                AsyncContext.TryEstablish(out asyncId1);
+                await Task.Yield();
+                AsyncContext.TryEstablish(out asyncId2);
+                return value;
+            });
+
+            asyncId2.Should().Be(asyncId1);
+        }
     }
 }

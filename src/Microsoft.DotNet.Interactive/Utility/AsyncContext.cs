@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         private static int _seed = 0;
 
         private static readonly AsyncLocal<int?> _id = new AsyncLocal<int?>();
-        private static Pocket.Logger _log = new("AsyncContext");
+        private static Logger _log = new("AsyncContext");
 
         public static int? Id
         {
