@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 $"#!connect --kernel-name mydb sqlite \"{connectionString}\"");
 
             var result = await kernel.SubmitCodeAsync(@"
-#!mydb
+#!sql-mydb
 SELECT * FROM fruit
 ");
 
@@ -80,7 +80,7 @@ SELECT * FROM fruit
                 $"#!connect --kernel-name mydb sqlite \"{connectionString}\"");
 
             var result = await kernel.SubmitCodeAsync(@"
-#!mydb
+#!sql-mydb
 SELECT 1 AS Apples, 2 AS Bananas, 3 AS Apples, 4 AS BANANAS, 5 AS Apples, 6 AS BaNaNaS
 ");
 
