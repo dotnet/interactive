@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
@@ -31,10 +32,10 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                     .UseKernelClientConnection(new MsSqlKernelConnection());
 
                 KernelInvocationContext.Current?.Display(
-                    $@"
-* Adds `mssql` to the connection types available using the [`#!connect`](https://github.com/dotnet/interactive/blob/main/docs/connect.md) magic command.",
-                    "text/markdown");
-
+                    new HtmlString(@"<details><summary>Query Microsoft SQL Server databases.</summary>
+    <p>This extension adds support for connecting to Microsoft SQL Server databases using the <code>#!connect mssql</code> magic command. For more information, run a cell using the <code>#!sql</code> magic command.</p>
+    </details>"),
+                    "text/html");
             }
 
             return Task.CompletedTask;

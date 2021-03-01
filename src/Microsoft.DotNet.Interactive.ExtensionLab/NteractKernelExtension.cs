@@ -16,10 +16,15 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public Task OnLoadAsync(Kernel kernel)
         {
             kernel.UseDataExplorer();
+
             kernel.RegisterForDisposal(() => DataExplorerExtensions.Settings.RestoreDefault());
+
             KernelInvocationContext.Current?.Display(
-                $@"Added the `Explore` extension method, which you can use with `IEnumerable<T>` and `IDataView` to view data using the [nteract Data Explorer](https://github.com/nteract/data-explorer).",
-                "text/markdown");
+                new HtmlString($@"<details><summary>Explore data visually using the <a href=""https://github.com/nteract/data-explorer"">nteract Data Explorer</a>.</summary>
+    <p>This extension adds the ability to sort, filter, and visualize data using the <a href=""https://github.com/nteract/data-explorer"">nteract Data Explorer</a>. Use the <code>Explore</code> extension method with variables of type <code>IEnumerable<T></code> or <code>IDataView</code> to render the data explorer.</p>
+    <img src=""https://user-images.githubusercontent.com/547415/109559345-621e5880-7a8f-11eb-8b98-d4feeaac116f.png"" width=""75%"">
+    </details>"),
+                "text/html");
 
             return Task.CompletedTask;
         }
