@@ -122,14 +122,10 @@ namespace Microsoft.DotNet.Interactive.Extensions
                 {
                     var extension = (IKernelExtension) Activator.CreateInstance(extensionType);
 
-                    var displayed = context.Display(
-                                        $"Loading kernel extension \"{extensionType.Name}\" from assembly {assemblyFile.FullName}");
-
                     try
                     {
                         await extension.OnLoadAsync(kernel);
                         context.Publish(new KernelExtensionLoaded(extension, context.Command));
-                        displayed.Update($"Loaded {extension}");
                     }
                     catch (Exception e)
                     {
