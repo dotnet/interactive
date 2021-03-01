@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             KernelInvocationContext context)
         {
             var kernel = new SQLiteKernel(
-                options.KernelName,
+                $"sql-{options.KernelName}",
                 options.ConnectionString);
 
             return Task.FromResult<Kernel>(kernel);

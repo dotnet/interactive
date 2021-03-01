@@ -17,14 +17,21 @@ namespace Microsoft.DotNet.Interactive
         Kernel,
         IKernelCommandHandler<SubmitCode>
     {
+        private readonly HashSet<string> _kernelNameFilter;
         public const string DefaultKernelName = "sql";
 
         public SQLKernel() : base(DefaultKernelName)
         {
+            _kernelNameFilter = new HashSet<string>
+            {
+                "MsSqlKernel",
+                "SQLiteKernel"
+            };
         }
 
         public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
+
             var root = (Kernel)ParentKernel ?? this;
 
             var mssqlKernelNames = new HashSet<string>();
@@ -32,7 +39,7 @@ namespace Microsoft.DotNet.Interactive
 
             root.VisitSubkernelsAndSelf(childKernel =>
             {
-                if (childKernel.GetType().Name.EndsWith("MsSqlKernel"))
+                if (_kernelNameFilter.Contains( childKernel.GetType().Name))
                 {
                     mssqlKernelNames.Add(childKernel.Name);
                 }

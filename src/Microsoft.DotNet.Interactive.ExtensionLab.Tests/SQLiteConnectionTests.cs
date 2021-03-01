@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync(@"
-#!mydb
+#!sql-mydb
 SELECT * FROM fruit
 ");
 
