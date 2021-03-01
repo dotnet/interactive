@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive
                     scope,
                     cancellationToken);
                 RunNext(operation);
-                // _scheduledOperationMonitor.Set();
+                _scheduledOperationMonitor.Set();
             }
             else
             {
@@ -118,18 +118,6 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private void RunScheduledOperationAndDeferredOperations(ScheduledOperation operation)
-        {
-            foreach (var deferredOperation in OperationsToRunBefore(operation))
-            {
-                Run(deferredOperation);
-            }
-
-            Run(operation);
-        }
-
-        private int _concurrency = 0;
-
         private void Run(ScheduledOperation operation, bool waitForComplete = false)
         {
             // FIX: (Run) 
@@ -182,6 +170,23 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
         }
+
+        private void RunScheduledOperationAndDeferredOperations(ScheduledOperation operation)
+        {
+            foreach (var deferredOperation in OperationsToRunBefore(operation))
+            {
+                Run(deferredOperation);
+            }
+
+            while (_immediateQueue.TryDequeue(out var newOperation))
+            {
+                Run(newOperation);
+            }
+
+            Run(operation);
+        }
+
+        private int _concurrency = 0;
 
         private void RunNext(ScheduledOperation operation)
         {
