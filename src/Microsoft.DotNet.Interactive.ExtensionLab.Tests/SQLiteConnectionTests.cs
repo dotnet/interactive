@@ -15,12 +15,53 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 {
     public class SQLiteConnectionTests
     {
+
+        [Fact]
+        public async Task SQLKernel_will_suggests_sqllite_connection_when_statements_are_submitted_to_it()
+        {
+            using var kernel = new CompositeKernel
+            {
+                new CSharpKernel().UseNugetDirective(),
+                new SQLKernel(),
+                new KeyValueStoreKernel()
+            };
+
+            kernel.UseKernelClientConnection(new SQLiteKernelConnection());
+
+            using var _ = CreateInMemorySQLiteDb(out var connectionString);
+
+            var result = await kernel.SubmitCodeAsync(
+                $"#!connect --kernel-name mydb sqlite \"{connectionString}\"");
+
+            result.KernelEvents
+                .ToSubscribedList()
+                .Should()
+                .NotContainErrors();
+
+            result = await kernel.SubmitCodeAsync(@"
+#!sql
+SELECT * FROM fruit
+");
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events.Should().NotContainErrors();
+            events.Should()
+                .ContainSingle<DisplayedValueProduced>()
+                .Which
+                .Value
+                .As<string>()
+                .Should()
+                .Contain("- `#!sql-mydb`");
+        }
+
         [Fact]
         public async Task It_can_connect_and_query_data()
         {
             using var kernel = new CompositeKernel
             {
                 new CSharpKernel().UseNugetDirective(),
+                new SQLKernel(),
                 new KeyValueStoreKernel()
             };
 
