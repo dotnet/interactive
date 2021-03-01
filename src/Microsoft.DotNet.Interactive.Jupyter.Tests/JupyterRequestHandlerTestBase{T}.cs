@@ -29,7 +29,6 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             _disposables.Add(output.SubscribeToPocketLogger());
             _cSharpKernel = new CSharpKernel()
                 .UseNugetDirective()
-                .UseDefaultFormatting()
                 .UseKernelHelpers()
                 .UseJupyterHelpers()
                 .UseMathAndLaTeX();

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -24,6 +25,18 @@ namespace Microsoft.DotNet.Interactive.Tests
 
         public LanguageKernelFormattingTests(ITestOutputHelper output) : base(output)
         {
+        }
+
+        protected override CSharpKernel CreateCSharpKernel()
+        {
+            var cSharpKernel = base.CreateCSharpKernel();
+
+            cSharpKernel.DeferCommand(new SubmitCode($@"
+using static {typeof(PocketViewTags).FullName};
+using {typeof(PocketView).Namespace};
+"));
+
+            return cSharpKernel;
         }
 
         [Theory]
@@ -408,6 +421,7 @@ f();"
             KernelEvents.Should()
                         .NotContain(e => e is CommandFailed);
         }
+
         [Fact]
         public async Task FSharpKernel_opens_System_IO()
         {
@@ -418,6 +432,7 @@ f();"
             KernelEvents.Should()
                         .Contain(e => e is CommandSucceeded);
         }
+
         [Fact]
         public async Task FSharpKernel_opens_System_Text()
         {
@@ -428,6 +443,7 @@ f();"
             KernelEvents.Should()
                         .Contain(e => e is CommandSucceeded);
         }
+
         [Fact]
         public async Task FSharpKernel_does_not_open_System_Linq()
         {
@@ -438,6 +454,7 @@ f();"
             KernelEvents.Should()
                         .Contain(e => e is CommandFailed);
         }
+
         [Fact]
         public async Task FSharpKernel_does_not_open_System_Threading_Tasks()
         {
@@ -448,6 +465,7 @@ f();"
             KernelEvents.Should()
                         .Contain(e => e is CommandFailed);
         }
+
         [Fact]
         public async Task FSharpKernel_does_not_open_HTML_DSL()
         {

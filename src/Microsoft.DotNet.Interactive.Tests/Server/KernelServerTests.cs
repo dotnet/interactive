@@ -33,7 +33,6 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 new CSharpKernel()
                     .UseKernelHelpers()
                     .UseNugetDirective()
-                    .UseDefaultFormatting()
                     .UseDefaultMagicCommands()
             };
 

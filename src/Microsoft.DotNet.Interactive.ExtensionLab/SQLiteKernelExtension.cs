@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
@@ -30,10 +31,11 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 compositeKernel
                     .UseKernelClientConnection(new SQLiteKernelConnection());
 
-            KernelInvocationContext.Current?.Display(
-                $@"
-* Adds `sqlite` to the connection types available using the [`#!connect`](https://github.com/dotnet/interactive/blob/main/docs/connect.md) magic command.",
-                "text/markdown");
+                KernelInvocationContext.Current?.Display(
+                    new HtmlString(@"<details><summary>Query SQLite databases.</summary>
+    <p>This extension adds support for connecting to SQLite databases using the <code>#!connect sqlite</code> magic command. For more information, run a cell using the <code>#!sql</code> magic command.</p>
+    </details>"),
+                    "text/html");
 
             }
 

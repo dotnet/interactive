@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-
+using Microsoft.AspNetCore.Html;
 using Microsoft.Data.Analysis;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
@@ -75,8 +75,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             });
 
             KernelInvocationContext.Current?.Display(
-                $@"Added the `#!linqify` magic command.",
-                "text/markdown");
+                new HtmlString($@"<details><summary>Create strongly-typed dataframes using<code>#!linqify</code>.</summary>
+    <p>The `#!linqify` magic command replaces a <a href=""https://www.nuget.org/packages/Microsoft.Data.Analysis/""><code>Microsoft.Data.Analysis.DataFrame</code></a> variable with a generated, strongly-typed data frame, allowing the use of LINQ operations over the contained data.</p>
+    </details>"),
+                "text/html");
 
             return Task.CompletedTask;
         }

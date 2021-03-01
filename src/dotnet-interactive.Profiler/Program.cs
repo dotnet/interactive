@@ -95,7 +95,6 @@ Console.Write(""value three"")", "fsharp");
             var kernel = new CompositeKernel
                 {
                     new CSharpKernel()
-                        .UseDefaultFormatting()
                         .UseNugetDirective()
                         .UseKernelHelpers()
                         .UseJupyterHelpers()

@@ -4,8 +4,6 @@
 namespace Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers
 
 open Microsoft.DotNet.Interactive
-open Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers.Html
-open Microsoft.AspNetCore.Html
 
 type internal IMarker = interface end
 
