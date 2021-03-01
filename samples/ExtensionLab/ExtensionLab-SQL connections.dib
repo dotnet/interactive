@@ -44,7 +44,7 @@ SQLite allows us to create a database in memory using the `Mode=Memory` paramete
 
 #!csharp
 
-#!fruits 
+#!sql-fruits 
 
 CREATE TABLE Fruits(
   Id    INTEGER PRIMARY KEY, 
