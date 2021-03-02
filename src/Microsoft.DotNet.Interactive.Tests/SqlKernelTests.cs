@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .ContainSingle<DisplayedValueProduced>()
                 .Which;
 
-            var message = (string)displayValue.Value;
+            var message = displayValue.Value.ToString();
 
             message.Should()
                 .NotContain(query);
@@ -54,14 +54,14 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .ContainSingle<DisplayedValueProduced>()
                 .Which;
 
-            var message = (string)displayValue.Value;
+            var message = displayValue.Value.ToString();
             
 
             // Should contain instructions for how to install SqlServer extension package
             message.Should().Contain(@"#r ""nuget:Microsoft.DotNet.Interactive.SqlServer,*-*""");
 
             // Should contain instructions for how to get help message for MSSQL kernel
-            message.Should().Contain("#!connect mssql -h");
+            message.Should().Contain("#!connect mssql --kernel-name");
         }
     }
 }
