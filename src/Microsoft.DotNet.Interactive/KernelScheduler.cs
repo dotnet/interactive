@@ -20,8 +20,10 @@ namespace Microsoft.DotNet.Interactive
         private readonly ManualResetEventSlim _scheduledOperationMonitor = new(false);
         private readonly object _lockObj = new();
         private readonly Task _runLoopTask;
-        private readonly Thread _runLoopThread;
+        private readonly Thread _runLoopThread = default;
         private readonly AsyncLocal<ScheduledOperation> _currentTopLevelOperation = new();
+        private readonly Logger Log = new("KernelScheduler");
+        private readonly Barrier _barrier = new(1);
 
         public KernelScheduler()
         {
@@ -30,7 +32,7 @@ namespace Microsoft.DotNet.Interactive
                 TaskCreationOptions.LongRunning,
                _schedulerDisposalSource.Token);
 
-            // _runLoopThread = new Thread(ScheduledOperationRunLoop);
+            //_runLoopThread = new Thread(ScheduledOperationRunLoop);
             //_runLoopThread.Start();
         }
 
@@ -107,19 +109,8 @@ namespace Microsoft.DotNet.Interactive
                         executionContext,
                     _ => RunScheduledOperationAndDeferredOperations(operation),
                     operation);
-
-                    if (_currentTopLevelOperation.Value is null)
-                    {
-
-                    }
-                    else
-                    {
-
-                    }
                 }
             }
-
-            ExecutionContext.SuppressFlow();
         }
 
         private void Run(ScheduledOperation operation)
@@ -145,7 +136,6 @@ namespace Microsoft.DotNet.Interactive
                 _currentTopLevelOperation.Value = operation;
             }
 
-            
             Interlocked.Increment(ref _concurrency);
             using var _ = Disposable.Create(() => Interlocked.Decrement(ref _concurrency));
 
@@ -163,22 +153,36 @@ namespace Microsoft.DotNet.Interactive
                     {
                         operation.TaskCompletionSource.SetException(t.Exception);
                     }
+
+                    if (_barrier.ParticipantCount > 1)
+                    {
+                        _barrier.RemoveParticipant();
+                    }
+
                 });
 
                 while (_immediateQueue.TryDequeue(out var nestedOperation   ))
                 {
                     Run(nestedOperation);
+                    _barrier.RemoveParticipant();
                 }
 
+                using var __ = Log.OnEnterAndExit($"Waiting for completion of {operation.Value}:");
+
+                _barrier.SignalAndWait(_schedulerDisposalSource.Token);
+
                 operationTask.Wait(_schedulerDisposalSource.Token);
+
             }
             catch (Exception exception)
             {
-                operation.TaskCompletionSource.SetException(exception);
+                if (!operation.TaskCompletionSource.Task.IsCompleted)
+                {
+                    operation.TaskCompletionSource.SetException(exception);
+                }
 
                 _scheduledQueue.Clear();
             }
-            
         }
 
         private void RunScheduledOperationAndDeferredOperations(ScheduledOperation operation)
@@ -200,6 +204,7 @@ namespace Microsoft.DotNet.Interactive
 
         private void RunNext(ScheduledOperation operation)
         {
+            _barrier.AddParticipant();
             _immediateQueue.Enqueue(operation);
         }
 
@@ -278,7 +283,10 @@ namespace Microsoft.DotNet.Interactive
 
                 if (cancellationToken != default)
                 {
-                    cancellationToken.Register(() => { TaskCompletionSource.SetCanceled(); });
+                    cancellationToken.Register(() => 
+                    { 
+                        TaskCompletionSource.SetCanceled(); 
+                    });
                 }
             }
 

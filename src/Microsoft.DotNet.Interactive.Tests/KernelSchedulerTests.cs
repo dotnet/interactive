@@ -14,6 +14,7 @@ using Xunit;
 using Xunit.Abstractions;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.KernelSchedulerTests>;
 using Microsoft.DotNet.Interactive.Commands;
+using FluentAssertions.Extensions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -369,7 +370,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                                               }
                                           ));
 
-            var xs = await Task.WhenAll(tasks);
+            var xs = await Task.WhenAll(tasks).Timeout(6.Seconds());
 
             xs.Should().BeEquivalentTo(0, 1, 2, 3, 4);
         }
@@ -410,6 +411,46 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             asyncId2.Should().Be(asyncId1);
         }
+              
+        [Fact]
+        public async Task AsyncContext_does_not_leak_from_inner_context()
+        {
+            using var scheduler = new KernelScheduler<int, int>();
+            int asyncId = default;
+
+            await scheduler.RunAsync(0, async value =>
+            {
+                await Task.Yield();
+                AsyncContext.TryEstablish(out asyncId);
+                return value;
+            });
+
+            AsyncContext.Id.Should().NotBe(asyncId);
+        }
+
+        [Fact]
+        public async Task AsyncContext_does_not_leak_between_scheduled_work()
+        {
+            using var scheduler = new KernelScheduler<int, int>();
+            int asyncId1 = default;
+            int asyncId2 = default;
+
+            await scheduler.RunAsync(1, async value =>
+            {
+                AsyncContext.TryEstablish(out asyncId1);
+                await Task.Yield();
+                return value;
+            });
+            await scheduler.RunAsync(2, async value =>
+            {
+                AsyncContext.TryEstablish(out asyncId2);
+                await Task.Yield();
+                return value;
+            });
+
+            asyncId2.Should().NotBe(asyncId1);
+        }
+
 
         [Fact]
         public async Task EXPERIMENT()

@@ -300,15 +300,15 @@ using {typeof(PocketView).Namespace};
                 Language.FSharp => $@"CSS(""{cssContent}"")",
             };
 
-            await kernel.SendAsync(new SubmitCode(submission));
+            var result = await kernel.SendAsync(new SubmitCode(submission));
 
-            var formatted =
-                KernelEvents
-                    .OfType<DisplayedValueProduced>()
-                    .SelectMany(v => v.FormattedValues)
-                    .ToArray();
+            var events = result.KernelEvents.ToSubscribedList();
 
-            formatted
+            events
+                .Should()
+                .ContainSingle<DisplayedValueProduced>()
+                .Which
+                .FormattedValues
                 .Should()
                 .ContainSingle(v =>
                                    v.MimeType == "text/html" &&
