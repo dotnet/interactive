@@ -47,17 +47,28 @@ namespace Microsoft.DotNet.Interactive
 
             if (mssqlKernelNames.Count == 0)
             {
-                context.Display(@"
-A SQL connection has not been established.
-
-Install `Microsoft.DotNet.Interactive.SqlServer` package by executing the following in a csharp cell:
-
-`#r ""nuget:Microsoft.DotNet.Interactive.SqlServer,*-*""`
-
-Once installed, find out more about how to create SQL connections by running the following:
-
-`#!connect mssql -h`
-                ", "text/markdown");
+                context.Display(HTML(@"
+<p>A SQL connection has not been established.</p>
+<p>To connect to a database, first add the SQL extension package by running the following in a C# cell:</p>
+<code>
+    <pre>
+    #r ""nuget:Microsoft.DotNet.Interactive.SqlServer,*-*""
+    </pre>
+</code>
+Now, you can connect to a Microsoft SQL Server database by running the following in a C# cell:
+<code>
+    <pre>
+    #!connect mssql --kernel-name mydatabase ""Persist Security Info=False; Integrated Security=true; Initial Catalog=MyDatabase; Server=localhost""
+    </pre>
+</code>
+<p>Once a connection is established, you can send SQL statements by prefixing them with the magic command for your connection.</p>
+<code>
+    <pre>
+    #!sql-mydatabase
+    SELECT * FROM MyDatabase.MyTable
+    </pre>
+</code>
+"), "text/html");
             }
             else if(!string.IsNullOrWhiteSpace(command.Code))
             {
