@@ -20,14 +20,18 @@ namespace Microsoft.DotNet.Interactive
         private readonly ManualResetEventSlim _scheduledOperationMonitor = new(false);
         private readonly object _lockObj = new();
         private readonly Task _runLoopTask;
+        private readonly Thread _runLoopThread;
         private readonly AsyncLocal<ScheduledOperation> _currentTopLevelOperation = new();
 
         public KernelScheduler()
         {
             _runLoopTask = Task.Factory.StartNew(
-                ScheduledOperationRunLoop,
+               ScheduledOperationRunLoop,
                 TaskCreationOptions.LongRunning,
-                _schedulerDisposalSource.Token);
+               _schedulerDisposalSource.Token);
+
+            // _runLoopThread = new Thread(ScheduledOperationRunLoop);
+            //_runLoopThread.Start();
         }
 
         public Task<U> RunAsync(
@@ -58,7 +62,7 @@ namespace Microsoft.DotNet.Interactive
                     scope,
                     cancellationToken);
                 RunNext(operation);
-                _scheduledOperationMonitor.Set();
+                //_scheduledOperationMonitor.Set();
             }
             else
             {
@@ -89,36 +93,36 @@ namespace Microsoft.DotNet.Interactive
                     ExecutionContext executionContext;
 
                     // FIX: (RunScheduledOperations) 
-                    if (_currentTopLevelOperation.Value is {} parentOperation)
+                    if (_currentTopLevelOperation.Value is { } parentOperation)
                     {
-                        executionContext
-                         = parentOperation.ExecutionContext;
+                        executionContext = parentOperation.ExecutionContext;
                     }
                     else
                     {
                         _currentTopLevelOperation.Value = operation;
-                        executionContext
-                         = operation.ExecutionContext;
+                        executionContext = operation.ExecutionContext;
                     }
 
-                    if (executionContext is { })
+                    ExecutionContext.Run(
+                        executionContext,
+                    _ => RunScheduledOperationAndDeferredOperations(operation),
+                    operation);
+
+                    if (_currentTopLevelOperation.Value is null)
                     {
-                        ExecutionContext.Run(
-                            executionContext,
-                            _ => RunScheduledOperationAndDeferredOperations(operation),
-                            operation);
+
                     }
                     else
                     {
-                        RunScheduledOperationAndDeferredOperations(operation);
-                    }
 
-                    _currentTopLevelOperation.Value = null;
+                    }
                 }
             }
+
+            ExecutionContext.SuppressFlow();
         }
 
-        private void Run(ScheduledOperation operation, bool waitForComplete = false)
+        private void Run(ScheduledOperation operation)
         {
             // FIX: (Run) 
             switch (_concurrency)
@@ -133,42 +137,48 @@ namespace Microsoft.DotNet.Interactive
                     break;
             }
 
-            lock (_lockObj)
+            if (_currentTopLevelOperation.Value is { })
             {
-                Interlocked.Increment(ref _concurrency);
-                using var _ = Disposable.Create(() => Interlocked.Decrement(ref _concurrency));
+            }
+            else
+            {
+                _currentTopLevelOperation.Value = operation;
+            }
 
-                try
+            
+            Interlocked.Increment(ref _concurrency);
+            using var _ = Disposable.Create(() => Interlocked.Decrement(ref _concurrency));
+
+            try
+            {
+                var operationTask = operation.ExecuteAsync();
+
+                operationTask.ContinueWith(t =>
                 {
-                    var operationTask = operation.ExecuteAsync();
-
-                    operationTask.ContinueWith(t =>
+                    if (t.IsCompletedSuccessfully)
                     {
-                        if (t.IsCompletedSuccessfully)
-                        {
-                            operation.TaskCompletionSource.SetResult(t.Result);
-                        }
-                        else
-                        {
-                            operation.TaskCompletionSource.SetException(t.Exception);
-                        }
-                    });
-
-                    if (!waitForComplete)
-                    {
-                        operationTask.Wait(_schedulerDisposalSource.Token);
+                        operation.TaskCompletionSource.SetResult(t.Result);
                     }
                     else
                     {
+                        operation.TaskCompletionSource.SetException(t.Exception);
                     }
-                }
-                catch (Exception exception)
-                {
-                    operation.TaskCompletionSource.SetException(exception);
+                });
 
-                    _scheduledQueue.Clear();
+                while (_immediateQueue.TryDequeue(out var nestedOperation   ))
+                {
+                    Run(nestedOperation);
                 }
+
+                operationTask.Wait(_schedulerDisposalSource.Token);
             }
+            catch (Exception exception)
+            {
+                operation.TaskCompletionSource.SetException(exception);
+
+                _scheduledQueue.Clear();
+            }
+            
         }
 
         private void RunScheduledOperationAndDeferredOperations(ScheduledOperation operation)

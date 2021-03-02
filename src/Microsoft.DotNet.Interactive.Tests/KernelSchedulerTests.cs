@@ -13,6 +13,7 @@ using Pocket;
 using Xunit;
 using Xunit.Abstractions;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.KernelSchedulerTests>;
+using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -362,6 +363,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var tasks = schedulers.Select((s, i) => s.RunAsync(i, async value =>
                                               {
+                                                  await Task.Yield();
                                                   barrier.SignalAndWait();
                                                   return value;
                                               }
@@ -373,7 +375,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public async Task AsyncContext_is_maintained_across_async_operations()
+        public async Task AsyncContext_is_maintained_across_async_operations_within_scheduled_work()
         {
             using var scheduler = new KernelScheduler<int, int>();
             int asyncId1 = default;
@@ -388,6 +390,67 @@ namespace Microsoft.DotNet.Interactive.Tests
             });
 
             asyncId2.Should().Be(asyncId1);
+        }
+
+        [Fact]
+        public async Task AsyncContext_is_maintained_across_from_outside_context_to_scheduled_work()
+        {
+            using var scheduler = new KernelScheduler<int, int>();
+            int asyncId1 = default;
+            int asyncId2 = default;
+            
+            AsyncContext.TryEstablish(out asyncId1);
+
+            await scheduler.RunAsync(0, async value =>
+            {
+                await Task.Yield();
+                AsyncContext.TryEstablish(out asyncId2);
+                return value;
+            });
+
+            asyncId2.Should().Be(asyncId1);
+        }
+
+        [Fact]
+        public async Task EXPERIMENT()
+        {
+            await using KernelInvocationContext invocationContext = KernelInvocationContext.Establish(new SubmitCode("hello!"));
+
+            AsyncContext.TryEstablish(out var id);
+
+            Log.Info($"AsyncContext.Id: {AsyncContext.Id.ToLogString()}");
+            Log.Info($"KernelInvocationContext is {KernelInvocationContext.Current.ToLogString()}");
+
+            var executionContext = ExecutionContext.Capture();
+            var flow = ExecutionContext.SuppressFlow();
+            Log.Info("SUPPRESSING");
+
+            await Task.Yield();
+
+            Log.Info($"AsyncContext.Id: {AsyncContext.Id.ToLogString()}");
+            Log.Info($"KernelInvocationContext is {KernelInvocationContext.Current.ToLogString()}");
+
+            Log.Info("Running a task");
+            ExecutionContext.Run(executionContext, _ => Write(), null);
+
+            // flow.Undo();
+            Log.Info("RESTORING");
+
+            ExecutionContext.Restore(executionContext);
+
+            Log.Info($"AsyncContext.Id: {AsyncContext.Id.ToLogString()}");
+            Log.Info($"KernelInvocationContext is {KernelInvocationContext.Current.ToLogString()}");
+
+            Task.Run(() =>
+            {
+                Write();
+            }).Wait();
+
+            void Write()
+            {
+                Log.Info($"AsyncContext.Id: {AsyncContext.Id.ToLogString()}");
+                Log.Info($"KernelInvocationContext is {KernelInvocationContext.Current.ToLogString()}");
+            }
         }
     }
 }
