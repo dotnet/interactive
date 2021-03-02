@@ -48,13 +48,13 @@ namespace Microsoft.DotNet.Interactive
             if (mssqlKernelNames.Count == 0)
             {
                 context.Display(@"
-A SQL kernel is not currently defined.
+A SQL connection has not been established.
 
-SQL kernels are provided as part of the `Microsoft.DotNet.Interactive.SqlServer` package, which can be installed by using the following nuget command:
+Install `Microsoft.DotNet.Interactive.SqlServer` package by executing the following in a csharp cell:
 
 `#r ""nuget:Microsoft.DotNet.Interactive.SqlServer,*-*""`
 
-Once installed, you can find more info about creating a SQL kernel and running queries by running the following help command:
+Once installed, find out more about how to create SQL connections by running the following:
 
 `#!connect mssql -h`
                 ", "text/markdown");
@@ -62,7 +62,7 @@ Once installed, you can find more info about creating a SQL kernel and running q
             else if(!string.IsNullOrWhiteSpace(command.Code))
             {
                 context.Display($@"
-Submit your SQL statements to one of the following SQL kernels.
+Submit SQL statements to one of the following SQL connections.
 
 - {string.Join("\n- ",mssqlKernelNames.Select(n => $"`#!{n}`"))}
 ", "text/markdown");
