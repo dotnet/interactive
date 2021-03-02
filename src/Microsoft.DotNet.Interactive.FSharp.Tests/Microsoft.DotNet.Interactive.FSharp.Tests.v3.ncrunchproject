@@ -1,5 +1,8 @@
 ﻿<ProjectConfiguration>
   <Settings>
     <CopyReferencedAssembliesToWorkspace>True</CopyReferencedAssembliesToWorkspace>
+    <HiddenComponentWarnings>
+      <Value>CopyReferencedAssembliesToWorkspaceIsOn</Value>
+    </HiddenComponentWarnings>
   </Settings>
 </ProjectConfiguration>

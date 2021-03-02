@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Pocket;
@@ -14,16 +13,16 @@ namespace Microsoft.DotNet.Interactive
     public class KernelScheduler<T, U> : IDisposable
     {
         private readonly List<DeferredOperation> _deferredOperationSources = new();
-        private readonly ConcurrentQueue<ScheduledOperation> _scheduledQueue = new();
         private readonly ConcurrentQueue<ScheduledOperation> _immediateQueue = new();
         private readonly CancellationTokenSource _schedulerDisposalSource = new();
-        private readonly ManualResetEventSlim _scheduledOperationMonitor = new(false);
         private readonly object _lockObj = new();
         private readonly Task _runLoopTask;
         private readonly Thread _runLoopThread = default;
         private readonly AsyncLocal<ScheduledOperation> _currentTopLevelOperation = new();
         private readonly Logger Log = new("KernelScheduler");
-        private readonly Barrier _barrier = new(1);
+
+        private readonly BlockingCollection<ScheduledOperation> _topLevelScheduledOperations = new();
+        private readonly Barrier _barrier = new(2);
 
         public KernelScheduler()
         {
@@ -45,28 +44,7 @@ namespace Microsoft.DotNet.Interactive
             ThrowIfDisposed();
 
             ScheduledOperation operation;
-            if (SynchronizationContext.Current is KernelSynchronizationContext ctx)
-            {
-                operation = new ScheduledOperation(
-                    value,
-                    onExecuteAsync,
-                    null,
-                    scope,
-                    cancellationToken);
-                ctx.Post(_ => Run(operation), operation);
-            }
-            else if (_currentTopLevelOperation.Value is { })
-            {
-                operation = new ScheduledOperation(
-                    value,
-                    onExecuteAsync,
-                    null,
-                    scope,
-                    cancellationToken);
-                RunNext(operation);
-                //_scheduledOperationMonitor.Set();
-            }
-            else
+            if (_currentTopLevelOperation.Value is not { })
             {
                 operation = new ScheduledOperation(
                     value,
@@ -74,8 +52,18 @@ namespace Microsoft.DotNet.Interactive
                     ExecutionContext.Capture(),
                     scope: scope,
                     cancellationToken: cancellationToken);
-                _scheduledQueue.Enqueue(operation);
-                _scheduledOperationMonitor.Set();
+                _topLevelScheduledOperations.Add(operation);
+            }
+            else
+            {
+                // recursive scheduling
+                operation = new ScheduledOperation(
+                    value,
+                    onExecuteAsync,
+                    null,
+                    scope,
+                    cancellationToken);
+                RunPreemptively(operation);
             }
 
             return operation.TaskCompletionSource.Task;
@@ -83,38 +71,38 @@ namespace Microsoft.DotNet.Interactive
 
         private void ScheduledOperationRunLoop(object _)
         {
-            // using var __ = KernelSynchronizationContext.Establish(this);
-
-            while (!_schedulerDisposalSource.IsCancellationRequested)
+            foreach (var operation in _topLevelScheduledOperations.GetConsumingEnumerable(_schedulerDisposalSource.Token))
             {
-                _scheduledOperationMonitor.Wait(_schedulerDisposalSource.Token);
+                ExecutionContext executionContext;
 
-                while (!_schedulerDisposalSource.IsCancellationRequested &&
-                       _scheduledQueue.TryDequeue(out var operation))
+                if (_currentTopLevelOperation.Value is { } parentOperation)
                 {
-                    ExecutionContext executionContext;
-
-                    // FIX: (RunScheduledOperations) 
-                    if (_currentTopLevelOperation.Value is { } parentOperation)
-                    {
-                        executionContext = parentOperation.ExecutionContext;
-                    }
-                    else
-                    {
-                        _currentTopLevelOperation.Value = operation;
-                        executionContext = operation.ExecutionContext;
-                    }
-
-                    ExecutionContext.Run(
-                        executionContext,
-                    _ => RunScheduledOperationAndDeferredOperations(operation),
-                    operation);
+                    executionContext = parentOperation.ExecutionContext;
                 }
+                else
+                {
+                    _currentTopLevelOperation.Value = operation;
+                    executionContext = operation.ExecutionContext;
+                }
+
+                ExecutionContext.Run(
+                    executionContext,
+                _ => RunScheduledOperationAndDeferredOperations(operation),
+                operation);
+
+                operation.TaskCompletionSource.Task.ContinueWith(_ =>
+                {
+                    _barrier.SignalAndWait(_schedulerDisposalSource.Token);
+                });
+                _barrier.SignalAndWait(_schedulerDisposalSource.Token);
+
+                _currentTopLevelOperation.Value = null;
             }
         }
 
         private void Run(ScheduledOperation operation)
         {
+            #region debuggy stuff
             // FIX: (Run) 
             switch (_concurrency)
             {
@@ -138,6 +126,7 @@ namespace Microsoft.DotNet.Interactive
 
             Interlocked.Increment(ref _concurrency);
             using var _ = Disposable.Create(() => Interlocked.Decrement(ref _concurrency));
+            #endregion
 
             try
             {
@@ -153,26 +142,7 @@ namespace Microsoft.DotNet.Interactive
                     {
                         operation.TaskCompletionSource.SetException(t.Exception);
                     }
-
-                    if (_barrier.ParticipantCount > 1)
-                    {
-                        _barrier.RemoveParticipant();
-                    }
-
-                });
-
-                while (_immediateQueue.TryDequeue(out var nestedOperation   ))
-                {
-                    Run(nestedOperation);
-                    _barrier.RemoveParticipant();
-                }
-
-                using var __ = Log.OnEnterAndExit($"Waiting for completion of {operation.Value}:");
-
-                _barrier.SignalAndWait(_schedulerDisposalSource.Token);
-
-                operationTask.Wait(_schedulerDisposalSource.Token);
-
+                }).Wait(_schedulerDisposalSource.Token);
             }
             catch (Exception exception)
             {
@@ -180,8 +150,6 @@ namespace Microsoft.DotNet.Interactive
                 {
                     operation.TaskCompletionSource.SetException(exception);
                 }
-
-                _scheduledQueue.Clear();
             }
         }
 
@@ -192,20 +160,16 @@ namespace Microsoft.DotNet.Interactive
                 Run(deferredOperation);
             }
 
-            while (_immediateQueue.TryDequeue(out var newOperation))
-            {
-                Run(newOperation);
-            }
-
             Run(operation);
         }
 
         private int _concurrency = 0;
 
-        private void RunNext(ScheduledOperation operation)
+        private void RunPreemptively(ScheduledOperation operation)
         {
-            _barrier.AddParticipant();
-            _immediateQueue.Enqueue(operation);
+            Run(operation);
+            operation.TaskCompletionSource.Task.Wait(_schedulerDisposalSource.Token);
+            //_immediateQueue.Enqueue(operation);
         }
 
         private IEnumerable<ScheduledOperation> OperationsToRunBefore(
@@ -222,17 +186,7 @@ namespace Microsoft.DotNet.Interactive
                         source.OnExecuteAsync,
                         scope: operation.Scope);
 
-                    while (_immediateQueue.TryDequeue(out var newOperation))
-                    {
-                        yield return newOperation;
-                    }
-
                     yield return deferredOperation;
-
-                    while (_immediateQueue.TryDequeue(out var newOperation))
-                    {
-                        yield return newOperation;
-                    }
                 }
             }
         }
@@ -283,9 +237,9 @@ namespace Microsoft.DotNet.Interactive
 
                 if (cancellationToken != default)
                 {
-                    cancellationToken.Register(() => 
-                    { 
-                        TaskCompletionSource.SetCanceled(); 
+                    cancellationToken.Register(() =>
+                    {
+                        TaskCompletionSource.SetCanceled();
                     });
                 }
             }
@@ -368,7 +322,7 @@ namespace Microsoft.DotNet.Interactive
                 }
                 else
                 {
-                    Scheduler.RunNext(
+                    Scheduler.RunPreemptively(
                         new ScheduledOperation(
                             default,
                             value =>

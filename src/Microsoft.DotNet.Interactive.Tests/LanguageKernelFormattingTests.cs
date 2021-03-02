@@ -436,10 +436,13 @@ f();"
         {
             var kernel = CreateKernel(Language.FSharp);
 
-            await kernel.SubmitCodeAsync("let t = StringBuilder()");
+            var result = await kernel.SubmitCodeAsync("let t = StringBuilder()");
 
-            KernelEvents.Should()
-                        .Contain(e => e is CommandSucceeded);
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events
+                .Should()
+                .ContainSingle<CommandSucceeded>();
         }
 
         [Fact]

@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly Subject<KernelEvent> _kernelEvents = new();
         private readonly CompositeDisposable _disposables;
-        
+
         private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive
                 () => _kernelEvents.OnCompleted()
                 ));
         }
-        
+
         internal KernelCommandPipeline Pipeline { get; }
 
         public CompositeKernel ParentKernel { get; internal set; }
@@ -71,37 +71,31 @@ namespace Microsoft.DotNet.Interactive
             }
 
             command.SetToken($"deferredCommand::{Guid.NewGuid():N}");
-          
-            
-            NewDeferCommand(command);
-        }
 
-        private void NewDeferCommand(KernelCommand command)
-        {
-           _deferredCommands.Enqueue(command);
+            _deferredCommands.Enqueue(command);
         }
 
         private bool TryPreprocessCommands(
             KernelCommand originalCommand,
-            KernelInvocationContext context, 
+            KernelInvocationContext context,
             out IReadOnlyList<KernelCommand> commands)
         {
             switch (originalCommand)
             {
-                case SubmitCode {LanguageNode: null} submitCode:
+                case SubmitCode { LanguageNode: null } submitCode:
                     commands = SubmissionParser.SplitSubmission(submitCode);
                     break;
-                case RequestDiagnostics {LanguageNode: null} requestDiagnostics:
+                case RequestDiagnostics { LanguageNode: null } requestDiagnostics:
                     commands = SubmissionParser.SplitSubmission(requestDiagnostics);
                     break;
-                case LanguageServiceCommand {LanguageNode: null} languageServiceCommand:
+                case LanguageServiceCommand { LanguageNode: null } languageServiceCommand:
                     if (!TryPreprocessLanguageServiceCommand(languageServiceCommand, context, out commands))
                     {
                         return false;
                     }
                     break;
                 default:
-                    commands = new[] {originalCommand};
+                    commands = new[] { originalCommand };
                     break;
             }
 
@@ -112,13 +106,13 @@ namespace Microsoft.DotNet.Interactive
                     command.KernelUri = GetHandlingKernelUri(command);
                 }
 
-                if (command.Parent is null && 
+                if (command.Parent is null &&
                     command != originalCommand)
                 {
                     command.Parent = originalCommand;
                 }
             }
-            
+
             return true;
         }
 
@@ -138,7 +132,7 @@ namespace Microsoft.DotNet.Interactive
                 commands = null;
                 return false;
             }
-            
+
             // TextSpan.Contains only checks `[start, end)`, but we need to allow for `[start, end]`
             var absolutePosition = tree.GetAbsolutePosition(command.LinePosition);
 
@@ -161,7 +155,7 @@ namespace Microsoft.DotNet.Interactive
                 var offsetLanguageServiceCommand = command.With(
                     node,
                     position);
-               
+
                 offsetLanguageServiceCommand.TargetKernelName = node switch
                 {
                     DirectiveNode => Name,
@@ -187,7 +181,7 @@ namespace Microsoft.DotNet.Interactive
         public IObservable<KernelEvent> KernelEvents => _kernelEvents;
 
         public string Name { get; set; }
-        
+
         internal KernelUri Uri =>
             ParentKernel is null
                 ? KernelUri.Parse(Name)
@@ -233,24 +227,34 @@ namespace Microsoft.DotNet.Interactive
             // only subscribe for the root command 
             var currentCommandOwnsContext = context.Command == command;
 
-            using var disposable = currentCommandOwnsContext
-                                       ? context.KernelEvents.Subscribe(PublishEvent)
-                                       : Disposable.Empty;
+            IDisposable disposable;
 
-            if (TryPreprocessCommands(command, context, out var commands))
+            if (currentCommandOwnsContext)
             {
-                foreach (var c in commands)
-                {
-                    await scheduler.RunAsync(
-                        c, 
-                        InvokePipelineAndCommandHandler,
-                        c.KernelUri.ToString(), 
-                        cancellationToken);
-                }
+                disposable = context.KernelEvents.Subscribe(PublishEvent);
+            }
+            else
+            {
+                disposable = Disposable.Empty;
+            }
 
-                if (currentCommandOwnsContext)
+            using (disposable)
+            {
+                if (TryPreprocessCommands(command, context, out var commands))
                 {
-                    await context.DisposeAsync();
+                    foreach (var c in commands)
+                    {
+                        await scheduler.RunAsync(
+                            c,
+                            InvokePipelineAndCommandHandler,
+                            c.KernelUri.ToString(),
+                            cancellationToken);
+                    }
+
+                    if (currentCommandOwnsContext)
+                    {
+                        await context.DisposeAsync();
+                    }
                 }
             }
 
@@ -306,7 +310,7 @@ namespace Microsoft.DotNet.Interactive
 
             try
             {
-                SetHandlingKernel(command,context);
+                SetHandlingKernel(command, context);
 
                 await Pipeline.SendAsync(command, context);
 
