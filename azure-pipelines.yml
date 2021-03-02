@@ -81,6 +81,10 @@ stages:
         - checkout: self
           clean: true
 
+        # Azure DevOps doesn't support git symlinks on Windows so we have to fake it
+        - pwsh: . "$(Build.SourcesDirectory)\src\dotnet-interactive-vscode\ensure-symlinks.ps1"
+          displayName: ensure symlinks
+
         - task: NodeTool@0
           displayName: Add NodeJS/npm
           inputs:
@@ -114,16 +118,26 @@ stages:
           displayName: NPM tests
           workingDirectory: "$(Build.SourcesDirectory)/src/Microsoft.DotNet.Interactive.Js"
 
+        # build and test VS Code extension
         - script: npm install
-          displayName: Install NPM packages for VS Code extension
-          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode"
+          displayName: npm install (VS Code stable)
+          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode/stable"
 
         - script: npm run ciTest
-          displayName: Run VS Code extension tests
-          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode"
+          displayName: npm test (VS Code stable)
+          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode/stable"
 
+        - script: npm install
+          displayName: npm install (VS Code insiders)
+          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode/insiders"
+
+        - script: npm run ciTest
+          displayName: npm test (VS Code insiders)
+          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode/insiders"
+
+        # publish VS Code test results
         - task: PublishTestResults@2
-          displayName: Publish VS Code Extension Test Results
+          displayName: Publish VS Code extension test results
           inputs:
             testResultsFormat: VSTest
             testResultsFiles: '**/*.trx'
@@ -131,7 +145,7 @@ stages:
           condition: always()
 
         - task: PowerShell@2
-          displayName: Pack VS Code Extension
+          displayName: Pack VS Code Extensions
           inputs:
             filePath: $(Build.SourcesDirectory)/eng/package/PackVSCodeExtension.ps1
             arguments: -stableToolVersionNumber $(StableToolVersionNumber) -gitSha $(Build.SourceVersion) -outDir "$(Build.ArtifactStagingDirectory)\vscode"
