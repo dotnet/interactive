@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
+using Pocket;
+using static Pocket.Logger<Microsoft.DotNet.Interactive.KernelInvocationContext>;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -21,7 +23,7 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly HashSet<KernelCommand> _childCommands = new();
 
-        private readonly CompositeDisposable _disposables = new();
+        private readonly System.Reactive.Disposables.CompositeDisposable _disposables = new();
 
         private readonly List<Func<KernelInvocationContext, Task>> _onCompleteActions = new();
 
@@ -29,6 +31,10 @@ namespace Microsoft.DotNet.Interactive
 
         private KernelInvocationContext(KernelCommand command)
         {
+            // FIX
+            var lifetimeLogger = Log.OnEnterAndExit($"KernelInvocationContext: {command}");
+             _disposables.Add(lifetimeLogger);
+
             _cancellationTokenSource = new CancellationTokenSource();
             Command = command;
            
@@ -37,12 +43,13 @@ namespace Microsoft.DotNet.Interactive
             _disposables.Add(_cancellationTokenSource);
             _disposables.Add(ConsoleOutput.Subscribe(c =>
             {
-                return new CompositeDisposable
+                return new System.Reactive.Disposables.CompositeDisposable
                 {
                     c.Out.Subscribe(s => this.DisplayStandardOut(s, command)),
                     c.Error.Subscribe(s => this.DisplayStandardError(s, command))
                 };
             }));
+           
         }
 
         public KernelCommand Command { get; }
