@@ -2,19 +2,10 @@
   <Settings>
     <IgnoredTests>
       <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.ExtensionLab.Tests.DataFrameTypeGeneratorTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.ExtensionLab.Tests.NteractKernelExtensionTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.ExtensionLab.Tests.SQLiteConnectionTests</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Microsoft.DotNet.Interactive.ExtensionLab.Tests.SQLiteKernelExtensionTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.ExtensionLab.Tests.TranscriptTests</FixtureName>
       </FixtureTestSelector>
     </IgnoredTests>
   </Settings>

@@ -221,8 +221,9 @@ namespace Microsoft.DotNet.Interactive
                                  .ToArray();
 
             var errors = new List<string>();
-
-            var result = ResolveAsync(GetPackageManagerLines(), restoreTfm, ReportError);
+            
+            var result = await Task.Run(() => 	
+                ResolveAsync(GetPackageManagerLines(), restoreTfm, ReportError));
 
             PackageRestoreResult packageRestoreResult;
 
