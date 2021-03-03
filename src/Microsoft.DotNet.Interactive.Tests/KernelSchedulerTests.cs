@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -456,8 +456,8 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task AsyncContext_flows_from_scheduled_work_to_deferred_work()
         {
             using var scheduler = new KernelScheduler<int, int>();
-            int asyncId1 = default;
-            var asyncIds = new []{0,0,0};
+            int asyncIdForScheduledWork = default;
+            var asyncIdsForDeferredWork = new []{0,0,0};
 
             scheduler.RegisterDeferredOperationSource((execute, name) =>
             {
@@ -465,18 +465,18 @@ namespace Microsoft.DotNet.Interactive.Tests
             }, async value =>
             {
                 AsyncContext.TryEstablish(out var asyncId);
-                asyncIds[value] = asyncId;
+                asyncIdsForDeferredWork[value] = asyncId;
                 await Task.Yield();
                 return value;
             });;
             await scheduler.RunAsync(1, async value =>
             {
-                AsyncContext.TryEstablish(out asyncId1);
+                AsyncContext.TryEstablish(out asyncIdForScheduledWork);
                 await Task.Yield();
                 return value;
             });
 
-            asyncIds.Should().AllBeEquivalentTo(asyncId1);
+            asyncIdsForDeferredWork.Should().AllBeEquivalentTo(asyncIdForScheduledWork);
         }
 
 
