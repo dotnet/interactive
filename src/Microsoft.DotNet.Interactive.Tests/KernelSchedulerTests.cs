@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using FluentAssertions;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -449,6 +450,33 @@ namespace Microsoft.DotNet.Interactive.Tests
             });
 
             asyncId2.Should().NotBe(asyncId1);
+        }
+
+        [Fact]
+        public async Task AsyncContext_flows_from_scheduled_work_to_deferred_work()
+        {
+            using var scheduler = new KernelScheduler<int, int>();
+            int asyncId1 = default;
+            var asyncIds = new []{0,0,0};
+
+            scheduler.RegisterDeferredOperationSource((execute, name) =>
+            {
+                return new[] {1,2,3};
+            }, async value =>
+            {
+                AsyncContext.TryEstablish(out var asyncId);
+                asyncIds[value] = asyncId;
+                await Task.Yield();
+                return value;
+            });;
+            await scheduler.RunAsync(1, async value =>
+            {
+                AsyncContext.TryEstablish(out asyncId1);
+                await Task.Yield();
+                return value;
+            });
+
+            asyncIds.Should().AllBeEquivalentTo(asyncId1);
         }
 
 
