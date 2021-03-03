@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
     {
 
         [Fact]
-        public async Task SQLKernel_will_suggests_sqllite_connection_when_statements_are_submitted_to_it()
+        public async Task SQLKernel_suggests_SQLite_connection_when_statements_are_submitted_to_it()
         {
             using var kernel = new CompositeKernel
             {
@@ -47,12 +47,12 @@ SELECT * FROM fruit
 
             events.Should().NotContainErrors();
             events.Should()
-                .ContainSingle<DisplayedValueProduced>()
-                .Which
-                .Value
-                .As<string>()
-                .Should()
-                .Contain("- `#!sql-mydb`");
+                  .ContainSingle<DisplayedValueProduced>()
+                  .Which
+                  .FormattedValues
+                  .Should()
+                  .ContainSingle(v => v.Value.Contains("#!sql-mydb") &&
+                                      v.MimeType == "text/html");
         }
 
         [Fact]
