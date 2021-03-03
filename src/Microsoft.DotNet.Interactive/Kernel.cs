@@ -284,6 +284,8 @@ namespace Microsoft.DotNet.Interactive
 
                 while (_deferredCommands.TryDequeue(out var kernelCommand))
                 {
+                    kernelCommand.TargetKernelName = Name;
+                    kernelCommand.KernelUri = Uri;
                     var currentInvocationContext = KernelInvocationContext.Current;
                     if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
                     {

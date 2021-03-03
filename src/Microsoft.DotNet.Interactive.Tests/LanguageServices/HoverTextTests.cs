@@ -110,7 +110,8 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         {
             // declare a variable in deferred code
             using var kernel = CreateKernel(language);
-            kernel.DeferCommand(new SubmitCode(deferredCode));
+            var languageKernel = kernel.FindKernel(language.LanguageName());
+            languageKernel.DeferCommand(new SubmitCode(deferredCode));
 
             // send the actual language service request that depends on the deferred code
             MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
