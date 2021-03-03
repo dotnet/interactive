@@ -48,8 +48,8 @@ function Build-Extension([string] $packageDirectory, [string] $packageVersionNum
 try {
     $stablePackageVersion = "${stableToolVersionNumber}00"
     $insidersPackageVersion = "${stableToolVersionNumber}01"
-    Build-Extension -packageDirectory "stable" -packageVersionNumber $stablePackageVersion -kernelVersionNumber $stableToolVersionNumber
-    Build-Extension -packageDirectory "insiders" -packageVersionNumber $insidersPackageVersion -kernelVersionNumber $stableToolVersionNumber
+    Build-Extension -packageDirectory "stable" -packageVersionNumber $stableToolVersionNumber -kernelVersionNumber $stableToolVersionNumber
+    Build-Extension -packageDirectory "insiders" -packageVersionNumber $stableToolVersionNumber -kernelVersionNumber $stableToolVersionNumber
 }
 catch {
     Write-Host $_
