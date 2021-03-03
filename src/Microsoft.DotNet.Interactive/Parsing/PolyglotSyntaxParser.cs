@@ -84,6 +84,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                 _sourceText,
                                 currentKernelName ?? DefaultLanguage,
                                 rootNode.SyntaxTree);
+                            if (_subkernelInfoByKernelName.TryGetValue(directiveNode.KernelName ?? string.Empty, out currentKernelInfo))
+                            {
+                                directiveNode.KernelUri = currentKernelInfo.kernelUri;
+                            }
                         }
 
                         if (_tokens.Count > i + 1 &&
