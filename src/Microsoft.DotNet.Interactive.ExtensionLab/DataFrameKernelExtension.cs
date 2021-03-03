@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             KernelInvocationContext.Current?.Display(
                 new HtmlString($@"<details><summary>Create strongly-typed dataframes using<code>#!linqify</code>.</summary>
-    <p>The `#!linqify` magic command replaces a <a href=""https://www.nuget.org/packages/Microsoft.Data.Analysis/""><code>Microsoft.Data.Analysis.DataFrame</code></a> variable with a generated, strongly-typed data frame, allowing the use of LINQ operations over the contained data.</p>
+    <p>The <code>#!linqify</code> magic command replaces a <a href=""https://www.nuget.org/packages/Microsoft.Data.Analysis/""><code>Microsoft.Data.Analysis.DataFrame</code></a> variable with a generated, strongly-typed data frame, allowing the use of LINQ operations over the contained data.</p>
     </details>"),
                 "text/html");
 

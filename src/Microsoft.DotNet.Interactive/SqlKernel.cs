@@ -5,13 +5,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Formatting;
+using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive
 {
     /* This kernel is used as a placeholder for the MSSQL kernel in order to enable SQL language coloring
 * in the editor. Language grammars can only be defined for fixed kernel names, but MSSQL subkernels
 * are user-defined via the #!connect magic command. So, this kernel is specified in addition to the
-* user-defined kernel as a kind of "styling" kernel.
+* user-defined kernel as a kind of "styling" kernel as well as to provide guidance and discoverability
+* for SQL features.
 */
     public class SQLKernel :
         Kernel,
@@ -31,21 +34,19 @@ namespace Microsoft.DotNet.Interactive
 
         public Task HandleAsync(SubmitCode command, KernelInvocationContext context)
         {
-
             var root = (Kernel)ParentKernel ?? this;
 
-            var mssqlKernelNames = new HashSet<string>();
-            
+            var connectedSqlKernelNames = new HashSet<string>();
 
-            root.VisitSubkernelsAndSelf(childKernel =>
+            root.VisitSubkernels(childKernel =>
             {
-                if (_kernelNameFilter.Contains( childKernel.GetType().Name))
+                if (_kernelNameFilter.Contains(childKernel.GetType().Name))
                 {
-                    mssqlKernelNames.Add(childKernel.Name);
+                    connectedSqlKernelNames.Add(childKernel.Name);
                 }
             });
 
-            if (mssqlKernelNames.Count == 0)
+            if (connectedSqlKernelNames.Count == 0)
             {
                 context.Display(HTML(@"
 <p>A SQL connection has not been established.</p>
@@ -70,14 +71,19 @@ Now, you can connect to a Microsoft SQL Server database by running the following
 </code>
 "), "text/html");
             }
-            else if(!string.IsNullOrWhiteSpace(command.Code))
+            else if (!string.IsNullOrWhiteSpace(command.Code))
             {
-                context.Display($@"
-Submit SQL statements to one of the following SQL connections.
+                PocketView view =
+                    div(
+                        p("You can send SQL statements to one of the following connected SQL kernels:"),
+                        connectedSqlKernelNames.Select(
+                            name =>
+                                code(
+                                    pre($"    #!{name}\n    SELECT TOP * FROM ..."))));
 
-- {string.Join("\n- ",mssqlKernelNames.Select(n => $"`#!{n}`"))}
-", "text/markdown");
+                context.Display(view);
             }
+
             return Task.CompletedTask;
         }
     }

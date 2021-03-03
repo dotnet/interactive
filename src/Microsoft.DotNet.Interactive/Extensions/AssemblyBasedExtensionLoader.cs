@@ -122,6 +122,8 @@ namespace Microsoft.DotNet.Interactive.Extensions
                 {
                     var extension = (IKernelExtension) Activator.CreateInstance(extensionType);
 
+                    context.Display($"Loading extensions from `{extensionType.FullName}`", "text/markdown");
+
                     try
                     {
                         await extension.OnLoadAsync(kernel);
