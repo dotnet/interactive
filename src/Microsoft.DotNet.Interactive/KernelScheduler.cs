@@ -15,9 +15,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly List<DeferredOperation> _deferredOperationSources = new();
         private readonly ConcurrentQueue<ScheduledOperation> _immediateQueue = new();
         private readonly CancellationTokenSource _schedulerDisposalSource = new();
-        private readonly object _lockObj = new();
         private readonly Task _runLoopTask;
-        private readonly Thread _runLoopThread = default;
         private readonly AsyncLocal<ScheduledOperation> _currentTopLevelOperation = new();
         private readonly Logger Log = new("KernelScheduler");
 
@@ -30,9 +28,6 @@ namespace Microsoft.DotNet.Interactive
                ScheduledOperationRunLoop,
                 TaskCreationOptions.LongRunning,
                _schedulerDisposalSource.Token);
-
-            //_runLoopThread = new Thread(ScheduledOperationRunLoop);
-            //_runLoopThread.Start();
         }
 
         public Task<U> RunAsync(
