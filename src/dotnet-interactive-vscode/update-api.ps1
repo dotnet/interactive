@@ -15,4 +15,4 @@ DownloadJupyterApi -branchName $jupyterStableVersion -destinationDirectory "stab
 DownloadVsCodeApi -branchName "release/$vsCodeStableVersion" -destinationDirectory "stable\src"
 
 # insiders
-DownloadVsCodeApi -branchName "master" -destinationDirectory "insiders\src"
+DownloadVsCodeApi -branchName "main" -destinationDirectory "insiders\src"
