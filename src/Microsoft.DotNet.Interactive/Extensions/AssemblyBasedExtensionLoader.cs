@@ -118,11 +118,14 @@ namespace Microsoft.DotNet.Interactive.Extensions
                                      .Where(t => t.CanBeInstantiated() && typeof(IKernelExtension).IsAssignableFrom(t))
                                      .ToArray();
 
+                if (extensionTypes.Any())
+                {
+                    context.Display($"Loading extensions from `{assemblyFile.Name}`", "text/markdown");
+                }
+
                 foreach (var extensionType in extensionTypes)
                 {
                     var extension = (IKernelExtension) Activator.CreateInstance(extensionType);
-
-                    context.Display($"Loading extensions from `{extensionType.FullName}`", "text/markdown");
 
                     try
                     {

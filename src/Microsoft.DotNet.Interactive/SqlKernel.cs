@@ -71,7 +71,7 @@ Now, you can connect to a Microsoft SQL Server database by running the following
 </code>
 "), "text/html");
             }
-            else if (!string.IsNullOrWhiteSpace(command.Code))
+            else
             {
                 PocketView view =
                     div(
