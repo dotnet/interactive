@@ -126,8 +126,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
     let jupyterApi: jupyter.IJupyterExtensionApi | undefined = undefined;
     if (useJupyterExtension) {
-        jupyterApi = <jupyter.IJupyterExtensionApi>await jupyterExtension!.activate();
-        jupyterApi.registerNewNotebookContent({ defaultCellLanguage: 'dotnet-interactive.csharp' });
+        try {
+            jupyterApi = <jupyter.IJupyterExtensionApi>await jupyterExtension!.activate();
+            jupyterApi.registerNewNotebookContent({ defaultCellLanguage: 'dotnet-interactive.csharp' });
+        } catch (err) {
+            diagnosticsChannel.appendLine(`Error activating and registering with Jupyter extension: ${err}.  Defaulting to local file handling.`);
+            useJupyterExtension = false;
+            jupyterApi = undefined;
+        }
     }
 
     const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable
