@@ -65,9 +65,19 @@
                     ],
                         function (dotnet) {
                             dotnet.init(global);
+                            dotnet.createDotnetInteractiveClient(uri)
+                                .then(client => {
+                                    global.interactiveClientInstance = client;
+                                    console.log('dotnet-interactive client connection established');
+                                })
+                                .catch(error => {
+                                    console.log('dotnet-interactive client connection cannot be established');
+                                    console.log(error);
+                                });
                             console.log('dotnet-interactive js api initialised');
                         },
                         function (error) {
+                            console.log('dotnet-interactive js api initialisation failure');
                             console.log(error);
                         }
                     );
