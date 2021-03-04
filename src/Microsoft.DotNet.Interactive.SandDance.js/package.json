@@ -1,7 +1,7 @@
 {
-  "name": "microsoft.dotnet.interactive.nteract.dataexplorer",
+  "name": "microsoft.dotnet.interactive.sanddance",
   "version": "1.0.0",
-  "description": "api to create nteract dataexplorer",
+  "description": "api to create sanddance visualizations",
   "main": "lib/index.js",
   "types": "./lib/index.d.ts",
   "files": [
@@ -28,18 +28,27 @@
   },
   "homepage": "https://github.com/dotnet/interactive",
   "dependencies": {
-    "@nteract/data-explorer": "8.2.9",
+    "@deck.gl/core": "^8.3.7",
+    "@deck.gl/layers": "^8.3.7",
+    "@msrvida/sanddance-explorer": "^3",
+    "@luma.gl/core": "^8.3.1",
+    "@fluentui/react": "^7.150.0",
+    "vega": "^5.17.0",
     "react": "16.13.1",
-    "react-dom": "16.13.1",
-    "styled-components": "5.1.1"
+    "react-dom": "16.13.1"
   },
   "devDependencies": {
+    "@msrvida/fluentui-react-cdn-typings": "^1",
+    "@types/chai": "4.2.11",
+    "@types/chai-as-promised": "7.1.2",
     "@types/expect.js": "0.3.29",
     "@types/mocha": "5.2.5",
     "@types/node": "10.11.6",
     "@types/react-dom": "16.9.8",
     "@types/styled-components": "5.1.2",
     "@types/webpack-env": "1.15.2",
+    "chai": "4.2.0",
+    "chai-as-promised": "7.1.1",
     "css-loader": "4.2.2",
     "fs-extra": "9.0.1",
     "mkdirp": "1.0.4",

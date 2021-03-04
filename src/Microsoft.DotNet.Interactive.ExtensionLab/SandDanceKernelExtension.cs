@@ -4,39 +4,36 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Http;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
-    public class NteractKernelExtension : IKernelExtension, IStaticContentSource
+    public class SandDanceKernelExtension : IKernelExtension, IStaticContentSource
     {
+        public string Name => "SandDance";
         public Task OnLoadAsync(Kernel kernel)
         {
-            kernel.UseDataExplorer();
-
+            kernel.UseSandDanceExplorer();
             kernel.RegisterForDisposal(() => DataExplorerExtensions.Settings.RestoreDefault());
 
             KernelInvocationContext.Current?.Display(
-                new HtmlString($@"<details><summary>Explore data visually using the <a href=""https://github.com/nteract/data-explorer"">nteract Data Explorer</a>.</summary>
-    <p>This extension adds the ability to sort, filter, and visualize data using the <a href=""https://github.com/nteract/data-explorer"">nteract Data Explorer</a>. Use the <code>Explore</code> extension method with variables of type <code>IEnumerable<T></code> or <code>IDataView</code> to render the data explorer.</p>
+                new HtmlString($@"<details><summary>Explore data visually using the <a href=""https://github.com/microsoft/SandDance"">SandDance Explorer</a>.</summary>
+    <p>This extension adds the ability to sort, filter, and visualize data using the <a href=""https://github.com/microsoft/SandDance"">SandDance Explorer</a>. Use the <code>SandDance</code> extension method with variables of type <code>IEnumerable<T></code> or <code>IDataView</code> to render the data explorer.</p>
     <img src=""https://user-images.githubusercontent.com/547415/109559345-621e5880-7a8f-11eb-8b98-d4feeaac116f.png"" width=""75%"">
     </details>"),
                 "text/html");
 
             return Task.CompletedTask;
         }
-
-        public string Name => "nteract";
     }
 
-    public static class DataExplorerExtensions
+    public static class SandDanceExplorerExtensions
     {
         public static DataExplorerSettings Settings { get; } = new();
 
-        public static T UseDataExplorer<T>(this T kernel) where T : Kernel
+        public static T UseSandDanceExplorer<T>(this T kernel) where T : Kernel
         {
             RegisterFormatters();
             return kernel;
@@ -46,12 +43,12 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             Formatter.Register<TabularJsonString>((explorer, writer) =>
             {
-                var html = explorer.RenderDataExplorer();
+                var html = explorer.RenderSandDanceExplorer();
                 writer.Write(html);
             }, HtmlFormatter.MimeType);
         }
 
-        private static HtmlString RenderDataExplorer(this TabularJsonString data)
+        private static HtmlString RenderSandDanceExplorer(this TabularJsonString data)
         {
             var divId = Guid.NewGuid().ToString("N");
             var code = new StringBuilder();
@@ -67,7 +64,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         private static void GenerateCode(TabularJsonString data, StringBuilder code, string divId, string requireUri)
         {
-            var functionName = $"renderDataExplorer_{divId}";
+            var functionName = $"renderSandDanceExplorer_{divId}";
             GenerateFunctionCode(data, code, divId, functionName);
             GenerateRequireLoader(code, functionName, requireUri);
         }
@@ -88,16 +85,16 @@ let {functionName} = () => {{");
                 var absoluteUri = Settings.Uri.AbsoluteUri.Replace(".js", string.Empty);
                 var cacheBuster = Settings.CacheBuster ?? absoluteUri.GetHashCode().ToString("0");
                 code.AppendLine($@"
-    (require.config({{ 'paths': {{ 'context': '{context}', 'nteractUri' : '{absoluteUri}', 'urlArgs': 'cacheBuster={cacheBuster}' }}}}) || require)(['nteractUri'], (nteract) => {{");
+    (require.config({{ 'paths': {{ 'context': '{context}', 'sandDanceUri' : '{absoluteUri}', 'urlArgs': 'cacheBuster={cacheBuster}' }}}}) || require)(['sandDanceUri'], (sandDance) => {{");
             }
             else
             {
                 code.AppendLine($@"
-    configureRequireFromExtension('nteract','{context}')(['nteract/nteractapi'], (nteract) => {{");
+    configureRequireFromExtension('SandDance','{context}')(['sandDance/sanddanceapi'], (sandDance) => {{");
             }
 
             code.AppendLine($@"
-        nteract.createDataExplorer({{
+        sanddance.createDataExplorer({{
             data: {data},
             container: document.getElementById(""{divId}"")
         }});

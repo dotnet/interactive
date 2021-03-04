@@ -3,10 +3,10 @@
 
 <head>
     <title>The demo thing</title>
-    <script src="../dist/nteractapi.js"></script>
+    <script src="../dist/sanddanceapi.js"></script>
 </head>
 
-<body>
+<body>  
 
     <div id="output" style="height: 100ch ;margin: 2px;"></div>
 
@@ -48,7 +48,7 @@
             ]
         };
 
-        let viewer = nteract.createDataExplorer({
+        let viewer = sandDance.createSandDanceExplorer({
             data: basicData,
             container: document.getElementById("output")
         });
