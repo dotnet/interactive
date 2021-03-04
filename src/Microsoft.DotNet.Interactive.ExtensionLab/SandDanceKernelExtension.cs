@@ -115,7 +115,7 @@ let {functionName} = () => {{");
             }
 
             code.AppendLine($@"
-        sanddance.createDataExplorer({{
+        sandDance.createSandDanceExplorer({{
             data: {data},
             container: document.getElementById(""{divId}"")
         }});
