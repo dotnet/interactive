@@ -113,7 +113,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                           .EnforceNewLine()
                           .Should()
                           .Be(@"<script type=""text/javascript"">if (typeof window.createDotnetInteractiveClient === typeof Function) {
-createDotnetInteractiveClient('http://12.12.12.12:4242/').then(function (interactive) {
+createDotnetInteractiveClient('http://12.12.12.12:4242/').then(async function (interactive) {
 let notebookScope = getDotnetInteractiveScope('http://12.12.12.12:4242/');
 alert('hello');
 });
