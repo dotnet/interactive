@@ -10,7 +10,7 @@ import { StdioKernelTransport } from '../stdioKernelTransport';
 import { registerLanguageProviders } from './languageProvider';
 import { registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
 
-import { getSimpleLanguage, isDotnetInteractiveLanguage, notebookCellLanguages } from '../interactiveNotebook';
+import { getSimpleLanguage, isDotnetInteractiveLanguage } from '../interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
 import { DotNetCellMetadata, withDotNetMetadata } from '../ipynbUtilities';
@@ -191,11 +191,6 @@ async function updateCellLanguageInMetadata(languageChangeEvent: { cell: vscode.
 
 async function updateDocumentMetadata(e: { document: vscode.NotebookDocument, kernel: vscode.NotebookKernel | undefined }, clientMapper: ClientMapper) {
     if (e.kernel?.id === KernelId) {
-        if (!isInsidersBuild()) {
-            // update document language (not supported on Insiders)
-            e.document.languages = notebookCellLanguages;
-        }
-
         // update various metadata
         await updateDocumentKernelspecMetadata(e.document);
         await updateCellLanguages(e.document);

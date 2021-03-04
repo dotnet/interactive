@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ClientMapper } from '../clientMapper';
-import { notebookCellLanguages, getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook } from '../interactiveNotebook';
+import { getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook } from '../interactiveNotebook';
 import { Eol } from '../interfaces';
 import { NotebookCell, NotebookCellOutput, NotebookDocument } from 'dotnet-interactive-vscode-interfaces/out/contracts';
 import { configureWebViewMessaging, getEol, isInsidersBuild, isUnsavedNotebook } from './vscodeUtilities';
@@ -16,7 +16,6 @@ import { OutputChannelAdapter } from './OutputChannelAdapter';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
 
-    private readonly onDidChangeNotebookEventEmitter = new vscode.EventEmitter<vscode.NotebookDocumentEditEvent>();
     eol: Eol;
 
     constructor(readonly outputChannel: OutputChannelAdapter, readonly clientMapper: ClientMapper) {
@@ -57,10 +56,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 
     private createNotebookData(cells: Array<NotebookCell>): vscode.NotebookData {
         const notebookData: vscode.NotebookData = {
-            languages: notebookCellLanguages,
-            metadata: {
-                cellHasExecutionOrder: false
-            },
+            metadata: new vscode.NotebookDocumentMetadata().with({ cellHasExecutionOrder: false }),
             cells: cells.map(toVsCodeNotebookCellData)
         };
 
@@ -78,8 +74,6 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
     saveNotebookAs(targetResource: vscode.Uri, document: vscode.NotebookDocument, _cancellation: vscode.CancellationToken): Promise<void> {
         return this.save(document, targetResource);
     }
-
-    onDidChangeNotebook: vscode.Event<vscode.NotebookDocumentEditEvent> = this.onDidChangeNotebookEventEmitter.event;
 
     async backupNotebook(document: vscode.NotebookDocument, context: vscode.NotebookDocumentBackupContext, cancellation: vscode.CancellationToken): Promise<vscode.NotebookDocumentBackup> {
         const extension = path.extname(document.uri.fsPath);
@@ -107,17 +101,17 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 
 function toVsCodeNotebookCellData(cell: NotebookCell): vscode.NotebookCellData {
     return {
-        cellKind: languageToCellKind(cell.language),
+        cellKind: <number>languageToCellKind(cell.language),
         source: cell.contents,
         language: getNotebookSpecificLanguage(cell.language),
         outputs: cell.outputs.map(toVsCodeNotebookCellOutput),
-        metadata: {}
+        metadata: new vscode.NotebookCellMetadata().with({ hasExecutionOrder: false }),
     };
 }
 
-function toVsCodeNotebookCellOutput(output: NotebookCellOutput): vscode.CellOutput {
+function toVsCodeNotebookCellOutput(output: NotebookCellOutput): vscode.NotebookCellOutput {
     if (isInsidersBuild()) {
-        return <vscode.CellOutput><any>vscodeInsiders.contractCellOutputToVsCodeCellOutput(output);
+        return vscodeInsiders.contractCellOutputToVsCodeCellOutput(output);
     } else {
         return vscodeStable.contractCellOutputToVsCodeCellOutput(output);
     }
@@ -137,9 +131,9 @@ function toNotebookCell(cell: vscode.NotebookCell): NotebookCell {
     };
 }
 
-function toNotebookCellOutput(output: vscode.CellOutput): NotebookCellOutput {
+function toNotebookCellOutput(output: vscode.NotebookCellOutput): NotebookCellOutput {
     if (isInsidersBuild()) {
-        return vscodeInsiders.vsCodeCellOutputToContractCellOutput(<vscode.NotebookCellOutput><any>output);
+        return vscodeInsiders.vsCodeCellOutputToContractCellOutput(output);
     } else {
         return vscodeStable.vsCodeCellOutputToContractCellOutput(output);
     }

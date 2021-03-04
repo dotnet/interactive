@@ -6,72 +6,64 @@ import * as contracts from 'dotnet-interactive-vscode-interfaces/out/contracts';
 import * as interfaces from 'dotnet-interactive-vscode-interfaces/out/notebook';
 import * as utilities from 'dotnet-interactive-vscode-interfaces/out/utilities';
 
+function generateVsCodeNotebookCellOutputItem(mimeType: string, value: unknown): vscode.NotebookCellOutputItem {
+    const displayValue = utilities.reshapeOutputValueForVsCode(mimeType, value);
+    return new vscode.NotebookCellOutputItem(mimeType, displayValue);
+}
+
 export async function updateCellOutputs(document: vscode.NotebookDocument, cellIndex: number, outputs: Array<interfaces.NotebookCellOutput>) {
     const edit = new vscode.WorkspaceEdit();
     edit.replaceNotebookCellOutput(document.uri, cellIndex, outputs.map(o => {
-        return new vscode.NotebookCellOutput(o.outputs.map(oi => {
-            // Stable vs code doesn't support the error mime type, so we force the display to `text/plain` to ensure something shows up.
-            // https://github.com/dotnet/interactive/issues/1063
-            const mimeType = oi.mime === interfaces.ErrorOutputMimeType ? 'text/plain' : oi.mime;
-            return new vscode.NotebookCellOutputItem(mimeType, oi.value);
-        }));
+        return new vscode.NotebookCellOutput(o.outputs.map(oi => generateVsCodeNotebookCellOutputItem(oi.mime, oi.value)));
     }));
     await vscode.workspace.applyEdit(edit);
 }
 
-export async function updateNotebookCellMetadata(document: vscode.NotebookDocument, cellIndex: number, metadata: vscode.NotebookCellMetadata) {
+export async function updateNotebookCellMetadata(document: vscode.NotebookDocument, cellIndex: number, metadata: interfaces.NotebookCellMetadata) {
     const cell = document.cells[cellIndex];
-    const newMetadata = { ...cell.metadata, ...metadata };
+    const newMetadata = cell.metadata.with(metadata);
     const edit = new vscode.WorkspaceEdit();
     edit.replaceNotebookCellMetadata(document.uri, cellIndex, newMetadata);
     await vscode.workspace.applyEdit(edit);
 }
 
-export function vsCodeCellOutputToContractCellOutput(output: vscode.CellOutput): contracts.NotebookCellOutput {
-    switch (output.outputKind) {
-        case vscode.CellOutputKind.Error:
-            const error: contracts.NotebookCellErrorOutput = {
-                errorName: output.ename,
-                errorValue: output.evalue,
-                stackTrace: output.traceback
-            };
-            return error;
-        case vscode.CellOutputKind.Rich:
-            const rich: contracts.NotebookCellDisplayOutput = {
-                data: output.data
-            };
-            return rich;
-        case vscode.CellOutputKind.Text:
-            const text: contracts.NotebookCellTextOutput = {
-                text: output.text
-            };
-            return text;
+export function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCellOutput): contracts.NotebookCellOutput {
+    const errorOutputItems = output.outputs.filter(oi => oi.mime === interfaces.ErrorOutputMimeType || oi.metadata?.mimeType === interfaces.ErrorOutputMimeType);
+    if (errorOutputItems.length > 0) {
+        // any error-like output takes precedence
+        const errorOutputItem = errorOutputItems[0];
+        const error: contracts.NotebookCellErrorOutput = {
+            errorName: 'Error',
+            errorValue: '' + errorOutputItem.value,
+            stackTrace: [],
+        };
+        return error;
+    } else {
+        //otherwise build the mime=>value dictionary
+        const data: { [key: string]: any } = {};
+        for (const outputItem of output.outputs) {
+            data[outputItem.mime] = outputItem.value;
+        }
+
+        const cellOutput: contracts.NotebookCellDisplayOutput = {
+            data,
+        };
+
+        return cellOutput;
     }
 }
 
-export function contractCellOutputToVsCodeCellOutput(output: contracts.NotebookCellOutput): vscode.CellOutput {
+export function contractCellOutputToVsCodeCellOutput(output: contracts.NotebookCellOutput): vscode.NotebookCellOutput {
+    const outputItems: Array<vscode.NotebookCellOutputItem> = [];
     if (utilities.isDisplayOutput(output)) {
-        return {
-            outputKind: vscode.CellOutputKind.Rich,
-            data: output.data
-        };
+        for (const mimeKey in output.data) {
+            outputItems.push(generateVsCodeNotebookCellOutputItem(mimeKey, output.data[mimeKey]));
+        }
     } else if (utilities.isErrorOutput(output)) {
-        return {
-            outputKind: vscode.CellOutputKind.Error,
-            ename: output.errorName,
-            evalue: output.errorValue,
-            traceback: output.stackTrace
-        };
+        outputItems.push(generateVsCodeNotebookCellOutputItem(interfaces.ErrorOutputMimeType, output.errorValue));
     } else if (utilities.isTextOutput(output)) {
-        return {
-            outputKind: vscode.CellOutputKind.Text,
-            text: output.text
-        };
+        outputItems.push(generateVsCodeNotebookCellOutputItem('text/plain', output.text));
     }
 
-    // unknown, better to return _something_ than to fail entirely
-    return {
-        outputKind: vscode.CellOutputKind.Rich,
-        data: {}
-    };
+    return new vscode.NotebookCellOutput(outputItems);
 }
