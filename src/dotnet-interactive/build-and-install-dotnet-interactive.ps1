@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 $thisDir = Split-Path -Parent $PSCommandPath
 $toolLocation = ""
 $toolVersion = ""
-dotnet run -p (Join-Path -Path $thisDir ".." "interface-generator") --out-file (Join-Path $thisDir ".." "dotnet-interactive-vscode" "src" "contracts.ts")
+dotnet run -p (Join-Path -Path $thisDir ".." "interface-generator") --out-file (Join-Path $thisDir ".." "dotnet-interactive-vscode" "src" "interfaces" "src" "contracts.ts")
 
 dotnet run -p (Join-Path -Path $thisDir ".." "interface-generator") --out-file (Join-Path $thisDir ".." "Microsoft.DotNet.Interactive.Js" "src" "dotnet-interactive" "contracts.ts")
 
