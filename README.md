@@ -14,6 +14,12 @@
 
 # Notebooks with .NET
 
+## Visual Studio Code
+
+We recently introduced the [.NET Interactive Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) extension for Visual Studio Code, which adds support for .NET Interactive using the new Visual Studio Code [native notebook feature](https://code.visualstudio.com/updates/v1_45#_github-issue-notebook). We encourage you to [try it out](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode). If you'd like to contribute, you can start [here](CONTRIBUTING.md). 
+
+![newnotebook](https://user-images.githubusercontent.com/2546640/94438730-833fed80-016d-11eb-94e6-da7b51abf58a.gif)
+
 ## Jupyter and nteract
 
 [Project Jupyter](https://jupyter.org/) is a popular platform for creating interactive notebooks that can be used for data science, documentation, DevOps, and much more.
@@ -28,12 +34,6 @@ There are several ways to get started using .NET with Jupyter, including Jupyter
 - [Share your own .NET notebooks with others online using Binder](docs/CreateBinder.md).
 - [Use .NET Interactive with nteract](https://nteract.io/kernels/dotnet)
 - [Use .NET Interactive on Raspberry Pi and pi-top](docs/small-factor-devices.md)
-
-## Visual Studio Code
-
-We have recently introduced the [.NET Interactive Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) extension for Visual Studio Code Insiders, which adds support for .NET Interactive using the new Visual Studio Code [native notebook feature](https://code.visualstudio.com/updates/v1_45#_github-issue-notebook). While we are still in the early stages of this effort, we encourage you to [try it out](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode). If you'd like to contribute, you can start [here](CONTRIBUTING.md). 
-
-![newnotebook](https://user-images.githubusercontent.com/2546640/94438730-833fed80-016d-11eb-94e6-da7b51abf58a.gif)
 
 ## Documentation
 
