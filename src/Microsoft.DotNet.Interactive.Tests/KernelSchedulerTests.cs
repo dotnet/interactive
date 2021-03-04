@@ -1,7 +1,8 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using FluentAssertions;
 using System.Linq;
@@ -457,26 +458,32 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
             using var scheduler = new KernelScheduler<int, int>();
             int asyncIdForScheduledWork = default;
-            var asyncIdsForDeferredWork = new []{0,0,0};
+            var asyncIdsForDeferredWork = new ConcurrentBag<int>();
+
+            AsyncContext.TryEstablish(out var _);
 
             scheduler.RegisterDeferredOperationSource((execute, name) =>
             {
-                return new[] {1,2,3};
+                return new[] {0,1,2};
             }, async value =>
             {
                 AsyncContext.TryEstablish(out var asyncId);
-                asyncIdsForDeferredWork[value] = asyncId;
+                asyncIdsForDeferredWork.Add( asyncId );
                 await Task.Yield();
                 return value;
-            });;
-            await scheduler.RunAsync(1, async value =>
+            });
+
+            await scheduler.RunAsync(3, async value =>
             {
                 AsyncContext.TryEstablish(out asyncIdForScheduledWork);
                 await Task.Yield();
                 return value;
             });
 
-            asyncIdsForDeferredWork.Should().AllBeEquivalentTo(asyncIdForScheduledWork);
+            asyncIdsForDeferredWork.Should()
+                .HaveCount(3)
+                .And
+                .AllBeEquivalentTo(asyncIdForScheduledWork);
         }
 
 
