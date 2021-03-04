@@ -18,7 +18,7 @@
     <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
     <PocketLoggerVersion>0.3.0</PocketLoggerVersion>
     <SystemDiagnosticsProcessVersion>4.3.0</SystemDiagnosticsProcessVersion>
-    <SystemReactiveVersion>4.4.1</SystemReactiveVersion>
+    <SystemReactiveVersion>5.0.0</SystemReactiveVersion>
     <SystemRuntimeExtensionsVersion>4.3.0</SystemRuntimeExtensionsVersion>
     <MicrosoftCodeAnalysisCommonVersion>3.8.0</MicrosoftCodeAnalysisCommonVersion>
     <TaskExtensionsVersion>0.1.8580001</TaskExtensionsVersion>
