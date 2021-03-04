@@ -151,13 +151,6 @@ namespace Microsoft.DotNet.Interactive
 
         public Kernel HandlingKernel { get; internal set; }
 
-        public async Task QueueAction(KernelCommandInvocation action)
-        {
-            var command = new AnonymousKernelCommand(action);
-
-            await HandlingKernel.SendAsync(command);
-        }
-
         public ValueTask DisposeAsync()
         {
             if (_current.Value is { } active)
