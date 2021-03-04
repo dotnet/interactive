@@ -372,7 +372,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                                               }
                                           ));
 
-            var xs = await Task.WhenAll(tasks).Timeout(6.Seconds());
+            var xs = await Task.WhenAll(tasks);
 
             xs.Should().BeEquivalentTo(0, 1, 2, 3, 4);
         }

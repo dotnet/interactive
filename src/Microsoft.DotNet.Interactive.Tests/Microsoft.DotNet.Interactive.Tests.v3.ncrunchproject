@@ -5,19 +5,5 @@
     <HiddenComponentWarnings>
       <Value>CopyReferencedAssembliesToWorkspaceIsOn</Value>
     </HiddenComponentWarnings>
-    <IgnoredTests>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.QuitCommandTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.CancelCommandTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageKernelPackageTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Microsoft.DotNet.Interactive.Tests.LanguageKernelExtensionLoadingTests</FixtureName>
-      </FixtureTestSelector>
-    </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
