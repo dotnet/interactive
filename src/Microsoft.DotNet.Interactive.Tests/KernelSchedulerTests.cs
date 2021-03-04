@@ -215,7 +215,7 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public void exception_in_scheduled_work_does_not_prevent_execution_of_work_already_queued()
+        public async Task exception_in_scheduled_work_does_not_prevent_execution_of_work_already_queued()
         {
             using var scheduler = new KernelScheduler<int, int>();
             var barrier = new Barrier(2);
@@ -234,7 +234,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             barrier.SignalAndWait();
 
-            t2.Status.Should().Be(TaskStatus.WaitingForActivation);
+            await t2;
             laterWorkWasExecuted.Should().BeTrue();
         }
 
