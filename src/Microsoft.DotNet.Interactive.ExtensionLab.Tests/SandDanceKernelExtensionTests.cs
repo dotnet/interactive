@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Assent;
 using FluentAssertions;
-using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.DotNet.Interactive.Formatting;
 using Xunit;
 using Xunit.Abstractions;
@@ -41,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ToTabularJsonString().ToDisplayString(SandDanceExplorerExtensions.MimeType);
+            var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("configureRequireFromExtension('SandDance','1.0.0')(['sandDance/sanddanceapi'], (sandDance) => {");
         }
@@ -63,7 +62,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ToTabularJsonString().ToDisplayString(SandDanceExplorerExtensions.MimeType);
+            var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("configureRequireFromExtension");
         }
@@ -85,7 +84,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ToTabularJsonString().ToDisplayString(SandDanceExplorerExtensions.MimeType);
+            var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should()
                 .Contain("if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function)))")
@@ -110,7 +109,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ToTabularJsonString().ToDisplayString(SandDanceExplorerExtensions.MimeType);
+            var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("require.config(");
         }
@@ -132,7 +131,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ToTabularJsonString().ToDisplayString(SandDanceExplorerExtensions.MimeType);
+            var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("'context': '2.2.2'");
         }
@@ -154,7 +153,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ToTabularJsonString().ToDisplayString(SandDanceExplorerExtensions.MimeType);
+            var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("'https://a.cdn.url/script'");
         }
@@ -176,7 +175,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ToTabularJsonString().ToDisplayString(SandDanceExplorerExtensions.MimeType);
+            var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().NotContain("'https://a.cdn.url/script.js'");
         }
@@ -198,7 +197,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ToTabularJsonString().ToDisplayString(SandDanceExplorerExtensions.MimeType);
+            var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("'urlArgs': 'cacheBuster=XYZ'");
         }

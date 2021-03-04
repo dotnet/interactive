@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Http;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -30,9 +31,20 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         }
     }
 
+    public class SandDanceExplorer
+    {
+        internal void LoadData<T>(IEnumerable<T> source)
+        {
+            TabularData = source.ToTabularJsonString();
+        }
+
+        internal TabularJsonString TabularData { get; set; }
+    }
+
     public static class SandDanceExplorerExtensions
     {
-        public static string MimeType => "iahavenoclueyet";
+       
+
         public static DataExplorerSettings Settings { get; } = new();
 
         public static T UseSandDanceExplorer<T>(this T kernel) where T : Kernel
@@ -43,18 +55,18 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public static void RegisterFormatters()
         {
-            Formatter.Register<TabularJsonString>((explorer, writer) =>
+            Formatter.Register<SandDanceExplorer>((explorer, writer) =>
             {
-                var html = explorer.RenderSandDanceExplorer();
+                var html = explorer.TabularData.RenderSandDanceExplorer();
                 writer.Write(html);
-            }, MimeType);
+            }, HtmlFormatter.MimeType);
         }
 
-        public static void ExploreWithSandDance<T>(this IEnumerable<T> source)
+        public static SandDanceExplorer ExploreWithSandDance<T>(this IEnumerable<T> source)
         {
-            KernelInvocationContext.Current.Display(
-                source.ToTabularJsonString(),
-                MimeType);
+            var explorer = new SandDanceExplorer();
+            explorer.LoadData(source);
+            return explorer;
         }
 
         private static HtmlString RenderSandDanceExplorer(this TabularJsonString data)
