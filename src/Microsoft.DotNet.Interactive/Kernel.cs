@@ -223,7 +223,10 @@ namespace Microsoft.DotNet.Interactive
 
             var scheduler = GetOrCreateScheduler();
             var context = KernelInvocationContext.Establish(command);
+            if(context.Command != command)
+            {
 
+            }
             // only subscribe for the root command 
             var currentCommandOwnsContext = context.Command == command;
 

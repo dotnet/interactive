@@ -123,6 +123,7 @@ namespace Microsoft.DotNet.Interactive
             using var _ = Disposable.Create(() => Interlocked.Decrement(ref _concurrency));
             #endregion
 
+            using var __ = Log.OnEnterAndExit($"Run : {operation.Value}");
             try
             {
                 var operationTask = operation.ExecuteAsync();
@@ -247,6 +248,11 @@ namespace Microsoft.DotNet.Interactive
             public string Scope { get; }
 
             public Task<U> ExecuteAsync() => _onExecuteAsync(Value);
+
+            public override string ToString()
+            {
+                return Value.ToString();
+            }
         }
 
         private class DeferredOperation

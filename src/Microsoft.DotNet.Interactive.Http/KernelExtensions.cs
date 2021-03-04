@@ -30,7 +30,6 @@ namespace Microsoft.DotNet.Interactive.Http
                         var html =
                             HttpApiBootstrapper.GetHtmlInjection(probingUrls, httpPort?.ToString() ?? Guid.NewGuid().ToString("N"));
                         context.Display(html, "text/html");
-                        context.Complete(submitCode);
                     }
                 })
             };
