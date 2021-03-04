@@ -5,59 +5,85 @@
     <OutputType>Library</OutputType>
   </PropertyGroup>
 
- <PropertyGroup>
+  <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageDescription>Experimental kernel extensions for dotnet-interactive</PackageDescription>
     <PackageTags>dotnet-interactive</PackageTags>
     <IncludeBuildOutput>true</IncludeBuildOutput>
-    <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn><!-- dll outside of lib/ folder -->
+    <NoWarn>$(NoWarn);NU5100;VSTHRD002</NoWarn>
+    <!-- dll outside of lib/ folder -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <JsApiRoot>$(MSBuildThisFileDirectory)/../Microsoft.DotNet.Interactive.nteract.js/</JsApiRoot>
-  </PropertyGroup>
 
- <ItemGroup>
-   <Compile Remove="bin\**" />
-   <EmbeddedResource Remove="bin\**" />
-   <None Remove="bin\**" />
- </ItemGroup>
 
   <ItemGroup>
-    <TypescriptInputs Include="$(JsApiRoot)package.json" />
-    <TypescriptInputs Include="$(JsApiRoot)package-lock.json" />
-    <TypescriptInputs Include="$(JsApiRoot)rollup.config.js" />
-    <TypescriptInputs Include="$(JsApiRoot)tsconfig.json" />
-    <TypescriptInputs Include="$(JsApiRoot)src/**/*.ts" />
+    <Compile Remove="bin\**" />
+    <EmbeddedResource Remove="bin\**" />
+    <None Remove="bin\**" />
+  </ItemGroup>
+
+  <!-- nteract explorer resources-->
+
+  <PropertyGroup>
+    <nteractJsApiRoot>$(MSBuildThisFileDirectory)/../Microsoft.DotNet.Interactive.nteract.js/</nteractJsApiRoot>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <nteractTypescriptInputs Include="$(nteractJsApiRoot)package.json" />
+    <nteractTypescriptInputs Include="$(nteractJsApiRoot)package-lock.json" />
+    <nteractTypescriptInputs Include="$(nteractJsApiRoot)rollup.config.js" />
+    <nteractTypescriptInputs Include="$(nteractJsApiRoot)tsconfig.json" />
+    <nteractTypescriptInputs Include="$(nteractJsApiRoot)src/**/*.ts" />
     <None Include="Inspector\LICENSE.SharpLab" />
     <None Include="Inspector\README.md" />
 
-    <TypescriptOutputFiles Include="$(JsApiRoot)dist/index.js" />
+    <nteractTypescriptOutputFiles Include="$(nteractJsApiRoot)dist/nteractapi.js" />
 
-    <EmbeddedResource Include="@(TypescriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)" />
+    <EmbeddedResource Include="@(nteractTypescriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)" />
 
   </ItemGroup>
 
- <ItemGroup>
-   <PackageReference Include="Microsoft.Data.Analysis" Version="0.4.0" />
-   <PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.0" />
-   <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.8">
-     <PrivateAssets>all</PrivateAssets>
-     <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-   </PackageReference>
-   <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.8" />
-   <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.8" />
- </ItemGroup>
+  <!-- sanddance resources-->
 
- <ItemGroup>
-   <PackageReference Include="Iced" Version="1.8.0" />
-   <PackageReference Include="ICSharpCode.Decompiler" Version="7.0.0.6225-preview1" />
-   <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
-   <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
-   <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="1.1.132302" />
-   <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
- </ItemGroup>
+  <PropertyGroup>
+    <sanddanceJsApiRoot>$(MSBuildThisFileDirectory)/../Microsoft.DotNet.Interactive.SandDance.js/</sanddanceJsApiRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SandDanceTypescriptInputs Include="$(sanddanceJsApiRoot)package.json" />
+    <SandDanceTypescriptInputs Include="$(sanddanceJsApiRoot)package-lock.json" />
+    <SandDanceTypescriptInputs Include="$(sanddanceJsApiRoot)rollup.config.js" />
+    <SandDanceTypescriptInputs Include="$(sanddanceJsApiRoot)tsconfig.json" />
+    <SandDanceTypescriptInputs Include="$(sanddanceJsApiRoot)src/**/*.ts" />
+    <None Include="Inspector\LICENSE.SharpLab" />
+    <None Include="Inspector\README.md" />
+
+    <SandDanceTypescriptOutputFiles Include="$(sanddanceJsApiRoot)dist/sanddanceapi.js" />
+
+    <EmbeddedResource Include="@(SandDanceTypescriptOutputFiles)" LogicalName="$(AssemblyName).resources.%(FileName)%(Extension)" />
+
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Analysis" Version="0.4.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.8" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Iced" Version="1.8.0" />
+    <PackageReference Include="ICSharpCode.Decompiler" Version="7.0.0.6225-preview1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
+    <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="1.1.132302" />
+    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Interactive.Formatting\Microsoft.DotNet.Interactive.Formatting.csproj" />
@@ -74,11 +100,16 @@
   </ItemGroup>
 
   <Target Name="InstallNodeModules">
-    <Exec Command="npm i" WorkingDirectory="$(JsApiRoot)" />
+    <Exec Command="npm i" WorkingDirectory="$(nteractJsApiRoot)" />
+    <Exec Command="npm i" WorkingDirectory="$(sanddanceJsApiRoot)" />
   </Target>
 
-  <Target Name="CompileTypescript" Inputs="@(TypescriptInputs)" Outputs="@(TypescriptOutputFiles)" DependsOnTargets="InstallNodeModules" BeforeTargets="BeforeBuild" Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'">
-    <Exec Command="npm run build" WorkingDirectory="$(JsApiRoot)" />
+  <Target Name="Compilenteract" Inputs="@(nteractTypescriptInputs)" Outputs="@(nteractTypescriptOutputFiles)" DependsOnTargets="InstallNodeModules" BeforeTargets="BeforeBuild" Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'">
+    <Exec Command="npm run build" WorkingDirectory="$(nteractJsApiRoot)" />
+  </Target>
+
+  <Target Name="CompileSandDance" Inputs="@(SandDanceTypescriptInputs)" Outputs="@(SandDanceTypescriptOutputFiles)" DependsOnTargets="InstallNodeModules" BeforeTargets="BeforeBuild" Condition="'$(NCrunch)' != '1' And '$(BuildingInsideVisualStudio)' != 'true'">
+    <Exec Command="npm run build" WorkingDirectory="$(sanddanceJsApiRoot)" />
   </Target>
 
 </Project>

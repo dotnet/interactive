@@ -16,22 +16,22 @@ const resolve = {
 };
 
 module.exports = [
-  {
-    entry: './src/index.ts',
-    output: {
-      filename: 'nteractapi.js',
-      path: path.resolve(__dirname, 'dist'),
-      libraryTarget: 'umd',
-      library: 'nteract',
-      globalObject: 'this'
-    },
-    module: {
-      rules: rules
-    },
-    externals,
-    resolve,
-    optimization: {
-      minimize: true
+    {
+      entry: './src/index.ts',
+      output: {
+        filename: 'sanddanceapi.js',
+        path: path.resolve(__dirname, 'dist'),
+        libraryTarget: 'umd',
+        library: 'sandDance',
+        globalObject: 'this'
+      },
+      module: {
+        rules: rules
+      },
+      externals,
+      resolve,
+      optimization: {
+        minimize: true
+      }
     }
-  }
-];
+  ];
