@@ -81,7 +81,7 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
     }
 }
 
-export async function updateCellMetadata(document: vscode.NotebookDocument, cell: vscode.NotebookCell, metadata: vscode.NotebookCellMetadata): Promise<void> {
+export async function updateCellMetadata(document: vscode.NotebookDocument, cell: vscode.NotebookCell, metadata: interfaces.NotebookCellMetadata): Promise<void> {
     const cellIndex = document.cells.findIndex(c => c === cell);
     if (cellIndex >= 0) {
         if (isInsidersBuild()) {
@@ -113,7 +113,7 @@ export async function updateDocumentKernelspecMetadata(document: vscode.Notebook
             cellKind: c.cellKind,
             source: c.document.getText(),
             language: c.language,
-            outputs: c.outputs,
+            outputs: c.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
             metadata: c.metadata
         };
     });
@@ -140,7 +140,7 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
             cellKind: cell.cellKind,
             source: cellText,
             language: newLanguage,
-            outputs: cell.outputs,
+            outputs: cell.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
             metadata: cell.metadata,
         };
         cellDatas.push(cellData);

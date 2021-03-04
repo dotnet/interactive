@@ -19,7 +19,7 @@ export async function updateCellOutputs(document: vscode.NotebookDocument, cellI
     await vscode.workspace.applyEdit(edit);
 }
 
-export async function updateNotebookCellMetadata(document: vscode.NotebookDocument, cellIndex: number, metadata: vscode.NotebookCellMetadata) {
+export async function updateNotebookCellMetadata(document: vscode.NotebookDocument, cellIndex: number, metadata: interfaces.NotebookCellMetadata) {
     const cell = document.cells[cellIndex];
     const newMetadata = cell.metadata.with(metadata);
     const edit = new vscode.WorkspaceEdit();

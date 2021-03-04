@@ -21,6 +21,28 @@ export interface NotebookCellOutput {
     readonly outputs: NotebookCellOutputItem[];
 }
 
+export enum NotebookCellRunState {
+    Running = 1,
+    Idle = 2,
+    Success = 3,
+    Error = 4
+}
+
+export interface NotebookCellMetadata {
+    editable?: boolean,
+    breakpointMargin?: boolean,
+    runnable?: boolean,
+    hasExecutionOrder?: boolean,
+    executionOrder?: number,
+    runState?: NotebookCellRunState,
+    runStartTime?: number,
+    statusMessage?: string,
+    lastRunDuration?: number,
+    inputCollapsed?: boolean,
+    outputCollapsed?: boolean,
+    custom?: Record<string, any>,
+}
+
 export interface Uri {
     fsPath: string;
     toString: () => string;

@@ -1,4 +1,4 @@
-$vsCodeStableVersion = "1.53"
+$vsCodeStableVersion = "1.54"
 $jupyterStableVersion = "2021.02.1"
 
 function DownloadVsCodeApi([string] $branchName, [string] $destinationDirectory) {
