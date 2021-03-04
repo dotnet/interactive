@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
@@ -31,6 +32,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
     public static class SandDanceExplorerExtensions
     {
+        public static string MimeType => "iahavenoclueyet";
         public static DataExplorerSettings Settings { get; } = new();
 
         public static T UseSandDanceExplorer<T>(this T kernel) where T : Kernel
@@ -45,7 +47,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             {
                 var html = explorer.RenderSandDanceExplorer();
                 writer.Write(html);
-            }, HtmlFormatter.MimeType);
+            }, MimeType);
+        }
+
+        public static void ExploreWithSandDance<T>(this IEnumerable<T> source)
+        {
+            KernelInvocationContext.Current.Display(
+                source.ToTabularJsonString(),
+                MimeType);
         }
 
         private static HtmlString RenderSandDanceExplorer(this TabularJsonString data)
