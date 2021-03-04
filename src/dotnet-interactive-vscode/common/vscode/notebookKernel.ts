@@ -9,9 +9,9 @@ import { getDiagnosticCollection } from './diagnostics';
 import { getSimpleLanguage, notebookCellLanguages } from "../interactiveNotebook";
 import { Diagnostic, DiagnosticSeverity } from '../interfaces/contracts';
 import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, withDotNetKernelMetadata } from '../ipynbUtilities';
+import { generateVsCodeNotebookCellOutputItem } from './notebookContentProvider';
 
 import * as vscodeLike from '../interfaces/vscode-like';
-import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import { createErrorOutput } from '../utilities';
 
 export const KernelId: string = 'dotnet-interactive';
@@ -93,14 +93,22 @@ function setCellErrorState(document: vscode.NotebookDocument, cell: vscode.Noteb
 export async function updateCellMetadata(document: vscode.NotebookDocument, cell: vscode.NotebookCell, metadata: vscodeLike.NotebookCellMetadata): Promise<void> {
     const cellIndex = document.cells.findIndex(c => c === cell);
     if (cellIndex >= 0) {
-        versionSpecificFunctions.updateNotebookCellMetadata(document, cellIndex, metadata);
+        const cell = document.cells[cellIndex];
+        const newMetadata = cell.metadata.with(metadata);
+        const edit = new vscode.WorkspaceEdit();
+        edit.replaceNotebookCellMetadata(document.uri, cellIndex, newMetadata);
+        await vscode.workspace.applyEdit(edit);
     }
 }
 
 export async function updateCellOutputs(document: vscode.NotebookDocument, cell: vscode.NotebookCell, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
     const cellIndex = document.cells.findIndex(c => c === cell);
     if (cellIndex >= 0) {
-        versionSpecificFunctions.updateCellOutputs(document, cellIndex, outputs);
+        const edit = new vscode.WorkspaceEdit();
+        edit.replaceNotebookCellOutput(document.uri, cellIndex, outputs.map(o => {
+            return new vscode.NotebookCellOutput(o.outputs.map(oi => generateVsCodeNotebookCellOutputItem(oi.mime, oi.value)));
+        }));
+        await vscode.workspace.applyEdit(edit);
     }
 }
 

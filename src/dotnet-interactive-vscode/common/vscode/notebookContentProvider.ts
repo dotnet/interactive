@@ -7,10 +7,11 @@ import * as vscode from 'vscode';
 import { ClientMapper } from '../clientMapper';
 import { getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook } from '../interactiveNotebook';
 import { Eol } from '../interfaces';
-import { NotebookCell, NotebookDocument } from '../interfaces/contracts';
+import { NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookDocument } from '../interfaces/contracts';
+import * as utilities from '../interfaces/utilities';
+import * as vscodeLike from '../interfaces/vscode-like';
 import { configureWebViewMessaging, getEol, isUnsavedNotebook } from './vscodeUtilities';
 
-import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
@@ -102,7 +103,7 @@ function toVsCodeNotebookCellData(cell: NotebookCell): vscode.NotebookCellData {
         cellKind: <number>languageToCellKind(cell.language),
         source: cell.contents,
         language: getNotebookSpecificLanguage(cell.language),
-        outputs: cell.outputs.map(versionSpecificFunctions.contractCellOutputToVsCodeCellOutput),
+        outputs: cell.outputs.map(contractCellOutputToVsCodeCellOutput),
         metadata: undefined,
     };
 }
@@ -117,6 +118,52 @@ function toNotebookCell(cell: vscode.NotebookCell): NotebookCell {
     return {
         language: getSimpleLanguage(cell.language),
         contents: cell.document.getText(),
-        outputs: cell.outputs.map(versionSpecificFunctions.vsCodeCellOutputToContractCellOutput)
+        outputs: cell.outputs.map(vsCodeCellOutputToContractCellOutput)
     };
+}
+
+function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCellOutput): NotebookCellOutput {
+    const errorOutputItems = output.outputs.filter(oi => oi.mime === vscodeLike.ErrorOutputMimeType || oi.metadata?.mimeType === vscodeLike.ErrorOutputMimeType);
+    if (errorOutputItems.length > 0) {
+        // any error-like output takes precedence
+        const errorOutputItem = errorOutputItems[0];
+        const error: NotebookCellErrorOutput = {
+            errorName: 'Error',
+            errorValue: '' + errorOutputItem.value,
+            stackTrace: [],
+        };
+        return error;
+    } else {
+        //otherwise build the mime=>value dictionary
+        const data: { [key: string]: any } = {};
+        for (const outputItem of output.outputs) {
+            data[outputItem.mime] = outputItem.value;
+        }
+
+        const cellOutput: NotebookCellDisplayOutput = {
+            data,
+        };
+
+        return cellOutput;
+    }
+}
+
+function contractCellOutputToVsCodeCellOutput(output: NotebookCellOutput): vscode.NotebookCellOutput {
+    const outputItems: Array<vscode.NotebookCellOutputItem> = [];
+    if (utilities.isDisplayOutput(output)) {
+        for (const mimeKey in output.data) {
+            outputItems.push(generateVsCodeNotebookCellOutputItem(mimeKey, output.data[mimeKey]));
+        }
+    } else if (utilities.isErrorOutput(output)) {
+        outputItems.push(generateVsCodeNotebookCellOutputItem(vscodeLike.ErrorOutputMimeType, output.errorValue));
+    } else if (utilities.isTextOutput(output)) {
+        outputItems.push(generateVsCodeNotebookCellOutputItem('text/plain', output.text));
+    }
+
+    return new vscode.NotebookCellOutput(outputItems);
+}
+
+export function generateVsCodeNotebookCellOutputItem(mimeType: string, value: unknown): vscode.NotebookCellOutputItem {
+    const displayValue = utilities.reshapeOutputValueForVsCode(mimeType, value);
+    return new vscode.NotebookCellOutputItem(mimeType, displayValue);
 }
