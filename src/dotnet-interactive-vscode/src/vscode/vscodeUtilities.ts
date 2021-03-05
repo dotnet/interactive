@@ -73,14 +73,16 @@ export function configureWebViewMessaging(webview: vscode.NotebookCommunication,
     webview.onDidReceiveMessage(async (message) => {
         switch (message.command) {
             case "getHttpApiEndpoint":
-                const client = await clientMapper.getOrAddClient(documentUri);
-                const uri = client.tryGetProperty<vscode.Uri>("externalUri");
-                webview.postMessage({ command: "configureFactories", endpointUri: uri?.toString() });
-
-                clientMapper.onClientCreate(documentUri, async (client) => {
+                const client = await clientMapper.tryGetClient(documentUri);
+                if (client) {
                     const uri = client.tryGetProperty<vscode.Uri>("externalUri");
-                    await webview.postMessage({ command: "resetFactories", endpointUri: uri?.toString() });
-                });
+                    webview.postMessage({ command: "configureFactories", endpointUri: uri?.toString() });
+
+                    clientMapper.onClientCreate(documentUri, async (client) => {
+                        const uri = client.tryGetProperty<vscode.Uri>("externalUri");
+                        await webview.postMessage({ command: "resetFactories", endpointUri: uri?.toString() });
+                    });
+                }
                 break;
         }
     });
