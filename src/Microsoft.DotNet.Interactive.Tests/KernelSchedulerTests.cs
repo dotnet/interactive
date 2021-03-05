@@ -140,21 +140,23 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public void cancelling_work_in_progress_prevents_later_scheduled_work_from_executing()
+        public void cancelling_work_in_progress_prevents_subsequent_work_scheduled_before_cancellation_from_executing()
         {
             using var scheduler = new KernelScheduler<int, int>();
             var cts = new CancellationTokenSource();
             var barrier = new Barrier(2);
             var laterWorkWasExecuted = false;
 
-            var t1 = scheduler.RunAsync(1, async v =>
+            // schedule work to be cancelled
+            var _ = scheduler.RunAsync(1, async v =>
             {
                 barrier.SignalAndWait();
-                await Task.Delay(3000);
+                await Task.Delay(1000);
                 return v;
             }, cancellationToken: cts.Token);
 
-            var t2 = scheduler.RunAsync(2, v =>
+            // schedule more work prior to cancellation
+            var laterWork = scheduler.RunAsync(2, v =>
             {
                 laterWorkWasExecuted = true;
                 return Task.FromResult(v);
@@ -163,8 +165,28 @@ namespace Microsoft.DotNet.Interactive.Tests
             barrier.SignalAndWait();
             cts.Cancel();
 
-            t2.Status.Should().Be(TaskStatus.WaitingForActivation);
+            laterWork.Status.Should().Be(TaskStatus.WaitingForActivation);
             laterWorkWasExecuted.Should().BeFalse();
+        }
+
+        [Fact]
+        public void work_in_progress_can_be_cancelled_without_holding_reference_to_the_CancellationToken_used_to_schedule_it()
+        {
+            using var scheduler = new KernelScheduler<int, int>();
+            var barrier = new Barrier(2);
+            var cts = new CancellationTokenSource();
+
+            var task = scheduler.RunAsync(1, async v =>
+            {
+                barrier.SignalAndWait(5000);
+                await Task.Delay(1000);
+                return v;
+            }, cancellationToken: cts.Token);
+
+            barrier.SignalAndWait(5000);
+            scheduler.CancelCurrentOperation();
+
+            task.IsCanceled.Should().BeTrue();
         }
 
         [Fact]

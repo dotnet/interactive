@@ -20,13 +20,22 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly BlockingCollection<ScheduledOperation> _topLevelScheduledOperations = new();
         private readonly Barrier _barrier = new(2);
+        private ScheduledOperation _currentlyRunningOperation;
 
         public KernelScheduler()
         {
             _runLoopTask = Task.Factory.StartNew(
-               ScheduledOperationRunLoop,
+                ScheduledOperationRunLoop,
                 TaskCreationOptions.LongRunning,
-               _schedulerDisposalSource.Token);
+                _schedulerDisposalSource.Token);
+        }
+
+        public void CancelCurrentOperation()
+        {
+            if (_currentlyRunningOperation is { } operation)
+            {
+                operation.TaskCompletionSource.TrySetCanceled(_schedulerDisposalSource.Token);
+            }
         }
 
         public Task<U> RunAsync(
@@ -79,18 +88,25 @@ namespace Microsoft.DotNet.Interactive
                     executionContext = operation.ExecutionContext;
                 }
 
-                ExecutionContext.Run(
-                    executionContext,
-                _ => RunScheduledOperationAndDeferredOperations(operation),
-                operation);
-
-                operation.TaskCompletionSource.Task.ContinueWith(_ =>
+                _currentlyRunningOperation = operation;
+                try
                 {
-                    _barrier.SignalAndWait(_schedulerDisposalSource.Token);
-                });
-                _barrier.SignalAndWait(_schedulerDisposalSource.Token);
+                    ExecutionContext.Run(
+                        executionContext,
+                        _ => RunScheduledOperationAndDeferredOperations(operation),
+                        operation);
 
-                _currentTopLevelOperation.Value = null;
+                    operation.TaskCompletionSource.Task.ContinueWith(_ => { _barrier.SignalAndWait(_schedulerDisposalSource.Token); });
+                    _barrier.SignalAndWait(_schedulerDisposalSource.Token);
+                }
+                catch (Exception ex)
+                {
+                }
+                finally
+                {
+                    _currentTopLevelOperation.Value = null;
+                    _currentlyRunningOperation = null;
+                }
             }
         }
 
@@ -104,15 +120,20 @@ namespace Microsoft.DotNet.Interactive
             using var __ = Log.OnEnterAndExit($"Run : {operation.Value}");
             try
             {
-                var operationTask = operation.ExecuteAsync();
+                var operationTask = operation
+                                  .ExecuteAsync()
+                                  .ContinueWith(t =>
+                                  {
+                                      if (t.IsCompletedSuccessfully)
+                                      {
+                                          operation.TaskCompletionSource.SetResult(t.Result);
+                                      }
+                                  });
 
-                operationTask.ContinueWith(t =>
-                {
-                    if (t.IsCompletedSuccessfully)
-                    {
-                        operation.TaskCompletionSource.SetResult(t.Result);
-                    }
-                }).Wait(_schedulerDisposalSource.Token);
+                Task.WaitAny(new[] {
+                    operationTask,
+                    operation.TaskCompletionSource.Task
+                }, _schedulerDisposalSource.Token);
             }
             catch (Exception exception)
             {
@@ -214,6 +235,7 @@ namespace Microsoft.DotNet.Interactive
             public TaskCompletionSource<U> TaskCompletionSource { get; }
 
             public T Value { get; }
+
             public ExecutionContext ExecutionContext { get; }
 
             public string Scope { get; }

@@ -13,8 +13,6 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         public override Task InvokeAsync(KernelInvocationContext context)
         {
-            context.Cancel();
-            
             return Task.CompletedTask;
         }
     }

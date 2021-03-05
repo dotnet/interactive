@@ -264,6 +264,7 @@ namespace Microsoft.DotNet.Interactive
                             case Cancel cancel:
                                 cancel.KernelUri = Uri;
                                 cancel.TargetKernelName = Name;
+                                scheduler.CancelCurrentOperation();
                                 await InvokePipelineAndCommandHandler(cancel);
                                 break;
 

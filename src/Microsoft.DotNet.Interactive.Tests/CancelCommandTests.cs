@@ -57,7 +57,24 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public async Task commands_issued_after_cancel_command_are_executed()
+        public async Task cancel_issues_CommandSucceeded()
+        {
+            var kernel = CreateKernel();
+
+            var cancelCommand = new Cancel();
+
+            var commandToCancel = new CancellableCommand();
+
+            var _ = kernel.SendAsync(commandToCancel);
+            await kernel.SendAsync(cancelCommand);
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CommandSucceeded>(c => c.Command == cancelCommand);
+        }
+
+        [Fact]
+        public async Task new_commands_issued_after_cancel_are_executed()
         {
             var kernel = CreateKernel();
 
@@ -73,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             KernelEvents
                 .Should()
-                .ContainSingle<CommandSucceeded>(c => c.Command == commandToCancel);
+                .ContainSingle<CommandSucceeded>(c => c.Command == commandToRun);
         }
 
         [Fact]
@@ -115,7 +132,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                     _cancelled.SetResult();
                 });
 
-                await Task.Delay(TimeSpan.FromDays(1), context.CancellationToken);
+                await _cancelled.Task;
             }
 
             public Task Invoked => _invoked.Task;
