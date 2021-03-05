@@ -4,6 +4,7 @@
 using System.Collections;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -30,6 +31,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return new TabularJsonString(JsonSerializer.Serialize(tabularData, new JsonSerializerOptions
             {
                 WriteIndented = true,
+                NumberHandling = JsonNumberHandling.AllowReadingFromString| JsonNumberHandling.AllowNamedFloatingPointLiterals,
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             }));
         }
