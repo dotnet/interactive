@@ -10,7 +10,7 @@ export class OutputChannelAdapter implements ReportChannel {
     }
 
     getName(): string {
-        return this.clear.name;
+        return this.channel.name;
     }
 
     append(value: string): void {

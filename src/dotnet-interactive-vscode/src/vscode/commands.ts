@@ -13,8 +13,9 @@ import { DotNetPathManager } from './extension';
 import { computeToolInstallArguments, executeSafe } from '../utilities';
 
 import * as jupyter from './jupyter';
+import { ReportChannel } from 'dotnet-interactive-vscode-interfaces/out/notebook';
 
-export function registerAcquisitionCommands(context: vscode.ExtensionContext) {
+export function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
     const minDotNetInteractiveVersion = config.get<string>('minimumInteractiveToolVersion');
     const interactiveToolSource = config.get<string>('interactiveToolSource');
@@ -35,7 +36,7 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext) {
                 async () => { await vscode.window.showInformationMessage('.NET Interactive installation complete.'); });
             return launchOptions;
         } catch (err) {
-            console.error(`Error acquiring dotnet-interactive tool: ${err}`);
+            diagnosticChannel.appendLine(`Error acquiring dotnet-interactive tool: ${err}`);
         }
     }));
 

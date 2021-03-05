@@ -1,11 +1,14 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { expect, use } from 'chai';
+import * as chai from 'chai';
+chai.use(require('chai-as-promised'));
+const expect = chai.expect;
+
 import * as fs from 'fs';
 import * as path from 'path';
 
-use(require('chai-fs'));
+chai.use(require('chai-fs'));
 
 import { acquireDotnetInteractive } from '../../acquisition';
 import { InstallInteractiveArgs } from '../../interfaces';
@@ -350,6 +353,51 @@ describe('Acquisition tests', () => {
         expect(installArgs).to.deep.equal({
             dotnetPath: 'some/path/to/dotnet',
             toolVersion: 'some-tool-version',
+        });
+    });
+
+    it('getting existing tool version failure is properly forwarded', done => {
+        withFakeGlobalStorageLocation(true, async globalStoragePath => {
+            expect(acquireDotnetInteractive(
+                { dotnetPath: 'dotnet' },
+                '42.42.42', // minimum version necessary
+                globalStoragePath,
+                () => { throw new Error('simulated tool version failure'); },
+                () => Promise.resolve(), // create tool manifest
+                () => { }, // report started
+                () => Promise.resolve(), // install tool
+                () => { } // report complete
+            )).eventually.rejectedWith('simulated tool version failure').notify(done);
+        });
+    });
+
+    it('creating tool manifest failure is properly forwarded', done => {
+        withFakeGlobalStorageLocation(true, async globalStoragePath => {
+            expect(acquireDotnetInteractive(
+                { dotnetPath: 'dotnet' },
+                '42.42.42', // minimum version necessary
+                globalStoragePath,
+                () => Promise.resolve(undefined), // no tool version found
+                () => { throw new Error('simulated tool manifest creation failure'); },
+                () => { }, // report started
+                () => Promise.resolve(), // install tool
+                () => { } // report complete
+            )).eventually.rejectedWith('simulated tool manifest creation failure').notify(done);
+        });
+    });
+
+    it('tool install failure is properly forwarded', done => {
+        withFakeGlobalStorageLocation(true, async globalStoragePath => {
+            expect(acquireDotnetInteractive(
+                { dotnetPath: 'dotnet' },
+                '42.42.42', // minimum version necessary
+                globalStoragePath,
+                () => Promise.resolve(undefined), // no tool version found
+                () => Promise.resolve(), // create tool manifest
+                () => { }, // report started
+                () => { throw new Error('simulated tool install failure'); },
+                () => { } // report complete
+            )).eventually.rejectedWith('simulated tool install failure').notify(done);
         });
     });
 });
