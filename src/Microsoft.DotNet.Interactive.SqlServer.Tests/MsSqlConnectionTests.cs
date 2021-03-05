@@ -94,11 +94,13 @@ SELECT TOP 100 * FROM Person.Person
                 .NotContainErrors()
                 .And
                 .ContainSingle<DisplayedValueProduced>(e =>
-                    e.FormattedValues.Any(f => f.MimeType == "text/markdown"))
-                .Which.FormattedValues.Single(f => f.MimeType == "text/markdown")
+                    e.FormattedValues.Any(f => f.MimeType == "text/html"))
+                .Which.FormattedValues.Single(f => f.MimeType == "text/html")
                 .Value
                 .Should()
-                .Contain("- `#!sql-adventureworks`");
+                .Contain("#!sql-adventureworks")
+                .And
+                .Contain(" SELECT TOP * FROM");
 
         }
 
