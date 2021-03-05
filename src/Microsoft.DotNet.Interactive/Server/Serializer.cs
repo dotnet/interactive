@@ -3,6 +3,7 @@
 
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.DotNet.Interactive.Notebook;
 
 namespace Microsoft.DotNet.Interactive.Server
@@ -15,6 +16,7 @@ namespace Microsoft.DotNet.Interactive.Server
             {
                 WriteIndented = false,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
             JsonSerializerOptions.Converters.Add(new DataDictionaryConverter());
