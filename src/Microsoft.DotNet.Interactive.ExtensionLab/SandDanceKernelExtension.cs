@@ -123,7 +123,7 @@ let {functionName} = () => {{");
             else
             {
                 code.AppendLine($@"
-    configureRequireFromExtension('SandDance','{context}')(['sandDance/sanddanceapi'], (sandDance) => {{");
+    configureRequireFromExtension('SandDance','{context}')(['SandDance/sanddanceapi'], (sandDance) => {{");
             }
 
             code.AppendLine($@"
