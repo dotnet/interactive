@@ -550,7 +550,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                 var apiUri = await frontedEnvironment.GetApiUriAsync();
                                 var fullCode =
                                     $@"if (typeof window.createDotnetInteractiveClient === typeof Function) {{
-createDotnetInteractiveClient('{apiUri.AbsoluteUri}').then(function (interactive) {{
+createDotnetInteractiveClient('{apiUri.AbsoluteUri}').then(async function (interactive) {{
 let notebookScope = getDotnetInteractiveScope('{apiUri.AbsoluteUri}');
 {script.ScriptValue}
 }});

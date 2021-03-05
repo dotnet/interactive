@@ -67,7 +67,7 @@
                             dotnet.init(global);
                             dotnet.createDotnetInteractiveClient(uri)
                                 .then(client => {
-                                    global.interactiveClientInstance = client;
+                                    global.createDotnetInteractiveClient = function () { return Promise.resolve(client); }
                                     console.log('dotnet-interactive client connection established');
                                 })
                                 .catch(error => {
