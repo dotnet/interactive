@@ -370,8 +370,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     workingDirOption
                 };
 
-                stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext, CancellationToken>(
-                    (startupOptions, options, console, context, cancellationToken) =>
+                stdIOCommand.Handler = CommandHandler.Create<StartupOptions, StdIOOptions, IConsole, InvocationContext>(
+                    (startupOptions, options, console, context) =>
                     {
                       
                         FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi 
@@ -381,7 +381,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
                         services.AddKernel(kernel);
 
-                        kernel.UseQuitCommand(disposeOnQuit, cancellationToken);
+                        kernel.UseQuitCommand();
                         
                         var kernelServer = kernel.CreateKernelServer(startupOptions.WorkingDir);
 
@@ -405,8 +405,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             return startHttp(startupOptions, console, startServer, context);
                         }
                         
-                        disposeOnQuit.Add(kernel);
-
                         return startStdIO(
                             startupOptions,
                             kernelServer,

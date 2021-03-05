@@ -3,15 +3,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
-using Pocket;
-using static Pocket.Logger<Microsoft.DotNet.Interactive.KernelInvocationContext>;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -31,11 +28,8 @@ namespace Microsoft.DotNet.Interactive
 
         private KernelInvocationContext(KernelCommand command)
         {
-            // FIX
-            var lifetimeLogger = Log.OnEnterAndExit($"KernelInvocationContext: {command}");
-             _disposables.Add(lifetimeLogger);
-
             _cancellationTokenSource = new CancellationTokenSource();
+
             Command = command;
            
             Result = new KernelCommandResult(_events);
@@ -49,7 +43,6 @@ namespace Microsoft.DotNet.Interactive
                     c.Error.Subscribe(s => this.DisplayStandardError(s, command))
                 };
             }));
-           
         }
 
         public KernelCommand Command { get; }
@@ -79,7 +72,7 @@ namespace Microsoft.DotNet.Interactive
         {
             if (!IsComplete)
             {
-                _cancellationTokenSource.Cancel(false);
+                _cancellationTokenSource.Cancel();
                 Fail(new OperationCanceledException($"Command :{Command} cancelled."));
             }
         }

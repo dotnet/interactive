@@ -13,7 +13,6 @@ namespace Microsoft.DotNet.Interactive
     public class KernelScheduler<T, U> : IDisposable
     {
         private readonly List<DeferredOperation> _deferredOperationSources = new();
-        private readonly ConcurrentQueue<ScheduledOperation> _immediateQueue = new();
         private readonly CancellationTokenSource _schedulerDisposalSource = new();
         private readonly Task _runLoopTask;
         private readonly AsyncLocal<ScheduledOperation> _currentTopLevelOperation = new();
@@ -47,7 +46,7 @@ namespace Microsoft.DotNet.Interactive
                     ExecutionContext.Capture(),
                     scope: scope,
                     cancellationToken: cancellationToken);
-                _topLevelScheduledOperations.Add(operation);
+                _topLevelScheduledOperations.Add(operation, cancellationToken);
             }
             else
             {
@@ -97,31 +96,10 @@ namespace Microsoft.DotNet.Interactive
 
         private void Run(ScheduledOperation operation)
         {
-            #region debuggy stuff
-            // FIX: (Run) 
-            switch (_concurrency)
-            {
-                case 0:
-                    break;
-                case 1:
-                    break;
-                case 2:
-                    break;
-                default:
-                    break;
-            }
-
-            if (_currentTopLevelOperation.Value is { })
-            {
-            }
-            else
+            if (_currentTopLevelOperation.Value is null)
             {
                 _currentTopLevelOperation.Value = operation;
             }
-
-            Interlocked.Increment(ref _concurrency);
-            using var _ = Disposable.Create(() => Interlocked.Decrement(ref _concurrency));
-            #endregion
 
             using var __ = Log.OnEnterAndExit($"Run : {operation.Value}");
             try
@@ -133,10 +111,6 @@ namespace Microsoft.DotNet.Interactive
                     if (t.IsCompletedSuccessfully)
                     {
                         operation.TaskCompletionSource.SetResult(t.Result);
-                    }
-                    else
-                    {
-                        operation.TaskCompletionSource.SetException(t.Exception);
                     }
                 }).Wait(_schedulerDisposalSource.Token);
             }
@@ -159,13 +133,10 @@ namespace Microsoft.DotNet.Interactive
             Run(operation);
         }
 
-        private int _concurrency = 0;
-
         private void RunPreemptively(ScheduledOperation operation)
         {
             Run(operation);
             operation.TaskCompletionSource.Task.Wait(_schedulerDisposalSource.Token);
-            //_immediateQueue.Enqueue(operation);
         }
 
         private IEnumerable<ScheduledOperation> OperationsToRunBefore(
@@ -266,87 +237,6 @@ namespace Microsoft.DotNet.Interactive
             public GetDeferredOperationsDelegate GetDeferredOperations { get; }
 
             public OnExecuteDelegate OnExecuteAsync { get; }
-        }
-
-        private class KernelSynchronizationContext : SynchronizationContext
-        {
-            private KernelSynchronizationContext(KernelScheduler<T, U> scheduler)
-            {
-                Scheduler = scheduler;
-                PreviousContext = Current;
-            }
-
-            public SynchronizationContext PreviousContext { get; }
-
-            public KernelScheduler<T, U> Scheduler { get; }
-
-            public static IDisposable Establish(KernelScheduler<T, U> scheduler)
-            {
-                var context = new KernelSynchronizationContext(scheduler);
-
-                SetSynchronizationContext(context);
-
-                return Disposable.Create(() => { SetSynchronizationContext(context.PreviousContext); });
-            }
-
-            public override void Post(SendOrPostCallback d, object state)
-            {
-                switch (Scheduler._concurrency)
-                {
-                    case 0:
-                        break;
-                    case 1:
-                        break;
-                    case 2:
-                        break;
-                    default:
-                        break;
-                }
-
-                if (state is ScheduledOperation operation)
-                {
-                    if (operation.ExecutionContext is { })
-                    {
-                        ExecutionContext.Run(
-                            operation.ExecutionContext,
-                            _ => Scheduler.Run(operation),
-                            operation);
-                    }
-                    else
-                    {
-                        Scheduler.Run(operation);
-                    }
-                }
-                else if (PreviousContext is { } previous)
-                {
-                    previous.Post(d, state);
-                }
-                else
-                {
-                    Scheduler.RunPreemptively(
-                        new ScheduledOperation(
-                            default,
-                            value =>
-                            {
-                                Send(d, state);
-                                return Task.FromResult(default(U));
-                            },
-                            default,
-                            default));
-                }
-            }
-
-            public override void Send(SendOrPostCallback d, object state)
-            {
-                if (PreviousContext is { } previous)
-                {
-                    previous.Send(d, state);
-                }
-                else
-                {
-                    base.Send(d, state);
-                }
-            }
         }
     }
 }

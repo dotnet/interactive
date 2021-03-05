@@ -9,12 +9,13 @@ namespace Microsoft.DotNet.Interactive.Commands
     {
         public Cancel(string targetKernelName = null): base(targetKernelName)
         {
-           
         }
 
         public override Task InvokeAsync(KernelInvocationContext context)
         {
-           return Task.CompletedTask;
+            context.Cancel();
+            
+            return Task.CompletedTask;
         }
     }
 }

@@ -221,12 +221,9 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(command));
             }
 
-            var scheduler = GetOrCreateScheduler();
+            var scheduler = Scheduler;
             var context = KernelInvocationContext.Establish(command);
-            if(context.Command != command)
-            {
-
-            }
+           
             // only subscribe for the root command 
             var currentCommandOwnsContext = context.Command == command;
 
@@ -235,6 +232,15 @@ namespace Microsoft.DotNet.Interactive
             if (currentCommandOwnsContext)
             {
                 disposable = context.KernelEvents.Subscribe(PublishEvent);
+
+                if (cancellationToken != CancellationToken.None && 
+                    cancellationToken != default)
+                {
+                    cancellationToken.Register(() =>
+                    {
+                        context.Cancel();
+                    });
+                }
             }
             else
             {
@@ -247,11 +253,28 @@ namespace Microsoft.DotNet.Interactive
                 {
                     foreach (var c in commands)
                     {
-                        await scheduler.RunAsync(
-                            c,
-                            InvokePipelineAndCommandHandler,
-                            c.KernelUri.ToString(),
-                            cancellationToken);
+                        switch (c)
+                        {
+                            case Quit quit:
+                                quit.KernelUri = Uri;
+                                quit.TargetKernelName = Name;
+                                await InvokePipelineAndCommandHandler(quit);
+                                break;
+
+                            case Cancel cancel:
+                                cancel.KernelUri = Uri;
+                                cancel.TargetKernelName = Name;
+                                await InvokePipelineAndCommandHandler(cancel);
+                                break;
+
+                            default:
+                                await scheduler.RunAsync(
+                                    c,
+                                    InvokePipelineAndCommandHandler,
+                                    c.KernelUri.ToString(),
+                                    cancellationToken);
+                                break;
+                        }
                     }
 
                     if (currentCommandOwnsContext)
@@ -262,51 +285,6 @@ namespace Microsoft.DotNet.Interactive
             }
 
             return context.Result;
-        }
-
-        protected KernelScheduler<KernelCommand, KernelCommandResult> GetOrCreateScheduler()
-        {
-            if (_commandScheduler is null)
-            {
-                SetScheduler(new KernelScheduler<KernelCommand, KernelCommandResult>());
-            }
-
-            return _commandScheduler;
-        }
-
-        internal void SetScheduler(KernelScheduler<KernelCommand, KernelCommandResult> scheduler)
-        {
-            _commandScheduler = scheduler;
-
-            IEnumerable<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
-            {
-                if (!command.KernelUri.Contains(Uri))
-                {
-                    yield break;
-                }
-
-                while (_deferredCommands.TryDequeue(out var kernelCommand))
-                {
-                    kernelCommand.TargetKernelName = Name;
-                    kernelCommand.KernelUri = Uri;
-                    var currentInvocationContext = KernelInvocationContext.Current;
-                    if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
-                    {
-                        foreach (var cmd in commands)
-                        {
-                            yield return cmd;
-                        }
-                    }
-                }
-            }
-
-            _commandScheduler.RegisterDeferredOperationSource(GetDeferredOperations, InvokePipelineAndCommandHandler);
-        }
-
-        private protected virtual KernelUri GetHandlingKernelUri(
-            KernelCommand command)
-        {
-            return Uri;
         }
 
         internal async Task<KernelCommandResult> InvokePipelineAndCommandHandler(KernelCommand command)
@@ -335,6 +313,54 @@ namespace Microsoft.DotNet.Interactive
 
                 throw;
             }
+        }
+
+        protected internal KernelScheduler<KernelCommand, KernelCommandResult> Scheduler
+        {
+            get
+            {
+                if (_commandScheduler is null)
+                {
+                    SetScheduler(new KernelScheduler<KernelCommand, KernelCommandResult>());
+                }
+
+                return _commandScheduler;
+            }
+        }
+
+        protected internal void SetScheduler(KernelScheduler<KernelCommand, KernelCommandResult> scheduler)
+        {
+            _commandScheduler = scheduler;
+
+            _commandScheduler.RegisterDeferredOperationSource(GetDeferredOperations, InvokePipelineAndCommandHandler);
+
+            IEnumerable<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
+            {
+                if (!command.KernelUri.Contains(Uri))
+                {
+                    yield break;
+                }
+
+                while (_deferredCommands.TryDequeue(out var kernelCommand))
+                {
+                    kernelCommand.TargetKernelName = Name;
+                    kernelCommand.KernelUri = Uri;
+                    var currentInvocationContext = KernelInvocationContext.Current;
+                    if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
+                    {
+                        foreach (var cmd in commands)
+                        {
+                            yield return cmd;
+                        }
+                    }
+                }
+            }
+        }
+
+        private protected virtual KernelUri GetHandlingKernelUri(
+            KernelCommand command)
+        {
+            return Uri;
         }
 
         protected internal void PublishEvent(KernelEvent kernelEvent)
@@ -454,8 +480,7 @@ namespace Microsoft.DotNet.Interactive
                         SetHandler(submitCodeHandler, submitCode);
                         break;
 
-                    case (RequestCompletions rq, _)
-                        when rq.LanguageNode is DirectiveNode:
+                    case (RequestCompletions { LanguageNode: DirectiveNode } rq, _):
                         rq.Handler = (__, ___) => HandleRequestCompletionsAsync(rq, context);
                         break;
 

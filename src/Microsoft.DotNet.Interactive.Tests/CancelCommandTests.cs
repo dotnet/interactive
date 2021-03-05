@@ -2,18 +2,18 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Reactive;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using System.Threading;
 using System.Threading.Tasks;
-
 using FluentAssertions;
 using FluentAssertions.Execution;
-
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
-
 using Xunit;
 using Xunit.Abstractions;
-
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -23,80 +23,12 @@ namespace Microsoft.DotNet.Interactive.Tests
         {
         }
 
-        [Fact(Skip = "requires scheduler working")]
-        public async Task cancel_command_cancels_all_deferred_commands_on_composite_kernel()
-        {
-            var deferredCommandExecuted = false;
-
-            var kernel = CreateKernel();
-
-            var deferred = new SubmitCode("placeholder")
-            {
-                Handler = (command, context) =>
-                {
-                    deferredCommandExecuted = true;
-                    return Task.CompletedTask;
-                }
-            };
-
-            var cancelCommand = new Cancel();
-
-            kernel.DeferCommand(deferred);
-
-            var events = kernel.KernelEvents.ToSubscribedList();
-
-            await kernel.SendAsync(cancelCommand);
-
-            using var _ = new AssertionScope();
-
-            deferredCommandExecuted.Should().BeFalse();
-
-            events
-                .Should().ContainSingle<CommandSucceeded>()
-                .Which
-                .Command
-                .Should()
-                .Be(cancelCommand);
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp, Skip = "requires scheduler working")]
-        [InlineData(Language.FSharp, Skip = "requires scheduler working")]
-        [InlineData(Language.PowerShell, Skip = "requires scheduler working")]
-        public async Task cancel_command_cancels_all_deferred_commands_on_subkernels(Language language)
-        {
-            var kernel = CreateKernel(language);
-
-            var deferred = new CancellableCommand();
-
-            var cancelCommand = new Cancel();
-
-            foreach (var subkernel in kernel.ChildKernels)
-            {
-                subkernel.DeferCommand(deferred);
-            }
-
-            await kernel.SendAsync(cancelCommand);
-
-            using var _ = new AssertionScope();
-
-            deferred.HasRun.Should().BeFalse();
-
-            KernelEvents
-                .Should().ContainSingle<CommandSucceeded>()
-                .Which
-                .Command
-                .Should()
-                .Be(cancelCommand);
-        }
-
         [Theory]
         [InlineData(Language.CSharp, Skip = "requires scheduler working")]
         [InlineData(Language.FSharp, Skip = "requires scheduler working")]
         [InlineData(Language.PowerShell, Skip = "to address later")]
         public void cancel_command_cancels_the_running_command(Language language)
         {
-
             var kernel = CreateKernel(language);
 
             var cancelCommand = new Cancel();
@@ -104,10 +36,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             var submitCodeCommand = new CancellableCommand();
 
             Task.WhenAll(
-                    Task.Run(async () =>
-                    {
-                        await kernel.SendAsync(submitCodeCommand);
-                    }),
+                    Task.Run(async () => { await kernel.SendAsync(submitCodeCommand); }),
                     Task.Run(async () =>
                     {
                         await Task.Delay(100);
@@ -115,11 +44,8 @@ namespace Microsoft.DotNet.Interactive.Tests
                     }))
                 .Wait(TimeSpan.FromSeconds(20));
 
-
             using var _ = new AssertionScope();
-
-            submitCodeCommand.HasRun.Should().BeTrue();
-            submitCodeCommand.HasBeenCancelled.Should().BeTrue();
+            
 
             KernelEvents
                 .Should()
@@ -130,14 +56,10 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .BeOfType<OperationCanceledException>();
         }
 
-        [Theory]
-        [InlineData(Language.CSharp, Skip = "requires scheduler working")]
-        [InlineData(Language.FSharp, Skip = "requires scheduler working")]
-        [InlineData(Language.PowerShell, Skip = "to address later")]
-        public async Task commands_issued_after_cancel_command_are_executed(Language language)
+        [Fact]
+        public async Task commands_issued_after_cancel_command_are_executed()
         {
-
-            var kernel = CreateKernel(language);
+            var kernel = CreateKernel();
 
             var cancelCommand = new Cancel();
 
@@ -146,80 +68,59 @@ namespace Microsoft.DotNet.Interactive.Tests
             var commandToRun = new SubmitCode("1");
 
             var _ = kernel.SendAsync(commandToCancel);
-            await Task.Delay(4000);
             await kernel.SendAsync(cancelCommand);
             await kernel.SendAsync(commandToRun);
 
-            // using var _ = new AssertionScope();
-
-            commandToCancel.HasRun.Should().BeTrue();
-            commandToCancel.HasBeenCancelled.Should().BeTrue();
-
             KernelEvents
                 .Should()
-                .ContainSingle<CommandFailed>(c => c.Command == commandToCancel)
-                .Which
-                .Exception
-                .Should()
-                .BeOfType<OperationCanceledException>();
+                .ContainSingle<CommandSucceeded>(c => c.Command == commandToCancel);
         }
 
-
-        [Theory]
-        [InlineData(Language.CSharp, @"while(true){
-    if(Microsoft.DotNet.Interactive.KernelInvocationContext.Current.CancellationToken.IsCancellationRequested)
-    {
-        Console.WriteLine(""done c#"");
-        break;
-    }
-} 
-", "done c#", Skip = "requires scheduler working")]
-        [InlineData(Language.FSharp, @"
-System.Threading.Thread.Sleep(3000)
-Console.WriteLine(""done c#"")", "done f#", Skip = "for the moment")]
-        public async Task user_code_can_react_to_cancel_command_using_cancellation_token(Language language, string code, string expectedValue)
+        [Fact]
+        public void user_code_can_react_to_cancel_command_using_KernelInvocationContext_cancellation_token()
         {
-            var kernel = CreateKernel(language);
-            var cancelCommand = new Cancel();
-            var submitCodeCommand = new SubmitCode(code);
+            var kernel = CreateKernel();
+            var commandInProgress = new CancellableCommand();
+            var cancelSent = commandInProgress.Invoked.ContinueWith(async task =>
+            {
+                // once the cancellable command is running, send a Cancel 
+                await kernel.SendAsync(new Cancel());
+            });
 
-            var _ = kernel.SendAsync(submitCodeCommand);
-            await Task.Delay(4000);
-            await kernel.SendAsync(cancelCommand);
+            var _ = kernel.SendAsync(commandInProgress);
 
-            KernelEvents
-                .Should()
-                .ContainSingle<StandardOutputValueProduced>()
-                .Which
-                .Value
-                .Should()
-                .Be(expectedValue);
-
+            Task.WhenAll(cancelSent, commandInProgress.Cancelled)
+                .Wait(TimeSpan.FromSeconds(5));
         }
 
         public class CancellableCommand : KernelCommand
         {
-            public CancellableCommand(string targetKernelName = null, KernelCommand parent = null) : base(targetKernelName, parent)
+            private readonly TaskCompletionSource _invoked = new();
+            private readonly TaskCompletionSource _cancelled = new();
+
+            public CancellableCommand(
+                string targetKernelName = null,
+                KernelCommand parent = null) : base(targetKernelName, parent)
             {
+                // prevent NoSuitableKernelException by setting the handler
+                Handler = (command, context) => Task.CompletedTask;
             }
 
-            public override Task InvokeAsync(KernelInvocationContext context)
+            public override async Task InvokeAsync(KernelInvocationContext context)
             {
-                HasRun = true;
+                _invoked.SetResult();
 
-                while (!context.CancellationToken.IsCancellationRequested)
+                context.CancellationToken.Register(() =>
                 {
+                    _cancelled.SetResult();
+                });
 
-                }
-
-                HasBeenCancelled = true;
-
-                return Task.CompletedTask;
+                await Task.Delay(TimeSpan.FromDays(1), context.CancellationToken);
             }
 
-            public bool HasBeenCancelled { get; private set; }
+            public Task Invoked => _invoked.Task;
 
-            public bool HasRun { get; private set; }
+            public Task Cancelled => _cancelled.Task;
         }
     }
 }

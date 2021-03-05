@@ -29,10 +29,10 @@ namespace Microsoft.DotNet.Interactive
         IKernelCommandHandler<ParseNotebook>,
         IKernelCommandHandler<SerializeNotebook>
     {
-        private readonly ConcurrentQueue<PackageAdded> _packagesToCheckForExtensions = new ConcurrentQueue<PackageAdded>();
-        private readonly List<Kernel> _childKernels = new List<Kernel>();
+        private readonly ConcurrentQueue<PackageAdded> _packagesToCheckForExtensions = new();
+        private readonly List<Kernel> _childKernels = new();
         private readonly Dictionary<string, Kernel> _kernelsByNameOrAlias;
-        private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
+        private readonly AssemblyBasedExtensionLoader _extensionLoader = new();
         private string _defaultKernelName;
         private Command _connectDirective;
 
@@ -40,8 +40,10 @@ namespace Microsoft.DotNet.Interactive
         {
             ListenForPackagesToScanForExtensions();
 
-            _kernelsByNameOrAlias = new Dictionary<string, Kernel>();
-            _kernelsByNameOrAlias.Add(Name, this);
+            _kernelsByNameOrAlias = new Dictionary<string, Kernel>
+            {
+                [Name] = this
+            };
         }
 
         private void ListenForPackagesToScanForExtensions() =>
@@ -75,7 +77,7 @@ namespace Microsoft.DotNet.Interactive
 
             kernel.ParentKernel = this;
             kernel.AddMiddleware(LoadExtensions);
-            kernel.SetScheduler(GetOrCreateScheduler());
+            kernel.SetScheduler(Scheduler);
 
             AddChooseKernelDirective(kernel, aliases);
 

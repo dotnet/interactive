@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var deserializedEnvelope = KernelEventEnvelope.Deserialize(json);
 
             // ignore these specific properties because they're not serialized
-            var ignoredProperties = new HashSet<string>()
+            var ignoredProperties = new HashSet<string>
             {
                 $"{nameof(CommandFailed)}.{nameof(CommandFailed.Exception)}",
                 $"{nameof(DisplayEvent)}.{nameof(DisplayEvent.Value)}"
@@ -197,7 +197,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new FormattedValue("text/html", "<b>hi!</b>"),
                     "the-value-id");
                 
-                yield return new Quit("csharp");
+                yield return new Quit();
 
                 yield return new Cancel("csharp");
             }

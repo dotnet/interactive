@@ -1,1 +1,1 @@
-{"token":"the-token","commandType":"Quit","command":{"targetKernelName":"csharp"}}
+{"token":"the-token","commandType":"Quit","command":{"targetKernelName":null}}

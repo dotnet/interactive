@@ -6,7 +6,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using FluentAssertions;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -16,7 +15,6 @@ using Xunit;
 using Xunit.Abstractions;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.KernelSchedulerTests>;
 using Microsoft.DotNet.Interactive.Commands;
-using FluentAssertions.Extensions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {

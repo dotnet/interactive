@@ -22,19 +22,26 @@ namespace Microsoft.DotNet.Interactive
 {
     public static class KernelExtensions
     {
-        public static T UseQuitCommand<T>(this T kernel, IDisposable disposeOnQuit, CancellationToken cancellationToken) where T : Kernel
+        public static T UseQuitCommand<T>(this T kernel, Func<Task> onQuitAsync = null) where T : Kernel
         {
-            Quit.OnQuit(() =>
+            kernel.RegisterCommandHandler<Quit>(async (quit, context) =>
             {
-                disposeOnQuit?.Dispose();
-                Environment.Exit(0);
+                if (onQuitAsync is not null)
+                {
+                    await onQuitAsync();
+                }
+                else
+                {
+                    ShutDown();
+                }
             });
 
-            cancellationToken.Register(async () =>
-            {
-                await kernel.SendAsync(new Quit());
-            });
             return kernel;
+
+            void ShutDown() 
+            {
+                Environment.Exit(0);
+            }
         }
 
         public static Kernel FindKernel(this Kernel kernel, string name)

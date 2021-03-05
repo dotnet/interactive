@@ -13,7 +13,6 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    [Collection("Do not parallelize")]
     public class QuitCommandTests : LanguageKernelTestBase
     {
         public QuitCommandTests(ITestOutputHelper output) : base(output)
@@ -24,10 +23,10 @@ namespace Microsoft.DotNet.Interactive.Tests
         public async Task quit_command_fails_when_not_configured()
         {
             var kernel = CreateKernel();
-            Quit.OnQuit(null);
-            var quitCommand = new Quit();
-            
-            await kernel.SendAsync(quitCommand);
+
+            var quit = new Quit();
+
+            await kernel.SendAsync(quit);
 
             using var _ = new AssertionScope();
 
@@ -36,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Which
                 .Command
                 .Should()
-                .Be(quitCommand);
+                .Be(quit);
 
             KernelEvents
                 .Should().ContainSingle<CommandFailed>()
@@ -46,170 +45,22 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .BeOfType<InvalidOperationException>();
         }
 
-        [Fact(Skip = "requires scheduler working")]
-        public async Task quit_command_cancels_all_deferred_commands_on_composite_kernel()
+        [Fact]
+        public async Task Quit_command_bypasses_work_in_progress()
         {
-            var deferredCommandExecuted = false;
+            var quitRan = false;
 
-            var quitCommandExecuted = false;
-
-            var kernel = CreateKernel();
-
-            var deferred = new SubmitCode("placeholder")
+            var kernel = CreateKernel().UseQuitCommand(() =>
             {
-                Handler = (command, context) =>
-                {
-                    deferredCommandExecuted = true;
-                    return Task.CompletedTask;
-                }
-            };
+                quitRan = true;
+                return Task.CompletedTask;
+            });
 
+            var workInProgress = kernel.SendAsync(new CancelCommandTests.CancellableCommand());
 
-            Quit.OnQuit(() => { quitCommandExecuted = true; });
+            await kernel.SendAsync(new Quit());
 
-            var quitCommand = new Quit();
-
-            kernel.DeferCommand(deferred);
-
-            await kernel.SendAsync(quitCommand);
-
-            using var _ = new AssertionScope();
-
-            deferredCommandExecuted.Should().BeFalse();
-            quitCommandExecuted.Should().BeTrue();
-
-            KernelEvents
-                .Should().ContainSingle<CommandSucceeded>()
-                .Which
-                .Command
-                .Should()
-                .Be(quitCommand);
-        }
-
-        [Theory(Skip = "requires scheduler working")]
-        [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]
-        [InlineData(Language.PowerShell)]
-        public async Task quit_command_cancels_all_deferred_commands_on_subkernels(Language language)
-        {
-            var deferredCommandExecuted = false;
-
-            var quitCommandExecuted = false;
-
-            var kernel = CreateKernel(language);
-
-            var deferred = new SubmitCode("placeholder")
-            {
-                Handler = (command, context) =>
-                {
-                    deferredCommandExecuted = true;
-                    return Task.CompletedTask;
-                }
-            };
-
-            Quit.OnQuit(() => { quitCommandExecuted = true; });
-
-            var quitCommand = new Quit();
-
-            foreach (var subkernel in kernel.ChildKernels)
-            {
-                subkernel.DeferCommand(deferred);
-            }
-
-            await kernel.SendAsync(quitCommand);
-
-            using var _ = new AssertionScope();
-
-            deferredCommandExecuted.Should().BeFalse();
-            quitCommandExecuted.Should().BeTrue();
-
-            KernelEvents
-                .Should().ContainSingle<CommandSucceeded>()
-                .Which
-                .Command
-                .Should()
-                .Be(quitCommand);
-        }
-
-        [Theory(Skip = "requires scheduler working")]
-        [InlineData(Language.CSharp, "System.Threading.Thread.Sleep(3000);")]
-        [InlineData(Language.FSharp, "System.Threading.Thread.Sleep(3000)")]
-        [InlineData(Language.PowerShell, "Start-Sleep -Milliseconds 3000", Skip = "to address later")]
-        public void Quit_command_is_handled(Language language, string code)
-        {
-            var kernel = CreateKernel(language);
-
-            var quitCommandExecuted = false;
-
-            Quit.OnQuit(() => { quitCommandExecuted = true; });
-
-            var quitCommand = new Quit();
-
-            var submitCodeCommand = new SubmitCode(code);
-
-            Task.WhenAll(
-                    Task.Run(async () =>
-                    {
-                        await Task.Delay(20);
-                        await kernel.SendAsync(submitCodeCommand);
-                    }),
-                    Task.Run(async () =>
-                    {
-                        await Task.Delay(100);
-                        await kernel.SendAsync(quitCommand);
-                    }))
-                .Wait(TimeSpan.FromSeconds(20));
-
-            using var _ = new AssertionScope();
-
-            quitCommandExecuted.Should().BeTrue();
-
-            KernelEvents
-                .Should()
-                .ContainSingle<CommandSucceeded>()
-                .Which
-                .Command
-                .Should()
-                .Be(quitCommand);
-        }
-
-
-        [Theory(Skip = "requires scheduler working")]
-        [InlineData(Language.CSharp, "System.Threading.Thread.Sleep(3000);")]
-        [InlineData(Language.FSharp, "System.Threading.Thread.Sleep(3000)")]
-        [InlineData(Language.PowerShell, "Start-Sleep -Milliseconds 3000", Skip = "to address later")]
-        public void Quit_command_causes_the_running_command_to_fail(Language language, string code)
-        {
-            var kernel = CreateKernel(language);
-
-            Quit.OnQuit(() => { });
-
-            var quitCommand = new Quit();
-
-            var submitCodeCommand = new SubmitCode(code);
-
-            Task.WhenAll(
-                    Task.Run(async () =>
-                    {
-                        await Task.Delay(20);
-                        await kernel.SendAsync(submitCodeCommand);
-                    }),
-                    Task.Run(async () =>
-                    {
-                        await Task.Delay(100);
-                        await kernel.SendAsync(quitCommand);
-                    }))
-                .Wait(TimeSpan.FromSeconds(20));
-
-            using var _ = new AssertionScope();
-
-            KernelEvents
-                .Should()
-                .ContainSingle<CommandFailed>(c => c.Command == submitCodeCommand)
-                .Which
-                .Exception
-                .Should()
-                .BeOfType<OperationCanceledException>();
+            quitRan.Should().BeTrue();
         }
     }
 }
