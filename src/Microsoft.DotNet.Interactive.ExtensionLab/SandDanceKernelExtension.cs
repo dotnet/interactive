@@ -74,6 +74,13 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return explorer;
         }
 
+        public static SandDanceExplorer ExploreWithSandDance(this  TabularJsonString source)
+        {
+            var explorer = new SandDanceExplorer();
+            explorer.LoadData(source);
+            return explorer;
+        }
+
         private static HtmlString RenderSandDanceExplorer(this TabularJsonString data)
         {
             var divId = Guid.NewGuid().ToString("N");
