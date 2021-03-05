@@ -94,7 +94,10 @@ namespace Microsoft.DotNet.Interactive
                         _ => RunScheduledOperationAndDeferredOperations(operation),
                         operation);
 
-                    operation.TaskCompletionSource.Task.ContinueWith(_ => { _barrier.SignalAndWait(_schedulerDisposalSource.Token); });
+                    operation.TaskCompletionSource.Task.ContinueWith(_ =>
+                    {
+                        _barrier.SignalAndWait(_schedulerDisposalSource.Token);
+                    });
                     _barrier.SignalAndWait(_schedulerDisposalSource.Token);
                 }
                 finally
