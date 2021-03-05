@@ -10,7 +10,10 @@ import * as fluentui from '@fluentui/react';
 import * as vega from 'vega';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { Explorer, use } from '@msrvida/sanddance-explorer';
+import { Explorer, use, Props, Explorer_Class } from '@msrvida/sanddance-explorer';
+
+import "@msrvida/sanddance-explorer/dist/css/sanddance-explorer.css";
+import "./app.css";
 
 fluentui.initializeIcons();
 
@@ -23,11 +26,12 @@ export interface DataExplorerSettings {
 
 export function createSandDanceExplorer(settings: DataExplorerSettings) {
     let converted = convertListOfRows(settings.data);
-
-    const explorerProps = {
+    let currentExplorer:Explorer_Class = null; 
+    const explorerProps:Props = {
         logoClickUrl: 'https://microsoft.github.io/SandDance/',
         mounted: explorer => {
-            explorer.load(converted);
+            currentExplorer = explorer;
+            currentExplorer.load(converted);
         }
     };
     
