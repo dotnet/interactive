@@ -99,9 +99,6 @@ namespace Microsoft.DotNet.Interactive
                     operation.TaskCompletionSource.Task.ContinueWith(_ => { _barrier.SignalAndWait(_schedulerDisposalSource.Token); });
                     _barrier.SignalAndWait(_schedulerDisposalSource.Token);
                 }
-                catch (Exception ex)
-                {
-                }
                 finally
                 {
                     _currentTopLevelOperation.Value = null;
