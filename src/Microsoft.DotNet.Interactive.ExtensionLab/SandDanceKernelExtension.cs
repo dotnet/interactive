@@ -35,7 +35,12 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     {
         internal void LoadData<T>(IEnumerable<T> source)
         {
-            TabularData = source.ToTabularJsonString();
+            LoadData(source.ToTabularJsonString());
+        }
+
+        internal void LoadData(TabularJsonString source)
+        {
+            TabularData = source;
         }
 
         internal TabularJsonString TabularData { get; set; }

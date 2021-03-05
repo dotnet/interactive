@@ -14,6 +14,7 @@ using Microsoft.Data.Analysis;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.ML;
 
@@ -158,6 +159,13 @@ namespace Microsoft.ML
             KernelInvocationContext.Current.Display(
                 source.ToTabularJsonString(),
                 HtmlFormatter.MimeType);
+        }
+
+        public static SandDanceExplorer ExploreWithSandDance(this IDataView source)
+        {
+            var explorer = new SandDanceExplorer();
+            explorer.LoadData(source.ToTabularJsonString());
+            return explorer;
         }
 
         private static T GetValue<T>(ValueGetter<T> valueGetter)
