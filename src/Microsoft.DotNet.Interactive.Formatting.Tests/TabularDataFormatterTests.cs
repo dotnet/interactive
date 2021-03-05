@@ -21,6 +21,23 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         [Fact]
+        public void can_generate_tabular_json_when_non_numeric_literals_are_used()
+        {
+            var data = new[]
+            {
+                new { Name = "Q", IsValid = false, Cost = double.NaN },
+                new { Name = "U", IsValid = false, Cost = 5.0 },
+                new { Name = "E", IsValid = true, Cost = double.NegativeInfinity },
+                new { Name = "S", IsValid = false, Cost = 10.0 },
+                new { Name = "T", IsValid = false, Cost = double.PositiveInfinity }
+            };
+
+            var formattedData = data.ToDisplayString(TabularDataFormatter.MimeType);
+
+            this.Assent(formattedData, _configuration);
+        }
+
+        [Fact]
         public void can_generate_tabular_json_from_object_array()
         {
             var data = new[]
