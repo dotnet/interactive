@@ -6,7 +6,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Pocket;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -16,7 +15,6 @@ namespace Microsoft.DotNet.Interactive
         private readonly CancellationTokenSource _schedulerDisposalSource = new();
         private readonly Task _runLoopTask;
         private readonly AsyncLocal<ScheduledOperation> _currentTopLevelOperation = new();
-        private readonly Logger Log = new("KernelScheduler");
 
         private readonly BlockingCollection<ScheduledOperation> _topLevelScheduledOperations = new();
         private readonly Barrier _barrier = new(2);
@@ -114,7 +112,6 @@ namespace Microsoft.DotNet.Interactive
                 _currentTopLevelOperation.Value = operation;
             }
 
-            using var __ = Log.OnEnterAndExit($"Run : {operation.Value}");
             try
             {
                 var operationTask = operation

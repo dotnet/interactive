@@ -65,7 +65,7 @@ export interface ParseNotebook extends KernelCommand {
     rawData: Uint8Array;
 }
 
-export interface Quit extends Cancel {
+export interface Quit extends KernelCommand {
 }
 
 export interface RequestCompletions extends LanguageServiceCommand {
