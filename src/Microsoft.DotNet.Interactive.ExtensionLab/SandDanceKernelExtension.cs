@@ -21,15 +21,18 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             KernelInvocationContext.Current?.Display(
                 new HtmlString($@"<details><summary>Explore data visually using the <a href=""https://github.com/microsoft/SandDance"">SandDance Explorer</a>.</summary>
     <p>This extension adds the ability to sort, filter, and visualize data using the <a href=""https://github.com/microsoft/SandDance"">SandDance Explorer</a>. Use the <code>ExploreWithSandDance</code> extension method with variables of type <code>IEnumerable<T></code> or <code>IDataView</code> to render the data explorer.</p>
-<code>using Microsoft.Data.Analysis;
-using System.Collections.Generic;
-using Microsoft.ML;
+<pre>
+    <code>
+    using Microsoft.Data.Analysis;
+    using System.Collections.Generic;
+    using Microsoft.ML;
 
-var dataFrame = DataFrame.LoadCsv(""./Data.csv"");
+    var dataFrame = DataFrame.LoadCsv(""./Data.csv"");
 
-dataFrame.ExploreWithSandDance()
-</code>
-    <img src=""https://user-images.githubusercontent.com/11507384/54236654-52d42800-44d1-11e9-859e-6c5d297a46d2.gif"" width=""75%"">
+    dataFrame.ExploreWithSandDance()
+    </code>
+</pre>
+    <img src=""https://user-images.githubusercontent.com/11507384/54236654-52d42800-44d1-11e9-859e-6c5d297a46d2.gif"" width=""30%"">
     </details>"),
                 "text/html");
 
