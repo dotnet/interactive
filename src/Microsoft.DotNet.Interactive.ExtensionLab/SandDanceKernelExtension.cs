@@ -2,13 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Http;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -23,6 +21,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             KernelInvocationContext.Current?.Display(
                 new HtmlString($@"<details><summary>Explore data visually using the <a href=""https://github.com/microsoft/SandDance"">SandDance Explorer</a>.</summary>
     <p>This extension adds the ability to sort, filter, and visualize data using the <a href=""https://github.com/microsoft/SandDance"">SandDance Explorer</a>. Use the <code>ExploreWithSandDance</code> extension method with variables of type <code>IEnumerable<T></code> or <code>IDataView</code> to render the data explorer.</p>
+<code>using Microsoft.Data.Analysis;
+using System.Collections.Generic;
+using Microsoft.ML;
+
+var dataFrame = DataFrame.LoadCsv(""./Data.csv"");
+
+dataFrame.ExploreWithSandDance()
+</code>
     <img src=""https://user-images.githubusercontent.com/11507384/54236654-52d42800-44d1-11e9-859e-6c5d297a46d2.gif"" width=""75%"">
     </details>"),
                 "text/html");
@@ -31,24 +37,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         }
     }
 
-    public class SandDanceExplorer
-    {
-        internal void LoadData<T>(IEnumerable<T> source)
-        {
-            LoadData(source.ToTabularJsonString());
-        }
-
-        internal void LoadData(TabularJsonString source)
-        {
-            TabularData = source;
-        }
-
-        internal TabularJsonString TabularData { get; set; }
-    }
-
     public static class SandDanceExplorerExtensions
     {
-       
 
         public static DataExplorerSettings Settings { get; } = new();
 
@@ -67,21 +57,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             }, HtmlFormatter.MimeType);
         }
 
-        public static SandDanceExplorer ExploreWithSandDance<T>(this IEnumerable<T> source)
-        {
-            var explorer = new SandDanceExplorer();
-            explorer.LoadData(source);
-            return explorer;
-        }
-
-        public static SandDanceExplorer ExploreWithSandDance(this  TabularJsonString source)
-        {
-            var explorer = new SandDanceExplorer();
-            explorer.LoadData(source);
-            return explorer;
-        }
-
-        private static HtmlString RenderSandDanceExplorer(this TabularJsonString data)
+        internal static HtmlString RenderSandDanceExplorer(this TabularJsonString data)
         {
             var divId = Guid.NewGuid().ToString("N");
             var code = new StringBuilder();

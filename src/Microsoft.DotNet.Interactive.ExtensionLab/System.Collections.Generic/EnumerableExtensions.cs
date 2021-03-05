@@ -3,12 +3,19 @@
 
 using System.Linq;
 using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting;
 
 namespace System.Collections.Generic
 {
     public static class EnumerableExtensions
     {
+        public static SandDanceExplorer ExploreWithSandDance<T>(this IEnumerable<T> source)
+        {
+            var explorer = new SandDanceExplorer();
+            explorer.LoadData(source);
+            return explorer;
+        }
         public static void Explore<T>(this IEnumerable<T> source)
         {
             KernelInvocationContext.Current.Display(
