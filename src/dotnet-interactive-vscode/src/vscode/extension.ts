@@ -32,9 +32,11 @@ export class CachedDotNetPathManager {
     }
 
     setDotNetPath(dotNetPath: string) {
-        this.dotNetPath = dotNetPath;
-        if (this.outputChannelAdapter) {
-            this.outputChannelAdapter.appendLine(`dotnet path set to '${this.dotNetPath}'`);
+        if (this.dotNetPath !== dotNetPath) {
+            this.dotNetPath = dotNetPath
+            if (this.outputChannelAdapter) {
+                this.outputChannelAdapter.appendLine(`dotnet path set to '${this.dotNetPath}'`);
+            }
         }
     }
 
@@ -62,8 +64,6 @@ export async function activate(context: vscode.ExtensionContext) {
             throw new Error(message);
         }
 
-        console.log('dotnet version was good');
-        diagnosticsChannel.appendLine(`Creating client for notebook "${notebookPath}"`);
         const launchOptions = await getInteractiveLaunchOptions();
         if (!launchOptions) {
             throw new Error('Unable to get interactive launch options; .NET SDK must be installed first.');
@@ -87,17 +87,8 @@ export async function activate(context: vscode.ExtensionContext) {
             displayError: async (message: string) => { await vscode.window.showErrorMessage(message, { modal: false }); },
             displayInfo: async (message: string) => { await vscode.window.showInformationMessage(message, { modal: false }); },
         };
-        const transport = new StdioKernelTransport(processStart, diagnosticsChannel, vscode.Uri.parse, notification, (pid, code, signal) => {
-            const message = `Kernel pid ${pid} for file '${notebookPath}' ended`;
-            const messageCodeSuffix = (code && code !== 0)
-                ? ` with code ${code}`
-                : '';
-            const messageSignalSuffix = signal
-                ? ` with signal ${signal}`
-                : '';
-            const fullMessage = `${message}${messageCodeSuffix}${messageSignalSuffix}.`;
-            diagnosticsChannel.appendLine(fullMessage);
-            clientMapper.closeClient({ fsPath: notebookPath });
+        const transport = new StdioKernelTransport(notebookPath, processStart, diagnosticsChannel, vscode.Uri.parse, notification, (pid, code, signal) => {
+            clientMapper.closeClient({ fsPath: notebookPath }, false);
         });
         await transport.waitForReady();
 
@@ -106,7 +97,7 @@ export async function activate(context: vscode.ExtensionContext) {
         await transport.setExternalUri(externalUri);
 
         return transport;
-    });
+    }, diagnosticsChannel);
 
     registerKernelCommands(context, clientMapper);
 

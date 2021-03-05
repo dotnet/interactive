@@ -24,12 +24,14 @@ import fetch from 'node-fetch';
 export class StdioKernelTransport implements KernelTransport {
     private childProcess: cp.ChildProcessWithoutNullStreams | null;
     private lineReader: LineReader;
+    private notifyOnExit: boolean = true;
     private readyPromise: Promise<void>;
     private subscribers: Array<KernelEventEnvelopeObserver> = [];
     public httpPort: Number;
     public externalUri: Uri | null;
 
     constructor(
+        notebookPath: string,
         processStart: ProcessStart,
         private diagnosticChannel: ReportChannel,
         private parseUri: (uri: string) => Uri,
@@ -51,10 +53,21 @@ export class StdioKernelTransport implements KernelTransport {
             let pid = childProcess.pid;
 
             this.childProcess = childProcess;
-            this.diagnosticChannel.appendLine(`Kernel started with pid ${childProcess.pid}.`);
+            this.diagnosticChannel.appendLine(`Kernel for '${notebookPath}' started (${childProcess.pid}).`);
 
             childProcess.on('exit', (code: number, signal: string) => {
-                this.processExited(pid, code, signal);
+                const message = `Kernel for '${notebookPath}' ended (${pid})`;
+                const messageCodeSuffix = (code && code !== 0)
+                    ? ` with code ${code}`
+                    : '';
+                const messageSignalSuffix = signal
+                    ? ` with signal ${signal}`
+                    : '';
+                const fullMessage = `${message}${messageCodeSuffix}${messageSignalSuffix}.`;
+                this.diagnosticChannel.appendLine(fullMessage);
+                if (this.notifyOnExit) {
+                    this.processExited(pid, code, signal);
+                }
             });
 
             childProcess.stdout.on('data', data => this.lineReader.onData(data));
@@ -212,7 +225,8 @@ export class StdioKernelTransport implements KernelTransport {
     }
 
     dispose() {
-        if (isNotNull(this.childProcess)) {
+        this.notifyOnExit = false;
+        if (this.childProcess) {
             this.childProcess.kill();
         }
     }

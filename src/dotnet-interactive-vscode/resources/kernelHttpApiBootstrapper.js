@@ -74,10 +74,10 @@
                                     console.log('dotnet-interactive client connection cannot be established');
                                     console.log(error);
                                 });
-                            console.log('dotnet-interactive js api initialised');
+                            console.log(`dotnet-interactive js api initialised for ${uri}`);
                         },
                         function (error) {
-                            console.log('dotnet-interactive js api initialisation failure');
+                            console.log(`dotnet-interactive js api initialisation failed for ${uri}`);
                             console.log(error);
                         }
                     );

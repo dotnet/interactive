@@ -3,23 +3,42 @@
 
 import { KernelTransport } from 'dotnet-interactive-vscode-interfaces/out/contracts';
 import { InteractiveClient } from "./interactiveClient";
-import { Uri } from "dotnet-interactive-vscode-interfaces/out/notebook";
+import { ReportChannel, Uri } from "dotnet-interactive-vscode-interfaces/out/notebook";
 
 export class ClientMapper {
     private clientMap: Map<string, Promise<InteractiveClient>> = new Map();
     private clientCreationCallbackMap: Map<string, (client: InteractiveClient) => Promise<void>> = new Map();
 
-    constructor(readonly kernelTransportCreator: (notebookPath: string) => Promise<KernelTransport>) {
+    constructor(readonly kernelTransportCreator: (notebookPath: string) => Promise<KernelTransport>, readonly diagnosticChannel?: ReportChannel) {
+    }
+
+    private writeDiagnosticMessage(message: string) {
+        if (this.diagnosticChannel) {
+            this.diagnosticChannel.appendLine(message);
+        }
     }
 
     static keyFromUri(uri: Uri): string {
         return uri.fsPath;
     }
 
+    tryGetClient(uri: Uri): Promise<InteractiveClient | undefined> {
+        return new Promise(resolve => {
+            const key = ClientMapper.keyFromUri(uri);
+            const clientPromise = this.clientMap.get(key);
+            if (clientPromise) {
+                clientPromise.then(resolve);
+            } else {
+                resolve(undefined);
+            }
+        });
+    }
+
     getOrAddClient(uri: Uri): Promise<InteractiveClient> {
-        let key = ClientMapper.keyFromUri(uri);
+        const key = ClientMapper.keyFromUri(uri);
         let clientPromise = this.clientMap.get(key);
         if (clientPromise === undefined) {
+            this.writeDiagnosticMessage(`creating client for '${key}'`);
             clientPromise = new Promise<InteractiveClient>(async (resolve, reject) => {
                 try {
                     const transport = await this.kernelTransportCreator(uri.fsPath);
@@ -64,14 +83,17 @@ export class ClientMapper {
         this.clientMap.delete(oldKey);
     }
 
-    closeClient(uri: Uri) {
-        let key = ClientMapper.keyFromUri(uri);
-        let clientPromise = this.clientMap.get(key);
+    closeClient(uri: Uri, disposeClient: boolean = true) {
+        const key = ClientMapper.keyFromUri(uri);
+        const clientPromise = this.clientMap.get(key);
         if (clientPromise) {
+            this.writeDiagnosticMessage(`closing client for '${key}', disposing = ${disposeClient}`);
             this.clientMap.delete(key);
-            clientPromise.then(client => {
-                client.dispose();
-            });
+            if (disposeClient) {
+                clientPromise.then(client => {
+                    client.dispose();
+                });
+            };
         }
     }
 
