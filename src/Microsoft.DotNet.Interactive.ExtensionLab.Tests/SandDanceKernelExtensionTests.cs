@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
 
-            formatted.Should().Contain("configureRequireFromExtension('SandDance','1.0.0')(['sandDance/sanddanceapi'], (sandDance) => {");
+            formatted.Should().Contain("configureRequireFromExtension('SandDance','1.0.0')(['SandDance/sanddanceapi'], (sandDance) => {");
         }
 
         [Fact]
