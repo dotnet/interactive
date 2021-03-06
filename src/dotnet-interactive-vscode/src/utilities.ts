@@ -5,7 +5,7 @@ import * as compareVersions from 'compare-versions';
 import * as cp from 'child_process';
 import * as path from 'path';
 import { InstallInteractiveArgs, ProcessStart } from "./interfaces";
-import { Uri } from 'dotnet-interactive-vscode-interfaces/out/notebook';
+import { ReportChannel, Uri } from 'dotnet-interactive-vscode-interfaces/out/notebook';
 
 export function executeSafe(command: string, args: Array<string>, workingDirectory?: string | undefined): Promise<{ code: number, output: string, error: string }> {
     return new Promise<{ code: number, output: string, error: string }>(resolve => {
@@ -41,6 +41,23 @@ export function executeSafe(command: string, args: Array<string>, workingDirecto
             });
         }
     });
+}
+
+export async function executeSafeAndLog(outputChannel: ReportChannel, operationName: string, command: string, args: Array<string>, workingDirectory?: string): Promise<{ code: number, output: string, error: string }> {
+    outputChannel.appendLine(`${operationName}: Executing [${command} ${args.join(' ')}] in '${workingDirectory}'.`);
+    const result = await executeSafe(command, args, workingDirectory);
+    outputChannel.appendLine(`${operationName}: Finished with code ${result.code}.`);
+    if (result.output.length > 0) {
+        outputChannel.appendLine(`${operationName}: STDOUT:`);
+        outputChannel.appendLine(result.output);
+    }
+
+    if (result.error.length > 0) {
+        outputChannel.appendLine(`${operationName}: STDERR:`);
+        outputChannel.appendLine(result.error);
+    }
+
+    return result;
 }
 
 export function isDotNetUpToDate(minVersion: string, commandResult: { code: number, output: string }): boolean {

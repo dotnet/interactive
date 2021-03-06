@@ -10,7 +10,7 @@ import { getEol, isUnsavedNotebook } from './vscodeUtilities';
 import { toNotebookDocument } from './notebookContentProvider';
 import { KernelId, updateCellMetadata } from './notebookKernel';
 import { DotNetPathManager } from './extension';
-import { computeToolInstallArguments, executeSafe } from '../utilities';
+import { computeToolInstallArguments, executeSafe, executeSafeAndLog } from '../utilities';
 
 import * as jupyter from './jupyter';
 import { ReportChannel } from 'dotnet-interactive-vscode-interfaces/out/notebook';
@@ -40,6 +40,13 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, di
         }
     }));
 
+    async function createToolManifest(dotnetPath: string, globalStoragePath: string): Promise<void> {
+        const result = await executeSafeAndLog(diagnosticChannel, 'create-tool-manifest', dotnetPath, ['new', 'tool-manifest'], globalStoragePath);
+        if (result.code !== 0) {
+            throw new Error(`Unable to create local tool manifest.  Command failed with code ${result.code}.\n\nSTDOUT:\n${result.output}\n\nSTDERR:\n${result.error}`);
+        }
+    }
+
     async function installInteractiveTool(args: InstallInteractiveArgs, globalStoragePath: string): Promise<void> {
         // remove previous tool; swallow errors in case it's not already installed
         let uninstallArgs = [
@@ -47,7 +54,7 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, di
             'uninstall',
             'Microsoft.dotnet-interactive'
         ];
-        await executeSafe(args.dotnetPath, uninstallArgs, globalStoragePath);
+        await executeSafeAndLog(diagnosticChannel, 'tool-uninstall', args.dotnetPath, uninstallArgs, globalStoragePath);
 
         let toolArgs = [
             'tool',
@@ -62,7 +69,7 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, di
         }
 
         return new Promise(async (resolve, reject) => {
-            const result = await executeSafe(args.dotnetPath, toolArgs, globalStoragePath);
+            const result = await executeSafeAndLog(diagnosticChannel, 'tool-install', args.dotnetPath, toolArgs, globalStoragePath);
             if (result.code === 0) {
                 resolve();
             } else {
@@ -215,11 +222,4 @@ async function getInteractiveVersion(dotnetPath: string, globalStoragePath: stri
     }
 
     return undefined;
-}
-
-async function createToolManifest(dotnetPath: string, globalStoragePath: string): Promise<void> {
-    const result = await executeSafe(dotnetPath, ['new', 'tool-manifest'], globalStoragePath);
-    if (result.code !== 0) {
-        throw new Error(`Unable to create local tool manifest.  Command failed with code ${result.code}.\n\nSTDOUT:\n${result.output}\n\nSTDERR:\n${result.error}`);
-    }
 }
