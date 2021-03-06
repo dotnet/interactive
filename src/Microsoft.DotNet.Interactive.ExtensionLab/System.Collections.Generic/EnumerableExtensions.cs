@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Linq;
-using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting;
 
@@ -18,9 +17,7 @@ namespace System.Collections.Generic
         }
         public static void Explore<T>(this IEnumerable<T> source)
         {
-            KernelInvocationContext.Current.Display(
-                source.ToTabularJsonString(),
-                HtmlFormatter.MimeType);
+            source.ToTabularJsonString().Explore();
         }
 
         public static IReadOnlyList<IDictionary<string, object>> ToTable(this IEnumerable<IEnumerable<(string name, object value)>> source)
@@ -33,9 +30,9 @@ namespace System.Collections.Generic
 
                 listOfRows.Add(dict);
 
-                foreach (var field in row)
+                foreach (var (fieldName, fieldValue) in row)
                 {
-                    dict.Add(field.name, field.value);
+                    dict.Add(fieldName, fieldValue);
                 }
             }
 

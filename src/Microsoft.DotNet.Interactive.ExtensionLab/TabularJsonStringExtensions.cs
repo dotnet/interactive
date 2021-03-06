@@ -14,5 +14,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
             explorer.LoadData(source);
             return explorer;
         }
+
+        public static void Explore(this TabularJsonString source)
+        {
+            KernelInvocationContext.Current.Display(
+                source,
+                HtmlFormatter.MimeType);
+        }
     }
 }
