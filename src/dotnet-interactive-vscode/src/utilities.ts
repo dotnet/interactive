@@ -4,8 +4,9 @@
 import * as compareVersions from 'compare-versions';
 import * as cp from 'child_process';
 import * as path from 'path';
+import { v4 as uuid } from 'uuid';
 import { InstallInteractiveArgs, ProcessStart } from "./interfaces";
-import { ReportChannel, Uri } from 'dotnet-interactive-vscode-interfaces/out/notebook';
+import { ErrorOutputMimeType, NotebookCellOutput, NotebookCellOutputItem, ReportChannel, Uri } from 'dotnet-interactive-vscode-interfaces/out/notebook';
 
 export function executeSafe(command: string, args: Array<string>, workingDirectory?: string | undefined): Promise<{ code: number, output: string, error: string }> {
     return new Promise<{ code: number, output: string, error: string }>(resolve => {
@@ -58,6 +59,27 @@ export async function executeSafeAndLog(outputChannel: ReportChannel, operationN
     }
 
     return result;
+}
+
+export function createOutput(outputItems: Array<NotebookCellOutputItem>, outputId?: string): NotebookCellOutput {
+    if (!outputId) {
+        outputId = uuid();
+    }
+
+    const output: NotebookCellOutput = {
+        id: outputId,
+        outputs: outputItems,
+    };
+    return output;
+}
+
+export function createErrorOutput(message: string, outputId?: string): NotebookCellOutput {
+    const outputItem: NotebookCellOutputItem = {
+        mime: ErrorOutputMimeType,
+        value: message,
+    };
+    const output = createOutput([outputItem], outputId);
+    return output;
 }
 
 export function isDotNetUpToDate(minVersion: string, commandResult: { code: number, output: string }): boolean {

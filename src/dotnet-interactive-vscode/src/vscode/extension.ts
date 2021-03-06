@@ -33,7 +33,7 @@ export class CachedDotNetPathManager {
 
     setDotNetPath(dotNetPath: string) {
         if (this.dotNetPath !== dotNetPath) {
-            this.dotNetPath = dotNetPath
+            this.dotNetPath = dotNetPath;
             if (this.outputChannelAdapter) {
                 this.outputChannelAdapter.appendLine(`dotnet path set to '${this.dotNetPath}'`);
             }
