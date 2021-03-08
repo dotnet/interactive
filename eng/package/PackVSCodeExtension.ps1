@@ -1,4 +1,4 @@
-[CmdletBinding(PositionalBinding=$false)]
+[CmdletBinding(PositionalBinding = $false)]
 param (
     [string]$stableToolVersionNumber,
     [string]$gitSha,
@@ -8,19 +8,21 @@ param (
 Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
 
-try {
+function Build-Extension([string] $packageDirectory, [string] $packageVersionNumber, [string] $kernelVersionNumber) {
+    Push-Location $packageDirectory
+
     # get JSON model for package.json
     Write-Host "Getting JSON package model"
     $packageJsonPath = Join-Path (Get-Location) "package.json"
     $packageJsonContents = (Get-Content $packageJsonPath | Out-String | ConvertFrom-Json)
 
     # set package version
-    Write-Host "Setting package version to $stableToolVersionNumber"
-    $packageJsonContents.version = $stableToolVersionNumber
+    Write-Host "Setting package version to $packageVersionNumber"
+    $packageJsonContents.version = $packageVersionNumber
 
     # set tool version
-    Write-Host "Setting tool version to $stableToolVersionNumber"
-    $packageJsonContents.contributes.configuration.properties."dotnet-interactive.minimumInteractiveToolVersion"."default" = $stableToolVersionNumber
+    Write-Host "Setting tool version to $kernelVersionNumber"
+    $packageJsonContents.contributes.configuration.properties."dotnet-interactive.minimumInteractiveToolVersion"."default" = $kernelVersionNumber
 
     # append git sha to package description
     Write-Host "Appending git sha to description in $packageJsonPath"
@@ -31,14 +33,23 @@ try {
     $packageJsonContents | ConvertTo-Json -depth 100 | Out-File $packageJsonPath
 
     # create destination
-    New-Item -Path $outDir -ItemType Directory
+    New-Item -Path "$outDir\$packageDirectory" -ItemType Directory
 
     # copy publish scripts
     Copy-Item -Path $PSScriptRoot\..\publish\* -Destination $outDir -Recurse
 
     # pack
     Write-Host "Packing extension"
-    npx vsce package --out "$outDir\dotnet-interactive-vscode-$stableToolVersionNumber.vsix"
+    npx vsce package --out "$outDir\$packageDirectory\dotnet-interactive-vscode-$packageVersionNumber.vsix"
+
+    Pop-Location
+}
+
+try {
+    $stablePackageVersion = "${stableToolVersionNumber}00"
+    $insidersPackageVersion = "${stableToolVersionNumber}01"
+    Build-Extension -packageDirectory "stable" -packageVersionNumber $stableToolVersionNumber -kernelVersionNumber $stableToolVersionNumber
+    Build-Extension -packageDirectory "insiders" -packageVersionNumber $stableToolVersionNumber -kernelVersionNumber $stableToolVersionNumber
 }
 catch {
     Write-Host $_

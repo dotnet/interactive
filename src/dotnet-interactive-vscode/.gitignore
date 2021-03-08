@@ -1,7 +1,1 @@
-out/
-dotnet-interactive-vscode-*.vsix
-.vscode-test/
-
-.fake
-.ionide
-dotnet-interactive-vscode-*.tgz
+dotnet-interactive-*.vsix

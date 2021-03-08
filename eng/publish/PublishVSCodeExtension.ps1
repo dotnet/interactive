@@ -1,6 +1,7 @@
-[CmdletBinding(PositionalBinding=$false)]
+[CmdletBinding(PositionalBinding = $false)]
 param (
     [string]$artifactsPath,
+    [string]$vscodeTarget,
     [string]$publishToken
 )
 
@@ -9,7 +10,7 @@ $ErrorActionPreference = "Stop"
 
 try {
     # find extension vsix
-    $extension = Get-ChildItem "$artifactsPath\dotnet-interactive-vscode-*.vsix" | Select-Object -First 1
+    $extension = Get-ChildItem "$artifactsPath\$vscodeTarget\dotnet-interactive-vscode-*.vsix" | Select-Object -First 1
 
     # verify
     . "$PSScriptRoot\VerifyVSCodeExtension.ps1" -extensionPath $extension
