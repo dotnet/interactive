@@ -13,11 +13,15 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 {
+    public class DataExplorerTests
+    {
+
+    }
     public class SandDanceKernelExtensionTests: IDisposable
     {
         private readonly Configuration _configuration;
 
-        public SandDanceKernelExtensionTests(ITestOutputHelper output)
+        public SandDanceKernelExtensionTests()
         {
             _configuration = new Configuration()
                 .SetInteractive(Debugger.IsAttached)
