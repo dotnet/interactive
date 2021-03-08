@@ -8,10 +8,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public static class TabularJsonStringExtensions
     {
-        public static SandDanceExplorer ExploreWithSandDance(this TabularJsonString source)
+        public static DataExplorer ExploreWithSandDance(this TabularJsonString source)
         {
-            var explorer = new SandDanceExplorer();
-            explorer.LoadData(source);
+            var explorer = new DataExplorer(source);
             return explorer;
         }
 
