@@ -9,6 +9,7 @@ import { getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, bac
 import { Eol } from '../interfaces';
 import { NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookDocument } from '../interfaces/contracts';
 import * as utilities from '../interfaces/utilities';
+import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import * as vscodeLike from '../interfaces/vscode-like';
 import { configureWebViewMessaging, getEol, isUnsavedNotebook } from './vscodeUtilities';
 
@@ -99,13 +100,13 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
 }
 
 function toVsCodeNotebookCellData(cell: NotebookCell): vscode.NotebookCellData {
-    return {
+    return versionSpecificFunctions.createVsCodeNotebookCellData({
         cellKind: <number>languageToCellKind(cell.language),
         source: cell.contents,
         language: getNotebookSpecificLanguage(cell.language),
         outputs: cell.outputs.map(contractCellOutputToVsCodeCellOutput),
         metadata: undefined,
-    };
+    });
 }
 
 export function toNotebookDocument(document: vscode.NotebookDocument): NotebookDocument {
@@ -148,7 +149,7 @@ function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCellOutput)
     }
 }
 
-function contractCellOutputToVsCodeCellOutput(output: NotebookCellOutput): vscode.NotebookCellOutput {
+export function contractCellOutputToVsCodeCellOutput(output: NotebookCellOutput): vscode.NotebookCellOutput {
     const outputItems: Array<vscode.NotebookCellOutputItem> = [];
     if (utilities.isDisplayOutput(output)) {
         for (const mimeKey in output.data) {

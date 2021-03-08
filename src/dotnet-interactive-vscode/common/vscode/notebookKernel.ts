@@ -11,6 +11,7 @@ import { Diagnostic, DiagnosticSeverity } from '../interfaces/contracts';
 import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, withDotNetKernelMetadata } from '../ipynbUtilities';
 import { generateVsCodeNotebookCellOutputItem } from './notebookContentProvider';
 
+import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import * as vscodeLike from '../interfaces/vscode-like';
 import { createErrorOutput } from '../utilities';
 
@@ -118,13 +119,13 @@ export async function updateDocumentKernelspecMetadata(document: vscode.Notebook
 
     // workaround for https://github.com/microsoft/vscode/issues/115912; capture all cell data so we can re-apply it at the end
     const cellData: Array<vscode.NotebookCellData> = document.cells.map(c => {
-        return {
+        return versionSpecificFunctions.createVsCodeNotebookCellData({
             cellKind: c.cellKind,
             source: c.document.getText(),
             language: c.language,
             outputs: c.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
             metadata: c.metadata
-        };
+        });
     });
 
     edit.replaceNotebookMetadata(document.uri, documentKernelMetadata);
@@ -145,13 +146,13 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
         const cellMetadata = getDotNetMetadata(cell.metadata);
         const cellText = cell.document.getText();
         const newLanguage = getCellLanguage(cellText, cellMetadata, documentLanguageInfo, cell.language);
-        const cellData = {
+        const cellData = versionSpecificFunctions.createVsCodeNotebookCellData({
             cellKind: cell.cellKind,
             source: cellText,
             language: newLanguage,
             outputs: cell.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
             metadata: cell.metadata,
-        };
+        });
         cellDatas.push(cellData);
         applyUpdate ||= cell.language !== newLanguage;
     }

@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { debounce } from './utilities';
-import { CellKind, Document, NotebookDocumentBackup } from './interfaces/vscode-like';
+import { Document, NotebookCellKind, NotebookDocumentBackup } from './interfaces/vscode-like';
 import { ClientMapper } from './clientMapper';
 import { Diagnostic } from './interfaces/contracts';
 
@@ -39,12 +39,12 @@ export function isDotnetInteractiveLanguage(language: string): boolean {
     return language.startsWith(notebookLanguagePrefix);
 }
 
-export function languageToCellKind(language: string): CellKind {
+export function languageToCellKind(language: string): NotebookCellKind {
     switch (language) {
         case 'markdown':
-            return CellKind.Markdown;
+            return NotebookCellKind.Markdown;
         default:
-            return CellKind.Code;
+            return NotebookCellKind.Code;
     }
 }
 

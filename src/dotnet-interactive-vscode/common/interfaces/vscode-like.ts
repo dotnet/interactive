@@ -3,7 +3,7 @@
 
 // set to match vscode notebook types
 
-export enum CellKind {
+export enum NotebookCellKind {
     Markdown = 1,
     Code = 2
 }
@@ -54,7 +54,7 @@ export interface Document {
 }
 
 export interface NotebookCell {
-    cellKind: CellKind;
+    cellKind: NotebookCellKind;
     document: Document;
     readonly language: string;
     //outputs: CellOutput[];
@@ -62,6 +62,14 @@ export interface NotebookCell {
 
 export interface NotebookDocument {
     readonly cells: ReadonlyArray<NotebookCell>;
+}
+
+export interface NotebookCellData {
+    cellKind: NotebookCellKind;
+    source: string;
+    language: string;
+    outputs: NotebookCellOutput[];
+    metadata?: NotebookCellMetadata;
 }
 
 export interface NotebookDocumentBackup {
