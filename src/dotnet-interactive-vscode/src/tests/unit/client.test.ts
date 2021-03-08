@@ -479,4 +479,11 @@ describe('InteractiveClient tests', () => {
         });
     });
 
+    it('exception creating kernel transport gracefully fails', done => {
+        const clientMapper = new ClientMapper(async _notebookPath => {
+            throw new Error('simulated error during transport creation');
+        });
+        expect(clientMapper.getOrAddClient({ fsPath: 'fake-notebook' })).eventually.rejectedWith('simulated error during transport creation').notify(done);
+    });
+
 });
