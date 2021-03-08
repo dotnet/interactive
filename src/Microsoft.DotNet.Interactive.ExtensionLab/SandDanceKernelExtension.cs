@@ -53,16 +53,16 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public static void RegisterFormatters()
         {
-            Formatter.Register<SandDanceExplorer>((explorer, writer) =>
+            Formatter.Register<DataExplorer>((explorer, writer) =>
             {
-                var html = explorer.TabularData.RenderSandDanceExplorer();
+                var html = explorer.TabularData.RenderSandDanceExplorer(explorer.Id);
                 writer.Write(html);
             }, HtmlFormatter.MimeType);
         }
 
-        internal static HtmlString RenderSandDanceExplorer(this TabularJsonString data)
+        internal static HtmlString RenderSandDanceExplorer(this TabularJsonString data, string explorerId)
         {
-            var divId = Guid.NewGuid().ToString("N");
+            var divId = explorerId;
             var code = new StringBuilder();
             code.AppendLine("<div style=\"background-color:white;\">");
             code.AppendLine($"<div id=\"{divId}\" style=\"height: 100ch ;margin: 2px;\">");
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         }
 
 
-        private static void GenerateFunctionCode(TabularJsonString data, StringBuilder code, string divId, string functionName)
+        private static void GenerateFunctionCode(TabularJsonString data, StringBuilder code, string dataExplorerId, string functionName)
         {
             var context = Settings.Context ?? "1.0.0";
             code.AppendLine($@"
@@ -108,7 +108,7 @@ let {functionName} = () => {{");
             code.AppendLine($@"
         sandDance.createSandDanceExplorer({{
             data: {data},
-            container: document.getElementById(""{divId}"")
+            container: document.getElementById(""{dataExplorerId}"")
         }});
     }},
     (error) => {{

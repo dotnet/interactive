@@ -161,10 +161,9 @@ namespace Microsoft.ML
                 HtmlFormatter.MimeType);
         }
 
-        public static SandDanceExplorer ExploreWithSandDance(this IDataView source)
+        public static DataExplorer ExploreWithSandDance(this IDataView source)
         {
-            var explorer = new SandDanceExplorer();
-            explorer.LoadData(source.ToTabularJsonString());
+            var explorer = new DataExplorer(source.ToTabularJsonString());
             return explorer;
         }
 

@@ -9,10 +9,9 @@ namespace System.Collections.Generic
 {
     public static class EnumerableExtensions
     {
-        public static SandDanceExplorer ExploreWithSandDance<T>(this IEnumerable<T> source)
+        public static DataExplorer ExploreWithSandDance<T>(this IEnumerable<T> source)
         {
-            var explorer = new SandDanceExplorer();
-            explorer.LoadData(source);
+            var explorer = new DataExplorer(source.ToTabularJsonString());
             return explorer;
         }
         public static void Explore<T>(this IEnumerable<T> source)
