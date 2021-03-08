@@ -58,14 +58,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         }
     }
 
-    public class DataProduced : KernelEvent
+    public class FilteredDataProduced : KernelEvent
     {
         [JsonPropertyName("dataExplorerId")]
         public string DataExplorerId { get; }
 
         public TabularJsonString Data { get; }
 
-        public DataProduced(TabularJsonString data, string dataExplorerId, KernelCommand command) : base(command)
+        public FilteredDataProduced(TabularJsonString data, string dataExplorerId, KernelCommand command) : base(command)
         {
             Data = data;
             DataExplorerId = dataExplorerId;
