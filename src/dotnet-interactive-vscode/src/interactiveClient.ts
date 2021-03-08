@@ -50,7 +50,7 @@ import {
     SubmitCodeType,
 } from 'dotnet-interactive-vscode-interfaces/out/contracts';
 import { Eol } from './interfaces';
-import { debounce } from './utilities';
+import { createErrorOutput, createOutput, debounce } from './utilities';
 
 import * as interfaces from 'dotnet-interactive-vscode-interfaces/out/notebook';
 
@@ -124,7 +124,7 @@ export class InteractiveClient {
                     case CommandFailedType:
                         {
                             const err = <CommandFailed>eventEnvelope.event;
-                            const errorOutput = this.createErrorOutput(err.message);
+                            const errorOutput = createErrorOutput(err.message, this.getNextOutputId());
                             outputs.push(errorOutput);
                             reportOutputs();
                             reject(err);
@@ -180,7 +180,7 @@ export class InteractiveClient {
                         break;
                 }
             }, configuration?.token).catch(e => {
-                const errorOutput = this.createErrorOutput('' + e);
+                const errorOutput = createErrorOutput('' + e, this.getNextOutputId());
                 outputs.push(errorOutput);
                 reportOutputs();
                 reject(e);
@@ -247,19 +247,6 @@ export class InteractiveClient {
 
     dispose() {
         this.kernelTransport.dispose();
-    }
-
-    private createErrorOutput(message: string): interfaces.NotebookCellOutput {
-        const outputItem: interfaces.NotebookCellOutputItem = {
-            mime: interfaces.ErrorOutputMimeType,
-            value: message,
-        };
-        const output: interfaces.NotebookCellOutput = {
-            id: this.getNextOutputId(),
-            outputs: [outputItem]
-        };
-
-        return output;
     }
 
     private submitCommandAndGetResult<TEvent extends KernelEvent>(command: KernelCommand, commandType: KernelCommandType, expectedEventType: KernelEventType, token: string | undefined): Promise<TEvent> {
@@ -356,11 +343,7 @@ export class InteractiveClient {
             }
         }
 
-        const output: interfaces.NotebookCellOutput = {
-            id: this.getNextOutputId(),
-            outputs: outputItems,
-        };
-
+        const output = createOutput(outputItems, this.getNextOutputId());
         return output;
     }
 

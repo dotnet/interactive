@@ -33,7 +33,7 @@ export class CachedDotNetPathManager {
 
     setDotNetPath(dotNetPath: string) {
         if (this.dotNetPath !== dotNetPath) {
-            this.dotNetPath = dotNetPath
+            this.dotNetPath = dotNetPath;
             if (this.outputChannelAdapter) {
                 this.outputChannelAdapter.appendLine(`dotnet path set to '${this.dotNetPath}'`);
             }
@@ -48,12 +48,12 @@ export class CachedDotNetPathManager {
 export const DotNetPathManager = new CachedDotNetPathManager();
 
 export async function activate(context: vscode.ExtensionContext) {
-    // this must happen first, because some following functions use the acquisition command
-    registerAcquisitionCommands(context);
-
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive : diagnostics'));
     DotNetPathManager.setOutputChannelAdapter(diagnosticsChannel);
+
+    // this must happen early, because some following functions use the acquisition command
+    registerAcquisitionCommands(context, diagnosticsChannel);
 
     // register with VS Code
     const clientMapper = new ClientMapper(async (notebookPath) => {
@@ -66,7 +66,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         const launchOptions = await getInteractiveLaunchOptions();
         if (!launchOptions) {
-            throw new Error('Unable to get interactive launch options; .NET SDK must be installed first.');
+            throw new Error(`Unable to get interactive launch options.  Please see the '${diagnosticsChannel.getName()}' output window for details.`);
         }
 
         // prepare kernel transport launch arguments and working directory using a fresh config item so we don't get cached values
@@ -188,12 +188,16 @@ async function updateCellLanguageInMetadata(languageChangeEvent: { cell: vscode.
 
 async function updateDocumentMetadata(e: { document: vscode.NotebookDocument, kernel: vscode.NotebookKernel | undefined }, clientMapper: ClientMapper) {
     if (e.kernel?.id === KernelId) {
-        // update various metadata
-        await updateDocumentKernelspecMetadata(e.document);
-        await updateCellLanguages(e.document);
+        try {
+            // update various metadata
+            await updateDocumentKernelspecMetadata(e.document);
+            await updateCellLanguages(e.document);
 
-        // force creation of the client so we don't have to wait for the user to execute a cell to get the tool
-        await clientMapper.getOrAddClient(e.document.uri);
+            // force creation of the client so we don't have to wait for the user to execute a cell to get the tool
+            await clientMapper.getOrAddClient(e.document.uri);
+        } catch (err) {
+            vscode.window.showErrorMessage(`Failed to set document metadata for '${e.document.uri}': ${err}`);
+        }
     }
 }
 

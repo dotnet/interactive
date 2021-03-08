@@ -13,6 +13,7 @@ import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, withDotNet
 import * as interfaces from 'dotnet-interactive-vscode-interfaces/out/notebook';
 import * as vscodeInsiders from 'dotnet-interactive-vscode-insiders/out/functions';
 import * as vscodeStable from 'dotnet-interactive-vscode-stable/out/functions';
+import { createErrorOutput } from '../utilities';
 
 export const KernelId: string = 'dotnet-interactive';
 
@@ -40,36 +41,38 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
 
     async executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell): Promise<void> {
         const startTime = Date.now();
-        await updateCellMetadata(document, cell, {
-            runStartTime: startTime,
-            runState: vscode.NotebookCellRunState.Running,
-        });
-        await updateCellOutputs(document, cell, []);
-        let client = await this.clientMapper.getOrAddClient(document.uri);
-        let source = cell.document.getText();
-        function outputObserver(outputs: Array<interfaces.NotebookCellOutput>) {
-            updateCellOutputs(document, cell, outputs).then(() => { });
-        }
-
-        let diagnosticCollection = getDiagnosticCollection(cell.uri);
-
-        function diagnosticObserver(diags: Array<Diagnostic>) {
-            diagnosticCollection.set(cell.uri, diags.filter(d => d.severity !== DiagnosticSeverity.Hidden).map(toVsCodeDiagnostic));
-        }
-
-        return client.execute(source, getSimpleLanguage(cell.language), outputObserver, diagnosticObserver, { id: document.uri.toString() }).then(() => {
-            return updateCellMetadata(document, cell, {
-                runState: vscode.NotebookCellRunState.Success,
-                lastRunDuration: Date.now() - startTime,
+        try {
+            await updateCellMetadata(document, cell, {
+                runStartTime: startTime,
+                runState: vscode.NotebookCellRunState.Running,
             });
-        }).catch(() => {
-            return updateCellMetadata(document, cell, {
-                runState: vscode.NotebookCellRunState.Error,
-                lastRunDuration: Date.now() - startTime,
+            await updateCellOutputs(document, cell, []);
+            let client = await this.clientMapper.getOrAddClient(document.uri);
+            let source = cell.document.getText();
+            function outputObserver(outputs: Array<interfaces.NotebookCellOutput>) {
+                updateCellOutputs(document, cell, outputs).then(() => { });
+            }
+
+            let diagnosticCollection = getDiagnosticCollection(cell.uri);
+
+            function diagnosticObserver(diags: Array<Diagnostic>) {
+                diagnosticCollection.set(cell.uri, diags.filter(d => d.severity !== DiagnosticSeverity.Hidden).map(toVsCodeDiagnostic));
+            }
+
+            return client.execute(source, getSimpleLanguage(cell.language), outputObserver, diagnosticObserver, { id: document.uri.toString() }).then(() => {
+                return updateCellMetadata(document, cell, {
+                    runState: vscode.NotebookCellRunState.Success,
+                    lastRunDuration: Date.now() - startTime,
+                });
+            }).catch(() => setCellErrorState(document, cell, startTime)).then(() => {
+                return updateCellLanguages(document);
             });
-        }).then(() => {
-            return updateCellLanguages(document);
-        });
+        } catch (err) {
+            const errorOutput = createErrorOutput(`Error executing cell: ${err}`);
+            await updateCellOutputs(document, cell, [errorOutput]);
+            await setCellErrorState(document, cell, startTime);
+            throw err;
+        }
     }
 
     cancelCellExecution(document: vscode.NotebookDocument, cell: vscode.NotebookCell): void {
@@ -79,6 +82,13 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
     cancelAllCellsExecution(document: vscode.NotebookDocument): void {
         // not supported
     }
+}
+
+function setCellErrorState(document: vscode.NotebookDocument, cell: vscode.NotebookCell, startTime: number): Promise<void> {
+    return updateCellMetadata(document, cell, {
+        runState: vscode.NotebookCellRunState.Error,
+        lastRunDuration: Date.now() - startTime,
+    });
 }
 
 export async function updateCellMetadata(document: vscode.NotebookDocument, cell: vscode.NotebookCell, metadata: interfaces.NotebookCellMetadata): Promise<void> {
