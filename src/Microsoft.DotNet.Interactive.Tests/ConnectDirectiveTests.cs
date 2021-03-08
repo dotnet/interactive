@@ -79,7 +79,6 @@ namespace Microsoft.DotNet.Interactive.Tests
 hello!
 ");
             wasCalled.Should().BeTrue();
-
         }
 
         [Fact]

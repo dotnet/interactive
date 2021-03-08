@@ -1,15 +1,16 @@
 ﻿<ProjectConfiguration>
   <Settings>
     <AdditionalFilesToIncludeForProject>
-      <Value>..\dotnet-interactive-vscode\src\contracts.ts</Value>
       <Value>..\Microsoft.DotNet.Interactive.Js\src\dotnet-interactive\contracts.ts</Value>
+      <Value>..\dotnet-interactive-vscode\src\interfaces\src\contracts.ts</Value>
     </AdditionalFilesToIncludeForProject>
+    <DefaultTestTimeout>25000</DefaultTestTimeout>
+    <HiddenComponentWarnings>
+      <Value>AspNetTestHostCompatibility</Value>
+    </HiddenComponentWarnings>
     <IgnoredTests>
       <NamedTestSelector>
         <TestName>Microsoft.DotNet.Interactive.App.Tests.CommandLine.CommandLineParserTests.kernel_server_honors_log_path</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Microsoft.DotNet.Interactive.App.Tests.TypeScriptInterfacesContractTests.vscode_generated_TypeScript_interfaces_file_has_known_shape</TestName>
       </NamedTestSelector>
     </IgnoredTests>
   </Settings>

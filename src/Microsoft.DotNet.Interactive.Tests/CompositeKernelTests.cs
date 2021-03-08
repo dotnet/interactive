@@ -8,6 +8,7 @@ using System.CommandLine.Invocation;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -21,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 {
     public class CompositeKernelTests : IDisposable
     {
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
 
         public CompositeKernelTests(ITestOutputHelper output)
         {
@@ -424,6 +425,7 @@ new [] {1,2,3}");
                     typeof(CompleteCodeSubmissionReceived),
                     typeof(CommandSucceeded));
         }
+        
 
         [Fact]
         public async Task Deferred_commands_on_composite_kernel_can_use_directives()

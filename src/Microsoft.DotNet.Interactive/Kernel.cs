@@ -7,18 +7,17 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Parsing;
 using Microsoft.DotNet.Interactive.Server;
-using Microsoft.DotNet.Interactive.Utility;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -26,14 +25,13 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly Subject<KernelEvent> _kernelEvents = new();
         private readonly CompositeDisposable _disposables;
-        private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
 
-        private readonly ConcurrentQueue<KernelOperation> _commandQueue =
-            new();
-        private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers =
-            new();
+        private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
+        private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
+
+        private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
 
         protected Kernel(string name)
         {
@@ -49,10 +47,6 @@ namespace Microsoft.DotNet.Interactive
             _disposables = new CompositeDisposable();
 
             Pipeline = new KernelCommandPipeline(this);
-
-            AddSetKernelMiddleware();
-
-            AddDirectiveMiddlewareAndCommonCommandHandlers();
 
             _disposables.Add(Disposable.Create(
                 () => _kernelEvents.OnCompleted()
@@ -77,89 +71,71 @@ namespace Microsoft.DotNet.Interactive
             }
 
             command.SetToken($"deferredCommand::{Guid.NewGuid():N}");
+
             _deferredCommands.Enqueue(command);
         }
 
-        private void AddSetKernelMiddleware()
+        private bool TryPreprocessCommands(
+            KernelCommand originalCommand,
+            KernelInvocationContext context,
+            out IReadOnlyList<KernelCommand> commands)
         {
-            AddMiddleware(SetKernel);
-        }
-
-        private void AddDirectiveMiddlewareAndCommonCommandHandlers()
-        {
-            AddMiddleware(
-                async (originalCommand, context, next) =>
-                {
-                    var commands = PreprocessCommands(originalCommand);
-
-                    if (!commands.Contains(originalCommand) && commands.Any())
-                    {
-                        context.CommandToSignalCompletion = commands.Last();
-                    }
-
-                    foreach (var command in commands)
-                    {
-                        if (context.IsComplete)
-                        {
-                            break;
-                        }
-
-                        if (command == originalCommand)
-                        {
-                            // no new context is needed
-                            await next(originalCommand, context);
-                        }
-                        else
-                        {
-                            switch (command)
-                            {
-                                case AnonymousKernelCommand _:
-                                case DirectiveCommand _:
-                                    await command.InvokeAsync(context);
-                                    break;
-                                default:
-                                    SetHandlingKernel(command, context);
-                                    var kernel = context.HandlingKernel;
-                                    if (kernel == this)
-                                    {
-                                        var c = KernelInvocationContext.Establish(command);
-                                        await next(command, c);
-                                    }
-                                    else
-                                    {
-                                        // forward to appropriate kernel
-                                        await kernel.SendAsync(command);
-                                    }
-                                    break;
-                            }
-                        }
-                    }
-                });
-        }
-
-        private IReadOnlyList<KernelCommand> PreprocessCommands(KernelCommand command)
-        {
-            return command switch
+            switch (originalCommand)
             {
-                SubmitCode {LanguageNode: null} submitCode => SubmissionParser.SplitSubmission(submitCode),
+                case SubmitCode { LanguageNode: null } submitCode:
+                    commands = SubmissionParser.SplitSubmission(submitCode);
+                    break;
+                case RequestDiagnostics { LanguageNode: null } requestDiagnostics:
+                    commands = SubmissionParser.SplitSubmission(requestDiagnostics);
+                    break;
+                case LanguageServiceCommand { LanguageNode: null } languageServiceCommand:
+                    if (!TryPreprocessLanguageServiceCommand(languageServiceCommand, context, out commands))
+                    {
+                        return false;
+                    }
+                    break;
+                default:
+                    commands = new[] { originalCommand };
+                    break;
+            }
 
-                RequestDiagnostics {LanguageNode: null} requestDiagnostics => SubmissionParser.SplitSubmission(requestDiagnostics),
+            foreach (var command in commands)
+            {
+                if (command.KernelUri is null)
+                {
+                    command.KernelUri = GetHandlingKernelUri(command);
+                }
 
-                LanguageServiceCommand {LanguageNode: null} languageServiceCommand => PreprocessLanguageServiceCommand(languageServiceCommand),
+                if (command.Parent is null &&
+                    command != originalCommand)
+                {
+                    command.Parent = originalCommand;
+                }
+            }
 
-                _ => new[] { command }
-            };
+            return true;
         }
 
-        private IReadOnlyList<KernelCommand> PreprocessLanguageServiceCommand(LanguageServiceCommand command)
+        private bool TryPreprocessLanguageServiceCommand(LanguageServiceCommand command, KernelInvocationContext context, out IReadOnlyList<KernelCommand> commands)
         {
-            var commands = new List<KernelCommand>();
+            var postProcessCommands = new List<KernelCommand>();
             var tree = SubmissionParser.Parse(command.Code, command.TargetKernelName);
             var rootNode = tree.GetRoot();
             var sourceText = SourceText.From(command.Code);
+            var lines = sourceText.Lines;
+            if (command.LinePosition.Line < 0
+                || command.LinePosition.Line >= lines.Count
+                || command.LinePosition.Character < 0
+                || command.LinePosition.Character > lines[command.LinePosition.Line].Span.Length)
+            {
+                context.Fail(message: $"The specified position {command.LinePosition}");
+                commands = null;
+                return false;
+            }
 
             // TextSpan.Contains only checks `[start, end)`, but we need to allow for `[start, end]`
             var absolutePosition = tree.GetAbsolutePosition(command.LinePosition);
+
             if (absolutePosition >= tree.Length)
             {
                 absolutePosition--;
@@ -182,21 +158,16 @@ namespace Microsoft.DotNet.Interactive
 
                 offsetLanguageServiceCommand.TargetKernelName = node switch
                 {
-                    DirectiveNode _ => Name,
+                    DirectiveNode => Name,
                     _ => node.KernelName,
                 };
 
-                commands.Add(offsetLanguageServiceCommand);
+                postProcessCommands.Add(offsetLanguageServiceCommand);
             }
 
-            return commands;
-        }
+            commands = postProcessCommands;
 
-        private async Task SetKernel(KernelCommand command, KernelInvocationContext context, KernelPipelineContinuation next)
-        {
-            SetHandlingKernel(command, context);
-
-            await next(command, context);
+            return true;
         }
 
         public FrontendEnvironment FrontendEnvironment
@@ -210,6 +181,11 @@ namespace Microsoft.DotNet.Interactive
         public IObservable<KernelEvent> KernelEvents => _kernelEvents;
 
         public string Name { get; set; }
+
+        internal KernelUri Uri =>
+            ParentKernel is null
+                ? KernelUri.Parse(Name)
+                : ParentKernel.Uri.Append($"{Name}");
 
         public IReadOnlyCollection<ICommand> Directives => SubmissionParser.Directives;
 
@@ -228,62 +204,6 @@ namespace Microsoft.DotNet.Interactive
             KernelCommandEnvelope.RegisterCommandTypeReplacingIfNecessary<TCommand>();
         }
 
-        private class KernelOperation
-        {
-            public KernelOperation(
-                KernelCommand command,
-                TaskCompletionSource<KernelCommandResult> taskCompletionSource)
-            {
-                Command = command;
-                TaskCompletionSource = taskCompletionSource;
-
-                AsyncContext.TryEstablish(out var id);
-                AsyncContextId = id;
-            }
-
-            public KernelCommand Command { get; }
-
-            public TaskCompletionSource<KernelCommandResult> TaskCompletionSource { get; }
-
-            public int AsyncContextId { get; }
-        }
-
-        private async Task ExecuteCommand(KernelOperation operation)
-        {
-            var context = KernelInvocationContext.Establish(operation.Command);
-
-            // only subscribe for the root command 
-            using var _ =
-                context.Command == operation.Command
-                ? context.KernelEvents.Subscribe(PublishEvent)
-                : Disposable.Empty;
-
-            try
-            {
-                await Pipeline.SendAsync(operation.Command, context);
-
-                if (operation.Command == context.Command)
-                {
-                    await context.DisposeAsync();
-                }
-                else
-                {
-                    context.Complete(operation.Command);
-                }
-
-                operation.TaskCompletionSource.SetResult(context.Result);
-            }
-            catch (Exception exception)
-            {
-                if (!context.IsComplete)
-                {
-                    context.Fail(exception);
-                }
-
-                operation.TaskCompletionSource.SetException(exception);
-            }
-        }
-
         internal virtual async Task HandleAsync(
             KernelCommand command,
             KernelInvocationContext context)
@@ -292,78 +212,159 @@ namespace Microsoft.DotNet.Interactive
             await command.InvokeAsync(context);
         }
 
-        public Task<KernelCommandResult> SendAsync(
+        public async Task<KernelCommandResult> SendAsync(
             KernelCommand command,
             CancellationToken cancellationToken)
-        {
-            return SendAsync(command, cancellationToken, null);
-        }
-
-        internal Task<KernelCommandResult> SendAsync(
-            KernelCommand command,
-            CancellationToken cancellationToken,
-            Action onDone)
         {
             if (command == null)
             {
                 throw new ArgumentNullException(nameof(command));
             }
 
-            UndeferCommands();
+            var scheduler = Scheduler;
+            var context = KernelInvocationContext.Establish(command);
+           
+            // only subscribe for the root command 
+            var currentCommandOwnsContext = context.Command == command;
 
-            var tcs = new TaskCompletionSource<KernelCommandResult>();
+            IDisposable disposable;
 
-            var operation = new KernelOperation(command, tcs);
-
-            _commandQueue.Enqueue(operation);
-
-            ProcessCommandQueue(_commandQueue, cancellationToken, onDone);
-
-            return tcs.Task;
-        }
-
-        private void ProcessCommandQueue(
-            ConcurrentQueue<KernelOperation> commandQueue,
-            CancellationToken cancellationToken,
-            Action onDone)
-        {
-            if (commandQueue.TryDequeue(out var currentOperation))
+            if (currentCommandOwnsContext)
             {
-                Task.Run(async () =>
+                disposable = context.KernelEvents.Subscribe(PublishEvent);
+
+                if (cancellationToken != CancellationToken.None && 
+                    cancellationToken != default)
                 {
-                    AsyncContext.Id = currentOperation.AsyncContextId;
-
-                    await ExecuteCommand(currentOperation);
-
-                    ProcessCommandQueue(commandQueue, cancellationToken, onDone);
-                }, cancellationToken).ConfigureAwait(false);
+                    cancellationToken.Register(() =>
+                    {
+                        context.Cancel();
+                    });
+                }
             }
             else
             {
-                onDone?.Invoke();
+                disposable = Disposable.Empty;
             }
-        }
 
-        internal Task RunDeferredCommandsAsync()
-        {
-            var tcs = new TaskCompletionSource<Unit>();
-            UndeferCommands();
-            ProcessCommandQueue(
-                _commandQueue,
-                CancellationToken.None,
-                () => tcs.SetResult(Unit.Default));
-            return tcs.Task;
-        }
-
-        private void UndeferCommands()
-        {
-            while (_deferredCommands.TryDequeue(out var initCommand))
+            using (disposable)
             {
-                _commandQueue.Enqueue(new KernelOperation(initCommand, new TaskCompletionSource<KernelCommandResult>()));
+                if (TryPreprocessCommands(command, context, out var commands))
+                {
+                    foreach (var c in commands)
+                    {
+                        switch (c)
+                        {
+                            case Quit quit:
+                                quit.KernelUri = Uri;
+                                quit.TargetKernelName = Name;
+                                await InvokePipelineAndCommandHandler(quit);
+                                break;
+
+                            case Cancel cancel:
+                                cancel.KernelUri = Uri;
+                                cancel.TargetKernelName = Name;
+                                scheduler.CancelCurrentOperation();
+                                await InvokePipelineAndCommandHandler(cancel);
+                                break;
+
+                            default:
+                                await scheduler.RunAsync(
+                                    c,
+                                    InvokePipelineAndCommandHandler,
+                                    c.KernelUri.ToString(),
+                                    cancellationToken);
+                                break;
+                        }
+                    }
+
+                    if (currentCommandOwnsContext)
+                    {
+                        await context.DisposeAsync();
+                    }
+                }
+            }
+
+            return context.Result;
+        }
+
+        internal async Task<KernelCommandResult> InvokePipelineAndCommandHandler(KernelCommand command)
+        {
+            var context = KernelInvocationContext.Establish(command);
+
+            try
+            {
+                SetHandlingKernel(command, context);
+
+                await Pipeline.SendAsync(command, context);
+
+                if (command != context.Command)
+                {
+                    context.Complete(command);
+                }
+
+                return context.Result;
+            }
+            catch (Exception exception)
+            {
+                if (!context.IsComplete)
+                {
+                    context.Fail(exception);
+                }
+
+                throw;
             }
         }
 
-        protected void PublishEvent(KernelEvent kernelEvent)
+        protected internal KernelScheduler<KernelCommand, KernelCommandResult> Scheduler
+        {
+            get
+            {
+                if (_commandScheduler is null)
+                {
+                    SetScheduler(new KernelScheduler<KernelCommand, KernelCommandResult>());
+                }
+
+                return _commandScheduler;
+            }
+        }
+
+        protected internal void SetScheduler(KernelScheduler<KernelCommand, KernelCommandResult> scheduler)
+        {
+            _commandScheduler = scheduler;
+
+            _commandScheduler.RegisterDeferredOperationSource(GetDeferredOperations, InvokePipelineAndCommandHandler);
+
+            IEnumerable<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
+            {
+                if (!command.KernelUri.Contains(Uri))
+                {
+                    yield break;
+                }
+
+                while (_deferredCommands.TryDequeue(out var kernelCommand))
+                {
+                    kernelCommand.TargetKernelName = Name;
+                    kernelCommand.KernelUri = Uri;
+                    var currentInvocationContext = KernelInvocationContext.Current;
+                    if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
+                    {
+                        foreach (var cmd in commands)
+                        {
+                            yield return cmd;
+                        }
+                    }
+                }
+            }
+        }
+
+        private protected virtual KernelUri GetHandlingKernelUri(
+            KernelCommand command)
+        {
+            return Uri;
+        }
+
+        protected internal void PublishEvent(KernelEvent kernelEvent)
         {
             if (kernelEvent == null)
             {
@@ -419,7 +420,7 @@ namespace Microsoft.DotNet.Interactive
             return Task.CompletedTask;
         }
 
-        private IReadOnlyList<CompletionItem> GetDirectiveCompletionItems(
+        private IEnumerable<CompletionItem> GetDirectiveCompletionItems(
             DirectiveNode directiveNode,
             int requestPosition)
         {
@@ -480,8 +481,7 @@ namespace Microsoft.DotNet.Interactive
                         SetHandler(submitCodeHandler, submitCode);
                         break;
 
-                    case (RequestCompletions rq, _)
-                        when rq.LanguageNode is DirectiveNode:
+                    case (RequestCompletions { LanguageNode: DirectiveNode } rq, _):
                         rq.Handler = (__, ___) => HandleRequestCompletionsAsync(rq, context);
                         break;
 
@@ -502,13 +502,13 @@ namespace Microsoft.DotNet.Interactive
                         break;
 
                     default:
-                        TrySetDynamicHandler(command, context);
+                        TrySetDynamicHandler(command);
                         break;
                 }
             }
         }
 
-        private void TrySetDynamicHandler(KernelCommand command, KernelInvocationContext context)
+        private void TrySetDynamicHandler(KernelCommand command)
         {
             if (_dynamicHandlers.TryGetValue(command.GetType(), out KernelCommandInvocation handler))
             {
@@ -531,7 +531,7 @@ namespace Microsoft.DotNet.Interactive
 
         protected virtual ChooseKernelDirective CreateChooseKernelDirective()
         {
-            return new ChooseKernelDirective(this);
+            return new(this);
         }
 
         internal ChooseKernelDirective ChooseKernelDirective => _chooseKernelDirective ??= CreateChooseKernelDirective();

@@ -22,6 +22,28 @@ namespace Microsoft.DotNet.Interactive
 {
     public static class KernelExtensions
     {
+        public static T UseQuitCommand<T>(this T kernel, Func<Task> onQuitAsync = null) where T : Kernel
+        {
+            kernel.RegisterCommandHandler<Quit>(async (quit, context) =>
+            {
+                if (onQuitAsync is not null)
+                {
+                    await onQuitAsync();
+                }
+                else
+                {
+                    ShutDown();
+                }
+            });
+
+            return kernel;
+
+            void ShutDown() 
+            {
+                Environment.Exit(0);
+            }
+        }
+
         public static Kernel FindKernel(this Kernel kernel, string name)
         {
             var root = kernel

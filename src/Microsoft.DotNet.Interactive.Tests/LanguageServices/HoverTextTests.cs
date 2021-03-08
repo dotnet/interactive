@@ -3,6 +3,7 @@
 
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -61,18 +62,20 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         [Theory]
         [InlineData(Language.CSharp, "var x = 1; // hovering$$ in a comment")]
         [InlineData(Language.FSharp, "let x = 1 // hovering$$ in a comment")]
-        public async Task invalid_hover_request_returns_no_result(Language language, string markupCode)
+        public async Task hover_request_over_comments_succeeds(Language language, string markupCode)
         {
             using var kernel = CreateKernel(language);
 
             MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
             var commandResult = await SendHoverRequest(kernel, code, line, character);
 
-            commandResult
+            var events = commandResult
                 .KernelEvents
-                .ToSubscribedList()
+                .ToSubscribedList();
+
+            events
                 .Should()
-                .NotContain(kv => kv.GetType().IsSubclassOf(typeof(HoverTextProduced)));
+                .ContainSingle<CommandSucceeded>();
         }
 
         [Theory]
@@ -86,11 +89,18 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
 
             var commandResult = await SendHoverRequest(kernel, code, line, character);
 
-            commandResult
+            var events = commandResult
                 .KernelEvents
-                .ToSubscribedList()
-                .Should()
-                .NotContain(kv => kv.GetType().IsSubclassOf(typeof(HoverTextProduced)));
+                .ToSubscribedList();
+
+            using var _ = new AssertionScope();
+
+            events.Should()
+                .NotContain(kv => kv is HoverTextProduced);
+
+            events
+                 .Should()
+                .ContainSingle<CommandFailed>();
         }
 
         [Theory]
@@ -100,7 +110,8 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         {
             // declare a variable in deferred code
             using var kernel = CreateKernel(language);
-            kernel.DeferCommand(new SubmitCode(deferredCode));
+            var languageKernel = kernel.FindKernel(language.LanguageName());
+            languageKernel.DeferCommand(new SubmitCode(deferredCode));
 
             // send the actual language service request that depends on the deferred code
             MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);

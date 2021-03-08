@@ -25,16 +25,21 @@ using Newtonsoft.Json.Linq;
 using Pocket;
 
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
     public class HttpApiTests : IDisposable
     {
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
 
-        public void Dispose()
+        public HttpApiTests(ITestOutputHelper output)
         {
             _disposables.Add(Formatting.Formatter.ResetToDefault);
+            _disposables.Add(output.SubscribeToPocketLogger());
+        }
+        public void Dispose()
+        {
             _disposables.Dispose();
         }
 
@@ -359,9 +364,8 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
                 packageVersion,
                 fileToEmbed: fileToEmbed);
 
-            await kernel.SubmitCodeAsync($@"
-#i ""nuget:{nupkg.Directory.FullName}""
-#r ""nuget:{packageName},{packageVersion}""            ");
+            await kernel.SubmitCodeAsync($@"#i ""nuget:{nupkg.Directory.FullName}""
+#r ""nuget:{packageName},{packageVersion}""");
 
             var response = await server.HttpClient.GetAsync("extensions/TestKernelExtension/resources/file.txt");
 

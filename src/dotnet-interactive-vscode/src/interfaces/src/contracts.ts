@@ -6,10 +6,12 @@
 // --------------------------------------------- Kernel Commands
 
 export const AddPackageType = "AddPackage";
+export const CancelType = "Cancel";
 export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
 export const ParseNotebookType = "ParseNotebook";
+export const QuitType = "Quit";
 export const RequestCompletionsType = "RequestCompletions";
 export const RequestDiagnosticsType = "RequestDiagnostics";
 export const RequestHoverTextType = "RequestHoverText";
@@ -20,10 +22,12 @@ export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 
 export type KernelCommandType =
       typeof AddPackageType
+    | typeof CancelType
     | typeof ChangeWorkingDirectoryType
     | typeof DisplayErrorType
     | typeof DisplayValueType
     | typeof ParseNotebookType
+    | typeof QuitType
     | typeof RequestCompletionsType
     | typeof RequestDiagnosticsType
     | typeof RequestHoverTextType
@@ -38,6 +42,9 @@ export interface AddPackage extends KernelCommand {
 
 export interface KernelCommand {
     targetKernelName?: string;
+}
+
+export interface Cancel extends KernelCommand {
 }
 
 export interface ChangeWorkingDirectory extends KernelCommand {
@@ -56,6 +63,9 @@ export interface DisplayValue extends KernelCommand {
 export interface ParseNotebook extends KernelCommand {
     fileName: string;
     rawData: Uint8Array;
+}
+
+export interface Quit extends KernelCommand {
 }
 
 export interface RequestCompletions extends LanguageServiceCommand {

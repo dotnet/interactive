@@ -68,7 +68,7 @@ using {typeof(PocketView).Namespace};
                                    v.MimeType == "text/html" &&
                                    v.Value.ToString().Contains(expectedContent));
         }
-        
+
         [Theory]
         [InlineData(Language.CSharp, "display(\"<test></test>\")", "<test></test>")]
         [InlineData(Language.FSharp, "display(\"<test></test>\")", "<test></test>")]
@@ -81,18 +81,16 @@ using {typeof(PocketView).Namespace};
 
             var result = await kernel.SendAsync(new SubmitCode(submission));
 
-            var valueProduced = await result
-                                      .KernelEvents
-                                      .OfType<DisplayedValueProduced>()
-                                      .Timeout(5.Seconds())
-                                      .FirstAsync();
+            var events = result.KernelEvents.ToSubscribedList();
 
-            valueProduced
-                .FormattedValues
-                .Should()
-                .ContainSingle(v =>
-                                   v.MimeType == "text/plain" &&
-                                   v.Value.ToString().Contains(expectedContent));
+            events.Should()
+                  .ContainSingle<DisplayedValueProduced>()
+                  .Which
+                  .FormattedValues
+                  .Should()
+                  .ContainSingle(v =>
+                                     v.MimeType == "text/plain" &&
+                                     v.Value.ToString().Contains(expectedContent));
         }
 
         [Theory]
@@ -302,15 +300,15 @@ using {typeof(PocketView).Namespace};
                 Language.FSharp => $@"CSS(""{cssContent}"")",
             };
 
-            await kernel.SendAsync(new SubmitCode(submission));
+            var result = await kernel.SendAsync(new SubmitCode(submission));
 
-            var formatted =
-                KernelEvents
-                    .OfType<DisplayedValueProduced>()
-                    .SelectMany(v => v.FormattedValues)
-                    .ToArray();
+            var events = result.KernelEvents.ToSubscribedList();
 
-            formatted
+            events
+                .Should()
+                .ContainSingle<DisplayedValueProduced>()
+                .Which
+                .FormattedValues
                 .Should()
                 .ContainSingle(v =>
                                    v.MimeType == "text/html" &&
@@ -438,10 +436,13 @@ f();"
         {
             var kernel = CreateKernel(Language.FSharp);
 
-            await kernel.SubmitCodeAsync("let t = StringBuilder()");
+            var result = await kernel.SubmitCodeAsync("let t = StringBuilder()");
 
-            KernelEvents.Should()
-                        .Contain(e => e is CommandSucceeded);
+            var events = result.KernelEvents.ToSubscribedList();
+
+            events
+                .Should()
+                .ContainSingle<CommandSucceeded>();
         }
 
         [Fact]

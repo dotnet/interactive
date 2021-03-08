@@ -18,9 +18,9 @@ namespace Microsoft.DotNet.Interactive
     public class PackageRestoreContext : IDisposable
     {
         private const string restoreTfm = "net5.0";
-        private readonly ConcurrentDictionary<string, PackageReference> _requestedPackageReferences = new ConcurrentDictionary<string, PackageReference>(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, ResolvedPackageReference> _resolvedPackageReferences = new Dictionary<string, ResolvedPackageReference>(StringComparer.OrdinalIgnoreCase);
-        private readonly HashSet<string> _restoreSources = new HashSet<string>();
+        private readonly ConcurrentDictionary<string, PackageReference> _requestedPackageReferences = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, ResolvedPackageReference> _resolvedPackageReferences = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _restoreSources = new();
         private readonly DependencyProvider _dependencies;
 
         // Resolution will  after 3 minutes by default
@@ -202,6 +202,7 @@ namespace Microsoft.DotNet.Interactive
         private IResolveDependenciesResult ResolveAsync(IEnumerable<Tuple<string, string>> packageManagerTextLines, string executionTfm, ResolvingErrorReport reportError)
         {
             IDependencyManagerProvider iDependencyManager = _dependencies.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
+
             if (iDependencyManager == null)
             {
                 // If this happens it is because of a bug in the Dependency provider. or deployment failed to deploy the nuget provider dll.
@@ -220,11 +221,9 @@ namespace Microsoft.DotNet.Interactive
                                  .ToArray();
 
             var errors = new List<string>();
-
-            var result =
-                await Task.Run(() => 
-                     ResolveAsync(GetPackageManagerLines(), restoreTfm, ReportError)
-                );
+            
+            var result = await Task.Run(() => 	
+                ResolveAsync(GetPackageManagerLines(), restoreTfm, ReportError));
 
             PackageRestoreResult packageRestoreResult;
 

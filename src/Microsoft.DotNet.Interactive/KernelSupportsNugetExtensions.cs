@@ -262,9 +262,7 @@ namespace Microsoft.DotNet.Interactive
                     }
                 };
 
-                await invocationContext.QueueAction(restore);
-                var kernel = invocationContext.HandlingKernel;
-                await kernel.RunDeferredCommandsAsync();
+                await invocationContext.HandlingKernel.SendAsync(new AnonymousKernelCommand(restore));
             };
 
             static string InstallingPackageMessage(PackageReference package)

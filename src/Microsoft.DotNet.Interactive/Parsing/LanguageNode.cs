@@ -22,6 +22,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         public string KernelName { get; }
 
+        internal KernelUri? KernelUri { get; set; }
+
         public override IEnumerable<Diagnostic> GetDiagnostics() =>
             LanguageSpecificParseResult.None.GetDiagnostics();
     }

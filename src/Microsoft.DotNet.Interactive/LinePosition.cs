@@ -41,6 +41,11 @@ namespace Microsoft.DotNet.Interactive
             return HashCode.Combine(Line, Character);
         }
 
+        public override string ToString()
+        {
+            return $"{nameof(LinePosition)}: {{{Line}, {Character}}})";
+        }
+
         public static bool operator ==(LinePosition a, LinePosition b)
         {
             if (a is null && b is null)

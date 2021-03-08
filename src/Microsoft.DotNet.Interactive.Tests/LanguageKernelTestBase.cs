@@ -15,17 +15,19 @@ using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
 using Pocket;
-
+using Xunit;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.LanguageKernelTestBase>;
 
 using Xunit.Abstractions;
+
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
     [LogTestNamesToPocketLogger]
     public abstract class LanguageKernelTestBase : IDisposable
     {
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
 
         protected LanguageKernelTestBase(ITestOutputHelper output)
         {
@@ -40,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.Tests
             }
             catch (Exception ex) 
             {
-                Log.Error(exception: ex);
+                Log.Error(ex);
             }
         }
 

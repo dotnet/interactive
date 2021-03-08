@@ -52,11 +52,14 @@ namespace Microsoft.DotNet.Interactive
                 HtmlFormatter.MimeType,
                 value.ToString());
 
-            var kernel = KernelInvocationContext.Current.HandlingKernel;
+            var context = KernelInvocationContext.Current;
 
-            Task.Run(() =>
-                         kernel.SendAsync(new DisplayValue(formatted)))
-                .Wait();
+            var kernel = context.HandlingKernel;
+
+            Task.Run(async () =>
+            {
+                await kernel.SendAsync(new DisplayValue(formatted));
+            }).Wait(context.CancellationToken);
         }
 
         public static Kernel GetKernel(string name) =>

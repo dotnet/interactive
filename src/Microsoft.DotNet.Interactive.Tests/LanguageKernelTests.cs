@@ -7,13 +7,16 @@ using System.CommandLine.Invocation;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+
 using FluentAssertions;
 using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+
 using Xunit;
 using Xunit.Abstractions;
 
@@ -294,9 +297,9 @@ f();"
                 .Which
                 .Diagnostics
                 .Should()
-                .ContainSingle(diag => 
-                    diag.LinePositionSpan == diagnosticRange && 
-                    diag.Code == code && 
+                .ContainSingle(diag =>
+                    diag.LinePositionSpan == diagnosticRange &&
+                    diag.Code == code &&
                     diag.Message == diagnosticMessage);
 
             // The FormattedValues are populated of DiagnosticsProduced event are populated
@@ -374,7 +377,7 @@ f();"
                 .Should()
                 .ContainSingle(d =>
                     d.LinePositionSpan == diagnosticRange &&
-                    d.Code == "ExpectedExpression" && 
+                    d.Code == "ExpectedExpression" &&
                     d.Message == "An expression was expected after '('.");
 
             KernelEvents
@@ -1038,7 +1041,7 @@ Console.Write(2);
                 .Select(e => e.Value as StandardOutputValueProduced)
                 .SelectMany(e => e.FormattedValues.Select(v => v.Value))
                 .Should()
-                .BeEquivalentTo(new [] {"1", "2"});
+                .BeEquivalentTo(new[] { "1", "2" });
 
         }
 
@@ -1222,7 +1225,7 @@ Console.Write(2);
             succeeded.Should().BeTrue();
             x.Should().Be(123);
         }
-        
+
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]

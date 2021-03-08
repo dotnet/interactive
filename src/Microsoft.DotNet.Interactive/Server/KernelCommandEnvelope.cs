@@ -74,7 +74,9 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(RequestSignatureHelp)] = typeof(KernelCommandEnvelope<RequestSignatureHelp>),
                 [nameof(SerializeNotebook)] = typeof(KernelCommandEnvelope<SerializeNotebook>),
                 [nameof(SubmitCode)] = typeof(KernelCommandEnvelope<SubmitCode>),
-                [nameof(UpdateDisplayedValue)] = typeof(KernelCommandEnvelope<UpdateDisplayedValue>)
+                [nameof(UpdateDisplayedValue)] = typeof(KernelCommandEnvelope<UpdateDisplayedValue>),
+                [nameof(Quit)] = typeof(KernelCommandEnvelope<Quit>),
+                [nameof(Cancel)] = typeof(KernelCommandEnvelope<Cancel>)
             };
 
             _commandTypesByCommandTypeName = new ConcurrentDictionary<string, Type>(_envelopeTypesByCommandTypeName
