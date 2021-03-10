@@ -121,9 +121,9 @@ namespace Microsoft.DotNet.Interactive
                                   .ExecuteAsync()
                                   .ContinueWith(t =>
                                   {
-                                      if (t.IsCompletedSuccessfully)
+                                      if (t.IsCompletedSuccessfully && !operation.TaskCompletionSource.Task.IsCompleted)
                                       {
-                                          operation.TaskCompletionSource.SetResult(t.Result);
+                                          operation.TaskCompletionSource.TrySetResult(t.Result);
                                       }
                                   });
 
@@ -224,7 +224,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     cancellationToken.Register(() =>
                     {
-                        TaskCompletionSource.SetCanceled();
+                        TaskCompletionSource.TrySetCanceled();
                     });
                 }
             }

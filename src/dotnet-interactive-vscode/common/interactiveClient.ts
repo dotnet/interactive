@@ -48,6 +48,8 @@ import {
     SubmissionType,
     SubmitCode,
     SubmitCodeType,
+    CancelType,
+    Cancel
 } from './interfaces/contracts';
 import { Eol } from './interfaces';
 import { createErrorOutput, createOutput, debounce } from './utilities';
@@ -245,6 +247,16 @@ export class InteractiveClient {
         return disposable;
     }
 
+    cancel(token?: string | undefined): Promise<void> {
+        let command: Cancel = {
+
+        };
+
+        token = token || this.getNextToken();
+        //await this.submitCommandAndGetResult<DisplayedValueProduced>(command, CancelType, DisplayedValueProducedType, token);
+        return this.submitCommand(command, CancelType, token);
+    }
+
     dispose() {
         this.kernelTransport.dispose();
     }
@@ -277,6 +289,28 @@ export class InteractiveClient {
                             let event = <TEvent>eventEnvelope.event;
                             resolve(event);
                         }
+                        break;
+                }
+            });
+            await this.kernelTransport.submitCommand(command, commandType, token);
+        });
+    }
+
+    private submitCommand(command: KernelCommand, commandType: KernelCommandType, token: string | undefined): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            token = token || this.getNextToken();
+            let disposable = this.subscribeToKernelTokenEvents(token, eventEnvelope => {
+                switch (eventEnvelope.eventType) {
+                    case CommandFailedType:
+                        let err = <CommandFailed>eventEnvelope.event;
+                        disposable.dispose();
+                        reject(err);
+                        break;
+                    case CommandSucceededType:
+                        disposable.dispose();
+                        resolve();
+                        break;
+                    default:
                         break;
                 }
             });

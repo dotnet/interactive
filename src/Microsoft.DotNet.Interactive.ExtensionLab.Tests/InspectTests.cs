@@ -15,9 +15,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
     public sealed class InspectTests
     {
         [Fact]
-        public async Task inspect_with_default_settings_produces_error_and_disagnostics_on_invalid_source_code()
+        public async Task inspect_with_default_settings_produces_error_and_diagnostics_on_invalid_source_code()
         {
-            using var kernel = new CompositeKernel() {
+            using var kernel = new CompositeKernel {
                 new CSharpKernel()
             };
 

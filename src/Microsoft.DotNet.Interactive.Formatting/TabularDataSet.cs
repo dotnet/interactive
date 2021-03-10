@@ -2,9 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
-using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -28,12 +26,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 data = Data
             };
 
-            return new TabularJsonString(JsonSerializer.Serialize(tabularData, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                NumberHandling = JsonNumberHandling.AllowReadingFromString| JsonNumberHandling.AllowNamedFloatingPointLiterals,
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            }));
+            return new TabularJsonString(JsonSerializer.Serialize(tabularData, TabularDataFormatter.JsonSerializerOptions));
         }
     }
 }

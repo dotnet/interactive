@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
@@ -31,7 +32,7 @@ namespace Microsoft.DotNet.Interactive
             _cancellationTokenSource = new CancellationTokenSource();
 
             Command = command;
-           
+
             Result = new KernelCommandResult(_events);
 
             _disposables.Add(_cancellationTokenSource);
@@ -43,13 +44,28 @@ namespace Microsoft.DotNet.Interactive
                     c.Error.Subscribe(s => this.DisplayStandardError(s, command))
                 };
             }));
+           
         }
 
         public KernelCommand Command { get; }
 
         public bool IsComplete { get; private set; }
 
-        public CancellationToken CancellationToken => _cancellationTokenSource.Token;
+        public CancellationToken CancellationToken
+        {
+            get
+            {
+                try
+                {
+                    return _cancellationTokenSource.Token;
+                }
+                catch (ObjectDisposedException)
+                {
+                    return new CancellationToken(true);
+                }
+
+            }
+        }
 
         public void Complete(KernelCommand command)
         {
@@ -72,7 +88,7 @@ namespace Microsoft.DotNet.Interactive
         {
             if (!IsComplete)
             {
-                _cancellationTokenSource.Cancel();
+                TryCancel();
                 Fail(new OperationCanceledException($"Command :{Command} cancelled."));
             }
         }
@@ -86,12 +102,24 @@ namespace Microsoft.DotNet.Interactive
                 Publish(new CommandFailed(exception, Command, message));
                 _events.OnCompleted();
 
-                if (_cancellationTokenSource.IsCancellationRequested)
-                {
-                    _cancellationTokenSource.Cancel(false);
-                }
+                TryCancel();
 
                 IsComplete = true;
+            }
+        }
+
+        private void TryCancel()
+        {
+            try
+            {
+                if (!_cancellationTokenSource.IsCancellationRequested)
+                {
+                    _cancellationTokenSource.Cancel();
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+
             }
         }
 
@@ -126,7 +154,7 @@ namespace Microsoft.DotNet.Interactive
             if (_current.Value == null || _current.Value.IsComplete)
             {
                 var context = new KernelInvocationContext(command);
-                
+
                 _current.Value = context;
             }
             else

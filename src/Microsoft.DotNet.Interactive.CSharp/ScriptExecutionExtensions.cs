@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Scripting;
@@ -20,7 +21,18 @@ namespace Microsoft.DotNet.Interactive.CSharp
                                 {
                                     while (!cancellationToken.IsCancellationRequested)
                                     {
-                                        await Task.Delay(100, cancellationToken);
+                                        try
+                                        {
+                                            await Task.Delay(100, cancellationToken);
+                                        }
+                                        catch (TaskCanceledException)
+                                        {
+
+                                        }
+                                        catch (OperationCanceledException)
+                                        {
+
+                                        }
                                     }
 
                                     return (ScriptState<object>) null;
