@@ -6,6 +6,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -13,6 +16,19 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         // https://specs.frictionlessdata.io/table-schema/#language
         public const string MimeType = "application/table-schema+json";
+
+        static TabularDataFormatter()
+        {
+            JsonSerializerOptions = new JsonSerializerOptions(JsonFormatter.SerializerOptions)
+            {
+                WriteIndented = true,
+                NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                ReferenceHandler = null
+            };
+        }
+        
+        public static JsonSerializerOptions JsonSerializerOptions { get; }
 
         internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultTabularDataFormatterSet.DefaultFormatters;
 

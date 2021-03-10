@@ -309,7 +309,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                                                     code,
                                                     ScriptOptions,
                                                     cancellationToken: cancellationToken)
-                                                .UntilCancelled(cancellationToken);
+                    .UntilCancelled(cancellationToken)?? ScriptState;
             }
             else
             {
@@ -318,10 +318,10 @@ namespace Microsoft.DotNet.Interactive.CSharp
                                                    ScriptOptions,
                                                    catchException: catchException,
                                                    cancellationToken: cancellationToken)
-                                               .UntilCancelled(cancellationToken);
+                    .UntilCancelled(cancellationToken)?? ScriptState;
             }
 
-            if (ScriptState.Exception is null)
+            if (ScriptState is not null && ScriptState.Exception is null)
             {
                 _workspace.UpdateWorkspace(ScriptState);
             }

@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
     {
         private ProjectId _previousSubmissionProjectId;
         private ProjectId _workingProjectId;
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
         private int _submissionCount;
         private readonly CSharpParseOptions _parseOptions;
         private Compilation _currentCompilation;

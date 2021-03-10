@@ -9,6 +9,7 @@ using System.CommandLine.Parsing;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -198,11 +199,19 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             try
             {
                 await _serviceClient.ExecuteQueryStringAsync(_tempFileUri, command.Code);
+               
                 context.CancellationToken.Register(() => {
-                    completion.SetCanceled(context.CancellationToken);
-                    _serviceClient.CancelQueryExecutionAsync(_tempFileUri).Wait();
+                  
+                    _serviceClient.CancelQueryExecutionAsync(_tempFileUri)
+                        .Wait(TimeSpan.FromSeconds(10));
+
+                    completion.TrySetCanceled(context.CancellationToken);
                 });
                 await completion.Task;
+            }
+            catch (TaskCanceledException)
+            {
+                context.Display("Query cancelled.");
             }
             catch (OperationCanceledException)
             {

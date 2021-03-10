@@ -32,6 +32,7 @@ namespace Microsoft.DotNet.Interactive
         private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
 
         private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
+        private bool _handlingCancellation = false;
 
         protected Kernel(string name)
         {
@@ -273,7 +274,14 @@ namespace Microsoft.DotNet.Interactive
                                     c,
                                     InvokePipelineAndCommandHandler,
                                     c.KernelUri.ToString(),
-                                    cancellationToken);
+                                    cancellationToken: cancellationToken)
+                                    .ContinueWith(t =>
+                                    {
+                                        if (t.IsCanceled)
+                                        {
+                                            context.Cancel();
+                                        }
+                                    }, cancellationToken);
                                 break;
                         }
                     }
