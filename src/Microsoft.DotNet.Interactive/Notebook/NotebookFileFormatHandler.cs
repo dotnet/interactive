@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using Microsoft.DotNet.Interactive.Extensions;
 
 namespace Microsoft.DotNet.Interactive.Notebook
 {
@@ -108,23 +109,6 @@ namespace Microsoft.DotNet.Interactive.Notebook
             }
 
             return new NotebookDocument(cells.ToArray());
-        }
-
-        private static JsonElement? GetPropertyFromPath(this JsonElement source, params string[] path)
-        {
-            var current = source;
-            foreach (var propertyName in path)
-            {
-                if (!current.TryGetProperty(propertyName, out var propertyValue))
-                {
-                    return null;
-                }
-
-                current = propertyValue;
-
-            }
-
-            return current;
         }
 
         private static NotebookDocument ParseJupyterNotebook(byte[] rawData, IDictionary<string, string> kernelLanguageAliases)

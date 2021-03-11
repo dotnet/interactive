@@ -82,12 +82,14 @@ namespace Microsoft.DotNet.Interactive.Http
             {
                 r.Routes.Add(new VariableRouter(kernel));
                 r.Routes.Add(new KernelsRouter(kernel));
-                var htmlNotebookFrontedEnvironment = kernel.FrontendEnvironment as HtmlNotebookFrontedEnvironment;
+                var htmlNotebookFrontedEnvironment = kernel.FrontendEnvironment as HtmlNotebookFrontendEnvironment;
 
                 if (htmlNotebookFrontedEnvironment is { } )
                 {
                     r.Routes.Add(new DiscoveryRouter(htmlNotebookFrontedEnvironment));
                     r.Routes.Add(new HttpApiTunnelingRouter(htmlNotebookFrontedEnvironment));
+                    r.Routes.Add(new PublishEventRouter(htmlNotebookFrontedEnvironment));
+                    r.Routes.Add(new ClientExecutionRouter(htmlNotebookFrontedEnvironment));
                 }
 
                 if (htmlNotebookFrontedEnvironment is null || htmlNotebookFrontedEnvironment.RequiresAutomaticBootstrapping)

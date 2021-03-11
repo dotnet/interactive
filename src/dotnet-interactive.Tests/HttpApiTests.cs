@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             var frontendEnvironment = server.FrontendEnvironment;
-            frontendEnvironment.Should().NotBeOfType<HtmlNotebookFrontedEnvironment>();
+            frontendEnvironment.Should().NotBeOfType<HtmlNotebookFrontendEnvironment>();
         }
 
         [Fact]
@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             using var scope = new AssertionScope();
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var frontendEnvironment = (HtmlNotebookFrontedEnvironment)server.FrontendEnvironment;
+            var frontendEnvironment = (HtmlNotebookFrontendEnvironment)server.FrontendEnvironment;
 
             var apiUri = await frontendEnvironment.GetApiUriAsync();
             apiUri.Should().Be(tunnelUri);
@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             using var scope = new AssertionScope();
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var frontendEnvironment = (HtmlNotebookFrontedEnvironment)server.FrontendEnvironment;
+            var frontendEnvironment = (HtmlNotebookFrontendEnvironment)server.FrontendEnvironment;
 
             var apiUri = await frontendEnvironment.GetApiUriAsync();
             apiUri.Should().Be(tunnelUri);

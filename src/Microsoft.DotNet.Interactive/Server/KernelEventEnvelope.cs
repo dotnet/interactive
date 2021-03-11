@@ -118,6 +118,15 @@ namespace Microsoft.DotNet.Interactive.Server
 
             var commandEnvelope = commandJson.ValueKind == JsonValueKind.Null ? null : KernelCommandEnvelope.Deserialize(commandJson);
 
+            var command = commandEnvelope?.Command;
+
+            return DeserializeWithCommand(json, command);
+        }
+
+        public static IKernelEventEnvelope DeserializeWithCommand(string json, KernelCommand command)
+        {
+            var jsonObject = JsonDocument.Parse(json).RootElement;
+
             var eventJson = jsonObject.GetProperty(nameof(SerializationModel.@event));
 
             var eventTypeName = jsonObject.GetProperty(nameof(SerializationModel.eventType)).GetString();
@@ -134,7 +143,7 @@ namespace Microsoft.DotNet.Interactive.Server
             {
                 if (typeof(KernelCommand).IsAssignableFrom(parameterInfo.ParameterType))
                 {
-                    ctorParams.Add(commandEnvelope == null ? KernelCommand.None: commandEnvelope.Command);
+                    ctorParams.Add(command ?? KernelCommand.None);
                 }
                 else
                 {
