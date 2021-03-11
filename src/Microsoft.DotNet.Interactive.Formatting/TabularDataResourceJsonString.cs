@@ -7,22 +7,22 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    public class TabularJsonString : JsonString
+    public class TabularDataResourceJsonString : JsonString
     {
-        public TabularJsonString(string json)
+        public TabularDataResourceJsonString(string json)
             : base(json)
         {
         }
 
-        public static TabularJsonString Create(IReadOnlyDictionary<string , Type> fields, IEnumerable data)
+        public static TabularDataResourceJsonString Create(IReadOnlyDictionary<string , Type> fields, IEnumerable data)
         {
-            var schema = new TabularDataSchema();
+            var schema = new TableSchema();
 
             foreach (var entry in fields)
             {
-               schema.Fields.Add(new TabularDataSchemaField(entry.Key, entry.Value.ToTableFieldType())); 
+               schema.Fields.Add(new TableSchemaFieldDescriptor(entry.Key, entry.Value.ToTableSchemaFieldType())); 
             }
-            var tabularDataSet = new TabularDataSet(schema, data);
+            var tabularDataSet = new TabularDataResource(schema, data);
 
             return tabularDataSet.ToJson();
         }

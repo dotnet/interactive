@@ -6,12 +6,12 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    internal class TabularDataSchema
+    public class TableSchema
     {
         [JsonPropertyName("primaryKey")]
-        public List<string> PrimaryKey { get; } = new List<string>();
+        public List<string> PrimaryKey { get; } = new();
 
         [JsonPropertyName("fields")]
-        public TabularDataFieldList Fields { get; } = new TabularDataFieldList();
+        public TableDataFieldDescriptors Fields { get; } = new();
     }
 }

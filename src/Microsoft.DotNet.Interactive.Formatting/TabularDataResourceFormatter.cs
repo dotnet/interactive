@@ -12,19 +12,24 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    public static class TabularDataFormatter
+    public static class TabularDataResourceFormatter
     {
         // https://specs.frictionlessdata.io/table-schema/#language
         public const string MimeType = "application/table-schema+json";
 
-        static TabularDataFormatter()
+        static TabularDataResourceFormatter()
         {
             JsonSerializerOptions = new JsonSerializerOptions(JsonFormatter.SerializerOptions)
             {
                 WriteIndented = true,
                 NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                ReferenceHandler = null
+                ReferenceHandler = null,
+                Converters =
+                {
+                    new TableSchemaFieldTypeConverter(),
+                    new TabularDataResourceConverter()
+                }
             };
         }
         
@@ -32,16 +37,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultTabularDataFormatterSet.DefaultFormatters;
 
-        public static TabularJsonString ToTabularJsonString<T>(this IEnumerable<T> source)
+        public static TabularDataResourceJsonString ToTabularDataResourceJsonString<T>(this IEnumerable<T> source)
         {
             var (schema, data) = Generate(source);
-            var tabularDataSet = new TabularDataSet(schema, data);
+            var tabularDataSet = new TabularDataResource(schema, data);
             return tabularDataSet.ToJson();
         }
 
-        private static (TabularDataSchema schema, IEnumerable data) Generate<T>(IEnumerable<T> source)
+        private static (TableSchema schema, IEnumerable data) Generate<T>(IEnumerable<T> source)
         {
-            var schema = new TabularDataSchema();
+            var schema = new TableSchema();
             var fields = new HashSet<string>();
             var members = new HashSet<(string name, Type type)>();
             var data = new List<object>();
@@ -114,7 +119,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     if (fields.Add(memberInfo.name))
                     {
-                        schema.Fields.Add(new TabularDataSchemaField(memberInfo.name, memberInfo.type.ToTableFieldType()));
+                        schema.Fields.Add(new TableSchemaFieldDescriptor(memberInfo.name, memberInfo.type.ToTableSchemaFieldType()));
                     }
                 }
             }
@@ -125,7 +130,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     if (fields.Add(name))
                     {
-                        schema.Fields.Add(new TabularDataSchemaField(name, value?.GetType().ToTableFieldType()));
+                        schema.Fields.Add(new TableSchemaFieldDescriptor(name, value?.GetType().ToTableSchemaFieldType()));
                     }
                 }
             }
@@ -136,30 +141,30 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     if (fields.Add(keyValuePair.Key))
                     {
-                        schema.Fields.Add(new TabularDataSchemaField(keyValuePair.Key, keyValuePair.Value?.GetType().ToTableFieldType()));
+                        schema.Fields.Add(new TableSchemaFieldDescriptor(keyValuePair.Key, keyValuePair.Value?.GetType().ToTableSchemaFieldType()));
                     }
 
                 }
             }
         }
 
-        internal static string ToTableFieldType(this Type type) =>
+        internal static TableSchemaFieldType ToTableSchemaFieldType(this Type type) =>
             type switch
             {
-                { } t when t == typeof(bool) => "boolean",
-                { } t when t == typeof(DateTime) => "datetime",
-                { } t when t == typeof(int) => "integer",
-                { } t when t == typeof(UInt16) => "integer",
-                { } t when t == typeof(UInt32) => "integer",
-                { } t when t == typeof(UInt64) => "integer",
-                { } t when t == typeof(long) => "integer",
-                { } t when t == typeof(Single) => "number",
-                { } t when t == typeof(float) => "number",
-                { } t when t == typeof(double) => "number",
-                { } t when t == typeof(decimal) => "number",
-                { } t when t == typeof(string) => "string",
-                { } t when t == typeof(ReadOnlyMemory<char>) => "string",
-                _ => "any",
+                { } t when t == typeof(bool) => TableSchemaFieldType.Boolean,
+                { } t when t == typeof(DateTime) => TableSchemaFieldType.DateTime,
+                { } t when t == typeof(int) => TableSchemaFieldType.Integer,
+                { } t when t == typeof(ushort) => TableSchemaFieldType.Integer,
+                { } t when t == typeof(uint) => TableSchemaFieldType.Integer,
+                { } t when t == typeof(ulong) => TableSchemaFieldType.Integer,
+                { } t when t == typeof(long) => TableSchemaFieldType.Integer,
+                { } t when t == typeof(float) => TableSchemaFieldType.Number,
+                { } t when t == typeof(float) => TableSchemaFieldType.Number,
+                { } t when t == typeof(double) => TableSchemaFieldType.Number,
+                { } t when t == typeof(decimal) => TableSchemaFieldType.Number,
+                { } t when t == typeof(string) => TableSchemaFieldType.String,
+                { } t when t == typeof(ReadOnlyMemory<char>) => TableSchemaFieldType.String,
+                _ => TableSchemaFieldType.Any
             };
 
     }

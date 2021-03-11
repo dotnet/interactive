@@ -6,15 +6,15 @@ using Microsoft.DotNet.Interactive.ExtensionLab;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    public static class TabularJsonStringExtensions
+    public static class TabularDataResourceJsonStringExtensions
     {
-        public static DataExplorer ExploreWithSandDance(this TabularJsonString source)
+        public static DataExplorer ExploreWithSandDance(this TabularDataResourceJsonString source)
         {
             var explorer = new DataExplorer(source);
             return explorer;
         }
 
-        public static void Explore(this TabularJsonString source)
+        public static void Explore(this TabularDataResourceJsonString source)
         {
             KernelInvocationContext.Current.Display(
                 source,

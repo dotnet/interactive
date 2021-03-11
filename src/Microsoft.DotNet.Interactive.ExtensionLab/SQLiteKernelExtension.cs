@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     // TODO: (RegisterFormatters) do all the tables...
 
                     writer.Write(source.First()
-                                       .ToTabularJsonString()
+                                       .ToTabularDataResourceJsonString()
                                        .ToDisplayString(HtmlFormatter.MimeType));
                 }, HtmlFormatter.MimeType);
 

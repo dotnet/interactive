@@ -12,36 +12,36 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
     public class DataExplorer
     {
-        public DataExplorer(TabularJsonString source)
+        public DataExplorer(TabularDataResourceJsonString source)
         {
             Id = Guid.NewGuid().ToString("N");
-            TabularData = source;
+            TabularDataResourceData = source;
         }
 
-        public Task LoadDataAsync(TabularJsonString source)
+        public Task LoadDataAsync(TabularDataResourceJsonString source)
         {
             throw new NotImplementedException();
         }
 
-        public Task<TabularJsonString> GetFilteredDataAsync()
+        public Task<TabularDataResourceJsonString> GetFilteredDataAsync()
         {
             throw new NotImplementedException();
         }
 
         public string Id { get; }
 
-        public TabularJsonString TabularData { get; }
+        public TabularDataResourceJsonString TabularDataResourceData { get; }
     }
 
     public class SetDataExplorerData : KernelCommand
     {
         [JsonPropertyName("data")]
-        public TabularJsonString Data { get; }
+        public TabularDataResourceJsonString Data { get; }
 
         [JsonPropertyName("dataExplorerId")]
         public string DataExplorerId { get; }
 
-        public SetDataExplorerData(TabularJsonString data, string dataExplorerId, string targetKernelName = null, KernelCommand parent = null) : base(targetKernelName, parent)
+        public SetDataExplorerData(TabularDataResourceJsonString data, string dataExplorerId, string targetKernelName = null, KernelCommand parent = null) : base(targetKernelName, parent)
         {
             Data = data;
             DataExplorerId = dataExplorerId;
@@ -63,9 +63,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         [JsonPropertyName("dataExplorerId")]
         public string DataExplorerId { get; }
 
-        public TabularJsonString Data { get; }
+        public TabularDataResourceJsonString Data { get; }
 
-        public FilteredDataProduced(TabularJsonString data, string dataExplorerId, KernelCommand command) : base(command)
+        public FilteredDataProduced(TabularDataResourceJsonString data, string dataExplorerId, KernelCommand command) : base(command)
         {
             Data = data;
             DataExplorerId = dataExplorerId;
