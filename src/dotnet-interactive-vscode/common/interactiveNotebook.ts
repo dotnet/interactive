@@ -17,6 +17,8 @@ export const notebookCellLanguages: Array<string> = [
     'dotnet-interactive.sql'
 ];
 
+export const defaultNotebookCellLanguage = notebookCellLanguages[0];
+
 const notebookLanguagePrefix = 'dotnet-interactive.';
 
 export function getSimpleLanguage(language: string): string {
