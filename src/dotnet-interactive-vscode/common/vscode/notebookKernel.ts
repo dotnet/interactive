@@ -75,8 +75,20 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
         }
     }
 
-    cancelCellExecution(document: vscode.NotebookDocument, cell: vscode.NotebookCell): void {
-        // not supported
+    cancelCellExecution(document: vscode.NotebookDocument, cell: vscode.NotebookCell): Promise<void> {
+        const startTime = cell.metadata.runStartTime || Date.now();
+        return this.clientMapper.getOrAddClient(document.uri).then(client => {
+            const errorOutput = createErrorOutput("Cell execution cancelled by user");
+            const resultPromise = () => updateCellOutputs(document, cell, [...cell.outputs, errorOutput])
+                .then(() => setCellErrorState(document, cell, startTime));
+            client.cancel()
+                .then(resultPromise)
+                .catch(resultPromise);
+        }).catch((err) => {
+            const errorOutput = createErrorOutput(`Error cancelling cell: ${err}`);
+            return updateCellOutputs(document, cell, [errorOutput]).then(() =>
+                setCellErrorState(document, cell, startTime));
+        });
     }
 
     cancelAllCellsExecution(document: vscode.NotebookDocument): void {

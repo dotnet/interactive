@@ -94,6 +94,50 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
+        public async Task can_cancel_user_infinite_loops()
+        {
+            var kernel = CreateKernel();
+
+            var cancelCommand = new Cancel();
+
+            var commandToRun = new SubmitCode("while(true){ await Task.Delay(10); }", targetKernelName:"csharp");
+            
+           
+            var commandToInterrupt =  kernel.SendAsync(commandToRun);
+
+            await kernel.SendAsync(cancelCommand);
+
+            await commandToInterrupt;
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CommandFailed>(c => c.Command == commandToRun);
+        }
+
+        [Fact]
+        public async Task can_cancel_user_loop_using_CancellationToken()
+        {
+            var kernel = CreateKernel();
+
+            var cancelCommand = new Cancel();
+
+            var commandToRun = new SubmitCode(@"
+using Microsoft.DotNet.Interactive;
+
+while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested){ await Task.Delay(10); }", targetKernelName: "csharp");
+            
+            var commandToInterrupt = kernel.SendAsync(commandToRun);
+
+            await kernel.SendAsync(cancelCommand);
+
+            await commandToInterrupt;
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CommandFailed>(c => c.Command == commandToRun);
+        }
+
+        [Fact]
         public void user_code_can_react_to_cancel_command_using_KernelInvocationContext_cancellation_token()
         {
             var kernel = CreateKernel();

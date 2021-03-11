@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ClientMapper } from '../clientMapper';
-import { getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook } from '../interactiveNotebook';
+import { getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook, defaultNotebookCellLanguage } from '../interactiveNotebook';
 import { Eol } from '../interfaces';
 import { NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookDocument } from '../interfaces/contracts';
 import * as utilities from '../interfaces/utilities';
@@ -49,6 +49,15 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
             }
         } else {
             // new empty/blank notebook, nothing to do
+        }
+
+        if (notebookCells.length === 0) {
+            // ensure at least one cell
+            notebookCells.push({
+                language: defaultNotebookCellLanguage,
+                contents: '',
+                outputs: [],
+            });
         }
 
         const notebookData = this.createNotebookData(notebookCells);

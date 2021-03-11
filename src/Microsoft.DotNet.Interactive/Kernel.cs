@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive
         private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
 
         private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
-
+       
         protected Kernel(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -273,7 +273,14 @@ namespace Microsoft.DotNet.Interactive
                                     c,
                                     InvokePipelineAndCommandHandler,
                                     c.KernelUri.ToString(),
-                                    cancellationToken);
+                                    cancellationToken: cancellationToken)
+                                    .ContinueWith(t =>
+                                    {
+                                        if (t.IsCanceled)
+                                        {
+                                            context.Cancel();
+                                        }
+                                    }, cancellationToken);
                                 break;
                         }
                     }
