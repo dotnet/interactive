@@ -319,6 +319,7 @@
   "dependencies": {
     "compare-versions": "3.6.0",
     "node-fetch": "^2.6.1",
+    "uuid": "^8.3.2",
     "dotnet-interactive-vscode-insiders": "file:src/vscode/insiders/dotnet-interactive-vscode-insiders-1.0.0.tgz",
     "dotnet-interactive-vscode-interfaces": "file:src/interfaces/dotnet-interactive-vscode-interfaces-1.0.0.tgz",
     "dotnet-interactive-vscode-stable": "file:src/vscode/stable/dotnet-interactive-vscode-stable-1.0.0.tgz"
