@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         private static RefCountDisposable _refCount;
         private static MultiplexingTextWriter _out;
         private static MultiplexingTextWriter _error;
-        private static readonly object _systemConsoleSwapLock = new object();
+        private static readonly object _systemConsoleSwapLock = new();
 
         private TextWriter _originalOutputWriter;
         private TextWriter _originalErrorWriter;
@@ -39,8 +39,8 @@ namespace Microsoft.DotNet.Interactive.Utility
                         _originalErrorWriter = Console.Error
                     };
 
-                    _out = new MultiplexingTextWriter();
-                    _error = new MultiplexingTextWriter();
+                    _out = new MultiplexingTextWriter(name: "out");
+                    _error = new MultiplexingTextWriter(name: "error");
 
                     Console.SetOut(_out);
                     Console.SetError(_error);
@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Interactive.Utility
                 var observableConsole = new ObservableConsole(
                     @out: _out.GetObservable(),
                     error: _error.GetObservable());
-
+                
                 return new CompositeDisposable
                 {
                     _refCount,

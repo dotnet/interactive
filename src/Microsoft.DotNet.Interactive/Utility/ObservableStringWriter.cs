@@ -4,11 +4,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Pocket;
+using static Pocket.Logger;
+using CompositeDisposable = Pocket.CompositeDisposable;
+using Disposable = Pocket.Disposable;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
@@ -20,18 +23,28 @@ namespace Microsoft.DotNet.Interactive.Utility
             public int Length { get; set; }
         }
 
-        private readonly Subject<string> _writeEvents = new Subject<string>();
-        private readonly List<Region> _regions = new List<Region>();
+        private readonly Subject<string> _writeEvents = new();
+        private readonly List<Region> _regions = new();
         private bool _trackingWriteOperation;
         private int _observerCount;
-
         private readonly CompositeDisposable _disposable;
 
-        public ObservableStringWriter()
+        // FIX: (ObservableStringWriter) remove debuggy stuff
+        private readonly int? _asyncContextId;
+        private readonly OperationLogger _logger;
+
+        public ObservableStringWriter(string name = null)
         {
+            _asyncContextId = AsyncContext.Id;
+
+            _logger = Log.OnEnterAndExit(
+                $"{nameof(ObservableStringWriter)} '{name}' on AsyncContext.Id {_asyncContextId}",
+                exitArgs: () => new[] { ("AsyncContext.Id", (object) AsyncContext.Id) });
+            
             _disposable = new CompositeDisposable
             {
-                _writeEvents
+                _writeEvents,
+                _logger 
             };
         }
 
