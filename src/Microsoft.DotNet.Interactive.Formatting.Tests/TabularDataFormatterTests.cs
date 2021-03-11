@@ -9,11 +9,11 @@ using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
-    public class TabularDataFormatterTests : IDisposable
+    public class TabularDataResourceFormatterTests : IDisposable
     {
         private readonly Configuration _configuration;
 
-        public TabularDataFormatterTests()
+        public TabularDataResourceFormatterTests()
         {
             _configuration = new Configuration()
                 .SetInteractive(Debugger.IsAttached)
