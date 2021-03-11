@@ -2,9 +2,11 @@
 trigger:
 - main
 - feature/*
+- release/*
 pr:
 - main
 - feature/*
+- release/*
 
 # Variables
 variables:
