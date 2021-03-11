@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             {
                 var tabularData = dataView.ToTabularJsonString();
                 writer.Write(tabularData.ToString());
-            }, TabularDataFormatter.MimeType);
+            }, TabularDataResourceFormatter.MimeType);
         }
 
         public string BuildTypedDataFrameCode(
@@ -174,7 +174,7 @@ namespace Microsoft.ML
             return value;
         }
 
-        public static TabularJsonString ToTabularJsonString(this IDataView source)
+        public static TabularDataResourceJsonString ToTabularJsonString(this IDataView source)
         {
             var fields = source.Schema.ToDictionary(column => column.Name, column => column.Type.RawType);
             var data = new List<Dictionary<string,object>>();
@@ -207,7 +207,7 @@ namespace Microsoft.ML
                 data.Add(rowObj);
             }
 
-            var tabularData = TabularJsonString.Create(fields, data);
+            var tabularData = TabularDataResourceJsonString.Create(fields, data);
 
             return tabularData;
         }

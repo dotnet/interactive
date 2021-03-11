@@ -146,7 +146,7 @@ SELECT TOP 100 * FROM Person.Person
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks --mime-type {TabularDataFormatter.MimeType}
+#!sql-adventureworks --mime-type {TabularDataResourceFormatter.MimeType}
 select * from sys.databases
 ");
 
@@ -183,7 +183,7 @@ select * from sys.databases
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks --mime-type {TabularDataFormatter.MimeType}
+#!sql-adventureworks --mime-type {TabularDataResourceFormatter.MimeType}
 use tempdb;
 create table dbo.EmptyTable(column1 int, column2 int, column3 int);
 select * from dbo.EmptyTable;

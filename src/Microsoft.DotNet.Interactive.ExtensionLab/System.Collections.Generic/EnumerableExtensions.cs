@@ -11,12 +11,12 @@ namespace System.Collections.Generic
     {
         public static DataExplorer ExploreWithSandDance<T>(this IEnumerable<T> source)
         {
-            var explorer = new DataExplorer(source.ToTabularJsonString());
+            var explorer = new DataExplorer(source.ToTabularDataResourceJsonString());
             return explorer;
         }
         public static void Explore<T>(this IEnumerable<T> source)
         {
-            source.ToTabularJsonString().Explore();
+            source.ToTabularDataResourceJsonString().Explore();
         }
 
         public static IReadOnlyList<IDictionary<string, object>> ToTable(this IEnumerable<IEnumerable<(string name, object value)>> source)

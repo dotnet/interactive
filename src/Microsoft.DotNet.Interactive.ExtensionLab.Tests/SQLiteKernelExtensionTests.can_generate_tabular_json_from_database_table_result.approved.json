@@ -1,4 +1,5 @@
 {
+  "profile": "tabular-data-resource",
   "schema": {
     "primaryKey": [],
     "fields": [

@@ -6,11 +6,11 @@ using System.IO;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    public class TabularDataFormatter<T> : TypeFormatter<T>
+    public class TabularDataResourceFormatter<T> : TypeFormatter<T>
     {
         private readonly Func<FormatContext, T, TextWriter, bool> _format;
 
-        public TabularDataFormatter(Func<FormatContext, T, TextWriter, bool> format)
+        public TabularDataResourceFormatter(Func<FormatContext, T, TextWriter, bool> format)
         {
             _format = format;
         }
@@ -20,6 +20,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return _format(context, value, writer);
         }
 
-        public override string MimeType => TabularDataFormatter.MimeType;
+        public override string MimeType => TabularDataResourceFormatter.MimeType;
     }
 }

@@ -1,11 +1,21 @@
 ﻿// Copyright(c).NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    internal class TabularDataFieldList : List<TabularDataSchemaField>
+    public enum TableSchemaFieldType
     {
+        Any,
+        Object,
+        Null,
+        Number,
+        Integer,
+        Boolean,
+        String,
+        Array,
+        DateTime,
+        GeoPoint,
+        GeoJson
+
     }
 }

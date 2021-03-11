@@ -55,12 +55,12 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             Formatter.Register<DataExplorer>((explorer, writer) =>
             {
-                var html = explorer.TabularData.RenderSandDanceExplorer(explorer.Id);
+                var html = explorer.TabularDataResourceData.RenderSandDanceExplorer(explorer.Id);
                 writer.Write(html);
             }, HtmlFormatter.MimeType);
         }
 
-        internal static HtmlString RenderSandDanceExplorer(this TabularJsonString data, string explorerId)
+        internal static HtmlString RenderSandDanceExplorer(this TabularDataResourceJsonString data, string explorerId)
         {
             var divId = explorerId;
             var code = new StringBuilder();
@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return new HtmlString(code.ToString());
         }
 
-        private static void GenerateCode(TabularJsonString data, StringBuilder code, string divId, string requireUri)
+        private static void GenerateCode(TabularDataResourceJsonString data, StringBuilder code, string divId, string requireUri)
         {
             var functionName = $"renderSandDanceExplorer_{divId}";
             GenerateFunctionCode(data, code, divId, functionName);
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         }
 
 
-        private static void GenerateFunctionCode(TabularJsonString data, StringBuilder code, string dataExplorerId, string functionName)
+        private static void GenerateFunctionCode(TabularDataResourceJsonString data, StringBuilder code, string dataExplorerId, string functionName)
         {
             var context = Settings.Context ?? "1.0.0";
             code.AppendLine($@"

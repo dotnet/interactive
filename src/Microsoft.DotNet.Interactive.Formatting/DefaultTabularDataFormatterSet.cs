@@ -10,14 +10,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         internal static readonly ITypeFormatter[] DefaultFormatters =
             {
-                new TabularDataFormatter<IEnumerable>((context, source, writer) =>
+                new TabularDataResourceFormatter<IEnumerable>((context, source, writer) =>
                 {
-                    var tabularData = source.Cast<object>().ToTabularJsonString();
+                    var tabularData = source.Cast<object>().ToTabularDataResourceJsonString();
                     writer.Write(tabularData.ToString());
                     return true;
                 }),
 
-                new TabularDataFormatter<TabularDataSet>((context, source, writer) =>
+                new TabularDataResourceFormatter<TabularDataResource>((context, source, writer) =>
                 {
                     var tabularData = source.ToJson();
                     writer.Write(tabularData);

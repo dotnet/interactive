@@ -44,14 +44,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public static void RegisterFormatters()
         {
-            Formatter.Register<TabularJsonString>((explorer, writer) =>
+            Formatter.Register<TabularDataResourceJsonString>((explorer, writer) =>
             {
                 var html = explorer.RenderDataExplorer();
                 writer.Write(html);
             }, HtmlFormatter.MimeType);
         }
 
-        private static HtmlString RenderDataExplorer(this TabularJsonString data)
+        private static HtmlString RenderDataExplorer(this TabularDataResourceJsonString data)
         {
             var divId = Guid.NewGuid().ToString("N");
             var code = new StringBuilder();
@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return new HtmlString(code.ToString());
         }
 
-        private static void GenerateCode(TabularJsonString data, StringBuilder code, string divId, string requireUri)
+        private static void GenerateCode(TabularDataResourceJsonString data, StringBuilder code, string divId, string requireUri)
         {
             var functionName = $"renderDataExplorer_{divId}";
             GenerateFunctionCode(data, code, divId, functionName);
@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         }
 
 
-        private static void GenerateFunctionCode(TabularJsonString data, StringBuilder code, string divId, string functionName)
+        private static void GenerateFunctionCode(TabularDataResourceJsonString data, StringBuilder code, string divId, string functionName)
         {
             var context = Settings.Context ?? "1.0.0";
             code.AppendLine($@"
