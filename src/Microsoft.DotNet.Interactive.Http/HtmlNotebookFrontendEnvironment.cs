@@ -13,14 +13,16 @@ namespace Microsoft.DotNet.Interactive.Http
 {
     public class HtmlNotebookFrontendEnvironment : BrowserFrontendEnvironment
     {
+        private readonly TimeSpan _getApiUriTimeout;
         private readonly TaskCompletionSource<Uri> _completionSource;
         private Dictionary<string, (KernelInvocationContext Context, TaskCompletionSource CompletionSource)> _tokenToInvocationContext;
 
-        public HtmlNotebookFrontendEnvironment()
+        public HtmlNotebookFrontendEnvironment(TimeSpan? apiUriTimeout = null)
         {
             RequiresAutomaticBootstrapping = true;
             _completionSource = new TaskCompletionSource<Uri>();
             _tokenToInvocationContext = new Dictionary<string, (KernelInvocationContext, TaskCompletionSource)>();
+            _getApiUriTimeout = apiUriTimeout ?? TimeSpan.FromSeconds(30);
         }
 
         public HtmlNotebookFrontendEnvironment(Uri apiUri) : this()
@@ -30,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
         public bool RequiresAutomaticBootstrapping { get; set; }
 
-        internal void SetApiUri(Uri apiUri)
+        public void SetApiUri(Uri apiUri)
         {
             _completionSource.TrySetResult(apiUri);
         }
@@ -43,7 +45,14 @@ namespace Microsoft.DotNet.Interactive.Http
         public override async Task ExecuteClientScript(string code, KernelInvocationContext context)
         {
             var commandToken = context.Command.GetToken();
-            var apiUri = await GetApiUriAsync();
+            var apiUriTask = GetApiUriAsync();
+            var completedTask = await Task.WhenAny(apiUriTask, Task.Delay(_getApiUriTimeout));
+            if (completedTask != apiUriTask)
+            {
+                throw new TimeoutException("Timeout resolving the kernel's HTTP endpoint. Please try again.");
+            }
+
+            var apiUri = apiUriTask.Result;
             var codePrelude = $@"
 if (typeof window.createDotnetInteractiveClient === typeof Function) {{
     window.createDotnetInteractiveClient('{apiUri.AbsoluteUri}').then(async function (interactive) {{

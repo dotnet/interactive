@@ -63,20 +63,47 @@ console.log('test');
         }
 
         [Fact]
-        public void HttpNotebookFrontendEnvironment_does_not_complete_if_uri_is_not_specified()
+        public async Task HttpNotebookFrontendEnvironment_does_not_complete_if_uri_is_not_specified()
         {
             var testCommand = new TestCommand();
             testCommand.SetToken("token-abcd");
             var context = KernelInvocationContext.Establish(testCommand);
-            var httpFrontend = new HtmlNotebookFrontendEnvironment();
+            var httpFrontend = new HtmlNotebookFrontendEnvironment(TimeSpan.FromSeconds(2));
 
-            Func<Task> executeTask = () => Task.WhenAny(
-                httpFrontend.ExecuteClientScript("console.log('test');", context),
-                Task.Delay(TimeSpan.FromSeconds(1)).ContinueWith(_ => throw new TimeoutException()));
+            Func<Task> executeTask = () => httpFrontend.ExecuteClientScript("console.log('test');", context);
 
-            executeTask
+            await executeTask
                 .Should()
                 .ThrowAsync<TimeoutException>();
+        }
+
+        [Fact]
+        public void HttpNotebookFrontendEnvironment_can_complete_if_the_uri_is_supplied_after_execution_is_invoked()
+        {
+            var testCommand = new TestCommand();
+            testCommand.SetToken("token-abcd");
+            var context = KernelInvocationContext.Establish(testCommand);
+            var events = context.KernelEvents.ToSubscribedList();
+            var httpFrontend = new HtmlNotebookFrontendEnvironment(TimeSpan.FromSeconds(2));
+
+            _ = httpFrontend.ExecuteClientScript("console.log('test');", context);
+
+            httpFrontend.SetApiUri(new Uri("http://test-uri"));
+
+            events
+                .Should()
+                .ContainSingle<DisplayedValueProduced>()
+                .Which
+                .FormattedValues
+                .Should()
+                .ContainSingle()
+                .Which
+                .Value
+                .Should()
+                .ContainAll(
+                    "http://test-uri",
+                    "console.log('test');"
+                );
         }
 
         [Fact]

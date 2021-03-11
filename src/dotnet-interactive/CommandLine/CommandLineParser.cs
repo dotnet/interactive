@@ -515,14 +515,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 kernel.LogEventsToPocketLogger();
             }
 
-            SetUpFormatters(frontendEnvironment, startupOptions, TimeSpan.FromSeconds(15));
+            SetUpFormatters(frontendEnvironment);
 
             kernel.DefaultKernelName = defaultKernelName;
          
             return kernel;
         }
 
-        public static void SetUpFormatters(FrontendEnvironment frontendEnvironment, StartupOptions startupOptions, TimeSpan apiUriTimeout)
+        public static void SetUpFormatters(FrontendEnvironment frontendEnvironment)
         {
             switch (frontendEnvironment)
             {

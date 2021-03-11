@@ -4,12 +4,10 @@
 using System;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
-using Newtonsoft.Json.Linq;
 using Pocket;
 using Xunit;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
@@ -23,9 +21,8 @@ namespace Microsoft.DotNet.Interactive.App.Tests
         public FormatterConfigurationTests()
         {
             var frontendEnvironment = new HtmlNotebookFrontendEnvironment(new Uri("http://12.12.12.12:4242"));
-            
 
-            CommandLineParser.SetUpFormatters(frontendEnvironment, new StartupOptions(), 1.Seconds());
+            CommandLineParser.SetUpFormatters(frontendEnvironment);
 
             _disposables.Add(Formatter.ResetToDefault);
             _disposables.Add(new AssertionScope());
