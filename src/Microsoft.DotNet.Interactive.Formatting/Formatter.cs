@@ -545,9 +545,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         }
                     }
 
-                    {
-                        return false;
-                    }
+                    return false;
                 }, mimeType);
             }
 
