@@ -11,6 +11,10 @@ namespace Microsoft.DotNet.Interactive
 
         public virtual Task ExecuteClientScript(string code, KernelInvocationContext context)
         {
+            var scriptContent = new ScriptContent(code);
+
+            context.Display(scriptContent);
+
             return Task.CompletedTask;
         }
     }
