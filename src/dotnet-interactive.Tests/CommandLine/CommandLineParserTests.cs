@@ -373,7 +373,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
 
             var kernel = GetKernel();
 
-            kernel.FrontendEnvironment.As<HtmlNotebookFrontedEnvironment>()
+            kernel.FrontendEnvironment.As<HtmlNotebookFrontendEnvironment>()
                  .RequiresAutomaticBootstrapping
                  .Should()
                  .BeTrue();
@@ -386,7 +386,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests.CommandLine
 
             var kernel = GetKernel();
 
-            kernel.FrontendEnvironment.As<HtmlNotebookFrontedEnvironment>()
+            kernel.FrontendEnvironment.As<HtmlNotebookFrontendEnvironment>()
                 .RequiresAutomaticBootstrapping
                 .Should()
                 .BeFalse();

@@ -82,15 +82,17 @@ namespace Microsoft.DotNet.Interactive.Http
             {
                 r.Routes.Add(new VariableRouter(kernel));
                 r.Routes.Add(new KernelsRouter(kernel));
-                var htmlNotebookFrontedEnvironment = kernel.FrontendEnvironment as HtmlNotebookFrontedEnvironment;
+                var htmlNotebookFrontendEnvironment = kernel.FrontendEnvironment as HtmlNotebookFrontendEnvironment;
 
-                if (htmlNotebookFrontedEnvironment is { } )
+                if (htmlNotebookFrontendEnvironment is { } )
                 {
-                    r.Routes.Add(new DiscoveryRouter(htmlNotebookFrontedEnvironment));
-                    r.Routes.Add(new HttpApiTunnelingRouter(htmlNotebookFrontedEnvironment));
+                    r.Routes.Add(new DiscoveryRouter(htmlNotebookFrontendEnvironment));
+                    r.Routes.Add(new HttpApiTunnelingRouter(htmlNotebookFrontendEnvironment));
+                    r.Routes.Add(new PublishEventRouter(htmlNotebookFrontendEnvironment));
+                    r.Routes.Add(new ClientExecutionRouter(htmlNotebookFrontendEnvironment));
                 }
 
-                if (htmlNotebookFrontedEnvironment is null || htmlNotebookFrontedEnvironment.RequiresAutomaticBootstrapping)
+                if (htmlNotebookFrontendEnvironment is null || htmlNotebookFrontendEnvironment.RequiresAutomaticBootstrapping)
                 {
                     var enableHttp = new SubmitCode("#!enable-http", kernel.Name);
                     enableHttp.PublishInternalEvents();

@@ -57,6 +57,11 @@ export interface DotnetInteractiveClient {
     submitCode(code: string, targetKernelName?: string): Promise<string>;
     submitCommand(commandType: string, command?: any, targetKernelName?: string): Promise<string>;
     configureRequire(config: any): any;
+
+    getConsole(commandToken: string): any;
+    markExecutionComplete(commandToken: string): Promise<void>;
+    failCommand(err: any, commandToken: string): void;
+    waitForAllEventsToPublish(commandToken: string): Promise<void>;
 }
 
 export interface KernelClientContainer {

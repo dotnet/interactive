@@ -3,20 +3,21 @@
 
 using System;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.DotNet.Interactive.Extensions;
 
 namespace Microsoft.DotNet.Interactive.Http
 {
-    public class DiscoveryRouter : IRouter
+    internal class ClientExecutionRouter : IRouter
     {
         private readonly HtmlNotebookFrontendEnvironment _frontendEnvironment;
 
-        public DiscoveryRouter(HtmlNotebookFrontendEnvironment frontendEnvironment)
+        public ClientExecutionRouter(HtmlNotebookFrontendEnvironment frontendEnvironment)
         {
-            _frontendEnvironment = frontendEnvironment;
+            _frontendEnvironment = frontendEnvironment ?? throw new ArgumentNullException(nameof(frontendEnvironment));
         }
 
         public VirtualPathData GetVirtualPath(VirtualPathContext context)
@@ -30,19 +31,20 @@ namespace Microsoft.DotNet.Interactive.Http
             {
                 var segments =
                     context.HttpContext
-                        .Request
-                        .Path
-                        .Value
-                        .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-                if (segments[0] == "discovery")
+                       .Request
+                       .Path
+                       .Value
+                       .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                if (segments.Length == 1 && segments[0] == "markExecutionComplete")
                 {
                     using var reader = new StreamReader(context.HttpContext.Request.Body);
-                    var source = await reader.ReadToEndAsync();
-                    var apiUri = new Uri(source);
-                    _frontendEnvironment.SetApiUri(apiUri);
-
+                    var requestText = await reader.ReadToEndAsync();
+                    var requestObject = JsonDocument.Parse(requestText).RootElement;
+                    var commandToken = requestObject.GetPropertyFromPath("commandToken")?.GetString();
+                    _frontendEnvironment.MarkExecutionComplete(commandToken);
                     context.Handler = async httpContext =>
                     {
+                        httpContext.Response.StatusCode = 200;
                         await httpContext.Response.CompleteAsync();
                     };
                 }

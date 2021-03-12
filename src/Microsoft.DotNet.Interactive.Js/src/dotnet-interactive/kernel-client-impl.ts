@@ -4,7 +4,7 @@
 import { KernelClient, VariableRequest, VariableResponse, DotnetInteractiveClient, ClientFetch, Kernel, IKernelCommandHandler } from "./dotnet-interactive-interfaces";
 import { TokenGenerator } from "./tokenGenerator";
 import { signalTransportFactory } from "./signalr-client";
-import { KernelTransport, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType } from "./contracts";
+import { CommandFailed, CommandFailedType, KernelTransport, KernelEventEnvelope, KernelEventEnvelopeObserver, DisposableSubscription, SubmitCode, SubmitCodeType, DisplayedValueProduced, DisplayedValueProducedType } from "./contracts";
 import { createDefaultClientFetch } from "./clientFetch";
 import { clientSideKernelFactory } from "./client-side-kernel";
 
@@ -15,6 +15,93 @@ export interface KernelClientImplParameteres {
     clientSideKernel: Kernel,
     configureRequire: (config: any) => any
 }
+
+class ClientEventQueueManager {
+    private static eventPromiseQueues: Map<string, Array<Promise<void>>> = new Map();
+
+    static addEventToClientQueue(clientFetch: ClientFetch, commandToken: string, eventEnvelope: KernelEventEnvelope) {
+        let promiseQueue = this.eventPromiseQueues.get(commandToken);
+        if (!promiseQueue) {
+            promiseQueue = [];
+            this.eventPromiseQueues.set(commandToken, promiseQueue);
+        }
+
+        const newPromise = clientFetch("publishEvent", {
+            method: 'POST',
+            cache: 'no-cache',
+            mode: 'cors',
+            body: JSON.stringify({ commandToken, eventEnvelope }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(() => { });
+        promiseQueue.push(newPromise);
+    }
+
+    static async waitForAllEventsToPublish(commandToken: string): Promise<void> {
+        const promiseQueue = this.eventPromiseQueues.get(commandToken);
+        if (!promiseQueue) {
+            return;
+        }
+
+        await Promise.all(promiseQueue);
+    }
+}
+
+class InteractiveConsoleWrapper {
+    private globalConsole: Console;
+
+    constructor(private clientFetch: ClientFetch, private commandToken: string) {
+        this.globalConsole = console;
+    }
+
+    public error(...args: any[]) {
+        this.redirectAndEnqueue(this.globalConsole.error, ...args);
+    }
+
+    public info(...args: any[]) {
+        this.redirectAndEnqueue(this.globalConsole.info, ...args);
+    }
+
+    public log(...args: any[]) {
+        this.redirectAndEnqueue(this.globalConsole.log, ...args);
+    }
+
+    private redirectAndEnqueue(target: (...args: any[]) => void, ...args: any[]) {
+        target(...args);
+        this.enqueueArgsAsEvents(...args);
+    }
+
+    private enqueueArgsAsEvents(...args: any[]) {
+        for (const arg of args) {
+            let mimeType: string;
+            let value: string;
+            if (typeof arg === 'string') {
+                mimeType = 'text/plain';
+                value = arg;
+            } else {
+                mimeType = 'application/json';
+                value = JSON.stringify(arg);
+            }
+
+            const displayedValue: DisplayedValueProduced = {
+                formattedValues: [
+                    {
+                        mimeType,
+                        value,
+                    }
+                ]
+            };
+            const eventEnvelope: KernelEventEnvelope = {
+                eventType: DisplayedValueProducedType,
+                event: displayedValue,
+            };
+
+            ClientEventQueueManager.addEventToClientQueue(this.clientFetch, this.commandToken, eventEnvelope);
+        }
+    }
+}
+
 export class KernelClientImpl implements DotnetInteractiveClient {
 
     private _clientFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
@@ -22,7 +109,8 @@ export class KernelClientImpl implements DotnetInteractiveClient {
     private _kernelTransport: KernelTransport;
     private _clientSideKernel: Kernel;
     private _tokenGenerator: TokenGenerator;
-    private _configureRequire:(confing:any) => any;
+    private _configureRequire: (confing: any) => any;
+
     constructor(parameters: KernelClientImplParameteres) {
         this._clientFetch = parameters.clientFetch;
         this._rootUrl = parameters.rootUrl;
@@ -31,6 +119,7 @@ export class KernelClientImpl implements DotnetInteractiveClient {
         this._configureRequire = parameters.configureRequire;
         this._clientSideKernel = parameters.clientSideKernel;
     }
+
     public configureRequire(config: any) {
         return this._configureRequire(config);
     }
@@ -108,7 +197,7 @@ export class KernelClientImpl implements DotnetInteractiveClient {
                         return this.submitCode(code, kernelName);
                     },
 
-                    submitCommand: (commandType: string, command?: any): Promise<string> =>{
+                    submitCommand: (commandType: string, command?: any): Promise<string> => {
                         return this.submitCommand(commandType, command, kernelName);
                     }
                 };
@@ -129,19 +218,51 @@ export class KernelClientImpl implements DotnetInteractiveClient {
         return token;
     }
 
-    public async submitCommand(commandType: string,command?: any ,targetKernelName?: string ): Promise<string>{
+    public async submitCommand(commandType: string, command?: any, targetKernelName?: string): Promise<string> {
         let token: string = this._tokenGenerator.GetNewToken();
-               
+
         if (!command) {
             command = {};
         }
 
-        if (targetKernelName){
+        if (targetKernelName) {
             command.targetKernelName = targetKernelName;
         }
 
         await this._kernelTransport.submitCommand(command, <any>commandType, token);
         return token;
+    }
+
+    public getConsole(commandToken: string): any {
+        const wrappedConsole = new InteractiveConsoleWrapper(this._clientFetch, commandToken);
+        return wrappedConsole;
+    }
+
+    public markExecutionComplete(commandToken: string): Promise<void> {
+        return this._clientFetch("markExecutionComplete", {
+            method: 'POST',
+            cache: 'no-cache',
+            mode: 'cors',
+            body: JSON.stringify({ commandToken }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(() => { });
+    }
+
+    public failCommand(err: any, commandToken: string) {
+        const failedEvent: CommandFailed = {
+            message: `${err}`
+        };
+        const eventEnvelope: KernelEventEnvelope = {
+            eventType: CommandFailedType,
+            event: failedEvent,
+        };
+        ClientEventQueueManager.addEventToClientQueue(this._clientFetch, commandToken, eventEnvelope);
+    }
+
+    public waitForAllEventsToPublish(commandToken: string): Promise<void> {
+        return ClientEventQueueManager.waitForAllEventsToPublish(commandToken);
     }
 }
 
@@ -194,7 +315,7 @@ export async function createDotnetInteractiveClient(configuration: string | Dotn
         rootUrl,
         kernelTransport: transport,
         clientSideKernel,
-        configureRequire: (config: any) =>{        
+        configureRequire: (config: any) => {
             return (<any>require).config(config) || require;
         }
     });

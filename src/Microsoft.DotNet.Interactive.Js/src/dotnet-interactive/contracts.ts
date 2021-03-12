@@ -195,7 +195,7 @@ export interface DisplayedValueProduced extends DisplayEvent {
 
 export interface DisplayEvent extends KernelEvent {
     formattedValues: Array<FormattedValue>;
-    valueId: string;
+    valueId?: string;
 }
 
 export interface DisplayedValueUpdated extends DisplayEvent {
