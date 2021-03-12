@@ -1,0 +1,47 @@
+{
+  "name": "dotnet-interactive",
+  "displayName": ".NET Interactive Notebooks",
+  "//description": "During build, the description gets the git SHA appended to it.",
+  "description": ".NET Interactive Notebook APIs for NodeJS.",
+  "license": "MIT",
+  "//version": "The version '42.42.42' is auto-set during CI package creation.",
+  "version": "42.42.42",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "url": "https://github.com/dotnet/interactive"
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "lint": "eslint src --ext ts",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "test": "mocha --opts mocha.opts",
+    "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json"
+  },
+  "devDependencies": {
+    "@types/chai": "4.2.11",
+    "@types/chai-as-promised": "^7.1.3",
+    "@types/chai-fs": "2.0.2",
+    "@types/mocha": "7.0.2",
+    "@types/node-fetch": "^2.5.7",
+    "@types/tmp": "0.2.0",
+    "@types/uuid": "^8.3.0",
+    "@typescript-eslint/eslint-plugin": "2.26.0",
+    "@typescript-eslint/parser": "2.26.0",
+    "chai": "4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "chai-fs": "2.0.0",
+    "eslint": "6.8.0",
+    "mocha": "7.1.1",
+    "mocha-multi-reporters": "1.1.7",
+    "mocha-trx-reporter": "3.2.4",
+    "tmp": "0.2.1",
+    "typescript": "4.1.3"
+  },
+  "dependencies": {
+    "compare-versions": "3.6.0",
+    "node-fetch": "^2.6.1",
+    "uuid": "^8.3.2"
+  }
+}

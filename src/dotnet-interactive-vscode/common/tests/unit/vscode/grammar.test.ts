@@ -11,14 +11,14 @@ import * as vsctm from 'vscode-textmate';
 describe('TextMate grammar tests', async () => {
     before(async () => {
         // prepare grammar parser
-        const nodeModulesDir = path.join(__dirname, '..', '..', '..', '..', '..', 'node_modules');
+        const nodeModulesDir = path.join(__dirname, '..', '..', '..', '..', '..', '..', 'node_modules');
         const onigWasmPath = path.join(nodeModulesDir, 'vscode-oniguruma', 'release', 'onig.wasm');
         const wasmBin = fs.readFileSync(onigWasmPath).buffer;
         await oniguruma.loadWASM(wasmBin);
     });
 
     // prepare grammar scope loader
-    const grammarDir = path.join(__dirname, '..', '..', '..', '..', '..', 'syntaxes');
+    const grammarDir = path.join(__dirname, '..', '..', '..', '..', '..', '..', 'syntaxes');
     const registry = new vsctm.Registry({
         onigLib: Promise.resolve({
             createOnigScanner: (sources) => new oniguruma.OnigScanner(sources),
