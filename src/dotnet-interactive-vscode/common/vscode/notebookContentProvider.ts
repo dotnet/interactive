@@ -126,7 +126,7 @@ export function toNotebookDocument(document: vscode.NotebookDocument): NotebookD
 
 function toNotebookCell(cell: vscode.NotebookCell): NotebookCell {
     return {
-        language: getSimpleLanguage(cell.language),
+        language: getSimpleLanguage(cell.document.languageId),
         contents: cell.document.getText(),
         outputs: cell.outputs.map(vsCodeCellOutputToContractCellOutput)
     };

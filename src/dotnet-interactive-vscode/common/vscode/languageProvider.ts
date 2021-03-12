@@ -133,7 +133,7 @@ export function registerLanguageProviders(clientMapper: ClientMapper, diagnostic
         if (vscode.languages.match(notebookCellLanguages, e.document)) {
             const cell = vscode.window.activeNotebookEditor?.document.cells.find(cell => cell.document === e.document);
             if (cell) {
-                notebookCellChanged(clientMapper, e.document, getSimpleLanguage(cell.language), diagnosticDelay, diagnostics => {
+                notebookCellChanged(clientMapper, e.document, getSimpleLanguage(cell.document.languageId), diagnosticDelay, diagnostics => {
                     const collection = getDiagnosticCollection(e.document.uri);
                     collection.set(e.document.uri, diagnostics.map(toVsCodeDiagnostic));
                 });
