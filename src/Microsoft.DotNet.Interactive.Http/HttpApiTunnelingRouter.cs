@@ -17,11 +17,11 @@ namespace Microsoft.DotNet.Interactive.Http
 {
     public class HttpApiTunnelingRouter : IRouter
     {
-        private readonly HtmlNotebookFrontedEnvironment _frontendEnvironment;
+        private readonly HtmlNotebookFrontendEnvironment _frontendEnvironment;
 
         private readonly ConcurrentDictionary<Uri, string> _bootstrapperScripts = new ConcurrentDictionary<Uri, string>();
 
-        public HttpApiTunnelingRouter(HtmlNotebookFrontedEnvironment frontendEnvironment)
+        public HttpApiTunnelingRouter(HtmlNotebookFrontendEnvironment frontendEnvironment)
         {
             _frontendEnvironment = frontendEnvironment;
         }

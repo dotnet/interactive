@@ -4,12 +4,10 @@
 using System;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.App.CommandLine;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Http;
 using Microsoft.DotNet.Interactive.Jupyter.Formatting;
-using Newtonsoft.Json.Linq;
 using Pocket;
 using Xunit;
 using Formatter = Microsoft.DotNet.Interactive.Formatting.Formatter;
@@ -22,10 +20,9 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
         public FormatterConfigurationTests()
         {
-            var frontendEnvironment = new HtmlNotebookFrontedEnvironment(new Uri("http://12.12.12.12:4242"));
-            
+            var frontendEnvironment = new HtmlNotebookFrontendEnvironment(new Uri("http://12.12.12.12:4242"));
 
-            CommandLineParser.SetUpFormatters(frontendEnvironment, new StartupOptions(), 1.Seconds());
+            CommandLineParser.SetUpFormatters(frontendEnvironment);
 
             _disposables.Add(Formatter.ResetToDefault);
             _disposables.Add(new AssertionScope());
@@ -93,48 +90,6 @@ namespace Microsoft.DotNet.Interactive.App.Tests
 
             formattedValue.MimeType.Should().Be("text/html");
             formattedValue.Value.Should().Be($"<script type=\"text/javascript\">{scriptText}</script>");
-        }
-
-        [Fact]
-        public void ScriptContent_type_is_wrapped_when_http_and_the_frontendEnvironment_is_JupyterFrontedEnvironment()
-        {
-            var frontendEnvironment = new HtmlNotebookFrontedEnvironment(new Uri("http://12.12.12.12:4242"));
-
-            CommandLineParser.SetUpFormatters(frontendEnvironment, new StartupOptions(httpPort: new HttpPort(4242)), 10.Seconds());
-            var script = new ScriptContent("alert('hello');");
-            var mimeType = Formatter.GetPreferredMimeTypeFor(script.GetType());
-
-            var formattedValue = new FormattedValue(
-                mimeType,
-                script.ToDisplayString(mimeType));
-
-            formattedValue.MimeType.Should().Be("text/html");
-            formattedValue.Value
-                          .EnforceNewLine()
-                          .Should()
-                          .Be(@"<script type=""text/javascript"">if (typeof window.createDotnetInteractiveClient === typeof Function) {
-createDotnetInteractiveClient('http://12.12.12.12:4242/').then(async function (interactive) {
-let notebookScope = getDotnetInteractiveScope('http://12.12.12.12:4242/');
-alert('hello');
-});
-}</script>".EnforceNewLine());
-        }
-
-        [Fact]
-        public void js_wrapping_formatter_fails_if_apiUri_is_not_configured_within_the_configured_timeout()
-        {
-            var frontendEnvironment = new HtmlNotebookFrontedEnvironment();
-
-            CommandLineParser.SetUpFormatters(frontendEnvironment, new StartupOptions(httpPort: new HttpPort(4242)), 1.Seconds());
-            var script = new ScriptContent("alert('hello');");
-            var mimeType = Formatter.GetPreferredMimeTypeFor(script.GetType());
-
-            Action formatting = () =>  script.ToDisplayString(mimeType);
-            formatting.Should()
-                .Throw<TimeoutException>()
-                .Which
-                .Message
-                .Should().Be("Timeout resolving the kernel's HTTP endpoint. Please try again.");
         }
     }
 }

@@ -240,7 +240,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                 Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context, CancellationToken cancellationToken)
                 {
-                    var frontendEnvironment = new HtmlNotebookFrontedEnvironment();
+                    var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
                     var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
                     services.AddKernel(kernel);
 
@@ -375,7 +375,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     {
                       
                         FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi 
-                            ? new HtmlNotebookFrontedEnvironment() 
+                            ? new HtmlNotebookFrontendEnvironment() 
                             : new BrowserFrontendEnvironment();
                         
                         var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
@@ -389,7 +389,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         {
                             if (context.ParseResult.Directives.Contains("vscode"))
                             {
-                                ((HtmlNotebookFrontedEnvironment) frontendEnvironment).RequiresAutomaticBootstrapping =
+                                ((HtmlNotebookFrontendEnvironment) frontendEnvironment).RequiresAutomaticBootstrapping =
                                     false;
                             }
 
@@ -515,14 +515,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 kernel.LogEventsToPocketLogger();
             }
 
-            SetUpFormatters(frontendEnvironment, startupOptions, TimeSpan.FromSeconds(15));
+            SetUpFormatters(frontendEnvironment);
 
             kernel.DefaultKernelName = defaultKernelName;
          
             return kernel;
         }
 
-        public static void SetUpFormatters(FrontendEnvironment frontendEnvironment, StartupOptions startupOptions, TimeSpan apiUriTimeout)
+        public static void SetUpFormatters(FrontendEnvironment frontendEnvironment)
         {
             switch (frontendEnvironment)
             {
@@ -538,40 +538,12 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                     Formatter.Register<LaTeXString>((laTeX, writer) => writer.Write(laTeX.ToString()), "text/latex");
                     Formatter.Register<MathString>((math, writer) => writer.Write(math.ToString()), "text/latex");
-                    if (startupOptions.EnableHttpApi && 
-                        browserFrontendEnvironment is HtmlNotebookFrontedEnvironment frontedEnvironment)
+                    Formatter.Register<ScriptContent>((script, writer) =>
                     {
-                        Formatter.Register<ScriptContent>((script, writer) =>
-                        {
-                            if (!Task.Run(async () =>
-                            {
-                                var apiUri = await frontedEnvironment.GetApiUriAsync();
-                                var fullCode =
-                                    $@"if (typeof window.createDotnetInteractiveClient === typeof Function) {{
-createDotnetInteractiveClient('{apiUri.AbsoluteUri}').then(async function (interactive) {{
-let notebookScope = getDotnetInteractiveScope('{apiUri.AbsoluteUri}');
-{script.ScriptValue}
-}});
-}}";
-                                IHtmlContent content =
-                                    PocketViewTags.script[type: "text/javascript"](fullCode.ToHtmlContent());
-                                content.WriteTo(writer, HtmlEncoder.Default);
-                            }).Wait(apiUriTimeout))
-                            {
-                                throw new TimeoutException("Timeout resolving the kernel's HTTP endpoint. Please try again.");
-                            }
-
-                        }, HtmlFormatter.MimeType);
-                    }
-                    else
-                    {
-                        Formatter.Register<ScriptContent>((script, writer) =>
-                        {
-                            IHtmlContent content =
-                                PocketViewTags.script[type: "text/javascript"](script.ScriptValue.ToHtmlContent());
-                            content.WriteTo(writer, HtmlEncoder.Default);
-                        }, HtmlFormatter.MimeType);
-                    }
+                        IHtmlContent content =
+                            PocketViewTags.script[type: "text/javascript"](script.ScriptValue.ToHtmlContent());
+                        content.WriteTo(writer, HtmlEncoder.Default);
+                    }, HtmlFormatter.MimeType);
 
                     break;
 
