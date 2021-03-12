@@ -53,13 +53,13 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
                 updateCellOutputs(document, cell, outputs).then(() => { });
             }
 
-            let diagnosticCollection = getDiagnosticCollection(cell.uri);
+            let diagnosticCollection = getDiagnosticCollection(cell.document.uri);
 
             function diagnosticObserver(diags: Array<Diagnostic>) {
-                diagnosticCollection.set(cell.uri, diags.filter(d => d.severity !== DiagnosticSeverity.Hidden).map(toVsCodeDiagnostic));
+                diagnosticCollection.set(cell.document.uri, diags.filter(d => d.severity !== DiagnosticSeverity.Hidden).map(toVsCodeDiagnostic));
             }
 
-            return client.execute(source, getSimpleLanguage(cell.language), outputObserver, diagnosticObserver, { id: document.uri.toString() }).then(() => {
+            return client.execute(source, getSimpleLanguage(cell.document.languageId), outputObserver, diagnosticObserver, { id: document.uri.toString() }).then(() => {
                 return updateCellMetadata(document, cell, {
                     runState: vscode.NotebookCellRunState.Success,
                     lastRunDuration: Date.now() - startTime,
@@ -132,9 +132,9 @@ export async function updateDocumentKernelspecMetadata(document: vscode.Notebook
     // workaround for https://github.com/microsoft/vscode/issues/115912; capture all cell data so we can re-apply it at the end
     const cellData: Array<vscode.NotebookCellData> = document.cells.map(c => {
         return versionSpecificFunctions.createVsCodeNotebookCellData({
-            cellKind: c.cellKind,
+            cellKind: versionSpecificFunctions.getCellKind(c),
             source: c.document.getText(),
-            language: c.language,
+            language: c.document.languageId,
             outputs: c.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
             metadata: c.metadata
         });
@@ -157,16 +157,16 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
     for (const cell of document.cells) {
         const cellMetadata = getDotNetMetadata(cell.metadata);
         const cellText = cell.document.getText();
-        const newLanguage = getCellLanguage(cellText, cellMetadata, documentLanguageInfo, cell.language);
+        const newLanguage = getCellLanguage(cellText, cellMetadata, documentLanguageInfo, cell.document.languageId);
         const cellData = versionSpecificFunctions.createVsCodeNotebookCellData({
-            cellKind: cell.cellKind,
+            cellKind: versionSpecificFunctions.getCellKind(cell),
             source: cellText,
             language: newLanguage,
             outputs: cell.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
             metadata: cell.metadata,
         });
         cellDatas.push(cellData);
-        applyUpdate ||= cell.language !== newLanguage;
+        applyUpdate ||= cell.document.languageId !== newLanguage;
     }
 
     if (applyUpdate) {

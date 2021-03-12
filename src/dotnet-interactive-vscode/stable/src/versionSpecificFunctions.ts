@@ -7,6 +7,10 @@ import * as vscodeLike from './common/interfaces/vscode-like';
 import * as utilities from './common/interfaces/utilities';
 import { contractCellOutputToVsCodeCellOutput } from './common/vscode/notebookContentProvider';
 
+export function getCellKind(cell: vscode.NotebookCell): vscode.NotebookCellKind {
+    return cell.cellKind;
+}
+
 export function createVsCodeNotebookCellData(cellData: { cellKind: vscodeLike.NotebookCellKind, source: string, language: string, outputs: contracts.NotebookCellOutput[], metadata?: vscode.NotebookCellMetadata }): vscode.NotebookCellData {
     return {
         cellKind: cellData.cellKind,
