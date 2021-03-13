@@ -1,0 +1,6 @@
+.eslintignore
+.eslintrc.json
+dotnet-interactive-*.tgz
+mocha.opts
+testConfig.json
+tsconfig.json
