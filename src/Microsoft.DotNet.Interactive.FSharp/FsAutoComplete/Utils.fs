@@ -43,7 +43,7 @@ module internal ProcessHelper =
 open System.IO
 open System.Collections.Concurrent
 open System
-open FSharp.Compiler.SourceCodeServices
+open FSharp.Compiler.CodeAnalysis
 
 type internal ResultOrString<'a> = Result<'a, string>
 

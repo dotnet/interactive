@@ -2,11 +2,15 @@ namespace FsAutoComplete
 
 open System
 open System.IO
-open FSharp.Compiler.SourceCodeServices
-open Utils
 open FSharp.Compiler
+open FSharp.Compiler.CodeAnalysis
+open FSharp.Compiler.Tokenization
+open FSharp.Compiler.EditorServices
+open FSharp.Compiler.Symbols
+open FSharp.Compiler.Syntax
 open FSharp.Compiler.Text
-open FSharp.Compiler.Text.Pos
+open FSharp.Compiler.Text.Position
+open Utils
 open FsAutoComplete.Utils
 
 [<RequireQualifiedAccess>]
@@ -49,7 +53,7 @@ type internal ParseAndCheckResults
       | newPos -> newPos
     let testPos = mkPos pos.Line (pos.Column - 1)
     // Get the parameter locations
-    let paramLocations = parseResults.FindNoteworthyParamInfoLocations pos
+    let paramLocations = parseResults.FindParameterLocations pos
     match paramLocations with
     | None -> return ResultOrString.Error "Could not find parameter locations"
     | Some nwpl ->
@@ -99,14 +103,14 @@ type internal ParseAndCheckResults
       let declarations = checkResults.GetDeclarationLocation(pos.Line, col, lineStr, identIsland, false)
 
       /// these are all None because you can't easily get the source file from the external symbol information here.
-      let tryGetSourceRangeForSymbol (sym: FSharpExternalSymbol): (string * int * int) option =
+      let tryGetSourceRangeForSymbol (sym: FindDeclExternalSymbol): (string * int * int) option =
         match sym with
-        | FSharpExternalSymbol.Type name -> None
-        | FSharpExternalSymbol.Constructor(typeName, args) -> None
-        | FSharpExternalSymbol.Method(typeName, name, paramSyms, genericArity) -> None
-        | FSharpExternalSymbol.Field(typeName, name) -> None
-        | FSharpExternalSymbol.Event(typeName, name) -> None
-        | FSharpExternalSymbol.Property(typeName, name) -> None
+        | FindDeclExternalSymbol.Type name -> None
+        | FindDeclExternalSymbol.Constructor(typeName, args) -> None
+        | FindDeclExternalSymbol.Method(typeName, name, paramSyms, genericArity) -> None
+        | FindDeclExternalSymbol.Field(typeName, name) -> None
+        | FindDeclExternalSymbol.Event(typeName, name) -> None
+        | FindDeclExternalSymbol.Property(typeName, name) -> None
 
       // attempts to manually discover symbol use and externalsymbol information for a range that doesn't exist in a local file
       // bugfix/workaround for FCS returning invalid declfound for f# members.
@@ -123,25 +127,25 @@ type internal ParseAndCheckResults
       }
 
       match declarations with
-      | FSharpFindDeclResult.DeclNotFound reason ->
+      | FindDeclResult.DeclNotFound reason ->
         let elaboration =
           match reason with
-          | FSharpFindDeclFailureReason.NoSourceCode -> "No source code was found for the declaration"
-          | FSharpFindDeclFailureReason.ProvidedMember m -> sprintf "Go-to-declaration is not available for Type Provider-provided member %s" m
-          | FSharpFindDeclFailureReason.ProvidedType t -> sprintf "Go-to-declaration is not available from Type Provider-provided type %s" t
-          | FSharpFindDeclFailureReason.Unknown r -> r
+          | FindDeclFailureReason.NoSourceCode -> "No source code was found for the declaration"
+          | FindDeclFailureReason.ProvidedMember m -> sprintf "Go-to-declaration is not available for Type Provider-provided member %s" m
+          | FindDeclFailureReason.ProvidedType t -> sprintf "Go-to-declaration is not available from Type Provider-provided type %s" t
+          | FindDeclFailureReason.Unknown r -> r
         return ResultOrString.Error (sprintf "Could not find declaration. %s" elaboration)
-      | FSharpFindDeclResult.DeclFound range when range.FileName.EndsWith(Range.rangeStartup.FileName) -> return ResultOrString.Error "Could not find declaration"
-      | FSharpFindDeclResult.DeclFound range when System.IO.File.Exists range.FileName ->
+      | FindDeclResult.DeclFound range when range.FileName.EndsWith(Range.rangeStartup.FileName) -> return ResultOrString.Error "Could not find declaration"
+      | FindDeclResult.DeclFound range when System.IO.File.Exists range.FileName ->
         let rangeStr = range.ToString()
         return Ok (FindDeclarationResult.Range range)
-      | FSharpFindDeclResult.DeclFound rangeInNonexistentFile ->
+      | FindDeclResult.DeclFound rangeInNonexistentFile ->
         let range = rangeInNonexistentFile.ToString()
         match! tryRecoverExternalSymbolForNonexistentDecl rangeInNonexistentFile with
         | Ok (assemblyFile, sourceFile) ->
           return ResultOrString.Error "no reason"
         | Error e -> return Error e
-      | FSharpFindDeclResult.ExternalDecl (assembly, externalSym) ->
+      | FindDeclResult.ExternalDecl (assembly, externalSym) ->
         // not enough info on external symbols to get a range-like thing :(
         return ResultOrString.Error "no reason"
     }
@@ -203,10 +207,10 @@ type internal ParseAndCheckResults
     | Some((startCol, endCol),identIsland) ->
       let identIsland = Array.toList identIsland
       // TODO: Display other tooltip types, for example for strings or comments where appropriate
-      let tip = checkResults.GetToolTipText(pos.Line, endCol, lineStr, identIsland, FSharpTokenTag.Identifier)
+      let tip = checkResults.GetToolTip(pos.Line, endCol, lineStr, identIsland, FSharpTokenTag.Identifier)
       return
         match tip with
-        | FSharpToolTipText(elems) when elems |> List.forall ((=) FSharpToolTipElement.None) ->
+        | ToolTipText(elems) when elems |> List.forall ((=) ToolTipElement.None) ->
             match identIsland with
             | [ident] ->
                match KeywordList.keywordTooltips.TryGetValue ident with
@@ -226,11 +230,11 @@ type internal ParseAndCheckResults
     | Some((startCol, endCol),identIsland) ->
       let identIsland = Array.toList identIsland
       // TODO: Display other tooltip types, for example for strings or comments where appropriate
-      let tip = checkResults.GetToolTipText(pos.Line, endCol, lineStr, identIsland, FSharpTokenTag.Identifier)
+      let tip = checkResults.GetToolTip(pos.Line, endCol, lineStr, identIsland, FSharpTokenTag.Identifier)
       let symbol = checkResults.GetSymbolUseAtLocation(pos.Line, endCol, lineStr, identIsland)
 
       match tip with
-      | FSharpToolTipText(elems) when elems |> List.forall ((=) FSharpToolTipElement.None) && symbol.IsNone ->
+      | ToolTipText(elems) when elems |> List.forall ((=) ToolTipElement.None) && symbol.IsNone ->
           match identIsland with
           | [ident] ->
              match KeywordList.keywordTooltips.TryGetValue ident with
@@ -260,11 +264,11 @@ type internal ParseAndCheckResults
     | Some((_, col),identIsland) ->
       let identIsland = Array.toList identIsland
       // TODO: Display other tooltip types, for example for strings or comments where appropriate
-      let tip = checkResults.GetToolTipText(pos.Line, col, lineStr, identIsland, FSharpTokenTag.Identifier)
+      let tip = checkResults.GetToolTip(pos.Line, col, lineStr, identIsland, FSharpTokenTag.Identifier)
       let symbol = checkResults.GetSymbolUseAtLocation(pos.Line, col, lineStr, identIsland)
 
       match tip with
-      | FSharpToolTipText(elems) when elems |> List.forall ((=) FSharpToolTipElement.None) && symbol.IsNone ->
+      | ToolTipText(elems) when elems |> List.forall ((=) ToolTipElement.None) && symbol.IsNone ->
           match identIsland with
           | [ident] ->
              match KeywordList.keywordTooltips.TryGetValue ident with
@@ -338,11 +342,15 @@ type internal ParseAndCheckResults
     match symbol with
     | None -> return Error "No matching symbol information"
     | Some symbol ->
-      match DocumentationFormatter.getTooltipDetailsFromSymbol symbol with
-      | None ->
-        return Error "No tooltip information"
-      | Some (signature, footer, cn) ->
-          return Ok (symbol.XmlDocSig, symbol.Assembly.FileName |> Option.defaultValue "", symbol.XmlDoc |> Seq.toList , signature, footer, cn)
+        match DocumentationFormatter.getTooltipDetailsFromSymbol symbol with
+        | None ->
+            return Error "No tooltip information"
+        | Some (signature, footer, cn) ->
+            match symbol.XmlDoc with
+            | FSharpXmlDoc.FromXmlText xmlDoc ->
+                let x = xmlDoc.UnprocessedLines
+                return Ok (symbol.XmlDocSig, symbol.Assembly.FileName |> Option.defaultValue "", xmlDoc.UnprocessedLines |> Seq.toList , signature, footer, cn)
+            | _ -> return Error "No tooltip information"
   }
 
   member __.TryGetSymbolUse (pos: pos) (lineStr: LineStr) =
@@ -436,14 +444,14 @@ type internal ParseAndCheckResults
       let results = checkResults.GetDeclarationListInfo(Some parseResults, pos.Line, lineStr, longName, getAllSymbols)
 
       let getKindPriority = function
-        | FSharpCompletionItemKind.CustomOperation -> -1
-        | FSharpCompletionItemKind.Property -> 0
-        | FSharpCompletionItemKind.Field -> 1
-        | FSharpCompletionItemKind.Method (isExtension = false) -> 2
-        | FSharpCompletionItemKind.Event -> 3
-        | FSharpCompletionItemKind.Argument -> 4
-        | FSharpCompletionItemKind.Other -> 5
-        | FSharpCompletionItemKind.Method (isExtension = true) -> 6
+        | CompletionItemKind .CustomOperation -> -1
+        | CompletionItemKind .Property -> 0
+        | CompletionItemKind .Field -> 1
+        | CompletionItemKind .Method (isExtension = false) -> 2
+        | CompletionItemKind .Event -> 3
+        | CompletionItemKind .Argument -> 4
+        | CompletionItemKind .Other -> 5
+        | CompletionItemKind .Method (isExtension = true) -> 6
 
       let decls =
         match filter with
@@ -476,7 +484,7 @@ type internal ParseAndCheckResults
   member __.GetAllEntities (publicOnly: bool) : AssemblySymbol list =
       try
         let res = [
-          yield! AssemblyContentProvider.getAssemblySignatureContent AssemblyContentType.Full checkResults.PartialAssemblySignature
+          yield! AssemblyContent.GetAssemblySignatureContent AssemblyContentType.Full checkResults.PartialAssemblySignature
           let ctx = checkResults.ProjectContext
           let assembliesByFileName =
             ctx.GetReferencedAssemblies()
@@ -485,8 +493,8 @@ type internal ParseAndCheckResults
                         // get Content.Entities from it.
 
           for fileName, signatures in assembliesByFileName do
-            let contentType = if publicOnly then Public else Full
-            let content = AssemblyContentProvider.getAssemblyContent entityCache.Locking contentType fileName signatures
+            let contentType = if publicOnly then AssemblyContentType.Public else AssemblyContentType.Full
+            let content = AssemblyContent.GetAssemblyContent entityCache.Locking contentType fileName signatures
             yield! content
         ]
         res

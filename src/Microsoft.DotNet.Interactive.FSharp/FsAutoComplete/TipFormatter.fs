@@ -8,7 +8,13 @@ open System.IO
 open System.Xml
 open System.Collections.Generic
 open System.Text.RegularExpressions
-open FSharp.Compiler.SourceCodeServices
+
+open FSharp.Compiler.CodeAnalysis
+open FSharp.Compiler.EditorServices
+open FSharp.Compiler.Symbols
+open FSharp.Compiler.Syntax
+open FSharp.Compiler.Text
+open FSharp.Compiler.Tokenization
 
 let inline nl<'T> = Environment.NewLine
 
@@ -954,22 +960,8 @@ type internal FormatCommentStyle =
 // --------------------------------------------------------------------------------------
 let private buildFormatComment cmt (formatStyle : FormatCommentStyle) (typeDoc: string option) =
     match cmt with
-    | FSharpXmlDoc.Text (rawText, _) ->
+    | FSharpXmlDoc.FromXmlText doc ->
         try
-            // We create a "fake" XML document in order to use the same parser for both libraries and user code
-            let s =
-                let lines =
-                    seq {
-                        yield "<fake>"
-                        yield! rawText
-                        yield "</fake>"
-                    }
-                String.concat "" lines
-
-            let xml = sprintf "<fake>%s</fake>" s
-            let doc = XmlDocument()
-            doc.LoadXml(xml)
-
             // This try to mimic how we found the indentation size when working a real XML file
             let rec findIndentationSize (lines : string list) =
                 match lines with
@@ -982,11 +974,14 @@ let private buildFormatComment cmt (formatStyle : FormatCommentStyle) (typeDoc: 
                 | [] -> 0
 
             let indentationSize =
-                s.Replace("\r\n", "\n").Split('\n')
+                doc.GetElaboratedXmlLines()
                 |> Array.toList
                 |> findIndentationSize
 
-            let xmlDoc = XmlDocMember(doc, indentationSize, 0)
+            let xmlDocument = XmlDocument()
+            xmlDocument.LoadXml(doc.GetXmlText())
+
+            let xmlDoc = XmlDocMember(xmlDocument, indentationSize, 0)
 
             match formatStyle with
             | FormatCommentStyle.Legacy ->
@@ -1002,7 +997,7 @@ let private buildFormatComment cmt (formatStyle : FormatCommentStyle) (typeDoc: 
             | ex ->
                 sprintf "An error occured when parsing the doc comment, please check that your doc comment is valid.\n\nMore info can be found LSP output"
 
-    | FSharpXmlDoc.XmlDocFileSignature(dllFile, memberName) ->
+    | FSharpXmlDoc.FromXmlFile (dllFile, memberName) ->
         match getXmlDoc dllFile with
         | Some doc when doc.ContainsKey memberName ->
             let typeDoc =
@@ -1039,20 +1034,26 @@ let private formatGenericParamInfo cmt =
   else
     cmt
 
+let ttToString (tt:TaggedText []) = tt |> Array.map (fun t -> t.Text) |> String.concat ""
 
-let formatTip (FSharpToolTipText tips) : (string * string) list list =
+let formatTip (ToolTipText tips) : (string * string) list list =
     tips
     |> List.choose (function
-        | FSharpToolTipElement.Group items ->
-            let getRemarks (it : FSharpToolTipElementData<string>) = defaultArg (it.Remarks |> Option.map (fun n -> if String.IsNullOrWhiteSpace n then n else "\n\n" + n)) ""
-            Some (items |> List.map (fun (it) ->  (it.MainDescription + getRemarks it, buildFormatComment it.XmlDoc FormatCommentStyle.Legacy None)))
-        | FSharpToolTipElement.CompositionError (error) -> Some [("<Note>", error)]
+        | ToolTipElement.Group items ->
+            let getRemarks (it : ToolTipElementData) =
+                defaultArg (it.Remarks
+                            |> Option.map (fun n ->
+                                let text = ttToString n
+                                if String.IsNullOrWhiteSpace text then text else "\n\n" + text)) ""
+
+            Some (items |> List.map (fun (it) ->  ((ttToString it.MainDescription) + (getRemarks it), buildFormatComment it.XmlDoc FormatCommentStyle.Legacy None)))
+        | ToolTipElement.CompositionError (error) -> Some [("<Note>", error)]
         | _ -> None)
 
-let internal formatTipEnhanced (FSharpToolTipText tips) (signature : string) (footer : string) (typeDoc: string option) (formatCommentStyle : FormatCommentStyle) : (string * string * string) list list =
+let internal formatTipEnhanced (ToolTipText tips) (signature : string) (footer : string) (typeDoc: string option) (formatCommentStyle : FormatCommentStyle) : (string * string * string) list list =
     tips
     |> List.choose (function
-        | FSharpToolTipElement.Group items ->
+        | ToolTipElement.Group items ->
             Some (items |> List.map (fun i ->
                 let comment =
                     if i.TypeMapping.IsEmpty then
@@ -1060,15 +1061,15 @@ let internal formatTipEnhanced (FSharpToolTipText tips) (signature : string) (fo
                     else
                       buildFormatComment i.XmlDoc formatCommentStyle typeDoc
                       + "\n\n**Generic parameters**\n\n"
-                      + (i.TypeMapping |> List.map formatGenericParamInfo |> String.concat "\n")
+                      + (i.TypeMapping |> List.map (fun tt -> tt |> ttToString |> formatGenericParamInfo) |> String.concat "\n")
                 (signature, comment, footer)))
-        | FSharpToolTipElement.CompositionError (error) -> Some [("<Note>", error, "")]
+        | ToolTipElement.CompositionError (error) -> Some [("<Note>", error, "")]
         | _ -> None)
 
-let formatDocumentation (FSharpToolTipText tips) ((signature, (constructors, fields, functions, interfaces, attrs, ts)) : string * (string [] * string [] * string []* string[]* string[]* string[])) (footer : string) (cn: string) =
+let formatDocumentation (ToolTipText tips) ((signature, (constructors, fields, functions, interfaces, attrs, ts)) : string * (string [] * string [] * string []* string[]* string[]* string[])) (footer : string) (cn: string) =
     tips
     |> List.choose (function
-        | FSharpToolTipElement.Group items ->
+        | ToolTipElement.Group items ->
             Some (items |> List.map (fun i ->
                 let comment =
                     if i.TypeMapping.IsEmpty then
@@ -1076,18 +1077,18 @@ let formatDocumentation (FSharpToolTipText tips) ((signature, (constructors, fie
                     else
                       buildFormatComment i.XmlDoc FormatCommentStyle.Documentation None
                       + "\n\n**Generic parameters**\n\n"
-                      + (i.TypeMapping |> List.map formatGenericParamInfo |> String.concat "\n")
+                      + (i.TypeMapping |> List.map (fun tt -> tt |> ttToString |> formatGenericParamInfo) |> String.concat "\n")
 
                 (signature, constructors, fields, functions, interfaces, attrs, ts, comment, footer, cn)))
-        | FSharpToolTipElement.CompositionError (error) -> Some [("<Note>", [||],[||], [||], [||], [||], [||], error, "", "")]
+        | ToolTipElement.CompositionError (error) -> Some [("<Note>", [||],[||], [||], [||], [||], [||], error, "", "")]
         | _ -> None)
 
 let formatDocumentationFromXmlSig (xmlSig: string) (assembly: string) ((signature, (constructors, fields, functions, interfaces, attrs, ts)) : string * (string [] * string [] * string [] * string[]* string[]* string[])) (footer : string) (cn: string) =
-    let xmlDoc =  FSharpXmlDoc.XmlDocFileSignature(assembly, xmlSig)
+    let xmlDoc =  FSharpXmlDoc.FromXmlFile (assembly, xmlSig)
     let comment = buildFormatComment xmlDoc FormatCommentStyle.Documentation None
     [[(signature, constructors, fields, functions, interfaces, attrs, ts, comment, footer, cn)]]
 
-let extractSignature (FSharpToolTipText tips) =
+let extractSignature (ToolTipText tips) =
     let getSignature (str: string) =
         let nlpos = str.IndexOfAny([|'\r';'\n'|])
         let firstLine =
@@ -1102,7 +1103,9 @@ let extractSignature (FSharpToolTipText tips) =
 
     let firstResult x =
         match x with
-        | FSharpToolTipElement.Group gs -> List.tryPick (fun (t : FSharpToolTipElementData<string>) -> if not (String.IsNullOrWhiteSpace t.MainDescription) then Some t.MainDescription else None) gs
+        | ToolTipElement.Group gs -> List.tryPick (fun (t: ToolTipElementData) ->
+                                                      let s = ttToString t.MainDescription
+                                                      if not (String.IsNullOrWhiteSpace s) then Some s else None) gs
         | _ -> None
 
     tips

@@ -1,19 +1,23 @@
 namespace FsAutoComplete
 
-open FSharp.Compiler.SourceCodeServices
+open FSharp.Compiler.EditorServices
+open FSharp.Compiler.Text
+open FSharp.Compiler.Tokenization
+open FSharp.Compiler.Symbols
+open FSharp.Compiler.Syntax
 
 #nowarn "57"
 
 module internal KeywordList =
 
     let keywordDescriptions =
-        FSharp.Compiler.SourceCodeServices.FSharpKeywords.KeywordsWithDescription
+        FSharpKeywords.KeywordsWithDescription
         |> dict
 
     let keywordTooltips =
       keywordDescriptions
       |> Seq.map (fun kv ->
-        let tip = FSharpToolTipText [FSharpToolTipElement.Single(kv.Key, FSharpXmlDoc.Text ([|kv.Value|], [|""|]))]
+        let tip = ToolTipText[ ToolTipElement.Single( [| TaggedText(TextTag.Keyword, kv.Key) |], FSharpXmlDoc.FromXmlText (XmlDoc([|kv.Value|], Range.rangeStartup))) ]
         kv.Key, tip)
       |> dict
 
@@ -31,5 +35,5 @@ module internal KeywordList =
 
 
     let allKeywords : string list =
-        FSharp.Compiler.SourceCodeServices.FSharpKeywords.KeywordsWithDescription
+        FSharpKeywords.KeywordsWithDescription
         |> List.map fst
