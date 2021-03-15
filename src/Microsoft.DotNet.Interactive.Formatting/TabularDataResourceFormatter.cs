@@ -39,9 +39,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public static TabularDataResourceJsonString ToTabularDataResourceJsonString<T>(this IEnumerable<T> source)
         {
-            var (schema, data) = Generate(source);
-            var tabularDataSet = new TabularDataResource(schema, data);
+            var tabularDataSet = source.ToTabularDataResource();
             return tabularDataSet.ToJson();
+        }
+
+        public static TabularDataResource ToTabularDataResource<T>(this IEnumerable<T> source)
+        {
+            var (schema, data) = Generate(source);
+           return new TabularDataResource(schema, data);
         }
 
         private static (TableSchema schema, IEnumerable data) Generate<T>(IEnumerable<T> source)
@@ -148,7 +153,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        internal static TableSchemaFieldType ToTableSchemaFieldType(this Type type) =>
+        public static TableSchemaFieldType ToTableSchemaFieldType(this Type type) =>
             type switch
             {
                 { } t when t == typeof(bool) => TableSchemaFieldType.Boolean,

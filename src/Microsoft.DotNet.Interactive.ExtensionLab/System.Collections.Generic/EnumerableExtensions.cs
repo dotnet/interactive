@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Linq;
+using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting;
 
@@ -11,7 +12,8 @@ namespace System.Collections.Generic
     {
         public static DataExplorer ExploreWithSandDance<T>(this IEnumerable<T> source)
         {
-            var explorer = new DataExplorer(source.ToTabularDataResourceJsonString());
+            var explorer = new DataExplorer(source.ToTabularDataResource());
+            KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
             return explorer;
         }
         public static void Explore<T>(this IEnumerable<T> source)

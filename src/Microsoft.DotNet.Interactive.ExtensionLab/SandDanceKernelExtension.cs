@@ -55,13 +55,15 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             Formatter.Register<DataExplorer>((explorer, writer) =>
             {
-                var html = explorer.TabularDataResourceData.RenderSandDanceExplorer(explorer.Id);
+                var html = explorer.RenderSandDanceExplorer();
                 writer.Write(html);
             }, HtmlFormatter.MimeType);
         }
 
-        internal static HtmlString RenderSandDanceExplorer(this TabularDataResourceJsonString data, string explorerId)
+        internal static HtmlString RenderSandDanceExplorer(this DataExplorer explorer)
         {
+            var explorerId = explorer.Id;
+            var data = explorer.TabularDataResource.ToJson();
             var divId = explorerId;
             var code = new StringBuilder();
             code.AppendLine("<div style=\"background-color:white;\">");

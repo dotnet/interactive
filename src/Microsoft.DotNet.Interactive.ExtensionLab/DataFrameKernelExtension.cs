@@ -163,7 +163,8 @@ namespace Microsoft.ML
 
         public static DataExplorer ExploreWithSandDance(this IDataView source)
         {
-            var explorer = new DataExplorer(source.ToTabularJsonString());
+            var explorer = new DataExplorer(source.ToTabularDataResource());
+            KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
             return explorer;
         }
 
@@ -174,10 +175,10 @@ namespace Microsoft.ML
             return value;
         }
 
-        public static TabularDataResourceJsonString ToTabularJsonString(this IDataView source)
+        public static TabularDataResource ToTabularDataResource(this IDataView source)
         {
             var fields = source.Schema.ToDictionary(column => column.Name, column => column.Type.RawType);
-            var data = new List<Dictionary<string,object>>();
+            var data = new List<Dictionary<string, object>>();
 
             var cursor = source.GetRowCursor(source.Schema);
 
@@ -189,8 +190,8 @@ namespace Microsoft.ML
                 {
                     var type = column.Type.RawType;
                     var getGetterMethod = cursor.GetType()
-                                                .GetMethod(nameof(cursor.GetGetter))
-                                                .MakeGenericMethod(type);
+                        .GetMethod(nameof(cursor.GetGetter))
+                        .MakeGenericMethod(type);
 
                     var valueGetter = getGetterMethod.Invoke(cursor, new object[] { column });
 
@@ -207,9 +208,20 @@ namespace Microsoft.ML
                 data.Add(rowObj);
             }
 
-            var tabularData = TabularDataResourceJsonString.Create(fields, data);
+            var schema = new TableSchema();
 
-            return tabularData;
+            foreach (var (fieldName, fieldValue) in fields)
+            {
+                schema.Fields.Add(new TableSchemaFieldDescriptor(fieldName, fieldValue.ToTableSchemaFieldType()));
+            }
+
+            return new TabularDataResource(schema, data);
+        }
+
+        public static TabularDataResourceJsonString ToTabularJsonString(this IDataView source)
+        {
+            var tabularDataResource = source.ToTabularDataResource();
+            return tabularDataResource.ToJson();
         }
     }
 }
