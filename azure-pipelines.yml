@@ -84,7 +84,7 @@ stages:
           clean: true
 
         # Azure DevOps doesn't support git symlinks on Windows so we have to fake it
-        - pwsh: . "$(Build.SourcesDirectory)\src\dotnet-interactive-vscode\ensure-symlinks.ps1"
+        - pwsh: . "$(Build.SourcesDirectory)\src\ensure-symlinks.ps1"
           displayName: ensure symlinks
 
         - task: NodeTool@0
@@ -137,15 +137,25 @@ stages:
           displayName: npm test (VS Code insiders)
           workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode/insiders"
 
-        # publish VS Code test results
+        # build and test npm package
+        - script: npm install
+          displayName: npm install (npm package)
+          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-npm"
+
+        - script: npm run ciTest
+          displayName: npm test (npm package)
+          workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-npm"
+
+        # publish VS Code and npm test results
         - task: PublishTestResults@2
-          displayName: Publish VS Code extension test results
+          displayName: Publish VS Code extension and npm test results
           inputs:
             testResultsFormat: VSTest
             testResultsFiles: '**/*.trx'
             searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults'
           condition: always()
 
+        # pack and publish vscode and npm
         - task: PowerShell@2
           displayName: Pack VS Code Extensions
           inputs:
@@ -159,6 +169,21 @@ stages:
           inputs:
             pathToPublish: $(Build.ArtifactStagingDirectory)\vscode
             artifactName: vscode
+            artifactType: container
+
+        - task: PowerShell@2
+          displayName: Pack NPM package
+          inputs:
+            filePath: $(Build.SourcesDirectory)/eng/package/PackNpmPackage.ps1
+            arguments: -packageVersionNumber $(StableToolVersionNumber) -gitSha $(Build.SourceVersion) -outDir "$(Build.ArtifactStagingDirectory)\npm"
+            workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-npm"
+            pwsh: true
+
+        - task: PublishBuildArtifacts@1
+          displayName: Publish NPM package artifacts
+          inputs:
+            pathToPublish: $(Build.ArtifactStagingDirectory)\npm
+            artifactName: npm
             artifactType: container
 
         # Prevent symbols packages from being saved in the following `packages` artifact because they're incomplete.

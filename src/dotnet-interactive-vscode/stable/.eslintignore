@@ -1,5 +1,3 @@
-src/interfaces/
-src/vscode/insiders/
-src/vscode/stable/
+jupyter.d.ts
 vscode.proposed.d.ts
 vscode.d.ts
