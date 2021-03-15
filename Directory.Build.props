@@ -11,6 +11,8 @@
 
     <!-- NuGet: A stable release of a package should not have a prerelease dependency. -->
     <NoWarn>$(NoWarn);NU5104</NoWarn>
+
+    <XUnitCoreSettingsFile>$(RepositoryEngineeringDir)config\xunit.runner.json</XUnitCoreSettingsFile>
   </PropertyGroup>
 
   <PropertyGroup>
