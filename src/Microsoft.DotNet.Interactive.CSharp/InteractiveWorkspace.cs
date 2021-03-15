@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return solution;
         }
 
-        private IEnumerable<MetadataReference> GetReferenceSet(Compilation compilation)
+        private IReadOnlyCollection<MetadataReference> GetReferenceSet(Compilation compilation)
         {
             var references =
                 _referenceAssemblies
