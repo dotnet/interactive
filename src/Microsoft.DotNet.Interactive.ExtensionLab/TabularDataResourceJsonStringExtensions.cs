@@ -6,14 +6,17 @@ using Microsoft.DotNet.Interactive.ExtensionLab;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    public static class TabularDataResourceJsonStringExtensions
+    public static class TabularDataResourceExtensions
     {
-        public static DataExplorer ExploreWithSandDance(this TabularDataResourceJsonString source)
+        public static DataExplorer ExploreWithSandDance(this TabularDataResource source)
         {
             var explorer = new DataExplorer(source);
+            KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
             return explorer;
         }
-
+    }
+    public static class TabularDataResourceJsonStringExtensions
+    {
         public static void Explore(this TabularDataResourceJsonString source)
         {
             KernelInvocationContext.Current.Display(
