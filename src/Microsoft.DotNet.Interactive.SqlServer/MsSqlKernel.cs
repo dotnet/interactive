@@ -159,7 +159,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                 var tables = GetEnumerableTables(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
                                 foreach (var table in tables)
                                 {
-                                    table.ExploreWithNteract(invocationContext: context);
+                                    var explorer = new NteractDataExplorer(table.ToTabularDataResource());
+                                    context.Display(explorer);
                                 }
                             }
                             else

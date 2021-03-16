@@ -8,23 +8,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public static class TabularDataResourceExtensions
     {
-        public static SandDanceDataExplorer ExploreWithSandDance(this TabularDataResource source, bool immediateDisplay = true, KernelInvocationContext invocationContext = null)
+        public static SandDanceDataExplorer ExploreWithSandDance(this TabularDataResource source)
         {
             var explorer = new SandDanceDataExplorer(source);
-            if (immediateDisplay)
-            {
-                (invocationContext ?? KernelInvocationContext.Current)?.Display(explorer, HtmlFormatter.MimeType);
-            }
+            KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
             return explorer;
         }
 
-        public static NteractDataExplorer ExploreWithNteract(this TabularDataResource source, bool immediateDisplay = true, KernelInvocationContext invocationContext = null)
+        public static NteractDataExplorer ExploreWithNteract(this TabularDataResource source)
         {
             var explorer = new NteractDataExplorer(source);
-            if (immediateDisplay)
-            {
-                (invocationContext ?? KernelInvocationContext.Current)?.Display(explorer, HtmlFormatter.MimeType);
-            }
+            KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
             return explorer;
         }
     }
