@@ -6,7 +6,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
-    public class NteractDataExplorer
+    public class NteractDataExplorer : ITabularDataResourceExplorer
     {
         public NteractDataExplorer(TabularDataResource source)
         {

@@ -10,22 +10,22 @@ namespace System.Collections.Generic
 {
     public static class EnumerableExtensions
     {
-        public static SandDanceDataExplorer ExploreWithSandDance<T>(this IEnumerable<T> source, bool immediateDisplay = true)
+        public static SandDanceDataExplorer ExploreWithSandDance<T>(this IEnumerable<T> source, bool immediateDisplay = true, KernelInvocationContext invocationContext = null)
         {
             var explorer = new SandDanceDataExplorer(source.ToTabularDataResource());
             if (immediateDisplay)
             {
-                KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
+                (invocationContext ?? KernelInvocationContext.Current)?.Display(explorer, HtmlFormatter.MimeType);
             }
             return explorer;
         }
 
-        public static NteractDataExplorer ExploreWithNteract<T>(this IEnumerable<T> source, bool immediateDisplay = true)
+        public static NteractDataExplorer ExploreWithNteract<T>(this IEnumerable<T> source, bool immediateDisplay = true, KernelInvocationContext invocationContext = null)
         {
             var explorer = new NteractDataExplorer(source.ToTabularDataResource());
             if (immediateDisplay)
             {
-                KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
+                (invocationContext ?? KernelInvocationContext.Current)?.Display(explorer, HtmlFormatter.MimeType);
             }
             return explorer;
         }

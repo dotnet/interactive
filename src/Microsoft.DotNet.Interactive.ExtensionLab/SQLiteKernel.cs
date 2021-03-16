@@ -17,6 +17,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         IKernelCommandHandler<SubmitCode>
     {
         private readonly string _connectionString;
+        private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> tables;
 
         public SQLiteKernel(string name, string connectionString) : base(name)
         {
@@ -43,9 +44,12 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             dbCommand.CommandText = submitCode.Code;
 
-            var results = Execute(dbCommand);
+            tables = Execute(dbCommand);
 
-            context.Display(results);
+            foreach (var table in tables)
+            {
+                table.ExploreWithNteract(invocationContext:context);
+            }
         }
 
         private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> Execute(IDbCommand command)

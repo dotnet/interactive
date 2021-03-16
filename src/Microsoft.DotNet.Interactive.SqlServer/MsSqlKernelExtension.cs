@@ -1,12 +1,9 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.ExtensionLab;
-using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
 {
@@ -16,20 +13,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         {
             if (kernel is CompositeKernel compositeKernel)
             {
-                NteractDataExplorerExtensions.RegisterFormatters();
-
-                // this is a formatter for SQL data
-                Formatter.Register
-                <IEnumerable /* tables*/
-                    <IEnumerable /* rows */
-                        <IEnumerable /* fields */<(string, object)>>>>((source, writer) =>
-                {
-                    // TODO: (RegisterFormatters) do all the tables...
-
-                    writer.Write(source.First()
-                                       .ExploreWithNteract(immediateDisplay:false)
-                                       .ToDisplayString(HtmlFormatter.MimeType));
-                }, HtmlFormatter.MimeType);
+                RegisterFormatters();
 
                 compositeKernel
                     .UseKernelClientConnection(new MsSqlKernelConnection());
@@ -42,6 +26,12 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             }
 
             return Task.CompletedTask;
+        }
+
+        public static void RegisterFormatters()
+        {
+            NteractDataExplorerExtensions.RegisterFormatters();
+            SandDanceExplorerExtensions.RegisterFormatters();
         }
     }
 }
