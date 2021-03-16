@@ -10,23 +10,17 @@ namespace System.Collections.Generic
 {
     public static class EnumerableExtensions
     {
-        public static SandDanceDataExplorer ExploreWithSandDance<T>(this IEnumerable<T> source, bool immediateDisplay = true, KernelInvocationContext invocationContext = null)
+        public static SandDanceDataExplorer ExploreWithSandDance<T>(this IEnumerable<T> source)
         {
             var explorer = new SandDanceDataExplorer(source.ToTabularDataResource());
-            if (immediateDisplay)
-            {
-                (invocationContext ?? KernelInvocationContext.Current)?.Display(explorer, HtmlFormatter.MimeType);
-            }
+            KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
             return explorer;
         }
 
-        public static NteractDataExplorer ExploreWithNteract<T>(this IEnumerable<T> source, bool immediateDisplay = true, KernelInvocationContext invocationContext = null)
+        public static NteractDataExplorer ExploreWithNteract<T>(this IEnumerable<T> source)
         {
             var explorer = new NteractDataExplorer(source.ToTabularDataResource());
-            if (immediateDisplay)
-            {
-                (invocationContext ?? KernelInvocationContext.Current)?.Display(explorer, HtmlFormatter.MimeType);
-            }
+            KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
             return explorer;
         }
 

@@ -159,23 +159,17 @@ namespace Microsoft.ML
             source.ExploreWithNteract();
         }
 
-        public static SandDanceDataExplorer ExploreWithSandDance(this IDataView source, bool immediateDisplay = true, KernelInvocationContext invocationContext = null)
+        public static SandDanceDataExplorer ExploreWithSandDance(this IDataView source)
         {
             var explorer = new SandDanceDataExplorer(source.ToTabularDataResource());
-            if (immediateDisplay)
-            {
-                (invocationContext ?? KernelInvocationContext.Current)?.Display(explorer, HtmlFormatter.MimeType);
-            }
+            KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
             return explorer;
         }
 
-        public static NteractDataExplorer ExploreWithNteract(this IDataView source, bool immediateDisplay = true, KernelInvocationContext invocationContext = null)
+        public static NteractDataExplorer ExploreWithNteract(this IDataView source)
         {
             var explorer = new NteractDataExplorer(source.ToTabularDataResource());
-            if (immediateDisplay)
-            {
-                (invocationContext ?? KernelInvocationContext.Current)?.Display(explorer, HtmlFormatter.MimeType);
-            }
+            KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
             return explorer;
         }
 

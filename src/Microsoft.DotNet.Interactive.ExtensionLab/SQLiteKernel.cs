@@ -8,6 +8,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Formatting;
 using Enumerable = System.Linq.Enumerable;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
@@ -48,7 +49,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             foreach (var table in tables)
             {
-                table.ExploreWithNteract(invocationContext:context);
+                var explorer = new NteractDataExplorer(table.ToTabularDataResource());
+                context.Display(explorer);
             }
         }
 
