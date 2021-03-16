@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new SandDanceKernelExtension();
-            DataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
+            NteractDataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
             await kernelExtension.OnLoadAsync(kernel);
 
             var data = new[]

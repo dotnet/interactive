@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             kernel.UseDataExplorer();
 
-            kernel.RegisterForDisposal(() => DataExplorerExtensions.Settings.RestoreDefault());
+            kernel.RegisterForDisposal(() => NteractDataExplorerExtensions.Settings.RestoreDefault());
 
             KernelInvocationContext.Current?.Display(
                 new HtmlString($@"<details><summary>Explore data visually using the <a href=""https://github.com/nteract/data-explorer"">nteract Data Explorer</a>.</summary>
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public string Name => "nteract";
     }
 
-    public static class DataExplorerExtensions
+    public static class NteractDataExplorerExtensions
     {
         public static DataExplorerSettings Settings { get; } = new();
 
@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public static void RegisterFormatters()
         {
-            Formatter.Register<TabularDataResourceJsonString>((explorer, writer) =>
+            Formatter.Register<NteractDataExplorer>((explorer, writer) =>
             {
                 var html = explorer.RenderDataExplorer();
                 writer.Write(html);
@@ -54,6 +54,21 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         private static HtmlString RenderDataExplorer(this TabularDataResourceJsonString data)
         {
             var divId = Guid.NewGuid().ToString("N");
+            var code = new StringBuilder();
+            code.AppendLine("<div style=\"background-color:white;\">");
+            code.AppendLine($"<div id=\"{divId}\" style=\"height: 100ch ;margin: 2px;\">");
+            code.AppendLine("</div>");
+            code.AppendLine(@"<script type=""text/javascript"">");
+            GenerateCode(data, code, divId, "https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js");
+            code.AppendLine(" </script>");
+            code.AppendLine("</div>");
+            return new HtmlString(code.ToString());
+        }
+
+        private static HtmlString RenderDataExplorer(this NteractDataExplorer explorer)
+        {
+            var divId = explorer.Id;
+            var data = explorer.TabularDataResource.ToJson();
             var code = new StringBuilder();
             code.AppendLine("<div style=\"background-color:white;\">");
             code.AppendLine($"<div id=\"{divId}\" style=\"height: 100ch ;margin: 2px;\">");
@@ -76,7 +91,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             code.AppendLine(JavascriptUtilities.GetCodeForEnsureRequireJs(new Uri(requireUri), functionName));
         }
-
 
         private static void GenerateFunctionCode(TabularDataResourceJsonString data, StringBuilder code, string divId, string functionName)
         {

@@ -10,15 +10,29 @@ namespace System.Collections.Generic
 {
     public static class EnumerableExtensions
     {
-        public static DataExplorer ExploreWithSandDance<T>(this IEnumerable<T> source)
+        public static SandDanceDataExplorer ExploreWithSandDance<T>(this IEnumerable<T> source, bool immediateDisplay = true)
         {
-            var explorer = new DataExplorer(source.ToTabularDataResource());
-            KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
+            var explorer = new SandDanceDataExplorer(source.ToTabularDataResource());
+            if (immediateDisplay)
+            {
+                KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
+            }
             return explorer;
         }
+
+        public static NteractDataExplorer ExploreWithNteract<T>(this IEnumerable<T> source, bool immediateDisplay = true)
+        {
+            var explorer = new NteractDataExplorer(source.ToTabularDataResource());
+            if (immediateDisplay)
+            {
+                KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
+            }
+            return explorer;
+        }
+
         public static void Explore<T>(this IEnumerable<T> source)
         {
-            source.ToTabularDataResourceJsonString().Explore();
+            source.ExploreWithNteract();
         }
 
         public static IReadOnlyList<IDictionary<string, object>> ToTable(this IEnumerable<IEnumerable<(string name, object value)>> source)

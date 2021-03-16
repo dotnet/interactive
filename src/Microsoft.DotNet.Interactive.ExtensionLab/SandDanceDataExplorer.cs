@@ -6,9 +6,9 @@ using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
-    public class DataExplorer
+    public class SandDanceDataExplorer
     {
-        public DataExplorer(TabularDataResource source)
+        public SandDanceDataExplorer(TabularDataResource source)
         {
             Id = Guid.NewGuid().ToString("N");
             TabularDataResource = source;
