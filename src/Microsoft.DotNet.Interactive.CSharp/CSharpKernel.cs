@@ -420,6 +420,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              .Select(r => CachingMetadataResolver.ResolveReferenceWithXmlDocumentationProvider(r))
                              .ToArray();
 
+            foreach (var reference in references)
+            {
+                _workspace.AddPackageManagerReference(reference);
+            }
+
             ScriptOptions = ScriptOptions.AddReferences(references);
         }
 

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
@@ -79,6 +80,35 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .Signatures
                 .Should()
                 .Contain(sigInfo => sigInfo.Label == "void Console.WriteLine()");
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "System.Environment.GetEnvironmentVariable($$", 0, "Retrieves the value of an environment variable from the current process")]
+        public async Task signature_help_can_return_doc_comments_from_bcl_types(Language language, string markupCode, int activeSignature, string expectedDocumentationSubstring)
+        {
+            using var kernel = CreateKernel(language);
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            await kernel.SendAsync(new RequestSignatureHelp(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<SignatureHelpProduced>()
+                .Which
+                .Signatures
+                .Should()
+                .HaveCountGreaterThan(activeSignature)
+                .And
+                .Subject
+                .LastOrDefault()
+                .Should()
+                .NotBeNull()
+                .And
+                .Subject
+                .As<SignatureInformation>()
+                .Documentation.Value
+                .Should()
+                .Contain(expectedDocumentationSubstring);
         }
 
         [Theory]

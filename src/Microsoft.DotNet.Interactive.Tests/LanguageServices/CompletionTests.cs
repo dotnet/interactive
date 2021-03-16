@@ -318,6 +318,24 @@ var y = x + 2;
         }
 
         [Theory]
+        [InlineData(Language.CSharp, "System.Environment.Command$$Line", "Gets the command line for this process.")]
+        public async Task completion_doc_comments_can_be_loaded_from_bcl_types(Language language, string markupCode, string expectedCompletionSubstring)
+        {
+            using var kernel = CreateKernel(language);
+
+            MarkupTestFile.GetLineAndColumn(markupCode, out var code, out var line, out var character);
+            await kernel.SendAsync(new RequestCompletions(code, new LinePosition(line, character)));
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CompletionsProduced>()
+                .Which
+                .Completions
+                .Should()
+                .ContainSingle(ci => ci.Documentation != null && ci.Documentation.Contains(expectedCompletionSubstring));
+        }
+
+        [Theory]
         [InlineData(Language.CSharp, "/// <summary>Adds two numbers.</summary>\nint Add(int a, int b) => a + b;", "Ad$$", "Adds two numbers.")]
         [InlineData(Language.FSharp, "/// Adds two numbers.\nlet add a b = a + b", "ad$$", "Adds two numbers.")]
         public async Task completion_doc_comments_can_be_loaded_from_source_in_a_previous_submission(Language language, string previousSubmission, string markupCode, string expectedCompletionSubString)
