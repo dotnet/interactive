@@ -156,9 +156,7 @@ namespace Microsoft.ML
     {
         public static void Explore(this IDataView source)
         {
-            KernelInvocationContext.Current.Display(
-                source.ToTabularJsonString(),
-                HtmlFormatter.MimeType);
+            source.ExploreWithNteract();
         }
 
         public static SandDanceDataExplorer ExploreWithSandDance(this IDataView source, bool immediateDisplay = true)
