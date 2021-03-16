@@ -962,6 +962,20 @@ let private buildFormatComment cmt (formatStyle : FormatCommentStyle) (typeDoc: 
     match cmt with
     | FSharpXmlDoc.FromXmlText doc ->
         try
+            // We create a "fake" XML document in order to use the same parser for both libraries and user code
+            let s =
+                let lines =
+                    seq {
+                        yield "<fake>"
+                        yield! doc.UnprocessedLines
+                        yield "</fake>"
+                    }
+                String.concat "" lines
+
+            let xml = sprintf "<fake>%s</fake>" s
+            let doc = XmlDocument()
+            doc.LoadXml(xml)
+
             // This try to mimic how we found the indentation size when working a real XML file
             let rec findIndentationSize (lines : string list) =
                 match lines with
@@ -974,14 +988,11 @@ let private buildFormatComment cmt (formatStyle : FormatCommentStyle) (typeDoc: 
                 | [] -> 0
 
             let indentationSize =
-                doc.GetElaboratedXmlLines()
+                s.Replace("\r\n", "\n").Split('\n')
                 |> Array.toList
                 |> findIndentationSize
 
-            let xmlDocument = XmlDocument()
-            xmlDocument.LoadXml(doc.GetXmlText())
-
-            let xmlDoc = XmlDocMember(xmlDocument, indentationSize, 0)
+            let xmlDoc = XmlDocMember(doc, indentationSize, 0)
 
             match formatStyle with
             | FormatCommentStyle.Legacy ->
