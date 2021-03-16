@@ -9,8 +9,8 @@ using System.CommandLine.Parsing;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab;
@@ -157,7 +157,10 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                 };
                                 var subsetResult = await _serviceClient.ExecuteQueryExecuteSubsetAsync(subsetParams);
                                 var tables = GetEnumerableTables(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
-                                context.Display(tables);
+                                foreach (var table in tables)
+                                {
+                                    table.ExploreWithNteract(invocationContext: context);
+                                }
                             }
                             else
                             {
@@ -199,9 +202,10 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             try
             {
                 await _serviceClient.ExecuteQueryStringAsync(_tempFileUri, command.Code);
-               
-                context.CancellationToken.Register(() => {
-                  
+
+                context.CancellationToken.Register(() =>
+                {
+
                     _serviceClient.CancelQueryExecutionAsync(_tempFileUri)
                         .Wait(TimeSpan.FromSeconds(10));
 
@@ -289,7 +293,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             context.Publish(new CompletionsProduced(completionItems, command));
         }
 
-        protected override ChooseKernelDirective CreateChooseKernelDirective() => 
+        protected override ChooseKernelDirective CreateChooseKernelDirective() =>
             new ChooseMsSqlKernelDirective(this);
 
         private class ChooseMsSqlKernelDirective : ChooseKernelDirective
@@ -299,7 +303,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 Add(MimeTypeOption);
             }
 
-            private Option<string> MimeTypeOption { get; } = new (
+            private Option<string> MimeTypeOption { get; } = new(
                 "--mime-type",
                 description: "Specify the MIME type to use for the data.",
                 getDefaultValue: () => HtmlFormatter.MimeType);

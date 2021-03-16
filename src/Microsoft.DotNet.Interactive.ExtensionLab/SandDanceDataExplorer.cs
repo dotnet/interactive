@@ -6,7 +6,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
-    public class SandDanceDataExplorer
+    public class SandDanceDataExplorer : ITabularDataResourceExplorer
     {
         public SandDanceDataExplorer(TabularDataResource source)
         {
