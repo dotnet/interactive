@@ -32,7 +32,8 @@ Please provide as much information as you can.
     - [ ] Jupyter Notebook
     - [ ] Jupyter Lab
     - [ ] nteract
-    - [ ] Visual Studio Code
+    - [ ] Visual Studio Code 
+    - [ ] Visual Studio Code Insiders
     - [ ] Other (please specify)
 
 ### Screenshots
