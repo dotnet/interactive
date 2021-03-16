@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -44,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ToTabularDataResourceJsonString().ToDisplayString(HtmlFormatter.MimeType);
+            var formatted = data.ExploreWithNteract().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("configureRequireFromExtension('nteract','1.0.0')(['nteract/nteractapi'], (nteract) => {");
         }
@@ -66,7 +67,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ToTabularDataResourceJsonString().ToDisplayString(HtmlFormatter.MimeType);
+            var formatted = data.ExploreWithNteract().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("configureRequireFromExtension");
         }
@@ -77,7 +78,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new NteractKernelExtension();
-            DataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
+            NteractDataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
             await kernelExtension.OnLoadAsync(kernel);
 
             var data = new[]
@@ -88,7 +89,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ToTabularDataResourceJsonString().ToDisplayString(HtmlFormatter.MimeType);
+            var formatted = data.ExploreWithNteract().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should()
                 .Contain("if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function)))")
@@ -102,7 +103,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new NteractKernelExtension();
-            DataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
+            NteractDataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
             await kernelExtension.OnLoadAsync(kernel);
 
             var data = new[]
@@ -113,7 +114,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ToTabularDataResourceJsonString().ToDisplayString(HtmlFormatter.MimeType);
+            var formatted = data.ExploreWithNteract().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("require.config(");
         }
@@ -124,7 +125,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new NteractKernelExtension();
-            DataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js", "2.2.2");
+            NteractDataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js", "2.2.2");
             await kernelExtension.OnLoadAsync(kernel);
 
             var data = new[]
@@ -135,7 +136,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ToTabularDataResourceJsonString().ToDisplayString(HtmlFormatter.MimeType);
+            var formatted = data.ExploreWithNteract().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("'context': '2.2.2'");
         }
@@ -146,7 +147,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new NteractKernelExtension();
-            DataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
+            NteractDataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
             await kernelExtension.OnLoadAsync(kernel);
 
             var data = new[]
@@ -157,7 +158,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ToTabularDataResourceJsonString().ToDisplayString(HtmlFormatter.MimeType);
+            var formatted = data.ExploreWithNteract().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("'https://a.cdn.url/script'");
         }
@@ -168,7 +169,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new NteractKernelExtension();
-            DataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
+            NteractDataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
             await kernelExtension.OnLoadAsync(kernel);
 
             var data = new[]
@@ -179,7 +180,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ToTabularDataResourceJsonString().ToDisplayString(HtmlFormatter.MimeType);
+            var formatted = data.ExploreWithNteract().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().NotContain("'https://a.cdn.url/script.js'");
         }
@@ -190,7 +191,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new NteractKernelExtension();
-            DataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js", cacheBuster: "XYZ");
+            NteractDataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js", cacheBuster: "XYZ");
             await kernelExtension.OnLoadAsync(kernel);
 
             var data = new[]
@@ -201,14 +202,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             };
 
 
-            var formatted = data.ToTabularDataResourceJsonString().ToDisplayString(HtmlFormatter.MimeType);
+            var formatted = data.ExploreWithNteract().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("'urlArgs': 'cacheBuster=XYZ'");
         }
 
         public void Dispose()
         {
-            DataExplorerExtensions.Settings.RestoreDefault();
+            NteractDataExplorerExtensions.Settings.RestoreDefault();
             Formatter.ResetToDefault();
         }
     }

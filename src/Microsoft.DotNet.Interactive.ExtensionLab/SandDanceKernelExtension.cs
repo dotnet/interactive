@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         public Task OnLoadAsync(Kernel kernel)
         {
             kernel.UseSandDanceExplorer();
-            kernel.RegisterForDisposal(() => DataExplorerExtensions.Settings.RestoreDefault());
+            kernel.RegisterForDisposal(() => NteractDataExplorerExtensions.Settings.RestoreDefault());
 
             KernelInvocationContext.Current?.Display(
                 new HtmlString($@"<details><summary>Explore data visually using the <a href=""https://github.com/microsoft/SandDance"">SandDance Explorer</a>.</summary>
@@ -53,14 +53,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
         public static void RegisterFormatters()
         {
-            Formatter.Register<DataExplorer>((explorer, writer) =>
+            Formatter.Register<SandDanceDataExplorer>((explorer, writer) =>
             {
                 var html = explorer.RenderSandDanceExplorer();
                 writer.Write(html);
             }, HtmlFormatter.MimeType);
         }
 
-        internal static HtmlString RenderSandDanceExplorer(this DataExplorer explorer)
+        internal static HtmlString RenderSandDanceExplorer(this SandDanceDataExplorer explorer)
         {
             var explorerId = explorer.Id;
             var data = explorer.TabularDataResource.ToJson();

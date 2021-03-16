@@ -15,6 +15,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             if (kernel is CompositeKernel compositeKernel)
             {
+                NteractDataExplorerExtensions.RegisterFormatters();
+
                 // this is a formatter for SQL data
                 Formatter.Register
                 <IEnumerable /* tables*/
@@ -24,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                     // TODO: (RegisterFormatters) do all the tables...
 
                     writer.Write(source.First()
-                                       .ToTabularDataResourceJsonString()
+                                       .ExploreWithNteract(immediateDisplay:false)
                                        .ToDisplayString(HtmlFormatter.MimeType));
                 }, HtmlFormatter.MimeType);
 

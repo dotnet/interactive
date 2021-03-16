@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.SqlServer
@@ -15,6 +16,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         {
             if (kernel is CompositeKernel compositeKernel)
             {
+                NteractDataExplorerExtensions.RegisterFormatters();
+
                 // this is a formatter for SQL data
                 Formatter.Register
                 <IEnumerable /* tables*/
@@ -24,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                     // TODO: (RegisterFormatters) do all the tables...
 
                     writer.Write(source.First()
-                                       .ToTabularDataResourceJsonString()
+                                       .ExploreWithNteract(immediateDisplay:false)
                                        .ToDisplayString(HtmlFormatter.MimeType));
                 }, HtmlFormatter.MimeType);
 
