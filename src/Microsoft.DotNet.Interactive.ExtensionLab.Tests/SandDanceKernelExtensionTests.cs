@@ -78,8 +78,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new SandDanceKernelExtension();
-            NteractDataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
             await kernelExtension.OnLoadAsync(kernel);
+            kernel.UseSandDanceExplorer("https://a.cdn.url/script.js");
 
             var data = new[]
             {
@@ -103,8 +103,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new SandDanceKernelExtension();
-            SandDanceExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
             await kernelExtension.OnLoadAsync(kernel);
+            kernel.UseSandDanceExplorer("https://a.cdn.url/script.js");
 
             var data = new[]
             {
@@ -125,8 +125,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new SandDanceKernelExtension();
-            SandDanceExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js", "2.2.2");
             await kernelExtension.OnLoadAsync(kernel);
+            kernel.UseSandDanceExplorer("https://a.cdn.url/script.js", "2.2.2");
 
             var data = new[]
             {
@@ -147,8 +147,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new SandDanceKernelExtension();
-            SandDanceExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
             await kernelExtension.OnLoadAsync(kernel);
+            kernel.UseSandDanceExplorer("https://a.cdn.url/script.js");
 
             var data = new[]
             {
@@ -169,8 +169,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new SandDanceKernelExtension();
-            SandDanceExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
             await kernelExtension.OnLoadAsync(kernel);
+            kernel.UseSandDanceExplorer("https://a.cdn.url/script.js");
 
             var data = new[]
             {
@@ -182,7 +182,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
 
-            formatted.Should().NotContain("'https://a.cdn.url/script.js'");
+            formatted.Should()
+                .Contain("'https://a.cdn.url/script'")
+                .And
+                .NotContain("'https://a.cdn.url/script.js'");
         }
 
         [Fact]
@@ -191,8 +194,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new SandDanceKernelExtension();
-            SandDanceExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js", cacheBuster: "XYZ");
             await kernelExtension.OnLoadAsync(kernel);
+            kernel.UseSandDanceExplorer("https://a.cdn.url/script.js", cacheBuster: "XYZ");
 
             var data = new[]
             {
@@ -209,7 +212,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
         public void Dispose()
         {
-            SandDanceExplorerExtensions.Settings.RestoreDefault();
             Formatter.ResetToDefault();
         }
     }

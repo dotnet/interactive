@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -19,7 +18,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
     {
         private async Task<CompositeKernel> CreateKernel()
         {
-            MsSqlKernelExtension.RegisterFormatters();
             var csharpKernel = new CSharpKernel().UseNugetDirective();
             await csharpKernel.SubmitCodeAsync(@$"
 #r ""nuget:microsoft.sqltoolsservice,3.0.0-release.53""
@@ -36,6 +34,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
             kernel.DefaultKernelName = csharpKernel.Name;
            
             kernel.UseKernelClientConnection(new MsSqlKernelConnection());
+            kernel.UseNteractDataExplorer();
+            kernel.UseSandDanceExplorer();
 
             return kernel;
         }

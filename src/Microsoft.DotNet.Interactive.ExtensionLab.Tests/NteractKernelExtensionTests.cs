@@ -78,9 +78,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new NteractKernelExtension();
-            NteractDataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
             await kernelExtension.OnLoadAsync(kernel);
-
+            kernel.UseNteractDataExplorer("https://a.cdn.url/script.js");
             var data = new[]
             {
                 new {Type="orange", Price=1.2},
@@ -103,8 +102,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new NteractKernelExtension();
-            NteractDataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
             await kernelExtension.OnLoadAsync(kernel);
+            kernel.UseNteractDataExplorer("https://a.cdn.url/script.js");
 
             var data = new[]
             {
@@ -125,9 +124,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new NteractKernelExtension();
-            NteractDataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js", "2.2.2");
             await kernelExtension.OnLoadAsync(kernel);
-
+            kernel.UseNteractDataExplorer("https://a.cdn.url/script.js", "2.2.2");
             var data = new[]
             {
                 new {Type="orange", Price=1.2},
@@ -147,8 +145,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new NteractKernelExtension();
-            NteractDataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
             await kernelExtension.OnLoadAsync(kernel);
+            kernel.UseNteractDataExplorer("https://a.cdn.url/script.js");
 
             var data = new[]
             {
@@ -169,8 +167,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new NteractKernelExtension();
-            NteractDataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js");
             await kernelExtension.OnLoadAsync(kernel);
+            kernel.UseNteractDataExplorer("https://a.cdn.url/script.js");
 
             var data = new[]
             {
@@ -182,7 +180,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var formatted = data.ExploreWithNteract().ToDisplayString(HtmlFormatter.MimeType);
 
-            formatted.Should().NotContain("'https://a.cdn.url/script.js'");
+            formatted.Should()
+                .Contain("'https://a.cdn.url/script'")
+                .And
+                .NotContain("'https://a.cdn.url/script.js'");
         }
 
         [Fact]
@@ -191,8 +192,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             using var kernel = new CompositeKernel();
 
             var kernelExtension = new NteractKernelExtension();
-            NteractDataExplorerExtensions.Settings.UseUri("https://a.cdn.url/script.js", cacheBuster: "XYZ");
             await kernelExtension.OnLoadAsync(kernel);
+            kernel.UseNteractDataExplorer("https://a.cdn.url/script.js", cacheBuster:"XYZ");
 
             var data = new[]
             {
@@ -209,7 +210,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
         public void Dispose()
         {
-            NteractDataExplorerExtensions.Settings.RestoreDefault();
             Formatter.ResetToDefault();
         }
     }

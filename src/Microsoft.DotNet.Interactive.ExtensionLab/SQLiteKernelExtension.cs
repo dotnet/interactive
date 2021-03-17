@@ -15,7 +15,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             if (kernel is CompositeKernel compositeKernel)
             {
-                RegisterFormatters();
+                kernel.UseNteractDataExplorer();
+                kernel.UseSandDanceExplorer();
 
                 compositeKernel
                     .UseKernelClientConnection(new SQLiteKernelConnection());
@@ -29,12 +30,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             }
 
             return Task.CompletedTask;
-        }
-
-        public static void RegisterFormatters()
-        {
-            NteractDataExplorerExtensions.RegisterFormatters();
-            SandDanceExplorerExtensions.RegisterFormatters();
         }
     }
 }

@@ -13,7 +13,8 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         {
             if (kernel is CompositeKernel compositeKernel)
             {
-                RegisterFormatters();
+                kernel.UseNteractDataExplorer();
+                kernel.UseSandDanceExplorer();
 
                 compositeKernel
                     .UseKernelClientConnection(new MsSqlKernelConnection());
@@ -26,12 +27,6 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             }
 
             return Task.CompletedTask;
-        }
-
-        public static void RegisterFormatters()
-        {
-            NteractDataExplorerExtensions.RegisterFormatters();
-            SandDanceExplorerExtensions.RegisterFormatters();
         }
     }
 }
