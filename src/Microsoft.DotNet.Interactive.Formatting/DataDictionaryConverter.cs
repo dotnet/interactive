@@ -4,9 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using Microsoft.DotNet.Interactive.Server;
 
-namespace Microsoft.DotNet.Interactive.Notebook
+namespace Microsoft.DotNet.Interactive.Formatting
 {
     public class DataDictionaryConverter : JsonConverter<Dictionary<string, object>>
     {
