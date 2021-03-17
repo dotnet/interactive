@@ -9,9 +9,9 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Html;
 using Microsoft.Data.Analysis;
-using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.ExtensionLab;
@@ -161,16 +161,12 @@ namespace Microsoft.ML
 
         public static SandDanceDataExplorer ExploreWithSandDance(this IDataView source)
         {
-            var explorer = new SandDanceDataExplorer(source.ToTabularDataResource());
-            KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
-            return explorer;
+            return source.ToTabularDataResource().ExploreWithSandDance();
         }
 
         public static NteractDataExplorer ExploreWithNteract(this IDataView source)
         {
-            var explorer = new NteractDataExplorer(source.ToTabularDataResource());
-            KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
-            return explorer;
+            return source.ToTabularDataResource().ExploreWithNteract();
         }
 
         private static T GetValue<T>(ValueGetter<T> valueGetter)
