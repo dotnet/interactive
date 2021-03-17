@@ -15,10 +15,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     {
         public Task OnLoadAsync(Kernel kernel)
         {
-            kernel.UseDataExplorer();
-
-            kernel.RegisterForDisposal(() => NteractDataExplorerExtensions.Settings.RestoreDefault());
-
+            kernel.UseNteractDataExplorer();
+            
             KernelInvocationContext.Current?.Display(
                 new HtmlString($@"<details><summary>Explore data visually using the <a href=""https://github.com/nteract/data-explorer"">nteract Data Explorer</a>.</summary>
     <p>This extension adds the ability to sort, filter, and visualize data using the <a href=""https://github.com/nteract/data-explorer"">nteract Data Explorer</a>. Use the <code>Explore</code> extension method with variables of type <code>IEnumerable<T></code> or <code>IDataView</code> to render the data explorer.</p>
@@ -34,38 +32,22 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
     public static class NteractDataExplorerExtensions
     {
-        public static DataExplorerSettings Settings { get; } = new();
-
-        public static T UseDataExplorer<T>(this T kernel) where T : Kernel
+        public static T UseNteractDataExplorer<T>(this T kernel, string uri = null, string context = null, string cacheBuster = null) where T : Kernel
         {
-            RegisterFormatters();
+            RegisterFormatters(string.IsNullOrWhiteSpace(uri) ? null : new Uri(uri), context, cacheBuster);
             return kernel;
         }
 
-        public static void RegisterFormatters()
+        private static void RegisterFormatters(Uri uri, string context, string cacheBuster)
         {
             Formatter.Register<NteractDataExplorer>((explorer, writer) =>
             {
-                var html = explorer.RenderDataExplorer();
+                var html = explorer.RenderDataExplorer(uri,context,cacheBuster);
                 writer.Write(html);
             }, HtmlFormatter.MimeType);
         }
 
-        private static HtmlString RenderDataExplorer(this TabularDataResourceJsonString data)
-        {
-            var divId = Guid.NewGuid().ToString("N");
-            var code = new StringBuilder();
-            code.AppendLine("<div style=\"background-color:white;\">");
-            code.AppendLine($"<div id=\"{divId}\" style=\"height: 100ch ;margin: 2px;\">");
-            code.AppendLine("</div>");
-            code.AppendLine(@"<script type=""text/javascript"">");
-            GenerateCode(data, code, divId, "https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js");
-            code.AppendLine(" </script>");
-            code.AppendLine("</div>");
-            return new HtmlString(code.ToString());
-        }
-
-        private static HtmlString RenderDataExplorer(this NteractDataExplorer explorer)
+        private static HtmlString RenderDataExplorer(this NteractDataExplorer explorer, Uri uri, string context, string cacheBuster)
         {
             var divId = explorer.Id;
             var data = explorer.TabularDataResource.ToJson();
@@ -74,16 +56,16 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             code.AppendLine($"<div id=\"{divId}\" style=\"height: 100ch ;margin: 2px;\">");
             code.AppendLine("</div>");
             code.AppendLine(@"<script type=""text/javascript"">");
-            GenerateCode(data, code, divId, "https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js");
+            GenerateCode(data, code, divId, "https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js", uri, context, cacheBuster);
             code.AppendLine(" </script>");
             code.AppendLine("</div>");
             return new HtmlString(code.ToString());
         }
 
-        private static void GenerateCode(TabularDataResourceJsonString data, StringBuilder code, string divId, string requireUri)
+        private static void GenerateCode(TabularDataResourceJsonString data, StringBuilder code, string divId, string requireUri, Uri uri, string context, string cacheBuster)
         {
             var functionName = $"renderDataExplorer_{divId}";
-            GenerateFunctionCode(data, code, divId, functionName);
+            GenerateFunctionCode(data, code, divId, functionName, uri, context, cacheBuster);
             GenerateRequireLoader(code, functionName, requireUri);
         }
 
@@ -92,15 +74,15 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             code.AppendLine(JavascriptUtilities.GetCodeForEnsureRequireJs(new Uri(requireUri), functionName));
         }
 
-        private static void GenerateFunctionCode(TabularDataResourceJsonString data, StringBuilder code, string divId, string functionName)
+        private static void GenerateFunctionCode(TabularDataResourceJsonString data, StringBuilder code, string divId, string functionName, Uri uri, string context, string cacheBuster)
         {
-            var context = Settings.Context ?? "1.0.0";
+            context ??= "1.0.0";
             code.AppendLine($@"
 let {functionName} = () => {{");
-            if (Settings.Uri != null)
+            if (uri != null)
             {
-                var absoluteUri = Settings.Uri.AbsoluteUri.Replace(".js", string.Empty);
-                var cacheBuster = Settings.CacheBuster ?? absoluteUri.GetHashCode().ToString("0");
+                var absoluteUri = uri.AbsoluteUri.Replace(".js", string.Empty);
+                cacheBuster ??= absoluteUri.GetHashCode().ToString("0");
                 code.AppendLine($@"
     (require.config({{ 'paths': {{ 'context': '{context}', 'nteractUri' : '{absoluteUri}', 'urlArgs': 'cacheBuster={cacheBuster}' }}}}) || require)(['nteractUri'], (nteract) => {{");
             }
