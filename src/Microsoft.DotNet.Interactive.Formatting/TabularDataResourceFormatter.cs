@@ -28,7 +28,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 Converters =
                 {
                     new TableSchemaFieldTypeConverter(),
-                    new TabularDataResourceConverter()
+                    new TabularDataResourceConverter(),
+                    new DataDictionaryConverter()
                 }
             };
         }
