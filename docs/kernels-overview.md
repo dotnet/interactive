@@ -34,7 +34,7 @@ You can see some additional examples of command and event interactions in the fo
 
 In the standard configuration, .NET Interactive uses multiple, nested kernels. These kernels share a common set of interfaces which allow them to be composed into different kinds of pipelines. This is the basis for supporting multiple languages, among other features. A user of a .NET Interactive notebook can specify the language for a code submission by prefixing a block of code with a [magic command](magic-commands.md) such as `#!csharp`, `#!fsharp`, or `#!pwsh`, or by using the language selector in the lower right corner of a Visual Studio Code notebook cell.
 
-<img src="https://user-images.githubusercontent.com/547415/82159474-276e6b00-9843-11ea-8ec0-f3f5bcee7547.png" width="40%">
+<img src="https://user-images.githubusercontent.com/547415/111684048-737f9880-87e3-11eb-9b02-67b4bf926bca.png" width="40%">
 
 The language-selection magic commands will even allow you to submit code for multiple languages in a single notebook cell. Once again, the submission will be split into several commands, just like in the `#!time` example above. Consider this submission:
 
