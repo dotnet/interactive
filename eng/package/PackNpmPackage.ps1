@@ -18,14 +18,15 @@ function Build-NpmPackage() {
     # pack
     Write-Host "Packing package"
     npm pack
-    Copy-Item -Path (Join-Path (Get-Location) "dotnet-interactive-$packageVersionNumber.tgz") -Destination $outDir
+    Copy-Item -Path (Join-Path (Get-Location) "microsoft-dotnet-interactive-$packageVersionNumber.tgz") -Destination $outDir
 }
 
 try {
     . "$PSScriptRoot\PackUtilities.ps1"
 
-    # create destination
+    # copy publish scripts
     EnsureCleanDirectory -location $outDir
+    Copy-Item -Path $PSScriptRoot\..\publish\* -Destination $outDir -Recurse
 
     Build-NpmPackage
 }
