@@ -1,15 +1,26 @@
-function EnsureSymlink([string] $sourceLocation, [string] $destinationLocation) {
-    if (Test-Path $sourceLocation) {
-        Remove-Item $sourceLocation
-    }
+function EnsureSymlink([string]$sourceDirectory, [string] $linkName, [string] $destinationLocation) {
+    Push-Location $sourceDirectory
 
-    New-Item -Path $sourceLocation -ItemType SymbolicLink -Value $destinationLocation
+    try {
+        if (Test-Path $linkName) {
+            Remove-Item $linkName
+        }
+
+        cmd /c mklink /D $linkName $destinationLocation
+        if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+        }
+    }
+    finally {
+        Pop-Location
+    }
 }
 
-EnsureSymlink -sourceLocation "$PSScriptRoot\dotnet-interactive-vscode\stable\src\common" -destinationLocation "$PSScriptRoot\dotnet-interactive-vscode\common"
-EnsureSymlink -sourceLocation "$PSScriptRoot\dotnet-interactive-vscode\stable\.vscode" -destinationLocation "$PSScriptRoot\dotnet-interactive-vscode\.vscode"
 
-EnsureSymlink -sourceLocation "$PSScriptRoot\dotnet-interactive-vscode\insiders\src\common" -destinationLocation "$PSScriptRoot\dotnet-interactive-vscode\common"
-EnsureSymlink -sourceLocation "$PSScriptRoot\dotnet-interactive-vscode\insiders\.vscode" -destinationLocation "$PSScriptRoot\dotnet-interactive-vscode\.vscode"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\stable\src" -linkName "common" -destinationLocation "..\..\common"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\stable" -linkName ".vscode" -destinationLocation "..\.vscode"
 
-EnsureSymlink -sourceLocation "$PSScriptRoot\dotnet-interactive-npm\src\common" -destinationLocation "$PSScriptRoot\dotnet-interactive-vscode\common"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\insiders\src" -linkName "common" -destinationLocation "..\..\common"
+EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-vscode\insiders" -linkName ".vscode" -destinationLocation "..\.vscode"
+
+EnsureSymlink -sourceDirectory "$PSScriptRoot\dotnet-interactive-npm\src" -linkName "common" -destinationLocation "..\..\dotnet-interactive-vscode\common"
