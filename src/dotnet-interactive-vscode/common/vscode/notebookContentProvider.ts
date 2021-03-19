@@ -72,6 +72,7 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
         return notebookData;
     }
 
+    // soon to be removed; already exists in kernel provider
     async resolveNotebook(document: vscode.NotebookDocument, webview: vscode.NotebookCommunication): Promise<void> {
         configureWebViewMessaging(webview, document.uri, this.clientMapper);
     }
