@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     _currentTopLevelOperation.Value = null;
                     _currentlyRunningOperation = null;
-                }
+;                }
             }
         }
 

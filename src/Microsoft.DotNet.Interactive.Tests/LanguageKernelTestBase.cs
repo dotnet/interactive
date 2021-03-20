@@ -24,7 +24,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    [LogTestNamesToPocketLogger]
+    [Pocket.For.Xunit.LogToPocketLogger(@"c:\temp\test.log")]
     public abstract class LanguageKernelTestBase : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();

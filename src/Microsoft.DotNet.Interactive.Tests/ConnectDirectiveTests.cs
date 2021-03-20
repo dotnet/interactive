@@ -8,12 +8,28 @@ using FluentAssertions;
 using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Pocket;
+using Pocket.For.Xunit;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    public class ConnectDirectiveTests
+    [LogToPocketLogger(@"c:\temp\test.log")]
+    public class ConnectDirectiveTests : IDisposable
     {
+        private readonly CompositeDisposable _disposables = new();
+
+        public ConnectDirectiveTests(ITestOutputHelper output)
+        {
+            _disposables.Add(output.SubscribeToPocketLogger());
+        }
+
+        public void Dispose()
+        {
+            _disposables.Dispose();
+        }
+
         [Fact]
         public void connect_command_is_not_available_by_default()
         {

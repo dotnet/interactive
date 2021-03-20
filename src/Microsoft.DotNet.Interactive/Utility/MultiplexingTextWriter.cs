@@ -5,12 +5,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Pocket;
-
+using static Pocket.Logger<Microsoft.DotNet.Interactive.Utility.MultiplexingTextWriter>;
 namespace Microsoft.DotNet.Interactive.Utility
 {
     public class MultiplexingTextWriter : TextWriter
@@ -20,9 +21,10 @@ namespace Microsoft.DotNet.Interactive.Utility
         private readonly Func<TextWriter> _createTextWriter;
         private readonly string _name;
 
-        private readonly ConcurrentDictionary<(int asyncContextId, string name), TextWriter> _writers = new();
+        private readonly ConcurrentDictionary<int, TextWriter> _writers = new();
 
         private readonly TextWriter _defaultWriter;
+        private bool _disposed = false;
 
         public MultiplexingTextWriter(
             string name,
@@ -41,32 +43,42 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         public IDisposable EnsureInitializedForCurrentAsyncContext()
         {
-            if (AsyncContext.TryEstablish(out var id))
-            {
-                if (_writers.TryGetValue((id, _name), out var writer))
-                {
-                    
-                }
+            AsyncContext.TryEstablish(out var id);
 
-                return Disposable.Create(() =>
-                {
-                    _writers.TryRemove((id, _name), out var writer);
-                    writer?.Dispose();
-                });
-            }
-            else
+            return Disposable.Create(() =>
             {
-                return Disposable.Empty;
-            }
+                var success = _writers.TryRemove(id, out var writer);
+
+                Log.Info("Removing {name} on asyncContextId {id}. Success: {success}", _name, id, success);
+
+                writer?.Dispose();
+            });
         }
 
-        private TextWriter GetCurrentWriter()
+        private TextWriter GetCurrentWriter(bool forWrite = true)
         {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException($"{nameof(MultiplexingTextWriter)} {_name} has been disposed.");
+            }
+
+            var readOrWrite = forWrite ? "write" : "read";
+
             if (AsyncContext.Id is { } asyncContextId)
             {
-                return _writers.GetOrAdd(
-                    (asyncContextId, _name),
-                    _ => _createTextWriter());
+                // FIX: (GetCurrentWriter) remove debuggy stuff
+
+                var writer = _writers.GetOrAdd(
+                    asyncContextId,
+                    _ =>
+                    {
+                        Log.Info("Adding writer {name} on {asyncContextId} for {readOrWrite}", _name,  asyncContextId, readOrWrite);
+                        return _createTextWriter();
+                    });
+
+                Log.Info("Retrieving {name} on {asyncContextId} for {readOrWrite}. Writers: {writers}.", _name, asyncContextId, readOrWrite, _writers);
+
+                return writer;
             }
 
             return _defaultWriter;
@@ -74,11 +86,12 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         public IObservable<string> GetObservable()
         {
-            if (GetCurrentWriter() is IObservable<string> observable)
+            if (GetCurrentWriter(false) is IObservable<string> observable)
             {
                 return observable;
             }
 
+            // FIX: (GetObservable) needed?
             if (_defaultWriter is IObservable<string> observable3)
             {
                 return observable3;
@@ -212,7 +225,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             return GetCurrentWriter().WriteAsync(buffer, index, count);
         }
 
-        public override Task WriteAsync(ReadOnlyMemory<char> buffer, CancellationToken cancellationToken = new CancellationToken())
+        public override Task WriteAsync(ReadOnlyMemory<char> buffer, CancellationToken cancellationToken = new())
         {
             return GetCurrentWriter().WriteAsync(buffer, cancellationToken);
         }
@@ -336,7 +349,10 @@ namespace Microsoft.DotNet.Interactive.Utility
         {
             if (disposing)
             {
-                foreach (var writer in _writers.Values)
+                _disposed = true;
+                var writers = _writers.Values.ToArray();
+                _writers.Clear();
+                foreach (var writer in writers)
                 {
                     writer.Dispose();
                 }
@@ -348,8 +364,10 @@ namespace Microsoft.DotNet.Interactive.Utility
         public override string ToString()
         {
             if (AsyncContext.Id is { } asyncContextId &&
-                _writers.TryGetValue((asyncContextId, _name), out var writer))
+                _writers.TryGetValue(asyncContextId, out var writer))
             {
+                Log.Info("ToString {name} on {asyncContextId}", _name, asyncContextId);
+
                 return writer.ToString();
             }
 

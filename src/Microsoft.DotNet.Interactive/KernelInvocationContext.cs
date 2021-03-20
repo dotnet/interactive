@@ -44,7 +44,6 @@ namespace Microsoft.DotNet.Interactive
                     c.Error.Subscribe(s => this.DisplayStandardError(s, command))
                 };
             }));
-           
         }
 
         public KernelCommand Command { get; }
@@ -55,15 +54,14 @@ namespace Microsoft.DotNet.Interactive
         {
             get
             {
-                try
-                {
-                    return _cancellationTokenSource.Token;
-                }
-                catch (ObjectDisposedException)
+                if (_cancellationTokenSource.IsCancellationRequested)
                 {
                     return new CancellationToken(true);
                 }
-
+                else
+                {
+                    return _cancellationTokenSource.Token;
+                }
             }
         }
 

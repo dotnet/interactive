@@ -2,10 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -101,7 +97,6 @@ namespace Microsoft.DotNet.Interactive.Tests
             var cancelCommand = new Cancel();
 
             var commandToRun = new SubmitCode("while(true){ await Task.Delay(10); }", targetKernelName:"csharp");
-            
            
             var commandToInterrupt =  kernel.SendAsync(commandToRun);
 
@@ -130,7 +125,8 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
 
             await kernel.SendAsync(cancelCommand);
 
-            await commandToInterrupt;
+            // FIX: (can_cancel_user_loop_using_CancellationToken) await
+            commandToInterrupt.Wait(15000);
 
             KernelEvents
                 .Should()

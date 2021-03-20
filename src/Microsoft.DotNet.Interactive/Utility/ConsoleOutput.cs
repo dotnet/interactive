@@ -3,25 +3,26 @@
 
 using System;
 using System.IO;
-using System.Reactive.Disposables;
-using System.Threading;
+using Pocket;
+using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
+using Disposable = System.Reactive.Disposables.Disposable;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
     internal class ConsoleOutput
     {
-        private static RefCountDisposable _refCount;
-        private static MultiplexingTextWriter _out;
-        private static MultiplexingTextWriter _error;
         private static readonly object _systemConsoleSwapLock = new();
 
-        private TextWriter _originalOutputWriter;
-        private TextWriter _originalErrorWriter;
+        private static MultiplexingTextWriter _multiplexingOutputWriter;
+        private static MultiplexingTextWriter _multiplexingErrorWriter;
+        private static TextWriter _originalOutputWriter;
+        private static TextWriter _originalErrorWriter;
 
-        private const int NOT_DISPOSED = 0;
-        private const int DISPOSED = 1;
+        private static int _refCount = 0;
 
-        private int _alreadyDisposed = NOT_DISPOSED;
+        private static readonly Logger Log = new(nameof(ConsoleOutput));
+
+        private static OperationLogger _operationLogger;
 
         private ConsoleOutput()
         {
@@ -31,81 +32,44 @@ namespace Microsoft.DotNet.Interactive.Utility
         {
             lock (_systemConsoleSwapLock)
             {
-                if (_refCount is null || _refCount.IsDisposed)
+                if (++_refCount == 1)
                 {
-                    var console = new ConsoleOutput
-                    {
-                        _originalOutputWriter = Console.Out,
-                        _originalErrorWriter = Console.Error
-                    };
-
-                    _out = new MultiplexingTextWriter(name: "out");
-                    _error = new MultiplexingTextWriter(name: "error");
-
-                    Console.SetOut(_out);
-                    Console.SetError(_error);
-
-                    _refCount = new RefCountDisposable(Disposable.Create(() =>
-                    {
-                        _out = null;
-                        _error = null;
-                        _refCount = null;
-
-                        console.RestoreSystemConsole();
-                    }));
-                }
-
-                var writerForCurrentContext = EnsureInitializedForCurrentAsyncContext();
-
-                var observableConsole = new ObservableConsole(
-                    @out: _out.GetObservable(),
-                    error: _error.GetObservable());
-                
-                return new CompositeDisposable
-                {
-                    _refCount,
-                    _refCount.GetDisposable(),
-                    subscribe(observableConsole),
-                    writerForCurrentContext
-                };
-
-                IDisposable EnsureInitializedForCurrentAsyncContext() =>
-                    new CompositeDisposable
-                    {
-                        _out.EnsureInitializedForCurrentAsyncContext(),
-                        _error.EnsureInitializedForCurrentAsyncContext()
-                    };
-            }
-        }
-
-        private void RestoreSystemConsole()
-        {
-            if (Interlocked.CompareExchange(ref _alreadyDisposed, DISPOSED, NOT_DISPOSED) == NOT_DISPOSED)
-            {
-                if (_originalOutputWriter != null)
-                {
-                    Console.SetOut(_originalOutputWriter);
-                }
-
-                if (_originalErrorWriter != null)
-                {
-                    Console.SetError(_originalErrorWriter);
+                    _operationLogger = Log.OnEnterAndExit(
+                        $"Console swap on AsyncContext.Id {AsyncContext.Id?.ToString() ?? "none"}",
+                        exitArgs: () => new[] { ("AsyncContext.Id", (object) AsyncContext.Id) });
+                    _originalOutputWriter = Console.Out;
+                    _originalErrorWriter = Console.Error;
+                    _multiplexingOutputWriter = new MultiplexingTextWriter("out");
+                    _multiplexingErrorWriter = new MultiplexingTextWriter("err");
+                    Console.SetOut(_multiplexingOutputWriter);
+                    Console.SetError(_multiplexingErrorWriter);
                 }
             }
+
+            _multiplexingOutputWriter.EnsureInitializedForCurrentAsyncContext();
+            _multiplexingErrorWriter.EnsureInitializedForCurrentAsyncContext();
+
+            var obsConsole = new ObservableConsole(
+                _multiplexingOutputWriter.GetObservable(),
+                _multiplexingErrorWriter.GetObservable());
+
+            return new CompositeDisposable(
+                subscribe(obsConsole),
+                Disposable.Create(() =>
+                {
+                    lock (_systemConsoleSwapLock)
+                    {
+                        if (--_refCount == 0)
+                        {
+                            Console.SetOut(_originalOutputWriter);
+                            Console.SetError(_originalErrorWriter);
+                        }
+                    }
+                }));
         }
 
-        internal class ObservableConsole
-        {
-            public ObservableConsole(
-                IObservable<string> @out,
-                IObservable<string> error)
-            {
-                Out = @out;
-                Error = error;
-            }
-
-            public IObservable<string> Out { get; }
-            public IObservable<string> Error { get; }
-        }
+        internal record ObservableConsole(
+            IObservable<string> Out,
+            IObservable<string> Error);
     }
 }

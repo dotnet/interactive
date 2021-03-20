@@ -10,13 +10,28 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
+using Pocket;
 using Xunit;
+using Xunit.Abstractions;
 using static System.Environment;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
-    public class MultiplexingTextWriterTests
+    [Pocket.For.Xunit.LogToPocketLogger(@"c:\temp\test.log")]
+    public class MultiplexingTextWriterTests : IDisposable
     {
+        private readonly CompositeDisposable _disposables = new();
+
+        public MultiplexingTextWriterTests(ITestOutputHelper output)
+        {
+            _disposables.Add(output.SubscribeToPocketLogger());
+        }
+
+        public void Dispose()
+        {
+            _disposables.Dispose();
+        }
+
         [Fact]
         public async Task It_writes_parallel_console_writes_to_separate_buffers()
         {

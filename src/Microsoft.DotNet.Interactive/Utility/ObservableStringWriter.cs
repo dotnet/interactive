@@ -359,10 +359,18 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         public IDisposable Subscribe(IObserver<string> observer)
         {
-            Interlocked.Increment(ref _observerCount);
+            var count = Interlocked.Increment(ref _observerCount);
+
+            var op = _logger.OnEnterAndExit("ObservableStringWriter subscription");
+            
             return new CompositeDisposable
             {
-                Disposable.Create(() => Interlocked.Decrement(ref _observerCount)),
+                Disposable.Create(() =>
+                {
+                    count = Interlocked.Decrement(ref _observerCount);
+
+                    op.Dispose();
+                }),
                 _writeEvents.Subscribe(observer)
             };
         }
