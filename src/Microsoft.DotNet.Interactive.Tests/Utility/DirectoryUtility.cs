@@ -61,9 +61,10 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
         public static string GetPathToSrcDirectory()
         {
-            string pathAssembly = System.Reflection.Assembly.GetExecutingAssembly().Location;            
-            string folderAssembly = Path.GetDirectoryName(pathAssembly);            
-            return Path.GetFullPath(folderAssembly + @"..\..\..\..\..\..\src");            
+            string pathAssembly = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            string folderAssembly = Path.GetDirectoryName(pathAssembly);
+            var ps = Path.DirectorySeparatorChar;
+            return Path.GetFullPath(folderAssembly + $"..{ps}..{ps}..{ps}..{ps}..{ps}..{ps}src");            
         }      
     }
 }

@@ -164,7 +164,7 @@ json"
         public async Task it_can_load_script_files_using_load_directive_with_relative_path(Language language, bool changeWorkingDirectory)
         {
             var srcDir = DirectoryUtility.GetPathToSrcDirectory();
-            var pathToScripts = Path.Combine(srcDir, @"Microsoft.DotNet.Interactive.Tests\");
+            var pathToScripts = Path.Combine(srcDir, @"Microsoft.DotNet.Interactive.Tests"+Path.DirectorySeparatorChar);
 
             var workingDirectory = Directory.GetCurrentDirectory();
             DisposeAfterTest(() => Directory.SetCurrentDirectory(workingDirectory));
