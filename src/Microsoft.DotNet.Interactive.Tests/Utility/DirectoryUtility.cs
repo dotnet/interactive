@@ -58,5 +58,12 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
                     t.content);
             }
         }
+
+        public static string GetPathToSrcDirectory()
+        {
+            string pathAssembly = System.Reflection.Assembly.GetExecutingAssembly().Location;            
+            string folderAssembly = Path.GetDirectoryName(pathAssembly);            
+            return Path.GetFullPath(folderAssembly + @"..\..\..\..\..\..\src");            
+        }      
     }
 }

@@ -53,6 +53,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         internal ScriptOptions ScriptOptions =
             ScriptOptions.Default
                          .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(Directory.GetCurrentDirectory()))
+                         .WithSourceResolver(new SourceFileResolver(ImmutableArray<string>.Empty, Directory.GetCurrentDirectory()))
                          .WithLanguageVersion(LanguageVersion.Latest)
                          .AddImports(
                              "System",
@@ -315,9 +316,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
             if (_currentDirectory != currentDirectory)
             {
                 _currentDirectory = currentDirectory;
-                ScriptOptions = ScriptOptions.WithMetadataResolver(
-                    CachingMetadataResolver.Default.WithBaseDirectory(
-                        _currentDirectory));
+                ScriptOptions = ScriptOptions
+                    .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(_currentDirectory))
+                    .WithSourceResolver(new SourceFileResolver(ImmutableArray<string>.Empty, _currentDirectory));
             }
 
             if (ScriptState is null)

@@ -158,6 +158,45 @@ json"
         }
 
         [Theory]
+        [InlineData(Language.CSharp, false)]
+        [InlineData(Language.FSharp, false)]
+        [InlineData(Language.CSharp, true)]
+        public async Task it_can_load_script_files_using_load_directive_with_relative_path(Language language, bool changeWorkingDirectory)
+        {
+            var srcDir = DirectoryUtility.GetPathToSrcDirectory();
+            var pathToScripts = Path.Combine(srcDir, @"Microsoft.DotNet.Interactive.Tests\");
+
+            var workingDirectory = Directory.GetCurrentDirectory();
+            DisposeAfterTest(() => Directory.SetCurrentDirectory(workingDirectory));
+
+            var kernel = CreateKernel(language);
+
+            if (changeWorkingDirectory)
+            {
+                await kernel.SendAsync(new SubmitCode("System.IO.Directory.SetCurrentDirectory(\"..\")"));
+            }
+
+            await kernel.SendAsync(new SubmitCode("Environment.CurrentDirectory"));
+
+            var currentDirectoryName = new DirectoryInfo(Directory.GetCurrentDirectory()).Name;
+            var relativeScriptPath = Path.GetRelativePath(
+                Directory.GetCurrentDirectory(),
+                pathToScripts);     
+
+            var code = language switch
+            {
+                Language.CSharp => $"#load \"{relativeScriptPath}RelativeLoadingSample.csx\"",
+                Language.FSharp => $"#load \"{relativeScriptPath}RelativeLoadingSample.fsx\""
+            };
+
+            var command = new SubmitCode(code);
+            await kernel.SendAsync(command);
+
+            KernelEvents.Should()
+                        .ContainSingle<CommandSucceeded>(c => c.Command == command);
+        }
+
+        [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         public async Task it_returns_completion_list_for_types_imported_at_runtime(Language language)
