@@ -162,10 +162,7 @@ json"
         [InlineData(Language.FSharp, false)]
         [InlineData(Language.CSharp, true)]
         public async Task it_can_load_script_files_using_load_directive_with_relative_path(Language language, bool changeWorkingDirectory)
-        {
-            var srcDir = DirectoryUtility.GetPathToSrcDirectory();
-            var pathToScripts = Path.Combine(srcDir, @"Microsoft.DotNet.Interactive.Tests");
-            
+        {            
             var workingDirectory = Directory.GetCurrentDirectory();
             DisposeAfterTest(() => Directory.SetCurrentDirectory(workingDirectory));
 
@@ -181,7 +178,7 @@ json"
             var currentDirectoryName = new DirectoryInfo(Directory.GetCurrentDirectory()).Name;
             var relativeScriptPath = Path.GetRelativePath(
                 Directory.GetCurrentDirectory(),
-                pathToScripts);     
+                workingDirectory);
 
             var code = language switch
             {
