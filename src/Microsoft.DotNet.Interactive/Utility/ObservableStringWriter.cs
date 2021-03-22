@@ -22,7 +22,8 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         private readonly Subject<string> _writeEvents = new Subject<string>();
         private readonly List<Region> _regions = new List<Region>();
-        private bool _trackingWriteOperation;
+        //private bool _trackingWriteOperation;
+        private int _trackingWriteOperationInt;
         private int _observerCount;
 
         private readonly CompositeDisposable _disposable;
@@ -60,13 +61,14 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         private void TrackWriteOperation(Action action)
         {
-            if (_trackingWriteOperation)
+            var wasTracking = Interlocked.CompareExchange(ref _trackingWriteOperationInt, 1, 1);
+            if (wasTracking == 1)
             {
                 action();
                 return;
             }
 
-            _trackingWriteOperation = true;
+            //_trackingWriteOperation = true;
             var sb = base.GetStringBuilder();
 
             var region = new Region
@@ -79,19 +81,21 @@ namespace Microsoft.DotNet.Interactive.Utility
             action();
 
             region.Length = sb.Length - region.Start;
-            _trackingWriteOperation = false;
+            _trackingWriteOperationInt = 0;
+            //_trackingWriteOperation = false;
             PublishStringIfObserved(sb, region);
         }
 
         private async Task TrackWriteOperationAsync(Func<Task> action)
         {
-            if (_trackingWriteOperation)
+            var wasTracking = Interlocked.CompareExchange(ref _trackingWriteOperationInt, 1, 1);
+            if (wasTracking == 1)
             {
                 await action();
                 return;
             }
 
-            _trackingWriteOperation = true;
+            //_trackingWriteOperation = true;
             var sb = base.GetStringBuilder();
 
             var region = new Region
@@ -105,7 +109,8 @@ namespace Microsoft.DotNet.Interactive.Utility
 
             region.Length = sb.Length - region.Start;
 
-            _trackingWriteOperation = false;
+            _trackingWriteOperationInt = 0;
+            //_trackingWriteOperation = false;
 
             PublishStringIfObserved(sb, region);
         }

@@ -10,25 +10,29 @@ namespace Microsoft.DotNet.Interactive.Utility
         private static int _seed = 0;
 
         private static readonly AsyncLocal<int?> _id = new();
+        private static object _gate = new object();
 
         public static int? Id
         {
             get => _id.Value;
-            set => _id.Value = value;
+            private set => _id.Value = value;
         }
 
         public static bool TryEstablish(out int id)
         {
-            if (_id.Value is { } value)
+            lock (_gate)
             {
-                id = _id.Value.Value;
-                return false;
-            }
-            else
-            {
-                _id.Value = Interlocked.Increment(ref _seed);
-                id = _id.Value.Value;
-                return true;
+                if (_id.Value is { } value)
+                {
+                    id = _id.Value.Value;
+                    return false;
+                }
+                else
+                {
+                    _id.Value = Interlocked.Increment(ref _seed);
+                    id = _id.Value.Value;
+                    return true;
+                }
             }
         }
     }
