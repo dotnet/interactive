@@ -65,7 +65,8 @@ namespace Microsoft.DotNet.Interactive.Utility
                             Console.SetError(_originalErrorWriter);
                         }
                     }
-                }));
+                }),
+                _operationLogger);
         }
 
         internal record ObservableConsole(
