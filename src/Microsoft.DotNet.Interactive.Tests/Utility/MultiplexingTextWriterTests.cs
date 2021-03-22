@@ -87,39 +87,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
                   .Should()
                   .BeFalse();
         }
-
-        [Fact]
-        public void Disposal_of_outer_context_disposes_writer()
-        {
-            var innerWriter = new TestWriter();
-            using var writer = new MultiplexingTextWriter("out", () => innerWriter);
-            using var outer = writer.EnsureInitializedForCurrentAsyncContext();
-            writer.Write("outer");
-            var inner = writer.EnsureInitializedForCurrentAsyncContext();
-            writer.Write(inner);
-
-            outer.Dispose();
-
-            writer.Writers.Count().Should().Be(0);
-            innerWriter.Disposed.Should().BeTrue();
-        }
-
-        [Fact]
-        public void Disposal_of_inner_contexts_doe_not_dispose_writer()
-        {
-            var innerWriter = new TestWriter();
-            using var writer = new MultiplexingTextWriter("out", () => innerWriter);
-            using var outer = writer.EnsureInitializedForCurrentAsyncContext();
-            writer.Write("outer");
-            var inner = writer.EnsureInitializedForCurrentAsyncContext();
-            writer.Write(inner);
-            
-            inner.Dispose();
-
-            writer.Writers.Count().Should().Be(1); 
-            innerWriter.Disposed.Should().BeFalse();
-        }
-
+        
         [Theory]
         [MemberData(nameof(WriteOperations))]
         public void Write_operations_on_MultiplexingStringWriter_are_observable_and_produce_one_event_per_top_level_write_invocation(
