@@ -164,8 +164,8 @@ json"
         public async Task it_can_load_script_files_using_load_directive_with_relative_path(Language language, bool changeWorkingDirectory)
         {
             var srcDir = DirectoryUtility.GetPathToSrcDirectory();
-            var pathToScripts = Path.Combine(srcDir, @"Microsoft.DotNet.Interactive.Tests"+Path.DirectorySeparatorChar);
-
+            var pathToScripts = Path.Combine(srcDir, @"Microsoft.DotNet.Interactive.Tests");
+            
             var workingDirectory = Directory.GetCurrentDirectory();
             DisposeAfterTest(() => Directory.SetCurrentDirectory(workingDirectory));
 
@@ -185,8 +185,8 @@ json"
 
             var code = language switch
             {
-                Language.CSharp => $"#load \"{relativeScriptPath}RelativeLoadingSample.csx\"",
-                Language.FSharp => $"#load \"{relativeScriptPath}RelativeLoadingSample.fsx\""
+                Language.CSharp => $"#load \"{relativeScriptPath}/RelativeLoadingSample.csx\"",
+                Language.FSharp => $"#load \"{relativeScriptPath}/RelativeLoadingSample.fsx\""
             };
 
             var command = new SubmitCode(code);
