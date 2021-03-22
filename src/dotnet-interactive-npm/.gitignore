@@ -1,4 +1,4 @@
 dist/
 node_modules/
 
-dotnet-interactive-*.tgz
+microsoft-dotnet-interactive-*.tgz

@@ -395,3 +395,15 @@ stages:
       enableSymbolValidation: false
       # SourceLink improperly looks for generated files.  See https://github.com/dotnet/arcade/issues/3069
       enableSourceLinkValidation: false
+
+#---------------------------------------------------------------------------------------------------------------------#
+#                                                    NPM Publish                                                      #
+#---------------------------------------------------------------------------------------------------------------------#
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  - template: eng/publish/publish-npm.yml
+    parameters:
+      packageName: microsoft-dotnet-interactive-*.tgz
+      registryUrl: pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/npm/registry/
+      registryUser: dnceng
+      registryEmail: dnceng@microsoft.com
+      publishingBranch: main
