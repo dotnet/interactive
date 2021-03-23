@@ -38,8 +38,17 @@ export async function executeCell(document: vscode.NotebookDocument, cell: vscod
             executionTask.start({
                 startTime,
             });
+            setCellLockState(cell, true);
             executionTask.clearOutput(cell.index);
             const client = await clientMapper.getOrAddClient(document.uri);
+            executionTask.token.onCancellationRequested(() => {
+                const errorOutput = utilities.createErrorOutput("Cell execution cancelled by user");
+                const resultPromise = () => updateCellOutputs(executionTask, cell, [...cell.outputs, errorOutput])
+                    .then(() => endExecution(cell, false, Date.now() - startTime));
+                client.cancel()
+                    .then(resultPromise)
+                    .catch(resultPromise);
+            });
             const source = cell.document.getText();
             function outputObserver(outputs: Array<vscodeLike.NotebookCellOutput>) {
                 updateCellOutputs(executionTask!, cell, outputs).then(() => { });
@@ -67,6 +76,7 @@ export async function executeCell(document: vscode.NotebookDocument, cell: vscod
 }
 
 function endExecution(cell: vscode.NotebookCell, success: boolean, duration?: number) {
+    setCellLockState(cell, false);
     const executionTask = executionTasks.get(cell.document.uri);
     if (executionTask) {
         executionTasks.delete(cell.document.uri);
@@ -75,6 +85,12 @@ function endExecution(cell: vscode.NotebookCell, success: boolean, duration?: nu
             duration,
         });
     }
+}
+
+function setCellLockState(cell: vscode.NotebookCell, locked: boolean) {
+    const edit = new vscode.WorkspaceEdit();
+    edit.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, cell.metadata.with({ editable: !locked }));
+    return vscode.workspace.applyEdit(edit);
 }
 
 export async function cancelCellExecution(document: vscode.NotebookDocument, cell: vscode.NotebookCell, clientMapper: ClientMapper): Promise<void> {
