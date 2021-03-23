@@ -8,9 +8,10 @@ import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces'
 import { ClientMapper } from '../clientMapper';
 import { getEol, isUnsavedNotebook } from './vscodeUtilities';
 import { toNotebookDocument } from './notebookContentProvider';
-import { KernelId, updateCellMetadata } from './notebookKernel';
+import { KernelId } from './notebookKernel';
 import { DotNetPathManager } from './extension';
 import { computeToolInstallArguments, executeSafe, executeSafeAndLog } from '../utilities';
+import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 
 import * as jupyter from './jupyter';
 import { ReportChannel } from '../interfaces/vscode-like';
@@ -108,10 +109,9 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
         }
 
         if (document) {
-            const d = document;
-            document.cells.forEach(async cell => {
-                await updateCellMetadata(d, cell, { runState: vscode.NotebookCellRunState.Idle });
-            });
+            for (const cell of document.cells) {
+                await versionSpecificFunctions.markCellIdle(document, cell);
+            }
 
             clientMapper.closeClient(document.uri);
         }

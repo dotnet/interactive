@@ -3,17 +3,11 @@
 
 import * as vscode from 'vscode';
 
-import { toVsCodeDiagnostic } from "./vscodeUtilities";
 import { ClientMapper } from "../clientMapper";
-import { getDiagnosticCollection } from './diagnostics';
-import { getSimpleLanguage, notebookCellLanguages } from "../interactiveNotebook";
-import { Diagnostic, DiagnosticSeverity } from '../interfaces/contracts';
+import { notebookCellLanguages } from "../interactiveNotebook";
 import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, withDotNetKernelMetadata } from '../ipynbUtilities';
-import { generateVsCodeNotebookCellOutputItem } from './notebookContentProvider';
 
 import * as versionSpecificFunctions from '../../versionSpecificFunctions';
-import * as vscodeLike from '../interfaces/vscode-like';
-import { createErrorOutput } from '../utilities';
 
 export const KernelId: string = 'dotnet-interactive';
 
@@ -33,95 +27,39 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
         this.supportedLanguages = notebookCellLanguages;
     }
 
+    /////////////////////////////////////////////////////////////////////////// required for stable
+
     async executeAllCells(document: vscode.NotebookDocument): Promise<void> {
-        for (let cell of document.cells) {
-            await this.executeCell(document, cell);
+        for (const cell of document.cells) {
+            await versionSpecificFunctions.executeCell(document, cell, this.clientMapper);
         }
     }
 
     async executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell): Promise<void> {
-        const startTime = Date.now();
-        try {
-            await updateCellMetadata(document, cell, {
-                runStartTime: startTime,
-                runState: vscode.NotebookCellRunState.Running,
-            });
-            await updateCellOutputs(document, cell, []);
-            let client = await this.clientMapper.getOrAddClient(document.uri);
-            let source = cell.document.getText();
-            function outputObserver(outputs: Array<vscodeLike.NotebookCellOutput>) {
-                updateCellOutputs(document, cell, outputs).then(() => { });
-            }
-
-            let diagnosticCollection = getDiagnosticCollection(cell.document.uri);
-
-            function diagnosticObserver(diags: Array<Diagnostic>) {
-                diagnosticCollection.set(cell.document.uri, diags.filter(d => d.severity !== DiagnosticSeverity.Hidden).map(toVsCodeDiagnostic));
-            }
-
-            return client.execute(source, getSimpleLanguage(cell.document.languageId), outputObserver, diagnosticObserver, { id: document.uri.toString() }).then(() => {
-                return updateCellMetadata(document, cell, {
-                    runState: vscode.NotebookCellRunState.Success,
-                    lastRunDuration: Date.now() - startTime,
-                });
-            }).catch(() => setCellErrorState(document, cell, startTime)).then(() => {
-                return updateCellLanguages(document);
-            });
-        } catch (err) {
-            const errorOutput = createErrorOutput(`Error executing cell: ${err}`);
-            await updateCellOutputs(document, cell, [errorOutput]);
-            await setCellErrorState(document, cell, startTime);
-            throw err;
-        }
+        return versionSpecificFunctions.executeCell(document, cell, this.clientMapper);
     }
 
     cancelCellExecution(document: vscode.NotebookDocument, cell: vscode.NotebookCell): Promise<void> {
-        const startTime = cell.metadata.runStartTime || Date.now();
-        return this.clientMapper.getOrAddClient(document.uri).then(client => {
-            const errorOutput = createErrorOutput("Cell execution cancelled by user");
-            const resultPromise = () => updateCellOutputs(document, cell, [...cell.outputs, errorOutput])
-                .then(() => setCellErrorState(document, cell, startTime));
-            client.cancel()
-                .then(resultPromise)
-                .catch(resultPromise);
-        }).catch((err) => {
-            const errorOutput = createErrorOutput(`Error cancelling cell: ${err}`);
-            return updateCellOutputs(document, cell, [errorOutput]).then(() =>
-                setCellErrorState(document, cell, startTime));
-        });
+        return versionSpecificFunctions.cancelCellExecution(document, cell, this.clientMapper);
     }
 
     cancelAllCellsExecution(document: vscode.NotebookDocument): void {
         // not supported
     }
-}
 
-function setCellErrorState(document: vscode.NotebookDocument, cell: vscode.NotebookCell, startTime: number): Promise<void> {
-    return updateCellMetadata(document, cell, {
-        runState: vscode.NotebookCellRunState.Error,
-        lastRunDuration: Date.now() - startTime,
-    });
-}
+    ///////////////////////////////////////////////////////////////////////// required for insiders
 
-export async function updateCellMetadata(document: vscode.NotebookDocument, cell: vscode.NotebookCell, metadata: vscodeLike.NotebookCellMetadata): Promise<void> {
-    const cellIndex = document.cells.findIndex(c => c === cell);
-    if (cellIndex >= 0) {
-        const cell = document.cells[cellIndex];
-        const newMetadata = cell.metadata.with(metadata);
-        const edit = new vscode.WorkspaceEdit();
-        edit.replaceNotebookCellMetadata(document.uri, cellIndex, newMetadata);
-        await vscode.workspace.applyEdit(edit);
+    async executeCellsRequest(document: vscode.NotebookDocument, ranges: vscode.NotebookCellRange[]): Promise<void> {
+        for (const range of ranges) {
+            for (let cellIndex = range.start; cellIndex < range.end; cellIndex++) {
+                const cell = document.cells[cellIndex];
+                await versionSpecificFunctions.executeCell(document, cell, this.clientMapper);
+            }
+        }
     }
-}
 
-export async function updateCellOutputs(document: vscode.NotebookDocument, cell: vscode.NotebookCell, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
-    const cellIndex = document.cells.findIndex(c => c === cell);
-    if (cellIndex >= 0) {
-        const edit = new vscode.WorkspaceEdit();
-        edit.replaceNotebookCellOutput(document.uri, cellIndex, outputs.map(o => {
-            return new vscode.NotebookCellOutput(o.outputs.map(oi => generateVsCodeNotebookCellOutputItem(oi.mime, oi.value)));
-        }));
-        await vscode.workspace.applyEdit(edit);
+    interrupt(document: vscode.NotebookDocument) {
+        // not supported
     }
 }
 
