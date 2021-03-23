@@ -179,15 +179,14 @@ export function deactivate() {
 async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocument: vscode.TextDocument) {
     const notebook = candidateNotebookCellDocument.notebook;
     if (notebook && isDotnetInteractiveLanguage(candidateNotebookCellDocument.languageId)) {
-        const cellIndex = notebook.cells.findIndex(c => c.document === candidateNotebookCellDocument);
-        if (cellIndex >= 0) {
-            const cell = notebook.cells[cellIndex];
+        const cell = notebook.cells.find(c => c.document === candidateNotebookCellDocument);
+        if (cell) {
             const edit = new vscode.WorkspaceEdit();
             const cellMetadata: DotNetCellMetadata = {
                 language: getSimpleLanguage(candidateNotebookCellDocument.languageId),
             };
             const metadata = withDotNetMetadata(cell.metadata, cellMetadata);
-            edit.replaceNotebookCellMetadata(candidateNotebookCellDocument.uri, cellIndex, metadata);
+            edit.replaceNotebookCellMetadata(candidateNotebookCellDocument.uri, cell.index, metadata);
             await vscode.workspace.applyEdit(edit);
         }
     }
