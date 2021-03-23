@@ -20,8 +20,8 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         private readonly Func<TextWriter> _createTextWriter;
         private readonly string _name;
-
-        private readonly ConcurrentDictionary<int, TextWriter> _writers = new();
+        private readonly object _lockObj = new();
+        private readonly ConcurrentDictionary<int, (int refCount, TextWriter writer)> _writers = new();
 
         private readonly TextWriter _defaultWriter;
         private bool _disposed = false;
@@ -47,11 +47,32 @@ namespace Microsoft.DotNet.Interactive.Utility
 
             return Disposable.Create(() =>
             {
-                var success = _writers.TryRemove(id, out var writer);
+                // FIX: (EnsureInitializedForCurrentAsyncContext) ref count?
+                lock (_lockObj)
+                {
+                    var success = _writers.TryGetValue(id, out var writer);
 
-                Log.Info("Removing {name} on asyncContextId {id}. Success: {success}", _name, id, success);
-
-                writer?.Dispose();
+                    if (success)
+                    {
+                        if (writer.refCount == 1)
+                        {
+                            Log.Info($"Disposing {{name}}:{GetHashCode()} on asyncContextId {{id}}.", _name, id, success);
+                            writer.writer.Dispose();
+                            _writers.TryRemove(id, out _);
+                        }
+                        else
+                        {
+                            Log.Info($"Reducing ref count for {{name}}:{GetHashCode()} on asyncContextId {{id}} to {{refcount}}.", _name, id, success, writer.refCount);
+                            _writers[id] = (writer.refCount - 1, writer.writer);
+                        }
+                    }
+                    else
+                    {
+                        Log.Error(
+                            message: $"Couldn't find {{name}}:{GetHashCode()} on asyncContextId {{id}}", 
+                            args: new object[]{_name, id});
+                    }
+                }
             });
         }
 
@@ -62,23 +83,38 @@ namespace Microsoft.DotNet.Interactive.Utility
                 throw new ObjectDisposedException($"{nameof(MultiplexingTextWriter)} {_name} has been disposed.");
             }
 
-            var readOrWrite = forWrite ? "write" : "read";
+            EnsureInitializedForCurrentAsyncContext();
+
+            string readOrWrite;
+            if (forWrite)
+            {
+                readOrWrite = "write";
+            }
+            else
+            {
+                readOrWrite = "read";
+            }
 
             if (AsyncContext.Id is { } asyncContextId)
             {
                 // FIX: (GetCurrentWriter) remove debuggy stuff
 
-                var writer = _writers.GetOrAdd(
-                    asyncContextId,
-                    _ =>
-                    {
-                        Log.Info("Adding writer {name} on {asyncContextId} for {readOrWrite}", _name,  asyncContextId, readOrWrite);
-                        return _createTextWriter();
-                    });
+                lock (_lockObj)
+                {
+                    var writer = _writers.GetOrAdd(
+                        asyncContextId,
+                        _ =>
+                        {
+                            Log.Info($"Adding writer {{name}}:{GetHashCode()} on {{asyncContextId}} for {{readOrWrite}}", _name, asyncContextId, readOrWrite);
+                            return (0, _createTextWriter());
+                        });
 
-                Log.Info("Retrieving {name} on {asyncContextId} for {readOrWrite}. Writers: {writers}.", _name, asyncContextId, readOrWrite, _writers);
+                    _writers[asyncContextId] = (writer.refCount + 1, writer.writer);
 
-                return writer;
+                    Log.Info($"Retrieving {{name}}:{GetHashCode()} on {{asyncContextId}} for {{readOrWrite}}. Writers: {{writers}}.", _name, asyncContextId, readOrWrite, _writers);
+
+                    return writer.writer;
+                }
             }
 
             return _defaultWriter;
@@ -113,7 +149,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             }
         }
 
-        public IEnumerable<TextWriter> Writers => _writers.Values;
+        public IEnumerable<TextWriter> Writers => _writers.Select(w => w.Value.writer);
 
         public override void Write(char value)
         {
@@ -354,7 +390,7 @@ namespace Microsoft.DotNet.Interactive.Utility
                 _writers.Clear();
                 foreach (var writer in writers)
                 {
-                    writer.Dispose();
+                    writer.writer.Dispose();
                 }
             }
 
@@ -366,9 +402,9 @@ namespace Microsoft.DotNet.Interactive.Utility
             if (AsyncContext.Id is { } asyncContextId &&
                 _writers.TryGetValue(asyncContextId, out var writer))
             {
-                Log.Info("ToString {name} on {asyncContextId}", _name, asyncContextId);
+                Log.Info($"ToString {{name}}:{GetHashCode()} on {{asyncContextId}}", _name, asyncContextId);
 
-                return writer.ToString();
+                return writer.writer.ToString();
             }
 
             return "";

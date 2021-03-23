@@ -1034,6 +1034,8 @@ Console.Write(2);
                     .Where(e => e.Value is StandardOutputValueProduced)
                     .ToArray();
 
+            events.Should().HaveCount(2);
+
             var diff = events[1].Timestamp - events[0].Timestamp;
 
             diff.Should().BeCloseTo(1.Seconds(), precision: 500);

@@ -28,28 +28,38 @@ namespace Microsoft.DotNet.Interactive.Utility
         private bool _trackingWriteOperation;
         private int _observerCount;
         private readonly CompositeDisposable _disposable;
+        private bool _disposed = false;
 
         // FIX: (ObservableStringWriter) remove debuggy stuff
         private readonly int? _asyncContextId;
         private readonly OperationLogger _logger;
+        private readonly string _name;
 
         public ObservableStringWriter(string name = null)
         {
+            _name = name;
+
             _asyncContextId = AsyncContext.Id;
 
             _logger = Log.OnEnterAndExit(
-                $"{nameof(ObservableStringWriter)} '{name}' on AsyncContext.Id {_asyncContextId}",
+                $"{nameof(ObservableStringWriter)}:{GetHashCode()} '{name}' on AsyncContext.Id {_asyncContextId}",
                 exitArgs: () => new[] { ("AsyncContext.Id", (object) AsyncContext.Id) });
             
             _disposable = new CompositeDisposable
             {
                 _writeEvents,
-                _logger 
+                _logger,
+                () => _disposed = true
             };
         }
 
         protected override void Dispose(bool disposing)
         {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException($"ObservableStringWriter {_name}:{GetHashCode()} has been disposed.");
+            }
+
             if (disposing)
             {
                 _disposable.Dispose();
@@ -68,6 +78,10 @@ namespace Microsoft.DotNet.Interactive.Utility
             if (_observerCount > 0)
             {
                 _writeEvents.OnNext(sb.ToString(region.Start, region.Length));
+            }
+            else
+            {
+                // FIX: (PublishStringIfObserved) clean up
             }
         }
 
@@ -361,7 +375,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         {
             var count = Interlocked.Increment(ref _observerCount);
 
-            var op = _logger.OnEnterAndExit("ObservableStringWriter subscription");
+            var op = _logger.OnEnterAndExit($"ObservableStringWriter:{GetHashCode()} subscription");
             
             return new CompositeDisposable
             {

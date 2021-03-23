@@ -9,7 +9,7 @@ using Disposable = System.Reactive.Disposables.Disposable;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
-    internal class ConsoleOutput
+    public static class ConsoleOutput
     {
         private static readonly object _systemConsoleSwapLock = new();
 
@@ -24,19 +24,22 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         private static OperationLogger _operationLogger;
 
-        private ConsoleOutput()
-        {
-        }
-
         public static IDisposable Subscribe(Func<ObservableConsole, IDisposable> subscribe)
         {
+            ObservableConsole obsConsole;
+
+            AsyncContext.TryEstablish(out _);
+
             lock (_systemConsoleSwapLock)
             {
+                _operationLogger = Log.OnEnterAndExit(
+                    $"Subscribe on AsyncContext.Id {AsyncContext.Id?.ToString() ?? "none"}",
+                    exitArgs: () => new[] { ("AsyncContext.Id", (object) AsyncContext.Id) });
+
                 if (++_refCount == 1)
                 {
-                    _operationLogger = Log.OnEnterAndExit(
-                        $"Console swap on AsyncContext.Id {AsyncContext.Id?.ToString() ?? "none"}",
-                        exitArgs: () => new[] { ("AsyncContext.Id", (object) AsyncContext.Id) });
+                    // FIX: (Subscribe) remove debuggy stuff
+
                     _originalOutputWriter = Console.Out;
                     _originalErrorWriter = Console.Error;
                     _multiplexingOutputWriter = new MultiplexingTextWriter("out");
@@ -44,17 +47,19 @@ namespace Microsoft.DotNet.Interactive.Utility
                     Console.SetOut(_multiplexingOutputWriter);
                     Console.SetError(_multiplexingErrorWriter);
                 }
+
+                obsConsole = new ObservableConsole(
+                    _multiplexingOutputWriter.GetObservable(),
+                    _multiplexingErrorWriter.GetObservable());
             }
 
-            _multiplexingOutputWriter.EnsureInitializedForCurrentAsyncContext();
-            _multiplexingErrorWriter.EnsureInitializedForCurrentAsyncContext();
-
-            var obsConsole = new ObservableConsole(
-                _multiplexingOutputWriter.GetObservable(),
-                _multiplexingErrorWriter.GetObservable());
+            // var outWriterSubscription = _multiplexingOutputWriter.EnsureInitializedForCurrentAsyncContext();
+            // var errorWriterSubscription = _multiplexingErrorWriter.EnsureInitializedForCurrentAsyncContext();
 
             return new CompositeDisposable(
                 subscribe(obsConsole),
+                // outWriterSubscription,
+                // errorWriterSubscription,
                 Disposable.Create(() =>
                 {
                     lock (_systemConsoleSwapLock)
@@ -63,13 +68,17 @@ namespace Microsoft.DotNet.Interactive.Utility
                         {
                             Console.SetOut(_originalOutputWriter);
                             Console.SetError(_originalErrorWriter);
+                            _multiplexingOutputWriter.Dispose();
+                            _multiplexingOutputWriter = null;
+                            _multiplexingErrorWriter.Dispose();
+                            _multiplexingErrorWriter = null;
                         }
                     }
                 }),
                 _operationLogger);
         }
 
-        internal record ObservableConsole(
+        public record ObservableConsole(
             IObservable<string> Out,
             IObservable<string> Error);
     }

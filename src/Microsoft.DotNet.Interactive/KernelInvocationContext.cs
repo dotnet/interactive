@@ -36,6 +36,7 @@ namespace Microsoft.DotNet.Interactive
             Result = new KernelCommandResult(_events);
 
             _disposables.Add(_cancellationTokenSource);
+
             _disposables.Add(ConsoleOutput.Subscribe(c =>
             {
                 return new System.Reactive.Disposables.CompositeDisposable
@@ -151,6 +152,8 @@ namespace Microsoft.DotNet.Interactive
         {
             if (_current.Value == null || _current.Value.IsComplete)
             {
+                AsyncContext.TryEstablish(out _);
+
                 var context = new KernelInvocationContext(command);
 
                 _current.Value = context;

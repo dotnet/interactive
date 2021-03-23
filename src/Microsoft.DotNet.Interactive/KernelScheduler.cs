@@ -6,11 +6,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive
 {
     public class KernelScheduler<T, U> : IDisposable
     {
+        private static readonly Logger Log = new("KernelScheduler");
         private readonly List<DeferredOperation> _deferredOperationSources = new();
         private readonly CancellationTokenSource _schedulerDisposalSource = new();
         private readonly Task _runLoopTask;
@@ -19,7 +21,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly BlockingCollection<ScheduledOperation> _topLevelScheduledOperations = new();
         private readonly Barrier _barrier = new(2);
         private ScheduledOperation _currentlyRunningOperation;
-
+        
         public KernelScheduler()
         {
             _runLoopTask = Task.Factory.StartNew(
@@ -118,16 +120,21 @@ namespace Microsoft.DotNet.Interactive
             try
             {
                 var operationTask = operation
-                                  .ExecuteAsync()
-                                  .ContinueWith(t =>
-                                  {
-                                      if (t.IsCompletedSuccessfully && !operation.TaskCompletionSource.Task.IsCompleted)
-                                      {
-                                          operation.TaskCompletionSource.TrySetResult(t.Result);
-                                      }
-                                  });
+                                    .ExecuteAsync()
+                                    .ContinueWith(t =>
+                                    {
+                                        if (t.IsCompletedSuccessfully && !operation.TaskCompletionSource.Task.IsCompleted)
+                                        {
+                                            operation.TaskCompletionSource.TrySetResult(t.Result);
+                                        }
+                                        else if (!operation.TaskCompletionSource.Task.IsCompleted)
+                                        {
+                                            // FIX: (Run) clean up
+                                        }
+                                    });
 
-                Task.WaitAny(new[] {
+                Task.WaitAny(new[]
+                {
                     operationTask,
                     operation.TaskCompletionSource.Task
                 }, _schedulerDisposalSource.Token);
@@ -143,12 +150,26 @@ namespace Microsoft.DotNet.Interactive
 
         private void RunScheduledOperationAndDeferredOperations(ScheduledOperation operation)
         {
-            foreach (var deferredOperation in OperationsToRunBefore(operation))
+            try
             {
-                Run(deferredOperation);
-            }
+                foreach (var deferredOperation in OperationsToRunBefore(operation))
+                {
+                    Run(deferredOperation);
 
-            Run(operation);
+                    if (!deferredOperation.TaskCompletionSource.Task.IsCompletedSuccessfully)
+                    {
+                        Log.Error(
+                            "Deferred operation failed",
+                            deferredOperation.TaskCompletionSource.Task.Exception);
+                    }
+                }
+
+                Run(operation);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception);
+            }
         }
 
         private void RunPreemptively(ScheduledOperation operation)

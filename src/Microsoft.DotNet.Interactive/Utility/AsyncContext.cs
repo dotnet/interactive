@@ -11,11 +11,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         private static readonly AsyncLocal<int?> _id = new();
 
-        public static int? Id
-        {
-            get => _id.Value;
-            set => _id.Value = value;
-        }
+        public static int? Id => _id.Value;
 
         public static bool TryEstablish(out int id)
         {
