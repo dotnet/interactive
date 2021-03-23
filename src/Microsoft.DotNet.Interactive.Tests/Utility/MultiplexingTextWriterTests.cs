@@ -11,13 +11,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
+using Pocket.For.Xunit;
 using Xunit;
 using Xunit.Abstractions;
 using static System.Environment;
 
 namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
-    [Pocket.For.Xunit.LogToPocketLogger(@"c:\temp\test.log")]
+    [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
     public class MultiplexingTextWriterTests : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();

@@ -15,12 +15,13 @@ using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Pocket;
+using Pocket.For.Xunit;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    [Pocket.For.Xunit.LogToPocketLogger(@"c:\temp\test.log")]
+    [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
     public class DirectiveTests : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();

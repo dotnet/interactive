@@ -15,7 +15,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    [LogToPocketLogger(@"c:\temp\test.log")]
+    [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
     public class ConnectDirectiveTests : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();
