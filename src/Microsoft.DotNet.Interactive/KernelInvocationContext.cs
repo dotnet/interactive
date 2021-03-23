@@ -132,7 +132,8 @@ namespace Microsoft.DotNet.Interactive
         {
             if (IsComplete)
             {
-                return;
+                throw new Exception($"Tried to publish event after completion.  Event: {@event}");
+                //return;
             }
 
             var command = @event.Command;
