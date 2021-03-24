@@ -41,7 +41,6 @@
   ],
   "activationEvents": [
     "onNotebook:dotnet-interactive",
-    "onNotebook:dotnet-interactive-jupyter",
     "onNotebook:*",
     "onCommand:dotnet-interactive.acquire",
     "onCommand:dotnet-interactive.newNotebook",
@@ -49,7 +48,9 @@
     "onCommand:dotnet-interactive.saveAsNotebook"
   ],
   "main": "./out/src/common/vscode/extension.js",
-  "extensionDependencies": [],
+  "extensionDependencies": [
+    "ms-toolsai.jupyter"
+  ],
   "contributes": {
     "notebookProvider": [
       {
@@ -60,16 +61,6 @@
             "filenamePattern": "*.{dib,dotnet-interactive}"
           }
         ]
-      },
-      {
-        "viewType": "dotnet-interactive-jupyter",
-        "displayName": ".NET Interactive for Jupyter",
-        "selector": [
-          {
-            "filenamePattern": "*.ipynb"
-          }
-        ],
-        "priority": "option"
       }
     ],
     "configuration": {
@@ -114,11 +105,6 @@
           "type": "string",
           "default": "1.0.217001",
           "description": "The minimum required version of the .NET Interactive tool."
-        },
-        "dotnet-interactive.useDotNetInteractiveExtensionForIpynbFiles": {
-          "type": "boolean",
-          "default": false,
-          "description": "(LEGACY) Use the .NET Interactive extension to handle .ipynb files (requires restart)."
         }
       }
     },

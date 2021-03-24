@@ -13,6 +13,10 @@ import * as vscodeUtilities from './common/vscode/vscodeUtilities';
 
 import { ClientMapper } from './common/clientMapper';
 
+export function registerAdditionalContentProvider(context: vscode.ExtensionContext, contentProvider: vscode.NotebookContentProvider) {
+    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive-jupyter', contentProvider));
+}
+
 export function getCellKind(cell: vscode.NotebookCell): vscode.NotebookCellKind {
     return cell.cellKind;
 }

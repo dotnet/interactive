@@ -13,6 +13,10 @@ import * as vscodeUtilities from './common/vscode/vscodeUtilities';
 
 import { ClientMapper } from './common/clientMapper';
 
+export function registerAdditionalContentProvider(context: vscode.ExtensionContext, contentProvider: vscode.NotebookContentProvider) {
+    // empty for insiders
+}
+
 export function getCellKind(cell: vscode.NotebookCell): vscode.NotebookCellKind {
     return cell.kind;
 }
