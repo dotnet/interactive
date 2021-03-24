@@ -32,11 +32,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
                                         }
                                         catch (TaskCanceledException)
                                         {
-
                                         }
                                         catch (OperationCanceledException)
                                         {
-
                                         }
                                     }
 

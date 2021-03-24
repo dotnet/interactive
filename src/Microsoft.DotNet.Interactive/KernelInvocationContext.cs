@@ -29,12 +29,9 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly CancellationTokenSource _cancellationTokenSource;
 
-        private static readonly Logger<KernelInvocationContext> Log;
-        private readonly OperationLogger _operation;
-
         private KernelInvocationContext(KernelCommand command)
         {
-            _operation = new OperationLogger(
+            var operation = new OperationLogger(
                 args: new object[] { ("Start AsyncContext.Id", AsyncContext.Id), ("KernelCommand", command) },
                 exitArgs: () => new[] { ("End AsyncContext.Id", (object) AsyncContext.Id) },
                 category: nameof(KernelInvocationContext),
@@ -59,7 +56,7 @@ namespace Microsoft.DotNet.Interactive
 
             _disposables.Add(AsyncContext.Clear);
 
-            _disposables.Add(_operation);
+            _disposables.Add(operation);
         }
 
         public KernelCommand Command { get; }
