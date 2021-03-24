@@ -3,7 +3,7 @@
 </div>
 <script type="text/javascript">
 
-let renderDataExplorer_00000000000000000000000000000000 = () => {
+let renderNteractDataExplorer_00000000000000000000000000000000 = () => {
 
     configureRequireFromExtension('nteract','1.0.0')(['nteract/nteractapi'], (nteract) => {
 
@@ -67,13 +67,13 @@ if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeo
     
     
     require_script.onload = function() {
-        renderDataExplorer_00000000000000000000000000000000();
+        renderNteractDataExplorer_00000000000000000000000000000000();
     };
 
     document.getElementsByTagName('head')[0].appendChild(require_script);
 }
 else {
-    renderDataExplorer_00000000000000000000000000000000();
+    renderNteractDataExplorer_00000000000000000000000000000000();
 }
 
  </script>

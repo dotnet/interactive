@@ -4,7 +4,6 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Assent;
@@ -27,14 +26,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             _configuration = new Configuration()
                 .SetInteractive(Debugger.IsAttached)
                 .UsingExtension("json");
-        }
-
-        private static  string FixedGuid(string source)
-        {
-            var reg = new Regex(@".*\s+id=""(?<id>\S+)""\s+.*", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
-            var id1 = reg.Match(source).Groups["id"].Value;
-            var id = id1;
-            return source.Replace(id, "00000000000000000000000000000000");
         }
 
         [Fact]
@@ -67,7 +58,7 @@ SELECT * FROM fruit
                 .Value;
 
            
-            this.Assent(FixedGuid(formattedData), _configuration);
+            this.Assent(formattedData.FixedGuid(), _configuration);
         }
 
         [Fact]
@@ -102,7 +93,7 @@ SELECT 1 AS Apples, 2 AS Bananas, 3 AS Apples, 4 AS BANANAS, 5 AS Apples, 6 AS B
                                 .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
                                 .Value;
 
-            this.Assent(FixedGuid(formattedData), _configuration);
+            this.Assent(formattedData.FixedGuid(), _configuration);
         }
 
         public void Dispose()

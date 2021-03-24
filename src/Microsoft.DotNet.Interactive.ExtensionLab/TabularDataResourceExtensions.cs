@@ -11,14 +11,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static SandDanceDataExplorer ExploreWithSandDance(this TabularDataResource source)
         {
             var explorer = new SandDanceDataExplorer(source);
-            KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
             return explorer;
         }
 
         public static NteractDataExplorer ExploreWithNteract(this TabularDataResource source)
         {
             var explorer = new NteractDataExplorer(source);
-            KernelInvocationContext.Current?.Display(explorer, HtmlFormatter.MimeType);
             return explorer;
         }
     }

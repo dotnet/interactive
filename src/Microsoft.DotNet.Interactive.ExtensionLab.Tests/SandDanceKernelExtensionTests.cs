@@ -5,19 +5,18 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+
 using Assent;
+
 using FluentAssertions;
+
 using Microsoft.DotNet.Interactive.Formatting;
+
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 {
-    public class DataExplorerTests
-    {
-
-    }
-    public class SandDanceKernelExtensionTests: IDisposable
+    public class SandDanceKernelExtensionTests : IDisposable
     {
         private readonly Configuration _configuration;
 
@@ -44,10 +43,31 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 new {Type="grape" , Price=1.4}
             };
 
-
             var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("configureRequireFromExtension('SandDance','1.0.0')(['SandDance/sanddanceapi'], (sandDance) => {");
+        }
+
+        [Fact]
+        public async Task widget_code_generation_is_not_broken()
+        {
+            using var kernel = new CompositeKernel();
+
+            var kernelExtension = new NteractKernelExtension();
+
+            await kernelExtension.OnLoadAsync(kernel);
+
+            var data = new[]
+            {
+                new {Type="orange", Price=1.2},
+                new {Type="apple" , Price=1.3},
+                new {Type="grape" , Price=1.4}
+            };
+
+
+            var html = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
+
+            this.Assent(html.FixedGuid());
         }
 
         [Fact]
@@ -79,7 +99,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var kernelExtension = new SandDanceKernelExtension();
             await kernelExtension.OnLoadAsync(kernel);
-            kernel.UseSandDanceExplorer("https://a.cdn.url/script.js");
 
             var data = new[]
             {
@@ -88,8 +107,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 new {Type="grape" , Price=1.4}
             };
 
-
-            var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
+            var explorer = data.ExploreWithSandDance();
+            explorer.LibraryUri = new Uri("https://a.cdn.url/script.js");
+            var formatted = explorer.ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should()
                 .Contain("if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function)))")
@@ -104,7 +124,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var kernelExtension = new SandDanceKernelExtension();
             await kernelExtension.OnLoadAsync(kernel);
-            kernel.UseSandDanceExplorer("https://a.cdn.url/script.js");
 
             var data = new[]
             {
@@ -113,8 +132,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 new {Type="grape" , Price=1.4}
             };
 
-
-            var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
+            var explorer = data.ExploreWithSandDance();
+            explorer.LibraryUri = new Uri("https://a.cdn.url/script.js");
+            var formatted = explorer.ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("require.config(");
         }
@@ -126,7 +146,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var kernelExtension = new SandDanceKernelExtension();
             await kernelExtension.OnLoadAsync(kernel);
-            kernel.UseSandDanceExplorer("https://a.cdn.url/script.js", "2.2.2");
 
             var data = new[]
             {
@@ -135,8 +154,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 new {Type="grape" , Price=1.4}
             };
 
-
-            var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
+            var explorer = data.ExploreWithSandDance();
+            explorer.LibraryUri = new Uri("https://a.cdn.url/script.js");
+            explorer.LibraryVersion = "2.2.2";
+            var formatted = explorer.ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("'context': '2.2.2'");
         }
@@ -148,7 +169,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var kernelExtension = new SandDanceKernelExtension();
             await kernelExtension.OnLoadAsync(kernel);
-            kernel.UseSandDanceExplorer("https://a.cdn.url/script.js");
 
             var data = new[]
             {
@@ -157,8 +177,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 new {Type="grape" , Price=1.4}
             };
 
-
-            var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
+            var explorer = data.ExploreWithSandDance();
+            explorer.LibraryUri = new Uri("https://a.cdn.url/script.js");
+            var formatted = explorer.ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("'https://a.cdn.url/script'");
         }
@@ -170,7 +191,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var kernelExtension = new SandDanceKernelExtension();
             await kernelExtension.OnLoadAsync(kernel);
-            kernel.UseSandDanceExplorer("https://a.cdn.url/script.js");
 
             var data = new[]
             {
@@ -179,8 +199,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 new {Type="grape" , Price=1.4}
             };
 
-
-            var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
+            var explorer = data.ExploreWithSandDance();
+            explorer.LibraryUri = new Uri("https://a.cdn.url/script.js");
+            var formatted = explorer.ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should()
                 .Contain("'https://a.cdn.url/script'")
@@ -195,7 +216,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var kernelExtension = new SandDanceKernelExtension();
             await kernelExtension.OnLoadAsync(kernel);
-            kernel.UseSandDanceExplorer("https://a.cdn.url/script.js", cacheBuster: "XYZ");
 
             var data = new[]
             {
@@ -204,8 +224,10 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
                 new {Type="grape" , Price=1.4}
             };
 
-
-            var formatted = data.ExploreWithSandDance().ToDisplayString(HtmlFormatter.MimeType);
+            var explorer = data.ExploreWithSandDance();
+            explorer.LibraryUri = new Uri("https://a.cdn.url/script.js");
+            explorer.CacheBuster = "XYZ";
+            var formatted = explorer.ToDisplayString(HtmlFormatter.MimeType);
 
             formatted.Should().Contain("'urlArgs': 'cacheBuster=XYZ'");
         }
@@ -213,6 +235,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         public void Dispose()
         {
             Formatter.ResetToDefault();
+            SandDanceDataExplorer.ResetDefaultConfiguration();
         }
     }
 }
