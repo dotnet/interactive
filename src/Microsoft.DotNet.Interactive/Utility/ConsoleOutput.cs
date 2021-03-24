@@ -24,11 +24,12 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         private static OperationLogger _operationLogger;
 
+        // FIX: (ConsoleOutput) delete
+        public static int RefCount => _refCount;
+
         public static IDisposable Subscribe(Func<ObservableConsole, IDisposable> subscribe)
         {
             ObservableConsole obsConsole;
-
-            AsyncContext.TryEstablish(out _);
 
             lock (_systemConsoleSwapLock)
             {

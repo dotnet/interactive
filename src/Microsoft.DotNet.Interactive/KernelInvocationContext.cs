@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
+using Pocket;
+using CompositeDisposable = Pocket.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -21,14 +23,23 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly HashSet<KernelCommand> _childCommands = new();
 
-        private readonly System.Reactive.Disposables.CompositeDisposable _disposables = new();
+        private readonly CompositeDisposable _disposables = new();
 
         private readonly List<Func<KernelInvocationContext, Task>> _onCompleteActions = new();
 
         private readonly CancellationTokenSource _cancellationTokenSource;
 
+        private static readonly Logger<KernelInvocationContext> Log;
+        private readonly OperationLogger _operation;
+
         private KernelInvocationContext(KernelCommand command)
         {
+            _operation = new OperationLogger(
+                args: new object[] { ("Start AsyncContext.Id", AsyncContext.Id), ("KernelCommand", command) },
+                exitArgs: () => new[] { ("End AsyncContext.Id", (object) AsyncContext.Id) },
+                category: nameof(KernelInvocationContext),
+                logOnStart: true);
+
             _cancellationTokenSource = new CancellationTokenSource();
 
             Command = command;
@@ -39,12 +50,16 @@ namespace Microsoft.DotNet.Interactive
 
             _disposables.Add(ConsoleOutput.Subscribe(c =>
             {
-                return new System.Reactive.Disposables.CompositeDisposable
+                return new CompositeDisposable
                 {
                     c.Out.Subscribe(s => this.DisplayStandardOut(s, command)),
                     c.Error.Subscribe(s => this.DisplayStandardError(s, command))
                 };
             }));
+
+            _disposables.Add(AsyncContext.Clear);
+
+            _disposables.Add(_operation);
         }
 
         public KernelCommand Command { get; }
@@ -152,7 +167,15 @@ namespace Microsoft.DotNet.Interactive
         {
             if (_current.Value == null || _current.Value.IsComplete)
             {
-                AsyncContext.TryEstablish(out _);
+
+                if (AsyncContext.TryEstablish(out _))
+                {
+
+                }
+                else
+                {
+
+                }
 
                 var context = new KernelInvocationContext(command);
 
@@ -173,7 +196,7 @@ namespace Microsoft.DotNet.Interactive
 
         public Kernel HandlingKernel { get; internal set; }
 
-        public ValueTask DisposeAsync()
+        public async ValueTask DisposeAsync()
         {
             if (_current.Value is { } active)
             {
@@ -181,23 +204,16 @@ namespace Microsoft.DotNet.Interactive
 
                 if (_onCompleteActions.Count > 0)
                 {
-                    Task.Run(async () =>
-                        {
-                            foreach (var action in _onCompleteActions)
-                            {
-                                await action.Invoke(this);
-                            }
-                        })
-                        .Wait();
+                    foreach (var action in _onCompleteActions)
+                    {
+                        await action.Invoke(this);
+                    }
                 }
 
                 active.Complete(Command);
 
                 _disposables.Dispose();
             }
-
-            // This method is not async because it would prevent the setting of _current.Value to null from flowing up to the caller.
-            return new ValueTask(Task.CompletedTask);
         }
     }
 }

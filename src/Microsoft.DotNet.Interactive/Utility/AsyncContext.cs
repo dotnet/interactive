@@ -27,5 +27,7 @@ namespace Microsoft.DotNet.Interactive.Utility
                 return true;
             }
         }
+
+        public static void Clear() => _id.Value = null;
     }
 }

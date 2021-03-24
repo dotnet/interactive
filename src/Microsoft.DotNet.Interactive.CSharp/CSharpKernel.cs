@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              typeof(CSharpKernel).Assembly,
                              typeof(PocketView).Assembly);
 
-        private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
+        private readonly AssemblyBasedExtensionLoader _extensionLoader = new();
         private string _currentDirectory;
 
         public CSharpKernel() : base(DefaultKernelName)
@@ -168,8 +168,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
                         new FormattedValue("text/markdown", info.ToMarkdownString())
                     },
                     correctedLinePosSpan));
-            
-            
         }
 
         public async Task HandleAsync(RequestSignatureHelp command, KernelInvocationContext context)
@@ -319,6 +317,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
                                                    catchException: catchException,
                                                    cancellationToken: cancellationToken)
                     .UntilCancelled(cancellationToken) ?? ScriptState;
+            }
+
+            if (IsDisposed)
+            {
+                return;
             }
 
             if (ScriptState is not null && ScriptState.Exception is null)

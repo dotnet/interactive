@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         private TextWriter DefaultCreateTextWriter()
         {
-            return new ObservableStringWriter(_name);
+            return new ObservableStringWriter(_name + ":" + AsyncContext.Id);
         }
 
         public IDisposable EnsureInitializedForCurrentAsyncContext()

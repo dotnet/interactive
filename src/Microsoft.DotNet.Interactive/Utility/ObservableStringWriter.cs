@@ -17,22 +17,24 @@ namespace Microsoft.DotNet.Interactive.Utility
 {
     public class ObservableStringWriter : StringWriter, IObservable<string>
     {
-        private class Region
-        {
-            public int Start { get; set; }
-            public int Length { get; set; }
-        }
-
         private readonly Subject<string> _writeEvents = new();
-        private readonly List<Region> _regions = new();
+
+        private readonly List<TextSpan> _regions = new();
+
         private bool _trackingWriteOperation;
+
         private int _observerCount;
+
         private readonly CompositeDisposable _disposable;
+
         private bool _disposed = false;
 
         // FIX: (ObservableStringWriter) remove debuggy stuff
+
         private readonly int? _asyncContextId;
+
         private readonly OperationLogger _logger;
+
         private readonly string _name;
 
         public ObservableStringWriter(string name = null)
@@ -73,11 +75,11 @@ namespace Microsoft.DotNet.Interactive.Utility
             TrackWriteOperation(() => base.Write(value));
         }
 
-        private void PublishStringIfObserved(StringBuilder sb, Region region)
+        private void PublishStringIfObserved(StringBuilder sb, TextSpan textSpan)
         {
             if (_observerCount > 0)
             {
-                _writeEvents.OnNext(sb.ToString(region.Start, region.Length));
+                _writeEvents.OnNext(sb.ToString(textSpan.Start, textSpan.Length));
             }
             else
             {
@@ -96,7 +98,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             _trackingWriteOperation = true;
             var sb = base.GetStringBuilder();
 
-            var region = new Region
+            var region = new TextSpan
             {
                 Start = sb.Length
             };
@@ -121,7 +123,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             _trackingWriteOperation = true;
             var sb = base.GetStringBuilder();
 
-            var region = new Region
+            var region = new TextSpan
             {
                 Start = sb.Length
             };
@@ -387,6 +389,12 @@ namespace Microsoft.DotNet.Interactive.Utility
                 }),
                 _writeEvents.Subscribe(observer)
             };
+        }
+
+        private class TextSpan
+        {
+            public int Start { get; init; }
+            public int Length { get; set; }
         }
     }
 }

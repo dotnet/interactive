@@ -131,13 +131,28 @@ namespace Microsoft.DotNet.Interactive
                                         {
                                             // FIX: (Run) clean up
                                         }
+                                        else
+                                        {
+                                        }
                                     });
 
-                Task.WaitAny(new[]
+                var result = Task.WaitAny(new[]
                 {
                     operationTask,
                     operation.TaskCompletionSource.Task
                 }, _schedulerDisposalSource.Token);
+
+                switch (result)
+                {
+                    case 0:
+                        break;
+                    case 1:
+                        if (!operation.TaskCompletionSource.Task.IsCompleted)
+                        {
+                            
+                        }
+                        break;
+                }
             }
             catch (Exception exception)
             {

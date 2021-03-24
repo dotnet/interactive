@@ -2,7 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.DotNet.Interactive.Utility;
 using Pocket;
 using Pocket.For.Xunit;
@@ -12,6 +15,7 @@ using Xunit.Abstractions;
 namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
     [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
+    [CheckForContextLeaks]
     public class ConsoleOutputTests : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();
@@ -96,6 +100,60 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
 
             stdOut1.Should().BeEquivalentTo("1");
             stdOut2.Should().BeEquivalentTo("1", "2");
+        }
+
+        [Fact]
+        public async Task Console_output_subscriptions_can_overlap_on_different_async_contexts()
+        {
+            var barrier = new Barrier(2);
+            SubscribedList<string> stdOut1 = null;
+            SubscribedList<string> stdOut2 = null;
+            
+            var contextOne = Task.Run(() =>
+            {
+                AsyncContext.TryEstablish(out var _);
+
+                using var _ = ConsoleOutput.Subscribe(console =>
+                {
+                    stdOut1 = console.Out.ToSubscribedList();
+
+                    return Disposable.Create(() => stdOut1.Dispose());
+                });
+
+                Console.Out.Write("1.1");
+                Console.Out.Write("1.2");
+
+                barrier.SignalAndWait();
+            });
+
+            var contextTwo = Task.Run(() =>
+            {
+                AsyncContext.TryEstablish(out var _);
+
+                using var _ = ConsoleOutput.Subscribe(console =>
+                {
+                    stdOut2 = console.Out.ToSubscribedList();
+
+                    return Disposable.Create(() => stdOut2.Dispose());
+                });
+
+                Console.Out.Write("2.1");
+
+                barrier.SignalAndWait();
+
+                Console.Out.Write("2.2");
+                Console.Out.Write("2.3");
+                Console.Out.Write("2.4");
+            });
+
+            await Task.WhenAll(contextOne, contextTwo);
+
+            using var __ = new AssertionScope();
+
+            stdOut1.Should().BeEquivalentSequenceTo("1.1", "1.2");
+            stdOut2.Should().BeEquivalentSequenceTo("2.1", "2.2", "2.3", "2.4");
+
+            // FIX: (Console_output_subscriptions_can_overlap_on_different_async_contexts) write test
         }
     }
 }
