@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Web;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
@@ -60,8 +61,17 @@ if (typeof window.createDotnetInteractiveClient === typeof Function) {{
         const notebookScope = getDotnetInteractiveScope('{apiUri.AbsoluteUri}');
         try {{
 
-".Replace("\r\n", "\n");
-            var codePostlude = $@"
+await Object.getPrototypeOf(async function() {{}}).constructor(
+    ""interactive"",
+    ""console"",
+    ""notebookScope"",
+    """.Replace("\r\n", "\n");
+            var codePostlude = $@"""
+)(
+    interactive,
+    console,
+    notebookScope
+);
 
         }} catch (err) {{
             interactive.failCommand(err, '{commandToken}');
@@ -72,7 +82,7 @@ if (typeof window.createDotnetInteractiveClient === typeof Function) {{
     }});
 }}
 ".Replace("\r\n", "\n");
-            var wrappedCode = $"{codePrelude}{code}{codePostlude}";
+            var wrappedCode = $"{codePrelude}{HttpUtility.JavaScriptStringEncode(code)}{codePostlude}";
             var executionCompletionSource = new TaskCompletionSource();
             _tokenToInvocationContext[commandToken] = (context, executionCompletionSource);
             IHtmlContent content = PocketViewTags.script[type: "text/javascript"](wrappedCode.ToHtmlContent());

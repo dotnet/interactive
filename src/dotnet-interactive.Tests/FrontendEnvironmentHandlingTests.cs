@@ -49,7 +49,16 @@ if (typeof window.createDotnetInteractiveClient === typeof Function) {
         const notebookScope = getDotnetInteractiveScope('http://12.12.12.12:4242/');
         try {
 
-console.log('test');
+await Object.getPrototypeOf(async function() {}).constructor(
+    ""interactive"",
+    ""console"",
+    ""notebookScope"",
+    ""console.log(\u0027test\u0027);""
+)(
+    interactive,
+    console,
+    notebookScope
+);
 
         } catch (err) {
             interactive.failCommand(err, 'token-abcd');
@@ -102,7 +111,7 @@ console.log('test');
                 .Should()
                 .ContainAll(
                     "http://test-uri",
-                    "console.log('test');"
+                    @"console.log(\u0027test\u0027);"
                 );
         }
 
