@@ -191,24 +191,34 @@ namespace Microsoft.DotNet.Interactive
 
         public Kernel HandlingKernel { get; internal set; }
 
-        public async ValueTask DisposeAsync()
+        public ValueTask DisposeAsync()
         {
             if (_current.Value is { } active)
             {
-                _current.Value = null;
+                if (_current.Value == this)
+                {
+                    _current.Value = null;
+                }
 
                 if (_onCompleteActions.Count > 0)
                 {
-                    foreach (var action in _onCompleteActions)
-                    {
-                        await action.Invoke(this);
-                    }
+                    Task.Run(async () =>
+                        {
+                            foreach (var action in _onCompleteActions)
+                            {
+                                await action.Invoke(this);
+                            }
+                        })
+                        .Wait();
                 }
 
                 active.Complete(Command);
 
                 _disposables.Dispose();
             }
+
+            // This method is not async because it would prevent the setting of _current.Value to null from flowing up to the caller.
+            return new ValueTask(Task.CompletedTask);
         }
     }
 }

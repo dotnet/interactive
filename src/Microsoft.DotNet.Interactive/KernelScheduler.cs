@@ -19,7 +19,6 @@ namespace Microsoft.DotNet.Interactive
         private readonly AsyncLocal<ScheduledOperation> _currentTopLevelOperation = new();
 
         private readonly BlockingCollection<ScheduledOperation> _topLevelScheduledOperations = new();
-        private readonly Barrier _barrier = new(2);
         private ScheduledOperation _currentlyRunningOperation;
         
         public KernelScheduler()
