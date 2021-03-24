@@ -57,10 +57,6 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
             }
         }
     }
-
-    interrupt(document: vscode.NotebookDocument) {
-        // not supported
-    }
 }
 
 export async function updateDocumentKernelspecMetadata(document: vscode.NotebookDocument): Promise<void> {
