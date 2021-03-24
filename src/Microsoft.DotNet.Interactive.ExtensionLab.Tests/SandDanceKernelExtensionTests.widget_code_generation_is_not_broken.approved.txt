@@ -3,53 +3,42 @@
 </div>
 <script type="text/javascript">
 
-let renderNteractDataExplorer_00000000000000000000000000000000 = () => {
+let renderSandDanceExplorer_00000000000000000000000000000000 = () => {
 
-    configureRequireFromExtension('nteract','1.0.0')(['nteract/nteractapi'], (nteract) => {
+    configureRequireFromExtension('SandDance','1.0.0')(['SandDance/sanddanceapi'], (sandDance) => {
 
-        nteract.createDataExplorer({
+        sandDance.createSandDanceExplorer({
             data: {
   "profile": "tabular-data-resource",
   "schema": {
     "primaryKey": [],
     "fields": [
       {
-        "name": "Apples",
-        "type": "integer"
+        "name": "Type",
+        "type": "string"
       },
       {
-        "name": "Bananas",
-        "type": "integer"
-      },
-      {
-        "name": "Apples (2)",
-        "type": "integer"
-      },
-      {
-        "name": "BANANAS",
-        "type": "integer"
-      },
-      {
-        "name": "Apples (3)",
-        "type": "integer"
-      },
-      {
-        "name": "BaNaNaS",
-        "type": "integer"
+        "name": "Price",
+        "type": "number"
       }
     ]
   },
   "data": [
     {
-      "Apples": 1,
-      "Bananas": 2,
-      "Apples (2)": 3,
-      "BANANAS": 4,
-      "Apples (3)": 5,
-      "BaNaNaS": 6
+      "Type": "orange",
+      "Price": 1.2
+    },
+    {
+      "Type": "apple",
+      "Price": 1.3
+    },
+    {
+      "Type": "grape",
+      "Price": 1.4
     }
   ]
 },
+            id: "00000000000000000000000000000000",
             container: document.getElementById("00000000000000000000000000000000")
         });
     },
@@ -65,13 +54,13 @@ if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeo
     
     
     require_script.onload = function() {
-        renderNteractDataExplorer_00000000000000000000000000000000();
+        renderSandDanceExplorer_00000000000000000000000000000000();
     };
 
     document.getElementsByTagName('head')[0].appendChild(require_script);
 }
 else {
-    renderNteractDataExplorer_00000000000000000000000000000000();
+    renderSandDanceExplorer_00000000000000000000000000000000();
 }
 
  </script>

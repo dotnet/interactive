@@ -14,39 +14,27 @@ let renderNteractDataExplorer_00000000000000000000000000000000 = () => {
     "primaryKey": [],
     "fields": [
       {
-        "name": "Apples",
-        "type": "integer"
+        "name": "Type",
+        "type": "string"
       },
       {
-        "name": "Bananas",
-        "type": "integer"
-      },
-      {
-        "name": "Apples (2)",
-        "type": "integer"
-      },
-      {
-        "name": "BANANAS",
-        "type": "integer"
-      },
-      {
-        "name": "Apples (3)",
-        "type": "integer"
-      },
-      {
-        "name": "BaNaNaS",
-        "type": "integer"
+        "name": "Price",
+        "type": "number"
       }
     ]
   },
   "data": [
     {
-      "Apples": 1,
-      "Bananas": 2,
-      "Apples (2)": 3,
-      "BANANAS": 4,
-      "Apples (3)": 5,
-      "BaNaNaS": 6
+      "Type": "orange",
+      "Price": 1.2
+    },
+    {
+      "Type": "apple",
+      "Price": 1.3
+    },
+    {
+      "Type": "grape",
+      "Price": 1.4
     }
   ]
 },

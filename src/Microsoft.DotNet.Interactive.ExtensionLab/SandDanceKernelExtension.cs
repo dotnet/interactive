@@ -1,12 +1,8 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
-using Microsoft.DotNet.Interactive.Formatting;
-using Microsoft.DotNet.Interactive.Http;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
@@ -36,84 +32,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
                 "text/html");
 
             return Task.CompletedTask;
-        }
-    }
-
-    public static class SandDanceExplorerExtensions
-    {
-        public static T UseSandDanceExplorer<T>(this T kernel, string uri = null, string context = null, string cacheBuster = null) where T : Kernel
-        {
-            RegisterFormatters(string.IsNullOrWhiteSpace(uri) ? null : new Uri(uri), context, cacheBuster);
-            return kernel;
-        }
-
-        private static void RegisterFormatters(Uri uri, string context, string cacheBuster)
-        {
-            Formatter.Register<SandDanceDataExplorer>((explorer, writer) =>
-            {
-                var html = explorer.RenderSandDanceExplorer(uri,context,cacheBuster);
-                writer.Write(html);
-            }, HtmlFormatter.MimeType);
-        }
-
-        private static HtmlString RenderSandDanceExplorer(this SandDanceDataExplorer explorer,Uri uri, string context, string cacheBuster)
-        {
-            var explorerId = explorer.Id;
-            var data = explorer.TabularDataResource.ToJson();
-            var divId = explorerId;
-            var code = new StringBuilder();
-            code.AppendLine("<div style=\"background-color:white;\">");
-            code.AppendLine($"<div id=\"{divId}\" style=\"height: 100ch ;margin: 2px;\">");
-            code.AppendLine("</div>");
-            code.AppendLine(@"<script type=""text/javascript"">");
-            GenerateCode(data, code, divId, "https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js", uri,context,cacheBuster);
-            code.AppendLine(" </script>");
-            code.AppendLine("</div>");
-            return new HtmlString(code.ToString());
-        }
-
-        private static void GenerateCode(TabularDataResourceJsonString data, StringBuilder code, string divId, string requireUri, Uri uri, string context, string cacheBuster)
-        {
-            var functionName = $"renderSandDanceExplorer_{divId}";
-            GenerateFunctionCode(data, code, divId, functionName, uri,context,cacheBuster);
-            GenerateRequireLoader(code, functionName, requireUri);
-        }
-
-        private static void GenerateRequireLoader(StringBuilder code, string functionName, string requireUri)
-        {
-            code.AppendLine(JavascriptUtilities.GetCodeForEnsureRequireJs(new Uri(requireUri), functionName));
-        }
-
-
-        private static void GenerateFunctionCode(TabularDataResourceJsonString data, StringBuilder code, string dataExplorerId, string functionName, Uri uri, string context, string cacheBuster)
-        {
-            context ??= "1.0.0";
-            code.AppendLine($@"
-let {functionName} = () => {{");
-            if (uri != null)
-            {
-                var absoluteUri = uri.AbsoluteUri.Replace(".js", string.Empty);
-                cacheBuster ??= absoluteUri.GetHashCode().ToString("0");
-                code.AppendLine($@"
-    (require.config({{ 'paths': {{ 'context': '{context}', 'sandDanceUri' : '{absoluteUri}', 'urlArgs': 'cacheBuster={cacheBuster}' }}}}) || require)(['sandDanceUri'], (sandDance) => {{");
-            }
-            else
-            {
-                code.AppendLine($@"
-    configureRequireFromExtension('SandDance','{context}')(['SandDance/sanddanceapi'], (sandDance) => {{");
-            }
-
-            code.AppendLine($@"
-        sandDance.createSandDanceExplorer({{
-            data: {data},
-            id: ""{dataExplorerId}"",
-            container: document.getElementById(""{dataExplorerId}"")
-        }});
-    }},
-    (error) => {{
-        console.log(error);
-    }});
-}};");
         }
     }
 }

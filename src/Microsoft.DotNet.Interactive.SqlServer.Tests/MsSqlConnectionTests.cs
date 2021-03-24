@@ -162,10 +162,8 @@ select * from sys.databases
                         e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
                               .Which;
 
-            var dataExplorer = (ITabularDataResourceExplorer)value.Value;
-
-            var table = dataExplorer.TabularDataResource;
-
+            var table = ((NteractDataExplorer)value.Value).Data;
+            
             table.Schema.Fields.Should()
                 .ContainSingle(f => f.Name == "database_id")
                 .Which

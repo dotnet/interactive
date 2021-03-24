@@ -397,6 +397,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// Registers a formatter to be used when formatting instances of type <typeparamref name="T" />.
         /// </summary>
         /// <param name="formatter">The formatter.</param>
+        /// <param name="mimeType">The MimeType for this formatter. If it is not specified it defaults to <see cref="PlainTextFormatter.MimeType"/></param>
         public static void Register<T>(
             Func<FormatContext, T, TextWriter, bool> formatter,
             string mimeType = PlainTextFormatter.MimeType)
@@ -410,6 +411,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </summary>
         /// <param name="formatter">The formatter.</param>
         /// <param name="type">The type the formatter is registered for.</param>
+        /// <param name="mimeType">The MimeType for this formatter. If it is not specified it defaults to <see cref="PlainTextFormatter.MimeType"/></param>
         public static void Register(
             Type type,
             Func<FormatContext, object, TextWriter, bool> formatter,
@@ -423,6 +425,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </summary>
         /// <param name="formatter">The formatting action.</param>
         /// <param name="type">The type the formatter is registered for.</param>
+        /// <param name="mimeType">The MimeType for this formatter. If it is not specified it defaults to <see cref="PlainTextFormatter.MimeType"/></param>
         public static void Register(
             Type type,
             Action<object, TextWriter> formatter,
@@ -439,6 +442,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// Registers a formatter to be used when formatting instances of type <typeparamref name="T" />.
         /// </summary>
         /// <param name="formatter">The formatting action.</param>
+        /// <param name="mimeType">The MimeType for this formatter. If it is not specified it defaults to <see cref="PlainTextFormatter.MimeType"/></param>
         public static void Register<T>(
             Action<T, TextWriter> formatter,
             string mimeType = PlainTextFormatter.MimeType)
@@ -454,6 +458,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// Registers a formatter to be used when formatting instances of type <typeparamref name="T" />.
         /// </summary>
         /// <param name="formatter">The formatter.</param>
+        /// <param name="mimeType">The MimeType for this formatter. If it is not specified it defaults to <see cref="PlainTextFormatter.MimeType"/></param>
         public static void Register<T>(
             Func<T, string> formatter,
             string mimeType = PlainTextFormatter.MimeType,
