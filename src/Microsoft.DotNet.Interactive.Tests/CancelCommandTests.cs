@@ -90,6 +90,20 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
+        public async Task cancel_succeeds_when_there_is_command_in_progress_to_cancel()
+        {
+            var kernel = CreateKernel();
+
+            var cancelCommand = new Cancel();
+
+            await kernel.SendAsync(cancelCommand);
+
+            KernelEvents
+                .Should()
+                .ContainSingle<CommandSucceeded>(c => c.Command == cancelCommand);
+        }
+
+        [Fact]
         public async Task can_cancel_user_infinite_loops()
         {
             var kernel = CreateKernel();
@@ -98,7 +112,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             var commandToRun = new SubmitCode("while(true){ await Task.Delay(10); }", targetKernelName:"csharp");
            
-            var commandToInterrupt =  kernel.SendAsync(commandToRun);
+            var commandToInterrupt = kernel.SendAsync(commandToRun);
 
             await kernel.SendAsync(cancelCommand);
 

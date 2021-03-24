@@ -234,15 +234,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 var diagnostics = ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
 
                 // Check for a compilation failure
-                if (exception is CodeSubmissionCompilationErrorException compilationError &&
-                    compilationError.InnerException is CompilationErrorException innerCompilationException)
+                if (exception is CodeSubmissionCompilationErrorException { InnerException: CompilationErrorException innerCompilationException })
                 {
                     diagnostics = innerCompilationException.Diagnostics;
                     // In the case of an error the diagnostics get attached to both the 
                     // DiagnosticsProduced and CommandFailed events.
                     message =
                         string.Join(Environment.NewLine,
-                                    innerCompilationException.Diagnostics.Select(d => d.ToString()) ?? Enumerable.Empty<string>());
+                                    innerCompilationException.Diagnostics.Select(d => d.ToString()));
                 }
                 else
                 {

@@ -54,8 +54,6 @@ namespace Microsoft.DotNet.Interactive
                 };
             }));
 
-            _disposables.Add(AsyncContext.Clear);
-
             _disposables.Add(operation);
         }
 
