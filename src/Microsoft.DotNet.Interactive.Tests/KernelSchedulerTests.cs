@@ -14,7 +14,6 @@ using Pocket;
 using Xunit;
 using Xunit.Abstractions;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.KernelSchedulerTests>;
-using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {

@@ -89,8 +89,6 @@ namespace Microsoft.DotNet.Interactive
 
                 _currentlyRunningOperation = operation;
 
-                using var barrier = new Barrier(2);
-
                 try
                 {
                     ExecutionContext.Run(
@@ -98,37 +96,7 @@ namespace Microsoft.DotNet.Interactive
                         _ => RunScheduledOperationAndDeferredOperations(operation),
                         operation);
 
-                    // operation.TaskCompletionSource.Task.Wait(_schedulerDisposalSource.Token);
-
-
-                    operation.TaskCompletionSource.Task.ContinueWith(t =>
-                    {
-                        switch (t.Status)
-                        {
-                            case TaskStatus.Canceled:
-                                break;
-                            case TaskStatus.Created:
-                                break;
-                            case TaskStatus.Faulted:
-                                break;
-                            case TaskStatus.RanToCompletion:
-                                break;
-                            case TaskStatus.Running:
-                                break;
-                            case TaskStatus.WaitingForActivation:
-                                break;
-                            case TaskStatus.WaitingForChildrenToComplete:
-                                break;
-                            case TaskStatus.WaitingToRun:
-                                break;
-                        }
-
-                        Log.Info("At ContinueWith barrier for {operation}", operation);
-
-                        barrier.SignalAndWait(_schedulerDisposalSource.Token);
-                    });
-
-                    Log.Info("At loop barrier for {operation}", operation);
+                    operation.TaskCompletionSource.Task.Wait(_schedulerDisposalSource.Token);
                 }
                 catch (Exception e)
                 {
@@ -136,7 +104,6 @@ namespace Microsoft.DotNet.Interactive
                 }
                 finally
                 {
-                    barrier.SignalAndWait(_schedulerDisposalSource.Token);
                     _currentTopLevelOperation.Value = null;
                     _currentlyRunningOperation = null;
 ;                }
