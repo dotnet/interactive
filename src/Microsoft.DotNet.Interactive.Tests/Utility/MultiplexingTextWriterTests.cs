@@ -19,7 +19,6 @@ using static System.Environment;
 namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
     [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
-    [CheckForContextLeaks]
     public class MultiplexingTextWriterTests : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();

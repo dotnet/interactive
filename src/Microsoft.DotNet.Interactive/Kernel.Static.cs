@@ -66,9 +66,5 @@ namespace Microsoft.DotNet.Interactive
                 await kernel.SendAsync(new DisplayValue(formatted));
             }).Wait(context.CancellationToken);
         }
-
-        public static Kernel GetKernel(string name) =>
-            Current.FindKernel(name) ??
-            throw new KeyNotFoundException($"Kernel \"{name}\" was not found.");
     }
 }

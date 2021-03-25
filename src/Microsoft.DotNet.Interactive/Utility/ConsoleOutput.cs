@@ -54,13 +54,8 @@ namespace Microsoft.DotNet.Interactive.Utility
                     _multiplexingErrorWriter.GetObservable());
             }
 
-            // var outWriterSubscription = _multiplexingOutputWriter.EnsureInitializedForCurrentAsyncContext();
-            // var errorWriterSubscription = _multiplexingErrorWriter.EnsureInitializedForCurrentAsyncContext();
-
             return new CompositeDisposable(
                 subscribe(obsConsole),
-                // outWriterSubscription,
-                // errorWriterSubscription,
                 Disposable.Create(() =>
                 {
                     lock (_systemConsoleSwapLock)

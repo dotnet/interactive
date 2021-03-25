@@ -26,7 +26,6 @@ using Xunit.Abstractions;
 namespace Microsoft.DotNet.Interactive.Tests
 {
     [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
-    [CheckForContextLeaks]
     public abstract class LanguageKernelTestBase : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();
