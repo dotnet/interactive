@@ -9,7 +9,7 @@ using Disposable = System.Reactive.Disposables.Disposable;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
-    public static class ConsoleOutput
+    internal static class ConsoleOutput
     {
         private static readonly object _systemConsoleSwapLock = new();
 
@@ -23,9 +23,6 @@ namespace Microsoft.DotNet.Interactive.Utility
         private static readonly Logger Log = new(nameof(ConsoleOutput));
 
         private static OperationLogger _operationLogger;
-
-        // FIX: (ConsoleOutput) delete
-        public static int RefCount => _refCount;
 
         public static IDisposable Subscribe(Func<ObservableConsole, IDisposable> subscribe)
         {

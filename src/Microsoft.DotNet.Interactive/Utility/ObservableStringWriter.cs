@@ -81,10 +81,6 @@ namespace Microsoft.DotNet.Interactive.Utility
             {
                 _writeEvents.OnNext(sb.ToString(textSpan.Start, textSpan.Length));
             }
-            else
-            {
-                // FIX: (PublishStringIfObserved) clean up
-            }
         }
 
         private void TrackWriteOperation(Action action)

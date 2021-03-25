@@ -160,13 +160,6 @@ namespace Microsoft.DotNet.Interactive
                                         {
                                             operation.TaskCompletionSource.TrySetResult(t.Result);
                                         }
-                                        else if (!operation.TaskCompletionSource.Task.IsCompleted)
-                                        {
-                                            // FIX: (Run) clean up
-                                        }
-                                        else
-                                        {
-                                        }
                                     });
 
                 var result = Task.WaitAny(new[]

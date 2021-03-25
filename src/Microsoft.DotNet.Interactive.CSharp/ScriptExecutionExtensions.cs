@@ -14,7 +14,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             this Task<ScriptState<object>> source,
             CancellationToken cancellationToken)
         {
-            // FIX: (UntilCancelled) 
             var completed = await Task.WhenAny(
                                 source,
                                 Task.Run(async () =>

@@ -139,8 +139,7 @@ while(!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested
 
             await kernel.SendAsync(cancelCommand);
 
-            // FIX: (can_cancel_user_loop_using_CancellationToken) await
-            commandToInterrupt.Wait(15000);
+            await commandToInterrupt;
 
             KernelEvents
                 .Should()
