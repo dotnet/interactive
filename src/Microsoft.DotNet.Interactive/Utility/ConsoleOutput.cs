@@ -22,18 +22,21 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         private static readonly Logger Log = new(nameof(ConsoleOutput));
 
-        private static OperationLogger _operationLogger;
-
         public static IDisposable Subscribe(Func<ObservableConsole, IDisposable> subscribe)
         {
             ObservableConsole obsConsole;
 
+            OperationLogger _operationLogger;
+
             lock (_systemConsoleSwapLock)
             {
                 _operationLogger = Log.OnEnterAndExit(
-                    $"Subscribe on AsyncContext.Id {AsyncContext.Id?.ToString() ?? "none"}",
-                    exitArgs: () => new[] { ("AsyncContext.Id", (object) AsyncContext.Id) });
-
+                    $"Subscribe on AsyncContext.Id {AsyncContext.Id?.ToString() ?? "none"} with initial _refCount {_refCount}",
+                    exitArgs: () => new[]
+                    {
+                        ("AsyncContext.Id", (object) AsyncContext.Id),
+                        ("_refCount", _refCount),
+                    });
                 if (++_refCount == 1)
                 {
                     // FIX: (Subscribe) remove debuggy stuff
