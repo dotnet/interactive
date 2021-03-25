@@ -3,6 +3,7 @@
 
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace System
 {
@@ -24,13 +25,10 @@ namespace System
         /// Display the formatted DataExplorer.
         /// </summary>
         /// <param name="explorer">The DataExplorer to display.</param>
-        /// <param name="mimeType">The mimeType.</param>
-        /// <returns>An instance of <see cref="DataExplorer{TData}"/> that can be used to later update the display.</returns>
-        public static DataExplorer<TData> Display<TData>(this DataExplorer<TData> explorer, string mimeType = null)
+        /// <returns>An instance of <see cref="DisplayedValue"/> that can be used to later update the display.</returns>
+        public static DisplayedValue Display<TData>(this DataExplorer<TData> explorer)
         {
-            KernelInvocationContext.Current.Display(explorer, mimeType);
-            return explorer;
+            return explorer.Display(HtmlFormatter.MimeType);
         }
-
     }
 }
