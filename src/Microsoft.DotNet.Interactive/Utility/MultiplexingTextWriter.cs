@@ -24,7 +24,6 @@ namespace Microsoft.DotNet.Interactive.Utility
         private readonly ConcurrentDictionary<int, TextWriter> _writers = new();
 
         private readonly TextWriter _defaultWriter;
-        private bool _disposed = false;
 
         public MultiplexingTextWriter(
             string name,
@@ -69,11 +68,6 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         private TextWriter GetCurrentWriter(bool forWrite = true)
         {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException($"{nameof(MultiplexingTextWriter)} {_name} has been disposed.");
-            }
-
             EnsureInitializedForCurrentAsyncContext();
 
             string readOrWrite;
@@ -374,7 +368,6 @@ namespace Microsoft.DotNet.Interactive.Utility
         {
             if (disposing)
             {
-                _disposed = true;
                 var writers = _writers.Values.ToArray();
                 _writers.Clear();
                 foreach (var writer in writers)
