@@ -21,6 +21,7 @@ import { KernelId, updateCellLanguages, updateDocumentKernelspecMetadata } from 
 import { DotNetInteractiveNotebookKernelProvider } from './notebookKernelProvider';
 
 import * as jupyter from './jupyter';
+import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 
 import { isInsidersBuild } from './vscodeUtilities';
 
@@ -112,7 +113,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const jupyterExtensionIsPresent = jupyterExtension !== undefined;
     let useJupyterExtension = jupyterExtensionIsPresent;
     const forceDotNetIpynbHandling = config.get<boolean>('useDotNetInteractiveExtensionForIpynbFiles') || false;
-    if (forceDotNetIpynbHandling) {
+    if (forceDotNetIpynbHandling && !isInsidersBuild()) {
         useJupyterExtension = false;
     }
 
@@ -145,7 +146,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // notebook content
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookContentProvider));
-    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive-jupyter', notebookContentProvider));
+    versionSpecificFunctions.registerAdditionalContentProvider(context, notebookContentProvider);
 
     // notebook kernels
     const apiBootstrapperUri = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'kernelHttpApiBootstrapper.js'));
