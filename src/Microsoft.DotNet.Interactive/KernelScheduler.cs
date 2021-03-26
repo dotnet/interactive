@@ -34,6 +34,7 @@ namespace Microsoft.DotNet.Interactive
             if (_currentlyRunningOperation is { } operation)
             {
                 operation.TaskCompletionSource.TrySetCanceled(_schedulerDisposalSource.Token);
+                _currentlyRunningOperation = null;
             }
         }
 
@@ -106,7 +107,7 @@ namespace Microsoft.DotNet.Interactive
                 {
                     _currentTopLevelOperation.Value = null;
                     _currentlyRunningOperation = null;
-;                }
+                }
             }
         }
 
@@ -117,35 +118,33 @@ namespace Microsoft.DotNet.Interactive
                 _currentTopLevelOperation.Value = operation;
             }
 
+            using var logOp = Log.OnEnterAndConfirmOnExit($"Run: {operation.Value}");
+
             try
             {
                 var operationTask = operation
                                     .ExecuteAsync()
                                     .ContinueWith(t =>
                                     {
-                                        if (t.IsCompletedSuccessfully && !operation.TaskCompletionSource.Task.IsCompleted)
+                                        if (!operation.TaskCompletionSource.Task.IsCompleted)
                                         {
-                                            operation.TaskCompletionSource.TrySetResult(t.Result);
+                                            if (t.IsCompletedSuccessfully)
+                                            {
+                                                operation.TaskCompletionSource.TrySetResult(t.Result);
+                                            }
+                                            else
+                                            {
+                                                // FIX: (Run) 
+                                            }
                                         }
                                     });
 
-                var result = Task.WaitAny(new[]
-                {
+                Task.WaitAny(new[] {
                     operationTask,
                     operation.TaskCompletionSource.Task
                 }, _schedulerDisposalSource.Token);
 
-                switch (result)
-                {
-                    case 0:
-                        break;
-                    case 1:
-                        if (!operation.TaskCompletionSource.Task.IsCompleted)
-                        {
-                            
-                        }
-                        break;
-                }
+                logOp.Succeed();
             }
             catch (Exception exception)
             {

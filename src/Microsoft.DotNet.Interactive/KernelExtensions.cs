@@ -281,6 +281,19 @@ namespace Microsoft.DotNet.Interactive
         }
 
         [DebuggerStepThrough]
+        public static T LogCommandsToPocketLogger<T>(this T kernel) 
+            where T : Kernel
+        {
+            kernel.AddMiddleware(async (command, context, next) =>
+            {
+                using var _ = Logger.Log.OnEnterAndExit($"Command: {command.ToString().Replace(Environment.NewLine, " ")}");
+
+                await next(command, context);
+            });
+            return kernel;
+        }
+
+        [DebuggerStepThrough]
         public static T LogEventsToPocketLogger<T>(this T kernel)
             where T : Kernel
         {
