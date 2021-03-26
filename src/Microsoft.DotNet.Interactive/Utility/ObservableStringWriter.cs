@@ -27,8 +27,6 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         private readonly CompositeDisposable _disposable;
 
-        private bool _disposed = false;
-
         // FIX: (ObservableStringWriter) remove debuggy stuff
 
         private readonly int? _asyncContextId;
@@ -50,18 +48,12 @@ namespace Microsoft.DotNet.Interactive.Utility
             _disposable = new CompositeDisposable
             {
                 _writeEvents,
-                _logger,
-                () => _disposed = true
+                _logger
             };
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException($"ObservableStringWriter {_name}:{GetHashCode()} has been disposed.");
-            }
-
             if (disposing)
             {
                 _disposable.Dispose();
