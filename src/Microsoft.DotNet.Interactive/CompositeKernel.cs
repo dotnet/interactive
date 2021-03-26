@@ -324,7 +324,6 @@ namespace Microsoft.DotNet.Interactive
             ConnectKernelCommand<TOptions> connectionCommand)
             where TOptions : KernelConnectionOptions
         {
-            // FIX: (AddKernelConnection) use a global option
             var kernelNameOption = new Option<string>(
                 "--kernel-name",
                 "The name of the subkernel to be added");

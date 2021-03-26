@@ -4,39 +4,64 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Pocket;
+using static Pocket.Logger;
+using CompositeDisposable = Pocket.CompositeDisposable;
+using Disposable = Pocket.Disposable;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
     public class ObservableStringWriter : StringWriter, IObservable<string>
     {
-        private class Region
-        {
-            public int Start { get; set; }
-            public int Length { get; set; }
-        }
+        private readonly Subject<string> _writeEvents = new();
 
-        private readonly Subject<string> _writeEvents = new Subject<string>();
-        private readonly List<Region> _regions = new List<Region>();
+        private readonly List<TextSpan> _regions = new();
+
         private bool _trackingWriteOperation;
+
         private int _observerCount;
 
         private readonly CompositeDisposable _disposable;
 
-        public ObservableStringWriter()
+        private bool _disposed = false;
+
+        // FIX: (ObservableStringWriter) remove debuggy stuff
+
+        private readonly int? _asyncContextId;
+
+        private readonly OperationLogger _logger;
+
+        private readonly string _name;
+
+        public ObservableStringWriter(string name = null)
         {
+            _name = name;
+
+            _asyncContextId = AsyncContext.Id;
+
+            _logger = Log.OnEnterAndExit(
+                $"{nameof(ObservableStringWriter)}:{GetHashCode()} '{name}' on AsyncContext.Id {_asyncContextId}",
+                exitArgs: () => new[] { ("AsyncContext.Id", (object) AsyncContext.Id) });
+            
             _disposable = new CompositeDisposable
             {
-                _writeEvents
+                _writeEvents,
+                _logger,
+                () => _disposed = true
             };
         }
 
         protected override void Dispose(bool disposing)
         {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException($"ObservableStringWriter {_name}:{GetHashCode()} has been disposed.");
+            }
+
             if (disposing)
             {
                 _disposable.Dispose();
@@ -50,11 +75,11 @@ namespace Microsoft.DotNet.Interactive.Utility
             TrackWriteOperation(() => base.Write(value));
         }
 
-        private void PublishStringIfObserved(StringBuilder sb, Region region)
+        private void PublishStringIfObserved(StringBuilder sb, TextSpan textSpan)
         {
             if (_observerCount > 0)
             {
-                _writeEvents.OnNext(sb.ToString(region.Start, region.Length));
+                _writeEvents.OnNext(sb.ToString(textSpan.Start, textSpan.Length));
             }
         }
 
@@ -69,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             _trackingWriteOperation = true;
             var sb = base.GetStringBuilder();
 
-            var region = new Region
+            var region = new TextSpan
             {
                 Start = sb.Length
             };
@@ -94,7 +119,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             _trackingWriteOperation = true;
             var sb = base.GetStringBuilder();
 
-            var region = new Region
+            var region = new TextSpan
             {
                 Start = sb.Length
             };
@@ -346,12 +371,26 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         public IDisposable Subscribe(IObserver<string> observer)
         {
-            Interlocked.Increment(ref _observerCount);
+            var count = Interlocked.Increment(ref _observerCount);
+
+            var op = _logger.OnEnterAndExit($"ObservableStringWriter:{GetHashCode()} subscription");
+            
             return new CompositeDisposable
             {
-                Disposable.Create(() => Interlocked.Decrement(ref _observerCount)),
+                Disposable.Create(() =>
+                {
+                    count = Interlocked.Decrement(ref _observerCount);
+
+                    op.Dispose();
+                }),
                 _writeEvents.Subscribe(observer)
             };
+        }
+
+        private class TextSpan
+        {
+            public int Start { get; init; }
+            public int Length { get; set; }
         }
     }
 }

@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              typeof(CSharpKernel).Assembly,
                              typeof(PocketView).Assembly);
 
-        private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
+        private readonly AssemblyBasedExtensionLoader _extensionLoader = new();
         private string _currentDirectory;
 
         public CSharpKernel() : base(DefaultKernelName)
@@ -168,8 +168,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
                         new FormattedValue("text/markdown", info.ToMarkdownString())
                     },
                     correctedLinePosSpan));
-            
-            
         }
 
         public async Task HandleAsync(RequestSignatureHelp command, KernelInvocationContext context)
@@ -236,15 +234,14 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 var diagnostics = ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
 
                 // Check for a compilation failure
-                if (exception is CodeSubmissionCompilationErrorException compilationError &&
-                    compilationError.InnerException is CompilationErrorException innerCompilationException)
+                if (exception is CodeSubmissionCompilationErrorException { InnerException: CompilationErrorException innerCompilationException })
                 {
                     diagnostics = innerCompilationException.Diagnostics;
                     // In the case of an error the diagnostics get attached to both the 
                     // DiagnosticsProduced and CommandFailed events.
                     message =
                         string.Join(Environment.NewLine,
-                                    innerCompilationException.Diagnostics.Select(d => d.ToString()) ?? Enumerable.Empty<string>());
+                                    innerCompilationException.Diagnostics.Select(d => d.ToString()));
                 }
                 else
                 {
@@ -309,7 +306,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                                                     code,
                                                     ScriptOptions,
                                                     cancellationToken: cancellationToken)
-                    .UntilCancelled(cancellationToken)?? ScriptState;
+                    .UntilCancelled(cancellationToken) ?? ScriptState;
             }
             else
             {
@@ -318,7 +315,12 @@ namespace Microsoft.DotNet.Interactive.CSharp
                                                    ScriptOptions,
                                                    catchException: catchException,
                                                    cancellationToken: cancellationToken)
-                    .UntilCancelled(cancellationToken)?? ScriptState;
+                    .UntilCancelled(cancellationToken) ?? ScriptState;
+            }
+
+            if (IsDisposed)
+            {
+                return;
             }
 
             if (ScriptState is not null && ScriptState.Exception is null)

@@ -20,6 +20,8 @@ variables:
     value: .NETCore
   - name: DotNetSdkVersion
     value: '5.0.100'
+  - name: PocketLoggerLogPath
+    value: $(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)
   - name: TryDotNetPackagesPath
     value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
   - name: NodeJSVersion
@@ -118,6 +120,7 @@ stages:
             $(_BuildArgs)
           displayName: Build / Test
           env:
+            POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
 
         - script: npm run ciTest
@@ -273,6 +276,7 @@ stages:
             $(_TestArgs)
           displayName: Build / Test
           env:
+            POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
 
         - script: npm run ciTest

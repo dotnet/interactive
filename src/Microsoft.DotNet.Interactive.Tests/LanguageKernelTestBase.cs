@@ -15,6 +15,7 @@ using Microsoft.DotNet.Interactive.PowerShell;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
 using Pocket;
+using Pocket.For.Xunit;
 using Xunit;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.LanguageKernelTestBase>;
 
@@ -24,7 +25,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    [LogTestNamesToPocketLogger]
+    [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
     public abstract class LanguageKernelTestBase : IDisposable
     {
         private readonly CompositeDisposable _disposables = new();

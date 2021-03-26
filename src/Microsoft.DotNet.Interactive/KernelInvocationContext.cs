@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Utility;
+using Pocket;
+using CompositeDisposable = Pocket.CompositeDisposable;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -21,7 +23,7 @@ namespace Microsoft.DotNet.Interactive
 
         private readonly HashSet<KernelCommand> _childCommands = new();
 
-        private readonly System.Reactive.Disposables.CompositeDisposable _disposables = new();
+        private readonly CompositeDisposable _disposables = new();
 
         private readonly List<Func<KernelInvocationContext, Task>> _onCompleteActions = new();
 
@@ -29,6 +31,12 @@ namespace Microsoft.DotNet.Interactive
 
         private KernelInvocationContext(KernelCommand command)
         {
+            var operation = new OperationLogger(
+                args: new object[] { ("Start AsyncContext.Id", AsyncContext.Id), ("KernelCommand", command) },
+                exitArgs: () => new[] { ("End AsyncContext.Id", (object) AsyncContext.Id) },
+                category: nameof(KernelInvocationContext),
+                logOnStart: true);
+
             _cancellationTokenSource = new CancellationTokenSource();
 
             Command = command;
@@ -36,15 +44,17 @@ namespace Microsoft.DotNet.Interactive
             Result = new KernelCommandResult(_events);
 
             _disposables.Add(_cancellationTokenSource);
+
             _disposables.Add(ConsoleOutput.Subscribe(c =>
             {
-                return new System.Reactive.Disposables.CompositeDisposable
+                return new CompositeDisposable
                 {
                     c.Out.Subscribe(s => this.DisplayStandardOut(s, command)),
                     c.Error.Subscribe(s => this.DisplayStandardError(s, command))
                 };
             }));
-           
+
+            _disposables.Add(operation);
         }
 
         public KernelCommand Command { get; }
@@ -55,15 +65,14 @@ namespace Microsoft.DotNet.Interactive
         {
             get
             {
-                try
-                {
-                    return _cancellationTokenSource.Token;
-                }
-                catch (ObjectDisposedException)
+                if (_cancellationTokenSource.IsCancellationRequested)
                 {
                     return new CancellationToken(true);
                 }
-
+                else
+                {
+                    return _cancellationTokenSource.Token;
+                }
             }
         }
 
@@ -153,6 +162,16 @@ namespace Microsoft.DotNet.Interactive
         {
             if (_current.Value == null || _current.Value.IsComplete)
             {
+
+                if (AsyncContext.TryEstablish(out _))
+                {
+
+                }
+                else
+                {
+
+                }
+
                 var context = new KernelInvocationContext(command);
 
                 _current.Value = context;
@@ -176,7 +195,10 @@ namespace Microsoft.DotNet.Interactive
         {
             if (_current.Value is { } active)
             {
-                _current.Value = null;
+                if (_current.Value == this)
+                {
+                    _current.Value = null;
+                }
 
                 if (_onCompleteActions.Count > 0)
                 {

@@ -14,12 +14,28 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Jupyter;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Pocket;
+using Pocket.For.Xunit;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    public class DirectiveTests
+    [LogToPocketLogger(FileNameEnvironmentVariable = "POCKETLOGGER_LOG_PATH")]
+    public class DirectiveTests : IDisposable
     {
+        private readonly CompositeDisposable _disposables = new();
+
+        public DirectiveTests(ITestOutputHelper output)
+        {
+            _disposables.Add(output.SubscribeToPocketLogger());
+        }
+
+        public void Dispose()
+        {
+            _disposables.Dispose();
+        }
+
         [Fact]
         public void Directives_may_be_prefixed_with_hash()
         {

@@ -178,6 +178,8 @@ namespace Microsoft.DotNet.Interactive
             set => _frontendEnvironment = value;
         }
 
+        protected bool IsDisposed => _disposables.IsDisposed;
+
         public IObservable<KernelEvent> KernelEvents => _kernelEvents;
 
         public string Name { get; set; }

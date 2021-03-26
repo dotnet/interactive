@@ -6,20 +6,21 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive
 {
     public class KernelScheduler<T, U> : IDisposable
     {
+        private static readonly Logger Log = new("KernelScheduler");
         private readonly List<DeferredOperation> _deferredOperationSources = new();
         private readonly CancellationTokenSource _schedulerDisposalSource = new();
         private readonly Task _runLoopTask;
         private readonly AsyncLocal<ScheduledOperation> _currentTopLevelOperation = new();
 
         private readonly BlockingCollection<ScheduledOperation> _topLevelScheduledOperations = new();
-        private readonly Barrier _barrier = new(2);
         private ScheduledOperation _currentlyRunningOperation;
-
+        
         public KernelScheduler()
         {
             _runLoopTask = Task.Factory.StartNew(
@@ -33,6 +34,7 @@ namespace Microsoft.DotNet.Interactive
             if (_currentlyRunningOperation is { } operation)
             {
                 operation.TaskCompletionSource.TrySetCanceled(_schedulerDisposalSource.Token);
+                _currentlyRunningOperation = null;
             }
         }
 
@@ -87,6 +89,7 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 _currentlyRunningOperation = operation;
+
                 try
                 {
                     ExecutionContext.Run(
@@ -94,11 +97,11 @@ namespace Microsoft.DotNet.Interactive
                         _ => RunScheduledOperationAndDeferredOperations(operation),
                         operation);
 
-                    operation.TaskCompletionSource.Task.ContinueWith(_ =>
-                    {
-                        _barrier.SignalAndWait(_schedulerDisposalSource.Token);
-                    });
-                    _barrier.SignalAndWait(_schedulerDisposalSource.Token);
+                    operation.TaskCompletionSource.Task.Wait(_schedulerDisposalSource.Token);
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e);
                 }
                 finally
                 {
@@ -115,22 +118,33 @@ namespace Microsoft.DotNet.Interactive
                 _currentTopLevelOperation.Value = operation;
             }
 
+            using var logOp = Log.OnEnterAndConfirmOnExit($"Run: {operation.Value}");
+
             try
             {
                 var operationTask = operation
-                                  .ExecuteAsync()
-                                  .ContinueWith(t =>
-                                  {
-                                      if (t.IsCompletedSuccessfully && !operation.TaskCompletionSource.Task.IsCompleted)
-                                      {
-                                          operation.TaskCompletionSource.TrySetResult(t.Result);
-                                      }
-                                  });
+                                    .ExecuteAsync()
+                                    .ContinueWith(t =>
+                                    {
+                                        if (!operation.TaskCompletionSource.Task.IsCompleted)
+                                        {
+                                            if (t.IsCompletedSuccessfully)
+                                            {
+                                                operation.TaskCompletionSource.TrySetResult(t.Result);
+                                            }
+                                            else
+                                            {
+                                                // FIX: (Run) 
+                                            }
+                                        }
+                                    });
 
                 Task.WaitAny(new[] {
                     operationTask,
                     operation.TaskCompletionSource.Task
                 }, _schedulerDisposalSource.Token);
+
+                logOp.Succeed();
             }
             catch (Exception exception)
             {
@@ -143,12 +157,26 @@ namespace Microsoft.DotNet.Interactive
 
         private void RunScheduledOperationAndDeferredOperations(ScheduledOperation operation)
         {
-            foreach (var deferredOperation in OperationsToRunBefore(operation))
+            try
             {
-                Run(deferredOperation);
-            }
+                foreach (var deferredOperation in OperationsToRunBefore(operation))
+                {
+                    Run(deferredOperation);
 
-            Run(operation);
+                    if (!deferredOperation.TaskCompletionSource.Task.IsCompletedSuccessfully)
+                    {
+                        Log.Error(
+                            "Deferred operation failed",
+                            deferredOperation.TaskCompletionSource.Task.Exception);
+                    }
+                }
+
+                Run(operation);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception);
+            }
         }
 
         private void RunPreemptively(ScheduledOperation operation)
