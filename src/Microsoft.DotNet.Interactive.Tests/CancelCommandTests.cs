@@ -4,8 +4,6 @@
 using System;
 using System.Threading.Tasks;
 using FluentAssertions;
-using FluentAssertions.Execution;
-using FluentAssertions.Extensions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
@@ -18,39 +16,6 @@ namespace Microsoft.DotNet.Interactive.Tests
     {
         public CancelCommandTests(ITestOutputHelper output) : base(output)
         {
-        }
-
-        [Theory]
-        [InlineData(Language.CSharp, Skip = "requires scheduler working")]
-        [InlineData(Language.FSharp, Skip = "requires scheduler working")]
-        [InlineData(Language.PowerShell, Skip = "to address later")]
-        public void cancel_command_cancels_the_running_command(Language language)
-        {
-            var kernel = CreateKernel(language);
-
-            var cancelCommand = new Cancel();
-
-            var submitCodeCommand = new CancellableCommand();
-
-            Task.WhenAll(
-                    Task.Run(async () => { await kernel.SendAsync(submitCodeCommand); }),
-                    Task.Run(async () =>
-                    {
-                        await Task.Delay(100);
-                        await kernel.SendAsync(cancelCommand);
-                    }))
-                .Wait(TimeSpan.FromSeconds(20));
-
-            using var _ = new AssertionScope();
-            
-
-            KernelEvents
-                .Should()
-                .ContainSingle<CommandFailed>(c => c.Command == submitCodeCommand)
-                .Which
-                .Exception
-                .Should()
-                .BeOfType<OperationCanceledException>();
         }
 
         [Fact]
