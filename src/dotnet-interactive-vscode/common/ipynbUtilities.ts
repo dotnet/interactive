@@ -1,7 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-import { getNotebookSpecificLanguage, notebookCellLanguages } from "./interactiveNotebook";
+import { getNotebookSpecificLanguage, isDotnetInteractiveLanguage, notebookCellLanguages } from "./interactiveNotebook";
 
 // the shape of this is meant to match the cell metadata from VS Code
 interface CellMetadata {
@@ -29,24 +29,6 @@ export function getDotNetMetadata(metadata: CellMetadata | undefined): DotNetCel
     return {
         language: undefined,
     };
-}
-
-export function withDotNetMetadata(metadata: { [key: string]: any } | undefined, cellMetadata: DotNetCellMetadata): any {
-    let result: { [key: string]: any } = {};
-    if (metadata) {
-        for (const key in metadata) {
-            result[key] = metadata[key];
-        }
-    }
-
-    result.custom ||= {};
-    result.custom.metadata ||= {};
-    result.custom.metadata.dotnet_interactive ||= {};
-    for (const key in cellMetadata) {
-        result.custom.metadata.dotnet_interactive[key] = (<any>cellMetadata)[key];
-    }
-
-    return result;
 }
 
 // the shape of this is meant to match the document metadata from VS Code
@@ -99,7 +81,7 @@ function mapIpynbLanguageName(name: string | undefined): string | undefined {
     return undefined;
 }
 
-export function getCellLanguage(cellText: string, cellMetadata: DotNetCellMetadata, documentMetadata: LanguageInfoMetadata, fallbackLanguage: string): string {
+export function getCellLanguage(cellText: string, cellMetadata: DotNetCellMetadata, documentMetadata: LanguageInfoMetadata, reportedCellLanguage: string): string {
     const cellLines = cellText.split('\n').map(line => line.trim());
     let cellLanguageSpecifier: string | undefined = undefined;
     if (cellLines.length > 0 && cellLines[0].startsWith('#!')) {
@@ -110,7 +92,17 @@ export function getCellLanguage(cellText: string, cellMetadata: DotNetCellMetada
         }
     }
 
-    return getNotebookSpecificLanguage(cellLanguageSpecifier || cellMetadata.language || documentMetadata.name || fallbackLanguage);
+    let dotnetDocumentLanguage: string | undefined = undefined;
+    if (isDotnetInteractiveLanguage(reportedCellLanguage) || notebookCellLanguages.includes(getNotebookSpecificLanguage(reportedCellLanguage))) {
+        // reported language is either something like `dotnet-interactive.csharp` or it's `csharp` that can be turned into a known supported language
+        dotnetDocumentLanguage = getNotebookSpecificLanguage(reportedCellLanguage);
+    }
+    const dotnetCellLanguage = cellLanguageSpecifier || cellMetadata.language || dotnetDocumentLanguage || documentMetadata.name;
+    if (dotnetCellLanguage) {
+        return getNotebookSpecificLanguage(dotnetCellLanguage);
+    }
+
+    return reportedCellLanguage;
 }
 
 export interface KernelspecMetadata {
