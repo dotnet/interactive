@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { expect } from 'chai';
-import { DotNetCellMetadata, getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, LanguageInfoMetadata, withDotNetKernelMetadata, withDotNetMetadata } from '../../ipynbUtilities';
+import { DotNetCellMetadata, getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, LanguageInfoMetadata, withDotNetKernelMetadata } from '../../ipynbUtilities';
 
 describe('ipynb metadata tests', () => {
     describe('document metadata', () => {
@@ -337,189 +337,111 @@ describe('ipynb metadata tests', () => {
             const dotnetMetadata = getDotNetMetadata(cellMetadata);
             expect(dotnetMetadata.language).to.equal(undefined);
         });
-
-        it(`cell metadata can be set when empty`, () => {
-            const existingMetadata = {
-            };
-            const dotnetMetadata = {
-                language: 'see-sharp'
-            };
-            const newMetadata = withDotNetMetadata(existingMetadata, dotnetMetadata);
-            expect(newMetadata).to.deep.equal({
-                custom: {
-                    metadata: {
-                        dotnet_interactive: {
-                            language: 'see-sharp'
-                        }
-                    }
-                }
-            });
-        });
-
-        it(`cell metadata can overwrite old values`, () => {
-            const existingMetadata = {
-                custom: {
-                    metadata: {
-                        dotnet_interactive: {
-                            language: 'eff-sharp'
-                        }
-                    }
-                }
-            };
-            const dotnetMetadata = {
-                language: 'see-sharp'
-            };
-            const newMetadata = withDotNetMetadata(existingMetadata, dotnetMetadata);
-            expect(newMetadata).to.deep.equal({
-                custom: {
-                    metadata: {
-                        dotnet_interactive: {
-                            language: 'see-sharp'
-                        }
-                    }
-                }
-            });
-        });
-
-        it(`cell metadata doesn't overwrite other values in dotnet_interactive namespace`, () => {
-            const existingMetadata = {
-                custom: {
-                    metadata: {
-                        dotnet_interactive: {
-                            language: 'eff-sharp',
-                            version: 42
-                        }
-                    }
-                }
-            };
-            const dotnetMetadata = {
-                language: 'see-sharp'
-            };
-            const newMetadata = withDotNetMetadata(existingMetadata, dotnetMetadata);
-            expect(newMetadata).to.deep.equal({
-                custom: {
-                    metadata: {
-                        dotnet_interactive: {
-                            language: 'see-sharp',
-                            version: 42
-                        }
-                    }
-                }
-            });
-        });
-
-        it(`cell metadata doesn't overwrite other values or namespaces`, () => {
-            const existingMetadata = {
-                custom: {
-                    metadata: {
-                        not_dotnet_interactive: {
-                            some_key: 'some_value'
-                        }
-                    }
-                }
-            };
-            const dotnetMetadata = {
-                language: 'see-sharp'
-            };
-            const newMetadata = withDotNetMetadata(existingMetadata, dotnetMetadata);
-            expect(newMetadata).to.deep.equal({
-                custom: {
-                    metadata: {
-                        dotnet_interactive: {
-                            language: 'see-sharp'
-                        },
-                        not_dotnet_interactive: {
-                            some_key: 'some_value'
-                        }
-                    }
-                }
-            });
-        });
-
-        it(`cell metadata doesn't remove values in non-standard locations`, () => {
-            const existingMetadata = {
-                something_non_standard: {
-                    really_odd: 'not sure what this is'
-                }
-            };
-            const dotnetMetadata = {
-                language: 'see-sharp'
-            };
-            const newMetadata = withDotNetMetadata(existingMetadata, dotnetMetadata);
-            expect(newMetadata).to.deep.equal({
-                something_non_standard: {
-                    really_odd: 'not sure what this is'
-                },
-                custom: {
-                    metadata: {
-                        dotnet_interactive: {
-                            language: 'see-sharp'
-                        }
-                    }
-                }
-            });
-        });
     });
 
     describe('cell language selection', () => {
         it(`sets the cell language first from cell text`, () => {
+            const cellText = '#!javascript\r\nalert(1+1);';
             const cellMetadata: DotNetCellMetadata = {
                 language: 'pwsh',
             };
             const documentMetadata: LanguageInfoMetadata = {
                 name: 'fsharp',
             };
-            const cellText = '#!javascript\r\nalert(1+1);';
-            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, 'csharp');
+            const cellReportedLanguage = 'dotnet-interactive.csharp';
+            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, cellReportedLanguage);
             expect(cellLanguage).to.equal('dotnet-interactive.javascript');
         });
 
-        it(`does not use the cell text for the language if a non-language specifier is on the first line`, () => {
-            const cellMetadata: DotNetCellMetadata = {
-                language: 'pwsh',
-            };
-            const documentMetadata: LanguageInfoMetadata = {
-                name: 'fsharp',
-            };
+        it(`does not use the cell text for the language if a non-language specifier is on the first line; cell metadata is used`, () => {
             const cellText = '#!about\r\n1+1';
-            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, 'csharp');
-            expect(cellLanguage).to.equal('dotnet-interactive.pwsh');
-        });
-
-        it(`sets the cell language second from cell metadata`, () => {
             const cellMetadata: DotNetCellMetadata = {
                 language: 'pwsh',
             };
             const documentMetadata: LanguageInfoMetadata = {
                 name: 'fsharp',
             };
-            const cellText = '1+1';
-            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, 'csharp');
+            const cellReportedLanguage = 'dotnet-interactive.csharp';
+            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, cellReportedLanguage);
             expect(cellLanguage).to.equal('dotnet-interactive.pwsh');
         });
 
-        it(`sets the cell language third from document metadata`, () => {
+        it(`sets the cell language second from cell metadata if cell text doesn't specify a language`, () => {
+            const cellText = '1+1';
+            const cellMetadata: DotNetCellMetadata = {
+                language: 'pwsh',
+            };
+            const documentMetadata: LanguageInfoMetadata = {
+                name: 'fsharp',
+            };
+            const cellReportedLanguage = 'dotnet-interactive.csharp';
+            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, cellReportedLanguage);
+            expect(cellLanguage).to.equal('dotnet-interactive.pwsh');
+        });
+
+        it(`sets the cell language third from document metadata if cell reported language is unsupported`, () => {
+            const cellText = '1+1';
             const cellMetadata: DotNetCellMetadata = {
                 language: undefined,
             };
             const documentMetadata: LanguageInfoMetadata = {
                 name: 'fsharp',
             };
-            const cellText = '1+1';
-            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, 'csharp');
+            const cellReportedLanguage = 'python';
+            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, cellReportedLanguage);
             expect(cellLanguage).to.equal('dotnet-interactive.fsharp');
         });
 
-        it(`sets the cell language finally from the fallback value`, () => {
+        it(`cell metadata is undefined, cell reported language is used if it's a dotnet language`, () => {
+            const cellText = '1+1';
+            const cellMetadata: DotNetCellMetadata = {
+                language: undefined,
+            };
+            const documentMetadata: LanguageInfoMetadata = {
+                name: 'fsharp',
+            };
+            const cellReportedLanguage = 'dotnet-interactive.csharp';
+            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, cellReportedLanguage);
+            expect(cellLanguage).to.equal('dotnet-interactive.csharp');
+        });
+
+        it(`cell metadata is undefined, document metadata is undefined, fall back to what the cell thinks it is, but make it a dotnet-interactive langugae`, () => {
+            const cellText = '1+1';
             const cellMetadata: DotNetCellMetadata = {
                 language: undefined,
             };
             const documentMetadata: LanguageInfoMetadata = {
                 name: undefined,
             };
-            const cellText = '1+1';
-            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, 'csharp');
+            const cellReportedLanguage = 'csharp';
+            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, cellReportedLanguage);
             expect(cellLanguage).to.equal('dotnet-interactive.csharp');
+        });
+
+        it(`cell metadata is undefined, document metadata is undefined, fall back to what the cell thinks it is; supported`, () => {
+            const cellText = '1+1';
+            const cellMetadata: DotNetCellMetadata = {
+                language: undefined,
+            };
+            const documentMetadata: LanguageInfoMetadata = {
+                name: undefined,
+            };
+            const cellReportedLanguage = 'dotnet-interactive.csharp';
+            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, cellReportedLanguage);
+            expect(cellLanguage).to.equal('dotnet-interactive.csharp');
+        });
+
+        it(`cell metadata is undefined, document metadata is undefined, fall back to what the cell thinks it is; unsupported`, () => {
+            const cellText = '1+1';
+            const cellMetadata: DotNetCellMetadata = {
+                language: undefined,
+            };
+            const documentMetadata: LanguageInfoMetadata = {
+                name: undefined,
+            };
+            const cellReportedLanguage = 'ruby';
+            const cellLanguage = getCellLanguage(cellText, cellMetadata, documentMetadata, cellReportedLanguage);
+            expect(cellLanguage).to.equal('ruby');
         });
     });
 });

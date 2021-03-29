@@ -14,7 +14,6 @@ import { registerAcquisitionCommands, registerKernelCommands, registerFileComman
 import { getSimpleLanguage, isDotnetInteractiveLanguage } from '../interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
-import { DotNetCellMetadata, withDotNetMetadata } from '../ipynbUtilities';
 import { executeSafe, isDotNetUpToDate, processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 import { KernelId, updateCellLanguages, updateDocumentKernelspecMetadata } from './notebookKernel';
@@ -173,7 +172,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.workspace.onDidRenameFiles(e => handleFileRenames(e, clientMapper)));
 
     // language registration
-    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(async e => updateNotebookCellLanguageInMetadata(e)));
+    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(async e => await updateNotebookCellLanguageInMetadata(e)));
     context.subscriptions.push(registerLanguageProviders(clientMapper, diagnosticDelay));
 }
 
@@ -200,12 +199,15 @@ async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocumen
     if (notebook && isDotnetInteractiveLanguage(candidateNotebookCellDocument.languageId)) {
         const cell = notebook.cells.find(c => c.document === candidateNotebookCellDocument);
         if (cell) {
+            const newMetadata = cell.metadata.with({
+                custom: {
+                    dotnet_interactive: {
+                        language: getSimpleLanguage(candidateNotebookCellDocument.languageId)
+                    }
+                }
+            });
             const edit = new vscode.WorkspaceEdit();
-            const cellMetadata: DotNetCellMetadata = {
-                language: getSimpleLanguage(candidateNotebookCellDocument.languageId),
-            };
-            const metadata = withDotNetMetadata(cell.metadata, cellMetadata);
-            edit.replaceNotebookCellMetadata(candidateNotebookCellDocument.uri, cell.index, metadata);
+            edit.replaceNotebookCellMetadata(candidateNotebookCellDocument.uri, cell.index, newMetadata);
             await vscode.workspace.applyEdit(edit);
         }
     }
