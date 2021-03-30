@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
     {
         public static string FixedGuid(this string source)
         {
-            var reg = new Regex(@".*\s+id=""(?<id>\S+)""\s+.*", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
+            var reg = new Regex(@".*\s+id=""(?<id>\S+)""\s*.*", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
             var id1 = reg.Match(source).Groups["id"].Value;
             var id = id1;
             return source.Replace(id, "00000000000000000000000000000000");

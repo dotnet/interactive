@@ -2,23 +2,21 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
-using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
-namespace System
-{
-}
+using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive
 {
     public partial class Kernel
     {
         public static Kernel Current => KernelInvocationContext.Current.HandlingKernel;
+
+        public static Kernel Root => KernelInvocationContext.Current.HandlingKernel?.ParentKernel ?? KernelInvocationContext.Current.HandlingKernel;
 
         public static DisplayedValue display(
             object value,
