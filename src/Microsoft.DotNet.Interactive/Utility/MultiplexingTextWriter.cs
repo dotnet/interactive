@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -12,15 +13,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using Pocket;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Utility.MultiplexingTextWriter>;
+
 namespace Microsoft.DotNet.Interactive.Utility
 {
+    [DebuggerDisplay(nameof(MultiplexingTextWriter))]
     public class MultiplexingTextWriter : TextWriter
     {
         private static volatile UnicodeEncoding _encoding;
 
         private readonly Func<TextWriter> _createTextWriter;
         private readonly string _name;
-        private readonly object _lockObj = new();
         private readonly ConcurrentDictionary<int, TextWriter> _writers = new();
 
         private readonly TextWriter _defaultWriter;
@@ -46,30 +48,24 @@ namespace Microsoft.DotNet.Interactive.Utility
 
             return Disposable.Create(() =>
             {
-                // FIX: (EnsureInitializedForCurrentAsyncContext) ref count?
-                lock (_lockObj)
-                {
-                    var success = _writers.TryGetValue(id, out var writer);
+                var success = _writers.TryGetValue(id, out var writer);
 
-                    if (success)
-                    {
-                        writer.Dispose();
-                        _writers.TryRemove(id, out _);
-                    }
-                    else
-                    {
-                        Log.Error(
-                            message: $"Couldn't find {{name}}:{GetHashCode()} on asyncContextId {{id}}",
-                            args: new object[] { _name, id });
-                    }
+                if (success)
+                {
+                    writer.Dispose();
+                    _writers.TryRemove(id, out _);
+                }
+                else
+                {
+                    Log.Error(
+                        message: $"Couldn't find {{name}}:{GetHashCode()} on asyncContextId {{id}}",
+                        args: new object[] { _name, id });
                 }
             });
         }
 
         private TextWriter GetCurrentWriter(bool forWrite = true)
         {
-            EnsureInitializedForCurrentAsyncContext();
-
             string readOrWrite;
             if (forWrite)
             {
@@ -83,21 +79,17 @@ namespace Microsoft.DotNet.Interactive.Utility
             if (AsyncContext.Id is { } asyncContextId)
             {
                 // FIX: (GetCurrentWriter) remove debuggy stuff
+                var writer = _writers.GetOrAdd(
+                    asyncContextId,
+                    _ =>
+                    {
+                        Log.Info($"Adding writer {{name}}:{GetHashCode()} on {{asyncContextId}} for {{readOrWrite}}", _name, asyncContextId, readOrWrite);
+                        return _createTextWriter();
+                    });
 
-                lock (_lockObj)
-                {
-                    var writer = _writers.GetOrAdd(
-                        asyncContextId,
-                        _ =>
-                        {
-                            Log.Info($"Adding writer {{name}}:{GetHashCode()} on {{asyncContextId}} for {{readOrWrite}}", _name, asyncContextId, readOrWrite);
-                            return _createTextWriter();
-                        });
+                Log.Info($"Retrieving {{name}}:{GetHashCode()} on {{asyncContextId}} for {{readOrWrite}}. Writers: {{writers}}.", _name, asyncContextId, readOrWrite, _writers);
 
-                    Log.Info($"Retrieving {{name}}:{GetHashCode()} on {{asyncContextId}} for {{readOrWrite}}. Writers: {{writers}}.", _name, asyncContextId, readOrWrite, _writers);
-
-                    return writer;
-                }
+                return writer;
             }
 
             return _defaultWriter;
