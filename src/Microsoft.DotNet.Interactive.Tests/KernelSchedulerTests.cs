@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             using var scheduler = new KernelScheduler<int, int>();
             scheduler.RegisterDeferredOperationSource(
-                (v, _) => Enumerable.Repeat(v * 10, v), PerformWork);
+                (v, _) => Enumerable.Repeat(v * 10, v).ToList(), PerformWork);
 
             for (var i = 1; i <= 3; i++)
             {
@@ -332,7 +332,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             using var scheduler = new KernelScheduler<int, int>();
             scheduler.RegisterDeferredOperationSource(
-                (v, scope) => scope == "scope2" ? Enumerable.Repeat(v * 10, v) : Enumerable.Empty<int>(), PerformWork);
+                (v, scope) => scope == "scope2" ? Enumerable.Repeat(v * 10, v).ToList() : Enumerable.Empty<int>().ToList(), PerformWork);
 
             for (var i = 1; i <= 3; i++)
             {
