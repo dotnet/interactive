@@ -183,7 +183,7 @@ json"
         [Theory]
         [InlineData(Language.CSharp)]
         //Not implemented: [InlineData(Language.FSharp)]
-        public async Task it_can_load_script_files_using_load_directive_with_relative_path_after_command_changeWorkingDirectory(Language language)
+        public async Task it_can_load_script_files_using_load_directive_with_relative_path_after_command_changeWorkspaceDirectory(Language language)
         {
             var currentDirectory = Directory.GetCurrentDirectory();
             DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
