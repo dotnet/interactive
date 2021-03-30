@@ -27,6 +27,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly CompositeDisposable _disposables;
 
         private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
+        private KernelScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler;
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
         private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
@@ -201,10 +202,8 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public void RegisterCommandType<TCommand>()
-            where TCommand : KernelCommand
-        {
+            where TCommand : KernelCommand =>
             KernelCommandEnvelope.RegisterCommandTypeReplacingIfNecessary<TCommand>();
-        }
 
         internal virtual async Task HandleAsync(
             KernelCommand command,
@@ -223,7 +222,6 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(command));
             }
 
-            var scheduler = Scheduler;
             var context = KernelInvocationContext.Establish(command);
            
             // only subscribe for the root command 
@@ -265,13 +263,29 @@ namespace Microsoft.DotNet.Interactive
 
                             case Cancel cancel:
                                 cancel.KernelUri = Uri;
-                                cancel.TargetKernelName = Name;
-                                scheduler.CancelCurrentOperation();
+                                cancel.TargetKernelName = Name; 
+                                Scheduler.CancelCurrentOperation();
                                 await InvokePipelineAndCommandHandler(cancel);
                                 break;
 
+                            case RequestDiagnostics requestDiagnostics:
+                                // FIX: (SendAsync) 
+                                 await FastPathScheduler.RunAsync(
+                                    c,
+                                    InvokePipelineAndCommandHandler,
+                                    c.KernelUri.ToString(),
+                                    cancellationToken: cancellationToken)
+                                    .ContinueWith(t =>
+                                    {
+                                        if (t.IsCanceled)
+                                        {
+                                            context.Cancel();
+                                        }
+                                    }, cancellationToken);
+                                break;
+
                             default:
-                                await scheduler.RunAsync(
+                                await Scheduler.RunAsync(
                                     c,
                                     InvokePipelineAndCommandHandler,
                                     c.KernelUri.ToString(),
@@ -338,37 +352,54 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+        protected KernelScheduler<KernelCommand, KernelCommandResult> FastPathScheduler
+        {
+            get
+            {
+                if (_fastPathScheduler is null)
+                {
+                    _fastPathScheduler = new();
+                    _fastPathScheduler.RegisterDeferredOperationSource(GetDeferredOperations, InvokePipelineAndCommandHandler);
+                }
+
+                return _fastPathScheduler;
+            }
+        }
+
         protected internal void SetScheduler(KernelScheduler<KernelCommand, KernelCommandResult> scheduler)
         {
             _commandScheduler = scheduler;
 
             _commandScheduler.RegisterDeferredOperationSource(GetDeferredOperations, InvokePipelineAndCommandHandler);
-
-            IEnumerable<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
-            {
-                if (!command.KernelUri.Contains(Uri))
-                {
-                    yield break;
-                }
-
-                while (_deferredCommands.TryDequeue(out var kernelCommand))
-                {
-                    kernelCommand.TargetKernelName = Name;
-                    kernelCommand.KernelUri = Uri;
-                    var currentInvocationContext = KernelInvocationContext.Current;
-                    if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
-                    {
-                        foreach (var cmd in commands)
-                        {
-                            yield return cmd;
-                        }
-                    }
-                }
-            }
         }
 
-        private protected virtual KernelUri GetHandlingKernelUri(
-            KernelCommand command)
+        private static readonly List<KernelCommand> EmptyCommandList = new(0);
+
+        protected IReadOnlyList<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
+        {
+            if (!command.KernelUri.Contains(Uri))
+            {
+                return EmptyCommandList;
+            }
+
+            var splitCommands = new List<KernelCommand>();
+
+            while (_deferredCommands.TryDequeue(out var kernelCommand))
+            {
+                kernelCommand.TargetKernelName = Name;
+                kernelCommand.KernelUri = Uri;
+                var currentInvocationContext = KernelInvocationContext.Current;
+
+                if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
+                {
+                    splitCommands.AddRange(commands);
+                }
+            }
+
+            return splitCommands;
+        }
+
+        private protected virtual KernelUri GetHandlingKernelUri(KernelCommand command)
         {
             return Uri;
         }

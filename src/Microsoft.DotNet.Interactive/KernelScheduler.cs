@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive
     public class KernelScheduler<T, U> : IDisposable
     {
         private static readonly Logger Log = new("KernelScheduler");
-        private readonly List<DeferredOperation> _deferredOperationSources = new();
+        private readonly List<DeferredOperationSource> _deferredOperationSources = new();
         private readonly CancellationTokenSource _schedulerDisposalSource = new();
         private readonly Task _runLoopTask;
         private readonly AsyncLocal<ScheduledOperation> _currentTopLevelOperation = new();
@@ -47,17 +47,7 @@ namespace Microsoft.DotNet.Interactive
             ThrowIfDisposed();
 
             ScheduledOperation operation;
-            if (_currentTopLevelOperation.Value is not { })
-            {
-                operation = new ScheduledOperation(
-                    value,
-                    onExecuteAsync,
-                    ExecutionContext.Capture(),
-                    scope: scope,
-                    cancellationToken: cancellationToken);
-                _topLevelScheduledOperations.Add(operation, cancellationToken);
-            }
-            else
+            if (_currentTopLevelOperation.Value is { })
             {
                 // recursive scheduling
                 operation = new ScheduledOperation(
@@ -67,6 +57,16 @@ namespace Microsoft.DotNet.Interactive
                     scope,
                     cancellationToken);
                 RunPreemptively(operation);
+            }
+            else
+            {
+                operation = new ScheduledOperation(
+                    value,
+                    onExecuteAsync,
+                    ExecutionContext.Capture(),
+                    scope: scope,
+                    cancellationToken: cancellationToken);
+                _topLevelScheduledOperations.Add(operation, cancellationToken);
             }
 
             return operation.TaskCompletionSource.Task;
@@ -131,10 +131,6 @@ namespace Microsoft.DotNet.Interactive
                                             if (t.IsCompletedSuccessfully)
                                             {
                                                 operation.TaskCompletionSource.TrySetResult(t.Result);
-                                            }
-                                            else
-                                            {
-                                                // FIX: (Run) 
                                             }
                                         }
                                     });
@@ -210,7 +206,7 @@ namespace Microsoft.DotNet.Interactive
         {
             ThrowIfDisposed();
 
-            _deferredOperationSources.Add(new DeferredOperation(onExecuteAsync, getDeferredOperations));
+            _deferredOperationSources.Add(new DeferredOperationSource(onExecuteAsync, getDeferredOperations));
         }
 
         public void Dispose()
@@ -228,7 +224,7 @@ namespace Microsoft.DotNet.Interactive
 
         public delegate Task<U> OnExecuteDelegate(T value);
 
-        public delegate IEnumerable<T> GetDeferredOperationsDelegate(T operationToExecute, string queueName);
+        public delegate IReadOnlyList<T> GetDeferredOperationsDelegate(T operationToExecute, string queueName);
 
         private class ScheduledOperation
         {
@@ -273,9 +269,9 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private class DeferredOperation
+        private class DeferredOperationSource
         {
-            public DeferredOperation(OnExecuteDelegate onExecuteAsync, GetDeferredOperationsDelegate getDeferredOperations)
+            public DeferredOperationSource(OnExecuteDelegate onExecuteAsync, GetDeferredOperationsDelegate getDeferredOperations)
             {
                 OnExecuteAsync = onExecuteAsync;
                 GetDeferredOperations = getDeferredOperations;
