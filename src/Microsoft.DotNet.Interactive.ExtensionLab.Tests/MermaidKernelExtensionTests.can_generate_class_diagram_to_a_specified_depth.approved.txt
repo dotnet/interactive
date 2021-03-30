@@ -1,49 +1,48 @@
 classDiagram
 CSharpKernel --|> DotNetKernel : Inheritance
-CSharpKernel --|> IDisposable : Inheritance
 CSharpKernel --|> IExtensibleKernel : Inheritance
-CSharpKernel --|> ISupportNuget : Inheritance
 CSharpKernel --|> IKernelCommandHandler~RequestCompletions~ : Inheritance
 CSharpKernel --|> IKernelCommandHandler~RequestDiagnostics~ : Inheritance
 CSharpKernel --|> IKernelCommandHandler~RequestHoverText~ : Inheritance
 CSharpKernel --|> IKernelCommandHandler~RequestSignatureHelp~ : Inheritance
 CSharpKernel --|> IKernelCommandHandler~SubmitCode~ : Inheritance
+CSharpKernel --|> ISupportNuget : Inheritance
+CSharpKernel --|> IDisposable : Inheritance
 DotNetKernel --|> Kernel : Inheritance
 DotNetKernel --|> IDisposable : Inheritance
 
-
 class CSharpKernel
+CSharpKernel : -<.ctor>b__8_0() PackageRestoreContext
+CSharpKernel : -<.ctor>b__8_1() Void
+CSharpKernel : -get_HasReturnValue() Boolean
+CSharpKernel : +get_PackageRestoreContext() PackageRestoreContext
+CSharpKernel : +get_RequestedPackageReferences() IEnumerable~PackageReference~
+CSharpKernel : +get_ResolvedPackageReferences() IEnumerable~ResolvedPackageReference~
+CSharpKernel : +get_RestoreSources() IEnumerable~String~
 CSharpKernel : +get_ScriptState() ScriptState
-CSharpKernel : -set_ScriptState(ScriptState value) Void
-CSharpKernel : +IsCompleteSubmissionAsync(String code) Task~Boolean~
+CSharpKernel : -GetCompletionList(String code, Int32 cursorPosition) Task~IEnumerable<CompletionItem>~
+CSharpKernel : GetDiagnosticsProduced(KernelCommand command, ImmutableArray~Diagnostic~ diagnostics) DiagnosticsProduced
 CSharpKernel : +GetVariableNames() IReadOnlyCollection~String~
-CSharpKernel : +TryGetVariable(String name, T& value) Boolean
-CSharpKernel : +SetVariableAsync(String name, Object value, Type declaredType) Task
 CSharpKernel : +HandleAsync(RequestHoverText command, KernelInvocationContext context) Task
 CSharpKernel : +HandleAsync(RequestSignatureHelp command, KernelInvocationContext context) Task
 CSharpKernel : +HandleAsync(SubmitCode submitCode, KernelInvocationContext context) Task
-CSharpKernel : -RunAsync(String code, CancellationToken cancellationToken, Func~Exception, Boolean~ catchException) Task
 CSharpKernel : +HandleAsync(RequestCompletions command, KernelInvocationContext context) Task
-CSharpKernel : -GetCompletionList(String code, Int32 cursorPosition) Task~IEnumerable<CompletionItem>~
-CSharpKernel : GetDiagnosticsProduced(KernelCommand command, ImmutableArray~Diagnostic~ diagnostics) DiagnosticsProduced
 CSharpKernel : +HandleAsync(RequestDiagnostics command, KernelInvocationContext context) Task
+CSharpKernel : +IsCompleteSubmissionAsync(String code) Task~Boolean~
 CSharpKernel : +LoadExtensionsFromDirectoryAsync(DirectoryInfo directory, KernelInvocationContext context) Task
-CSharpKernel : +get_PackageRestoreContext() PackageRestoreContext
-CSharpKernel : -get_HasReturnValue() Boolean
 CSharpKernel : -Microsoft.DotNet.Interactive.ISupportNuget.AddRestoreSource(String source) Void
 CSharpKernel : -Microsoft.DotNet.Interactive.ISupportNuget.GetOrAddPackageReference(String packageName, String packageVersion) PackageReference
 CSharpKernel : -Microsoft.DotNet.Interactive.ISupportNuget.RegisterResolvedPackageReferences(IReadOnlyList~ResolvedPackageReference~ resolvedReferences) Void
 CSharpKernel : -Microsoft.DotNet.Interactive.ISupportNuget.RestoreAsync() Task~PackageRestoreResult~
-CSharpKernel : +get_RequestedPackageReferences() IEnumerable~PackageReference~
-CSharpKernel : +get_ResolvedPackageReferences() IEnumerable~ResolvedPackageReference~
-CSharpKernel : +get_RestoreSources() IEnumerable~String~
-CSharpKernel : -<.ctor>b__8_0() PackageRestoreContext
-CSharpKernel : -<.ctor>b__8_1() Void
+CSharpKernel : -RunAsync(String code, CancellationToken cancellationToken, Func~Exception, Boolean~ catchException) Task
+CSharpKernel : -set_ScriptState(ScriptState value) Void
+CSharpKernel : +SetVariableAsync(String name, Object value, Type declaredType) Task
+CSharpKernel : +TryGetVariable(String name, T& value) Boolean
 
 class DotNetKernel
-DotNetKernel : +TryGetVariable(String name, T& value) Boolean*
-DotNetKernel : +SetVariableAsync(String name, Object value, Type declaredType) Task*
 DotNetKernel : +GetVariableNames() IReadOnlyCollection~String~*
+DotNetKernel : +SetVariableAsync(String name, Object value, Type declaredType) Task*
+DotNetKernel : +TryGetVariable(String name, T& value) Boolean*
 
 class IDisposable
 <<interface>> IDisposable
@@ -52,16 +51,6 @@ IDisposable : +Dispose() Void*
 class IExtensibleKernel
 <<interface>> IExtensibleKernel
 IExtensibleKernel : +LoadExtensionsFromDirectoryAsync(DirectoryInfo directory, KernelInvocationContext invocationContext) Task*
-
-class ISupportNuget
-<<interface>> ISupportNuget
-ISupportNuget : +RestoreAsync() Task~PackageRestoreResult~*
-ISupportNuget : +get_RestoreSources() IEnumerable~String~*
-ISupportNuget : +get_RequestedPackageReferences() IEnumerable~PackageReference~*
-ISupportNuget : +get_ResolvedPackageReferences() IEnumerable~ResolvedPackageReference~*
-ISupportNuget : +GetOrAddPackageReference(String packageName, String packageVersion) PackageReference*
-ISupportNuget : +AddRestoreSource(String source) Void*
-ISupportNuget : +RegisterResolvedPackageReferences(IReadOnlyList~ResolvedPackageReference~ packageReferences) Void*
 
 class IKernelCommandHandler~RequestCompletions~
 <<interface>> IKernelCommandHandler~RequestCompletions~
@@ -83,51 +72,62 @@ class IKernelCommandHandler~SubmitCode~
 <<interface>> IKernelCommandHandler~SubmitCode~
 IKernelCommandHandler~SubmitCode~ : +HandleAsync(SubmitCode command, KernelInvocationContext context) Task*
 
+class ISupportNuget
+<<interface>> ISupportNuget
+ISupportNuget : +AddRestoreSource(String source) Void*
+ISupportNuget : +get_RequestedPackageReferences() IEnumerable~PackageReference~*
+ISupportNuget : +get_ResolvedPackageReferences() IEnumerable~ResolvedPackageReference~*
+ISupportNuget : +get_RestoreSources() IEnumerable~String~*
+ISupportNuget : +GetOrAddPackageReference(String packageName, String packageVersion) PackageReference*
+ISupportNuget : +RegisterResolvedPackageReferences(IReadOnlyList~ResolvedPackageReference~ packageReferences) Void*
+ISupportNuget : +RestoreAsync() Task~PackageRestoreResult~*
+
 class Kernel
-Kernel : get_Pipeline() KernelCommandPipeline
-Kernel : +get_ParentKernel() CompositeKernel
-Kernel : set_ParentKernel(CompositeKernel value) Void
-Kernel : +get_SubmissionParser() SubmissionParser
+Kernel : -<.ctor>b__7_0() Void
+Kernel : -<SetScheduler>g__GetDeferredOperations|45_0(KernelCommand command, String scope) IEnumerable~KernelCommand~
+Kernel : +AddDirective(Command command) Void
 Kernel : +AddMiddleware(KernelCommandPipelineMiddleware middleware, String caller) Void
+Kernel : CreateChooseKernelDirective() ChooseKernelDirective
+Kernel : +CSS(String content) Void$
 Kernel : +DeferCommand(KernelCommand command) Void
-Kernel : -TryPreprocessCommands(KernelCommand originalCommand, KernelInvocationContext context, IReadOnlyList commands) Boolean
-Kernel : -TryPreprocessLanguageServiceCommand(LanguageServiceCommand command, KernelInvocationContext context, IReadOnlyList commands) Boolean
+Kernel : +display(Object value, String mimeType) DisplayedValue$
+Kernel : +Dispose() Void
+Kernel : get_ChooseKernelDirective() ChooseKernelDirective
+Kernel : +get_Current() Kernel$
+Kernel : +get_Directives() IReadOnlyCollection~ICommand~
 Kernel : +get_FrontendEnvironment() FrontendEnvironment
-Kernel : +set_FrontendEnvironment(FrontendEnvironment value) Void
 Kernel : get_IsDisposed() Boolean
 Kernel : +get_KernelEvents() IObservable~KernelEvent~
 Kernel : +get_Name() String
-Kernel : +set_Name(String value) Void
-Kernel : get_Uri() KernelUri
-Kernel : +get_Directives() IReadOnlyCollection~ICommand~
-Kernel : +AddDirective(Command command) Void
-Kernel : +RegisterCommandHandler(Func~TCommand, KernelInvocationContext, Task~ handler) Void
-Kernel : +RegisterCommandType() Void
-Kernel : HandleAsync(KernelCommand command, KernelInvocationContext context) Task
-Kernel : +SendAsync(KernelCommand command, CancellationToken cancellationToken) Task~KernelCommandResult~
-Kernel : InvokePipelineAndCommandHandler(KernelCommand command) Task~KernelCommandResult~
+Kernel : +get_ParentKernel() CompositeKernel
+Kernel : get_Pipeline() KernelCommandPipeline
+Kernel : +get_Root() Kernel$
 Kernel : get_Scheduler() KernelScheduler~KernelCommand, KernelCommandResult~
-Kernel : SetScheduler(KernelScheduler~KernelCommand, KernelCommandResult~ scheduler) Void
-Kernel : GetHandlingKernelUri(KernelCommand command) KernelUri
-Kernel : PublishEvent(KernelEvent kernelEvent) Void
-Kernel : +RegisterForDisposal(Action dispose) Void
-Kernel : +RegisterForDisposal(IDisposable disposable) Void
-Kernel : -HandleRequestCompletionsAsync(RequestCompletions command, KernelInvocationContext context) Task
+Kernel : +get_SubmissionParser() SubmissionParser
+Kernel : get_Uri() KernelUri
 Kernel : -GetDirectiveCompletionItems(DirectiveNode directiveNode, Int32 requestPosition) IEnumerable~CompletionItem~
 Kernel : GetDirectiveParsersForCompletion(DirectiveNode directiveNode, Int32 requestPosition) IEnumerable~Parser~
-Kernel : TrySetHandler(KernelCommand command, KernelInvocationContext context) Void
-Kernel : -TrySetDynamicHandler(KernelCommand command) Void
+Kernel : GetHandlingKernelUri(KernelCommand command) KernelUri
+Kernel : HandleAsync(KernelCommand command, KernelInvocationContext context) Task
+Kernel : -HandleRequestCompletionsAsync(RequestCompletions command, KernelInvocationContext context) Task
+Kernel : +HTML(String content) IHtmlContent$
+Kernel : InvokePipelineAndCommandHandler(KernelCommand command) Task~KernelCommandResult~
+Kernel : +Javascript(String scriptContent) Void$
+Kernel : PublishEvent(KernelEvent kernelEvent) Void
+Kernel : +RegisterCommandHandler(Func~TCommand, KernelInvocationContext, Task~ handler) Void
+Kernel : +RegisterCommandType() Void
+Kernel : +RegisterForDisposal(Action dispose) Void
+Kernel : +RegisterForDisposal(IDisposable disposable) Void
+Kernel : +SendAsync(KernelCommand command, CancellationToken cancellationToken) Task~KernelCommandResult~
+Kernel : +set_FrontendEnvironment(FrontendEnvironment value) Void
+Kernel : +set_Name(String value) Void
+Kernel : set_ParentKernel(CompositeKernel value) Void
 Kernel : -SetHandler(IKernelCommandHandler~T~ handler, T command) Void$
 Kernel : SetHandlingKernel(KernelCommand command, KernelInvocationContext context) Void
-Kernel : +Dispose() Void
-Kernel : CreateChooseKernelDirective() ChooseKernelDirective
-Kernel : get_ChooseKernelDirective() ChooseKernelDirective
-Kernel : +get_Current() Kernel$
-Kernel : +get_Root() Kernel$
-Kernel : +display(Object value, String mimeType) DisplayedValue$
-Kernel : +HTML(String content) IHtmlContent$
-Kernel : +CSS(String content) Void$
-Kernel : +Javascript(String scriptContent) Void$
-Kernel : -<.ctor>b__7_0() Void
-Kernel : -<SetScheduler>g__GetDeferredOperations|45_0(KernelCommand command, String scope) IEnumerable~KernelCommand~
+Kernel : SetScheduler(KernelScheduler~KernelCommand, KernelCommandResult~ scheduler) Void
+Kernel : -TryPreprocessCommands(KernelCommand originalCommand, KernelInvocationContext context, IReadOnlyList commands) Boolean
+Kernel : -TryPreprocessLanguageServiceCommand(LanguageServiceCommand command, KernelInvocationContext context, IReadOnlyList commands) Boolean
+Kernel : -TrySetDynamicHandler(KernelCommand command) Void
+Kernel : TrySetHandler(KernelCommand command, KernelInvocationContext context) Void
+
 

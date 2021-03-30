@@ -27,14 +27,11 @@ namespace System
 
             CreateRelationships(type, graphDepth, types, classRelationshipBuffer);
 
-           foreach(var typeToDescribe in types.OrderByDescending(t => t.FullName))
+           foreach(var typeToDescribe in types.OrderBy(t => t.Name.ToLowerInvariant()))
             {
    
                 if (generateTypes.Add(typeToDescribe))
                 {
-                    classDefinitionBuffer.AppendLine();
-
-
                     var className = CreateClassName(typeToDescribe);
 
                     classDefinitionBuffer.AppendLine($"class {className}");
@@ -45,10 +42,12 @@ namespace System
 
                     foreach (var method in typeToDescribe.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public |
                                                                      BindingFlags.NonPublic | BindingFlags.Static |
-                                                                     BindingFlags.Instance))
+                                                                     BindingFlags.Instance).OrderBy(m => m.Name.ToLowerInvariant()))
                     {
                         classDefinitionBuffer.AppendLine($"{className} : {CreateMethodSignature(method)}");
                     }
+
+                    classDefinitionBuffer.AppendLine();
                 }
             }
 
@@ -132,12 +131,12 @@ namespace System
                         types.Add(@interface);
                     }
 
-                    foreach (var parentType in typesToScan.OrderByDescending(t => t.FullName))
+                    foreach (var parentType in typesToScan.OrderBy(t => t.FullName))
                     {
                         classRelationshipBuffer.AppendLine($"{CreateClassName(type)} --|> {CreateClassName(parentType)} : Inheritance");
                     }
 
-                    foreach (var parentType in typesToScan.OrderByDescending(t => t.FullName))
+                    foreach (var parentType in typesToScan.OrderBy(t => t.FullName))
                     {
                         CreateRelationships(parentType, graphDepth - 1, types, classRelationshipBuffer);
                     }
