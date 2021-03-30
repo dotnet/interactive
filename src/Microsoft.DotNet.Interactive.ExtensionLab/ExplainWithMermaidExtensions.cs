@@ -8,7 +8,6 @@ using System.Text;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.ExtensionLab;
-using Microsoft.DotNet.Interactive.Formatting;
 
 namespace System
 {
@@ -20,7 +19,7 @@ namespace System
 
             var buffer = new StringBuilder();
             buffer.AppendLine("classDiagram");
-            var types = new Queue<Type>();
+            var types = new List<Type>();
 
             var classRelationshipBuffer = new StringBuilder();
             var classDefinitionBuffer = new StringBuilder();
@@ -28,9 +27,9 @@ namespace System
 
             CreateRelationships(type, graphDepth, types, classRelationshipBuffer);
 
-            while (types.Count > 0)
+           foreach(var typeToDescribe in types.OrderByDescending(t => t.FullName))
             {
-                var typeToDescribe = types.Dequeue();
+   
                 if (generateTypes.Add(typeToDescribe))
                 {
                     classDefinitionBuffer.AppendLine();
@@ -115,30 +114,30 @@ namespace System
                 return signature.ToString();
             }
 
-            static void CreateRelationships(Type type, int graphDepth, Queue<Type> types, StringBuilder classRelationshipBuffer)
+            static void CreateRelationships(Type type, int graphDepth, List<Type> types, StringBuilder classRelationshipBuffer)
             {
-                types.Enqueue(type);
+                types.Add(type);
                 if (graphDepth > 0)
                 {
                     var typesToScan = new List<Type>();
                     if (type.BaseType is not null)
                     {
                         typesToScan.Add(type.BaseType);
-                        types.Enqueue(type.BaseType);
+                        types.Add(type.BaseType);
                     }
 
                     foreach (var @interface in type.GetInterfaces())
                     {
                         typesToScan.Add(@interface);
-                        types.Enqueue(@interface);
+                        types.Add(@interface);
                     }
 
-                    foreach (var parentType in typesToScan)
+                    foreach (var parentType in typesToScan.OrderByDescending(t => t.FullName))
                     {
                         classRelationshipBuffer.AppendLine($"{CreateClassName(type)} --|> {CreateClassName(parentType)} : Inheritance");
                     }
 
-                    foreach (var parentType in typesToScan)
+                    foreach (var parentType in typesToScan.OrderByDescending(t => t.FullName))
                     {
                         CreateRelationships(parentType, graphDepth - 1, types, classRelationshipBuffer);
                     }

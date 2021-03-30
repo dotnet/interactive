@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 using Assent;
@@ -28,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         public MermaidKernelExtensionTests()
         {
             _configuration = new Configuration()
-                .UsingExtension("json")
+                .UsingExtension("txt")
                 .SetInteractive(Debugger.IsAttached);
         }
 
