@@ -387,3 +387,5 @@ src/Microsoft.DotNet.Interactive.nteract.js/lib/
 src/Microsoft.DotNet.Interactive.SandDance.js/lib/
 
 src/Microsoft.DotNet.Interactive.SandDance.js/dist/
+
+src/Microsoft.DotNet.Interactive.Mermaid.js/dist/

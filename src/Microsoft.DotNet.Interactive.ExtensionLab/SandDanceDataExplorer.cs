@@ -58,12 +58,6 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return html;
         }
 
-        private static void GenerateCode(TabularDataResourceJsonString data, StringBuilder code, string divId, string requireUri, Uri uri, string context, string cacheBuster)
-        {
-            var functionName = $"renderSandDanceExplorer_{divId}";
-            AppendWidgetCode(code, data, divId, functionName, uri, context, cacheBuster);
-        }
-
         private static void AppendWidgetCode(StringBuilder stringBuilder, TabularDataResourceJsonString data,
             string dataExplorerId, string functionName, Uri libraryUri, string libraryVersion, string cacheBuster)
         {

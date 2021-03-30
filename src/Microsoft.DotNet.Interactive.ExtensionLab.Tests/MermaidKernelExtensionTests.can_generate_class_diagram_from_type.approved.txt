@@ -1,0 +1,27 @@
+classDiagram
+
+
+class CompositeKernel
+CompositeKernel : -ListenForPackagesToScanForExtensions() Void
+CompositeKernel : +get_DefaultKernelName() String
+CompositeKernel : +set_DefaultKernelName(String value) Void
+CompositeKernel : +Add(Kernel kernel, IReadOnlyCollection~String~ aliases) Void
+CompositeKernel : +HandleAsync(ParseNotebook command, KernelInvocationContext context) Task
+CompositeKernel : +ParseNotebook(String fileName, Byte[] rawData) NotebookDocument
+CompositeKernel : +HandleAsync(SerializeNotebook command, KernelInvocationContext context) Task
+CompositeKernel : -AddChooseKernelDirective(Kernel kernel, IEnumerable~String~ aliases) Void
+CompositeKernel : -LoadExtensions(KernelCommand command, KernelInvocationContext context, KernelPipelineContinuation next) Task
+CompositeKernel : +get_ChildKernels() IReadOnlyList~Kernel~
+CompositeKernel : SetHandlingKernel(KernelCommand command, KernelInvocationContext context) Void
+CompositeKernel : -GetHandlingKernel(KernelCommand command, KernelInvocationContext context) Kernel
+CompositeKernel : GetHandlingKernelUri(KernelCommand command) KernelUri
+CompositeKernel : HandleAsync(KernelCommand command, KernelInvocationContext context) Task
+CompositeKernel : GetDirectiveParsersForCompletion(DirectiveNode directiveNode, Int32 requestPosition) IEnumerable~Parser~
+CompositeKernel : +GetEnumerator() IEnumerator~Kernel~
+CompositeKernel : -System.Collections.IEnumerable.GetEnumerator() IEnumerator
+CompositeKernel : +LoadExtensionsFromDirectoryAsync(DirectoryInfo directory, KernelInvocationContext context) Task
+CompositeKernel : +AddKernelConnection(ConnectKernelCommand~TOptions~ connectionCommand) Void
+CompositeKernel : -<ListenForPackagesToScanForExtensions>b__7_2(PackageAdded added) Void
+CompositeKernel : -<>n__0(KernelCommand command, KernelInvocationContext context) Task
+CompositeKernel : <GetDirectiveParsersForCompletion>g__IsDirectiveDefinedIn|23_0(Parser parser, <>c__DisplayClass23_0& ) Boolean$
+
