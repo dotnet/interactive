@@ -202,6 +202,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
             const client = await clientMapper.getOrAddClient(uri);
             const buffer = await client.serializeNotebook(uri.fsPath, notebook, eol);
             await vscode.workspace.fs.writeFile(uri, buffer);
+            await vscode.commands.executeCommand('dotnet-interactive.openNotebook', uri);
         }
     }));
 }
