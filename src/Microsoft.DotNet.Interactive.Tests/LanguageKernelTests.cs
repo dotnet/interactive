@@ -1134,11 +1134,11 @@ Console.Write(2);
             await kernel.SendAsync(new RequestCompletions("al", new LinePosition(0, 2)));
 
             KernelEvents
-                        .OfType<CompletionsProduced>()
-                        .Single()
-                        .Completions
-                        .Should()
-                        .Contain(i => i.DisplayText == "alpha");
+                .OfType<CompletionsProduced>()
+                .Single()
+                .Completions
+                .Should()
+                .Contain(i => i.DisplayText == "alpha");
         }
 
         [Fact]
