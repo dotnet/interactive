@@ -4,10 +4,14 @@
 import * as vscode from 'vscode';
 
 import { ClientMapper } from "../clientMapper";
-import { notebookCellLanguages } from "../interactiveNotebook";
+import { getSimpleLanguage, notebookCellLanguages } from "../interactiveNotebook";
 import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, withDotNetKernelMetadata } from '../ipynbUtilities';
-
-import * as versionSpecificFunctions from '../../versionSpecificFunctions';
+import * as contracts from '../interfaces/contracts';
+import * as vscodeLike from '../interfaces/vscode-like';
+import * as diagnostics from './diagnostics';
+import * as notebookContentProvider from './notebookContentProvider';
+import * as utilities from '../utilities';
+import * as vscodeUtilities from './vscodeUtilities';
 
 export const KernelId: string = 'dotnet-interactive';
 
@@ -27,33 +31,11 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
         this.supportedLanguages = notebookCellLanguages;
     }
 
-    /////////////////////////////////////////////////////////////////////////// required for stable
-
-    async executeAllCells(document: vscode.NotebookDocument): Promise<void> {
-        for (const cell of document.cells) {
-            await versionSpecificFunctions.executeCell(document, cell, this.clientMapper);
-        }
-    }
-
-    async executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell): Promise<void> {
-        return versionSpecificFunctions.executeCell(document, cell, this.clientMapper);
-    }
-
-    cancelCellExecution(document: vscode.NotebookDocument, cell: vscode.NotebookCell): Promise<void> {
-        return versionSpecificFunctions.cancelCellExecution(document, cell, this.clientMapper);
-    }
-
-    cancelAllCellsExecution(document: vscode.NotebookDocument): void {
-        // not supported
-    }
-
-    ///////////////////////////////////////////////////////////////////////// required for insiders
-
     async executeCellsRequest(document: vscode.NotebookDocument, ranges: vscode.NotebookCellRange[]): Promise<void> {
         for (const range of ranges) {
             for (let cellIndex = range.start; cellIndex < range.end; cellIndex++) {
                 const cell = document.cells[cellIndex];
-                await versionSpecificFunctions.executeCell(document, cell, this.clientMapper);
+                await executeCell(document, cell, this.clientMapper);
             }
         }
     }
@@ -65,13 +47,13 @@ export async function updateDocumentKernelspecMetadata(document: vscode.Notebook
 
     // workaround for https://github.com/microsoft/vscode/issues/115912; capture all cell data so we can re-apply it at the end
     const cellData: Array<vscode.NotebookCellData> = document.cells.map(c => {
-        return versionSpecificFunctions.createVsCodeNotebookCellData({
-            cellKind: versionSpecificFunctions.getCellKind(c),
-            source: c.document.getText(),
-            language: c.document.languageId,
-            outputs: c.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
-            metadata: c.metadata
-        });
+        return new vscode.NotebookCellData(
+            c.kind,
+            c.document.getText(),
+            c.document.languageId,
+            c.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
+            c.metadata,
+        );
     });
 
     edit.replaceNotebookMetadata(document.uri, documentKernelMetadata);
@@ -92,13 +74,13 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
         const cellMetadata = getDotNetMetadata(cell.metadata);
         const cellText = cell.document.getText();
         const newLanguage = getCellLanguage(cellText, cellMetadata, documentLanguageInfo, cell.document.languageId);
-        const cellData = versionSpecificFunctions.createVsCodeNotebookCellData({
-            cellKind: versionSpecificFunctions.getCellKind(cell),
-            source: cellText,
-            language: newLanguage,
-            outputs: cell.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
-            metadata: cell.metadata,
-        });
+        const cellData = new vscode.NotebookCellData(
+            cell.kind,
+            cellText,
+            newLanguage,
+            cell.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
+            cell.metadata,
+        );
         cellDatas.push(cellData);
         applyUpdate ||= cell.document.languageId !== newLanguage;
     }
@@ -108,4 +90,75 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
         edit.replaceNotebookCells(document.uri, 0, document.cells.length, cellDatas);
         await vscode.workspace.applyEdit(edit);
     }
+}
+
+const executionTasks: Map<vscode.Uri, vscode.NotebookCellExecutionTask> = new Map();
+
+async function executeCell(document: vscode.NotebookDocument, cell: vscode.NotebookCell, clientMapper: ClientMapper): Promise<void> {
+    const startTime = Date.now();
+    const executionTask = vscode.notebook.createNotebookCellExecutionTask(document.uri, cell.index, KernelId);
+    if (executionTask) {
+        executionTasks.set(cell.document.uri, executionTask);
+        try {
+            executionTask.start({
+                startTime,
+            });
+            setCellLockState(cell, true);
+            executionTask.clearOutput(cell.index);
+            const client = await clientMapper.getOrAddClient(document.uri);
+            executionTask.token.onCancellationRequested(() => {
+                const errorOutput = utilities.createErrorOutput("Cell execution cancelled by user");
+                const resultPromise = () => updateCellOutputs(executionTask, cell, [...cell.outputs, errorOutput])
+                    .then(() => endExecution(cell, false, Date.now() - startTime));
+                client.cancel()
+                    .then(resultPromise)
+                    .catch(resultPromise);
+            });
+            const source = cell.document.getText();
+            function outputObserver(outputs: Array<vscodeLike.NotebookCellOutput>) {
+                updateCellOutputs(executionTask!, cell, outputs).then(() => { });
+            }
+
+            const diagnosticCollection = diagnostics.getDiagnosticCollection(cell.document.uri);
+
+            function diagnosticObserver(diags: Array<contracts.Diagnostic>) {
+                diagnosticCollection.set(cell.document.uri, diags.filter(d => d.severity !== contracts.DiagnosticSeverity.Hidden).map(vscodeUtilities.toVsCodeDiagnostic));
+            }
+
+            return client.execute(source, getSimpleLanguage(cell.document.languageId), outputObserver, diagnosticObserver, { id: document.uri.toString() }).then(() =>
+                endExecution(cell, true, Date.now() - startTime)
+            ).catch(() => endExecution(cell, false, Date.now() - startTime)
+            ).then(() => {
+                return updateCellLanguages(document);
+            });
+        } catch (err) {
+            const errorOutput = utilities.createErrorOutput(`Error executing cell: ${err}`);
+            await updateCellOutputs(executionTask, cell, [errorOutput]);
+            endExecution(cell, false, Date.now() - startTime);
+            throw err;
+        }
+    }
+}
+
+function setCellLockState(cell: vscode.NotebookCell, locked: boolean) {
+    const edit = new vscode.WorkspaceEdit();
+    edit.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, cell.metadata.with({ editable: !locked }));
+    return vscode.workspace.applyEdit(edit);
+}
+
+export function endExecution(cell: vscode.NotebookCell, success: boolean, duration?: number) {
+    setCellLockState(cell, false);
+    const executionTask = executionTasks.get(cell.document.uri);
+    if (executionTask) {
+        executionTasks.delete(cell.document.uri);
+        executionTask.end({
+            success,
+            duration,
+        });
+    }
+}
+
+async function updateCellOutputs(executionTask: vscode.NotebookCellExecutionTask, cell: vscode.NotebookCell, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
+    const reshapedOutputs = outputs.map(o => new vscode.NotebookCellOutput(o.outputs.map(oi => notebookContentProvider.generateVsCodeNotebookCellOutputItem(oi.mime, oi.value))));
+    await executionTask.replaceOutput(reshapedOutputs, cell.index);
 }

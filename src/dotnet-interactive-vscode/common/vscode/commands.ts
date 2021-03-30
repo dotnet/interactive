@@ -8,10 +8,9 @@ import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces'
 import { ClientMapper } from '../clientMapper';
 import { getEol, isUnsavedNotebook } from './vscodeUtilities';
 import { toNotebookDocument } from './notebookContentProvider';
-import { KernelId } from './notebookKernel';
+import { KernelId, endExecution } from './notebookKernel';
 import { DotNetPathManager } from './extension';
 import { computeToolInstallArguments, executeSafe, executeSafeAndLog } from '../utilities';
-import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 
 import * as jupyter from './jupyter';
 import { ReportChannel } from '../interfaces/vscode-like';
@@ -110,7 +109,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
 
         if (document) {
             for (const cell of document.cells) {
-                await versionSpecificFunctions.markCellIdle(document, cell);
+                endExecution(cell, false);
             }
 
             clientMapper.closeClient(document.uri);
@@ -203,6 +202,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
             const client = await clientMapper.getOrAddClient(uri);
             const buffer = await client.serializeNotebook(uri.fsPath, notebook, eol);
             await vscode.workspace.fs.writeFile(uri, buffer);
+            await vscode.commands.executeCommand('dotnet-interactive.openNotebook', uri);
         }
     }));
 }
