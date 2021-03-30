@@ -162,16 +162,6 @@ namespace Microsoft.DotNet.Interactive
         {
             if (_current.Value == null || _current.Value.IsComplete)
             {
-
-                if (AsyncContext.TryEstablish(out _))
-                {
-
-                }
-                else
-                {
-
-                }
-
                 var context = new KernelInvocationContext(command);
 
                 _current.Value = context;

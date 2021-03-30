@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.App
 {
     public class Program
     {
-        private static readonly ServiceCollection _serviceCollection = new ServiceCollection();
+        private static readonly ServiceCollection _serviceCollection = new();
 
         public static async Task<int> Main(string[] args)
         {

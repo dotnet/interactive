@@ -24,8 +24,6 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         public static IDisposable Subscribe(Func<ObservableConsole, IDisposable> subscribe)
         {
-            ObservableConsole obsConsole;
-
             OperationLogger _operationLogger;
 
             lock (_systemConsoleSwapLock)
@@ -37,6 +35,7 @@ namespace Microsoft.DotNet.Interactive.Utility
                         ("AsyncContext.Id", (object) AsyncContext.Id),
                         ("_refCount", _refCount),
                     });
+
                 if (++_refCount == 1)
                 {
                     // FIX: (Subscribe) remove debuggy stuff
@@ -48,14 +47,19 @@ namespace Microsoft.DotNet.Interactive.Utility
                     Console.SetOut(_multiplexingOutputWriter);
                     Console.SetError(_multiplexingErrorWriter);
                 }
-
-                obsConsole = new ObservableConsole(
-                    _multiplexingOutputWriter.GetObservable(),
-                    _multiplexingErrorWriter.GetObservable());
             }
 
+            var outWriterForContext = _multiplexingOutputWriter.EnsureInitializedForCurrentAsyncContext();
+            var errWriterForContext = _multiplexingErrorWriter.EnsureInitializedForCurrentAsyncContext();
+
+            var obsConsole = new ObservableConsole(
+                _multiplexingOutputWriter.GetObservable(),
+                _multiplexingErrorWriter.GetObservable());
+            
             return new CompositeDisposable(
                 subscribe(obsConsole),
+                outWriterForContext,
+                errWriterForContext,
                 Disposable.Create(() =>
                 {
                     lock (_systemConsoleSwapLock)
