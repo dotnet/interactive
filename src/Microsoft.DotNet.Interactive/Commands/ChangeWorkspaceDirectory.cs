@@ -7,19 +7,19 @@ using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Commands
 {
-    public class ChangeWorkingDirectory : KernelCommand
+    public class ChangeWorkspaceDirectory : KernelCommand
     {
-        public string WorkingDirectory { get; }
+        public string WorkspaceDirectory { get; }
 
-        public ChangeWorkingDirectory(string workingDirectory)
+        public ChangeWorkspaceDirectory(string workspaceDirectory)
         {
-            WorkingDirectory = workingDirectory;
+            WorkspaceDirectory = workspaceDirectory;
         }
 
         public override Task InvokeAsync(KernelInvocationContext context)
         {
-            Directory.SetCurrentDirectory(WorkingDirectory);
-            context.Publish(new WorkingDirectoryChanged(WorkingDirectory, this));            
+            Directory.SetCurrentDirectory(WorkspaceDirectory);
+            context.Publish(new WorkspaceDirectoryChanged(WorkspaceDirectory, this));            
             return Handler(this, context);
         }
     }

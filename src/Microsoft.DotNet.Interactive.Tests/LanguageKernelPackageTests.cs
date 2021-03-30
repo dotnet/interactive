@@ -190,7 +190,7 @@ json"
 
             var kernel = CreateKernel(language);
             var absolutePathOneLevelHigher = Directory.GetParent(currentDirectory).FullName;
-            await kernel.SendAsync(new ChangeWorkingDirectory(absolutePathOneLevelHigher));        
+            await kernel.SendAsync(new ChangeWorkspaceDirectory(absolutePathOneLevelHigher));        
 
             await kernel.SendAsync(new SubmitCode("Environment.CurrentDirectory"));
 

@@ -7,7 +7,7 @@
 
 export const AddPackageType = "AddPackage";
 export const CancelType = "Cancel";
-export const ChangeWorkingDirectoryType = "ChangeWorkingDirectory";
+export const ChangeWorkspaceDirectoryType = "ChangeWorkspaceDirectory";
 export const DisplayErrorType = "DisplayError";
 export const DisplayValueType = "DisplayValue";
 export const ParseNotebookType = "ParseNotebook";
@@ -23,7 +23,7 @@ export const UpdateDisplayedValueType = "UpdateDisplayedValue";
 export type KernelCommandType =
       typeof AddPackageType
     | typeof CancelType
-    | typeof ChangeWorkingDirectoryType
+    | typeof ChangeWorkspaceDirectoryType
     | typeof DisplayErrorType
     | typeof DisplayValueType
     | typeof ParseNotebookType
@@ -47,8 +47,8 @@ export interface KernelCommand {
 export interface Cancel extends KernelCommand {
 }
 
-export interface ChangeWorkingDirectory extends KernelCommand {
-    workingDirectory: string;
+export interface ChangeWorkspaceDirectory extends KernelCommand {
+    workspaceDirectory: string;
 }
 
 export interface DisplayError extends KernelCommand {
@@ -127,7 +127,7 @@ export const ReturnValueProducedType = "ReturnValueProduced";
 export const SignatureHelpProducedType = "SignatureHelpProduced";
 export const StandardErrorValueProducedType = "StandardErrorValueProduced";
 export const StandardOutputValueProducedType = "StandardOutputValueProduced";
-export const WorkingDirectoryChangedType = "WorkingDirectoryChanged";
+export const WorkspaceDirectoryChangedType = "WorkspaceDirectoryChanged";
 
 export type KernelEventType =
       typeof CodeSubmissionReceivedType
@@ -153,7 +153,7 @@ export type KernelEventType =
     | typeof SignatureHelpProducedType
     | typeof StandardErrorValueProducedType
     | typeof StandardOutputValueProducedType
-    | typeof WorkingDirectoryChangedType;
+    | typeof WorkspaceDirectoryChangedType;
 
 export interface CodeSubmissionReceived extends KernelEvent {
     code: string;
@@ -254,8 +254,8 @@ export interface StandardErrorValueProduced extends DisplayEvent {
 export interface StandardOutputValueProduced extends DisplayEvent {
 }
 
-export interface WorkingDirectoryChanged extends KernelEvent {
-    workingDirectory: string;
+export interface WorkspaceDirectoryChanged extends KernelEvent {
+    workspaceDirectory: string;
 }
 
 // --------------------------------------------- Required Types

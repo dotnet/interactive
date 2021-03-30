@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             {
                 yield return new AddPackage(new PackageReference("MyAwesomePackage", "1.2.3"));
 
-                yield return new ChangeWorkingDirectory("/path/to/somewhere");
+                yield return new ChangeWorkspaceDirectory("/path/to/somewhere");
 
                 yield return new DisplayError("oops!");
 
@@ -359,9 +359,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                         new FormattedValue("text/plain", "123"),
                     });
 
-                yield return new WorkingDirectoryChanged(
+                yield return new WorkspaceDirectoryChanged(
                     "some/different/directory",
-                    new ChangeWorkingDirectory("some/different/directory"));
+                    new ChangeWorkspaceDirectory("some/different/directory"));
 
                 yield return new KernelExtensionLoaded(new SubmitCode(@"#r ""nuget:package"" "));
             }

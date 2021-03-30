@@ -1,0 +1,1 @@
+{"token":"the-token","commandType":"ChangeWorkspaceDirectory","command":{"workspaceDirectory":"/path/to/somewhere","targetKernelName":null}}

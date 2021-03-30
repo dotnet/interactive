@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         IKernelCommandHandler<RequestHoverText>,
         IKernelCommandHandler<RequestSignatureHelp>,
         IKernelCommandHandler<SubmitCode>,
-        IKernelCommandHandler<ChangeWorkingDirectory>
+        IKernelCommandHandler<ChangeWorkspaceDirectory>
     {
         internal const string DefaultKernelName = "csharp";
 
@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
 
-        private string _workingDirectory;
+        private string _workspaceDirectory;
 
         public CSharpKernel() : base(DefaultKernelName)
         {
@@ -310,9 +310,9 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
         }
 
-        public Task HandleAsync(ChangeWorkingDirectory command, KernelInvocationContext context)
+        public Task HandleAsync(ChangeWorkspaceDirectory command, KernelInvocationContext context)
         {
-            _workingDirectory = command.WorkingDirectory;
+            _workspaceDirectory = command.WorkspaceDirectory;
             return Task.CompletedTask;
         }
 
@@ -321,12 +321,12 @@ namespace Microsoft.DotNet.Interactive.CSharp
             CancellationToken cancellationToken = default,
             Func<Exception, bool> catchException = default)
         {
-            if (_workingDirectory == null)
-                _workingDirectory = Directory.GetCurrentDirectory();
+            if (_workspaceDirectory == null)
+                _workspaceDirectory = Directory.GetCurrentDirectory();
 
             ScriptOptions = ScriptOptions
-                .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(_workingDirectory))
-                .WithSourceResolver(new SourceFileResolver(ImmutableArray<string>.Empty, _workingDirectory));
+                .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(_workspaceDirectory))
+                .WithSourceResolver(new SourceFileResolver(ImmutableArray<string>.Empty, _workspaceDirectory));
 
             if (ScriptState is null)
             {
