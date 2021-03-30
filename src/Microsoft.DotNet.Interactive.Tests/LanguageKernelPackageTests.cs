@@ -149,6 +149,7 @@ json"
         [InlineData(Language.CSharp, false)]
         [InlineData(Language.FSharp, false)]
         [InlineData(Language.CSharp, true)]
+        [InlineData(Language.FSharp, true)]
         public async Task it_can_load_script_files_using_load_directive_with_relative_path(Language language, bool changeCurrentDirectoryInUserCode)
         {            
             var currentDirectory = Directory.GetCurrentDirectory();
