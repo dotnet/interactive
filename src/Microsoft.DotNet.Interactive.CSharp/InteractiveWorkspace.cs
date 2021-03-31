@@ -106,12 +106,12 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             _previousSubmissionProjectId = AddProjectWithPreviousSubmissionToSolution(_currentCompilation, scriptState.Script.Code, _workingProjectId, _previousSubmissionProjectId);
 
-            (_workingProjectId, _workingDocumentId) = AddNewWorkingProjectToSolution(_currentCompilation, _previousSubmissionProjectId);
+            AddNewWorkingProjectToSolution(_currentCompilation, _previousSubmissionProjectId);
         }
 
         private Solution RemoveWorkingProjectFromSolution(Solution solution)
         {
-            if (_workingProjectId != null)
+            if (_workingProjectId is not null)
             {
                 solution = solution.RemoveProject(_workingProjectId);
             }
@@ -129,34 +129,32 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return references;
         }
 
-        private (ProjectId projectId, DocumentId workingDocumentId) AddNewWorkingProjectToSolution(Compilation previousCompilation, ProjectId projectReferenceProjectId)
+        private void AddNewWorkingProjectToSolution(Compilation previousCompilation, ProjectId projectReferenceProjectId)
         {
             var solution = CurrentSolution;
             var assemblyName = $"Submission#{_submissionCount++}";
             var compilationOptions = previousCompilation.Options.WithScriptClassName(assemblyName);
 
-            var projectId = ProjectId.CreateNewId(debugName: $"workingProject{assemblyName}");
+            _workingProjectId = ProjectId.CreateNewId(debugName: $"workingProject{assemblyName}");
 
             var references = GetReferenceSet(previousCompilation);
 
             solution = CreateProjectAndAddToSolution(
-                projectId,
+                _workingProjectId,
                 assemblyName,
                 compilationOptions,
                 solution,
                 projectReferenceProjectId,
                 references);
 
-            var workingDocumentId = DocumentId.CreateNewId(
-                projectId);
+            _workingDocumentId = DocumentId.CreateNewId(_workingProjectId);
 
             solution = solution.AddDocument(
-                workingDocumentId,
+                _workingDocumentId,
                 "active",
                 string.Empty);
 
             SetCurrentSolution(solution);
-            return (projectId, workingDocumentId);
         }
 
         private Solution CreateProjectAndAddToSolution(
@@ -243,6 +241,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         public Document UpdateWorkingDocument(string code)
         {
             var solution = CurrentSolution;
+           
             solution = solution.RemoveDocument(_workingDocumentId);
 
             var documentDebugName = $"Working from #{_submissionCount}";
