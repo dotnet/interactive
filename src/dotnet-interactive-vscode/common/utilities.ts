@@ -7,6 +7,7 @@ import * as path from 'path';
 import { v4 as uuid } from 'uuid';
 import { InstallInteractiveArgs, ProcessStart } from "./interfaces";
 import { ErrorOutputMimeType, NotebookCellOutput, NotebookCellOutputItem, ReportChannel, Uri } from './interfaces/vscode-like';
+import { isDotnetInteractiveLanguage } from './interactiveNotebook';
 
 export function executeSafe(command: string, args: Array<string>, workingDirectory?: string | undefined): Promise<{ code: number, output: string, error: string }> {
     return new Promise<{ code: number, output: string, error: string }>(resolve => {
@@ -215,8 +216,10 @@ export function isDotNetKernelPreferred(filename: string, fileMetadata: any): bo
         // maybe preferred if the kernelspec data matches
         case '.ipynb':
             const kernelName = fileMetadata?.custom?.metadata?.kernelspec?.name;
-            return typeof kernelName === 'string'
-                && kernelName.toLowerCase().startsWith('.net-');
+            const isDotnetKernel = typeof kernelName === 'string' && kernelName.toLowerCase().startsWith('.net-');
+            const languageInfo = fileMetadata?.custom?.metadata?.language_info?.name;
+            const isDotnetLanguageInfo = typeof languageInfo === 'string' && isDotnetInteractiveLanguage(languageInfo);
+            return isDotnetKernel || isDotnetLanguageInfo;
         // never preferred if it's an unknown extension
         default:
             return false;
