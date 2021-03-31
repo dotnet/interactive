@@ -15,7 +15,18 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             
             KernelInvocationContext.Current?.Display(
                 new HtmlString($@"<details><summary>Explore data visually using the <a href=""https://github.com/nteract/data-explorer"">nteract Data Explorer</a>.</summary>
-    <p>This extension adds the ability to sort, filter, and visualize data using the <a href=""https://github.com/nteract/data-explorer"">nteract Data Explorer</a>. Use the <code>Explore</code> extension method with variables of type <code>IEnumerable<T></code> or <code>IDataView</code> to render the data explorer.</p>
+    <p>This extension adds the ability to sort, filter, and visualize data using the <a href=""https://github.com/nteract/data-explorer"">nteract Data Explorer</a>. Use the <code>ExploreWithNteract()</code> extension method with variables of type <code>JsonElement</code>, <code>IEnumerable<T></code> or <code>IDataView</code> to render the data explorer.</p>
+<pre>
+    <code>
+    using Microsoft.Data.Analysis;
+    using System.Collections.Generic;
+    using Microsoft.ML;
+
+    var dataFrame = DataFrame.LoadCsv(""./Data.csv"");
+
+    dataFrame.ExploreWithNteract().Display();
+    </code>
+</pre>
     <img src=""https://user-images.githubusercontent.com/547415/109559345-621e5880-7a8f-11eb-8b98-d4feeaac116f.png"" width=""75%"">
     </details>"),
                 "text/html");
