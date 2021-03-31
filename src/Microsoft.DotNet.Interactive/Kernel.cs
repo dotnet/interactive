@@ -270,9 +270,10 @@ namespace Microsoft.DotNet.Interactive
                                 await InvokePipelineAndCommandHandler(cancel);
                                 break;
 
-                            case RequestDiagnostics requestDiagnostics:
+                            case RequestDiagnostics _:
+                            case LanguageServiceCommand _:
                                 // FIX: (SendAsync) 
-                                 await context.HandlingKernel.FastPathScheduler.RunAsync(
+                                await context.HandlingKernel.FastPathScheduler.RunAsync(
                                     c,
                                     InvokePipelineAndCommandHandler,
                                     c.KernelUri.ToString(),
