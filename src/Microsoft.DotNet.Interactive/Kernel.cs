@@ -251,6 +251,8 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (TryPreprocessCommands(command, context, out var commands))
                 {
+                    SetHandlingKernel(command, context);
+
                     foreach (var c in commands)
                     {
                         switch (c)
@@ -270,7 +272,7 @@ namespace Microsoft.DotNet.Interactive
 
                             case RequestDiagnostics requestDiagnostics:
                                 // FIX: (SendAsync) 
-                                 await FastPathScheduler.RunAsync(
+                                 await context.HandlingKernel.FastPathScheduler.RunAsync(
                                     c,
                                     InvokePipelineAndCommandHandler,
                                     c.KernelUri.ToString(),
@@ -317,8 +319,6 @@ namespace Microsoft.DotNet.Interactive
 
             try
             {
-                SetHandlingKernel(command, context);
-
                 await Pipeline.SendAsync(command, context);
 
                 if (command != context.Command)
