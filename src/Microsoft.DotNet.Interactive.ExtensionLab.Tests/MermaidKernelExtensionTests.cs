@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 using Assent;
@@ -105,7 +106,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         [Fact]
         public void can_generate_class_diagram_from_type()
         {
-            var diagram = typeof(CompositeKernel).ToClassDiagram();
+            var diagram = typeof(JsonElement).ToClassDiagram();
 
             this.Assent(diagram.ToString());
         }
