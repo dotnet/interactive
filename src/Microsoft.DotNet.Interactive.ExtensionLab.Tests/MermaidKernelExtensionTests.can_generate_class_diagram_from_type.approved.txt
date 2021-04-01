@@ -1,27 +1,62 @@
 classDiagram
 
-class CompositeKernel
-CompositeKernel : -<>n__0(KernelCommand command, KernelInvocationContext context) Task
-CompositeKernel : <GetDirectiveParsersForCompletion>g__IsDirectiveDefinedIn|23_0(Parser parser, <>c__DisplayClass23_0& ) Boolean$
-CompositeKernel : -<ListenForPackagesToScanForExtensions>b__7_2(PackageAdded added) Void
-CompositeKernel : +Add(Kernel kernel, IReadOnlyCollection~String~ aliases) Void
-CompositeKernel : -AddChooseKernelDirective(Kernel kernel, IEnumerable~String~ aliases) Void
-CompositeKernel : +AddKernelConnection(ConnectKernelCommand~TOptions~ connectionCommand) Void
-CompositeKernel : +get_ChildKernels() IReadOnlyList~Kernel~
-CompositeKernel : +get_DefaultKernelName() String
-CompositeKernel : GetDirectiveParsersForCompletion(DirectiveNode directiveNode, Int32 requestPosition) IEnumerable~Parser~
-CompositeKernel : +GetEnumerator() IEnumerator~Kernel~
-CompositeKernel : -GetHandlingKernel(KernelCommand command, KernelInvocationContext context) Kernel
-CompositeKernel : GetHandlingKernelUri(KernelCommand command) KernelUri
-CompositeKernel : +HandleAsync(ParseNotebook command, KernelInvocationContext context) Task
-CompositeKernel : +HandleAsync(SerializeNotebook command, KernelInvocationContext context) Task
-CompositeKernel : HandleAsync(KernelCommand command, KernelInvocationContext context) Task
-CompositeKernel : -ListenForPackagesToScanForExtensions() Void
-CompositeKernel : -LoadExtensions(KernelCommand command, KernelInvocationContext context, KernelPipelineContinuation next) Task
-CompositeKernel : +LoadExtensionsFromDirectoryAsync(DirectoryInfo directory, KernelInvocationContext context) Task
-CompositeKernel : +ParseNotebook(String fileName, Byte[] rawData) NotebookDocument
-CompositeKernel : +set_DefaultKernelName(String value) Void
-CompositeKernel : SetHandlingKernel(KernelCommand command, KernelInvocationContext context) Void
-CompositeKernel : -System.Collections.IEnumerable.GetEnumerator() IEnumerator
+class JsonElement
+JsonElement : -CheckValidInstance() Void
+JsonElement : +Clone() JsonElement
+JsonElement : +EnumerateArray() ArrayEnumerator
+JsonElement : +EnumerateObject() ObjectEnumerator
+JsonElement : -get_DebuggerDisplay() String
+JsonElement : +get_Item(Int32 index) JsonElement
+JsonElement : -get_TokenType() JsonTokenType
+JsonElement : +get_ValueKind() JsonValueKind
+JsonElement : +GetArrayLength() Int32
+JsonElement : +GetBoolean() Boolean
+JsonElement : +GetByte() Byte
+JsonElement : +GetBytesFromBase64() Byte[]
+JsonElement : +GetDateTime() DateTime
+JsonElement : +GetDateTimeOffset() DateTimeOffset
+JsonElement : +GetDecimal() Decimal
+JsonElement : +GetDouble() Double
+JsonElement : +GetGuid() Guid
+JsonElement : +GetInt16() Int16
+JsonElement : +GetInt32() Int32
+JsonElement : +GetInt64() Int64
+JsonElement : +GetProperty(String propertyName) JsonElement
+JsonElement : +GetProperty(ReadOnlySpan~Char~ propertyName) JsonElement
+JsonElement : +GetProperty(ReadOnlySpan~Byte~ utf8PropertyName) JsonElement
+JsonElement : GetPropertyName() String
+JsonElement : GetPropertyRawText() String
+JsonElement : +GetRawText() String
+JsonElement : +GetSByte() SByte
+JsonElement : +GetSingle() Single
+JsonElement : +GetString() String
+JsonElement : +GetUInt16() UInt16
+JsonElement : +GetUInt32() UInt32
+JsonElement : +GetUInt64() UInt64
+JsonElement : TextEqualsHelper(ReadOnlySpan~Byte~ utf8Text, Boolean isPropertyName, Boolean shouldUnescape) Boolean
+JsonElement : TextEqualsHelper(ReadOnlySpan~Char~ text, Boolean isPropertyName) Boolean
+JsonElement : +ToString() String
+JsonElement : +TryGetByte(Byte& value) Boolean
+JsonElement : +TryGetBytesFromBase64(Byte[]& value) Boolean
+JsonElement : +TryGetDateTime(DateTime& value) Boolean
+JsonElement : +TryGetDateTimeOffset(DateTimeOffset& value) Boolean
+JsonElement : +TryGetDecimal(Decimal& value) Boolean
+JsonElement : +TryGetDouble(Double& value) Boolean
+JsonElement : +TryGetGuid(Guid& value) Boolean
+JsonElement : +TryGetInt16(Int16& value) Boolean
+JsonElement : +TryGetInt32(Int32& value) Boolean
+JsonElement : +TryGetInt64(Int64& value) Boolean
+JsonElement : +TryGetProperty(String propertyName, JsonElement& value) Boolean
+JsonElement : +TryGetProperty(ReadOnlySpan~Char~ propertyName, JsonElement& value) Boolean
+JsonElement : +TryGetProperty(ReadOnlySpan~Byte~ utf8PropertyName, JsonElement& value) Boolean
+JsonElement : +TryGetSByte(SByte& value) Boolean
+JsonElement : +TryGetSingle(Single& value) Boolean
+JsonElement : +TryGetUInt16(UInt16& value) Boolean
+JsonElement : +TryGetUInt32(UInt32& value) Boolean
+JsonElement : +TryGetUInt64(UInt64& value) Boolean
+JsonElement : +ValueEquals(String text) Boolean
+JsonElement : +ValueEquals(ReadOnlySpan~Byte~ utf8Text) Boolean
+JsonElement : +ValueEquals(ReadOnlySpan~Char~ text) Boolean
+JsonElement : +WriteTo(Utf8JsonWriter writer) Void
 
 
