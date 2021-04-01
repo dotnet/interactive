@@ -121,6 +121,34 @@ describe('Miscellaneous tests', () => {
             expect(isDotNetKernelPreferred(filename, fileMetadata)).is.false;
         });
 
+        it(`.ipynb file extension is preferred if metadata contains an acceptable language_info value`, () => {
+            const filename = 'notebook.ipynb';
+            const fileMetadata = {
+                custom: {
+                    metadata: {
+                        language_info: {
+                            name: 'dotnet-interactive.fsharp'
+                        }
+                    }
+                }
+            };
+            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
+        });
+
+        it(`.ipynb file extension is not preferred if metadata contains an unacceptable language_info value`, () => {
+            const filename = 'notebook.ipynb';
+            const fileMetadata = {
+                custom: {
+                    metadata: {
+                        language_info: {
+                            name: 'python'
+                        }
+                    }
+                }
+            };
+            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.false;
+        });
+
         it(`unsupported file extension is not preferred even if metadata matches`, () => {
             const filename = 'notebook.not-a-notebook-we-know-about';
             const fileMetadata = {
