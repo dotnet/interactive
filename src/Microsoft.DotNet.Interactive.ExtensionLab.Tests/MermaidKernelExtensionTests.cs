@@ -70,6 +70,23 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
             this.Assent(formatted.FixedGuid());
         }
 
+        [Fact]
+        public async Task registers_html_formatter_for_explorer()
+        {
+            using CompositeKernel kernel = new CompositeKernel
+            {
+                new CSharpKernel().UseNugetDirective(),
+            };
+
+            var extension = new MermaidKernelExtension();
+
+            await extension.OnLoadAsync(kernel);
+
+            string formatted = typeof(List<string>).ExploreWithUmlClassDiagram().ToDisplayString(HtmlFormatter.MimeType);
+
+            this.Assent(formatted.FixedGuid());
+        }
+
 
         [Fact]
         public async Task mermaid_kernel_handles_SubmitCode()
@@ -123,7 +140,24 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         [Fact]
         public void can_generate_class_diagram_to_a_specified_depth()
         {
-            var diagram = typeof(List<Dictionary<string, object>>).ToClassDiagram(graphDepth:2);
+            var diagram = typeof(List<Dictionary<string, object>>).ToClassDiagram(new ClassDiagramConfiguration(2));
+
+            this.Assent(diagram.ToString());
+        }
+
+        [Fact]
+        public void can_explore_a_type_with_UmlClassDiagram()
+        {
+            var diagram = typeof(List<Dictionary<string, object>>).ExploreWithUmlClassDiagram().ToMarkdown();
+
+            this.Assent(diagram.ToString());
+        }
+
+        [Fact]
+        public void can_configure_UmlClassDiagramExplorer()
+        {
+            var diagram = typeof(List<Dictionary<string, object>>).ExploreWithUmlClassDiagram()
+                .WithGraphDepth(2).ToMarkdown();
 
             this.Assent(diagram.ToString());
         }
