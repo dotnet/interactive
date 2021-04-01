@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using Assent;
 
 using FluentAssertions;
+using FluentAssertions.Execution;
+using HtmlAgilityPack;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
@@ -61,13 +63,25 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             await extension.OnLoadAsync(kernel);
 
-            string formatted = new MermaidMarkdown(@"
-    graph TD
+            var markdown = @"graph TD
     A[Client] --> B[Load Balancer]
     B --> C[Server1]
-    B --> D[Server2]").ToDisplayString(HtmlFormatter.MimeType);
+    B --> D[Server2]";
 
-            this.Assent(formatted.FixedGuid());
+            var formatted = new MermaidMarkdown(markdown).ToDisplayString(HtmlFormatter.MimeType);
+            var doc = new HtmlDocument();
+            doc.LoadHtml(formatted.FixedGuid());
+            var scriptNode = doc.DocumentNode.SelectSingleNode("//div/script");
+            var renderTarget = doc.DocumentNode.SelectSingleNode("//div[@id='00000000000000000000000000000000']");
+            using var _ = new AssertionScope();
+
+            scriptNode.Should().NotBeNull();
+            scriptNode.InnerText.Should()
+                .Contain(markdown);
+            scriptNode.InnerText.Should()
+                .Contain("configureRequireFromExtension('Mermaid','1.0.0')(['Mermaid/mermaidapi'], (mermaid) => {");
+
+            renderTarget.Should().NotBeNull();
         }
 
         [Fact]
@@ -82,9 +96,24 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             await extension.OnLoadAsync(kernel);
 
-            string formatted = typeof(List<string>).ExploreWithUmlClassDiagram().ToDisplayString(HtmlFormatter.MimeType);
+            var explorer = typeof(List<string>).ExploreWithUmlClassDiagram();
+            var formatted = explorer.ToDisplayString(HtmlFormatter.MimeType);
+            var markdown = explorer.ToMarkdown().ToString();
 
-            this.Assent(formatted.FixedGuid());
+            var doc = new HtmlDocument();
+            doc.LoadHtml(formatted.FixedGuid());
+            var scriptNode = doc.DocumentNode.SelectSingleNode("//div/script");
+            var renderTarget = doc.DocumentNode.SelectSingleNode("//div[@id='00000000000000000000000000000000']");
+            
+            using var _ = new AssertionScope();
+
+            scriptNode.Should().NotBeNull();
+            scriptNode.InnerText.Should()
+                .Contain(markdown);
+            scriptNode.InnerText.Should()
+                .Contain("configureRequireFromExtension('Mermaid','1.0.0')(['Mermaid/mermaidapi'], (mermaid) => {");
+
+            renderTarget.Should().NotBeNull();
         }
 
 
