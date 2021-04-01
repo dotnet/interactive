@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             code.AppendLine("<div style=\"background-color:white;\">");
            
             code.AppendLine(@"<script type=""text/javascript"">");
-            AppendJsCode(code,  divId, functionName, libraryUri, libraryVersion, cacheBuster, markdown.ToString());
+            code.AppendJsCode(divId, functionName, libraryUri, libraryVersion, cacheBuster, markdown.ToString());
             code.AppendLine(JavascriptUtilities.GetCodeForEnsureRequireJs(requireUri, functionName));
             code.AppendLine("</script>");
 
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             return html;
         }
 
-        private static void AppendJsCode(StringBuilder stringBuilder,
+        private static void AppendJsCode(this StringBuilder stringBuilder,
             string divId, string functionName, Uri libraryUri, string libraryVersion, string cacheBuster, string  markdown)
         {
             libraryVersion ??= "1.0.0";
