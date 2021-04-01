@@ -24,16 +24,30 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             
             var message = new HtmlString(
                 $@"<details><summary>Explain things visually using the <a href=""https://mermaid-js.github.io/mermaid/"">Mermaid language</a>.</summary>
-    <p>TO DO</p>
+    <p>This extension adds a new kernel that can render mermaid markdown. This code will render a diagram</p>
 <pre>
     <code>
-    using Microsoft.Data.Analysis;
-    using System.Collections.Generic;
-    using Microsoft.ML;
+#!mermaid
+sequenceDiagram
+    participant Alice
+    participant Bob
+    Alice->>John: Hello John, how are you?
+    loop Healthcheck
+        John->>John: Fight against hypochondria
+    end
+    Note right of John: Rational thoughts <br/>prevail!
+    John-->>Alice: Great!
+    John->>Bob: How about you?
+    Bob-->>John: Jolly good!
+    </code>
+</pre>
+It also add gestures to render a class diagram from any type or instance. Use the <code>Explain()</code> extension method on object to render its class diagram. You can also control the graph depth passing a value to the extension method.
 
-    var dataFrame = DataFrame.LoadCsv(""./Data.csv"");
+<pre>
+    <code>
+using Microsoft.DotNet.Interactive;
 
-    dataFrame.ExploreWithSandDance()
+Kernel.Root.Explain(graphDepth: 2);
     </code>
 </pre>
     <img src=""https://mermaid-js.github.io/mermaid/img/header.png"" width=""30%"">
