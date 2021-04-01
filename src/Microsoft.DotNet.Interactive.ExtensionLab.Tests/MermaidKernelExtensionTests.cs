@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         }
 
         [Fact]
-        public async Task register_formatters()
+        public async Task registers_html_formatter_for_MermaidMarkdown()
         {
             using var kernel = new CompositeKernel
             {
@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         [Fact]
         public void can_generate_class_diagram_to_a_specified_depth()
         {
-            var diagram = typeof(CSharpKernel).ToClassDiagram(graphDepth:2);
+            var diagram = typeof(List<Dictionary<string, object>>).ToClassDiagram(graphDepth:2);
 
             this.Assent(diagram.ToString());
         }

@@ -1,15 +1,19 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
 {
     public class MermaidKernelExtension : IKernelExtension, IStaticContentSource
     {
         public string Name => "Mermaid";
-        public Task OnLoadAsync(Kernel kernel)
+        public async Task OnLoadAsync(Kernel kernel)
         {
             if (kernel is CompositeKernel compositeKernel)
             {
@@ -17,8 +21,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             }
 
             kernel.UseMermaid();
-            KernelInvocationContext.Current?.Display(
-                new HtmlString($@"<details><summary>Explain things visually using the <a href=""https://mermaid-js.github.io/mermaid/"">Mermaid language</a>.</summary>
+            
+            var message = new HtmlString(
+                $@"<details><summary>Explain things visually using the <a href=""https://mermaid-js.github.io/mermaid/"">Mermaid language</a>.</summary>
     <p>TO DO</p>
 <pre>
     <code>
@@ -32,11 +37,15 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
     </code>
 </pre>
     <img src=""https://mermaid-js.github.io/mermaid/img/header.png"" width=""30%"">
-    </details>"),
-                "text/html");
+    </details>");
 
-            return Task.CompletedTask;
+           
+            var formattedValue = new FormattedValue(
+                HtmlFormatter.MimeType,
+                message.ToDisplayString(HtmlFormatter.MimeType));
+            
+            await kernel.SendAsync(new DisplayValue(formattedValue, Guid.NewGuid().ToString()));
+
         }
-
     }
 }
