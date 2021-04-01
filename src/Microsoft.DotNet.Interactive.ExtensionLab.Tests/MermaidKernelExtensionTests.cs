@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         }
 
         [Fact]
-        public async Task can_explore_type_umlClassDiagram_from_csharp_code()
+        public async Task can_use_extension_methods_from_the_kernel_extension()
         {
             using CompositeKernel kernel = new CompositeKernel
             {
