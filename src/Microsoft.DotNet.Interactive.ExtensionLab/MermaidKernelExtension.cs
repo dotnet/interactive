@@ -5,7 +5,6 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
@@ -41,11 +40,10 @@ sequenceDiagram
     Bob-->>John: Jolly good!
     </code>
 </pre>
-<p>This extension also adds gestures to render a class diagram from any type. Use the <code>ToClassDiagram()</code> extension method on <code>System.Type</code> to render its class diagram.</p>
+<p>This extension also adds gestures to render a class diagram from any type. Use the <code>ExploreWithUmlClassDiagram().Display();</code> extension method on <code>System.Type</code> to render its class diagram.</p>
 
 <pre>
     <code>
-
 typeof(List<string>).ExploreWithUmlClassDiagram().Display();
     </code>
 </pre>
