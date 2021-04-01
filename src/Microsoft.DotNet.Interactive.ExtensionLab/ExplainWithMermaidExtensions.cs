@@ -12,8 +12,4 @@ namespace System
             return new UmlClassDiagramExplorer(type, new ClassDiagramConfiguration(1));
         }
     }
-
-
-
-  
 }

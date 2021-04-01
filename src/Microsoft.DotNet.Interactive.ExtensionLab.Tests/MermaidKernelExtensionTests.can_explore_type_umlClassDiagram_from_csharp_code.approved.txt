@@ -1,0 +1,187 @@
+<div style="background-color:white;">
+<script type="text/javascript">
+
+let loadMermaid_00000000000000000000000000000000 = () => {
+
+        configureRequireFromExtension('Mermaid','1.0.0')(['Mermaid/mermaidapi'], (mermaid) => {
+
+            let renderTarget = document.getElementById('00000000000000000000000000000000');
+            mermaid.render( 
+                'mermaid_00000000000000000000000000000000', 
+                `classDiagram
+List~String~ --|> ICollection~String~ : Inheritance
+List~String~ --|> IEnumerable~String~ : Inheritance
+List~String~ --|> IList~String~ : Inheritance
+List~String~ --|> IReadOnlyCollection~String~ : Inheritance
+List~String~ --|> IReadOnlyList~String~ : Inheritance
+List~String~ --|> ICollection : Inheritance
+List~String~ --|> IEnumerable : Inheritance
+List~String~ --|> IList : Inheritance
+List~String~ --|> Object : Inheritance
+
+class ICollection
+<<interface>> ICollection
+ICollection : +CopyTo(Array array, Int32 index) Void*
+ICollection : +get_Count() Int32*
+ICollection : +get_IsSynchronized() Boolean*
+ICollection : +get_SyncRoot() Object*
+
+class ICollection~String~
+<<interface>> ICollection~String~
+ICollection~String~ : +Add(String item) Void*
+ICollection~String~ : +Clear() Void*
+ICollection~String~ : +Contains(String item) Boolean*
+ICollection~String~ : +CopyTo(String[] array, Int32 arrayIndex) Void*
+ICollection~String~ : +get_Count() Int32*
+ICollection~String~ : +get_IsReadOnly() Boolean*
+ICollection~String~ : +Remove(String item) Boolean*
+
+class IEnumerable
+<<interface>> IEnumerable
+IEnumerable : +GetEnumerator() IEnumerator*
+
+class IEnumerable~String~
+<<interface>> IEnumerable~String~
+IEnumerable~String~ : +GetEnumerator() IEnumerator~String~*
+
+class IList
+<<interface>> IList
+IList : +Add(Object value) Int32*
+IList : +Clear() Void*
+IList : +Contains(Object value) Boolean*
+IList : +get_IsFixedSize() Boolean*
+IList : +get_IsReadOnly() Boolean*
+IList : +get_Item(Int32 index) Object*
+IList : +IndexOf(Object value) Int32*
+IList : +Insert(Int32 index, Object value) Void*
+IList : +Remove(Object value) Void*
+IList : +RemoveAt(Int32 index) Void*
+IList : +set_Item(Int32 index, Object value) Void*
+
+class IList~String~
+<<interface>> IList~String~
+IList~String~ : +get_Item(Int32 index) String*
+IList~String~ : +IndexOf(String item) Int32*
+IList~String~ : +Insert(Int32 index, String item) Void*
+IList~String~ : +RemoveAt(Int32 index) Void*
+IList~String~ : +set_Item(Int32 index, String value) Void*
+
+class IReadOnlyCollection~String~
+<<interface>> IReadOnlyCollection~String~
+IReadOnlyCollection~String~ : +get_Count() Int32*
+
+class IReadOnlyList~String~
+<<interface>> IReadOnlyList~String~
+IReadOnlyList~String~ : +get_Item(Int32 index) String*
+
+class List~String~
+List~String~ : +Add(String item) Void
+List~String~ : +AddRange(IEnumerable~String~ collection) Void
+List~String~ : -AddWithResize(String item) Void
+List~String~ : +AsReadOnly() ReadOnlyCollection~String~
+List~String~ : +BinarySearch(Int32 index, Int32 count, String item, IComparer~String~ comparer) Int32
+List~String~ : +BinarySearch(String item) Int32
+List~String~ : +BinarySearch(String item, IComparer~String~ comparer) Int32
+List~String~ : +Clear() Void
+List~String~ : +Contains(String item) Boolean
+List~String~ : +ConvertAll(Converter~String, TOutput~ converter) List~TOutput~
+List~String~ : +CopyTo(String[] array) Void
+List~String~ : +CopyTo(Int32 index, String[] array, Int32 arrayIndex, Int32 count) Void
+List~String~ : +CopyTo(String[] array, Int32 arrayIndex) Void
+List~String~ : -EnsureCapacity(Int32 min) Void
+List~String~ : +Exists(Predicate~String~ match) Boolean
+List~String~ : +Find(Predicate~String~ match) String
+List~String~ : +FindAll(Predicate~String~ match) List~String~
+List~String~ : +FindIndex(Predicate~String~ match) Int32
+List~String~ : +FindIndex(Int32 startIndex, Predicate~String~ match) Int32
+List~String~ : +FindIndex(Int32 startIndex, Int32 count, Predicate~String~ match) Int32
+List~String~ : +FindLast(Predicate~String~ match) String
+List~String~ : +FindLastIndex(Predicate~String~ match) Int32
+List~String~ : +FindLastIndex(Int32 startIndex, Predicate~String~ match) Int32
+List~String~ : +FindLastIndex(Int32 startIndex, Int32 count, Predicate~String~ match) Int32
+List~String~ : +ForEach(Action~String~ action) Void
+List~String~ : +get_Capacity() Int32
+List~String~ : +get_Count() Int32
+List~String~ : +get_Item(Int32 index) String
+List~String~ : +GetEnumerator() Enumerator~String~
+List~String~ : +GetRange(Int32 index, Int32 count) List~String~
+List~String~ : +IndexOf(String item) Int32
+List~String~ : +IndexOf(String item, Int32 index) Int32
+List~String~ : +IndexOf(String item, Int32 index, Int32 count) Int32
+List~String~ : +Insert(Int32 index, String item) Void
+List~String~ : +InsertRange(Int32 index, IEnumerable~String~ collection) Void
+List~String~ : -IsCompatibleObject(Object value) Boolean$
+List~String~ : +LastIndexOf(String item) Int32
+List~String~ : +LastIndexOf(String item, Int32 index) Int32
+List~String~ : +LastIndexOf(String item, Int32 index, Int32 count) Int32
+List~String~ : +Remove(String item) Boolean
+List~String~ : +RemoveAll(Predicate~String~ match) Int32
+List~String~ : +RemoveAt(Int32 index) Void
+List~String~ : +RemoveRange(Int32 index, Int32 count) Void
+List~String~ : +Reverse() Void
+List~String~ : +Reverse(Int32 index, Int32 count) Void
+List~String~ : +set_Capacity(Int32 value) Void
+List~String~ : +set_Item(Int32 index, String value) Void
+List~String~ : +Sort() Void
+List~String~ : +Sort(IComparer~String~ comparer) Void
+List~String~ : +Sort(Int32 index, Int32 count, IComparer~String~ comparer) Void
+List~String~ : +Sort(Comparison~String~ comparison) Void
+List~String~ : -System.Collections.Generic.ICollection<T>.get_IsReadOnly() Boolean
+List~String~ : -System.Collections.Generic.IEnumerable<T>.GetEnumerator() IEnumerator~String~
+List~String~ : -System.Collections.ICollection.CopyTo(Array array, Int32 arrayIndex) Void
+List~String~ : -System.Collections.ICollection.get_IsSynchronized() Boolean
+List~String~ : -System.Collections.ICollection.get_SyncRoot() Object
+List~String~ : -System.Collections.IEnumerable.GetEnumerator() IEnumerator
+List~String~ : -System.Collections.IList.Add(Object item) Int32
+List~String~ : -System.Collections.IList.Contains(Object item) Boolean
+List~String~ : -System.Collections.IList.get_IsFixedSize() Boolean
+List~String~ : -System.Collections.IList.get_IsReadOnly() Boolean
+List~String~ : -System.Collections.IList.get_Item(Int32 index) Object
+List~String~ : -System.Collections.IList.IndexOf(Object item) Int32
+List~String~ : -System.Collections.IList.Insert(Int32 index, Object item) Void
+List~String~ : -System.Collections.IList.Remove(Object item) Void
+List~String~ : -System.Collections.IList.set_Item(Int32 index, Object value) Void
+List~String~ : +ToArray() String[]
+List~String~ : +TrimExcess() Void
+List~String~ : +TrueForAll(Predicate~String~ match) Boolean
+
+class Object
+Object : +Equals(Object obj) Boolean
+Object : +Equals(Object objA, Object objB) Boolean$
+Object : Finalize() Void
+Object : +GetHashCode() Int32
+Object : +GetType() Type
+Object : MemberwiseClone() Object
+Object : +ReferenceEquals(Object objA, Object objB) Boolean$
+Object : +ToString() String
+
+
+`, 
+                g => {
+                    renderTarget.innerHTML = g 
+                });
+        },
+        (error) => {
+            console.log(error);
+        });
+}
+// ensure `require` is available globally
+if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function))) {
+    let require_script = document.createElement('script');
+    require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
+    require_script.setAttribute('type', 'text/javascript');
+    
+    
+    require_script.onload = function() {
+        loadMermaid_00000000000000000000000000000000();
+    };
+
+    document.getElementsByTagName('head')[0].appendChild(require_script);
+}
+else {
+    loadMermaid_00000000000000000000000000000000();
+}
+
+</script>
+<div id="00000000000000000000000000000000"></div>
+</div>

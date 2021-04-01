@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using Assent;
 
 using FluentAssertions;
-
+using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -108,9 +108,41 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
     B --> D[Server2]
 ");
 
-            SubscribedList<KernelEvent> events = result.KernelEvents.ToSubscribedList();
+            var events = result.KernelEvents.ToSubscribedList();
 
-            string formattedData = events
+            var formattedData = events
+                .OfType<DisplayedValueProduced>()
+                .Single()
+                .FormattedValues
+                .Single(fm => fm.MimeType == HtmlFormatter.MimeType)
+                .Value;
+
+            this.Assent(formattedData.FixedGuid(), _configuration);
+        }
+
+        [Fact]
+        public async Task can_explore_type_umlClassDiagram_from_csharp_code()
+        {
+            using CompositeKernel kernel = new CompositeKernel
+            {
+                new CSharpKernel().UseNugetDirective(),
+            };
+
+            var extension = new MermaidKernelExtension();
+
+            await extension.OnLoadAsync(kernel);
+
+            await kernel.SendAsync(new SubmitCode($@"#r ""{typeof(MermaidKernelExtension).Assembly.Location}""", "csharp"));
+
+            var result = await kernel.SendAsync( new SubmitCode(@"
+using System;
+
+typeof(List<string>).ExploreWithUmlClassDiagram().Display();
+", "csharp"));
+
+            var events = result.KernelEvents.ToSubscribedList();
+
+            var formattedData = events
                 .OfType<DisplayedValueProduced>()
                 .Single()
                 .FormattedValues
