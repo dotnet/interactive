@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         [Fact]
         public async Task adds_mermaid_kernel()
         {
-            using var kernel = new CompositeKernel
+            using CompositeKernel kernel = new CompositeKernel
             {
                 new CSharpKernel().UseNugetDirective(),
             };
@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         [Fact]
         public async Task registers_html_formatter_for_MermaidMarkdown()
         {
-            using var kernel = new CompositeKernel
+            using CompositeKernel kernel = new CompositeKernel
             {
                 new CSharpKernel().UseNugetDirective(),
             };
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             await extension.OnLoadAsync(kernel);
 
-            var formatted = new MermaidMarkdown(@"
+            string formatted = new MermaidMarkdown(@"
     graph TD
     A[Client] --> B[Load Balancer]
     B --> C[Server1]
@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
         [Fact]
         public async Task mermaid_kernel_handles_SubmitCode()
         {
-            using var kernel = new CompositeKernel
+            using CompositeKernel kernel = new CompositeKernel
             {
                 new CSharpKernel().UseNugetDirective(),
             };
@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             await extension.OnLoadAsync(kernel);
 
-            var result = await kernel.SubmitCodeAsync(@"
+            KernelCommandResult result = await kernel.SubmitCodeAsync(@"
 #!mermaid
     graph TD
     A[Client] --> B[Load Balancer]
@@ -91,9 +91,9 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
     B --> D[Server2]
 ");
 
-            var events = result.KernelEvents.ToSubscribedList();
+            SubscribedList<KernelEvent> events = result.KernelEvents.ToSubscribedList();
 
-            var formattedData = events
+            string formattedData = events
                 .OfType<DisplayedValueProduced>()
                 .Single()
                 .FormattedValues
