@@ -172,9 +172,11 @@ typeof(List<string>).ExploreWithUmlClassDiagram().Display();
         [Fact]
         public void can_generate_class_diagram_to_a_specified_depth()
         {
-            var diagram = typeof(List<Dictionary<string, object>>).ToClassDiagram(new ClassDiagramConfiguration(2));
+            var diagram = typeof(List<Dictionary<string, object>>).ToClassDiagram(new ClassDiagramConfiguration(1));
 
-            this.Assent(diagram.ToString());
+            diagram.ToString().Should()
+                .NotContain(
+                    "ICollection~Dictionary<String, Object>~ --|> IEnumerable~Dictionary<String, Object>~ : Inheritance");
         }
 
         [Fact]
@@ -189,15 +191,16 @@ typeof(List<string>).ExploreWithUmlClassDiagram().Display();
         public void can_configure_UmlClassDiagramExplorer()
         {
             var diagram = typeof(List<Dictionary<string, object>>).ExploreWithUmlClassDiagram()
-                .WithGraphDepth(2).ToMarkdown();
-
-            this.Assent(diagram.ToString());
+                .WithGraphDepth(1).ToMarkdown();
+            
+            diagram.ToString().Should()
+                .NotContain(
+                    "ICollection~Dictionary<String, Object>~ --|> IEnumerable~Dictionary<String, Object>~ : Inheritance");
         }
 
         public void Dispose()
         {
             Formatter.ResetToDefault();
         }
-
     }
 }
