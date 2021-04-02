@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 [nameof(SignatureHelpProduced)] = typeof(KernelEventEnvelope<SignatureHelpProduced>),
                 [nameof(StandardErrorValueProduced)] = typeof(KernelEventEnvelope<StandardErrorValueProduced>),
                 [nameof(StandardOutputValueProduced)] = typeof(KernelEventEnvelope<StandardOutputValueProduced>),
-                [nameof(WorkspaceDirectoryChanged)] = typeof(KernelEventEnvelope<WorkspaceDirectoryChanged>),
+                [nameof(WorkingDirectoryChanged)] = typeof(KernelEventEnvelope<WorkingDirectoryChanged>),
                 [nameof(KernelExtensionLoaded)] = typeof(KernelEventEnvelope<KernelExtensionLoaded>),
             };
 

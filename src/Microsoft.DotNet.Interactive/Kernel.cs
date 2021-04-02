@@ -628,8 +628,8 @@ namespace Microsoft.DotNet.Interactive
                         SetHandler(requestSignatureHelpHandler, requestSignatureHelp);
                         break;
 
-                    case (ChangeWorkspaceDirectory changeWorkspaceDirectory, IKernelCommandHandler<ChangeWorkspaceDirectory> changeWorkspaceDirectoryHandler):
-                        SetHandler(changeWorkspaceDirectoryHandler, changeWorkspaceDirectory);
+                    case (ChangeWorkingDirectory changeWorkingDirectory, IKernelCommandHandler<ChangeWorkingDirectory> changeWorkingDirectoryHandler):
+                        SetHandler(changeWorkingDirectoryHandler, changeWorkingDirectory);
                         break;
 
                     default:

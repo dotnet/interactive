@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.Server
             _envelopeTypesByCommandTypeName = new ConcurrentDictionary<string, Type>
             {
                 [nameof(AddPackage)] = typeof(KernelCommandEnvelope<AddPackage>),
-                [nameof(ChangeWorkspaceDirectory)] = typeof(KernelCommandEnvelope<ChangeWorkspaceDirectory>),
+                [nameof(ChangeWorkingDirectory)] = typeof(KernelCommandEnvelope<ChangeWorkingDirectory>),
                 [nameof(DisplayError)] = typeof(KernelCommandEnvelope<DisplayError>),
                 [nameof(DisplayValue)] = typeof(KernelCommandEnvelope<DisplayValue>),
                 [nameof(ParseNotebook)] = typeof(KernelCommandEnvelope<ParseNotebook>),

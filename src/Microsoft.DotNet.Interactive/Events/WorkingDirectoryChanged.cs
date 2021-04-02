@@ -5,14 +5,14 @@ using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Events
 {
-    public class WorkspaceDirectoryChanged : KernelEvent
+    public class WorkingDirectoryChanged : KernelEvent
     {
-        public WorkspaceDirectoryChanged(string workspaceDirectory, KernelCommand command)
+        public WorkingDirectoryChanged(string workingDirectory, KernelCommand command)
             : base(command)
         {
-            WorkspaceDirectory = workspaceDirectory;
+            WorkingDirectory = workingDirectory;
         }
 
-        public string WorkspaceDirectory { get; }
+        public string WorkingDirectory { get; }
     }
 }
