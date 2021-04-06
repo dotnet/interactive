@@ -271,7 +271,6 @@ namespace Microsoft.DotNet.Interactive
                                 break;
 
                             case RequestDiagnostics _:
-                            case LanguageServiceCommand _:
                                 // FIX: (SendAsync) 
                                 await context.HandlingKernel.FastPathScheduler.RunAsync(
                                     c,
@@ -320,6 +319,8 @@ namespace Microsoft.DotNet.Interactive
 
             try
             {
+                SetHandlingKernel(command, context);
+
                 await Pipeline.SendAsync(command, context);
 
                 if (command != context.Command)
