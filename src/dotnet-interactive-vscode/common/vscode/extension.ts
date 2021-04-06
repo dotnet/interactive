@@ -197,7 +197,7 @@ async function waitForSdkInstall(requiredSdkVersion: string): Promise<void> {
 async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocument: vscode.TextDocument) {
     const notebook = candidateNotebookCellDocument.notebook;
     if (notebook && isDotnetInteractiveLanguage(candidateNotebookCellDocument.languageId)) {
-        const cell = notebook.cells.find(c => c.document === candidateNotebookCellDocument);
+        const cell = versionSpecificFunctions.getCells(notebook).find(c => c.document === candidateNotebookCellDocument);
         if (cell) {
             const newMetadata = cell.metadata.with({
                 custom: {

@@ -9,6 +9,7 @@ import { getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, bac
 import { Eol } from '../interfaces';
 import { NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookDocument } from '../interfaces/contracts';
 import * as utilities from '../interfaces/utilities';
+import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import * as vscodeLike from '../interfaces/vscode-like';
 import { configureWebViewMessaging, getEol, isUnsavedNotebook } from './vscodeUtilities';
 
@@ -119,7 +120,7 @@ function toVsCodeNotebookCellData(cell: NotebookCell): vscode.NotebookCellData {
 
 export function toNotebookDocument(document: vscode.NotebookDocument): NotebookDocument {
     return {
-        cells: document.cells.map(toNotebookCell)
+        cells: versionSpecificFunctions.getCells(document).map(toNotebookCell)
     };
 }
 

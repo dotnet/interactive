@@ -9,6 +9,7 @@ import { notebookCellLanguages, getSimpleLanguage, notebookCellChanged } from '.
 import { convertToRange, toVsCodeDiagnostic } from './vscodeUtilities';
 import { getDiagnosticCollection } from './diagnostics';
 import { provideSignatureHelp } from './../languageServices/signatureHelp';
+import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 
 export class CompletionItemProvider implements vscode.CompletionItemProvider {
     static readonly triggerCharacters = ['.'];
@@ -131,7 +132,7 @@ export function registerLanguageProviders(clientMapper: ClientMapper, diagnostic
     disposables.push(vscode.languages.registerSignatureHelpProvider(languages, new SignatureHelpProvider(clientMapper), ...SignatureHelpProvider.triggerCharacters));
     disposables.push(vscode.workspace.onDidChangeTextDocument(e => {
         if (vscode.languages.match(notebookCellLanguages, e.document)) {
-            const cell = vscode.window.activeNotebookEditor?.document.cells.find(cell => cell.document === e.document);
+            const cell = versionSpecificFunctions.getCells(vscode.window.activeNotebookEditor?.document).find(cell => cell.document === e.document);
             if (cell) {
                 notebookCellChanged(clientMapper, e.document, getSimpleLanguage(cell.document.languageId), diagnosticDelay, diagnostics => {
                     const collection = getDiagnosticCollection(e.document.uri);

@@ -103,7 +103,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.217604",
+          "default": "1.0.220104",
           "description": "The minimum required version of the .NET Interactive tool."
         }
       }
@@ -338,7 +338,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "compile": "npm run lint && tsc -p ./",
     "lint": "eslint src --ext ts",
     "watch": "tsc -watch -p ./",
     "integration-test": "node ./out/tests/integration/runTest.js",
@@ -365,6 +365,7 @@
     "chai-fs": "2.0.0",
     "del-cli": "^3.0.1",
     "eslint": "6.8.0",
+    "eslint-plugin-deprecation": "^1.2.0",
     "glob": "7.1.6",
     "mocha": "7.1.1",
     "mocha-multi-reporters": "1.1.7",
