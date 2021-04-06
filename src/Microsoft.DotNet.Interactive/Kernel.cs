@@ -275,7 +275,8 @@ namespace Microsoft.DotNet.Interactive
                             case RequestCompletions _:
                             case RequestSignatureHelp _:
                                 // FIX: (SendAsync) 
-                                await context.HandlingKernel.FastPathScheduler.RunAsync(
+                                var fastPathScheduler = await context.HandlingKernel.GetFastPathSchedulerAsync(context);
+                                await fastPathScheduler.RunAsync(
                                     c,
                                     InvokePipelineAndCommandHandler,
                                     c.KernelUri.ToString(),
@@ -316,6 +317,18 @@ namespace Microsoft.DotNet.Interactive
             return context.Result;
         }
 
+        private async Task<KernelScheduler<KernelCommand, KernelCommandResult>> GetFastPathSchedulerAsync(
+            KernelInvocationContext invocationContext)
+        {
+            if (_fastPathScheduler is null)
+            {
+                await SendAsync(new AnonymousKernelCommand((_, _) => Task.CompletedTask, invocationContext.HandlingKernel.Name, invocationContext.Command ), invocationContext.CancellationToken);
+                _fastPathScheduler = new();
+            }
+
+            return _fastPathScheduler;
+        }
+
         internal async Task<KernelCommandResult> InvokePipelineAndCommandHandler(KernelCommand command)
         {
             var context = KernelInvocationContext.Establish(command);
@@ -354,20 +367,6 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 return _commandScheduler;
-            }
-        }
-
-        protected KernelScheduler<KernelCommand, KernelCommandResult> FastPathScheduler
-        {
-            get
-            {
-                if (_fastPathScheduler is null)
-                {
-                    _fastPathScheduler = new();
-                    _fastPathScheduler.RegisterDeferredOperationSource(GetDeferredOperations, InvokePipelineAndCommandHandler);
-                }
-
-                return _fastPathScheduler;
             }
         }
 
