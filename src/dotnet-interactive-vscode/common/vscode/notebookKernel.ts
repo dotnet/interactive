@@ -11,6 +11,7 @@ import * as vscodeLike from '../interfaces/vscode-like';
 import * as diagnostics from './diagnostics';
 import * as notebookContentProvider from './notebookContentProvider';
 import * as utilities from '../utilities';
+import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import * as vscodeUtilities from './vscodeUtilities';
 
 export const KernelId: string = 'dotnet-interactive';
@@ -34,7 +35,7 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
     async executeCellsRequest(document: vscode.NotebookDocument, ranges: vscode.NotebookCellRange[]): Promise<void> {
         for (const range of ranges) {
             for (let cellIndex = range.start; cellIndex < range.end; cellIndex++) {
-                const cell = document.cells[cellIndex];
+                const cell = versionSpecificFunctions.cellAt(document, cellIndex);
                 await executeCell(document, cell, this.clientMapper);
             }
         }
@@ -46,7 +47,7 @@ export async function updateDocumentKernelspecMetadata(document: vscode.Notebook
     const documentKernelMetadata = withDotNetKernelMetadata(document.metadata);
 
     // workaround for https://github.com/microsoft/vscode/issues/115912; capture all cell data so we can re-apply it at the end
-    const cellData: Array<vscode.NotebookCellData> = document.cells.map(c => {
+    const cellData: Array<vscode.NotebookCellData> = versionSpecificFunctions.getCells(document).map(c => {
         return new vscode.NotebookCellData(
             c.kind,
             c.document.getText(),
@@ -59,7 +60,7 @@ export async function updateDocumentKernelspecMetadata(document: vscode.Notebook
     edit.replaceNotebookMetadata(document.uri, documentKernelMetadata);
 
     // this is the re-application for the workaround mentioned above
-    edit.replaceNotebookCells(document.uri, 0, document.cells.length, cellData);
+    edit.replaceNotebookCells(document.uri, 0, versionSpecificFunctions.cellCount(document), cellData);
 
     await vscode.workspace.applyEdit(edit);
 }
@@ -70,7 +71,7 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
     // update cell language
     let applyUpdate = false;
     let cellDatas: Array<vscode.NotebookCellData> = [];
-    for (const cell of document.cells) {
+    for (const cell of versionSpecificFunctions.getCells(document)) {
         const cellMetadata = getDotNetMetadata(cell.metadata);
         const cellText = cell.document.getText();
         const newLanguage = getCellLanguage(cellText, cellMetadata, documentLanguageInfo, cell.document.languageId);
@@ -87,7 +88,7 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
 
     if (applyUpdate) {
         const edit = new vscode.WorkspaceEdit();
-        edit.replaceNotebookCells(document.uri, 0, document.cells.length, cellDatas);
+        edit.replaceNotebookCells(document.uri, 0, versionSpecificFunctions.cellCount(document), cellDatas);
         await vscode.workspace.applyEdit(edit);
     }
 }

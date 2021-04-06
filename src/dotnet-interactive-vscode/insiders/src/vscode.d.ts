@@ -2158,10 +2158,33 @@ declare module 'vscode' {
 	}
 
 	/**
+	 * The reason why code actions were requested.
+	 */
+	export enum CodeActionTriggerKind {
+		/**
+		 * Code actions were explicitly requested by the user or by an extension.
+		 */
+		Invoke = 1,
+
+		/**
+		 * Code actions were requested automatically.
+		 *
+		 * This typically happens when current selection in a file changes, but can
+		 * also be triggered when file content changes.
+		 */
+		Automatic = 2,
+	}
+
+	/**
 	 * Contains additional diagnostic information about the context in which
 	 * a [code action](#CodeActionProvider.provideCodeActions) is run.
 	 */
 	export interface CodeActionContext {
+		/**
+		 * The reason why code actions were requested.
+		 */
+		readonly triggerKind: CodeActionTriggerKind;
+
 		/**
 		 * An array of diagnostics.
 		 */
@@ -2419,13 +2442,13 @@ declare module 'vscode' {
 	/**
 	 * Information about where a symbol is defined.
 	 *
-	 * Provides additional metadata over normal [location](#Location) definitions, including the range of
+	 * Provides additional metadata over normal {@link Location location} definitions, including the range of
 	 * the defining symbol
 	 */
 	export type DefinitionLink = LocationLink;
 
 	/**
-	 * The definition of a symbol represented as one or many [locations](#Location).
+	 * The definition of a symbol represented as one or many {@link Location locations}.
 	 * For most programming languages there is only one location at which a symbol is
 	 * defined.
 	 */

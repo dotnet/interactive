@@ -13,6 +13,7 @@ import { DotNetPathManager } from './extension';
 import { computeToolInstallArguments, executeSafe, executeSafeAndLog } from '../utilities';
 
 import * as jupyter from './jupyter';
+import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import { ReportChannel } from '../interfaces/vscode-like';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel) {
@@ -108,7 +109,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
         }
 
         if (document) {
-            for (const cell of document.cells) {
+            for (const cell of versionSpecificFunctions.getCells(document)) {
                 endExecution(cell, false);
             }
 

@@ -14,3 +14,19 @@ import * as vscodeUtilities from './common/vscode/vscodeUtilities';
 export function registerAdditionalContentProvider(context: vscode.ExtensionContext, contentProvider: vscode.NotebookContentProvider) {
     // empty for insiders
 }
+
+export function cellAt(document: vscode.NotebookDocument, index: number): vscode.NotebookCell {
+    return document.cellAt(index);
+}
+
+export function cellCount(document: vscode.NotebookDocument): number {
+    return document.cellCount;
+}
+
+export function getCells(document: vscode.NotebookDocument | undefined): Array<vscode.NotebookCell> {
+    if (document) {
+        return [...document.getCells()];
+    }
+
+    return [];
+}
