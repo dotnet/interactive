@@ -271,6 +271,9 @@ namespace Microsoft.DotNet.Interactive
                                 break;
 
                             case RequestDiagnostics _:
+                            case RequestHoverText _:
+                            case RequestCompletions _:
+                            case RequestSignatureHelp _:
                                 // FIX: (SendAsync) 
                                 await context.HandlingKernel.FastPathScheduler.RunAsync(
                                     c,
