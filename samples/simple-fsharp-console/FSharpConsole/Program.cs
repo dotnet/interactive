@@ -10,8 +10,7 @@ var kernel = new FSharpKernel()
                     .UseDefaultFormatting()
                     .UseNugetDirective()
                     .UseKernelHelpers()
-                    .UseWho()
-                    .UseDotNetVariableSharing();
+                    .UseWho();
 Formatter.SetPreferredMimeTypeFor(typeof(object), "text/plain");
 Formatter.Register<object>(o => o.ToString());
 
@@ -20,7 +19,7 @@ while (true)
     if (ReadLine() is not { } request)
         continue;
     var toSubmit = new SubmitCode(request);
-    var response = kernel.SendAsync(toSubmit).Result;
+    var response = await kernel.SendAsync(toSubmit);
     response.KernelEvents.Subscribe(
         e =>
         {
