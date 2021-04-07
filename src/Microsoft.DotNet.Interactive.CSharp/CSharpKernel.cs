@@ -143,6 +143,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
+            await EnsureWorkspaceIsInitializedAsync(context);
+
             using var _ = new GCPressure(1024 * 1024);
 
             var document = _workspace.UpdateWorkingDocument(command.Code);
@@ -172,11 +174,29 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public async Task HandleAsync(RequestSignatureHelp command, KernelInvocationContext context)
         {
-            var document = _workspace.UpdateWorkingDocument(command.Code);
+            await EnsureWorkspaceIsInitializedAsync(context);
+
+            var document = _workspace.UpdateWorkingDocument(command.Code); 
             var signatureHelp = await SignatureHelpGenerator.GenerateSignatureInformation(document, command);
             if (signatureHelp is { })
             {
                 context.Publish(signatureHelp);
+            }
+        }
+
+        private async Task EnsureWorkspaceIsInitializedAsync(KernelInvocationContext context)
+        {
+            if (ScriptState is null)
+            {
+                ScriptState = await CSharpScript.RunAsync(
+                        string.Empty,
+                        ScriptOptions,
+                        cancellationToken: context.CancellationToken)
+                    .UntilCancelled(context.CancellationToken) ?? ScriptState;
+                if (ScriptState is not null)
+                {
+                    _workspace.UpdateWorkspace(ScriptState);
+                }
             }
         }
 
@@ -333,6 +353,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
             RequestCompletions command,
             KernelInvocationContext context)
         {
+            await EnsureWorkspaceIsInitializedAsync(context);
+
             var completionList =
                 await GetCompletionList(
                     command.Code,
@@ -386,6 +408,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
             RequestDiagnostics command,
             KernelInvocationContext context)
         {
+            await EnsureWorkspaceIsInitializedAsync(context);
+
             var document = _workspace.UpdateWorkingDocument(command.Code);
             var semanticModel = await document.GetSemanticModelAsync();
             var diagnostics = semanticModel.GetDiagnostics();
