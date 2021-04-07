@@ -27,6 +27,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly CompositeDisposable _disposables;
 
         private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
+        private IKernelScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler;
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
         private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
@@ -201,10 +202,8 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public void RegisterCommandType<TCommand>()
-            where TCommand : KernelCommand
-        {
+            where TCommand : KernelCommand =>
             KernelCommandEnvelope.RegisterCommandTypeReplacingIfNecessary<TCommand>();
-        }
 
         internal virtual async Task HandleAsync(
             KernelCommand command,
@@ -223,7 +222,6 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentNullException(nameof(command));
             }
 
-            var scheduler = Scheduler;
             var context = KernelInvocationContext.Establish(command);
            
             // only subscribe for the root command 
@@ -253,6 +251,8 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (TryPreprocessCommands(command, context, out var commands))
                 {
+                    SetHandlingKernel(command, context);
+
                     foreach (var c in commands)
                     {
                         switch (c)
@@ -265,13 +265,33 @@ namespace Microsoft.DotNet.Interactive
 
                             case Cancel cancel:
                                 cancel.KernelUri = Uri;
-                                cancel.TargetKernelName = Name;
-                                scheduler.CancelCurrentOperation();
+                                cancel.TargetKernelName = Name; 
+                                Scheduler.CancelCurrentOperation();
                                 await InvokePipelineAndCommandHandler(cancel);
                                 break;
 
+                            case RequestDiagnostics _:
+                            case RequestHoverText _:
+                            case RequestCompletions _:
+                            case RequestSignatureHelp _:
+                                // FIX: (SendAsync) 
+                                var fastPathScheduler = await context.HandlingKernel.GetFastPathSchedulerAsync(context);
+                                await fastPathScheduler.RunAsync(
+                                    c,
+                                    InvokePipelineAndCommandHandler,
+                                    c.KernelUri.ToString(),
+                                    cancellationToken: cancellationToken)
+                                    .ContinueWith(t =>
+                                    {
+                                        if (t.IsCanceled)
+                                        {
+                                            context.Cancel();
+                                        }
+                                    }, cancellationToken);
+                                break;
+
                             default:
-                                await scheduler.RunAsync(
+                                await Scheduler.RunAsync(
                                     c,
                                     InvokePipelineAndCommandHandler,
                                     c.KernelUri.ToString(),
@@ -295,6 +315,29 @@ namespace Microsoft.DotNet.Interactive
             }
 
             return context.Result;
+        }
+
+        private async Task<IKernelScheduler<KernelCommand, KernelCommandResult>> GetFastPathSchedulerAsync(
+            KernelInvocationContext invocationContext)
+        {
+            await _fastPathSchedulerLock.WaitAsync();
+            try
+            {
+                if (_fastPathScheduler is null)
+                {
+                    await SendAsync(
+                        new AnonymousKernelCommand((_, _) => Task.CompletedTask, invocationContext.HandlingKernel.Name,
+                            invocationContext.Command), invocationContext.CancellationToken);
+                    _fastPathScheduler = new ImmediateScheduler<KernelCommand, KernelCommandResult>();
+
+                }
+            }
+            finally
+            {
+                _fastPathSchedulerLock.Release();
+            }
+
+            return _fastPathScheduler;
         }
 
         internal async Task<KernelCommandResult> InvokePipelineAndCommandHandler(KernelCommand command)
@@ -343,32 +386,37 @@ namespace Microsoft.DotNet.Interactive
             _commandScheduler = scheduler;
 
             _commandScheduler.RegisterDeferredOperationSource(GetDeferredOperations, InvokePipelineAndCommandHandler);
-
-            IEnumerable<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
-            {
-                if (!command.KernelUri.Contains(Uri))
-                {
-                    yield break;
-                }
-
-                while (_deferredCommands.TryDequeue(out var kernelCommand))
-                {
-                    kernelCommand.TargetKernelName = Name;
-                    kernelCommand.KernelUri = Uri;
-                    var currentInvocationContext = KernelInvocationContext.Current;
-                    if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
-                    {
-                        foreach (var cmd in commands)
-                        {
-                            yield return cmd;
-                        }
-                    }
-                }
-            }
         }
 
-        private protected virtual KernelUri GetHandlingKernelUri(
-            KernelCommand command)
+        private static readonly List<KernelCommand> EmptyCommandList = new(0);
+        private readonly SemaphoreSlim _fastPathSchedulerLock = new(1);
+
+
+        protected IReadOnlyList<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
+        {
+            if (!command.KernelUri.Contains(Uri))
+            {
+                return EmptyCommandList;
+            }
+
+            var splitCommands = new List<KernelCommand>();
+
+            while (_deferredCommands.TryDequeue(out var kernelCommand))
+            {
+                kernelCommand.TargetKernelName = Name;
+                kernelCommand.KernelUri = Uri;
+                var currentInvocationContext = KernelInvocationContext.Current;
+
+                if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
+                {
+                    splitCommands.AddRange(commands);
+                }
+            }
+
+            return splitCommands;
+        }
+
+        private protected virtual KernelUri GetHandlingKernelUri(KernelCommand command)
         {
             return Uri;
         }
