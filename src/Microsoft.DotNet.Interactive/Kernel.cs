@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly CompositeDisposable _disposables;
 
         private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
-        private KernelScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler;
+        private IKernelScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler;
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
         private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
@@ -317,13 +317,24 @@ namespace Microsoft.DotNet.Interactive
             return context.Result;
         }
 
-        private async Task<KernelScheduler<KernelCommand, KernelCommandResult>> GetFastPathSchedulerAsync(
+        private async Task<IKernelScheduler<KernelCommand, KernelCommandResult>> GetFastPathSchedulerAsync(
             KernelInvocationContext invocationContext)
         {
-            if (_fastPathScheduler is null)
+            await _fastPathSchedulerLock.WaitAsync();
+            try
             {
-                await SendAsync(new AnonymousKernelCommand((_, _) => Task.CompletedTask, invocationContext.HandlingKernel.Name, invocationContext.Command ), invocationContext.CancellationToken);
-                _fastPathScheduler = new();
+                if (_fastPathScheduler is null)
+                {
+                    await SendAsync(
+                        new AnonymousKernelCommand((_, _) => Task.CompletedTask, invocationContext.HandlingKernel.Name,
+                            invocationContext.Command), invocationContext.CancellationToken);
+                    _fastPathScheduler = new SchedulerToDoStuff<KernelCommand, KernelCommandResult>();
+
+                }
+            }
+            finally
+            {
+                _fastPathSchedulerLock.Release();
             }
 
             return _fastPathScheduler;
@@ -378,6 +389,8 @@ namespace Microsoft.DotNet.Interactive
         }
 
         private static readonly List<KernelCommand> EmptyCommandList = new(0);
+        private readonly SemaphoreSlim _fastPathSchedulerLock = new(1);
+
 
         protected IReadOnlyList<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
         {

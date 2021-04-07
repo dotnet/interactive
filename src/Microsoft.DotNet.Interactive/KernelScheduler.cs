@@ -10,7 +10,7 @@ using Pocket;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class KernelScheduler<T, U> : IDisposable
+    public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TResult>
     {
         private static readonly Logger Log = new("KernelScheduler");
         private readonly List<DeferredOperationSource> _deferredOperationSources = new();
@@ -38,9 +38,9 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public Task<U> RunAsync(
+        public Task<TResult> RunAsync(
             T value,
-            OnExecuteDelegate onExecuteAsync,
+            KernelSchedulerDelegate<T, TResult> onExecuteAsync,
             string scope = "default",
             CancellationToken cancellationToken = default)
         {
@@ -202,11 +202,11 @@ namespace Microsoft.DotNet.Interactive
 
         public void RegisterDeferredOperationSource(
             GetDeferredOperationsDelegate getDeferredOperations,
-            OnExecuteDelegate onExecuteAsync)
+            KernelSchedulerDelegate<T, TResult> kernelSchedulerOnExecuteAsync)
         {
             ThrowIfDisposed();
 
-            _deferredOperationSources.Add(new DeferredOperationSource(onExecuteAsync, getDeferredOperations));
+            _deferredOperationSources.Add(new DeferredOperationSource(kernelSchedulerOnExecuteAsync, getDeferredOperations));
         }
 
         public void Dispose()
@@ -218,21 +218,19 @@ namespace Microsoft.DotNet.Interactive
         {
             if (_schedulerDisposalSource.IsCancellationRequested)
             {
-                throw new ObjectDisposedException($"{nameof(KernelScheduler<T, U>)} has been disposed.");
+                throw new ObjectDisposedException($"{nameof(KernelScheduler<T, TResult>)} has been disposed.");
             }
         }
-
-        public delegate Task<U> OnExecuteDelegate(T value);
 
         public delegate IReadOnlyList<T> GetDeferredOperationsDelegate(T operationToExecute, string queueName);
 
         private class ScheduledOperation
         {
-            private readonly OnExecuteDelegate _onExecuteAsync;
+            private readonly KernelSchedulerDelegate<T,TResult> _onExecuteAsync;
 
             public ScheduledOperation(
                 T value,
-                OnExecuteDelegate onExecuteAsync,
+                KernelSchedulerDelegate<T, TResult> onExecuteAsync,
                 ExecutionContext executionContext = default,
                 string scope = "default",
                 CancellationToken cancellationToken = default)
@@ -253,7 +251,7 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
 
-            public TaskCompletionSource<U> TaskCompletionSource { get; }
+            public TaskCompletionSource<TResult> TaskCompletionSource { get; }
 
             public T Value { get; }
 
@@ -261,7 +259,7 @@ namespace Microsoft.DotNet.Interactive
 
             public string Scope { get; }
 
-            public Task<U> ExecuteAsync() => _onExecuteAsync(Value);
+            public Task<TResult> ExecuteAsync() => _onExecuteAsync(Value);
 
             public override string ToString()
             {
@@ -271,15 +269,15 @@ namespace Microsoft.DotNet.Interactive
 
         private class DeferredOperationSource
         {
-            public DeferredOperationSource(OnExecuteDelegate onExecuteAsync, GetDeferredOperationsDelegate getDeferredOperations)
+            public DeferredOperationSource(KernelSchedulerDelegate<T, TResult> kernelSchedulerOnExecuteAsync, GetDeferredOperationsDelegate getDeferredOperations)
             {
-                OnExecuteAsync = onExecuteAsync;
+                OnExecuteAsync = kernelSchedulerOnExecuteAsync;
                 GetDeferredOperations = getDeferredOperations;
             }
 
             public GetDeferredOperationsDelegate GetDeferredOperations { get; }
 
-            public OnExecuteDelegate OnExecuteAsync { get; }
+            public KernelSchedulerDelegate<T, TResult> OnExecuteAsync { get; }
         }
     }
 }
