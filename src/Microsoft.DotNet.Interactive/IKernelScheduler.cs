@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive
             CancellationToken cancellationToken = default);
     }
 
-    public class SchedulerToDoStuff<T, TResult> : IKernelScheduler<T, TResult>
+    internal class ImmediateScheduler<T, TResult> : IKernelScheduler<T, TResult>
     {
         public Task<TResult> RunAsync(T value, KernelSchedulerDelegate<T, TResult> onExecuteAsync, string scope = "default",
             CancellationToken cancellationToken = default)

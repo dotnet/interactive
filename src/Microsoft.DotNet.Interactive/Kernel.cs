@@ -328,7 +328,7 @@ namespace Microsoft.DotNet.Interactive
                     await SendAsync(
                         new AnonymousKernelCommand((_, _) => Task.CompletedTask, invocationContext.HandlingKernel.Name,
                             invocationContext.Command), invocationContext.CancellationToken);
-                    _fastPathScheduler = new SchedulerToDoStuff<KernelCommand, KernelCommandResult>();
+                    _fastPathScheduler = new ImmediateScheduler<KernelCommand, KernelCommandResult>();
 
                 }
             }
