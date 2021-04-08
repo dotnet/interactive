@@ -275,6 +275,24 @@ namespace Microsoft.DotNet.Interactive
                             case RequestCompletions _:
                             case RequestSignatureHelp _:
                                 // FIX: (SendAsync) 
+
+                                if (_languageServiceCommandInFlight > 0 && command is RequestDiagnostics)
+                                {
+                                    context.Complete(command);
+                                }
+
+                               
+
+                                _inFlightDiagnosticsCommandInvocationContext?.Complete(_inFlightDiagnosticsCommandInvocationContext.Command);
+                                if (command is RequestDiagnostics)
+                                {
+                                    _inFlightDiagnosticsCommandInvocationContext = context;
+                                }
+                                else
+                                {
+                                    Interlocked.Increment(ref _languageServiceCommandInFlight);
+                                }
+
                                 var fastPathScheduler = await context.HandlingKernel.GetFastPathSchedulerAsync(context);
                                 await fastPathScheduler.RunAsync(
                                     c,
@@ -286,6 +304,15 @@ namespace Microsoft.DotNet.Interactive
                                         if (t.IsCanceled)
                                         {
                                             context.Cancel();
+                                        }
+
+                                        if (context.Command is RequestDiagnostics)
+                                        {
+                                            _inFlightDiagnosticsCommandInvocationContext = null;
+                                        }
+                                        else
+                                        {
+                                            Interlocked.Decrement(ref _languageServiceCommandInFlight);
                                         }
                                     }, cancellationToken);
                                 break;
@@ -390,6 +417,8 @@ namespace Microsoft.DotNet.Interactive
 
         private static readonly List<KernelCommand> EmptyCommandList = new(0);
         private readonly SemaphoreSlim _fastPathSchedulerLock = new(1);
+        private KernelInvocationContext _inFlightDiagnosticsCommandInvocationContext;
+        private int _languageServiceCommandInFlight = 0;
 
 
         protected IReadOnlyList<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
