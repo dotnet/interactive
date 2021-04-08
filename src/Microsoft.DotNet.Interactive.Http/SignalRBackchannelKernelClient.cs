@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Http
     public class SignalRBackchannelKernelClient : KernelClientBase
     {
         private IHubContext<KernelHub> _hubContext;
-        private readonly Subject<KernelEvent> _kernelEventsFromClient = new Subject<KernelEvent>();
+        private readonly Subject<KernelEvent> _kernelEventsFromClient = new();
 
         public override IObservable<KernelEvent> KernelEvents => _kernelEventsFromClient;
 
