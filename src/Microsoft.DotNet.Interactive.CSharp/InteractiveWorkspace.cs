@@ -25,7 +25,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
         private Compilation _currentCompilation;
         private DocumentId _workingDocumentId;
         private readonly IReadOnlyCollection<MetadataReference> _referenceAssemblies;
-        private readonly List<MetadataReference> _packageManagerReferences = new List<MetadataReference>();
+        private readonly List<MetadataReference> _packageManagerReferences = new();
+        private readonly object _workspaceLock = new();
 
         public InteractiveWorkspace() : base(MefHostServices.DefaultHost, WorkspaceKind.Interactive)
         {
@@ -97,16 +98,20 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public void UpdateWorkspace(ScriptState scriptState)
         {
-            _currentCompilation = scriptState.Script.GetCompilation();
+            lock (_workspaceLock)
+            {
+                _currentCompilation = scriptState.Script.GetCompilation();
 
-            var solution = CurrentSolution;
-            solution = RemoveWorkingProjectFromSolution(solution);
+                var solution = CurrentSolution;
+                solution = RemoveWorkingProjectFromSolution(solution);
 
-            SetCurrentSolution(solution);
+                SetCurrentSolution(solution);
 
-            _previousSubmissionProjectId = AddProjectWithPreviousSubmissionToSolution(_currentCompilation, scriptState.Script.Code, _workingProjectId, _previousSubmissionProjectId);
+                _previousSubmissionProjectId = AddProjectWithPreviousSubmissionToSolution(_currentCompilation,
+                    scriptState.Script.Code, _workingProjectId, _previousSubmissionProjectId);
 
-            AddNewWorkingProjectToSolution(_currentCompilation, _previousSubmissionProjectId);
+                AddNewWorkingProjectToSolution(_currentCompilation, _previousSubmissionProjectId);
+            }
         }
 
         private Solution RemoveWorkingProjectFromSolution(Solution solution)
@@ -240,24 +245,31 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public Document UpdateWorkingDocument(string code)
         {
-            var solution = CurrentSolution;
-           
-            solution = solution.RemoveDocument(_workingDocumentId);
+            Document workingDocument;
 
-            var documentDebugName = $"Working from #{_submissionCount}";
+            lock (_workspaceLock)
+            {
+                var solution = CurrentSolution;
 
-            _workingDocumentId = DocumentId.CreateNewId(
-                _workingProjectId,
-                documentDebugName);
+                solution = solution.RemoveDocument(_workingDocumentId);
 
-            solution = solution.AddDocument(
-                _workingDocumentId,
-                documentDebugName,
-                SourceText.From(code)
-            );
+                var documentDebugName = $"Working from #{_submissionCount}";
 
-            var workingDocument = solution.GetDocument(_workingDocumentId);
-            SetCurrentSolution(solution);
+                var workingDocumentId = DocumentId.CreateNewId(
+                    _workingProjectId,
+                    documentDebugName);
+
+                solution = solution.AddDocument(
+                    workingDocumentId,
+                    documentDebugName,
+                    SourceText.From(code)
+                );
+
+                workingDocument = solution.GetDocument(workingDocumentId);
+                _workingDocumentId = workingDocumentId;
+                SetCurrentSolution(solution);
+            }
+
             return workingDocument;
 
         }
