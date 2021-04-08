@@ -4,14 +4,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Pocket;
-using static Pocket.Logger;
-using CompositeDisposable = Pocket.CompositeDisposable;
-using Disposable = Pocket.Disposable;
+
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
@@ -27,28 +25,13 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         private readonly CompositeDisposable _disposable;
 
-        // FIX: (ObservableStringWriter) remove debuggy stuff
 
-        private readonly int? _asyncContextId;
-
-        private readonly OperationLogger _logger;
-
-        private readonly string _name;
-
-        public ObservableStringWriter(string name = null)
+        public ObservableStringWriter()
         {
-            _name = name;
 
-            _asyncContextId = AsyncContext.Id;
-
-            _logger = Log.OnEnterAndExit(
-                $"{nameof(ObservableStringWriter)}:{GetHashCode()} '{name}' on AsyncContext.Id {_asyncContextId}",
-                exitArgs: () => new[] { ("AsyncContext.Id", (object) AsyncContext.Id) });
-            
             _disposable = new CompositeDisposable
             {
-                _writeEvents,
-                _logger
+                _writeEvents
             };
         }
 
@@ -341,39 +324,16 @@ namespace Microsoft.DotNet.Interactive.Utility
             }
         }
 
-        public override void Write(ReadOnlySpan<char> buffer)
-        {
-             base.Write(buffer);
-        }
-
-        public override Task WriteAsync(ReadOnlyMemory<char> buffer, CancellationToken cancellationToken = new CancellationToken())
-        {
-            return base.WriteAsync(buffer, cancellationToken);
-        }
-
-        public override void WriteLine(ReadOnlySpan<char> buffer)
-        {
-            base.WriteLine(buffer);
-        }
-
-        public override Task WriteLineAsync(ReadOnlyMemory<char> buffer, CancellationToken cancellationToken = new CancellationToken())
-        {
-            return base.WriteLineAsync(buffer, cancellationToken);
-        }
-
         public IDisposable Subscribe(IObserver<string> observer)
         {
-            var count = Interlocked.Increment(ref _observerCount);
+            Interlocked.Increment(ref _observerCount);
 
-            var op = _logger.OnEnterAndExit($"ObservableStringWriter:{GetHashCode()} subscription");
-            
             return new CompositeDisposable
             {
                 Disposable.Create(() =>
                 {
-                    count = Interlocked.Decrement(ref _observerCount);
+                    Interlocked.Decrement(ref _observerCount);
 
-                    op.Dispose();
                 }),
                 _writeEvents.Subscribe(observer)
             };

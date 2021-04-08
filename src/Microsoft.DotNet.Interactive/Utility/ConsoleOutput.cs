@@ -3,9 +3,7 @@
 
 using System;
 using System.IO;
-using Pocket;
-using CompositeDisposable = System.Reactive.Disposables.CompositeDisposable;
-using Disposable = System.Reactive.Disposables.Disposable;
+using System.Reactive.Disposables;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
@@ -19,22 +17,13 @@ namespace Microsoft.DotNet.Interactive.Utility
         private static TextWriter _originalErrorWriter;
 
         private static int _refCount = 0;
-
-        private static readonly Logger Log = new(nameof(ConsoleOutput));
+        
 
         public static IDisposable Subscribe(Func<ObservableConsole, IDisposable> subscribe)
         {
-            OperationLogger _operationLogger;
 
             lock (_systemConsoleSwapLock)
             {
-                _operationLogger = Log.OnEnterAndExit(
-                    $"Subscribe on AsyncContext.Id {AsyncContext.Id?.ToString() ?? "none"} with initial _refCount {_refCount}",
-                    exitArgs: () => new[]
-                    {
-                        ("AsyncContext.Id", (object) AsyncContext.Id),
-                        ("_refCount", _refCount),
-                    });
 
                 if (++_refCount == 1)
                 {
@@ -74,8 +63,7 @@ namespace Microsoft.DotNet.Interactive.Utility
                             _multiplexingErrorWriter = null;
                         }
                     }
-                }),
-                _operationLogger);
+                }));
         }
 
         public record ObservableConsole(
