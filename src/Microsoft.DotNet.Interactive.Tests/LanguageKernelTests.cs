@@ -633,6 +633,32 @@ $${languageSpecificCode}
                 .ContainSingle(diag => diag.LinePositionSpan.Start.Line == line);
         }
 
+        [Fact]
+        public void when_a_sequence_of_diagnostics_requests_is_fired_diagnostics_are_produced_only_for_the_latest_request()
+        {
+            var kernel = CreateKernel();
+           var results =  Task.WhenAll(
+                kernel.SendAsync(new RequestDiagnostics("C")),
+                kernel.SendAsync(new RequestDiagnostics("Co")),
+                kernel.SendAsync(new RequestDiagnostics("Con")),
+                kernel.SendAsync(new RequestDiagnostics("Cons")), 
+                kernel.SendAsync(new RequestDiagnostics("Conso"))
+            ).Result;
+
+           var events = results.SelectMany(r => r.KernelEvents.ToSubscribedList()).ToList();
+
+           events.Select(e => e.GetType()).Should()
+               .Contain( Enumerable.Repeat( typeof(CommandSucceeded),5));
+
+           events.Should().ContainSingle<DiagnosticsProduced>()
+                .Which
+                .Command
+                .As<RequestDiagnostics>()
+                .Code
+                .Should()
+                .Be("Conso");
+        } 
+
         [Theory]
         [InlineData(Language.CSharp, "Console.WriteLineeeeeee();")]
         [InlineData(Language.FSharp, "printfnnnnnn \"\"")]
