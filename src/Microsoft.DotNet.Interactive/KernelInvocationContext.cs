@@ -32,8 +32,8 @@ namespace Microsoft.DotNet.Interactive
         private KernelInvocationContext(KernelCommand command)
         {
             var operation = new OperationLogger(
-                args: new object[] { ("Start AsyncContext.Id", AsyncContext.Id), ("KernelCommand", command) },
-                exitArgs: () => new[] { ("End AsyncContext.Id", (object) AsyncContext.Id) },
+                args: new object[] { ("KernelCommand", command) },
+                exitArgs: () => new[] { ("KernelCommand", (object)command) },
                 category: nameof(KernelInvocationContext),
                 logOnStart: true);
 

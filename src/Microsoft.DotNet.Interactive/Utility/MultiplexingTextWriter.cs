@@ -7,12 +7,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Pocket;
-using static Pocket.Logger<Microsoft.DotNet.Interactive.Utility.MultiplexingTextWriter>;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
@@ -39,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         private TextWriter DefaultCreateTextWriter()
         {
-            return new ObservableStringWriter(_name + ":" + AsyncContext.Id);
+            return new ObservableStringWriter();
         }
 
         public IDisposable EnsureInitializedForCurrentAsyncContext()
@@ -54,12 +53,6 @@ namespace Microsoft.DotNet.Interactive.Utility
                 {
                     writer.Dispose();
                     _writers.TryRemove(id, out _);
-                }
-                else
-                {
-                    Log.Error(
-                        message: $"Couldn't find {{name}}:{GetHashCode()} on asyncContextId {{id}}",
-                        args: new object[] { _name, id });
                 }
             });
         }
@@ -83,11 +76,9 @@ namespace Microsoft.DotNet.Interactive.Utility
                     asyncContextId,
                     _ =>
                     {
-                        Log.Info($"Adding writer {{name}}:{GetHashCode()} on {{asyncContextId}} for {{readOrWrite}}", _name, asyncContextId, readOrWrite);
                         return _createTextWriter();
                     });
 
-                Log.Info($"Retrieving {{name}}:{GetHashCode()} on {{asyncContextId}} for {{readOrWrite}}. Writers: {{writers}}.", _name, asyncContextId, readOrWrite, _writers);
 
                 return writer;
             }
@@ -376,7 +367,6 @@ namespace Microsoft.DotNet.Interactive.Utility
             if (AsyncContext.Id is { } asyncContextId &&
                 _writers.TryGetValue(asyncContextId, out var writer))
             {
-                Log.Info($"ToString {{name}}:{GetHashCode()} on {{asyncContextId}}", _name, asyncContextId);
 
                 return writer.ToString();
             }
