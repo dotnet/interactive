@@ -59,26 +59,12 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         private TextWriter GetCurrentWriter(bool forWrite = true)
         {
-            string readOrWrite;
-            if (forWrite)
-            {
-                readOrWrite = "write";
-            }
-            else
-            {
-                readOrWrite = "read";
-            }
 
             if (AsyncContext.Id is { } asyncContextId)
             {
-                // FIX: (GetCurrentWriter) remove debuggy stuff
                 var writer = _writers.GetOrAdd(
                     asyncContextId,
-                    _ =>
-                    {
-                        return _createTextWriter();
-                    });
-
+                    _ => _createTextWriter());
 
                 return writer;
             }
