@@ -19,6 +19,7 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 
 using Xunit;
 using Xunit.Abstractions;
+using DiagnosticsProduced = Microsoft.DotNet.Interactive.Events.DiagnosticsProduced;
 
 #pragma warning disable 8509
 #pragma warning disable 8524
@@ -651,8 +652,9 @@ $${languageSpecificCode}
 
            var events = results.SelectMany(r => r.KernelEvents.ToSubscribedList()).ToList();
 
-           events.Select(e => e.GetType()).Should()
-               .Contain( Enumerable.Repeat( typeof(CommandSucceeded),5));
+           events.Select(e => e.GetType())
+               .Where(t => t == typeof(CommandSucceeded)).Should()
+               .HaveCount(5);
 
            events.Should().ContainSingle<DiagnosticsProduced>()
                 .Which
@@ -661,7 +663,32 @@ $${languageSpecificCode}
                 .Code
                 .Should()
                 .Be("Conso");
-        } 
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public void RequestCompletions_prevents_RequestDiagnostics_from_producing_events(Language language)
+        {
+            var kernel = CreateKernel(language);
+            MarkupTestFile.GetLineAndColumn("Console.$$", out var output, out var line, out var column);
+
+            var requestDiagnosticsCommand = new RequestDiagnostics(output);
+
+            var results = Task.WhenAll(
+                kernel.SendAsync(new RequestCompletions(output, new LinePosition(line,column))),
+                kernel.SendAsync(requestDiagnosticsCommand)
+            ).Result;
+
+            var events = results.SelectMany(r => r.KernelEvents.ToSubscribedList()).ToList();
+
+            events.Select(e => e.GetType())
+                .Where(t => t == typeof(CommandSucceeded)).Should()
+                .HaveCount(2);
+
+            events.Should()
+                .NotContain(e => e.GetType() == typeof(DiagnosticsProduced) && e.Command == requestDiagnosticsCommand);
+        }
 
         [Theory]
         [InlineData(Language.CSharp, "Console.WriteLineeeeeee();")]
