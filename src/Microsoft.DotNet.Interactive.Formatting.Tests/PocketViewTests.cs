@@ -49,19 +49,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         [Fact]
-        public void Comma_delimited_arguments_of_different_types_are_encoded_properly()
-        {
-            var joe = new { foo = 1, bar = "two" };
-
-            string output = script[@type: "text/javascript", id: "the-script"](
-                "var x = ", joe.SerializeToJson()).ToString();
-
-            output
-                .Should()
-                .Be("<script id=\"the-script\" type=\"text/javascript\">var x = {\"foo\":1,\"bar\":\"two\"}</script>");
-        }
-
-        [Fact]
         public void A_simple_tag()
         {
             string output = div("foo").ToString();

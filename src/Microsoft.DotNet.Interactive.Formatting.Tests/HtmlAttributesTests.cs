@@ -228,56 +228,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         [Fact]
-        public void Data_attributes_containing_primitive_values_are_properly_quoted()
-        {
-            var attr = new HtmlAttributes();
-
-            attr.Data("string", "name");
-            attr.Data("int", 123);
-            attr.Data("double", 1.23);
-
-            attr.ToString().Should().Contain("data-int='123'");
-            attr.ToString().Should().Contain("data-double='1.23'");
-            attr.ToString().Should().Contain("data-string=\"name\"");
-        }
-
-        [Fact]
-        public void Data_attributes_containing_IHtmlContent_are_not_reencoded()
-        {
-            var attr = new HtmlAttributes();
-
-            attr.Data("bind", new { name = "Felix" }.SerializeToJson());
-
-            attr.ToString()
-                .Should()
-                .Be("data-bind='{\"name\":\"Felix\"}'");
-        }
-
-        [Fact]
-        public void Data_attributes_containing_json_can_be_added()
-        {
-            var attributes = new HtmlAttributes();
-
-            attributes.Data("data-widget", new { Id = 789, Name = "The Stanley", Price = 24.99m });
-
-            attributes.ToString()
-                      .Should()
-                      .Be("data-widget='{\"Id\":789,\"Name\":\"The Stanley\",\"Price\":24.99}'");
-        }
-
-        [Fact]
-        public void Data_prepends_the_word_data_if_specified_attribute_name_does_not_start_with_the_word_data()
-        {
-            var attributes = new HtmlAttributes();
-
-            attributes.Data("widget", new { Id = 789, Name = "The Stanley", Price = 24.99m });
-
-            attributes.ToString()
-                      .Should()
-                      .Be("data-widget='{\"Id\":789,\"Name\":\"The Stanley\",\"Price\":24.99}'");
-        }
-
-        [Fact]
         public void Empty_id_attributes_are_not_rendered()
         {
             "div".Tag().WithAttributes(new HtmlAttributes { { "id", null } }).ToString()
@@ -291,33 +241,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             "div".Tag().WithAttributes(new HtmlAttributes { { "id", string.Empty } }).ToString()
                  .Should()
                  .NotContain("id");
-        }
-
-        [Fact]
-        public void Attributes_containing_JSON_values_are_not_reencoded()
-        {
-            const string expected = @"<option data-url='""/widgets/X-1""'>X-1 Widget</option>";
-
-            var part =
-                new
-                {
-                    Name = "X-1 Widget",
-                    SerialNumber = "X-1"
-                };
-
-            var attr = new HtmlAttributes
-            {
-                { "data-url", ("/widgets/" + part.SerialNumber).JsonEncode() }
-            };
-
-            var opt = "option"
-                      .Tag()
-                      .Containing(part.Name)
-                      .WithAttributes(attr);
-
-            opt.Crunch()
-               .Should()
-               .Be(expected.Crunch());
         }
 
         [Fact]
