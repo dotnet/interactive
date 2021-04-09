@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             });
         }
 
-        private TextWriter GetCurrentWriter(bool forWrite = true)
+        private TextWriter GetCurrentWriter()
         {
 
             if (AsyncContext.Id is { } asyncContextId)
@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         public IObservable<string> GetObservable()
         {
-            if (GetCurrentWriter(false) is IObservable<string> observable)
+            if (GetCurrentWriter() is IObservable<string> observable)
             {
                 return observable;
             }
@@ -88,18 +88,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             return Observable.Empty<string>();
         }
 
-        public override Encoding Encoding
-        {
-            get
-            {
-                if (_encoding == null)
-                {
-                    _encoding = new UnicodeEncoding(false, false);
-                }
-
-                return _encoding;
-            }
-        }
+        public override Encoding Encoding => _encoding ?? (_encoding = new UnicodeEncoding(false, false));
 
         public IEnumerable<TextWriter> Writers => _writers.Select(w => w.Value);
 
