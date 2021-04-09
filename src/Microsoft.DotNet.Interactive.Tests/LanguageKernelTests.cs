@@ -636,6 +636,7 @@ $${languageSpecificCode}
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell)]
         public void when_a_sequence_of_diagnostics_requests_is_fired_diagnostics_are_produced_only_for_the_latest_request(Language language)
         {
             var kernel = CreateKernel(language);
