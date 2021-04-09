@@ -279,6 +279,7 @@ namespace Microsoft.DotNet.Interactive
                                 if (_languageServiceCommandInFlight > 0 && command is RequestDiagnostics)
                                 {
                                     context.Complete(command);
+                                    return context.Result;
                                 }
 
                                 _inFlightDiagnosticsCommandInvocationContext?.Complete(_inFlightDiagnosticsCommandInvocationContext.Command);
