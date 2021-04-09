@@ -126,7 +126,7 @@ async function executeCell(document: vscode.NotebookDocument, cell: vscode.Noteb
                 diagnosticCollection.set(cell.document.uri, diags.filter(d => d.severity !== contracts.DiagnosticSeverity.Hidden).map(vscodeUtilities.toVsCodeDiagnostic));
             }
 
-            return client.execute(source, getSimpleLanguage(cell.document.languageId), outputObserver, diagnosticObserver, { id: document.uri.toString() }).then(() =>
+            return client.execute(source, getSimpleLanguage(cell.document.languageId), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(() =>
                 endExecution(cell, true, Date.now() - startTime)
             ).catch(() => endExecution(cell, false, Date.now() - startTime)
             ).then(() => {
