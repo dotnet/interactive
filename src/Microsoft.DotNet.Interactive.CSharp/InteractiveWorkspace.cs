@@ -246,23 +246,23 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
             var solution = CurrentSolution;
 
-                solution = solution.RemoveDocument(_workingDocumentId);
+            solution = solution.RemoveDocument(_workingDocumentId);
 
-                var documentDebugName = $"Working from #{_submissionCount}";
+            var documentDebugName = $"Working from #{_submissionCount}";
 
-                var workingDocumentId = DocumentId.CreateNewId(
-                    _workingProjectId,
-                    documentDebugName);
+            var workingDocumentId = DocumentId.CreateNewId(
+                _workingProjectId,
+                documentDebugName);
 
-                solution = solution.AddDocument(
-                    workingDocumentId,
-                    documentDebugName,
-                    SourceText.From(code)
-                );
+            solution = solution.AddDocument(
+                workingDocumentId,
+                documentDebugName,
+                SourceText.From(code)
+            );
 
-                var workingDocument = solution.GetDocument(workingDocumentId);
+            var workingDocument = solution.GetDocument(workingDocumentId);
 
-                return workingDocument;
+            return workingDocument;
 
         }
 
