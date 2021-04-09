@@ -638,17 +638,17 @@ $${languageSpecificCode}
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
         [InlineData(Language.PowerShell)]
-        public void when_a_sequence_of_diagnostics_requests_is_fired_diagnostics_are_produced_only_for_the_latest_request(Language language)
+        public async Task when_a_sequence_of_diagnostics_requests_is_fired_diagnostics_are_produced_only_for_the_latest_request(Language language)
         {
             var kernel = CreateKernel(language);
            
-            var results =  Task.WhenAll(
+            var results = await Task.WhenAll(
                 kernel.SendAsync(new RequestDiagnostics("C")),
                 kernel.SendAsync(new RequestDiagnostics("Co")),
                 kernel.SendAsync(new RequestDiagnostics("Con")),
                 kernel.SendAsync(new RequestDiagnostics("Cons")), 
                 kernel.SendAsync(new RequestDiagnostics("Conso"))
-            ).Result;
+            );
 
            var events = results.SelectMany(r => r.KernelEvents.ToSubscribedList()).ToList();
 
@@ -668,17 +668,17 @@ $${languageSpecificCode}
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        public void RequestCompletions_prevents_RequestDiagnostics_from_producing_events(Language language)
+        public async Task RequestCompletions_prevents_RequestDiagnostics_from_producing_events(Language language)
         {
             var kernel = CreateKernel(language);
             MarkupTestFile.GetLineAndColumn("Console.$$", out var output, out var line, out var column);
 
             var requestDiagnosticsCommand = new RequestDiagnostics(output);
 
-            var results = Task.WhenAll(
+            var results = await  Task.WhenAll(
                 kernel.SendAsync(new RequestCompletions(output, new LinePosition(line,column))),
                 kernel.SendAsync(requestDiagnosticsCommand)
-            ).Result;
+            );
 
             var events = results.SelectMany(r => r.KernelEvents.ToSubscribedList()).ToList();
 
