@@ -25,14 +25,16 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly Subject<KernelEvent> _kernelEvents = new();
         private readonly CompositeDisposable _disposables;
-
         private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
         private IKernelScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler;
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
         private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
-
         private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
+        private static readonly List<KernelCommand> EmptyCommandList = new(0);
+        private readonly SemaphoreSlim _fastPathSchedulerLock = new(1);
+        private KernelInvocationContext _inFlightContext;
+        private int _countOfLanguageServiceCommandsInFlight = 0;
 
         protected Kernel(string name)
         {
@@ -272,7 +274,7 @@ namespace Microsoft.DotNet.Interactive
 
                             case RequestDiagnostics _:
                                 {
-                                    if (_languageServiceCommandInFlight > 0)
+                                    if (_countOfLanguageServiceCommandsInFlight > 0)
                                     {
                                         context.Complete(command);
                                         return context.Result;
@@ -300,11 +302,11 @@ namespace Microsoft.DotNet.Interactive
                                         inflight.Complete(inflight.Command);
                                     }
 
-                                    Interlocked.Increment(ref _languageServiceCommandInFlight);
+                                    Interlocked.Increment(ref _countOfLanguageServiceCommandsInFlight);
 
                                     await RunOnFastPath(cancellationToken, context, c);
 
-                                    Interlocked.Decrement(ref _languageServiceCommandInFlight);
+                                    Interlocked.Decrement(ref _countOfLanguageServiceCommandsInFlight);
                                 }
                                 break;
 
@@ -423,12 +425,6 @@ namespace Microsoft.DotNet.Interactive
 
             _commandScheduler.RegisterDeferredOperationSource(GetDeferredOperations, InvokePipelineAndCommandHandler);
         }
-
-        private static readonly List<KernelCommand> EmptyCommandList = new(0);
-        private readonly SemaphoreSlim _fastPathSchedulerLock = new(1);
-        private KernelInvocationContext _inFlightContext;
-        private int _countOfLanguageServiceCommandsInFlight = 0;
-
 
         protected IReadOnlyList<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
         {
