@@ -427,7 +427,7 @@ namespace Microsoft.DotNet.Interactive
         private static readonly List<KernelCommand> EmptyCommandList = new(0);
         private readonly SemaphoreSlim _fastPathSchedulerLock = new(1);
         private KernelInvocationContext _inFlightContext;
-        private int _languageServiceCommandInFlight = 0;
+        private int _countOfLanguageServiceCommandsInFlight = 0;
 
 
         protected IReadOnlyList<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
