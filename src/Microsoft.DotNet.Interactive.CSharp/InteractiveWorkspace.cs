@@ -242,38 +242,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
             return projectId;
         }
 
-
-        public Document UpdateWorkingDocument(string code)
-        {
-            Document workingDocument;
-
-            lock (_workspaceLock)
-            {
-                var solution = CurrentSolution;
-
-                solution = solution.RemoveDocument(_workingDocumentId);
-
-                var documentDebugName = $"Working from #{_submissionCount}";
-
-                var workingDocumentId = DocumentId.CreateNewId(
-                    _workingProjectId,
-                    documentDebugName);
-
-                solution = solution.AddDocument(
-                    workingDocumentId,
-                    documentDebugName,
-                    SourceText.From(code)
-                );
-
-                workingDocument = solution.GetDocument(workingDocumentId);
-                _workingDocumentId = workingDocumentId;
-                SetCurrentSolution(solution);
-            }
-
-            return workingDocument;
-
-        }
-
         public Document ForkDocumentForLanguageServices(string code)
         {
             var solution = CurrentSolution;
