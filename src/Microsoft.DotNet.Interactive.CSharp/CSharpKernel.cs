@@ -375,7 +375,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
         private async Task<IEnumerable<CompletionItem>> GetCompletionList(string code,
             int cursorPosition, CancellationToken contextCancellationToken)
         {
-
             using var _ = new GCPressure(1024 * 1024);
 
             var document = _workspace.ForkDocumentForLanguageServices(code);

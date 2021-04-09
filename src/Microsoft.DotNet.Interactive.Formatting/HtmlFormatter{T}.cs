@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             
             if (dictionaryGenericType is not null || dictionaryObjectType is not null)
             {
-                var dictType = (dictionaryGenericType ?? dictionaryObjectType);
+                var dictType = dictionaryGenericType ?? dictionaryObjectType;
                 var keysProperty = dictType.GetProperty("Keys");
                 getKeys = instance => (IEnumerable) keysProperty.GetValue(instance, null);
 
@@ -149,29 +149,62 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 foreach (var (value, index) in rowData)
                 {
-                    var destructurer = Destructurer.GetOrCreate(value?.GetType());
+                    bool destructureIntoColumns = true;
 
-                    var destructured = destructurer.Destructure(value);
+                    if (value is { })
+                    {
+                        // FIX: (CreateForAnyEnumerable) 
+                        var formatter = Formatter.GetPreferredFormatterFor(value.GetType(), HtmlFormatter.MimeType);
+
+                        // destructureIntoColumns = !formatter.ShouldSuppressDestructuring();
+
+                        if (formatter.Type == typeof(object))
+                        {
+                            destructureIntoColumns = true;
+                        }
+                        else
+                        {
+                            destructureIntoColumns = false;
+                        }
+                    }
+
+                    IDictionary<string, object> keysAndValues;
+
+                    if (destructureIntoColumns)
+                    {
+                        var destructurer = Destructurer.GetOrCreate(value?.GetType());
+
+                        keysAndValues = destructurer.Destructure(value);
+                    }
+                    else
+                    {
+                        keysAndValues = NonDestructurer.Instance.Destructure(value);
+                    }
 
                     if (value is not null)
                     {
                         var type = value.GetType();
                         if (!types.ContainsKey(type))
+                        {
                             types.Add(type, types.Count);
+                        }
 
                         typesAreDifferent = types.Count > 1;
                     }
 
-                    var typeIndex = (value is null) ? 0 : types[value.GetType()];
+                    var typeIndex = value is null ? 0 : types[value.GetType()];
 
                     var pairIndex = 0;
-                    foreach(var pair in destructured)
+
+                    foreach (var pair in keysAndValues)
                     {
                         if (!headerToSortIndex.ContainsKey(pair.Key))
+                        {
                             headerToSortIndex.Add(pair.Key, (typeIndex, pairIndex));
+                        }
 
                         valuesByHeader
-                            .GetOrAdd(pair.Key, key => new Dictionary<int, object>())
+                            .GetOrAdd(pair.Key, _ => new Dictionary<int, object>())
                             .Add(index, pair.Value);
                         pairIndex++;
                     }
@@ -194,7 +227,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     headers.Add(th(i("index")));
                     leftColumnValues = Enumerable.Range(0, rowData.Count)
                                                  .Select(i => str(i.ToString()))
-                                                 .Cast<object>()
                                                  .ToList();
                 }
 
@@ -252,7 +284,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     // Note, embeds the values as arbitrary objects into the HTML content.
                     rows.Add(tr(rowValues.Select(r => td(embed(r, innerContext)))));
-
                 }
 
                 if (remainingCount > 0)

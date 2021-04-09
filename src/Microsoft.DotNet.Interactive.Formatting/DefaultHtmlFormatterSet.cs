@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 using System.Numerics;
@@ -118,7 +119,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                             genericTypeDefinition.FullName.ToLower().Replace("+",".").Replace("`","-");
 
                         PocketView view = 
-                           span(a[href: $"https://docs.microsoft.com/dotnet/api/{typeLookupName}?view=netcore-3.0"](
+                           span(a[href: $"https://docs.microsoft.com/dotnet/api/{typeLookupName}?view=net-5.0"](
                                    text));
                         view.WriteTo(writer, HtmlEncoder.Default);
                     }
@@ -182,8 +183,76 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     HtmlFormatter.FormatObjectAsPlainText(context, value, writer);
                     return true;
-                })
+                }),
 
-            };            
+
+               new HtmlFormatter<JsonProperty>((property, writer) =>
+                {
+                    PocketView view =
+                        details(
+                            summary(property.Name),
+                            property.Value);
+                    view.WriteTo(writer, HtmlEncoder.Default);
+               }),
+
+               new HtmlFormatter<JsonElement>((element, writer) =>
+               {
+                   IHtmlContent view = null;
+
+                   switch (element.ValueKind)
+                   {
+                       case JsonValueKind.Object:
+
+                           var keysAndValues = element.EnumerateObject().ToArray();
+
+                           view = details(
+                               summary(
+                                   span(new HtmlString("{ }&nbsp;")), i($"{keysAndValues.Length} keys")),
+                               keysAndValues);
+
+                           break;
+
+                       case JsonValueKind.Array:
+
+                           var arrayEnumerator = element.EnumerateArray().ToArray();
+
+                           view = details(
+                               summary(
+                                   span(new HtmlString("[ ]&nbsp;")), i($"{arrayEnumerator.Length} items")),
+                               arrayEnumerator);
+
+                           break;
+
+                       case JsonValueKind.String:
+
+                           var value = element.GetString();
+                           view = span(value);
+
+                           break;
+
+                       case JsonValueKind.Number:
+                           view = span(element.GetSingle());
+                           break;
+
+                       case JsonValueKind.True:
+                           view = span("true");
+                           break;
+
+                       case JsonValueKind.False:
+                           view = span("false");
+                           break;
+
+                       case JsonValueKind.Null:
+                           view = span(Formatter.NullString);
+                           break;
+
+                       default:
+                           view = HtmlString.Empty;
+                           break;
+                   }
+
+                   view.WriteTo(writer, HtmlEncoder.Default);
+               })
+        };
     }
 }

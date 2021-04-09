@@ -18,20 +18,20 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         private static int _defaultListExpansionLimit;
         private static int _recursionLimit;
-        internal static readonly RecursionCounter RecursionCounter = new RecursionCounter();
+        internal static readonly RecursionCounter RecursionCounter = new();
 
         private static string _defaultMimeType = HtmlFormatter.MimeType;
 
         // user specification
-        private static readonly ConcurrentStack<(Type type, string mimeType)> _preferredMimeTypes = new ConcurrentStack<(Type type, string mimeType)>();
-        private static readonly ConcurrentStack<(Type type, string mimeType)> _defaultPreferredMimeTypes = new ConcurrentStack<(Type type, string mimeType)>();
-        internal static readonly ConcurrentStack<ITypeFormatter> _typeFormatters = new ConcurrentStack<ITypeFormatter>();
-        internal static readonly ConcurrentStack<ITypeFormatter> _defaultTypeFormatters = new ConcurrentStack<ITypeFormatter>();
+        private static readonly ConcurrentStack<(Type type, string mimeType)> _preferredMimeTypes = new();
+        private static readonly ConcurrentStack<(Type type, string mimeType)> _defaultPreferredMimeTypes = new();
+        internal static readonly ConcurrentStack<ITypeFormatter> _userTypeFormatters = new();
+        internal static readonly ConcurrentStack<ITypeFormatter> _defaultTypeFormatters = new();
 
         // computed state
-        private static readonly ConcurrentDictionary<Type, string> _preferredMimeTypesTable = new ConcurrentDictionary<Type, string>();
-        private static readonly ConcurrentDictionary<(Type type, string mimeType), ITypeFormatter> _typeFormattersTable = new ConcurrentDictionary<(Type type, string mimeType), ITypeFormatter>();
-        private static readonly ConcurrentDictionary<Type, Action<FormatContext, object, TextWriter, string>> _genericFormattersTable = new ConcurrentDictionary<Type, Action<FormatContext, object, TextWriter, string>>();
+        private static readonly ConcurrentDictionary<Type, string> _preferredMimeTypesTable = new();
+        private static readonly ConcurrentDictionary<(Type type, string mimeType), ITypeFormatter> _typeFormattersTable = new();
+        private static readonly ConcurrentDictionary<Type, Action<FormatContext, object, TextWriter, string>> _genericFormattersTable = new();
 
         /// <summary>
         /// Initializes the <see cref="Formatter"/> class.
@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static void ResetToDefault()
         {
             ClearComputedState();
-            _typeFormatters.Clear();
+            _userTypeFormatters.Clear();
             _preferredMimeTypes.Clear();
             _defaultTypeFormatters.Clear();
             _defaultPreferredMimeTypes.Clear();
@@ -112,7 +112,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _defaultTypeFormatters.PushRange(HtmlFormatter.DefaultFormatters.Reverse().ToArray());
             _defaultTypeFormatters.PushRange(JsonFormatter.DefaultFormatters.Reverse().ToArray());
             _defaultTypeFormatters.PushRange(PlainTextFormatter.DefaultFormatters.Reverse().ToArray());
-            
 
             // It is unclear if we need this default:
             _defaultPreferredMimeTypes.Push((typeof(string), PlainTextFormatter.MimeType));
@@ -379,7 +378,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public static IEnumerable<string> RegisteredMimeTypesFor(Type type)
         {
-            return _typeFormatters.Concat(_defaultTypeFormatters).Where(k => k.Type == type).Select(k => k.MimeType);
+            return _userTypeFormatters.Concat(_defaultTypeFormatters).Where(k => k.Type == type).Select(k => k.MimeType);
         }
 
         /// <summary>
@@ -394,7 +393,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             ClearComputedState();
 
-            _typeFormatters.Push(formatter);
+            _userTypeFormatters.Push(formatter);
         }
 
         /// <summary>
@@ -477,7 +476,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public static IEnumerable<ITypeFormatter> RegisteredFormatters(bool includeDefaults = true)
         {
-            foreach (var formatter in _typeFormatters)
+            foreach (var formatter in _userTypeFormatters)
             {
                 yield return formatter;
             }
@@ -491,25 +490,30 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        public static ITypeFormatter GetPreferredFormatterFor(Type actualType, string mimeType = PlainTextFormatter.MimeType)
-        {
-            return
-                _typeFormattersTable
-                    .GetOrAdd(
-                        (actualType, mimeType),
-                        tuple => InferPreferredFormatter(actualType, mimeType));
-        }
+        public static ITypeFormatter GetPreferredFormatterFor(Type actualType, string mimeType = PlainTextFormatter.MimeType) =>
+            _typeFormattersTable
+                .GetOrAdd(
+                    (actualType, mimeType),
+                    tuple => InferPreferredFormatter(actualType, mimeType));
+
+        internal static bool ShouldSuppressDestructuring(this ITypeFormatter formatter) =>
+            _userTypeFormatters.Contains(formatter) ||
+            _defaultTypeFormatters.Contains(formatter);
 
         internal static ITypeFormatter InferPreferredFormatter(Type actualType, string mimeType)
         {
             // Try to find a user-specified type formatter, use the most specific type with a matching mime type
-            if (TryInferPreferredFormatter(actualType, mimeType, _typeFormatters) is { } userFormatter)
+            if (TryInferPreferredFormatter(actualType, mimeType, _userTypeFormatters) is { } userFormatter)
+            {
                 return userFormatter;
-
+            }
+            
             // Try to find a default built-in type formatter, use the most specific type with a matching mime type
             if (TryInferPreferredFormatter(actualType, mimeType, _defaultTypeFormatters) is { } defaultFormatter)
+            {
                 return defaultFormatter;
-
+            }
+            
             // Last resort backup 
             return new AnonymousTypeFormatter<object>((context, obj, writer) =>
             {
@@ -520,7 +524,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static ITypeFormatter TryInferPreferredFormatter(Type actualType, string mimeType, IEnumerable<ITypeFormatter> formatters)
         {
-
             // Find the most specific type that specifies a mimeType
             var candidates =
                 formatters
@@ -528,31 +531,32 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     .Select((x, i) => (formatter: x, index: i))
                     .ToArray();
 
-            if (candidates.Length == 1)
+            switch (candidates.Length)
             {
-                return candidates[0].formatter;
-            }
+                case 1:
+                    return candidates[0].formatter;
 
-            if (candidates.Length > 0)
-            {
-                Array.Sort(candidates, new SortByRelevanceAndOrder<(ITypeFormatter formatter, int index)>(tup => tup.formatter.Type, tup => tup.index));
+                case > 0:
+                    Array.Sort(candidates, new SortByRelevanceAndOrder<(ITypeFormatter formatter, int index)>(tup => tup.formatter.Type, tup => tup.index));
 
-                // Compose the possible formatters into one formatter, trying each in turn
-                return new AnonymousTypeFormatter<object>((context, obj, writer) =>
-                {
-                    foreach (var formatter in candidates)
+                    // Compose the possible formatters into one formatter, trying each in turn
+                    return new AnonymousTypeFormatter<object>((context, obj, writer) =>
                     {
-                        if (formatter.formatter.Format(context, obj, writer))
+                        for (var i = 0; i < candidates.Length; i++)
                         {
-                            return true;
+                            var formatter = candidates[i];
+                            if (formatter.formatter.Format(context, obj, writer))
+                            {
+                                return true;
+                            }
                         }
-                    }
 
-                    return false;
-                }, mimeType);
+                        return false;
+                    }, mimeType, candidates[0].formatter.Type);
+
+                default:
+                    return null;
             }
-
-            return null;
         }
 
         private static IReadOnlyCollection<T> ReadOnlyMemoryToArray<T>(ReadOnlyMemory<T> mem) => mem.Span.ToArray();

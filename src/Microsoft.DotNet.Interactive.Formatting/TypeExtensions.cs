@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             while (baseChain is not null)
             {
-                if (baseChain.IsGenericType && baseChain.GetGenericTypeDefinition().Equals(type))
+                if (baseChain.IsGenericType && baseChain.GetGenericTypeDefinition() == type)
                 {
                     return true;
                 }
@@ -118,7 +118,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             foreach (var i in actualType.GetInterfaces())
             {
-                if (i.IsGenericType && i.GetGenericTypeDefinition().Equals(type))
+                if (i.IsGenericType && i.GetGenericTypeDefinition() == type)
                 {
                     return true;
                 }

@@ -8,9 +8,14 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using FluentAssertions;
 using FluentAssertions.Extensions;
+using Microsoft.AspNetCore.Html;
 using Xunit;
+using Xunit.Abstractions;
+using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
@@ -20,6 +25,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         public const string PlainTextBegin = "<div class=\"dni-plaintext\">";
         public const string PlainTextEnd = "</div>";
     }
+
     public class HtmlFormatterTests : FormatterTestBase
     {
         public class Objects : FormatterTestBase
@@ -237,7 +243,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=netcore-3.0\">System.String</a></span>");
+                      .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/system.string?view=net-5.0\">System.String</a></span>");
             }
 
 
@@ -252,7 +258,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/microsoft.csharp.runtimebinder.runtimebinderexception?view=netcore-3.0\">Microsoft.CSharp.RuntimeBinder.RuntimeBinderException</a></span>");
+                      .Be("<span><a href=\"https://docs.microsoft.com/dotnet/api/microsoft.csharp.runtimebinder.runtimebinderexception?view=net-5.0\">Microsoft.CSharp.RuntimeBinder.RuntimeBinderException</a></span>");
             }
 
 
@@ -292,7 +298,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 var writer = new StringWriter();
 
-                string instance = @"this
+                var instance = @"this
 is a 
    multiline<>
 string";
@@ -333,8 +339,8 @@ string";
 
                 var instance = new List<EntityId>
                 {
-                    new EntityId("entity one", "123"),
-                    new EntityId("entity two", "456")
+                    new("entity one", "123"),
+                    new("entity two", "456")
                 };
 
                 formatter.Format(instance, writer);
@@ -436,7 +442,7 @@ string";
                 var html = date1.ToDisplayString("text/html");
 
                 html.Should().BeEquivalentHtmlTo(
-                    $"<span>{date1.ToString("u")}</span>");
+                    $"<span>{date1:u}</span>");
             }
 
             [Fact]
@@ -447,7 +453,7 @@ string";
                 var html = date1.ToDisplayString("text/html");
 
                 html.Should().BeEquivalentHtmlTo(
-                    $"<span>{date1.ToString("u")}</span>");
+                    $"<span>{date1:u}</span>");
             }
 
             [Fact]
@@ -458,7 +464,7 @@ string";
                 var html = day.ToDisplayString("text/html");
 
                 html.Should().BeEquivalentHtmlTo(
-                    $"<span>{day.ToString()}</span>");
+                    $"<span>{day}</span>");
             }
 
             [Fact]
@@ -634,7 +640,7 @@ string";
           <td>0</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.string?view=netcore-3.0\""}>System.String</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.string?view=net-5.0\""}>System.String</a>
             </span>
           </td>
         </tr>
@@ -642,78 +648,12 @@ string";
           <td>1</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=netcore-3.0\""}>System.Int32</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0\""}>System.Int32</a>
             </span>
           </td>
         </tr>
       </tbody>
     </table>");
-            }
-
-            class SomeDictUsingInterfaceImpls : IDictionary<int, string>
-            {
-                string IDictionary<int, string>.this[int key] { get => "2"; set => throw new NotImplementedException(); }
-
-                ICollection<int> IDictionary<int, string>.Keys => new int[] { 1 };
-
-                ICollection<string> IDictionary<int, string>.Values => new string[] { "2" };
-
-                int ICollection<KeyValuePair<int, string>>.Count => 1;
-
-                bool ICollection<KeyValuePair<int, string>>.IsReadOnly => true;
-
-                void IDictionary<int, string>.Add(int key, string value)
-                {
-                }
-
-                void ICollection<KeyValuePair<int, string>>.Add(KeyValuePair<int, string> item)
-                {
-                }
-
-                void ICollection<KeyValuePair<int, string>>.Clear()
-                {
-                }
-
-                bool ICollection<KeyValuePair<int, string>>.Contains(KeyValuePair<int, string> item)
-                {
-                    return (item.Key == 1 && item.Value == "2");
-                }
-
-                bool IDictionary<int, string>.ContainsKey(int key)
-                {
-                    return (key == 1);
-                }
-
-                void ICollection<KeyValuePair<int, string>>.CopyTo(KeyValuePair<int, string>[] array, int arrayIndex)
-                {
-                    throw new NotImplementedException();
-                }
-
-                IEnumerator<KeyValuePair<int, string>> IEnumerable<KeyValuePair<int, string>>.GetEnumerator()
-                {
-                    return ((IEnumerable < KeyValuePair<int, string> > ) new KeyValuePair<int, string>[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
-                }
-
-                bool IDictionary<int, string>.Remove(int key)
-                {
-                    throw new NotImplementedException();
-                }
-
-                bool ICollection<KeyValuePair<int, string>>.Remove(KeyValuePair<int, string> item)
-                {
-                    return false;
-                }
-
-                bool IDictionary<int, string>.TryGetValue(int key, out string value)
-                {
-                    value = "2";
-                    return (key == 1);
-                }
-
-                IEnumerator IEnumerable.GetEnumerator()
-                {
-                    return ((IEnumerable)new KeyValuePair<int, string>[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
-                }
             }
 
             [Fact]
@@ -931,7 +871,7 @@ string";
           <td>0</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.boolean?view=netcore-3.0\""}>System.Boolean</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.boolean?view=net-5.0\""}>System.Boolean</a>
             </span>
           </td>
           <td>{PlainTextBegin}True{PlainTextEnd}</td>
@@ -940,7 +880,7 @@ string";
           <td>1</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=netcore-3.0\""}>System.Int32</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0\""}>System.Int32</a>
             </span>
           </td>
           <td>{PlainTextBegin}99{PlainTextEnd}</td>
@@ -949,7 +889,7 @@ string";
           <td>2</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.string?view=netcore-3.0\""}>System.String</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.string?view=net-5.0\""}>System.String</a>
             </span>
           </td>
           <td>{PlainTextBegin}Hello, World{PlainTextEnd}</td>
@@ -966,7 +906,7 @@ string";
                     1, 
                     (2, "two"), 
                     Enumerable.Range(1, 3),
-                    new { name = "apple", color = "green" },
+                    new { name = "apple", color = "green" }
                 };
 
                 var result= objects.ToDisplayString("text/html");
@@ -994,7 +934,7 @@ string";
           <td>0</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=netcore-3.0\""}>System.Int32</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0\""}>System.Int32</a>
             </span>
           </td>
           <td>{PlainTextBegin}1{PlainTextEnd}</td>
@@ -1007,7 +947,7 @@ string";
           <td>1</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=netcore-3.0\""}>System.ValueTuple&lt;System.Int32,System.String&gt;</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=net-5.0\""}>System.ValueTuple&lt;System.Int32,System.String&gt;</a>
             </span>
           </td>
           <td></td>
@@ -1020,7 +960,7 @@ string";
           <td>2</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=netcore-3.0\""}>System.Linq.Enumerable+RangeIterator</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=net-5.0\""}>System.Linq.Enumerable+RangeIterator</a>
             </span>
           </td>
           <td>{PlainTextBegin}[ 1, 2, 3 ]{PlainTextEnd}</td>
@@ -1041,23 +981,23 @@ string";
       </tbody>
     </table>");
             }
-        }
-        [Fact]
-        public void All_properties_are_shown_when_sequences_contain_different_types_in_order_they_are_encountered()
-        {
-            var objects = new object[]
+
+            [Fact]
+            public void All_properties_are_shown_when_sequences_contain_different_types_in_order_they_are_encountered()
             {
+                var objects = new object[]
+                {
                     new { name = "apple", Item2 = "green" },
                     (2, "two"),
                     1,
                     Enumerable.Range(1, 3),
-            };
+                };
 
-            var result = objects.ToDisplayString("text/html");
-            result
-                   .Should()
-                   .BeEquivalentHtmlTo(
-                      $@"<table>
+                var result = objects.ToDisplayString("text/html");
+                result
+                    .Should()
+                    .BeEquivalentHtmlTo(
+                        $@"<table>
       <thead>
         <tr>
           <th>
@@ -1085,7 +1025,7 @@ string";
           <td>1</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=netcore-3.0\""}>System.ValueTuple&lt;System.Int32,System.String&gt;</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=net-5.0\""}>System.ValueTuple&lt;System.Int32,System.String&gt;</a>
             </span>
           </td>
           <td></td>
@@ -1097,7 +1037,7 @@ string";
           <td>2</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=netcore-3.0\""}>System.Int32</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0\""}>System.Int32</a>
             </span>
           </td>
           <td></td>
@@ -1109,7 +1049,7 @@ string";
           <td>3</td>
           <td>
             <span>
-              <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=netcore-3.0\""}>System.Linq.Enumerable+RangeIterator</a>
+              <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=net-5.0\""}>System.Linq.Enumerable+RangeIterator</a>
             </span>
           </td>
           <td></td>
@@ -1119,6 +1059,201 @@ string";
         </tr>
       </tbody>
     </table>");
+            }
+
+            [Fact]
+            public void Respective_HTML_formatters_are_used_when_sequences_contain_different_types()
+            {
+                var anonymousObj = new { name = "apple", color = "green" };
+
+                Formatter.Register(anonymousObj.GetType(), (o, writer) => writer.Write($"<i>{o}</i>"), HtmlFormatter.MimeType);
+              
+                var objects = new object[]
+                {
+                    anonymousObj,
+                    (123, "two"),
+                    456,
+                    new [] { 7, 8, 9 } 
+                };
+
+                var result = objects.ToDisplayString("text/html");
+                result
+                    .Should()
+                    .BeEquivalentHtmlTo(
+                        $@"<table>
+  <thead>
+    <tr>
+      <th>
+        <i>index</i>
+      </th>
+      <th>
+        <i>type</i>
+      </th>
+      <th>value</th>
+      <th>Item1</th>
+      <th>Item2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>(anonymous)</td>
+      <td>
+        <i>{{ name = apple, color = green }}</i>
+      </td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>
+        <span>
+          <a href=""https://docs.microsoft.com/dotnet/api/system.valuetuple-2?view=net-5.0"">System.ValueTuple&lt;System.Int32,System.String&gt;</a>
+        </span>
+      </td>
+      <td></td>
+      <td>
+        <div class=""dni-plaintext"">123</div>
+      </td>
+      <td>
+        <div class=""dni-plaintext"">two</div>
+      </td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>
+        <span>
+          <a href=""https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0"">System.Int32</a>
+        </span>
+      </td>
+      <td>
+        <div class=""dni-plaintext"">456</div>
+      </td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>
+        <span>
+          <a href=""https://docs.microsoft.com/dotnet/api/system.int32[]?view=net-5.0"">System.Int32[]</a>
+        </span>
+      </td>
+      <td>
+        <div class=""dni-plaintext"">[ 7, 8, 9 ]</div>
+      </td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>");
+            }
+
+            class SomeDictUsingInterfaceImpls : IDictionary<int, string>
+            {
+                string IDictionary<int, string>.this[int key] { get => "2"; set => throw new NotImplementedException(); }
+
+                ICollection<int> IDictionary<int, string>.Keys => new int[] { 1 };
+
+                ICollection<string> IDictionary<int, string>.Values => new string[] { "2" };
+
+                int ICollection<KeyValuePair<int, string>>.Count => 1;
+
+                bool ICollection<KeyValuePair<int, string>>.IsReadOnly => true;
+
+                void IDictionary<int, string>.Add(int key, string value)
+                {
+                }
+
+                void ICollection<KeyValuePair<int, string>>.Add(KeyValuePair<int, string> item)
+                {
+                }
+
+                void ICollection<KeyValuePair<int, string>>.Clear()
+                {
+                }
+
+                bool ICollection<KeyValuePair<int, string>>.Contains(KeyValuePair<int, string> item)
+                {
+                    return (item.Key == 1 && item.Value == "2");
+                }
+
+                bool IDictionary<int, string>.ContainsKey(int key)
+                {
+                    return (key == 1);
+                }
+
+                void ICollection<KeyValuePair<int, string>>.CopyTo(KeyValuePair<int, string>[] array, int arrayIndex)
+                {
+                    throw new NotImplementedException();
+                }
+
+                IEnumerator<KeyValuePair<int, string>> IEnumerable<KeyValuePair<int, string>>.GetEnumerator()
+                {
+                    return ((IEnumerable < KeyValuePair<int, string> > ) new KeyValuePair<int, string>[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
+                }
+
+                bool IDictionary<int, string>.Remove(int key)
+                {
+                    throw new NotImplementedException();
+                }
+
+                bool ICollection<KeyValuePair<int, string>>.Remove(KeyValuePair<int, string> item)
+                {
+                    return false;
+                }
+
+                bool IDictionary<int, string>.TryGetValue(int key, out string value)
+                {
+                    value = "2";
+                    return (key == 1);
+                }
+
+                IEnumerator IEnumerable.GetEnumerator()
+                {
+                    return ((IEnumerable)new KeyValuePair<int, string>[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
+                }
+            }
+        }
+
+        public class Json : FormatterTestBase
+        {
+            private readonly ITestOutputHelper _output;
+
+            public Json(ITestOutputHelper output)
+            {
+                _output = output;
+            }
+
+            [Fact]
+            public void JSON_OBJECT()
+            {
+                var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
+
+                var jsonElement = JsonDocument.Parse(jsonString).RootElement;
+
+                var html = jsonElement.ToDisplayString(HtmlFormatter.MimeType);
+
+                _output.WriteLine(html);
+
+                // FIX: (testname) write test
+                throw new NotImplementedException();
+            }
+
+            [Fact]
+            public void JSON_ARRAY()
+            {
+                var jsonString = JsonSerializer.Serialize(new object[] { "apple", "banana", "cherry" });
+
+                var jsonElement = JsonDocument.Parse(jsonString).RootElement;
+
+                var html = jsonElement.ToDisplayString(HtmlFormatter.MimeType);
+
+                _output.WriteLine(html);
+
+                // FIX: (testname) write test
+                throw new NotImplementedException();
+            }
         }
     }
 }
