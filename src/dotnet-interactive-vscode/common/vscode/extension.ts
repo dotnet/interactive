@@ -207,7 +207,7 @@ async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocumen
                 }
             });
             const edit = new vscode.WorkspaceEdit();
-            edit.replaceNotebookCellMetadata(candidateNotebookCellDocument.uri, cell.index, newMetadata);
+            edit.replaceNotebookCellMetadata(notebook.uri, cell.index, newMetadata);
             await vscode.workspace.applyEdit(edit);
         }
     }
