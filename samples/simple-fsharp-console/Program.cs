@@ -10,12 +10,7 @@ var kernel = new FSharpKernel()
                     .UseDefaultFormatting()
                     .UseNugetDirective()
                     .UseKernelHelpers()
-<<<<<<< HEAD
                     .UseWho();
-=======
-                    .UseWho()
-                    .UseDotNetVariableSharing();
->>>>>>> b06a2619... Naive F# synchronous interactive console sample added
 Formatter.SetPreferredMimeTypeFor(typeof(object), "text/plain");
 Formatter.Register<object>(o => o.ToString());
 
@@ -24,11 +19,7 @@ while (true)
     if (ReadLine() is not { } request)
         continue;
     var toSubmit = new SubmitCode(request);
-<<<<<<< HEAD
     var response = await kernel.SendAsync(toSubmit);
-=======
-    var response = kernel.SendAsync(toSubmit).Result;
->>>>>>> b06a2619... Naive F# synchronous interactive console sample added
     response.KernelEvents.Subscribe(
         e =>
         {
