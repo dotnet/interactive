@@ -276,7 +276,8 @@ namespace Microsoft.DotNet.Interactive
                                 {
                                     if (_countOfLanguageServiceCommandsInFlight > 0)
                                     {
-                                        context.Complete(command);
+                                    
+                                        context.CancelWithSuccess();
                                         return context.Result;
                                     }
 
@@ -299,7 +300,7 @@ namespace Microsoft.DotNet.Interactive
                                 {
                                     if (_inFlightContext is { } inflight)
                                     {
-                                        inflight.Complete(inflight.Command);
+                                        inflight.CancelWithSuccess();
                                     }
 
                                     Interlocked.Increment(ref _countOfLanguageServiceCommandsInFlight);

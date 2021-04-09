@@ -148,10 +148,10 @@ namespace Microsoft.DotNet.Interactive.CSharp
             using var _ = new GCPressure(1024 * 1024);
 
             var document = _workspace.ForkDocumentForLanguageServices(command.Code);
-            var text = await document.GetTextAsync();
+            var text = await document.GetTextAsync(context.CancellationToken);
             var cursorPosition = text.Lines.GetPosition(command.LinePosition.ToCodeAnalysisLinePosition());
             var service = QuickInfoService.GetService(document);
-            var info = await service.GetQuickInfoAsync(document, cursorPosition);
+            var info = await service.GetQuickInfoAsync(document, cursorPosition, context.CancellationToken);
             
             if (info == null)
             {
@@ -177,7 +177,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             await EnsureWorkspaceIsInitializedAsync(context);
 
             var document = _workspace.ForkDocumentForLanguageServices(command.Code); 
-            var signatureHelp = await SignatureHelpGenerator.GenerateSignatureInformation(document, command);
+            var signatureHelp = await SignatureHelpGenerator.GenerateSignatureInformation(document, command, context.CancellationToken);
             if (signatureHelp is { })
             {
                 context.Publish(signatureHelp);
@@ -358,21 +358,21 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var completionList =
                 await GetCompletionList(
                     command.Code,
-                    SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.LinePosition));
+                    SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.LinePosition),
+                    context.CancellationToken);
 
             context.Publish(new CompletionsProduced(completionList, command));
         }
 
-        private async Task<IEnumerable<CompletionItem>> GetCompletionList(
-            string code,
-            int cursorPosition)
+        private async Task<IEnumerable<CompletionItem>> GetCompletionList(string code,
+            int cursorPosition, CancellationToken contextCancellationToken)
         {
 
             using var _ = new GCPressure(1024 * 1024);
 
             var document = _workspace.ForkDocumentForLanguageServices(code);
             var service = CompletionService.GetService(document);
-            var completionList = await service.GetCompletionsAsync(document, cursorPosition);
+            var completionList = await service.GetCompletionsAsync(document, cursorPosition, cancellationToken: contextCancellationToken);
            
             if (completionList is null)
             {
@@ -382,7 +382,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var items = new List<CompletionItem>();
             foreach (var item in completionList.Items)
             {
-                var description = await service.GetDescriptionAsync(document, item);
+                var description = await service.GetDescriptionAsync(document, item, contextCancellationToken);
                 var completionItem = item.ToModel(description);
                 items.Add(completionItem);
             }
@@ -411,8 +411,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
             await EnsureWorkspaceIsInitializedAsync(context);
 
             var document = _workspace.ForkDocumentForLanguageServices(command.Code);
-            var semanticModel = await document.GetSemanticModelAsync();
-            var diagnostics = semanticModel.GetDiagnostics();
+            var semanticModel = await document.GetSemanticModelAsync(context.CancellationToken);
+            var diagnostics = semanticModel.GetDiagnostics(cancellationToken:context.CancellationToken);
             context.Publish(GetDiagnosticsProduced(command, diagnostics));
         }
 
