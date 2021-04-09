@@ -633,10 +633,12 @@ $${languageSpecificCode}
                 .ContainSingle(diag => diag.LinePositionSpan.Start.Line == line);
         }
 
-        [Fact]
-        public void when_a_sequence_of_diagnostics_requests_is_fired_diagnostics_are_produced_only_for_the_latest_request()
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public void when_a_sequence_of_diagnostics_requests_is_fired_diagnostics_are_produced_only_for_the_latest_request(Language language)
         {
-            var kernel = CreateKernel();
+            var kernel = CreateKernel(language);
            var results =  Task.WhenAll(
                 kernel.SendAsync(new RequestDiagnostics("C")),
                 kernel.SendAsync(new RequestDiagnostics("Co")),
