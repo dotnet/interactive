@@ -281,8 +281,6 @@ namespace Microsoft.DotNet.Interactive
                                     context.Complete(command);
                                 }
 
-                               
-
                                 _inFlightDiagnosticsCommandInvocationContext?.Complete(_inFlightDiagnosticsCommandInvocationContext.Command);
                                 if (command is RequestDiagnostics)
                                 {
