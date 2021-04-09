@@ -52,7 +52,7 @@ describe('LanguageProvider tests', () => {
         };
 
         // perform the completion request
-        let completion = await provideCompletion(clientMapper, 'csharp', document, position, token);
+        let completion = await provideCompletion(clientMapper, 'csharp', document, position, 0, token);
         expect(completion).to.deep.equal({
             linePositionSpan: null,
             completions: [
@@ -115,7 +115,7 @@ describe('LanguageProvider tests', () => {
         };
 
         // perform the hover request
-        let hover = await provideHover(clientMapper, 'csharp', document, position, token);
+        let hover = await provideHover(clientMapper, 'csharp', document, position, 0, token);
         expect(hover).to.deep.equal({
             contents: 'readonly struct System.Int32',
             isMarkdown: true,
@@ -182,7 +182,7 @@ describe('LanguageProvider tests', () => {
         };
 
         // perform the sig help request
-        let sigHelp = await provideSignatureHelp(clientMapper, 'csharp', document, position, token);
+        let sigHelp = await provideSignatureHelp(clientMapper, 'csharp', document, position, 0, token);
         expect(sigHelp).to.deep.equal({
             activeParameter: 0,
             activeSignature: 0,

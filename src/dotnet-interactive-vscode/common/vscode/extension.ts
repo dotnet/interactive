@@ -132,7 +132,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     }
 
-    const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable
+    const languageServiceDelay = config.get<number>('languageServiceDelay') || 500; // fall back to something reasonable
     const selectorDib = {
         viewType: ['dotnet-interactive'],
         filenamePattern: '*.{dib,dotnet-interactive}'
@@ -173,7 +173,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // language registration
     context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(async e => await updateNotebookCellLanguageInMetadata(e)));
-    context.subscriptions.push(registerLanguageProviders(clientMapper, diagnosticDelay));
+    context.subscriptions.push(registerLanguageProviders(clientMapper, languageServiceDelay));
 }
 
 export function deactivate() {

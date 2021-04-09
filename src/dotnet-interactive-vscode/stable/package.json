@@ -95,10 +95,10 @@
           "default": "{global_storage_path}",
           "description": "The working directory in which the kernel transport process is started."
         },
-        "dotnet-interactive.liveDiagnosticDelay": {
+        "dotnet-interactive.languageServiceDelay": {
           "type": "number",
           "default": 500,
-          "description": "The delay in ms after the last cell edit before live diagnostics are requested."
+          "description": "The delay in ms before language services are invoked."
         },
         "dotnet-interactive.interactiveToolSource": {
           "type": "string",
