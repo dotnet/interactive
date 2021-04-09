@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Interactive
         private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
 
         private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
-       
+
         protected Kernel(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -223,7 +223,7 @@ namespace Microsoft.DotNet.Interactive
             }
 
             var context = KernelInvocationContext.Establish(command);
-           
+
             // only subscribe for the root command 
             var currentCommandOwnsContext = context.Command == command;
 
@@ -233,7 +233,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 disposable = context.KernelEvents.Subscribe(PublishEvent);
 
-                if (cancellationToken != CancellationToken.None && 
+                if (cancellationToken != CancellationToken.None &&
                     cancellationToken != default)
                 {
                     cancellationToken.Register(() =>
@@ -265,55 +265,47 @@ namespace Microsoft.DotNet.Interactive
 
                             case Cancel cancel:
                                 cancel.KernelUri = Uri;
-                                cancel.TargetKernelName = Name; 
+                                cancel.TargetKernelName = Name;
                                 Scheduler.CancelCurrentOperation();
                                 await InvokePipelineAndCommandHandler(cancel);
                                 break;
 
                             case RequestDiagnostics _:
+                                {
+                                    if (_languageServiceCommandInFlight > 0)
+                                    {
+                                        context.Complete(command);
+                                        return context.Result;
+                                    }
+
+                                    if (_inFlightContext is { } inflight)
+                                    {
+                                        inflight.Complete(inflight.Command);
+                                    }
+
+                                    _inFlightContext = context;
+
+                                    await RunOnFastPath(cancellationToken, context, c);
+
+                                    _inFlightContext = null;
+                                }
+                                break;
                             case RequestHoverText _:
                             case RequestCompletions _:
                             case RequestSignatureHelp _:
                                 // FIX: (SendAsync) 
-
-                                if (_languageServiceCommandInFlight > 0 && command is RequestDiagnostics)
                                 {
-                                    context.Complete(command);
-                                    return context.Result;
-                                }
-
-                                _inFlightDiagnosticsCommandInvocationContext?.Complete(_inFlightDiagnosticsCommandInvocationContext.Command);
-                                if (command is RequestDiagnostics)
-                                {
-                                    _inFlightDiagnosticsCommandInvocationContext = context;
-                                }
-                                else
-                                {
-                                    Interlocked.Increment(ref _languageServiceCommandInFlight);
-                                }
-
-                                var fastPathScheduler = await context.HandlingKernel.GetFastPathSchedulerAsync(context);
-                                await fastPathScheduler.RunAsync(
-                                    c,
-                                    InvokePipelineAndCommandHandler,
-                                    c.KernelUri.ToString(),
-                                    cancellationToken: cancellationToken)
-                                    .ContinueWith(t =>
+                                    if (_inFlightContext is { } inflight)
                                     {
-                                        if (t.IsCanceled)
-                                        {
-                                            context.Cancel();
-                                        }
+                                        inflight.Complete(inflight.Command);
+                                    }
 
-                                        if (context.Command is RequestDiagnostics)
-                                        {
-                                            _inFlightDiagnosticsCommandInvocationContext = null;
-                                        }
-                                        else
-                                        {
-                                            Interlocked.Decrement(ref _languageServiceCommandInFlight);
-                                        }
-                                    }, cancellationToken);
+                                    Interlocked.Increment(ref _languageServiceCommandInFlight);
+
+                                    await RunOnFastPath(cancellationToken, context, c);
+
+                                    Interlocked.Decrement(ref _languageServiceCommandInFlight);
+                                }
                                 break;
 
                             default:
@@ -341,6 +333,24 @@ namespace Microsoft.DotNet.Interactive
             }
 
             return context.Result;
+        }
+
+        private async Task RunOnFastPath(CancellationToken cancellationToken, KernelInvocationContext context,
+            KernelCommand c)
+        {
+            var fastPathScheduler = await context.HandlingKernel.GetFastPathSchedulerAsync(context);
+            await fastPathScheduler.RunAsync(
+                    c,
+                    InvokePipelineAndCommandHandler,
+                    c.KernelUri.ToString(),
+                    cancellationToken: cancellationToken)
+                .ContinueWith(t =>
+                {
+                    if (t.IsCanceled)
+                    {
+                        context.Cancel();
+                    }
+                }, cancellationToken);
         }
 
         private async Task<IKernelScheduler<KernelCommand, KernelCommandResult>> GetFastPathSchedulerAsync(
@@ -416,7 +426,7 @@ namespace Microsoft.DotNet.Interactive
 
         private static readonly List<KernelCommand> EmptyCommandList = new(0);
         private readonly SemaphoreSlim _fastPathSchedulerLock = new(1);
-        private KernelInvocationContext _inFlightDiagnosticsCommandInvocationContext;
+        private KernelInvocationContext _inFlightContext;
         private int _languageServiceCommandInFlight = 0;
 
 

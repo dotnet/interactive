@@ -147,7 +147,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             using var _ = new GCPressure(1024 * 1024);
 
-            var document = _workspace.UpdateWorkingDocument(command.Code);
+            var document = _workspace.ForkDocumentForLanguageServices(command.Code);
             var text = await document.GetTextAsync();
             var cursorPosition = text.Lines.GetPosition(command.LinePosition.ToCodeAnalysisLinePosition());
             var service = QuickInfoService.GetService(document);
@@ -176,7 +176,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
             await EnsureWorkspaceIsInitializedAsync(context);
 
-            var document = _workspace.UpdateWorkingDocument(command.Code); 
+            var document = _workspace.ForkDocumentForLanguageServices(command.Code); 
             var signatureHelp = await SignatureHelpGenerator.GenerateSignatureInformation(document, command);
             if (signatureHelp is { })
             {
@@ -370,7 +370,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             using var _ = new GCPressure(1024 * 1024);
 
-            var document = _workspace.UpdateWorkingDocument(code);
+            var document = _workspace.ForkDocumentForLanguageServices(code);
             var service = CompletionService.GetService(document);
             var completionList = await service.GetCompletionsAsync(document, cursorPosition);
            
@@ -410,7 +410,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
             await EnsureWorkspaceIsInitializedAsync(context);
 
-            var document = _workspace.UpdateWorkingDocument(command.Code);
+            var document = _workspace.ForkDocumentForLanguageServices(command.Code);
             var semanticModel = await document.GetSemanticModelAsync();
             var diagnostics = semanticModel.GetDiagnostics();
             context.Publish(GetDiagnosticsProduced(command, diagnostics));

@@ -274,6 +274,30 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         }
 
+        public Document ForkDocumentForLanguageServices(string code)
+        {
+            var solution = CurrentSolution;
+
+                solution = solution.RemoveDocument(_workingDocumentId);
+
+                var documentDebugName = $"Working from #{_submissionCount}";
+
+                var workingDocumentId = DocumentId.CreateNewId(
+                    _workingProjectId,
+                    documentDebugName);
+
+                solution = solution.AddDocument(
+                    workingDocumentId,
+                    documentDebugName,
+                    SourceText.From(code)
+                );
+
+                var workingDocument = solution.GetDocument(workingDocumentId);
+
+                return workingDocument;
+
+        }
+
         public void AddPackageManagerReference(MetadataReference reference)
         {
             _packageManagerReferences.Add(reference);
