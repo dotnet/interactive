@@ -813,7 +813,7 @@ using NodaTime.Extensions;");
 
         [Theory]
         [InlineData(Language.CSharp)]
-        [InlineData(Language.FSharp)]   /// Reenable when --- https://github.com/dotnet/fsharp/issues/8775
+        [InlineData(Language.FSharp)]
         public async Task Pound_r_nuget_does_not_accept_invalid_keys(Language language)
         {
             var kernel = CreateKernel(language);
