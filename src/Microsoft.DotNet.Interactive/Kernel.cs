@@ -288,7 +288,7 @@ namespace Microsoft.DotNet.Interactive
 
                                     _inFlightContext = context;
 
-                                    await RunOnFastPath(cancellationToken, context, c);
+                                    await RunOnFastPath(context, c, cancellationToken);
 
                                     _inFlightContext = null;
                                 }
@@ -305,7 +305,7 @@ namespace Microsoft.DotNet.Interactive
 
                                     Interlocked.Increment(ref _countOfLanguageServiceCommandsInFlight);
 
-                                    await RunOnFastPath(cancellationToken, context, c);
+                                    await RunOnFastPath(context, c, cancellationToken);
 
                                     Interlocked.Decrement(ref _countOfLanguageServiceCommandsInFlight);
                                 }
@@ -338,14 +338,14 @@ namespace Microsoft.DotNet.Interactive
             return context.Result;
         }
 
-        private async Task RunOnFastPath(CancellationToken cancellationToken, KernelInvocationContext context,
-            KernelCommand c)
+        private async Task RunOnFastPath(KernelInvocationContext context,
+            KernelCommand command, CancellationToken cancellationToken)
         {
             var fastPathScheduler = await context.HandlingKernel.GetFastPathSchedulerAsync(context);
             await fastPathScheduler.RunAsync(
-                    c,
+                    command,
                     InvokePipelineAndCommandHandler,
-                    c.KernelUri.ToString(),
+                    command.KernelUri.ToString(),
                     cancellationToken: cancellationToken)
                 .ContinueWith(t =>
                 {
