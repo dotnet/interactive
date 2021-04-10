@@ -131,12 +131,12 @@ f();"));
                 .Which
                 .Text
                 .Should()
-                .BeEquivalentTo(Environment.NewLine + "(1,13): error CS1002: ; expected" + Environment.NewLine + Environment.NewLine);
+                .ContainAll("(1,13): error CS1002:", ";");
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "(1,4): error CS1733: Expected expression")]
-        [InlineData(Language.FSharp, "input.fsx (1,4)-(1,4) parse error Unexpected end of input in expression")]
+        [InlineData(Language.CSharp, "(1,4): error CS1733:")]
+        [InlineData(Language.FSharp, "input.fsx (1,4)-(1,4) parse error")]
         public async Task shows_diagnostics_on_erroneous_input(Language language, string expected)
         {
             var scheduler = CreateScheduler();
