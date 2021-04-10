@@ -170,7 +170,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                 .First(s => s.Trim().Length > 0)
                 .ToLowerInvariant()
                 .Should()
-                .Match("*ping*data*");
+                .ContainAll("[::1]", "32");
         }
 
         [Fact]
