@@ -813,17 +813,11 @@ using NodaTime.Extensions;");
 
         [Theory]
         [InlineData(Language.CSharp)]
-        //[InlineData(Language.FSharp)]   /// Reenable when --- https://github.com/dotnet/fsharp/issues/8775
+        [InlineData(Language.FSharp)]   /// Reenable when --- https://github.com/dotnet/fsharp/issues/8775
         public async Task Pound_r_nuget_does_not_accept_invalid_keys(Language language)
         {
             var kernel = CreateKernel(language);
 
-            // C# and F# should both fail, but the messages will be different because they handle it differently internally.
-            var expectedMessage = language switch
-            {
-                Language.CSharp => "Metadata file 'nugt:System.Text.Json' could not be found",
-                Language.FSharp => "interactive error Package manager key 'nugt' was not registered"
-            };
             using var events = kernel.KernelEvents.ToSubscribedList();
 
             // nugt is an invalid provider key should fail
@@ -838,7 +832,14 @@ using NodaTime.Extensions;");
                  .Which
                  .Value
                  .Should()
-                 .Contain(expectedMessage);
+                 .ContainAll(
+                    // C# and F# should both fail, but the messages will be different because they handle it differently internally.
+                    language switch
+                    { 
+                        Language.CSharp => new[] { "CS0006", "nugt:System.Text.Json" },
+                        Language.FSharp => new[] { "interactive error", "nugt" }
+                    }
+                );
         }
 
         [Theory]
@@ -859,7 +860,7 @@ using NodaTime.Extensions;");
                   .Which
                   .Message
                   .Should()
-                  .Contain($"error NU1101: Unable to find package {nonexistentPackageName}. No packages exist with this id in source(s): ");
+                  .Contain($"error NU1101:", nonexistentPackageName);
         }
 
         [Theory]
