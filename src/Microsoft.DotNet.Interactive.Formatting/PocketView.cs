@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
     /// </summary>
     public class PocketView : DynamicObject, IHtmlTag
     {
-        private readonly Dictionary<string, TagTransform> _transforms = new Dictionary<string, TagTransform>();
+        private readonly Dictionary<string, TagTransform> _transforms = new();
         private readonly HtmlTag _htmlTag;
         private TagTransform _transform;
 
@@ -160,11 +160,18 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }
                 else
                 {
-                    var key = binder.CallInfo
-                                    .ArgumentNames
-                                    .ElementAt(argumentNameIndex++)
-                                    .Replace("_", "-");
-                    HtmlAttributes[key] = values[i];
+                    if (binder.CallInfo.ArgumentNames.Count > 0)
+                    {
+                        var key = binder.CallInfo
+                                        .ArgumentNames
+                                        .ElementAt(argumentNameIndex++)
+                                        .Replace("_", "-");
+                        HtmlAttributes[key] = values[i];
+                    }
+                    else if (att is string s)
+                    {
+                        HtmlAttributes[s] = null;
+                    }
                 }
             }
 

@@ -7,6 +7,7 @@ using System.IO;
 using System.Text.Encodings.Web;
 using System.Web;
 using Microsoft.AspNetCore.Html;
+using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -208,5 +209,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
             tag.Content = writer => wrappingTag.WriteTo(writer, HtmlEncoder.Default);
             return tag;
         }
+
+        internal static PocketView Table(
+            IReadOnlyList<IHtmlContent> headers,
+            IReadOnlyList<IHtmlContent> rows) =>
+            table(
+                thead(
+                    tr(
+                        headers ?? Array.Empty<IHtmlContent>())),
+                tbody(
+                    rows));
     }
 }

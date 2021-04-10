@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
     /// </summary>
     public class HtmlAttributes : DynamicObject, IDictionary<string, object>, IHtmlContent
     {
-        private readonly SortedDictionary<string, object> _attributes = new SortedDictionary<string, object>(StringComparer.Ordinal);
+        private readonly Dictionary<string, object> _attributes = new(StringComparer.Ordinal);
 
         /// <summary>
         ///   Initializes a new instance of the <see cref = "HtmlAttributes" /> class.
@@ -348,13 +348,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             var first = true;
             foreach (var pair in _attributes)
             {
-                // don't write out empty id attributes
-                if (string.Equals(pair.Key, "id", StringComparison.Ordinal) &&
-                    (pair.Value is null || pair.Value.ToString() == string.Empty))
-                {
-                    continue;
-                }
-
                 if (!first)
                 {
                     // spaces between attributes
@@ -375,16 +368,21 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }
                 else
                 {
-                    sb.Append(pair.Key)
-                      .Append("=\"")
-                      .Append(pair.Value.EnsureHtmlAttributeEncoded())
-                      .Append("\"");
+                    sb.Append(pair.Key);
+
+                    if (pair.Value is not null)
+                    {
+                        sb.Append("=\"")
+                          .Append(pair.Value.EnsureHtmlAttributeEncoded())
+                          .Append("\"");
+                    }
                 }
             }
 
             return sb.ToString();
         }
 
+        /// <inheritdoc />
         public void WriteTo(TextWriter writer, HtmlEncoder encoder)
         {
             if (Count > 0)

@@ -149,28 +149,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 foreach (var (value, index) in rowData)
                 {
-                    bool destructureIntoColumns = true;
-
-                    if (value is { })
-                    {
-                        // FIX: (CreateForAnyEnumerable) 
-                        var formatter = Formatter.GetPreferredFormatterFor(value.GetType(), HtmlFormatter.MimeType);
-
-                        // destructureIntoColumns = !formatter.ShouldSuppressDestructuring();
-
-                        if (formatter.Type == typeof(object))
-                        {
-                            destructureIntoColumns = true;
-                        }
-                        else
-                        {
-                            destructureIntoColumns = false;
-                        }
-                    }
-
                     IDictionary<string, object> keysAndValues;
 
-                    if (destructureIntoColumns)
+                    if (value is { } &&
+                        Formatter.GetPreferredFormatterFor(value.GetType(), HtmlFormatter.MimeType) is { } formatter &&
+                        formatter.Type == typeof(object))
                     {
                         var destructurer = Destructurer.GetOrCreate(value?.GetType());
 
@@ -293,7 +276,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     rows.Add(tr(td[colspan: $"{headers.Count}"](more)));
                 }
 
-                var table = HtmlFormatter.Table(headers, rows);
+                var table = Html.Table(headers, rows);
 
                 table.WriteTo(writer, HtmlEncoder.Default);
                 return true;

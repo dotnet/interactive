@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using FluentAssertions;
 using System.Linq;
 using Xunit;
@@ -142,7 +143,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                     tag.Content = writer =>
                     {
                         writer.Write(label[@for: model.name](model.name));
-                        writer.Write(input[value: model.value, type: "text", name: model.name]);
+                        writer.Write(input[name: model.name, type: "text", value: model.value]);
                     };
                 });
 
@@ -176,7 +177,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             string output = _.div[style: "color:red"]("hi").ToString();
 
             output
-                .Should().Be("<div class=\"foo\" style=\"color:red\">hi</div>");
+                .Should().Be("<div style=\"color:red\" class=\"foo\">hi</div>");
         }
 
         [Fact]
@@ -240,9 +241,26 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         [Fact]
+        public void attributes_can_be_written_without_a_value()
+        {
+            string output = details["open"](summary("heading"), p("some content")).ToString();
+
+            output.Should().Be("<details open><summary>heading</summary><p>some content</p></details>");
+        }
+        
+        [Fact]
+        public void multiple_attributes_can_be_written_without_a_value()
+        {
+            string output = details["open", "disabled"](summary("heading"), p("some content")).ToString();
+
+            output.Should().Be("<details open disabled><summary>heading</summary><p>some content</p></details>");
+        }
+
+        [Fact]
         public void Method_and_property_calls_return_the_same_result_when_no_attributes_are_present()
         {
             string property = _.foo.ToString();
+
             var method = _.foo().ToString();
 
             property.Should().Be(method);

@@ -185,74 +185,85 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     return true;
                 }),
 
-
-               new HtmlFormatter<JsonProperty>((property, writer) =>
+                new HtmlFormatter<JsonProperty>((context, property, writer) =>
                 {
                     PocketView view =
                         details(
-                            summary(property.Name),
+                            summary(property.Name + ":"),
                             property.Value);
                     view.WriteTo(writer, HtmlEncoder.Default);
-               }),
+                    return true;
+                }),
 
-               new HtmlFormatter<JsonElement>((element, writer) =>
-               {
-                   IHtmlContent view = null;
+                new HtmlFormatter<JsonElement>((context, element, writer) =>
+                {
+                    IHtmlContent view = null;
 
-                   switch (element.ValueKind)
-                   {
-                       case JsonValueKind.Object:
+                    switch (element.ValueKind)
+                    {
+                        case JsonValueKind.Object:
 
-                           var keysAndValues = element.EnumerateObject().ToArray();
+                            var keysAndValues = element.EnumerateObject().ToArray();
 
-                           view = details(
-                               summary(
-                                   span(new HtmlString("{ }&nbsp;")), i($"{keysAndValues.Length} keys")),
-                               keysAndValues);
+                            view = details(
+                                summary(
+                                    span("{&nbsp;&nbsp;}&nbsp;".ToHtmlContent()), i($"{keysAndValues.Length} keys")),
+                                div[style: "margin-left:1.2em"](
+                                    Html.Table(
+                                        headers: null,
+                                        rows: keysAndValues.Select(
+                                            a => (IHtmlContent)
+                                                tr(
+                                                    td[style: "word-wrap: break-word; max-width: 150px;"](a.Name), td(a.Value))).ToArray())));
 
-                           break;
+                            break;
 
-                       case JsonValueKind.Array:
+                        case JsonValueKind.Array:
 
-                           var arrayEnumerator = element.EnumerateArray().ToArray();
+                            var arrayEnumerator = element.EnumerateArray().ToArray();
 
-                           view = details(
-                               summary(
-                                   span(new HtmlString("[ ]&nbsp;")), i($"{arrayEnumerator.Length} items")),
-                               arrayEnumerator);
+                            view = details(
+                                summary(
+                                    span("[&nbsp;&nbsp;]&nbsp;".ToHtmlContent()), i($"{arrayEnumerator.Length} items")),
+                                div[style: "margin-left:1.2em"](
+                                    Html.Table(
+                                        headers: null,
+                                        rows: arrayEnumerator.Select(
+                                            a => (IHtmlContent) tr(td[style: "word-wrap: break-word; max-width: 150px;"](a))).ToArray())));
 
-                           break;
+                            break;
 
-                       case JsonValueKind.String:
+                        case JsonValueKind.String:
 
-                           var value = element.GetString();
-                           view = span(value);
+                            var value = element.GetString();
+                            view = span($"\"{value}\"");
 
-                           break;
+                            break;
 
-                       case JsonValueKind.Number:
-                           view = span(element.GetSingle());
-                           break;
+                        case JsonValueKind.Number:
+                            view = span(element.GetSingle());
+                            break;
 
-                       case JsonValueKind.True:
-                           view = span("true");
-                           break;
+                        case JsonValueKind.True:
+                            view = span("true");
+                            break;
 
-                       case JsonValueKind.False:
-                           view = span("false");
-                           break;
+                        case JsonValueKind.False:
+                            view = span("false");
+                            break;
 
-                       case JsonValueKind.Null:
-                           view = span(Formatter.NullString);
-                           break;
+                        case JsonValueKind.Null:
+                            view = span(Formatter.NullString);
+                            break;
 
-                       default:
-                           view = HtmlString.Empty;
-                           break;
-                   }
+                        default:
+                            return false;
+                    }
 
-                   view.WriteTo(writer, HtmlEncoder.Default);
-               })
+                    view.WriteTo(writer, HtmlEncoder.Default);
+
+                    return true;
+                })
         };
     }
 }

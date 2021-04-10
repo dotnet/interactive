@@ -1254,6 +1254,39 @@ string";
                 // FIX: (testname) write test
                 throw new NotImplementedException();
             }
+
+            [Fact]
+            public void JSON_MIXED()
+            {
+                var jsonString = JsonSerializer.Serialize(
+                    new
+                    {
+                        fruits = new object[]
+                        {
+                            "apple",
+                            "banana",
+                            new
+                            {
+                                cherry = new[]
+                                {
+                                    "bing",
+                                    "rainier"
+                                }
+                            }
+                        },
+                        exampleIsSilly = true,
+                        howSilly = 9000
+                    });
+
+                var jsonElement = JsonDocument.Parse(jsonString).RootElement;
+
+                var html = jsonElement.ToDisplayString(HtmlFormatter.MimeType);
+
+                _output.WriteLine(html);
+
+                // FIX: (testname) write test
+                throw new NotImplementedException();
+            }
         }
     }
 }

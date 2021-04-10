@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text.Encodings.Web;
-using Microsoft.AspNetCore.Html;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {

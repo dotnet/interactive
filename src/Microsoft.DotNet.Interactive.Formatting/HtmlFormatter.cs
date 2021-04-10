@@ -2,10 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text.Encodings.Web;
-using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.Formatting
@@ -45,7 +43,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static void FormatObjectAsPlainText(FormatContext context, object value, TextWriter writer)
         {
             using var swriter = Formatter.CreateWriter();
-            Formatter.FormatTo(value, context, swriter, PlainTextFormatter.MimeType);
+            value.FormatTo(context, swriter, PlainTextFormatter.MimeType);
             var text = swriter.ToString();
             FormatStringAsPlainText(text, writer);
         }
@@ -60,16 +58,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 html.WriteTo(writer, HtmlEncoder.Default);
             }
         }
-
-        internal static PocketView Table(
-            List<IHtmlContent> headers,
-            List<IHtmlContent> rows) =>
-            table(
-                thead(
-                    tr(
-                        headers ?? new List<IHtmlContent>())),
-                tbody(
-                    rows));
 
         internal class EmbeddedFormat
         {

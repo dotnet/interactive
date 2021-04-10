@@ -228,22 +228,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         }
 
         [Fact]
-        public void Empty_id_attributes_are_not_rendered()
-        {
-            "div".Tag().WithAttributes(new HtmlAttributes { { "id", null } }).ToString()
-                 .Should()
-                 .NotContain("id");
-
-            "div".Tag().WithAttributes(new HtmlAttributes { { "id", new HtmlString("") } }).ToString()
-                 .Should()
-                 .NotContain("id");
-
-            "div".Tag().WithAttributes(new HtmlAttributes { { "id", string.Empty } }).ToString()
-                 .Should()
-                 .NotContain("id");
-        }
-
-        [Fact]
         public void IsReadOnly_defaults_to_false()
         {
             new HtmlAttributes().IsReadOnly.Should().BeFalse();
