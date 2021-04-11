@@ -9,6 +9,8 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
+using System;
+using System.Linq;
 
 #pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
@@ -368,24 +370,20 @@ public class SampleClass
         [InlineData(Language.FSharp)]
         public async Task csharp_hover_text_is_returned_for_shadowing_variables(Language language)
         {
-            SubmitCode declaration = null;
-            SubmitCode shadowingDeclaration = null;
-            using var kernel = CreateKernel(language);
-            string expected = "";
-            switch (language)
+            var (declaration, shadowingDeclaration, expectedEnd) = language switch
             {
-                case Language.CSharp:
-                    declaration = new SubmitCode("var identifier = 1234;");
-                    shadowingDeclaration = new SubmitCode("var identifier = \"one-two-three-four\";");
-                    expected = "(field) string identifier";
-                    break;
-                case Language.FSharp:
-                    declaration = new SubmitCode("let identifier = 1234");
-                    shadowingDeclaration = new SubmitCode("let identifier = \"one-two-three-four\"");
-                    expected = "```fsharp\nval identifier : string\n```\n\n----\n*Full name: identifier*";
-                    break;
+                Language.CSharp => 
+                    (new SubmitCode("var identifier = 1234;"),
+                     new SubmitCode("var identifier = \"one-two-three-four\";"),
+                     ") string identifier"), // word "field" is locale-dependent
+                Language.FSharp => 
+                    (new SubmitCode("let identifier = 1234"),
+                     new SubmitCode("let identifier = \"one-two-three-four\""),
+                     "```fsharp\nval identifier : string\n```\n\n----\n*Full name: identifier*")
+            };
 
-            }
+            using var kernel = CreateKernel(language);
+
             await kernel.SendAsync(declaration); 
 
             await kernel.SendAsync(shadowingDeclaration); 
@@ -404,7 +402,11 @@ public class SampleClass
                 .Which
                 .Content
                 .Should()
-                .ContainSingle(fv => fv.Value == expected);
+                .ContainSingle(
+                fv => fv.Value.EndsWith(expectedEnd)
+                );
+
+
         }
     }
 }
