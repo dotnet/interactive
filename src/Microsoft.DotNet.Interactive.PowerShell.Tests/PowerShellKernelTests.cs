@@ -163,10 +163,10 @@ for ($j = 0; $j -le 4; $j += 4 ) {
 
             outputs.Should().HaveCountGreaterThan(1);
             
-            outputs
+            string.Join("", 
+                outputs
                 .SelectMany(e => e.FormattedValues.Select(v => v.Value))
-                .First(s => s.Trim().Length > 0)
-                .ToLowerInvariant()
+                ).ToLowerInvariant()
                 .Should()
                 .ContainAll("build-server", "restore");
         }
