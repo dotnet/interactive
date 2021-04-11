@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using FluentAssertions;
-using Microsoft.AspNetCore.Html;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
