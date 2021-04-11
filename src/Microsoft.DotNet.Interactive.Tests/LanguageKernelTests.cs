@@ -319,9 +319,9 @@ f();"
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "'AppDomain.GetCurrentThreadId()' is obsolete: 'AppDomain.GetCurrentThreadId has been deprecated")]
-        [InlineData(Language.FSharp, "This construct is deprecated. AppDomain.GetCurrentThreadId has been deprecated")]
-        public async Task when_code_contains_compile_time_warnings_diagnostics_are_produced(Language language, string diagnosticMessage)
+        [InlineData(Language.CSharp, "AppDomain.GetCurrentThreadId()", "'AppDomain.GetCurrentThreadId has been deprecated")]
+        [InlineData(Language.FSharp, "AppDomain.GetCurrentThreadId has been deprecated")]
+        public async Task when_code_contains_compile_time_warnings_diagnostics_are_produced(Language language, params string[] diagnosticMessageFragments)
         {
             var kernel = CreateKernel(language);
 
@@ -356,7 +356,7 @@ f();"
                 .Which
                 .Message
                 .Should()
-                .StartWith(diagnosticMessage);
+                .ContainAll(diagnosticMessageFragments);
         }
 
         [Fact]
