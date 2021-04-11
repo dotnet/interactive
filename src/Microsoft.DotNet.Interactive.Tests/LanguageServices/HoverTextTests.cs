@@ -105,9 +105,9 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "var one = 1;", "Console.WriteLine(o$$ne)", "text/markdown", "(field) int one")]
+        [InlineData(Language.CSharp, "var one = 1;", "Console.WriteLine(o$$ne)", "text/markdown", ") int one")]
         [InlineData(Language.FSharp, "let one = 1", "printfn \"%a\" o$$ne", "text/markdown", "```fsharp\nval one : int\n```\n\n----\n*Full name: one*")]
-        public async Task language_service_methods_run_deferred_commands(Language language, string deferredCode, string markupCode, string expectedMimeType, string expectedContent)
+        public async Task language_service_methods_run_deferred_commands(Language language, string deferredCode, string markupCode, string expectedMimeType, string expectedContentEnd)
         {
             // declare a variable in deferred code
             using var kernel = CreateKernel(language);
@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                 .Which
                 .Content
                 .Should()
-                .ContainEquivalentOf(new FormattedValue(expectedMimeType, expectedContent));
+                .Contain(f => f.MimeType == expectedMimeType && f.Value.EndsWith(expectedContentEnd));
         }
 
         [Theory]
@@ -286,7 +286,7 @@ public class SampleClass
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 17 overloads)")]
+        [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 17")]
         [InlineData(Language.FSharp, "ex$$it 0", "text/markdown", "Exit the current hardware isolated process")]
         public async Task hover_text_commands_have_offsets_normalized_after_magic_commands(Language language, string markupCode, string expectedMimeType, string expectedContent)
         {
@@ -313,7 +313,7 @@ public class SampleClass
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 17 overloads)")]
+        [InlineData(Language.CSharp, "Console.Write$$Line();", "text/markdown", "void Console.WriteLine() (+ 17")]
         [InlineData(Language.FSharp, "ex$$it 0", "text/markdown", "Exit the current hardware isolated process")]
         public async Task hover_text_commands_have_offsets_normalized_after_switching_to_the_same_language(Language language, string markupCode, string expectedMimeType, string expectedContent)
         {
