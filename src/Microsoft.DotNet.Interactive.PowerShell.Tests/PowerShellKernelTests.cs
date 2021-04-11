@@ -155,9 +155,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
         {
             var kernel = CreateKernel(Language.PowerShell);
 
-            var command = Platform.IsWindows
-                ? new SubmitCode("ping.exe -n 1 localhost")
-                : new SubmitCode("ping -c 1 localhost");
+            var command = new SubmitCode("dotnet --help");
 
             await kernel.SendAsync(command);
 
@@ -170,7 +168,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
                 .First(s => s.Trim().Length > 0)
                 .ToLowerInvariant()
                 .Should()
-                .ContainAll("[::1]", "32");
+                .ContainAll("build-server", "restore");
         }
 
         [Fact]
