@@ -253,9 +253,9 @@ f();"
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "CS0103", "The name 'aaaadd' does not exist in the current context", "(1,1): error CS0103: The name 'aaaadd' does not exist in the current context")]
-        [InlineData(Language.FSharp, "FS0039", "The value or constructor 'aaaadd' is not defined.", "input.fsx (1,1)-(1,7) typecheck error The value or constructor 'aaaadd' is not defined.")]
-        public async Task when_code_contains_compile_time_error_diagnostics_are_produced(Language language, string code, string diagnosticMessage, string errorMessage)
+        [InlineData(Language.CSharp, "CS0103", "aaaadd", "(1,1): error CS0103:")]
+        [InlineData(Language.FSharp, "FS0039", "aaaadd", "input.fsx (1,1)-(1,7) typecheck error")]
+        public async Task when_code_contains_compile_time_error_diagnostics_are_produced(Language language, string code, string diagnosticMessageFragment, string errorMessageFragment)
         {
             var kernel = CreateKernel(language);
 
@@ -289,7 +289,7 @@ f();"
                 .Which
                 .Message
                 .Should()
-                .Be(errorMessage);
+                .Contain(errorMessageFragment);
 
             // The Diagnostics of DiagnosticsProduced event are populated
             KernelEvents
@@ -301,7 +301,7 @@ f();"
                 .ContainSingle(diag =>
                     diag.LinePositionSpan == diagnosticRange &&
                     diag.Code == code &&
-                    diag.Message == diagnosticMessage);
+                    diag.Message.Contains(diagnosticMessageFragment));
 
             // The FormattedValues are populated of DiagnosticsProduced event are populated
             KernelEvents
@@ -314,7 +314,7 @@ f();"
                 .Which
                 .Value
                 .Should()
-                .Be(errorMessage);
+                .Contain(errorMessageFragment);
 
         }
 
@@ -404,13 +404,13 @@ int SomeFunction(int n)
     };
 }
 
-", "The switch expression does not handle all possible values of its input type")]
+", "CS8509", "switch", "1")]
         [InlineData(Language.FSharp, @"
 let x n =
     match n with
     | 0 -> ()
-", "Incomplete pattern matches on this expression.")]
-        public async Task diagnostics_are_produced_on_command_succeeded(Language language, string code, string diagnosticText)
+", "FS0025", "1")]
+        public async Task diagnostics_are_produced_on_command_succeeded(Language language, string code, string errorCode, params string[] diagnosticMessageFragments)
         {
             var kernel = CreateKernel(language);
 
@@ -428,7 +428,11 @@ let x n =
                 .Which
                 .Diagnostics
                 .Should()
-                .ContainSingle(diag => diag.Message.Contains(diagnosticText));
+                .ContainSingle(diag =>
+                diag.Code == errorCode &&
+                diagnosticMessageFragments.All(
+                    frag => diag.Message.Contains(frag)
+                ));
         }
 
         [Fact(Skip = "The first failed sub-command cancels all subsequent command executions; the second kernel doesn't get a chance to report.")]
@@ -1001,11 +1005,10 @@ Console.Write(""value three"");"
         {
             var kernel = CreateKernel(language, openTestingNamespaces: true);
 
-            var (source, error) = language switch
+            var (source, errorFragments) = language switch
             {
-                Language.CSharp => ("using Not.A.Namespace;", "(1,7): error CS0246: The type or namespace name 'Not' could not be found (are you missing a using directive or an assembly reference?)"),
-                Language.FSharp => ("open Not.A.Namespace", @"input.fsx (1,6)-(1,9) typecheck error The namespace or module 'Not' is not defined. Maybe you want one of the following:
-   Net")
+                Language.CSharp => ("using Not.A.Namespace;", new[] { "(1,7): error CS0246:", "Not", "using" }),
+                Language.FSharp => ("open Not.A.Namespace", new[] { @"input.fsx (1,6)-(1,9) typecheck error", "Not" })
             };
 
             await SubmitCode(kernel, source);
@@ -1020,7 +1023,7 @@ Console.Write(""value three"");"
                 .Which
                 .Value
                 .Should()
-                .Be(error);
+                .ContainAll(errorFragments);
         }
 
         [Theory]
