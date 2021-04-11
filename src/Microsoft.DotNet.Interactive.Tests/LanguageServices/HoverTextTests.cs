@@ -9,8 +9,6 @@ using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
-using System;
-using System.Linq;
 
 #pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
@@ -402,11 +400,7 @@ public class SampleClass
                 .Which
                 .Content
                 .Should()
-                .ContainSingle(
-                fv => fv.Value.EndsWith(expectedEnd)
-                );
-
-
+                .ContainSingle(fv => fv.Value.EndsWith(expectedEnd));
         }
     }
 }
