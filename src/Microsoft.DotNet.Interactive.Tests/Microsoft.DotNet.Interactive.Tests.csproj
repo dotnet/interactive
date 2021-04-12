@@ -57,6 +57,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="16.6.1" />
+    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="16.9.4" />
   </ItemGroup>
 </Project>
