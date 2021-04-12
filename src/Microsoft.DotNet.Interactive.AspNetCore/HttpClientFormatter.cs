@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
@@ -69,12 +70,19 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
 
             var requestLine = h3($"{requestMessage.Method} ", a[href: requestUri](requestUri), $" HTTP/{requestMessage.Version}");
             var requestHeaders = details(summary("Headers"), HeaderTable(requestMessage.Headers, requestMessage.Content?.Headers));
-            var requestBody = details(summary("Body"), pre(requestBodyString));
+            
+            var requestBody = details(
+                summary("Body"), 
+                pre(requestBodyString));
 
             var responseLine = h3($"HTTP/{responseMessage.Version} {(int)responseMessage.StatusCode} {responseMessage.ReasonPhrase}");
 
-            var responseHeaders = details[open: true](summary("Headers"), HeaderTable(responseMessage.Headers, responseMessage.Content.Headers));
-            var responseBody = details[open: true](summary("Body"), pre(responseBodyString));
+            var responseHeaders = details[open: true](
+                summary("Headers"), HeaderTable(responseMessage.Headers, responseMessage.Content.Headers));
+
+            var responseBody = details[open: true](
+                summary("Body"), 
+                JsonDocument.Parse(responseBodyString));
 
             var output = div[@class: _containerClass](
                 style[type: "text/css"](_flexCss),

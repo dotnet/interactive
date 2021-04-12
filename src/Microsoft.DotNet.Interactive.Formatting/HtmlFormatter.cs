@@ -67,14 +67,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 { Object = instance;  Context = context;  }
         }
 
-
         internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultHtmlFormatterSet.DefaultFormatters;
 
         internal static FormatterTable FormattersForAnyObject =
-            new FormatterTable(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyObject));
+            new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyObject));
 
         internal static FormatterTable FormattersForAnyEnumerable =
-            new FormatterTable(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyEnumerable));
+            new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyEnumerable));
 
     }
 }

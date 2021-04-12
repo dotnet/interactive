@@ -185,14 +185,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     return true;
                 }),
 
-                new HtmlFormatter<JsonProperty>((context, property, writer) =>
+
+                new HtmlFormatter<JsonDocument>((doc, writer) =>
                 {
-                    PocketView view =
-                        details(
-                            summary(property.Name + ":"),
-                            property.Value);
-                    view.WriteTo(writer, HtmlEncoder.Default);
-                    return true;
+                    doc.RootElement.FormatTo(writer, HtmlFormatter.MimeType);
                 }),
 
                 new HtmlFormatter<JsonElement>((context, element, writer) =>
@@ -263,7 +259,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     view.WriteTo(writer, HtmlEncoder.Default);
 
                     return true;
-                })
+                }),
+
+                new HtmlFormatter<JsonProperty>((context, property, writer) =>
+                {
+                    PocketView view =
+                        details(
+                            summary(property.Name + ":"),
+                            property.Value);
+                    view.WriteTo(writer, HtmlEncoder.Default);
+                    return true;
+                }),
         };
     }
 }
