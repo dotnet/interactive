@@ -31,8 +31,4 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="16.9.4" />
-  </ItemGroup>
-
 </Project>
