@@ -425,18 +425,68 @@ Formatter.Register<DataFrame>((df, writer) =>
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync(@"#i ""nuget:https://completelyFakerestoreSource""");
+            await kernel.SubmitCodeAsync(@"
+#i ""nuget:https://completelyFakerestoreSource1""
+#i ""nuget:https://completelyFakerestoreSource2""
+");
 
-            events.Should()
-                  .ContainSingle<DisplayedValueUpdated>()
-                  .Which
-                  .FormattedValues
-                  .Should()
-                  .ContainSingle(v => v.MimeType == "text/html")
-                  .Which
-                  .Value
-                  .Should()
-                  .ContainAll("Restore sources", "https://completelyFakerestoreSource");
+            Assert.Collection(events,
+                                       e => e.Should().BeOfType<CodeSubmissionReceived>(),
+                                       e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                                       e => e.Should().BeOfType<DisplayedValueProduced>()
+                                             .Which.Value.ToString().Contains("https://completelyFakerestoreSource1"),
+                                       e => e.Should().BeOfType<DisplayedValueUpdated>()
+                                             .Which.Value.ToString().Contains("https://completelyFakerestoreSource2"),
+                                       e => e.Should().BeOfType<CodeSubmissionReceived>(),
+                                       e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                                       e => e.Should().BeOfType<CodeSubmissionReceived>(),
+                                       e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
+                                       e => e.Should().BeOfType<CommandSucceeded>());
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_i_nuget_displays_list_of_added_sources_with_multiple_commands_produces_2_DisplayValueProducedEvents (Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SubmitCodeAsync(@"
+#i ""nuget:https://completelyFakerestoreSourceCommand1.1""
+#i ""nuget:https://completelyFakerestoreSourceCommand1.2""
+");
+
+            var displayValueProducedEvents = KernelEvents.Where(e => e is DisplayedValueProduced);
+            Assert.True(displayValueProducedEvents.Count() == 1);
+
+            var displayValueUpdatedEvents = KernelEvents.Where(e => e is DisplayedValueUpdated);
+            Assert.True(displayValueProducedEvents.Count() == 1);
+
+            await kernel.SubmitCodeAsync(@"
+#i ""nuget:https://completelyFakerestoreSourceCommand2.1""
+#i ""nuget:https://completelyFakerestoreSourceCommand2.2""
+");
+
+            // Only produces a single DisplayedValueProduced event
+            displayValueProducedEvents = KernelEvents.Where(e => e is DisplayedValueProduced);
+            Assert.True(displayValueProducedEvents.Count() == 2);
+
+            displayValueUpdatedEvents = KernelEvents.Where(e => e is DisplayedValueUpdated);
+            Assert.True(displayValueProducedEvents.Count() == 2);
+
+            Assert.Collection(displayValueProducedEvents,
+                                       e => e.Should().BeOfType<DisplayedValueProduced>()
+                                             .Which.Value.ToString().Contains("https://completelyFakerestoreSource1.1"),
+                                       e => e.Should().BeOfType<DisplayedValueProduced>()
+                                             .Which.Value.ToString().Contains("https://completelyFakerestoreSource2.1"));
+
+            Assert.Collection(displayValueUpdatedEvents,
+                                       e => e.Should().BeOfType<DisplayedValueUpdated>()
+                                             .Which.Value.ToString().Contains("https://completelyFakerestoreSource1.2"),
+                                       e => e.Should().BeOfType<DisplayedValueUpdated>()
+                                             .Which.Value.ToString().Contains("https://completelyFakerestoreSource2.2"));
         }
 
         [Theory]

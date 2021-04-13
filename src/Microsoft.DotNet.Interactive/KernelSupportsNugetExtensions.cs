@@ -36,6 +36,7 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
+        private static readonly string restoreSourcesPropertyName = "commandIHandler.RestoreSources";
         private static Command i()
         {
             var iDirective = new Command("#i")
@@ -51,8 +52,16 @@ namespace Microsoft.DotNet.Interactive
                         strong("Restore sources"),
                         ul(kernel.RestoreSources.Select(s => li(span(s)))));
 
-                    var displayed = new DisplayedValue("displayedValueRestoreSources" + context.GetHashCode().ToString(), HtmlFormatter.MimeType, context);
-                    displayed.Update(content);
+                    object displayed = null;
+                    if (!context.Command.Properties.TryGetValue(restoreSourcesPropertyName, out displayed))
+                    {
+                        displayed = context.Display(content, HtmlFormatter.MimeType);
+                        context.Command.Properties.Add(restoreSourcesPropertyName, displayed);
+                    }
+                    else
+                    {
+                        (displayed as DisplayedValue).Update(content);
+                    }
                 }
             });
             return iDirective;
