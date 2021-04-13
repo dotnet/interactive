@@ -129,7 +129,7 @@ json"
                 await kernel.SendAsync(new SubmitCode("System.IO.Directory.SetCurrentDirectory(\"..\")"));
             }
 
-            var dllName = new FileInfo(typeof(JsonConvert).Assembly.Location).Name;             
+            var dllName = new FileInfo(typeof(JsonConvert).Assembly.Location).Name;
 
             var code = language switch
             {
@@ -151,7 +151,7 @@ json"
         [InlineData(Language.CSharp, true)]
         [InlineData(Language.FSharp, true)]
         public async Task it_can_load_script_files_using_load_directive_with_relative_path(Language language, bool changeCurrentDirectoryInUserCode)
-        {            
+        {
             var currentDirectory = Directory.GetCurrentDirectory();
             DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
 
@@ -163,12 +163,8 @@ json"
                 await kernel.SendAsync(new SubmitCode("System.IO.Directory.SetCurrentDirectory(\"..\")"));
             }
 
-            await kernel.SendAsync(new SubmitCode("Environment.CurrentDirectory"));
-
-            var currentDirectoryName = new DirectoryInfo(Directory.GetCurrentDirectory()).Name;            
-
             var code = language switch
-            {                
+            {
                 Language.CSharp => $"#load \"RelativeLoadingSample.csx\"",
                 Language.FSharp => $"#load \"RelativeLoadingSample.fsx\""
             };
@@ -177,7 +173,7 @@ json"
             await kernel.SendAsync(command);
 
             KernelEvents.Should()
-                        .ContainSingle<CommandSucceeded>(c => c.Command == command);
+                        .ContainSingle<StandardOutputValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
         }
 
         [Theory]
@@ -190,11 +186,8 @@ json"
 
             var kernel = CreateKernel(language);
             var absolutePathOneLevelHigher = Directory.GetParent(currentDirectory).FullName;
-            await kernel.SendAsync(new ChangeWorkingDirectory(absolutePathOneLevelHigher));        
+            await kernel.SendAsync(new ChangeWorkingDirectory(absolutePathOneLevelHigher));
 
-            await kernel.SendAsync(new SubmitCode("Environment.CurrentDirectory"));
-
-            var currentDirectoryName = new DirectoryInfo(Directory.GetCurrentDirectory()).Name;
             var relativePath = Path.GetRelativePath(absolutePathOneLevelHigher, currentDirectory);
 
             var code = language switch
@@ -207,7 +200,7 @@ json"
             await kernel.SendAsync(command);
 
             KernelEvents.Should()
-                        .ContainSingle<CommandSucceeded>(c => c.Command == command);
+                        .ContainSingle<StandardOutputValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
         }
 
         [Theory]
@@ -393,14 +386,14 @@ Formatter.Register<DataFrame>((df, writer) =>
         }
         rows.Add(cells);
     }
-    
+
     var t = table(
         thead(
             headers),
         tbody(
             rows.Select(
                 r => tr(r))));
-    
+
     writer.Write(t);
 }, ""text/html"");");
 
