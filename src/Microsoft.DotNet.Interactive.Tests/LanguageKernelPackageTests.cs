@@ -428,7 +428,7 @@ Formatter.Register<DataFrame>((df, writer) =>
             await kernel.SubmitCodeAsync(@"#i ""nuget:https://completelyFakerestoreSource""");
 
             events.Should()
-                  .ContainSingle<DisplayedValueProduced>()
+                  .ContainSingle<DisplayedValueUpdated>()
                   .Which
                   .FormattedValues
                   .Should()
