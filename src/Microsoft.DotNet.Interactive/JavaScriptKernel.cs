@@ -22,5 +22,17 @@ namespace Microsoft.DotNet.Interactive
         {
             return FrontendEnvironment.ExecuteClientScript(command.Code, context);
         }
+
+        internal override async Task HandleAsync(KernelCommand command, KernelInvocationContext context)
+        {
+            TrySetHandler(command, context);
+
+            if (CommandTypeIsRegistered(command.GetType()) && command.Handler is null)
+            {
+                command.Handler = (kernelCommand, invocationContext) => FrontendEnvironment.ForwardCommand(kernelCommand, invocationContext);
+            }
+
+            await command.InvokeAsync(context);
+        }
     }
 }
