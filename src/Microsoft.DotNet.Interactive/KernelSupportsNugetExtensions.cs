@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive
@@ -46,13 +47,12 @@ namespace Microsoft.DotNet.Interactive
                 if (context.HandlingKernel is ISupportNuget kernel)
                 {
                     kernel.AddRestoreSource(source.Replace("nuget:", ""));
-
                     IHtmlContent content = div(
                         strong("Restore sources"),
-                        ul(kernel.RestoreSources
-                                 .Select(s => li(span(s)))));
+                        ul(kernel.RestoreSources.Select(s => li(span(s)))));
 
-                    context.Display(content);
+                    var displayed = new DisplayedValue("displayedValueRestoreSources" + context.GetHashCode().ToString(), HtmlFormatter.MimeType, context);
+                    displayed.Update(content);
                 }
             });
             return iDirective;
