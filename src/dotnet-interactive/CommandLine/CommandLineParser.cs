@@ -387,15 +387,16 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                         if (startupOptions.EnableHttpApi)
                         {
-                            if (context.ParseResult.Directives.Contains("vscode"))
-                            {
-                                ((HtmlNotebookFrontendEnvironment) frontendEnvironment).RequiresAutomaticBootstrapping =
-                                    false;
-                            }
-
                             var clientSideKernelClient = new SignalRBackchannelKernelClient();
                             services.AddSingleton(clientSideKernelClient);
                             kernel.UseKernelClientConnection(new ConnectClientKernel(clientSideKernelClient));
+
+                            if (context.ParseResult.Directives.Contains("vscode"))
+                            {
+                                ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping =
+                                    false;
+                                ((HtmlNotebookFrontendEnvironment)frontendEnvironment).SetKernelClient(clientSideKernelClient);
+                            }
 
                             kernelServer.Start();
                             onServerStarted ??= () =>

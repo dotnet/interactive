@@ -207,6 +207,9 @@ namespace Microsoft.DotNet.Interactive
             where TCommand : KernelCommand =>
             KernelCommandEnvelope.RegisterCommandTypeReplacingIfNecessary<TCommand>();
 
+        public bool CommandTypeIsRegistered(Type commandType) =>
+            KernelCommandEnvelope.IsCommandTypeRegistered(commandType);
+
         internal virtual async Task HandleAsync(
             KernelCommand command,
             KernelInvocationContext context)
@@ -565,7 +568,8 @@ namespace Microsoft.DotNet.Interactive
                         SetHandler(parseNotebookHandler, parseNotebook);
                         break;
 
-                    case (SerializeNotebook serializeNotebook, IKernelCommandHandler<SerializeNotebook> serializeNotebookHandler):
+                    case (SerializeNotebook serializeNotebook, IKernelCommandHandler<SerializeNotebook>
+                        serializeNotebookHandler):
                         SetHandler(serializeNotebookHandler, serializeNotebook);
                         break;
 
@@ -573,23 +577,27 @@ namespace Microsoft.DotNet.Interactive
                         SetHandler(submitCodeHandler, submitCode);
                         break;
 
-                    case (RequestCompletions { LanguageNode: DirectiveNode } rq, _):
+                    case (RequestCompletions {LanguageNode: DirectiveNode} rq, _):
                         rq.Handler = (__, ___) => HandleRequestCompletionsAsync(rq, context);
                         break;
 
-                    case (RequestCompletions requestCompletion, IKernelCommandHandler<RequestCompletions> requestCompletionHandler):
+                    case (RequestCompletions requestCompletion, IKernelCommandHandler<RequestCompletions>
+                        requestCompletionHandler):
                         SetHandler(requestCompletionHandler, requestCompletion);
                         break;
 
-                    case (RequestDiagnostics requestDiagnostics, IKernelCommandHandler<RequestDiagnostics> requestDiagnosticsHandler):
+                    case (RequestDiagnostics requestDiagnostics, IKernelCommandHandler<RequestDiagnostics>
+                        requestDiagnosticsHandler):
                         SetHandler(requestDiagnosticsHandler, requestDiagnostics);
                         break;
 
-                    case (RequestHoverText hoverCommand, IKernelCommandHandler<RequestHoverText> requestHoverTextHandler):
+                    case (RequestHoverText hoverCommand, IKernelCommandHandler<RequestHoverText> requestHoverTextHandler
+                        ):
                         SetHandler(requestHoverTextHandler, hoverCommand);
                         break;
 
-                    case (RequestSignatureHelp requestSignatureHelp, IKernelCommandHandler<RequestSignatureHelp> requestSignatureHelpHandler):
+                    case (RequestSignatureHelp requestSignatureHelp, IKernelCommandHandler<RequestSignatureHelp>
+                        requestSignatureHelpHandler):
                         SetHandler(requestSignatureHelpHandler, requestSignatureHelp);
                         break;
 

@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Server
     public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
     {
         private static readonly ConcurrentDictionary<Type, Func<KernelCommand, IKernelCommandEnvelope>> _envelopeFactories =
-            new ConcurrentDictionary<Type, Func<KernelCommand, IKernelCommandEnvelope>>();
+            new();
 
         private static ConcurrentDictionary<string, Type> _envelopeTypesByCommandTypeName;
 
@@ -25,6 +25,10 @@ namespace Microsoft.DotNet.Interactive.Server
             ResetToDefaults();
         }
 
+        internal static bool IsCommandTypeRegistered(Type commaType)
+        {
+            return _commandTypesByCommandTypeName.ContainsKey(commaType.Name);
+        }
         internal static Type CommandTypeByName(string name) => _commandTypesByCommandTypeName[name];
 
         private readonly KernelCommand _command;
