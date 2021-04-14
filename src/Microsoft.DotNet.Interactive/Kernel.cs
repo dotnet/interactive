@@ -229,7 +229,7 @@ namespace Microsoft.DotNet.Interactive
             return  _registeredCommandTypes;
         }
 
-        private IEnumerable<Type> GetCommandFromInterfaceImplementation()
+        private IEnumerable<Type> GetSupportedCommandTypesFromInterfaceImplementation()
         {
             var interfaces = GetType().GetInterfaces();
             var types = interfaces.Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IKernelCommandHandler<>))
