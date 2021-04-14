@@ -429,25 +429,48 @@ Formatter.Register<DataFrame>((df, writer) =>
 #i ""nuget:https://completelyFakerestoreSource1""
 #i ""nuget:https://completelyFakerestoreSource2""
 ");
+            events.OfType<DisplayEvent>().Select(e => e.GetType()).Should().ContainInOrder(typeof(DisplayedValueProduced), typeof(DisplayedValueUpdated));
+        }
 
-            Assert.Collection(events,
-                                       e => e.Should().BeOfType<CodeSubmissionReceived>(),
-                                       e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-                                       e => e.Should().BeOfType<DisplayedValueProduced>()
-                                             .Which.Value.ToString().Contains("https://completelyFakerestoreSource1"),
-                                       e => e.Should().BeOfType<DisplayedValueUpdated>()
-                                             .Which.Value.ToString().Contains("https://completelyFakerestoreSource2"),
-                                       e => e.Should().BeOfType<CodeSubmissionReceived>(),
-                                       e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-                                       e => e.Should().BeOfType<CodeSubmissionReceived>(),
-                                       e => e.Should().BeOfType<CompleteCodeSubmissionReceived>(),
-                                       e => e.Should().BeOfType<CommandSucceeded>());
+
+        // For the restore sources formatted text, strip out the restore source lines and return them
+        private static System.Collections.Generic.IEnumerable<string> GetLines(string value)
+        {
+            var startToken = @"<li><span>";
+            var startLength = startToken.Length;
+            var endToken = @"</span></li>";
+            var endLength = endToken.Length;
+            var pos = 0;
+            while(pos <= value.Length)
+            {
+                var st = value.IndexOf(startToken, pos);
+                if (st >= 0)
+                {
+                    var p = st + startLength;
+                    var en = value.IndexOf(endToken, p);
+                    if (en >= 0)
+                    {
+                        yield return value.Substring(p, en - p);
+                        pos = en + 1;
+                    }
+                    else
+                    {
+                        yield return value.Substring(p);
+                        pos = value.Length + 1;
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
         }
 
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        public async Task Pound_i_nuget_displays_list_of_added_sources_with_multiple_commands_produces_2_DisplayValueProducedEvents (Language language)
+        public async Task Pound_i_nuget_displays_list_of_added_sources_with_multiple_commands_produces_DisplayValueProducedEventsText(Language language)
         {
             var kernel = CreateKernel(language);
 
@@ -458,35 +481,59 @@ Formatter.Register<DataFrame>((df, writer) =>
 #i ""nuget:https://completelyFakerestoreSourceCommand1.2""
 ");
 
-            var displayValueProducedEvents = KernelEvents.Where(e => e is DisplayedValueProduced);
-            Assert.True(displayValueProducedEvents.Count() == 1);
+            await kernel.SubmitCodeAsync(@"
+#i ""nuget:https://completelyFakerestoreSourceCommand2.1""
+#i ""nuget:https://completelyFakerestoreSourceCommand2.2""
+");
 
-            var displayValueUpdatedEvents = KernelEvents.Where(e => e is DisplayedValueUpdated);
-            Assert.True(displayValueProducedEvents.Count() == 1);
+            var expectedList = new[]
+            {
+                "https://completelyFakerestoreSourceCommand1.1",
+                "https://completelyFakerestoreSourceCommand1.2",
+                "https://completelyFakerestoreSourceCommand2.1"
+            };
+
+            // For the DisplayValueProduced Events events strip out the restore sources
+            // Verify that they match the expected values
+            events.OfType<DisplayedValueProduced>()
+                    .SelectMany(e => GetLines(e.FormattedValues.First().Value.ToString()))
+                    .Should().ContainInOrder(expectedList);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_i_nuget_displays_list_of_added_sources_with_multiple_commands_produces_DisplayValueUpdatedEventsText(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            using var events = kernel.KernelEvents.ToSubscribedList();
+
+            await kernel.SubmitCodeAsync(@"
+#i ""nuget:https://completelyFakerestoreSourceCommand1.1""
+#i ""nuget:https://completelyFakerestoreSourceCommand1.2""
+");
 
             await kernel.SubmitCodeAsync(@"
 #i ""nuget:https://completelyFakerestoreSourceCommand2.1""
 #i ""nuget:https://completelyFakerestoreSourceCommand2.2""
 ");
 
-            // Only produces a single DisplayedValueProduced event
-            displayValueProducedEvents = KernelEvents.Where(e => e is DisplayedValueProduced);
-            Assert.True(displayValueProducedEvents.Count() == 2);
+            var expectedList = new[]
+            {
+                "https://completelyFakerestoreSourceCommand1.1",
+                "https://completelyFakerestoreSourceCommand1.2",
+                "https://completelyFakerestoreSourceCommand1.1",
+                "https://completelyFakerestoreSourceCommand1.2",
+                "https://completelyFakerestoreSourceCommand2.1",
+                "https://completelyFakerestoreSourceCommand2.2"
+            };
 
-            displayValueUpdatedEvents = KernelEvents.Where(e => e is DisplayedValueUpdated);
-            Assert.True(displayValueProducedEvents.Count() == 2);
-
-            Assert.Collection(displayValueProducedEvents,
-                                       e => e.Should().BeOfType<DisplayedValueProduced>()
-                                             .Which.Value.ToString().Contains("https://completelyFakerestoreSource1.1"),
-                                       e => e.Should().BeOfType<DisplayedValueProduced>()
-                                             .Which.Value.ToString().Contains("https://completelyFakerestoreSource2.1"));
-
-            Assert.Collection(displayValueUpdatedEvents,
-                                       e => e.Should().BeOfType<DisplayedValueUpdated>()
-                                             .Which.Value.ToString().Contains("https://completelyFakerestoreSource1.2"),
-                                       e => e.Should().BeOfType<DisplayedValueUpdated>()
-                                             .Which.Value.ToString().Contains("https://completelyFakerestoreSource2.2"));
+            // For the DisplayedValueUpdated events strip out the restore sources
+            // Verify that they match the expected values
+            events.OfType<DisplayedValueUpdated>()
+                    .SelectMany(e => GetLines(e.FormattedValues.First().Value.ToString()))
+                    .Should().ContainInOrder(expectedList);
         }
 
         [Theory]
