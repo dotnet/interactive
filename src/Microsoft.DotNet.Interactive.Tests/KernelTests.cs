@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
@@ -238,6 +237,20 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .AdditionalProperty
                 .Should()
                 .Be(originalCommand.AdditionalProperty);
+        }
+
+        [Fact]
+        public void Return_the_list_of_supported_commands()
+        {
+            using var kernel = new FakeKernel();
+            kernel.RegisterCommandType<CustomCommandTypes.FirstSubmission.MyCommand>();
+            kernel.RegisterCommandType<CustomCommandTypes.SecondSubmission.MyCommand>();
+
+            var supportedCommands = kernel.SupportedCommands();
+
+            supportedCommands.Should().ContainInOrder(typeof(SubmitCode),
+                typeof(CustomCommandTypes.FirstSubmission.MyCommand),
+                typeof(CustomCommandTypes.SecondSubmission.MyCommand));
         }
     }
 }
