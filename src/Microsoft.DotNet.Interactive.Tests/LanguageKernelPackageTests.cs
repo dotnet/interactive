@@ -470,7 +470,7 @@ Formatter.Register<DataFrame>((df, writer) =>
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        public async Task Pound_i_nuget_displays_list_of_added_sources_with_multiple_commands_produces_DisplayValueProducedEventsText(Language language)
+        public async Task Pound_i_nuget_with_multi_submissions_combines_the_DisplayValueProduced_Text(Language language)
         {
             var kernel = CreateKernel(language);
 
@@ -503,7 +503,7 @@ Formatter.Register<DataFrame>((df, writer) =>
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        public async Task Pound_i_nuget_displays_list_of_added_sources_with_multiple_commands_produces_DisplayValueUpdatedEventsText(Language language)
+        public async Task Pound_i_nuget_with_multi_submissions_combines_the_DisplayValueUpdated_Text(Language language)
         {
             var kernel = CreateKernel(language);
 
