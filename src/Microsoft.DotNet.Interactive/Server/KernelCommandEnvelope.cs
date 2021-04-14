@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.Interactive.Server
         internal static IKernelCommandEnvelope Deserialize(JsonElement json)
         {
             var commandTypeJson = string.Empty;
-            var commandJson = string.Empty;
+            string commandJson;
             var token = string.Empty;
             
             if (json.TryGetProperty("commandType", out var commandTypeProperty))
