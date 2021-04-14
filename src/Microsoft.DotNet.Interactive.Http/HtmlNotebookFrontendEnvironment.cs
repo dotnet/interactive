@@ -18,8 +18,7 @@ namespace Microsoft.DotNet.Interactive.Http
         private readonly TimeSpan _getApiUriTimeout;
         private readonly TaskCompletionSource<Uri> _completionSource;
         private Dictionary<string, (KernelInvocationContext Context, TaskCompletionSource CompletionSource)> _tokenToInvocationContext;
-        private KernelClientBase _client = null;
-
+       
         public HtmlNotebookFrontendEnvironment(TimeSpan? apiUriTimeout = null)
         {
             RequiresAutomaticBootstrapping = true;
@@ -40,10 +39,6 @@ namespace Microsoft.DotNet.Interactive.Http
             _completionSource.TrySetResult(apiUri);
         }
 
-        public void SetKernelClient(KernelClientBase kernelClient)
-        {
-            _client = kernelClient ?? throw new ArgumentNullException(nameof(kernelClient));
-        }
 
         public Task<Uri> GetApiUriAsync()
         {
@@ -118,9 +113,5 @@ await Object.getPrototypeOf(async function() {{}}).constructor(
             _tokenToInvocationContext.Remove(token);
         }
 
-        public override Task ForwardCommand(KernelCommand command, KernelInvocationContext context)
-        {
-            return _client.SendAsync(command);
-        }
     }
 }

@@ -395,7 +395,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             {
                                 ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping =
                                     false;
-                                ((HtmlNotebookFrontendEnvironment)frontendEnvironment).SetKernelClient(clientSideKernelClient);
+
+                                (kernel.FindKernel(JavaScriptKernel.DefaultKernelName) as JavaScriptKernel)?.SetKernelClient(clientSideKernelClient);
                             }
 
                             kernelServer.Start();

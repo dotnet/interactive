@@ -26,6 +26,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly Subject<KernelEvent> _kernelEvents = new();
         private readonly CompositeDisposable _disposables;
         private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
+        private readonly HashSet<Type> _registeredCommandTypes = new();
         private IKernelScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler;
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
@@ -204,11 +205,14 @@ namespace Microsoft.DotNet.Interactive
         }
 
         public void RegisterCommandType<TCommand>()
-            where TCommand : KernelCommand =>
-            KernelCommandEnvelope.RegisterCommandTypeReplacingIfNecessary<TCommand>();
-
-        public bool CommandTypeIsRegistered(Type commandType) =>
-            KernelCommandEnvelope.IsCommandTypeRegistered(commandType);
+            where TCommand : KernelCommand
+        {
+            if (_registeredCommandTypes.Add(typeof(TCommand)))
+            {
+                KernelCommandEnvelope.RegisterCommandTypeReplacingIfNecessary<TCommand>();
+            }
+        }
+        protected bool IsCommandTypeRegistered(Type commandType) => _registeredCommandTypes.Contains(commandType);
 
         internal virtual async Task HandleAsync(
             KernelCommand command,
