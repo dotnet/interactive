@@ -31,16 +31,14 @@ namespace Microsoft.DotNet.Interactive
             _client = kernelClient ?? throw new ArgumentNullException(nameof(kernelClient));
         }
 
-        internal override async Task HandleAsync(KernelCommand command, KernelInvocationContext context)
+        protected override Func<TCommand, KernelInvocationContext, Task> CreateDefaultHandlerForCommandType<TCommand>()
         {
-            TrySetHandler(command, context);
+            return (kernelCommand, _) => ForwardCommand(kernelCommand);
+        }
 
-            if (_client is not null && IsCommandTypeRegistered(command.GetType()) && command.Handler is null)
-            {
-                command.Handler = (kernelCommand, _) => _client.SendAsync(kernelCommand); 
-            }
-
-            await command.InvokeAsync(context);
+        private Task ForwardCommand(KernelCommand command)
+        {
+            return _client.SendAsync(command);
         }
     }
 }
