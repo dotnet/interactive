@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using Xunit;
@@ -305,7 +306,21 @@ string";
                           $"{PlainTextBegin}{instance.HtmlEncode()}{PlainTextEnd}");
             }
 
+            [Fact]
+            public void It_does_not_affect_BigInteger()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(BigInteger));
 
+                var writer = new StringWriter();
+
+                var instance = BigInteger.Parse("78923589327589332402359");
+
+                formatter.Format(instance, writer);
+
+                writer.ToString()
+                    .Should()
+                    .Be("<div class=\"dni-plaintext\">78923589327589332402359</div>");
+            }
         }
         public class Sequences : FormatterTestBase
         {

@@ -155,6 +155,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     return formatter.Format(context, value, writer);
                 }),
 
+                // BigInteger should be displayed as plain text
+                new HtmlFormatter<System.Numerics.BigInteger>((context, value, writer) =>
+                {
+                    HtmlFormatter.FormatStringAsPlainText(value.ToString(), writer);
+                    return true;
+                }),
+
                 // Try to display object results as tables. This will return false for nested tables.
                 new HtmlFormatter<object>((context, value, writer) =>
                 {
