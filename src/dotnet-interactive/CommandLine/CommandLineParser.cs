@@ -241,7 +241,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context, CancellationToken cancellationToken)
                 {
                     var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
-                    var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
+                    var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, null);
                     services.AddKernel(kernel);
 
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
@@ -302,7 +302,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     (startupOptions, options, console, context) =>
                     {
                         var frontendEnvironment = new BrowserFrontendEnvironment();
-                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
+                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, null);
                         services.AddKernel(kernel);
 
                         onServerStarted ??= () =>
@@ -380,7 +380,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                         var clientSideKernelClient = startupOptions.EnableHttpApi  ? new SignalRBackchannelKernelClient(): null;
 
-                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
+                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, clientSideKernelClient);
                         services.AddKernel(kernel);
 
                         kernel.UseQuitCommand();
@@ -397,8 +397,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                 ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping =
                                     false;
                             }
-
-                            (kernel.FindKernel(JavaScriptKernel.DefaultKernelName) as JavaScriptKernel)?.SetKernelClient(clientSideKernelClient);
 
                             kernelServer.Start();
                             onServerStarted ??= () =>
@@ -456,7 +454,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         private static CompositeKernel CreateKernel(
             string defaultKernelName,
             FrontendEnvironment frontendEnvironment,
-            StartupOptions startupOptions)
+            StartupOptions startupOptions,
+            KernelClientBase kernelClient)
         {
             using var _ = Log.OnEnterAndExit("Creating Kernels");
 
@@ -496,7 +495,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 new[] { "powershell" });
 
             compositeKernel.Add(
-                new JavaScriptKernel(),
+                new JavaScriptKernel(kernelClient),
                 new[] { "js" });
 
             compositeKernel.Add(

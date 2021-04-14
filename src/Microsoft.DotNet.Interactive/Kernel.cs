@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Interactive
 
             Pipeline = new KernelCommandPipeline(this);
             
-            _registeredCommandTypes = new HashSet<Type>(GetCommandFromInterfaceImplementation());
+            _registeredCommandTypes = new HashSet<Type>(GetSupportedCommandTypesFromInterfaceImplementation());
 
             _disposables.Add(Disposable.Create(
                 () => _kernelEvents.OnCompleted()
