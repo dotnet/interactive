@@ -210,11 +210,9 @@ namespace Microsoft.DotNet.Interactive
             if (_registeredCommandTypes.Add(typeof(TCommand)))
             {
                 KernelCommandEnvelope.RegisterCommandTypeReplacingIfNecessary<TCommand>();
-                var defaultHandler = CreateDefaultHandlerForCommandType<TCommand>();
-                if (defaultHandler is not null)
-                {
-                    _dynamicHandlers[typeof(TCommand)] = (command, context) => defaultHandler((TCommand)command, context);
-                }
+                var defaultHandler = CreateDefaultHandlerForCommandType<TCommand>() ?? throw new InvalidOperationException("CreateDefaultHandlerForCommandType should not return null");
+                
+                _dynamicHandlers[typeof(TCommand)] = (command, context) => defaultHandler((TCommand)command, context);
             }
         }
 
