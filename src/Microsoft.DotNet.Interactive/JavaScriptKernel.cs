@@ -12,11 +12,12 @@ namespace Microsoft.DotNet.Interactive
         Kernel,
         IKernelCommandHandler<SubmitCode>
     {
-        private KernelClientBase _client;
+        private readonly KernelClientBase _client;
         public const string DefaultKernelName = "javascript";
 
-        public JavaScriptKernel() : base(DefaultKernelName)
+        public JavaScriptKernel(KernelClientBase client = null) : base(DefaultKernelName)
         {
+            _client = client;
         }
 
         public Task HandleAsync(
@@ -26,11 +27,6 @@ namespace Microsoft.DotNet.Interactive
             return FrontendEnvironment.ExecuteClientScript(command.Code, context);
         }
 
-        public void SetKernelClient(KernelClientBase kernelClient)
-        {
-            _client = kernelClient ?? throw new ArgumentNullException(nameof(kernelClient));
-        }
-
         protected override Func<TCommand, KernelInvocationContext, Task> CreateDefaultHandlerForCommandType<TCommand>()
         {
             return (kernelCommand, _) => ForwardCommand(kernelCommand);
@@ -38,7 +34,7 @@ namespace Microsoft.DotNet.Interactive
 
         private Task ForwardCommand(KernelCommand command)
         {
-            return _client.SendAsync(command);
+            return _client?.SendAsync(command) ?? Task.CompletedTask;
         }
     }
 }

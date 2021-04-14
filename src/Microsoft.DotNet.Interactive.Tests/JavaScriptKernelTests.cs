@@ -55,10 +55,9 @@ namespace Microsoft.DotNet.Interactive.Tests
             var client = new TestClient();
             using var kernel = new CompositeKernel
             {
-                new JavaScriptKernel()
+                new JavaScriptKernel(client)
             };
-
-            ((JavaScriptKernel) kernel.FindKernel(JavaScriptKernel.DefaultKernelName)).SetKernelClient(client);
+            
             kernel.FindKernel(JavaScriptKernel.DefaultKernelName).RegisterCommandType<CustomCommand>();
 
             using var events = kernel.KernelEvents.ToSubscribedList();
