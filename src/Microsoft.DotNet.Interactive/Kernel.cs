@@ -9,6 +9,7 @@ using System.CommandLine.Parsing;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,7 +27,7 @@ namespace Microsoft.DotNet.Interactive
         private readonly Subject<KernelEvent> _kernelEvents = new();
         private readonly CompositeDisposable _disposables;
         private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
-        private readonly HashSet<Type> _registeredCommandTypes = new();
+        private readonly HashSet<Type> _registeredCommandTypes;
         private IKernelScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler;
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
@@ -51,6 +52,8 @@ namespace Microsoft.DotNet.Interactive
             _disposables = new CompositeDisposable();
 
             Pipeline = new KernelCommandPipeline(this);
+            
+            _registeredCommandTypes = new HashSet<Type>(GetCommandFromInterfaceImplementation());
 
             _disposables.Add(Disposable.Create(
                 () => _kernelEvents.OnCompleted()
@@ -221,7 +224,18 @@ namespace Microsoft.DotNet.Interactive
             return (_,_) => Task.CompletedTask;
         }
 
-        protected bool IsCommandTypeRegistered(Type commandType) => _registeredCommandTypes.Contains(commandType);
+        public virtual IEnumerable<Type> SupportedCommands()
+        {
+            return  _registeredCommandTypes;
+        }
+
+        private IEnumerable<Type> GetCommandFromInterfaceImplementation()
+        {
+            var interfaces = GetType().GetInterfaces();
+            var types = interfaces.Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IKernelCommandHandler<>))
+                .SelectMany(i => i.GenericTypeArguments);
+            return types;
+        }
 
         internal virtual async Task HandleAsync(
             KernelCommand command,
