@@ -40,16 +40,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         KernelCommand IKernelCommandEnvelope.Command => _command;
 
-        public static void RegisterCommandType<T>(string commandTypeName) where T : KernelCommand
-        {
-            var commandEnvelopeType = typeof(KernelCommandEnvelope<T>);
-            var commandType = typeof(T);
-
-            _envelopeTypesByCommandTypeName.TryAdd(commandTypeName, commandEnvelopeType);
-            _commandTypesByCommandTypeName.TryAdd(commandTypeName, commandType);
-        }
-
-        internal static void RegisterCommandTypeReplacingIfNecessary<T>() where T : KernelCommand
+        internal static void RegisterCommandTypeForSerialization<T>() where T : KernelCommand
         {
             var commandEnvelopeType = typeof(KernelCommandEnvelope<T>);
             var commandType = typeof(T);

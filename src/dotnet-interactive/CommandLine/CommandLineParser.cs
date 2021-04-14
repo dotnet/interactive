@@ -377,7 +377,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi 
                             ? new HtmlNotebookFrontendEnvironment() 
                             : new BrowserFrontendEnvironment();
-                        
+
+                        var clientSideKernelClient = startupOptions.EnableHttpApi  ? new SignalRBackchannelKernelClient(): null;
+
                         var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
                         services.AddKernel(kernel);
 
@@ -387,7 +389,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                         if (startupOptions.EnableHttpApi)
                         {
-                            var clientSideKernelClient = new SignalRBackchannelKernelClient();
                             services.AddSingleton(clientSideKernelClient);
                             kernel.UseKernelClientConnection(new ConnectClientKernel(clientSideKernelClient));
 
@@ -395,9 +396,9 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                             {
                                 ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping =
                                     false;
-
-                                (kernel.FindKernel(JavaScriptKernel.DefaultKernelName) as JavaScriptKernel)?.SetKernelClient(clientSideKernelClient);
                             }
+
+                            (kernel.FindKernel(JavaScriptKernel.DefaultKernelName) as JavaScriptKernel)?.SetKernelClient(clientSideKernelClient);
 
                             kernelServer.Start();
                             onServerStarted ??= () =>
