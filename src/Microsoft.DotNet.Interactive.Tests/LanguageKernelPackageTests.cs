@@ -432,58 +432,20 @@ Formatter.Register<DataFrame>((df, writer) =>
             events.OfType<DisplayEvent>().Select(e => e.GetType()).Should().ContainInOrder(typeof(DisplayedValueProduced), typeof(DisplayedValueUpdated));
         }
 
-
-        // For the restore sources formatted text, strip out the restore source lines and return them
-        private static System.Collections.Generic.IEnumerable<string> GetLines(string value)
-        {
-            var startToken = @"<li><span>";
-            var startLength = startToken.Length;
-            var endToken = @"</span></li>";
-            var endLength = endToken.Length;
-            var pos = 0;
-            while(pos <= value.Length)
-            {
-                var st = value.IndexOf(startToken, pos);
-                if (st >= 0)
-                {
-                    var p = st + startLength;
-                    var en = value.IndexOf(endToken, p);
-                    if (en >= 0)
-                    {
-                        yield return value.Substring(p, en - p);
-                        pos = en + 1;
-                    }
-                    else
-                    {
-                        yield return value.Substring(p);
-                        pos = value.Length + 1;
-                        break;
-                    }
-                }
-                else
-                {
-                    break;
-                }
-            }
-        }
-
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        public async Task Pound_i_nuget_with_multi_submissions_combines_the_DisplayValueProduced_Text(Language language)
+        public async Task Pound_i_nuget_with_multi_submissions_combines_the_Text_Produced(Language language)
         {
             var kernel = CreateKernel(language);
-
-            using var events = kernel.KernelEvents.ToSubscribedList();
 
             await kernel.SubmitCodeAsync(@"
 #i ""nuget:https://completelyFakerestoreSourceCommand1.1""
 #i ""nuget:https://completelyFakerestoreSourceCommand1.2""
 ");
 
-            await kernel.SubmitCodeAsync(@"
+            var result = await kernel.SubmitCodeAsync(@"
 #i ""nuget:https://completelyFakerestoreSourceCommand2.1""
-#i ""nuget:https://completelyFakerestoreSourceCommand2.2""
 ");
 
             var expectedList = new[]
@@ -493,28 +455,33 @@ Formatter.Register<DataFrame>((df, writer) =>
                 "https://completelyFakerestoreSourceCommand2.1"
             };
 
-            // For the DisplayValueProduced Events events strip out the restore sources
+            using var events = result.KernelEvents.ToSubscribedList();
+
+            // For the DisplayedValueUpdated events strip out the restore sources
             // Verify that they match the expected values
-            events.OfType<DisplayedValueProduced>()
-                    .SelectMany(e => GetLines(e.FormattedValues.First().Value.ToString()))
-                    .Should().ContainInOrder(expectedList);
+            events.Should()
+                  .ContainSingle<DisplayedValueProduced>()
+                  .Which.FormattedValues
+                  .Should()
+                  .ContainSingle(e => e.MimeType == HtmlFormatter.MimeType)
+                  .Which.Value
+                  .Should()
+                  .ContainAll(expectedList);
         }
 
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        public async Task Pound_i_nuget_with_multi_submissions_combines_the_DisplayValueUpdated_Text(Language language)
+        public async Task Pound_i_nuget_with_multi_submissions_combines_the_Text_Updates(Language language)
         {
             var kernel = CreateKernel(language);
-
-            using var events = kernel.KernelEvents.ToSubscribedList();
 
             await kernel.SubmitCodeAsync(@"
 #i ""nuget:https://completelyFakerestoreSourceCommand1.1""
 #i ""nuget:https://completelyFakerestoreSourceCommand1.2""
 ");
 
-            await kernel.SubmitCodeAsync(@"
+            var result = await kernel.SubmitCodeAsync(@"
 #i ""nuget:https://completelyFakerestoreSourceCommand2.1""
 #i ""nuget:https://completelyFakerestoreSourceCommand2.2""
 ");
@@ -523,17 +490,21 @@ Formatter.Register<DataFrame>((df, writer) =>
             {
                 "https://completelyFakerestoreSourceCommand1.1",
                 "https://completelyFakerestoreSourceCommand1.2",
-                "https://completelyFakerestoreSourceCommand1.1",
-                "https://completelyFakerestoreSourceCommand1.2",
                 "https://completelyFakerestoreSourceCommand2.1",
                 "https://completelyFakerestoreSourceCommand2.2"
             };
 
+            using var events = result.KernelEvents.ToSubscribedList();
+
             // For the DisplayedValueUpdated events strip out the restore sources
             // Verify that they match the expected values
             events.OfType<DisplayedValueUpdated>()
-                    .SelectMany(e => GetLines(e.FormattedValues.First().Value.ToString()))
-                    .Should().ContainInOrder(expectedList);
+                  .Last().FormattedValues
+                  .Should()
+                  .ContainSingle(e => e.MimeType == HtmlFormatter.MimeType)
+                  .Which.Value
+                  .Should()
+                  .ContainAll(expectedList);
         }
 
         [Theory]
