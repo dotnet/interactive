@@ -220,7 +220,7 @@ namespace Microsoft.DotNet.Interactive
 
         protected virtual Func<TCommand, KernelInvocationContext, Task> CreateDefaultHandlerForCommandType<TCommand>() where TCommand : KernelCommand
         {
-            return null;
+            return (_,_) => Task.CompletedTask;
         }
 
         protected bool IsCommandTypeRegistered(Type commandType) => _registeredCommandTypes.Contains(commandType);
