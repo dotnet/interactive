@@ -40,6 +40,7 @@
     "PowerShell"
   ],
   "activationEvents": [
+    "onUri",
     "onNotebook:dotnet-interactive",
     "onNotebook:dotnet-interactive-jupyter",
     "onNotebook:*",
@@ -112,7 +113,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.221403",
+          "default": "1.0.221503",
           "description": "The minimum required version of the .NET Interactive tool."
         },
         "dotnet-interactive.useDotNetInteractiveExtensionForIpynbFiles": {
