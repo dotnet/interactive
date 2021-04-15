@@ -320,22 +320,6 @@ string";
                     .Should()
                     .Be($"{PlainTextBegin}78923589327589332402359{PlainTextEnd}");
             }
-
-            [Fact]
-            public void PlainTextFormatter_returns_plain_for_BigInteger()
-            {
-                var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(BigInteger));
-
-                var writer = new StringWriter();
-
-                var instance = BigInteger.Parse("78923589327589332402359");
-
-                formatter.Format(instance, writer);
-
-                writer.ToString()
-                    .Should()
-                    .Be("78923589327589332402359");
-            }
         }
 
         public class Sequences : FormatterTestBase
