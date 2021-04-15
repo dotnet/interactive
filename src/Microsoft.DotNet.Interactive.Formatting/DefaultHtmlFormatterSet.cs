@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
+using System.Numerics;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -156,9 +157,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }),
 
                 // BigInteger should be displayed as plain text
-                new HtmlFormatter<System.Numerics.BigInteger>((context, value, writer) =>
+                new HtmlFormatter<BigInteger>((context, value, writer) =>
                 {
-                    HtmlFormatter.FormatStringAsPlainText(value.ToString(), writer);
+                    value.FormatTo(writer, PlainTextFormatter.MimeType);
                     return true;
                 }),
 

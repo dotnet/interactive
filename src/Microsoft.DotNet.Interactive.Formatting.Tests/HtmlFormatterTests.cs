@@ -15,11 +15,10 @@ using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
-    public class Tags
+    public static class Tags
     {
         public const string PlainTextBegin = "<div class=\"dni-plaintext\">";
         public const string PlainTextEnd = "</div>";
-
     }
     public class HtmlFormatterTests : FormatterTestBase
     {
@@ -307,7 +306,7 @@ string";
             }
 
             [Fact]
-            public void It_does_not_affect_BigInteger()
+            public void HtmlFormatter_returns_plain_for_BigInteger()
             {
                 var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(BigInteger));
 
@@ -319,9 +318,26 @@ string";
 
                 writer.ToString()
                     .Should()
-                    .Be("<div class=\"dni-plaintext\">78923589327589332402359</div>");
+                    .Be($"{PlainTextBegin}78923589327589332402359{PlainTextEnd}");
+            }
+
+            [Fact]
+            public void PlainTextFormatter_returns_plain_for_BigInteger()
+            {
+                var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(BigInteger));
+
+                var writer = new StringWriter();
+
+                var instance = BigInteger.Parse("78923589327589332402359");
+
+                formatter.Format(instance, writer);
+
+                writer.ToString()
+                    .Should()
+                    .Be($"{PlainTextBegin}78923589327589332402359{PlainTextEnd}");
             }
         }
+
         public class Sequences : FormatterTestBase
         {
             [Fact]
