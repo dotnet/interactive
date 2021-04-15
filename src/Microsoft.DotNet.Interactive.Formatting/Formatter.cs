@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public static void SetPreferredMimeTypeFor(Type type, string preferredMimeType)
         {
-            if (type == null)
+            if (type is null)
             {
                 throw new ArgumentNullException(nameof(type));
             }
@@ -222,7 +222,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             this object obj,
             string mimeType = PlainTextFormatter.MimeType)
         {
-            if (mimeType == null)
+            if (mimeType is null)
             {
                 throw new ArgumentNullException(nameof(mimeType));
             }
@@ -237,7 +237,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             this object obj,
             ITypeFormatter formatter)
         {
-            if (formatter == null)
+            if (formatter is null)
             {
                 throw new ArgumentNullException(nameof(formatter));
             }
@@ -263,7 +263,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             TextWriter writer,
             string mimeType = PlainTextFormatter.MimeType)
         {
-            if (obj != null)
+            if (obj is not null)
             {
                 var actualType = obj.GetType();
 
@@ -324,7 +324,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             TextWriter writer,
             int? listExpansionLimit = null)
         {
-            if (list == null)
+            if (list is null)
             {
                 writer.Write(NullString);
                 return;
@@ -383,7 +383,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </summary>
         public static void Register(ITypeFormatter formatter)
         {
-            if (formatter == null)
+            if (formatter is null)
             {
                 throw new ArgumentNullException(nameof(formatter));
             }

@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 while (!_complete)
                 {
                     var line = await ReadLineAsync();
-                    if (line == null)
+                    if (line is null)
                     {
                         await Task.Delay(100, _cancellationSource.Token);
                     }

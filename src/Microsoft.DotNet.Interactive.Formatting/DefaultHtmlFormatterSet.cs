@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     
                     // This is approximate
                     var isKnownDocType =
-                      type.Namespace != null &&
+                      type.Namespace is not null &&
                       (type.Namespace == "System" ||
                        type.Namespace.StartsWith("System.") ||
                        type.Namespace.StartsWith("Microsoft."));

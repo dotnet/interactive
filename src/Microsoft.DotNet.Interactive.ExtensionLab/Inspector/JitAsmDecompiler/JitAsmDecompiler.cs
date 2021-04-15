@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
 
         private bool TryDisassembleAndWriteMembersOfGeneric(JitWriteContext context, TypeInfo type, ImmutableArray<Type>? parentArgumentTypes = null)
         {
-            if (parentArgumentTypes != null)
+            if (parentArgumentTypes is not null)
             {
                 var genericInstance = type.MakeGenericType(parentArgumentTypes.Value.ToArray());
                 DisassembleAndWriteMembers(context, genericInstance.GetTypeInfo(), parentArgumentTypes);
@@ -182,14 +182,14 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
             var clrMethod = context.Runtime.GetMethodByHandle((ulong)handle.Value.ToInt64());
             var regions = FindNonEmptyHotColdInfo(clrMethod);
 
-            if (clrMethod == null || regions == null)
+            if (clrMethod is null || regions is null)
             {
                 context.Runtime.Flush();
                 clrMethod = context.Runtime.GetMethodByHandle((ulong)handle.Value.ToInt64());
                 regions = FindNonEmptyHotColdInfo(clrMethod);
             }
 
-            if (clrMethod == null || regions == null)
+            if (clrMethod is null || regions is null)
             {
                 var address = (ulong)handle.GetFunctionPointer().ToInt64();
                 clrMethod = context.Runtime.GetMethodByAddress(address);
@@ -197,7 +197,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
             }
 
             var writer = context.Writer;
-            if (clrMethod != null)
+            if (clrMethod is not null)
             {
                 writer.WriteLine();
                 writer.WriteLine(clrMethod.GetFullSignature());
@@ -207,7 +207,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
                 WriteSignatureFromReflection(context, method);
             }
 
-            if (regions == null)
+            if (regions is null)
             {
                 if (method.IsGenericMethod || (method.DeclaringType?.IsGenericType ?? false))
                 {
@@ -264,7 +264,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
 
         private HotColdRegions FindNonEmptyHotColdInfo(ClrMethod method)
         {
-            if (method == null)
+            if (method is null)
                 return null;
 
             // I can't really explain this, but it seems that some methods
@@ -273,7 +273,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
             if (method.HotColdInfo.HotSize > 0)
                 return method.HotColdInfo;
 
-            if (method.Type == null)
+            if (method.Type is null)
                 return null;
 
             var methodSignature = method.GetFullSignature();

@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 
         public MsSqlFact()
         {
-            if (_skipReason != null)
+            if (_skipReason is not null)
             {
                 Skip = _skipReason;
             }

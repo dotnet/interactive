@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             T subject;
 
-            if (where == null)
+            if (where is null)
             {
                 should.ContainSingle(e => e is T);
 
@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
         {
             T subject;
 
-            if (where == null)
+            if (where is null)
             {
                 should.ContainSingle(e => e is T);
 

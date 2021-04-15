@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="nested"> A nested instance. </param>
         public PocketView(PocketView nested = null)
         {
-            if (nested != null)
+            if (nested is not null)
             {
                 _transforms = nested._transforms;
             }
@@ -113,7 +113,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             InvokeBinder binder,
             object[] args)
         {
-            if (_transform != null)
+            if (_transform is not null)
             {
                 var content = ComposeContent(
                     binder?.CallInfo?.ArgumentNames,
@@ -235,7 +235,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </returns>
         public override string ToString()
         {
-            if (_tag == null)
+            if (_tag is null)
             {
                 return "";
             }
@@ -254,7 +254,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             get
             {
-                if (_tag == null)
+                if (_tag is null)
                 {
                     return "";
                 }
@@ -330,7 +330,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             var expando = new ExpandoObject();
 
-            if (argumentNames != null)
+            if (argumentNames is not null)
             {
                 expando
                     .MergeWith(

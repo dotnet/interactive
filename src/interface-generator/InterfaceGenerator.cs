@@ -127,7 +127,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
             }
 
             var baseType = type.EffectiveBaseType();
-            var extends = baseType == null
+            var extends = baseType is null
                 ? ""
                 : $"extends {GetTypeScriptTypeName(baseType)} ";
 
@@ -140,7 +140,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
             builder.AppendLine("}");
 
-            if (baseType != null)
+            if (baseType is not null)
             {
                 GenerateType(builder, baseType, emittedTypes, requiredTypes);
             }
@@ -159,7 +159,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
             void HandlePropertyType(Type propertyType)
             {
-                if (requiredTypes != null)
+                if (requiredTypes is not null)
                 {
                     requiredTypes.Add(propertyType);
                 }
@@ -256,7 +256,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
                 .Where(p =>
                 {
                     var jsonIgnore = p.GetCustomAttribute(typeof(JsonIgnoreAttribute)) as JsonIgnoreAttribute;
-                    return jsonIgnore == null || jsonIgnore.Condition != JsonIgnoreCondition.Always;
+                    return jsonIgnore is null || jsonIgnore.Condition != JsonIgnoreCondition.Always;
                 });
         }
     }

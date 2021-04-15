@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive
 
         private void EnsureMiddlewarePipelineIsInitialized()
         {
-            if (_pipeline == null)
+            if (_pipeline is null)
             {
                 _pipeline = BuildPipeline();
             }

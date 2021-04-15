@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
         {
             var hmac = _signatureValidator.CreateSignature(message);
 
-            if (message.Identifiers != null)
+            if (message.Identifiers is not null)
             {
                 foreach (var ident in message.Identifiers)
                 {

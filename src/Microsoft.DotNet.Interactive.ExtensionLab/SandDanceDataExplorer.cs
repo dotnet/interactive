@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
             libraryVersion ??= "1.0.0";
             stringBuilder.AppendLine($@"
 let {functionName} = () => {{");
-            if (libraryUri != null)
+            if (libraryUri is not null)
             {
                 var libraryAbsoluteUri = libraryUri.AbsoluteUri.Replace(".js", string.Empty);
                 cacheBuster ??= libraryAbsoluteUri.GetHashCode().ToString("0");

@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         internal void Add(SyntaxNodeOrToken child)
         {
-            if (child.Parent != null)
+            if (child.Parent is not null)
             {
                 throw new InvalidOperationException($"{child.GetType().Name} {child} is already parented to {child.Parent}");
             }

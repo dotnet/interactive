@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive.Events
         public HoverTextProduced(RequestHoverText command, IReadOnlyCollection<FormattedValue> content, LinePositionSpan linePositionSpan = null)
             : base(command)
         {
-            if (content == null)
+            if (content is null)
             {
                 throw new ArgumentNullException(nameof(content));
             }

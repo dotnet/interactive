@@ -153,7 +153,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var service = QuickInfoService.GetService(document);
             var info = await service.GetQuickInfoAsync(document, cursorPosition, context.CancellationToken);
             
-            if (info == null)
+            if (info is null)
             {
                 return;
             }
@@ -283,13 +283,13 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 }
 
                 // Report the compilation failure or exception
-                if (exception != null)
+                if (exception is not null)
                 {
                     context.Fail(exception, message);
                 }
                 else
                 {
-                    if (ScriptState != null && HasReturnValue)
+                    if (ScriptState is not null && HasReturnValue)
                     {
                         var formattedValues = FormattedValue.FromObject(ScriptState.ReturnValue);
                         context.Publish(
@@ -320,7 +320,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                         _currentDirectory));
             }
 
-            if (ScriptState == null)
+            if (ScriptState is null)
             {
                 ScriptState = await CSharpScript.RunAsync(
                                                     code,
@@ -429,7 +429,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         public PackageRestoreContext PackageRestoreContext => _packageRestoreContext.Value;
 
         private bool HasReturnValue =>
-            ScriptState != null &&
+            ScriptState is not null &&
             (bool)_hasReturnValueMethod.Invoke(ScriptState.Script, null);
 
         void ISupportNuget.AddRestoreSource(string source) => _packageRestoreContext.Value.AddRestoreSource(source);

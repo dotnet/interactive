@@ -93,7 +93,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 
         private void ThrowIfNull(object obj)
         {
-            if (obj == null)
+            if (obj is null)
             {
                 throw new ArgumentNullException(nameof(obj));
             }
@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 
         private void ThrowIfForwarderSet()
         {
-            if (_writeLine != null)
+            if (_writeLine is not null)
             {
                 throw new InvalidOperationException("WriteLine forwarder set previously"); // TODO: Localize this?
             }
@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 
         private void ThrowIfCaptureSet()
         {
-            if (_capture != null)
+            if (_capture is not null)
             {
                 throw new InvalidOperationException("Already capturing stream!"); // TODO: Localize this?
             }

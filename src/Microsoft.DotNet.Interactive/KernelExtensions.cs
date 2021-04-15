@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Interactive
             this Kernel kernel,
             KernelCommand command)
         {
-            if (kernel == null)
+            if (kernel is null)
             {
                 throw new ArgumentNullException(nameof(kernel));
             }
@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.Interactive
             this Kernel kernel,
             string code)
         {
-            if (kernel == null)
+            if (kernel is null)
             {
                 throw new ArgumentNullException(nameof(kernel));
             }
@@ -331,12 +331,12 @@ namespace Microsoft.DotNet.Interactive
             Action<Kernel> onVisit,
             bool recursive = false)
         {
-            if (kernel == null)
+            if (kernel is null)
             {
                 throw new ArgumentNullException(nameof(kernel));
             }
 
-            if (onVisit == null)
+            if (onVisit is null)
             {
                 throw new ArgumentNullException(nameof(onVisit));
             }
@@ -370,12 +370,12 @@ namespace Microsoft.DotNet.Interactive
             Func<Kernel, Task> onVisit,
             bool recursive = false)
         {
-            if (kernel == null)
+            if (kernel is null)
             {
                 throw new ArgumentNullException(nameof(kernel));
             }
 
-            if (onVisit == null)
+            if (onVisit is null)
             {
                 throw new ArgumentNullException(nameof(onVisit));
             }

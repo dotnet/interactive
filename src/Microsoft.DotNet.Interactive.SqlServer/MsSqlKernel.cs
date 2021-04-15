@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         {
             if (connParams.OwnerUri.Equals(_tempFileUri.AbsolutePath))
             {
-                if (connParams.ErrorMessage != null)
+                if (connParams.ErrorMessage is not null)
                 {
                     _connectionCompleted.SetException(new Exception(connParams.ErrorMessage));
                 }
@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         private void HandleQueryComplete(object sender, QueryCompleteParams queryParams)
         {
-            if (_queryCompletionHandler != null)
+            if (_queryCompletionHandler is not null)
             {
                 Task.Run(() => _queryCompletionHandler(queryParams)).Wait();
             }
@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         private void HandleQueryMessage(object sender, MessageParams messageParams)
         {
-            if (_queryMessageHandler != null)
+            if (_queryMessageHandler is not null)
             {
                 Task.Run(() => _queryMessageHandler(messageParams)).Wait();
             }
@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             // If a query handler is already defined, then it means another query is already running in parallel.
             // We only want to run one query at a time, so we display an error here instead.
-            if (_queryCompletionHandler != null)
+            if (_queryCompletionHandler is not null)
             {
                 context.Display("Error: Another query is currently running. Please wait for that query to complete before re-running this cell.");
                 return;

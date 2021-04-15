@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 
         public IEnumerable<ApplicationInsightsEntryFormat> Filter(object objectToFilter)
         {
-            if (objectToFilter == null)
+            if (objectToFilter is null)
             {
                 return new List<ApplicationInsightsEntryFormat>();
             }
@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
 
                 var entryItems = FilterCommand(mainCommandName, tokens, parseResult.CommandResult, parseResult.Directives);
 
-                if (entryItems != null)
+                if (entryItems is not null)
                 {
                     result.Add(CreateEntry(entryItems));
                 }
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
         private ImmutableArray<KeyValuePair<string, string>>? 
             FilterCommand(string commandName, IEnumerable<Token> tokens, CommandResult commandResult, IDirectiveCollection directives)
         {
-            if (commandName == null || tokens == null)
+            if (commandName is null || tokens is null)
             {
                 return null;
             }
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                 .Select(rule => rule.CommandName == commandName 
                     ? TryMatchRule(rule, tokens, commandResult, directives) 
                     : null)
-                .FirstOrDefault(x => x != null);
+                .FirstOrDefault(x => x is not null);
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                     case OptionItem optItem:
                         {
                             var optionValue = commandResult.Children.OfType<OptionResult>().FirstOrDefault(o => o.Option.HasAlias(optItem.Option))?.GetValueOrDefault()?.ToString();
-                            if (optionValue != null && optItem.Values.Contains(optionValue))
+                            if (optionValue is not null && optItem.Values.Contains(optionValue))
                             {
                                 entryItems.Add(new KeyValuePair<string, string>(optItem.EntryKey, optionValue));
                             }

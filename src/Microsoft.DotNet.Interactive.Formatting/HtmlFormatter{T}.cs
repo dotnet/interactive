@@ -110,7 +110,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             var dictionaryObjectType = typeof(T).GetAllInterfaces()
                                                 .FirstOrDefault(i => i == typeof(IDictionary));
             
-            if (dictionaryGenericType != null || dictionaryObjectType != null)
+            if (dictionaryGenericType is not null || dictionaryObjectType is not null)
             {
                 var dictType = (dictionaryGenericType ?? dictionaryObjectType);
                 var keysProperty = dictType.GetProperty("Keys");
@@ -153,7 +153,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     var destructured = destructurer.Destructure(value);
 
-                    if (value != null)
+                    if (value is not null)
                     {
                         var type = value.GetType();
                         if (!types.ContainsKey(type))
@@ -162,7 +162,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         typesAreDifferent = types.Count > 1;
                     }
 
-                    var typeIndex = (value == null) ? 0 : types[value.GetType()];
+                    var typeIndex = (value is null) ? 0 : types[value.GetType()];
 
                     var pairIndex = 0;
                     foreach(var pair in destructured)
@@ -181,7 +181,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 List<object> leftColumnValues;
 
-                if (getKeys != null)
+                if (getKeys is not null)
                 {
                     headers.Add(th(i("key")));
                     leftColumnValues = getKeys(source)

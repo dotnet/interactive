@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
 
         private static string GetCref(string cref)
         {
-            if (cref == null || cref.Trim().Length == 0)
+            if (cref is null || cref.Trim().Length == 0)
             {
                 return "";
             }

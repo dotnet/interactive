@@ -43,11 +43,11 @@ namespace Microsoft.DotNet.Interactive
         {
             var mimeTypes = new HashSet<string> ();
 
-            if (type != null)
+            if (type is not null)
             {
                 var preferredMimeType = Formatter.GetPreferredMimeTypeFor(type);
 
-                if (preferredMimeType == null)
+                if (preferredMimeType is null)
                 {
                     if (type?.IsPrimitive == true)
                     {

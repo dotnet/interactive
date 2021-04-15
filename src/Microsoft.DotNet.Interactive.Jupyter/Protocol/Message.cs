@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
             foreach (var messageImplementation in messageImplementations)
             {
                 var messageType = messageImplementation.GetCustomAttribute<JupyterMessageTypeAttribute>(true);
-                if (messageType != null)
+                if (messageType is not null)
                 {
                     messageTypeToClrType[messageType.Type] = messageImplementation;
                     clrTypeToMessageType[messageImplementation] = messageType.Type;
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 
         public static string GetMessageType(Message source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 
         public static string GetMessageType(Type type)
         {
-            if (type == null)
+            if (type is null)
             {
                 throw new ArgumentNullException(nameof(type));
             }

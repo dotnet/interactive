@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         /// </remarks>
         private static int IndexOfExtension(string path)
         {
-            if (path == null)
+            if (path is null)
             {
                 return -1;
             }
@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         /// </remarks>
         internal static string GetExtension(string path)
         {
-            if (path == null)
+            if (path is null)
             {
                 return null;
             }
@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         /// </remarks>
         private static string RemoveExtension(string path)
         {
-            if (path == null)
+            if (path is null)
             {
                 return null;
             }
@@ -129,13 +129,13 @@ namespace Microsoft.DotNet.Interactive.Utility
         /// </returns>
         internal static string ChangeExtension(string path, string extension)
         {
-            if (path == null)
+            if (path is null)
             {
                 return null;
             }
  
             var pathWithoutExtension = RemoveExtension(path);
-            if (extension == null || path.Length == 0)
+            if (extension is null || path.Length == 0)
             {
                 return pathWithoutExtension;
             }
@@ -154,7 +154,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         /// <returns>-1 if path is null.</returns>
         internal static int IndexOfFileName(string path)
         {
-            if (path == null)
+            if (path is null)
             {
                 return -1;
             }

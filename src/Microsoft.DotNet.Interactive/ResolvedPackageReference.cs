@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive
             ProbingPaths = probingPaths ?? Array.Empty<string>();
             PackageRoot = packageRoot;
             
-            if (PackageRoot == null && 
+            if (PackageRoot is null && 
                 AssemblyPaths.FirstOrDefault() is {} path)
             {
                 PackageRoot = new FileInfo(path).Directory?.Parent?.Parent?.FullName;

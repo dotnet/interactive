@@ -32,22 +32,22 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests.Utility
                     }
             };
 
-            if (output != null)
+            if (output is not null)
             {
                 process.OutputDataReceived += (sender, eventArgs) =>
                 {
-                    if (eventArgs.Data != null)
+                    if (eventArgs.Data is not null)
                     {
                         output(eventArgs.Data);
                     }
                 };
             }
 
-            if (error != null)
+            if (error is not null)
             {
                 process.ErrorDataReceived += (sender, eventArgs) =>
                 {
-                    if (eventArgs.Data != null)
+                    if (eventArgs.Data is not null)
                     {
                         error(eventArgs.Data);
                     }

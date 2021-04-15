@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.App
         {
             var kernelDisplayName = GetKernelDisplayName(sourceDirectory);
 
-            if (destination != null)
+            if (destination is not null)
             {
                 return InstallKernelSpecToDirectory(sourceDirectory, destination, kernelDisplayName);
             }
@@ -100,12 +100,12 @@ namespace Microsoft.DotNet.Interactive.App
 
         private bool CopyKernelSpecFiles(DirectoryInfo source, DirectoryInfo destination)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (destination == null)
+            if (destination is null)
             {
                 throw new ArgumentNullException(nameof(destination));
             }

@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         public static ConnectionInformation Load(FileInfo file)
         {
-            if (file == null)
+            if (file is null)
             {
                 throw new ArgumentNullException(nameof(file));
             }

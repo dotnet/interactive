@@ -147,7 +147,7 @@ namespace Microsoft.DotNet.Interactive.Server
             {
                 token = tokenProperty.GetString();
             }
-            if (token != null)
+            if (token is not null)
             {
                 command.SetToken(token);
             }

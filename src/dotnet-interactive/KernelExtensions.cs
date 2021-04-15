@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.App
                 var assembly = typeof(KernelExtensions).Assembly;
                 using (var resourceStream = assembly.GetManifestResourceStream($"{typeof(KernelExtensions).Namespace}.resources.logo-456x456.png"))
                 {
-                    if (resourceStream != null)
+                    if (resourceStream is not null)
                     {
                         var png = new byte[resourceStream.Length];
                         resourceStream.Read(png, 0, png.Length);

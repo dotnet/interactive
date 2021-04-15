@@ -183,7 +183,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             solution = solution.AddProject(projectInfo);
 
-            if (projectReferenceProjectId != null)
+            if (projectReferenceProjectId is not null)
             {
                 solution = solution.AddProjectReference(
                     projectId,
@@ -211,7 +211,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 #if DEBUG
             debugName += $": {code}";
 #endif
-            if (projectId == null)
+            if (projectId is null)
             {
                 projectId = ProjectId.CreateNewId(debugName: debugName);
             }

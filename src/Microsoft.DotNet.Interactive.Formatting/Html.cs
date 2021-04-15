@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
     public static class Html
     {
         internal static IHtmlContent EnsureHtmlAttributeEncoded(this object source) =>
-            source == null
+            source is null
                 ? HtmlString.Empty
                 : source as IHtmlContent ?? source.ToString().HtmlAttributeEncode();
 

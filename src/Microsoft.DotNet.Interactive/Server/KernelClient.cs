@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.Server
                 _kernelEvents.OnNext(diagnosticEvent);
             }
 
-            if (kernelEventEnvelope != null)
+            if (kernelEventEnvelope is not null)
             {
                 _kernelEvents.OnNext(kernelEventEnvelope.Event);
             }

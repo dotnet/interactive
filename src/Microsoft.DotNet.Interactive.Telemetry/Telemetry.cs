@@ -95,7 +95,7 @@ The .NET Core tools collect usage data in order to help us improve your experien
 
         private bool PermissionExists(IFirstTimeUseNoticeSentinel sentinel)
         {
-            if (sentinel == null)
+            if (sentinel is null)
             {
                 return false;
             }
@@ -151,7 +151,7 @@ The .NET Core tools collect usage data in order to help us improve your experien
             IDictionary<string, string> properties,
             IDictionary<string, double> measurements)
         {
-            if (_client == null)
+            if (_client is null)
             {
                 return;
             }
@@ -173,7 +173,7 @@ The .NET Core tools collect usage data in order to help us improve your experien
         private Dictionary<string, double> GetEventMeasures(IDictionary<string, double> measurements)
         {
             Dictionary<string, double> eventMeasurements = new Dictionary<string, double>(_commonMeasurements);
-            if (measurements != null)
+            if (measurements is not null)
             {
                 foreach (KeyValuePair<string, double> measurement in measurements)
                 {
@@ -185,7 +185,7 @@ The .NET Core tools collect usage data in order to help us improve your experien
 
         private Dictionary<string, string> GetEventProperties(IDictionary<string, string> properties)
         {
-            if (properties != null)
+            if (properties is not null)
             {
                 var eventProperties = new Dictionary<string, string>(_commonProperties);
                 foreach (KeyValuePair<string, string> property in properties)

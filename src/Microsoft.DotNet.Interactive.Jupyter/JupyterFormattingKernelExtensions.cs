@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
     {
         public static CSharpKernel UseMathAndLaTeX(this CSharpKernel kernel)
         {
-            if (kernel == null)
+            if (kernel is null)
             {
                 throw new ArgumentNullException(nameof(kernel));
             }
@@ -29,7 +29,7 @@ using {typeof(LaTeXString).Namespace};
 
         public static FSharpKernel UseMathAndLaTeX(this FSharpKernel kernel)
         {
-            if (kernel == null)
+            if (kernel is null)
             {
                 throw new ArgumentNullException(nameof(kernel));
             }
