@@ -159,7 +159,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 // BigInteger should be displayed as plain text
                 new HtmlFormatter<BigInteger>((context, value, writer) =>
                 {
-                    value.FormatTo(writer, PlainTextFormatter.MimeType);
+                    HtmlFormatter.FormatObjectAsPlainText(context, value, writer);
                     return true;
                 }),
 
