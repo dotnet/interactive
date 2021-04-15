@@ -425,18 +425,86 @@ Formatter.Register<DataFrame>((df, writer) =>
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync(@"#i ""nuget:https://completelyFakerestoreSource""");
+            await kernel.SubmitCodeAsync(@"
+#i ""nuget:https://completelyFakerestoreSource1""
+#i ""nuget:https://completelyFakerestoreSource2""
+");
+            events.OfType<DisplayEvent>().Select(e => e.GetType()).Should().ContainInOrder(typeof(DisplayedValueProduced), typeof(DisplayedValueUpdated));
+        }
 
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_i_nuget_with_multi_submissions_combines_the_Text_Produced(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            await kernel.SubmitCodeAsync(@"
+#i ""nuget:https://completelyFakerestoreSourceCommand1.1""
+#i ""nuget:https://completelyFakerestoreSourceCommand1.2""
+");
+
+            var result = await kernel.SubmitCodeAsync(@"
+#i ""nuget:https://completelyFakerestoreSourceCommand2.1""
+");
+
+            var expectedList = new[]
+            {
+                "https://completelyFakerestoreSourceCommand1.1",
+                "https://completelyFakerestoreSourceCommand1.2",
+                "https://completelyFakerestoreSourceCommand2.1"
+            };
+
+            using var events = result.KernelEvents.ToSubscribedList();
+
+            // For the DisplayedValueUpdated events strip out the restore sources
+            // Verify that they match the expected values
             events.Should()
-                  .ContainSingle<DisplayedValueUpdated>()
-                  .Which
-                  .FormattedValues
+                  .ContainSingle<DisplayedValueProduced>()
+                  .Which.FormattedValues
                   .Should()
-                  .ContainSingle(v => v.MimeType == "text/html")
-                  .Which
-                  .Value
+                  .ContainSingle(e => e.MimeType == HtmlFormatter.MimeType)
+                  .Which.Value
                   .Should()
-                  .ContainAll("Restore sources", "https://completelyFakerestoreSource");
+                  .ContainAll(expectedList);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_i_nuget_with_multi_submissions_combines_the_Text_Updates(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            await kernel.SubmitCodeAsync(@"
+#i ""nuget:https://completelyFakerestoreSourceCommand1.1""
+#i ""nuget:https://completelyFakerestoreSourceCommand1.2""
+");
+
+            var result = await kernel.SubmitCodeAsync(@"
+#i ""nuget:https://completelyFakerestoreSourceCommand2.1""
+#i ""nuget:https://completelyFakerestoreSourceCommand2.2""
+");
+
+            var expectedList = new[]
+            {
+                "https://completelyFakerestoreSourceCommand1.1",
+                "https://completelyFakerestoreSourceCommand1.2",
+                "https://completelyFakerestoreSourceCommand2.1",
+                "https://completelyFakerestoreSourceCommand2.2"
+            };
+
+            using var events = result.KernelEvents.ToSubscribedList();
+
+            // For the DisplayedValueUpdated events strip out the restore sources
+            // Verify that they match the expected values
+            events.OfType<DisplayedValueUpdated>()
+                  .Last().FormattedValues
+                  .Should()
+                  .ContainSingle(e => e.MimeType == HtmlFormatter.MimeType)
+                  .Which.Value
+                  .Should()
+                  .ContainAll(expectedList);
         }
 
         [Theory]
