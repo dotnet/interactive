@@ -332,7 +332,7 @@ var y = x + 2;
                 .Which
                 .Completions
                 .Should()
-                .ContainSingle(ci => ci.Documentation is not null && ci.Documentation.Contains(expectedCompletionSubstring));
+                .ContainSingle(ci => !string.IsNullOrEmpty(ci.Documentation) && ci.Documentation.Contains(expectedCompletionSubstring));
         }
 
         [Theory]
@@ -353,7 +353,7 @@ var y = x + 2;
                 .Which
                 .Completions
                 .Should()
-                .ContainSingle(ci => ci.Documentation is not null && ci.Documentation.Contains(expectedCompletionSubString));
+                .ContainSingle(ci => !string.IsNullOrEmpty(ci.Documentation) && ci.Documentation.Contains(expectedCompletionSubString));
         }
 
         [Theory]
@@ -391,7 +391,7 @@ public class C
                 .Which
                 .Completions
                 .Should()
-                .ContainSingle(ci => ci.Documentation is not null && ci.Documentation.Contains("This is the answer."));
+                .ContainSingle(ci => !string.IsNullOrEmpty(ci.Documentation) && ci.Documentation.Contains("This is the answer."));
         }
 
         [Fact]
@@ -415,7 +415,7 @@ public class C
                 .Which
                 .Completions
                 .Should()
-                .ContainSingle(ci => ci.Documentation is not null && ci.Documentation.Contains("Represents JavaScript's null as a string. This field is read-only."));
+                .ContainSingle(ci => !string.IsNullOrEmpty(ci.Documentation) && ci.Documentation.Contains("Represents JavaScript's null as a string. This field is read-only."));
         }
 
         [Fact(Skip = "https://github.com/dotnet/interactive/issues/1071  N.b., the preceeding test can be deleted when this one is fixed.")]
@@ -436,7 +436,7 @@ public class C
                 .Which
                 .Completions
                 .Should()
-                .ContainSingle(ci => ci.Documentation is not null && ci.Documentation.Contains("Represents JavaScript's null as a string. This field is read-only."));
+                .ContainSingle(ci => !string.IsNullOrEmpty(ci.Documentation) && ci.Documentation.Contains("Represents JavaScript's null as a string. This field is read-only."));
         }
 
         [Fact]
@@ -457,7 +457,7 @@ public class C
                 .Which
                 .Completions
                 .Should()
-                .ContainSingle(ci => ci.Documentation is not null && ci.Documentation.Contains("Represents JavaScript's null as a string. This field is read-only."));
+                .ContainSingle(ci => !string.IsNullOrEmpty(ci.Documentation) && ci.Documentation.Contains("Represents JavaScript's null as a string. This field is read-only."));
         }
     }
 }

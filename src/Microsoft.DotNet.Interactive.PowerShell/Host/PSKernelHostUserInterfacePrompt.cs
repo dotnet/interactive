@@ -561,7 +561,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
                         $"choices[{i}].Label");
                 }
 
-                hotkeysAndPlainLabels[0, i] = hotKeyChar is nullChar ? string.Empty : hotKeyChar.ToString();
+                hotkeysAndPlainLabels[0, i] = hotKeyChar == NullChar ? string.Empty : hotKeyChar.ToString();
                 hotkeysAndPlainLabels[1, i] = hotKeyString;
             }
 
