@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
+using System.Numerics;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -153,6 +154,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     var type = value.GetType();
                     var formatter = HtmlFormatter.GetDefaultFormatterForAnyEnumerable(type);
                     return formatter.Format(context, value, writer);
+                }),
+
+                // BigInteger should be displayed as plain text
+                new HtmlFormatter<BigInteger>((context, value, writer) =>
+                {
+                    HtmlFormatter.FormatObjectAsPlainText(context, value, writer);
+                    return true;
                 }),
 
                 // Try to display object results as tables. This will return false for nested tables.

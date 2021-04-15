@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.CommandLine.Rendering;
 using System.Dynamic;
 using System.Linq;
+using System.Numerics;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using Microsoft.AspNetCore.Html;
@@ -125,6 +126,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     var type = obj.GetType();
                     var formatter = PlainTextFormatter.GetDefaultFormatterForAnyEnumerable(type);
                     return formatter.Format(context, obj, writer);
+                }),
+
+                // BigInteger should be displayed as plain text
+                new PlainTextFormatter<BigInteger>((context, value, writer) =>
+                {
+                    value.FormatTo(writer, PlainTextFormatter.MimeType);
+                    return true;
                 }),
 
                 // Fallback for any object

@@ -39,7 +39,6 @@ namespace Microsoft.DotNet.Interactive.Notebook
                             if (reader.Read() && reader.TokenType == JsonTokenType.String)
                             {
                                 errorName = reader.GetString();
-
                             }
                             break;
                         case "errorValue":

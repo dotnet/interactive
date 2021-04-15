@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using FluentAssertions;
 using FluentAssertions.Extensions;
 using Xunit;
@@ -14,11 +15,10 @@ using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
-    public class Tags
+    public static class Tags
     {
         public const string PlainTextBegin = "<div class=\"dni-plaintext\">";
         public const string PlainTextEnd = "</div>";
-
     }
     public class HtmlFormatterTests : FormatterTestBase
     {
@@ -305,8 +305,23 @@ string";
                           $"{PlainTextBegin}{instance.HtmlEncode()}{PlainTextEnd}");
             }
 
+            [Fact]
+            public void HtmlFormatter_returns_plain_for_BigInteger()
+            {
+                var formatter = HtmlFormatter.GetPreferredFormatterFor(typeof(BigInteger));
 
+                var writer = new StringWriter();
+
+                var instance = BigInteger.Parse("78923589327589332402359");
+
+                formatter.Format(instance, writer);
+
+                writer.ToString()
+                    .Should()
+                    .Be($"{PlainTextBegin}78923589327589332402359{PlainTextEnd}");
+            }
         }
+
         public class Sequences : FormatterTestBase
         {
             [Fact]

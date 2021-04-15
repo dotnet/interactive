@@ -499,18 +499,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static ITypeFormatter InferPreferredFormatter(Type actualType, string mimeType)
         {
             // Try to find a user-specified type formatter, use the most specific type with a matching mime type
-            var userFormatter = TryInferPreferredFormatter(actualType, mimeType, _typeFormatters);
-            if (userFormatter != null)
-            {
+            if (TryInferPreferredFormatter(actualType, mimeType, _typeFormatters) is { } userFormatter)
                 return userFormatter;
-            }
 
             // Try to find a default built-in type formatter, use the most specific type with a matching mime type
-            var defaultFormatter = TryInferPreferredFormatter(actualType, mimeType, _defaultTypeFormatters);
-            if (defaultFormatter != null)
-            {
+            if (TryInferPreferredFormatter(actualType, mimeType, _defaultTypeFormatters) is { } defaultFormatter)
                 return defaultFormatter;
-            }
 
             // Last resort backup 
             return new AnonymousTypeFormatter<object>((context, obj, writer) =>
