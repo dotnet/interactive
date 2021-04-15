@@ -350,7 +350,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 // don't write out empty id attributes
                 if (string.Equals(pair.Key, "id", StringComparison.Ordinal) &&
-                    (pair.Value == null || pair.Value.ToString() == string.Empty))
+                    (pair.Value is null || pair.Value.ToString() == string.Empty))
                 {
                     continue;
                 }

@@ -49,10 +49,10 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
                 var throughExpression = ((MemberAccessExpressionSyntax)invocation.Receiver).Expression;
                 var throughSymbol = invocation.SemanticModel.GetSpeculativeSymbolInfo(invocation.Position, throughExpression, SpeculativeBindingOption.BindAsExpression).Symbol;
                 ISymbol throughType = invocation.SemanticModel.GetSpeculativeTypeInfo(invocation.Position, throughExpression, SpeculativeBindingOption.BindAsTypeOrNamespace).Type;
-                var includeInstance = (throughSymbol != null && !(throughSymbol is ITypeSymbol)) ||
+                var includeInstance = (throughSymbol is not null && !(throughSymbol is ITypeSymbol)) ||
                     throughExpression is LiteralExpressionSyntax ||
                     throughExpression is TypeOfExpressionSyntax;
-                var includeStatic = (throughSymbol is INamedTypeSymbol) || throughType != null;
+                var includeStatic = (throughSymbol is INamedTypeSymbol) || throughType is not null;
                 methodGroup = methodGroup.Where(m => (m.IsStatic && includeStatic) || (!m.IsStatic && includeInstance));
             }
             else if (invocation.Receiver is SimpleNameSyntax && invocation.IsInStaticContext)
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
             var node = root.FindToken(position).Parent;
 
             // Walk up until we find a node that we're interested in.
-            while (node != null)
+            while (node is not null)
             {
                 if (node is InvocationExpressionSyntax invocation && invocation.ArgumentList.Span.Contains(position))
                 {
@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
             var definitionEnum = parameters.GetEnumerator();
             while (invocationEnum.MoveNext() && definitionEnum.MoveNext())
             {
-                if (invocationEnum.Current.ConvertedType == null)
+                if (invocationEnum.Current.ConvertedType is null)
                 {
                     // 1 point for having a parameter
                     score += 1;

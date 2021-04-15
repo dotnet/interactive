@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             var runtimePackageIdSuffix = "native.Microsoft.SqlToolsService";
             var root = resolvedPackageReferences.FirstOrDefault(p => p.PackageName.EndsWith(runtimePackageIdSuffix, StringComparison.OrdinalIgnoreCase));
             string pathToService = "";
-            if (root != null)
+            if (root is not null)
             {
                 // Extract the platform 'osx-x64' from the package name 'runtime.osx-x64.native.microsoft.sqltoolsservice'
                 string[] packageNameSegments = root.PackageName.Split(".");

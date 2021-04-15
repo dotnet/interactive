@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests.Utility
             while (DateTime.UtcNow < startTime + timeout)
             {
                 var file = GetMatchingFile(directory, predicate);
-                if (file != null)
+                if (file is not null)
                 {
                     return file;
                 }

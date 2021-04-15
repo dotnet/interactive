@@ -32,6 +32,6 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
         public DirectoryInfo WorkingDir { get; internal set; }
 
-        public bool EnableHttpApi => HttpPort != null || HttpPortRange != null;
+        public bool EnableHttpApi => HttpPort is not null || HttpPortRange is not null;
     }
 }

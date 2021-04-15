@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
             string signature = null)
             where T : Protocol.Message
         {
-            if (content == null)
+            if (content is null)
             {
                 throw new ArgumentNullException(nameof(content));
             }
@@ -75,12 +75,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
             Message request)
             where T : ReplyMessage
         {
-            if (content == null)
+            if (content is null)
             {
                 throw new ArgumentNullException(nameof(content));
             }
 
-            if (request == null)
+            if (request is null)
             {
                 throw new ArgumentNullException(nameof(request));
             }
@@ -101,12 +101,12 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
             string kernelIdentity = null)
             where T : PubSubMessage
         {
-            if (content == null)
+            if (content is null)
             {
                 throw new ArgumentNullException(nameof(content));
             }
 
-            if (request == null)
+            if (request is null)
             {
                 throw new ArgumentNullException(nameof(request));
             }
@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
             }
 
             var topic = Topic(content, kernelIdentity);
-            var identifiers = topic == null ? null : new[] { Topic(content, kernelIdentity) };
+            var identifiers = topic is null ? null : new[] { Topic(content, kernelIdentity) };
             var replyMessage = Create(content, request.Header, identifiers: identifiers, metaData: request.MetaData, signature: request.Signature);
 
             return replyMessage;
@@ -175,7 +175,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
 
             string GenerateFullTopic(string topic)
             {
-                if (kernelIdentity == null)
+                if (kernelIdentity is null)
                 {
                     throw new ArgumentNullException(nameof(kernelIdentity));
                 }

@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive
             PackageReference requestedPackage,
             IReadOnlyCollection<string> errors = null)
         {
-            if (requestedPackage == null)
+            if (requestedPackage is null)
             {
                 throw new ArgumentNullException(nameof(requestedPackage));
             }

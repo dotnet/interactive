@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public static KernelServer CreateKernelServer(this Kernel kernel, TextReader inputStream, TextWriter outputStream, DirectoryInfo workingDir)
         {
-            if (kernel == null)
+            if (kernel is null)
             {
                 throw new ArgumentNullException(nameof(kernel));
             }
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public static KernelClient CreateKernelClient(this Process remote)
         {
-            if (remote == null)
+            if (remote is null)
             {
                 throw new ArgumentNullException(nameof(remote));
             }
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public static T UseNamedPipeKernelServer<T>(this T kernel, string pipeName, DirectoryInfo workingDir) where T : Kernel
         {
-            if (kernel == null)
+            if (kernel is null)
             {
                 throw new ArgumentNullException(nameof(kernel));
             }
@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public static KernelClient CreateKernelClient(this NamedPipeClientStream remote)
         {
-            if (remote == null)
+            if (remote is null)
             {
                 throw new ArgumentNullException(nameof(remote));
             }
@@ -93,7 +93,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public static KernelClient CreateKernelClient(this HubConnection hubConnection)
         {
-            if (hubConnection == null) throw new ArgumentNullException(nameof(hubConnection));
+            if (hubConnection is null) throw new ArgumentNullException(nameof(hubConnection));
 
             var input = new SignalRInputTextStream(hubConnection);
             var output = new SignalROutputTextStream(hubConnection);

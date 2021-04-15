@@ -82,11 +82,11 @@ namespace Microsoft.DotNet.Interactive.Utility
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(packageName));
             }
 
-            var versionArg = version != null ? $"--version {version}" : "";
+            var versionArg = version is not null ? $"--version {version}" : "";
             
             var args = $@"{packageName} --tool-path ""{toolPath.FullName.TrimTrailingSeparators()}"" {versionArg}";
             
-            if (addSource != null)
+            if (addSource is not null)
             {
                 args += $@" --add-source ""{addSource}""";
             }
@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
             using (var process = Process.Start("dotnet"))
             {
-                if (process != null)
+                if (process is not null)
                 {
                     fileInfo = new FileInfo(process.MainModule.FileName);
                 }
@@ -148,7 +148,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             {
                 var muxerDir = new FileInfo(fxDepsFile).Directory?.Parent?.Parent?.Parent;
 
-                if (muxerDir != null)
+                if (muxerDir is not null)
                 {
                     var muxerCandidate = new FileInfo(System.IO.Path.Combine(muxerDir.FullName, muxerFileName));
 

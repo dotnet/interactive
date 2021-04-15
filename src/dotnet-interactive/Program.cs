@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Interactive.App
         {
             var disposables = new CompositeDisposable();
 
-            if (options.LogPath != null)
+            if (options.LogPath is not null)
             {
                 var log = new SerilogLoggerConfiguration()
                           .WriteTo
@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.App
                           .UseDotNetInteractiveHttpApi(options.EnableHttpApi, options.HttpPort, probingSettings, serviceCollection)
                           .UseStartup<Startup>();
 
-            if (options.EnableHttpApi && probingSettings != null)
+            if (options.EnableHttpApi && probingSettings is not null)
             {
                 webHost = webHost.UseUrls(probingSettings.AddressList.Select(a => a.AbsoluteUri).ToArray());
             }
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Interactive.App
             static HttpPort GetFreePort(StartupOptions startupOptions)
             {
                 using var __ = Log.OnEnterAndExit(nameof(GetFreePort));
-                if (startupOptions.HttpPort != null && !startupOptions.HttpPort.IsAuto)
+                if (startupOptions.HttpPort is not null && !startupOptions.HttpPort.IsAuto)
                 {
                     return startupOptions.HttpPort;
                 }
@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.Interactive.App
                 var currentPort = 0;
                 var endPort = 0;
 
-                if (startupOptions.HttpPortRange != null)
+                if (startupOptions.HttpPortRange is not null)
                 {
                     currentPort = startupOptions.HttpPortRange.Start;
                     endPort = startupOptions.HttpPortRange.End;

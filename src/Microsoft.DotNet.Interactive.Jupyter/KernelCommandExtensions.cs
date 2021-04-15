@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             {
                 returnValue = (bool) produceEvents;
             }
-            else if (command?.Parent != null)
+            else if (command?.Parent is not null)
             {
                 returnValue = command.Parent.ShouldPublishInternalEvents();
             }

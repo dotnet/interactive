@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         private static void EnsureInitialized()
         {
-            if (getters != null)
+            if (getters is not null)
             {
                 return;
             }
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             lock (lockObj)
             {
                 // while the double-checked lock is not 100% reliable, multiple initialization is safe in this case. the static setters are not modified (per T) after initialization, so this is a performance optimization to avoid taking locks during read operations.
-                if (getters != null)
+                if (getters is not null)
                 {
                     return;
                 }

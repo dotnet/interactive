@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
             {
                 foreach (var tuple in actualValues
                                       .Zip(expectedValues, (actual, expected) => (actual, expected))
-                                      .Where(t => t.expected == null || t.expected.GetType().GetProperties().Any()))
+                                      .Where(t => t.expected is null || t.expected.GetType().GetProperties().Any()))
                 {
                     tuple.actual
                         .Should()
@@ -110,7 +110,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         {
             T subject;
 
-            if (where == null)
+            if (where is null)
             {
                 should.ContainSingle(e => e is T);
 
@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         {
             T subject;
 
-            if (where == null)
+            if (where is null)
             {
                 should.ContainSingle(e => e is T);
 
@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         {
             T subject;
 
-            if (where == null)
+            if (where is null)
             {
                 should.ContainSingle(e => e is T);
 
@@ -194,7 +194,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         {
             T subject;
 
-            if (where == null)
+            if (where is null)
             {
                 should.ContainSingle(e => e is T);
 
@@ -222,7 +222,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         {
             T subject;
 
-            if (where == null)
+            if (where is null)
             {
                 should.ContainSingle(e => e is T);
 
@@ -258,7 +258,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
         {
             return Task.Run(async () =>
             {
-                if (where == null)
+                if (where is null)
                 {
                     where = _ => true;
                 }

@@ -57,17 +57,17 @@ namespace Microsoft.DotNet.Interactive.Notebook
                 }
                 else if (reader.TokenType == JsonTokenType.EndObject)
                 {
-                    if (text != null)
+                    if (text is not null)
                     {
                         return new NotebookCellTextOutput(text);
                     }
 
-                    if (data != null)
+                    if (data is not null)
                     {
                         return new NotebookCellDisplayOutput(data);
                     }
 
-                    if (errorName != null && errorValue != null && stackTrace != null)
+                    if (errorName is not null && errorValue is not null && stackTrace is not null)
                     {
                         return new NotebookCellErrorOutput(errorName, errorValue, stackTrace.ToArray());
                     }

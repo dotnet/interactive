@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void DeferCommand(KernelCommand command)
         {
-            if (command == null)
+            if (command is null)
             {
                 throw new ArgumentNullException(nameof(command));
             }
@@ -249,7 +249,7 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             CancellationToken cancellationToken)
         {
-            if (command == null)
+            if (command is null)
             {
                 throw new ArgumentNullException(nameof(command));
             }
@@ -488,7 +488,7 @@ namespace Microsoft.DotNet.Interactive
 
         protected internal void PublishEvent(KernelEvent kernelEvent)
         {
-            if (kernelEvent == null)
+            if (kernelEvent is null)
             {
                 throw new ArgumentNullException(nameof(kernelEvent));
             }
@@ -500,7 +500,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void RegisterForDisposal(IDisposable disposable)
         {
-            if (disposable == null)
+            if (disposable is null)
             {
                 throw new ArgumentNullException(nameof(disposable));
             }
@@ -587,7 +587,7 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             KernelInvocationContext context)
         {
-            if (command.Handler == null)
+            if (command.Handler is null)
             {
                 switch (command, this)
                 {

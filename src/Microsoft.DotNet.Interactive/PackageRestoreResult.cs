@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Interactive
             IReadOnlyList<ResolvedPackageReference> resolvedReferences = null,
             IReadOnlyCollection<string> errors = null)
         {
-            if (requestedPackages == null)
+            if (requestedPackages is null)
             {
                 throw new ArgumentNullException(nameof(requestedPackages));
             }

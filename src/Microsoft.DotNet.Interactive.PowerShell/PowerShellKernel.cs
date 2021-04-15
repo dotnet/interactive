@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             var variable = pwsh.Runspace.SessionStateProxy.PSVariable.Get(name);
 
-            if (variable != null)
+            if (variable is not null)
             {
                 object outVal = (variable.Value is PSObject psobject) ? psobject.Unwrap() : variable.Value;
 
@@ -214,7 +214,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 return;
             }
 
-            if (AzShell != null)
+            if (AzShell is not null)
             {
                 await RunSubmitCodeInAzShell(code);
             }
@@ -230,7 +230,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         {
             CompletionsProduced completion;
 
-            if (AzShell != null)
+            if (AzShell is not null)
             {
                 // Currently no tab completion when interacting with AzShell.
                 completion = new CompletionsProduced(Array.Empty<CompletionItem>(), requestCompletions);

@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         {
             var operation = Log.OnEnterAndExit();
 
-            if (services == null)
+            if (services is null)
             {
                 throw new ArgumentNullException(nameof(services));
             }

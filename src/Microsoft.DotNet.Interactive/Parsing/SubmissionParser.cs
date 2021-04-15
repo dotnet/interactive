@@ -261,7 +261,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         internal Parser GetDirectiveParser()
         {
-            if (_directiveParser == null)
+            if (_directiveParser is null)
             {
                 EnsureRootCommandIsInitialized();
 
@@ -290,7 +290,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         public void AddDirective(Command command)
         {
-            if (command == null)
+            if (command is null)
             {
                 throw new ArgumentNullException(nameof(command));
             }
@@ -340,7 +340,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 sortText: name,
                 insertText: name,
                 documentation:
-                symbol != null
+                symbol is not null
                     ? helpBuilder.GetHelpForSymbol(symbol)
                     : null);
         }

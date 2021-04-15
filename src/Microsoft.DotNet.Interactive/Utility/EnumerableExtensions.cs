@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         {
             yield return source;
 
-            while ((source = next(source)) != null)
+            while ((source = next(source)) is not null)
             {
                 yield return source;
             }

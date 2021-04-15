@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
             return _userLevelCacheWriter.RunWithCache(MachineIdCacheKey, () =>
             {
                 var macAddress = _getMACAddress();
-                return macAddress != null 
+                return macAddress is not null 
                     ? _hasher(macAddress) 
                     : Guid.NewGuid().ToString();
             });

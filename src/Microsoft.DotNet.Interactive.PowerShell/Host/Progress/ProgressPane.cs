@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
             int maxHeight = Math.Max(5, _ui.RawUI.WindowSize.Height / 3);
 
             List<string> contents = pendingProgress.Render(maxWidth, maxHeight, _ui);
-            if (contents == null)
+            if (contents is null)
             {
                 Hide();
                 return;
@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
             }
 
             string textToRender = string.Join('\n', contents);
-            if (_displayValue == null)
+            if (_displayValue is null)
             {
                 _displayValue = KernelInvocationContext.Current?.Display(textToRender, "text/plain");
             }

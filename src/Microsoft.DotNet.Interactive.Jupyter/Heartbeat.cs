@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
 
         public Heartbeat(ConnectionInformation connectionInformation)
         {
-            if (connectionInformation == null)
+            if (connectionInformation is null)
             {
                 throw new ArgumentNullException(nameof(connectionInformation));
             }

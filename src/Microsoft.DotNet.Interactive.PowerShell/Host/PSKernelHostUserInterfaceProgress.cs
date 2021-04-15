@@ -26,22 +26,22 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
 
         public override void WriteProgress(long sourceId, ProgressRecord record)
         {
-            if (record == null)
+            if (record is null)
             {
                 throw new ArgumentNullException(nameof(record));
             }
 
             lock (_instanceLock)
             {
-                if (_pendingProgress == null)
+                if (_pendingProgress is null)
                 {
-                    Debug.Assert(_progPane == null, "If there is no data struct, there shouldn't be a pane, either.");
+                    Debug.Assert(_progPane is null, "If there is no data struct, there shouldn't be a pane, either.");
                     _pendingProgress = new PendingProgress();
                 }
 
                 _pendingProgress.Update(sourceId, record);
 
-                if (_progPane == null)
+                if (_progPane is null)
                 {
                     // This is the first time we've received a progress record, so
                     //  - create a progress pane,
@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
                     //  - create a timer for updating the flag
                     _progPane = new ProgressPane(this);
 
-                    if (_progPaneUpdateTimer == null)
+                    if (_progPaneUpdateTimer is null)
                     {
                         // Show a progress pane at the first time we've received a progress record
                         progPaneUpdateFlag = ToRender;
@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
             // so we need the lock.
             lock (_instanceLock)
             {
-                if (_progPaneUpdateTimer != null)
+                if (_progPaneUpdateTimer is not null)
                 {
                     // Stop update a progress pane and destroy the timer.
                     _progPaneUpdateTimer.Dispose();
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
                 // 1. According to MSDN, the timer callback can occur after the Dispose() method has been called.
                 //    So we cannot guarantee the flag is truly set to 'ToNotRender'.
                 // 2. When creating a new timer in 'HandleIncomingProgressRecord', we will set the flag to 'ToRender' anyways.
-                if (_progPane != null)
+                if (_progPane is not null)
                 {
                     _progPane.Hide();
                     _progPane = null;

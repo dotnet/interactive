@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 // filter out internal values from the Data dictionary, since they're intended to be surfaced in other ways
                 var dataAccessor = accessors.SingleOrDefault(a => a.Member.Name == "Data");
-                if (dataAccessor != null)
+                if (dataAccessor is not null)
                 {
                     var originalGetData = dataAccessor.Getter;
                     dataAccessor.Getter = e => ((IDictionary) originalGetData(e))
@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 // replace the default stack trace with the full stack trace when present
                 var stackTraceAccessor = accessors.SingleOrDefault(a => a.Member.Name == "StackTrace");
-                if (stackTraceAccessor != null)
+                if (stackTraceAccessor is not null)
                 {
                     stackTraceAccessor.Getter = e =>
                     {

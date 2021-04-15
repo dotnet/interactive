@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         private void EnsureParsed()
         {
-            if (_parseResult == null)
+            if (_parseResult is null)
             {
                 _parseResult = DirectiveParser.Parse(Node.Text);
             }

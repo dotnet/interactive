@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive
 
         public static string GetToken(this KernelCommand command)
         {
-            if (command == null)
+            if (command is null)
             {
                 throw new ArgumentNullException(nameof(command));
             }
@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.Interactive
 
             public TokenSequence(string current = null)
             {
-                if (current != null)
+                if (current is not null)
                 {
                     Current = current;
                 }

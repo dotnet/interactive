@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             TextWriter writer,
             string mimeType = PlainTextFormatter.MimeType)
         {
-            if (obj == null)
+            if (obj is null)
             {
                 var formatter = Formatter.GetPreferredFormatterFor(typeof(T), mimeType);
                 formatter.Format(context, null, writer);

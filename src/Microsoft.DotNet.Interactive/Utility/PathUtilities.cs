@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         // Exposed for testing purposes only.
         internal static string GetDirectoryName(string path, bool isUnixLike)
         {
-            if (path != null)
+            if (path is not null)
             {
                 var rootLength = GetPathRoot(path, isUnixLike).Length;
                 if (path.Length > rootLength)
@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         {
             parent = RemoveTrailingDirectorySeparator(parent);
 
-            while (child != null)
+            while (child is not null)
             {
                 child = RemoveTrailingDirectorySeparator(child);
 
@@ -182,7 +182,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
         private static string GetPathRoot(string path, bool isUnixLike)
         {
-            if (path == null)
+            if (path is null)
             {
                 return null;
             }
@@ -455,7 +455,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         /// </summary>
         public static bool IsFilePath(string assemblyDisplayNameOrPath)
         {
-            Debug.Assert(assemblyDisplayNameOrPath != null);
+            Debug.Assert(assemblyDisplayNameOrPath is not null);
 
             string extension = FileNameUtilities.GetExtension(assemblyDisplayNameOrPath);
             return string.Equals(extension, ".dll", StringComparison.OrdinalIgnoreCase)
@@ -484,7 +484,7 @@ namespace Microsoft.DotNet.Interactive.Utility
 
                 int count = 0;
                 var currentPath = path;
-                while (currentPath != null)
+                while (currentPath is not null)
                 {
                     var currentName = GetFileName(currentPath);
                     if (comparer.Equals(currentName, component))
@@ -661,7 +661,7 @@ namespace Microsoft.DotNet.Interactive.Utility
         {
             int hc = 0;
 
-            if (path != null)
+            if (path is not null)
             {
                 foreach (var ch in path)
                 {
@@ -752,12 +752,12 @@ namespace Microsoft.DotNet.Interactive.Utility
         {
             public bool Equals(string x, string y)
             {
-                if (x == null && y == null)
+                if (x is null && y is null)
                 {
                     return true;
                 }
 
-                if (x == null || y == null)
+                if (x is null || y is null)
                 {
                     return false;
                 }

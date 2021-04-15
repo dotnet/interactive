@@ -146,7 +146,7 @@ namespace Microsoft.DotNet.Interactive
 
             var command = @event.Command;
 
-            if (command == null ||
+            if (command is null ||
                 Command == command ||
                 _childCommands.Contains(command))
             {
@@ -160,7 +160,7 @@ namespace Microsoft.DotNet.Interactive
 
         public static KernelInvocationContext Establish(KernelCommand command)
         {
-            if (_current.Value == null || _current.Value.IsComplete)
+            if (_current.Value is null || _current.Value.IsComplete)
             {
                 var context = new KernelInvocationContext(command);
 

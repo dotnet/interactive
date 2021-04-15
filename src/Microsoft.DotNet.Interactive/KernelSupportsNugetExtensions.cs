@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.Interactive
                             return reference;
                         }
 
-                        if (token != null &&
+                        if (token is not null &&
                             !token.StartsWith("nuget:") &&
                             !EndsInDirectorySeparator(token))
                         {
@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.Interactive
                         PackageReference existing = null)
                     {
                         var spanFormatter = new TextSpanFormatter();
-                        if (existing != null)
+                        if (existing is not null)
                         {
                             if (!string.IsNullOrEmpty(requested.PackageName))
                             {

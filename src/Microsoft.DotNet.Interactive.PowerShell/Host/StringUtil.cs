@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
             }
 
             var result = IndentCache[countOfSpaces];
-            if (result == null)
+            if (result is null)
             {
                 Interlocked.CompareExchange(ref IndentCache[countOfSpaces], new string(' ', countOfSpaces), null);
                 result = IndentCache[countOfSpaces];

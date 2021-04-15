@@ -171,7 +171,7 @@ namespace Microsoft.DotNet.Interactive.Server
         {
             KernelCommandEnvelope.SerializationModel commandSerializationModel = null;
 
-            if (eventEnvelope.Event.Command != null && eventEnvelope.Event.Command is not NoCommand)
+            if (eventEnvelope.Event.Command is not null && eventEnvelope.Event.Command is not NoCommand)
             {
                 var commandEnvelope = KernelCommandEnvelope.Create(eventEnvelope.Event.Command);
 

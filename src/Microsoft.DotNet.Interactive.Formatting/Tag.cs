@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name = "writer">The writer.</param>
         public virtual void WriteTo(TextWriter writer, HtmlEncoder encoder)
         {
-            if (Content == null && IsSelfClosing)
+            if (Content is null && IsSelfClosing)
             {
                 WriteSelfClosingTag(writer);
                 return;

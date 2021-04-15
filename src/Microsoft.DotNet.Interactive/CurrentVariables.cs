@@ -15,12 +15,12 @@ namespace Microsoft.DotNet.Interactive
         public CurrentVariables(IEnumerable<CurrentVariable> variables, bool detailed)
             : this(detailed)
         {
-            if (variables == null)
+            if (variables is null)
             {
                 throw new ArgumentNullException(nameof(variables));
             }
 
-            foreach (var variable in variables.Where(v => v != null))
+            foreach (var variable in variables.Where(v => v is not null))
             {
                 _variables[variable.Name] = variable;
             }

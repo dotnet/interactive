@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Interactive.App
                     var dotnetDirectory = disposableDirectory.Directory;
                     ZipFile.ExtractToDirectory(zipPath, dotnetDirectory.FullName);
 
-                    if (_httpPortRange != null)
+                    if (_httpPortRange is not null)
                     {
                         ComputeKernelSpecArgs(_httpPortRange, dotnetDirectory);
                     }
