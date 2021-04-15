@@ -180,11 +180,20 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
             }
         }
 
-        if (jupyterApi) {
-            await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'jupyter-notebook');
-            await switchToInteractiveKernel();
-        } else {
-            await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'dotnet-interactive-jupyter');
+        const extension = path.extname(notebookUri.fsPath);
+        switch (extension) {
+            case '.ipynb':
+                if (jupyterApi) {
+                    await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'jupyter-notebook');
+                    await switchToInteractiveKernel();
+                } else {
+                    await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'dotnet-interactive-jupyter');
+                }
+                break;
+            default:
+                // was .dib or .dotnet-interactive
+                await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'dotnet-interactive');
+                break;
         }
     }));
 

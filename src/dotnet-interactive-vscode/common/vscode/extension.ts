@@ -56,6 +56,27 @@ export async function activate(context: vscode.ExtensionContext) {
     // this must happen early, because some following functions use the acquisition command
     registerAcquisitionCommands(context, diagnosticsChannel);
 
+    vscode.window.registerUriHandler({
+        handleUri(uri: vscode.Uri): vscode.ProviderResult<void> {
+            switch (uri.path) {
+                case '/newNotebook':
+                    vscode.commands.executeCommand('dotnet-interactive.acquire').then(() => {
+                        vscode.commands.executeCommand('dotnet-interactive.newNotebook').then(() => { });
+                    });
+                    break;
+                case '/openNotebook':
+                    const params = new URLSearchParams(uri.query);
+                    const path = params.get('path');
+                    if (path) {
+                        vscode.commands.executeCommand('dotnet-interactive.acquire').then(() => {
+                            vscode.commands.executeCommand('dotnet-interactive.openNotebook', vscode.Uri.file(path)).then(() => { });
+                        });
+                    }
+                    break;
+            }
+        }
+    });
+
     // register with VS Code
     const clientMapper = new ClientMapper(async (notebookPath) => {
         const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion') || '5.0';
