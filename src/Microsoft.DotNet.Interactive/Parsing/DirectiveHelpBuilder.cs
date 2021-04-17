@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     helpBuilder.Write(command);
                     break;
                 case IOption option:
-                    helpBuilder.Write(option);
+                    RenderAsColumns(GetHelpItem(option));
                     break;
             }
 
