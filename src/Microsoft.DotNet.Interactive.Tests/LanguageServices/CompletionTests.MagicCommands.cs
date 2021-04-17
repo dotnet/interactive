@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Linq;
@@ -58,6 +59,37 @@ namespace Microsoft.DotNet.Interactive.Tests.LanguageServices
                                       .Should()
                                       .Contain(expected.Split(","),
                                                because: $"position {requestCompleted.LinePositionSpan} should provide completions"));
+            }
+
+            [Theory]
+            // commands
+            [InlineData("#!sha[||]", "Share a .NET variable")]
+            // options
+            [InlineData("#!share --fr[||]", "--from*csharp*The name of the kernel")]
+            // subcommands
+            [InlineData("#!connect signa[||]", "Connects to a kernel using SignalR*--hub-url*The URL of the SignalR hub")]
+            public void Completion_documentation_is_available_for_magic_commands(
+                string markupCode,
+                string expected)
+            {
+                var kernel = CreateKernel().UseKernelClientConnection(new ConnectSignalR());
+
+                markupCode
+                    .ParseMarkupCode()
+                    .PositionsInMarkedSpans()
+                    .Should()
+                    .ProvideCompletions(kernel)
+                    .Which
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .Completions
+                    .Should()
+                    .ContainSingle()
+                    .Which
+                    .Documentation
+                    .Should()
+                    .Match($"*{expected}*");
             }
 
             [Fact]

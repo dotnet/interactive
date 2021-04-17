@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
-using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
@@ -269,7 +268,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     new CommandLineBuilder(_rootCommand)
                         .ParseResponseFileAs(ResponseFileHandling.Disabled)
                         .UseTypoCorrections()
-                        .UseHelpBuilder(bc => new DirectiveHelpBuilder(bc.Console, _rootCommand.Name))
+                        .UseHelpBuilder(bc => new DirectiveHelpBuilder(_rootCommand.Name))
                         .UseHelp()
                         .UseMiddleware(
                             context =>
@@ -330,7 +329,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
             };
 
             var helpBuilder = new DirectiveHelpBuilder(
-                new TestConsole(),
                 parseResult.Parser.Configuration.RootCommand.Name);
 
             return new CompletionItem(
