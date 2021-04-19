@@ -64,14 +64,14 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 
     public class CSharpLanguageInfo : LanguageInfo
     {
-        public CSharpLanguageInfo(string version = "8.0") : base("C#", version, "text/x-csharp", ".cs", pygmentsLexer: "csharp")
+        public CSharpLanguageInfo(string version = "9.0") : base("C#", version, "text/x-csharp", ".cs", pygmentsLexer: "csharp")
         {
         }
     }
 
     public class FSharpLanguageInfo : LanguageInfo
     {
-        public FSharpLanguageInfo(string version = "4.5") : base("F#", version, "text/x-fsharp", ".fs", pygmentsLexer: "fsharp")
+        public FSharpLanguageInfo(string version = "5.0") : base("F#", version, "text/x-fsharp", ".fs", pygmentsLexer: "fsharp")
         {
            
         }
