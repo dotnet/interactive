@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 
     public class FSharpLanguageInfo : LanguageInfo
     {
-        public FSharpLanguageInfo(string version = "4.5") : base("C#", version, "text/x-fsharp", ".fs", pygmentsLexer: "fsharp")
+        public FSharpLanguageInfo(string version = "4.5") : base("F#", version, "text/x-fsharp", ".fs", pygmentsLexer: "fsharp")
         {
            
         }
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
 
     public class VBnetLanguageInfo : LanguageInfo
     {
-        public VBnetLanguageInfo(string version = "15.0") : base("C#", version, "text/x-vbnet", ".vb", pygmentsLexer: "vbnet")
+        public VBnetLanguageInfo(string version = "15.0") : base("VB.NET", version, "text/x-vbnet", ".vb", pygmentsLexer: "vbnet")
         {
         }
     }
