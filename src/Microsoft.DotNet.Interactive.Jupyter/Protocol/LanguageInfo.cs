@@ -84,11 +84,4 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Protocol
            
         }
     }
-
-    public class VBnetLanguageInfo : LanguageInfo
-    {
-        public VBnetLanguageInfo(string version = "15.0") : base("VB.NET", version, "text/x-vbnet", ".vb", pygmentsLexer: "vbnet")
-        {
-        }
-    }
 }
