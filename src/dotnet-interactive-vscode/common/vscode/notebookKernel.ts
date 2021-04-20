@@ -104,7 +104,7 @@ async function executeCell(document: vscode.NotebookDocument, cell: vscode.Noteb
             executionTask.start({
                 startTime,
             });
-            setCellLockState(cell, true);
+            await setCellLockState(cell, true);
             executionTask.clearOutput(cell.index);
             const client = await clientMapper.getOrAddClient(document.uri);
             executionTask.token.onCancellationRequested(() => {
@@ -135,20 +135,20 @@ async function executeCell(document: vscode.NotebookDocument, cell: vscode.Noteb
         } catch (err) {
             const errorOutput = utilities.createErrorOutput(`Error executing cell: ${err}`);
             await updateCellOutputs(executionTask, cell, [errorOutput]);
-            endExecution(cell, false, Date.now() - startTime);
+            await endExecution(cell, false, Date.now() - startTime);
             throw err;
         }
     }
 }
 
-function setCellLockState(cell: vscode.NotebookCell, locked: boolean) {
+async function setCellLockState(cell: vscode.NotebookCell, locked: boolean): Promise<boolean> {
     const edit = new vscode.WorkspaceEdit();
     edit.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, cell.metadata.with({ editable: !locked }));
-    return vscode.workspace.applyEdit(edit);
+    return await vscode.workspace.applyEdit(edit);
 }
 
-export function endExecution(cell: vscode.NotebookCell, success: boolean, duration?: number) {
-    setCellLockState(cell, false);
+export async function endExecution(cell: vscode.NotebookCell, success: boolean, duration?: number): Promise<void> {
+    await setCellLockState(cell, false);
     const executionTask = executionTasks.get(cell.document.uri);
     if (executionTask) {
         executionTasks.delete(cell.document.uri);
