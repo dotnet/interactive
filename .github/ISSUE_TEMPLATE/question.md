@@ -11,7 +11,7 @@ assignees: ''
 <!--
 There are a few of ways to find this out:
 * In a notebook, run the `#!about` magic command. 
-* At the command line, run `dotnet interactive --version`.
+* At the command line, run `dotnet interactive --version`. Non-VS Code only.
 -->
 
 ### Question
