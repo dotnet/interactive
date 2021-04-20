@@ -50,8 +50,12 @@ export const DotNetPathManager = new CachedDotNetPathManager();
 
 export async function activate(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
+    const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion') || '5.0';
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive : diagnostics'));
     DotNetPathManager.setOutputChannelAdapter(diagnosticsChannel);
+
+    // pause if an sdk installation is currently running
+    await waitForSdkInstall(minDotNetSdkVersion);
 
     // this must happen early, because some following functions use the acquisition command
     registerAcquisitionCommands(context, diagnosticsChannel);
@@ -79,11 +83,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // register with VS Code
     const clientMapper = new ClientMapper(async (notebookPath) => {
-        const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion') || '5.0';
-
-        // pause if an sdk installation is currently running
-        await waitForSdkInstall(minDotNetSdkVersion);
-
         if (!await checkForDotNetSdk(minDotNetSdkVersion!)) {
             const message = 'Unable to find appropriate .NET SDK.';
             vscode.window.showErrorMessage(message);
@@ -200,16 +199,21 @@ export async function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
 }
 
-async function waitForSdkInstall(requiredSdkVersion: string): Promise<void> {
-    const sdkExtension = vscode.extensions.getExtension("ms-dotnettools.vscode-dotnet-pack");
-    if (sdkExtension) {
-        if (!sdkExtension.isActive) {
-            await sdkExtension.activate();
-        }
+interface DotnetPackExtensionExports {
+    getDotnetPath(version?: string): Promise<string | undefined>;
+}
 
-        const statusResult: any = await vscode.commands.executeCommand('dotnet-sdk.acquireStatus', { version: requiredSdkVersion, requestingExtensionId: 'ms-dotnettools.dotnet-interactive-vscode' });
-        if (statusResult && typeof statusResult.dotnetPath === 'string') {
-            DotNetPathManager.setDotNetPath(statusResult.dotnetPath);
+async function waitForSdkInstall(requiredSdkVersion: string): Promise<void> {
+    const sdkExtension = vscode.extensions.getExtension<DotnetPackExtensionExports | undefined>("ms-dotnettools.vscode-dotnet-pack");
+    if (sdkExtension) {
+        const sdkExports = sdkExtension.isActive
+            ? sdkExtension.exports
+            : await sdkExtension.activate();
+        if (sdkExports) {
+            const dotnetPath = await sdkExports.getDotnetPath(requiredSdkVersion);
+            if (dotnetPath) {
+                DotNetPathManager.setDotNetPath(dotnetPath);
+            }
         }
     }
 }
