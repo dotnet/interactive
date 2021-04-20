@@ -1,7 +1,9 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import * as path from 'path';
 import { getNotebookSpecificLanguage, isDotnetInteractiveLanguage, notebookCellLanguages } from "./interactiveNotebook";
+import { isDotnetKernel } from './utilities';
 
 // the shape of this is meant to match the cell metadata from VS Code
 interface CellMetadata {
@@ -132,4 +134,30 @@ export function withDotNetKernelMetadata(metadata: { [key: string]: any } | unde
     // always set kernelspec data so that this notebook can be opened in Jupyter Lab
     result.custom.metadata.kernelspec = { ...result.custom.metadata.kernelspec, ...requiredKernelspecData };
     return result;
+}
+
+export function isIpynbFile(filePath: string): boolean {
+    return path.extname(filePath).toLowerCase() === '.ipynb';
+}
+
+export function validateNotebookShape(notebookData: any, notificationCallback: (isError: boolean, message: string) => void) {
+    const kernelspecName = notebookData?.metadata?.kernelspec?.name;
+    if (isDotnetKernel(kernelspecName)) {
+        // looks like us, check the cell languages
+        let hasLanguages = true;
+        for (const cell of notebookData?.cells) {
+            const cellLanguage = cell?.metadata?.dotnet_interactive?.language;
+            if (typeof cellLanguage !== 'string') {
+                hasLanguages = false;
+                break;
+            }
+        }
+
+        if (!hasLanguages) {
+            notificationCallback(false, `.NET Interactive could not determine the language of the notebook cells.  Please ensure each cell's language is correctly set.`);
+        }
+    } else {
+        // might be something else
+        notificationCallback(true, `Unexpected kernelspec name '${kernelspecName}' in notebook.  Right-click the notebook file and select 'Open With...' to select the correct editor.`);
+    }
 }

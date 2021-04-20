@@ -7,6 +7,10 @@ import { Eol, WindowsEol, NonWindowsEol } from "../interfaces";
 import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan } from '../interfaces/contracts';
 import { ClientMapper } from '../clientMapper';
 
+export function isStableBuild(): boolean {
+    return !isInsidersBuild();
+}
+
 export function isInsidersBuild(): boolean {
     return vscode.version.indexOf('-insider') >= 0;
 }

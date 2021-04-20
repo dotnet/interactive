@@ -118,7 +118,7 @@
         },
         "dotnet-interactive.useDotNetInteractiveExtensionForIpynbFiles": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "(LEGACY) Use the .NET Interactive extension to handle .ipynb files (requires restart)."
         }
       }
