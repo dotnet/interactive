@@ -21,20 +21,34 @@ export function registerAcquisitionCommands(context: vscode.ExtensionContext, di
     const minDotNetInteractiveVersion = config.get<string>('minimumInteractiveToolVersion');
     const interactiveToolSource = config.get<string>('interactiveToolSource');
 
+    let cachedInstallArgs: InstallInteractiveArgs | undefined = undefined;
+    let acquirePromise: Promise<InteractiveLaunchOptions> | undefined = undefined;
+
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.acquire', async (args?: InstallInteractiveArgs | string | undefined): Promise<InteractiveLaunchOptions | undefined> => {
         try {
             const installArgs = computeToolInstallArguments(args);
             DotNetPathManager.setDotNetPath(installArgs.dotnetPath);
 
-            const launchOptions = await acquireDotnetInteractive(
-                installArgs,
-                minDotNetInteractiveVersion!,
-                context.globalStorageUri.fsPath,
-                getInteractiveVersion,
-                createToolManifest,
-                async (version: string) => { await vscode.window.showInformationMessage(`Installing .NET Interactive version ${version}...`); },
-                installInteractiveTool,
-                async () => { await vscode.window.showInformationMessage('.NET Interactive installation complete.'); });
+            if (cachedInstallArgs) {
+                if (installArgs.dotnetPath !== cachedInstallArgs.dotnetPath ||
+                    installArgs.toolVersion !== cachedInstallArgs.toolVersion) {
+                    // if specified install args are different than what we previously computed, invalidate the acquisition
+                    acquirePromise = undefined;
+                }
+            }
+
+            if (!acquirePromise) {
+                acquirePromise = acquireDotnetInteractive(
+                    installArgs,
+                    minDotNetInteractiveVersion!,
+                    context.globalStorageUri.fsPath,
+                    getInteractiveVersion,
+                    createToolManifest,
+                    async (version: string) => { await vscode.window.showInformationMessage(`Installing .NET Interactive version ${version}...`); },
+                    installInteractiveTool,
+                    async () => { await vscode.window.showInformationMessage('.NET Interactive installation complete.'); });
+            }
+            const launchOptions = await acquirePromise;
             return launchOptions;
         } catch (err) {
             diagnosticChannel.appendLine(`Error acquiring dotnet-interactive tool: ${err}`);
