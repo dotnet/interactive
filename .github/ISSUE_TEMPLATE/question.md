@@ -17,4 +17,4 @@ There are a few of ways to find this out:
 ### Question
 <!--Ask your question here. Be specific-->
 
-<!--You can also ask your questions on official .NET server: https://discord.gg/3pvut9YujN -->
+<!--You can also ask your questions on the .NET Discord server: https://discord.gg/3pvut9YujN -->
