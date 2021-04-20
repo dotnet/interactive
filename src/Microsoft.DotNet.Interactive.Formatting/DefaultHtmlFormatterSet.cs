@@ -10,6 +10,7 @@ using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 using System.Numerics;
+using System.Drawing;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -160,6 +161,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 new HtmlFormatter<BigInteger>((context, value, writer) =>
                 {
                     HtmlFormatter.FormatObjectAsPlainText(context, value, writer);
+                    return true;
+                }),
+
+                new HtmlFormatter<Bitmap>((context, value, writer) =>
+                {
+                    System.IO.MemoryStream stream = new System.IO.MemoryStream();
+                    value.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                    byte[] imageBytes = stream.ToArray();
+                    var base64 = Convert.ToBase64String(imageBytes);
+                    var img = @$"<img src='data:image/png;base64, {base64}' />";
+                    writer.Write(img);
                     return true;
                 }),
 

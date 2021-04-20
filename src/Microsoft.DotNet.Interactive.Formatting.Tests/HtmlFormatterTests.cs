@@ -12,6 +12,7 @@ using FluentAssertions;
 using FluentAssertions.Extensions;
 using Xunit;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
+using System.Drawing;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
@@ -72,6 +73,14 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
     <tbody><tr><td>{PlainTextBegin}2{PlainTextEnd}</td><td>{PlainTextBegin}socks{PlainTextEnd}</td></tr>
     </tbody>
 </table>");
+            }
+
+            [Fact]
+            public void Formatter_kdjfdkjfksdjf()
+            {
+                //var formatter = HtmlFormatter.GetPreferredFormatterFor<Bitmap>();
+                var output = new Bitmap("D:/tmp/duck.png").ToDisplayString("text/html");
+                Console.WriteLine();
             }
 
             [Fact]
