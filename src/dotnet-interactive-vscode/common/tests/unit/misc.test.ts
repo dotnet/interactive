@@ -371,6 +371,7 @@ describe('Miscellaneous tests', () => {
             const notebookData = {
                 cells: [
                     {
+                        cell_type: "code",
                         metadata: {
                             dotnet_interactive: {
                                 language: 'csharp'
@@ -390,10 +391,30 @@ describe('Miscellaneous tests', () => {
             done();
         });
 
+        it(`.net notebook with markdown cells without languages doesn't trigger validation failure`, done => {
+            const notebookData = {
+                cells: [
+                    {
+                        cell_type: "markdown"
+                    }
+                ],
+                metadata: {
+                    kernelspec: {
+                        name: '.net-csharp'
+                    }
+                }
+            };
+            validateNotebookShape(notebookData, (_isError, message) => {
+                done(`Unexpected validation failure: ${message}`);
+            });
+            done();
+        });
+
         it(`.net notebook with bad language triggers validation warning`, done => {
             const notebookData = {
                 cells: [
                     {
+                        cell_type: "code",
                         metadata: {
                             dotnet_interactive: {
                                 language: 42
@@ -416,10 +437,11 @@ describe('Miscellaneous tests', () => {
             });
         });
 
-        it(`.net notebook without cell metadata triggers validation warning`, done => {
+        it(`.net notebook without code cell metadata triggers validation warning`, done => {
             const notebookData = {
                 cells: [
                     {
+                        cell_type: "code",
                         metadata: {}
                     }
                 ],
