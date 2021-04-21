@@ -4,8 +4,8 @@
 import { expect } from 'chai';
 import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from '../../interfaces/contracts';
 import { isDisplayOutput, isErrorOutput, isTextOutput, reshapeOutputValueForVsCode } from '../../interfaces/utilities';
-import { requiredKernelspecData } from '../../ipynbUtilities';
-import { debounce, executeSafe, isDotNetKernelPreferred, isDotNetUpToDate, parse, processArguments, stringify } from '../../utilities';
+import { isIpynbFile, requiredKernelspecData, validateNotebookShape } from '../../ipynbUtilities';
+import { debounce, executeSafe, isDotnetKernel, isDotNetKernelPreferred, isDotNetUpToDate, parse, processArguments, stringify } from '../../utilities';
 
 import * as vscodeLike from '../../interfaces/vscode-like';
 
@@ -353,6 +353,118 @@ describe('Miscellaneous tests', () => {
         it('version number check crashed', () => {
             const isSupported = isDotNetUpToDate('5.0', { code: -1, output: '' });
             expect(isSupported).to.be.false;
+        });
+    });
+
+    describe('.ipynb helpers', () => {
+        it('file extension of .ipynb matches', () => {
+            expect(isIpynbFile('notebook.ipynb')).to.be.true;
+            expect(isIpynbFile('NOTEBOOK.IPYNB')).to.be.true;
+        });
+
+        it(`file extension of .dib doesn't match`, () => {
+            expect(isIpynbFile('notebook.dib')).to.be.false;
+            expect(isIpynbFile('notebook.dotnet-interactive')).to.be.false;
+        });
+
+        it(`.net notebook with languages doesn't trigger validation failure`, done => {
+            const notebookData = {
+                cells: [
+                    {
+                        metadata: {
+                            dotnet_interactive: {
+                                language: 'csharp'
+                            }
+                        }
+                    }
+                ],
+                metadata: {
+                    kernelspec: {
+                        name: '.net-csharp'
+                    }
+                }
+            };
+            validateNotebookShape(notebookData, (_isError, message) => {
+                done(`Unexpected validation failure: ${message}`);
+            });
+            done();
+        });
+
+        it(`.net notebook with bad language triggers validation warning`, done => {
+            const notebookData = {
+                cells: [
+                    {
+                        metadata: {
+                            dotnet_interactive: {
+                                language: 42
+                            }
+                        }
+                    }
+                ],
+                metadata: {
+                    kernelspec: {
+                        name: '.net-csharp'
+                    }
+                }
+            };
+            validateNotebookShape(notebookData, (isError, _message) => {
+                if (isError) {
+                    done('failure should have been a warning');
+                } else {
+                    done();
+                }
+            });
+        });
+
+        it(`.net notebook without cell metadata triggers validation warning`, done => {
+            const notebookData = {
+                cells: [
+                    {
+                        metadata: {}
+                    }
+                ],
+                metadata: {
+                    kernelspec: {
+                        name: '.net-csharp'
+                    }
+                }
+            };
+            validateNotebookShape(notebookData, (isError, _message) => {
+                if (isError) {
+                    done('failure should have been a warning');
+                } else {
+                    done();
+                }
+            });
+        });
+
+        it(`non-.net notebook triggers validation error`, done => {
+            const notebookData = {
+                cells: [],
+                metadata: {
+                    kernelspec: {
+                        name: 'python'
+                    }
+                }
+            };
+            validateNotebookShape(notebookData, (isError, _message) => {
+                if (!isError) {
+                    done('failure should have been an error');
+                } else {
+                    done();
+                }
+            });
+        });
+
+        it('.net kernelspec can be detected', () => {
+            expect(isDotnetKernel('.net-csharp')).to.be.true;
+            expect(isDotnetKernel('.net-fsharp')).to.be.true;
+        });
+
+        it(`non-.net kernelspec isn't detected`, () => {
+            expect(isDotnetKernel('python')).to.be.false;
+            expect(isDotnetKernel(42)).to.be.false;
+            expect(isDotnetKernel(undefined)).to.be.false;
         });
     });
 });

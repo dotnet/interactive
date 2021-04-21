@@ -14,6 +14,7 @@ import * as vscodeLike from '../interfaces/vscode-like';
 import { configureWebViewMessaging, getEol, isUnsavedNotebook } from './vscodeUtilities';
 
 import { OutputChannelAdapter } from './OutputChannelAdapter';
+import { isIpynbFile, validateNotebookShape } from '../ipynbUtilities';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
 
@@ -44,8 +45,23 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
                 const fileName = path.basename(fileUri.fsPath);
                 const notebook = await client.parseNotebook(fileName, buffer);
                 notebookCells = notebook.cells;
+
+                // peek at kernelspec to see if it's possibly not us
+                if (isIpynbFile(fileUri.fsPath)) {
+                    const notebookObject = JSON.parse(buffer.toString());
+                    validateNotebookShape(
+                        notebookObject,
+                        (isError, message) => {
+                            if (isError) {
+                                vscode.window.showErrorMessage(message);
+                            } else {
+                                vscode.window.showWarningMessage(message);
+                            }
+                        });
+                }
             } catch (e) {
-                this.outputChannel.appendLine(`Error opening file '${fileUri.fsPath}':\n${e}`);
+                vscode.window.showErrorMessage(`Error opening file '${fileUri.fsPath}'; check the '${this.outputChannel.getName()}' output channel for details`);
+                this.outputChannel.appendLine(`Error opening file '${fileUri.fsPath}':\n${e?.message}`);
             }
         } else {
             // new empty/blank notebook, nothing to do
