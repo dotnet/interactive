@@ -147,7 +147,7 @@ export function validateNotebookShape(notebookData: any, notificationCallback: (
         let hasLanguages = true;
         for (const cell of notebookData?.cells) {
             const cellLanguage = cell?.metadata?.dotnet_interactive?.language;
-            if (typeof cellLanguage !== 'string') {
+            if (cell?.cell_type === 'code' && typeof cellLanguage !== 'string') {
                 hasLanguages = false;
                 break;
             }
