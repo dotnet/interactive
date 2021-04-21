@@ -9,18 +9,18 @@ module.exports = function (wallaby) {
             type: "node"
         },
         files: [
-            "src/**/*.ts",
-            { pattern: "tests/**/*.ts", instrument: false },         
-            { pattern : "/node_modules/compare-versions/**.*", instrument: flattenDiagnosticMessageText},
-            { pattern: "tests/Responses/**/*.json", instrument: false },     
-            "!src/tests/**/*.test.ts*",
+            "/src/**/*.ts",
+            { pattern: "tests/**/*.ts", instrument: false },
+            { pattern: "/node_modules/compare-versions/**.*", instrument: flattenDiagnosticMessageText },
+            { pattern: "tests/Responses/**/*.json", instrument: false },
+            "!src/common/tests/**/*.test.ts*",
         ],
         tests: [
-            "src/tests/unit/**/*.test.ts",
-            "!src/tests/integration/**/*.test.ts"
+            "/src/common/tests/unit/**/*.test.ts",
+            "!src/common/tests/integration/**/*.test.ts"
         ],
         compilers: {
-            '**/*.ts?(x)': wallaby.compilers.typeScript({ })
+            '**/*.ts?(x)': wallaby.compilers.typeScript({})
         },
         testFramework: 'mocha',
         debug: true,
