@@ -6,7 +6,6 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { ClientMapper } from '../clientMapper';
 
-import { DotNetInteractiveNotebookContentProvider } from './notebookContentProvider';
 import { StdioKernelTransport } from '../stdioKernelTransport';
 import { registerLanguageProviders } from './languageProvider';
 import { registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
@@ -16,13 +15,13 @@ import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces'
 
 import { executeSafe, isDotnetKernel, isDotNetUpToDate, processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
-import { KernelId, updateCellLanguages, updateDocumentKernelspecMetadata } from './notebookKernel';
-import { DotNetInteractiveNotebookKernelProvider } from './notebookKernelProvider';
 
 import * as jupyter from './jupyter';
 import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 
 import { isInsidersBuild, isStableBuild } from './vscodeUtilities';
+
+export const KernelId = 'dotnet-interactive';
 
 export class CachedDotNetPathManager {
     private dotNetPath: string = 'dotnet'; // default to global tool if possible
@@ -153,23 +152,6 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     const languageServiceDelay = config.get<number>('languageServiceDelay') || 500; // fall back to something reasonable
-    const selectorDib = {
-        viewType: ['dotnet-interactive'],
-        filenamePattern: '*.{dib,dotnet-interactive}'
-    };
-    const selectorIpynbWithJupyter = {
-        viewType: ['jupyter-notebook'],
-        filenamePattern: '*.ipynb'
-    };
-    const selectorIpynbWithDotNetInteractive = {
-        viewType: ['dotnet-interactive-jupyter'],
-        filenamePatter: '*.ipynb'
-    };
-    const notebookContentProvider = new DotNetInteractiveNotebookContentProvider(diagnosticsChannel, clientMapper);
-
-    // notebook content
-    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookContentProvider));
-    versionSpecificFunctions.registerAdditionalContentProvider(context, notebookContentProvider);
 
     // notebook kernels
     const apiBootstrapperUri = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'kernelHttpApiBootstrapper.js'));
@@ -177,28 +159,11 @@ export async function activate(context: vscode.ExtensionContext) {
         throw new Error(`Unable to find bootstrapper API expected at '${apiBootstrapperUri.fsPath}'.`);
     }
 
-    const notebookKernelProvider = new DotNetInteractiveNotebookKernelProvider(apiBootstrapperUri, clientMapper);
-    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorDib, notebookKernelProvider));
-    if (useJupyterExtension) {
-        context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorIpynbWithJupyter, notebookKernelProvider));
-    }
-
-    if (isStableBuild()) {
-        // always register us as a possible .ipynb handler
-        context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorIpynbWithDotNetInteractive, notebookKernelProvider));
-    }
+    versionSpecificFunctions.registerWithVsCode(context, clientMapper, diagnosticsChannel, useJupyterExtension, apiBootstrapperUri);
 
     registerFileCommands(context, clientMapper, jupyterApi);
 
-    context.subscriptions.push(vscode.notebook.onDidChangeActiveNotebookKernel(async e => await handleNotebookKernelChange(e, clientMapper)));
-    context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => {
-        clientMapper.closeClient(notebookDocument.uri);
-        const resolve = notebookDocumentCloseResolvers.get(notebookDocument.uri);
-        if (resolve) {
-            notebookDocumentCloseResolvers.delete(notebookDocument.uri);
-            resolve();
-        }
-    }));
+    context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(vscode.workspace.onDidRenameFiles(e => handleFileRenames(e, clientMapper)));
 
     // language registration
@@ -244,50 +209,6 @@ async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocumen
             const edit = new vscode.WorkspaceEdit();
             edit.replaceNotebookCellMetadata(notebook.uri, cell.index, newMetadata);
             await vscode.workspace.applyEdit(edit);
-        }
-    }
-}
-
-const notebookDocumentCloseResolvers: Map<vscode.Uri, { (): void }> = new Map();
-
-async function handleNotebookKernelChange(e: { document: vscode.NotebookDocument, kernel: vscode.NotebookKernel | undefined }, clientMapper: ClientMapper) {
-    if (e.kernel?.id === KernelId) {
-        try {
-            // update various metadata
-            await updateDocumentKernelspecMetadata(e.document);
-            await updateCellLanguages(e.document);
-
-            // force creation of the client so we don't have to wait for the user to execute a cell to get the tool
-            await clientMapper.getOrAddClient(e.document.uri);
-        } catch (err) {
-            vscode.window.showErrorMessage(`Failed to set document metadata for '${e.document.uri}': ${err}`);
-        }
-    } else if (isStableBuild()) {
-        const kernelspecName = e.document.metadata?.custom?.metadata?.kernelspec?.name;
-        if (isDotnetKernel(kernelspecName)) {
-            // if kernel looks suspicously like us, tell them to re-open with our editor
-            const reopenText = 'Re-open with .NET Interactive';
-            const extensionsWithViewType = vscode.extensions.all.filter(ex => {
-                const notebookProviders = ex.packageJSON?.contributes?.notebookProvider;
-                if (Array.isArray(notebookProviders)) {
-                    const viewTypes = notebookProviders.map(p => p?.viewType);
-                    return viewTypes.findIndex(v => v === e.document.viewType) >= 0;
-                }
-
-                return false;
-            }).map(ex => <string | undefined>ex.packageJSON.displayName || ex.id);
-            const actualExtensionText = extensionsWithViewType.length === 0 ? '' : ` from the '${extensionsWithViewType[0]}' extension`;
-            const result = await vscode.window.showWarningMessage(`This notebook should be opened with the .NET Interactive Jupyter editor, but is currently open with '${e.document.viewType}'${actualExtensionText}.  Do you want to re-open it now?`, reopenText);
-            if (result === reopenText) {
-                if (vscode.window.activeNotebookEditor?.document !== e.document) {
-                    await vscode.window.showNotebookDocument(e.document.uri);
-                }
-
-                const closePromise = new Promise<void>(resolve => notebookDocumentCloseResolvers.set(e.document.uri, resolve));
-                await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
-                await closePromise;
-                await vscode.commands.executeCommand('vscode.openWith', e.document.uri, 'dotnet-interactive-jupyter');
-            }
         }
     }
 }

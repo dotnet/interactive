@@ -4,17 +4,17 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ClientMapper } from '../clientMapper';
-import { getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook, defaultNotebookCellLanguage } from '../interactiveNotebook';
-import { Eol } from '../interfaces';
-import { NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookDocument } from '../interfaces/contracts';
-import * as utilities from '../interfaces/utilities';
-import * as versionSpecificFunctions from '../../versionSpecificFunctions';
-import * as vscodeLike from '../interfaces/vscode-like';
-import { configureWebViewMessaging, getEol, isUnsavedNotebook } from './vscodeUtilities';
+import { ClientMapper } from './common/clientMapper';
+import { getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook, defaultNotebookCellLanguage } from './common/interactiveNotebook';
+import { Eol } from './common/interfaces';
+import { NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookDocument } from './common/interfaces/contracts';
+import * as utilities from './common/interfaces/utilities';
 
-import { OutputChannelAdapter } from './OutputChannelAdapter';
-import { isIpynbFile, validateNotebookShape } from '../ipynbUtilities';
+import { isIpynbFile, validateNotebookShape } from './common/ipynbUtilities';
+import * as vscodeLike from './common/interfaces/vscode-like';
+import { getEol, isUnsavedNotebook, toNotebookDocument } from './common/vscode/vscodeUtilities';
+
+import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
 
 export class DotNetInteractiveNotebookContentProvider implements vscode.NotebookContentProvider {
 
@@ -134,46 +134,6 @@ function toVsCodeNotebookCellData(cell: NotebookCell): vscode.NotebookCellData {
     );
 }
 
-export function toNotebookDocument(document: vscode.NotebookDocument): NotebookDocument {
-    return {
-        cells: versionSpecificFunctions.getCells(document).map(toNotebookCell)
-    };
-}
-
-function toNotebookCell(cell: vscode.NotebookCell): NotebookCell {
-    return {
-        language: getSimpleLanguage(cell.document.languageId),
-        contents: cell.document.getText(),
-        outputs: cell.outputs.map(vsCodeCellOutputToContractCellOutput)
-    };
-}
-
-function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCellOutput): NotebookCellOutput {
-    const errorOutputItems = output.outputs.filter(oi => oi.mime === vscodeLike.ErrorOutputMimeType || oi.metadata?.mimeType === vscodeLike.ErrorOutputMimeType);
-    if (errorOutputItems.length > 0) {
-        // any error-like output takes precedence
-        const errorOutputItem = errorOutputItems[0];
-        const error: NotebookCellErrorOutput = {
-            errorName: 'Error',
-            errorValue: '' + errorOutputItem.value,
-            stackTrace: [],
-        };
-        return error;
-    } else {
-        //otherwise build the mime=>value dictionary
-        const data: { [key: string]: any } = {};
-        for (const outputItem of output.outputs) {
-            data[outputItem.mime] = outputItem.value;
-        }
-
-        const cellOutput: NotebookCellDisplayOutput = {
-            data,
-        };
-
-        return cellOutput;
-    }
-}
-
 export function contractCellOutputToVsCodeCellOutput(output: NotebookCellOutput): vscode.NotebookCellOutput {
     const outputItems: Array<vscode.NotebookCellOutputItem> = [];
     if (utilities.isDisplayOutput(output)) {
@@ -192,4 +152,23 @@ export function contractCellOutputToVsCodeCellOutput(output: NotebookCellOutput)
 export function generateVsCodeNotebookCellOutputItem(mimeType: string, value: unknown): vscode.NotebookCellOutputItem {
     const displayValue = utilities.reshapeOutputValueForVsCode(mimeType, value);
     return new vscode.NotebookCellOutputItem(mimeType, displayValue);
+}
+
+export function configureWebViewMessaging(webview: vscode.NotebookCommunication, documentUri: vscode.Uri, clientMapper: ClientMapper) {
+    webview.onDidReceiveMessage(async (message) => {
+        switch (message.command) {
+            case "getHttpApiEndpoint":
+                const client = await clientMapper.tryGetClient(documentUri);
+                if (client) {
+                    const uri = client.tryGetProperty<vscode.Uri>("externalUri");
+                    webview.postMessage({ command: "configureFactories", endpointUri: uri?.toString() });
+
+                    clientMapper.onClientCreate(documentUri, async (client) => {
+                        const uri = client.tryGetProperty<vscode.Uri>("externalUri");
+                        await webview.postMessage({ command: "resetFactories", endpointUri: uri?.toString() });
+                    });
+                }
+                break;
+        }
+    });
 }

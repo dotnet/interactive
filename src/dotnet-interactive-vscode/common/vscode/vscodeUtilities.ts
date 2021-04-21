@@ -4,15 +4,19 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
 import { Eol, WindowsEol, NonWindowsEol } from "../interfaces";
-import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan } from '../interfaces/contracts';
-import { ClientMapper } from '../clientMapper';
+import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan, NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookDocument } from '../interfaces/contracts';
 
-export function isStableBuild(): boolean {
-    return !isInsidersBuild();
-}
+import * as versionSpecificFunctions from '../../versionSpecificFunctions';
+import { getSimpleLanguage } from '../interactiveNotebook';
+import * as vscodeLike from '../interfaces/vscode-like';
+import { isDotnetKernel } from '../utilities';
 
 export function isInsidersBuild(): boolean {
     return vscode.version.indexOf('-insider') >= 0;
+}
+
+export function isStableBuild(): boolean {
+    return !isInsidersBuild();
 }
 
 function convertToPosition(linePosition: LinePosition): vscode.Position {
@@ -72,22 +76,80 @@ export function getEol(): Eol {
 export function isUnsavedNotebook(uri: vscode.Uri): boolean {
     return uri.scheme === 'untitled';
 }
+export function toNotebookDocument(document: vscode.NotebookDocument): NotebookDocument {
+    return {
+        cells: versionSpecificFunctions.getCells(document).map(toNotebookCell)
+    };
+}
 
-export function configureWebViewMessaging(webview: vscode.NotebookCommunication, documentUri: vscode.Uri, clientMapper: ClientMapper) {
-    webview.onDidReceiveMessage(async (message) => {
-        switch (message.command) {
-            case "getHttpApiEndpoint":
-                const client = await clientMapper.tryGetClient(documentUri);
-                if (client) {
-                    const uri = client.tryGetProperty<vscode.Uri>("externalUri");
-                    webview.postMessage({ command: "configureFactories", endpointUri: uri?.toString() });
+export function toNotebookCell(cell: vscode.NotebookCell): NotebookCell {
+    return {
+        language: getSimpleLanguage(cell.document.languageId),
+        contents: cell.document.getText(),
+        outputs: cell.outputs.map(vsCodeCellOutputToContractCellOutput)
+    };
+}
 
-                    clientMapper.onClientCreate(documentUri, async (client) => {
-                        const uri = client.tryGetProperty<vscode.Uri>("externalUri");
-                        await webview.postMessage({ command: "resetFactories", endpointUri: uri?.toString() });
-                    });
-                }
-                break;
+export function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCellOutput): NotebookCellOutput {
+    const errorOutputItems = output.outputs.filter(oi => oi.mime === vscodeLike.ErrorOutputMimeType || oi.metadata?.mimeType === vscodeLike.ErrorOutputMimeType);
+    if (errorOutputItems.length > 0) {
+        // any error-like output takes precedence
+        const errorOutputItem = errorOutputItems[0];
+        const error: NotebookCellErrorOutput = {
+            errorName: 'Error',
+            errorValue: '' + errorOutputItem.value,
+            stackTrace: [],
+        };
+        return error;
+    } else {
+        //otherwise build the mime=>value dictionary
+        const data: { [key: string]: any } = {};
+        for (const outputItem of output.outputs) {
+            data[outputItem.mime] = outputItem.value;
         }
-    });
+
+        const cellOutput: NotebookCellDisplayOutput = {
+            data,
+        };
+
+        return cellOutput;
+    }
+}
+
+const notebookDocumentCloseResolvers: Map<vscode.Uri, { (): void }> = new Map();
+
+export async function offerToReOpen(notebookDocument: vscode.NotebookDocument, kernelspecName: any): Promise<void> {
+    if (isDotnetKernel(kernelspecName)) {
+        // if kernel looks suspicously like us, tell them to re-open with our editor
+        const reopenText = 'Re-open with .NET Interactive';
+        const extensionsWithViewType = vscode.extensions.all.filter(ex => {
+            const notebookProviders = ex.packageJSON?.contributes?.notebookProvider;
+            if (Array.isArray(notebookProviders)) {
+                const viewTypes = notebookProviders.map(p => p?.viewType);
+                return viewTypes.findIndex(v => v === notebookDocument.viewType) >= 0;
+            }
+
+            return false;
+        }).map(ex => <string | undefined>ex.packageJSON.displayName || ex.id);
+        const actualExtensionText = extensionsWithViewType.length === 0 ? '' : ` from the '${extensionsWithViewType[0]}' extension`;
+        const result = await vscode.window.showWarningMessage(`This notebook should be opened with the .NET Interactive Jupyter editor, but is currently open with '${notebookDocument.viewType}'${actualExtensionText}.  Do you want to re-open it now?`, reopenText);
+        if (result === reopenText) {
+            if (vscode.window.activeNotebookEditor?.document !== notebookDocument) {
+                await vscode.window.showNotebookDocument(notebookDocument.uri);
+            }
+
+            const closePromise = new Promise<void>(resolve => notebookDocumentCloseResolvers.set(notebookDocument.uri, resolve));
+            await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+            await closePromise;
+            await vscode.commands.executeCommand('vscode.openWith', notebookDocument.uri, 'dotnet-interactive-jupyter');
+        }
+    }
+}
+
+export function resolveNotebookDocumentClose(notebookDocument: vscode.NotebookDocument) {
+    const resolve = notebookDocumentCloseResolvers.get(notebookDocument.uri);
+    if (resolve) {
+        notebookDocumentCloseResolvers.delete(notebookDocument.uri);
+        resolve();
+    }
 }

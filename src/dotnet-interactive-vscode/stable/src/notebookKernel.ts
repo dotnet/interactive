@@ -3,18 +3,17 @@
 
 import * as vscode from 'vscode';
 
-import { ClientMapper } from "../clientMapper";
-import { getSimpleLanguage, notebookCellLanguages } from "../interactiveNotebook";
-import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, withDotNetKernelMetadata } from '../ipynbUtilities';
-import * as contracts from '../interfaces/contracts';
-import * as vscodeLike from '../interfaces/vscode-like';
-import * as diagnostics from './diagnostics';
+import { KernelId } from './common/vscode/extension';
+import { ClientMapper } from "./common/clientMapper";
+import { getSimpleLanguage, notebookCellLanguages } from "./common/interactiveNotebook";
+import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, withDotNetKernelMetadata } from './common/ipynbUtilities';
+import * as contracts from './common/interfaces/contracts';
+import * as vscodeLike from './common/interfaces/vscode-like';
+import * as diagnostics from './common/vscode/diagnostics';
 import * as notebookContentProvider from './notebookContentProvider';
-import * as utilities from '../utilities';
-import * as versionSpecificFunctions from '../../versionSpecificFunctions';
-import * as vscodeUtilities from './vscodeUtilities';
-
-export const KernelId: string = 'dotnet-interactive';
+import * as utilities from './common/utilities';
+import * as versionSpecificFunctions from './versionSpecificFunctions';
+import * as vscodeUtilities from './common/vscode/vscodeUtilities';
 
 export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
     id: string = KernelId;
@@ -22,12 +21,12 @@ export class DotNetInteractiveNotebookKernel implements vscode.NotebookKernel {
     description?: string | undefined;
     detail?: string | undefined;
     isPreferred: boolean;
-    preloads?: vscode.Uri[] | undefined;
+    preloads?: vscode.Uri[];
     supportedLanguages: Array<string>;
 
-    constructor(readonly clientMapper: ClientMapper, apiBootstrapperUri: vscode.Uri, isPreferred: boolean) {
+    constructor(readonly clientMapper: ClientMapper, preloadUris: vscode.Uri[], isPreferred: boolean) {
         this.label = ".NET Interactive";
-        this.preloads = [apiBootstrapperUri];
+        this.preloads = preloadUris;
         this.isPreferred = isPreferred;
         this.supportedLanguages = notebookCellLanguages;
     }
