@@ -201,8 +201,10 @@ async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocumen
         if (cell) {
             const newMetadata = cell.metadata.with({
                 custom: {
-                    dotnet_interactive: {
-                        language: getSimpleLanguage(candidateNotebookCellDocument.languageId)
+                    metadata: {
+                        dotnet_interactive: {
+                            language: getSimpleLanguage(candidateNotebookCellDocument.languageId)
+                        }
                     }
                 }
             });
