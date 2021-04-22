@@ -10,7 +10,6 @@ import { getEol, isUnsavedNotebook, toNotebookDocument } from './vscodeUtilities
 import { DotNetPathManager, KernelId } from './extension';
 import { computeToolInstallArguments, executeSafe, executeSafeAndLog } from '../utilities';
 
-import * as jupyter from './jupyter';
 import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import { ReportChannel } from '../interfaces/vscode-like';
 
@@ -136,13 +135,17 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
     }));
 }
 
-export function registerFileCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper, jupyterApi: jupyter.IJupyterExtensionApi | undefined) {
+export function registerFileCommands(context: vscode.ExtensionContext, clientMapper: ClientMapper) {
 
     const eol = getEol();
 
-    const fileFormatFilters = {
+    const fileOpenFilters = {
+        '.NET Interactive Notebooks': ['dib', 'dotnet-interactive'],
+    };
+
+    const fileSaveAsFilters = {
+        ...fileOpenFilters,
         'Jupyter Notebooks': ['ipynb'],
-        '.NET Interactive Notebooks': ['dib', 'dotnet-interactive']
     };
 
     function workspaceHasUnsavedNotebookWithName(fileName: string): boolean {
@@ -156,30 +159,31 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
         }) >= 0;
     }
 
+    // using .ipynb as default until https://github.com/microsoft/vscode/issues/121974 is fixed
+    //const [newNotebookExtension, newNotebookViewType] = ['.dib', 'dotnet-interactive'];
+    const [newNotebookExtension, newNotebookViewType] = ['.ipynb', 'jupyter-notebook'];
+
     function getNewNotebookName(): string {
         let suffix = 1;
-        while (workspaceHasUnsavedNotebookWithName(`Untitled-${suffix}.ipynb`)) {
-            suffix++;
-        }
+        let filename = '';
+        do {
+            filename = `Untitled-${suffix++}${newNotebookExtension}`;
+        } while (workspaceHasUnsavedNotebookWithName(filename));
 
-        return `Untitled-${suffix}.ipynb`;
+        return filename;
     }
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebook', async () => {
-        if (jupyterApi) {
-            jupyterApi.createBlankNotebook({ defaultCellLanguage: 'dotnet-interactive.csharp' });
-        } else {
-            const fileName = getNewNotebookName();
-            const newUri = vscode.Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
-            await vscode.commands.executeCommand('vscode.openWith', newUri, 'dotnet-interactive-jupyter');
-        }
+        const fileName = getNewNotebookName();
+        const newUri = vscode.Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
+        await vscode.commands.executeCommand('vscode.openWith', newUri, newNotebookViewType);
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
         // ensure we have a notebook uri
         if (!notebookUri) {
             const uris = await vscode.window.showOpenDialog({
-                filters: fileFormatFilters
+                filters: fileOpenFilters
             });
 
             if (uris && uris.length > 0) {
@@ -192,27 +196,13 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
             }
         }
 
-        const extension = path.extname(notebookUri.fsPath);
-        switch (extension) {
-            case '.ipynb':
-                if (jupyterApi) {
-                    await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'jupyter-notebook');
-                    await switchToInteractiveKernel();
-                } else {
-                    await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'dotnet-interactive-jupyter');
-                }
-                break;
-            default:
-                // was .dib or .dotnet-interactive
-                await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'dotnet-interactive');
-                break;
-        }
+        await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'dotnet-interactive');
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {
         if (vscode.window.activeNotebookEditor) {
             const uri = await vscode.window.showSaveDialog({
-                filters: fileFormatFilters
+                filters: fileSaveAsFilters
             });
 
             if (!uri) {
@@ -224,7 +214,12 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
             const client = await clientMapper.getOrAddClient(uri);
             const buffer = await client.serializeNotebook(uri.fsPath, notebook, eol);
             await vscode.workspace.fs.writeFile(uri, buffer);
-            await vscode.commands.executeCommand('dotnet-interactive.openNotebook', uri);
+            switch (path.extname(uri.fsPath)) {
+                case '.dib':
+                case '.dotnet-interactive':
+                    await vscode.commands.executeCommand('dotnet-interactive.openNotebook', uri);
+                    break;
+            }
         }
     }));
 }

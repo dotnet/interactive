@@ -14,7 +14,6 @@ import { DotNetInteractiveNotebookKernelProvider } from './notebookKernelProvide
 import { DotNetInteractiveNotebookContentProvider } from './notebookContentProvider';
 import { ClientMapper } from './common/clientMapper';
 import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
-import { isStableBuild, offerToReOpen } from './common/vscode/vscodeUtilities';
 
 export function cellAt(document: vscode.NotebookDocument, index: number): vscode.NotebookCell {
     return document.cells[index];
@@ -32,7 +31,7 @@ export function getCells(document: vscode.NotebookDocument | undefined): Array<v
     return [];
 }
 
-export function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, diagnosticsChannel: OutputChannelAdapter, useJupyterExtension: boolean, ...preloadUris: vscode.Uri[]) {
+export function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, diagnosticsChannel: OutputChannelAdapter, ...preloadUris: vscode.Uri[]) {
     const selectorDib = {
         viewType: ['dotnet-interactive'],
         filenamePattern: '*.{dib,dotnet-interactive}'
@@ -52,15 +51,11 @@ export function registerWithVsCode(context: vscode.ExtensionContext, clientMappe
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive-jupyter', notebookContentProvider));
     const notebookKernelProvider = new DotNetInteractiveNotebookKernelProvider(preloadUris, clientMapper);
     context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorDib, notebookKernelProvider));
-    if (useJupyterExtension) {
-        context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorIpynbWithJupyter, notebookKernelProvider));
-    }
 
     // always register as a possible .ipynb handler
     context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorIpynbWithDotNetInteractive, notebookKernelProvider));
 
     context.subscriptions.push(vscode.notebook.onDidChangeActiveNotebookKernel(async e => await handleNotebookKernelChange(e, clientMapper)));
-    context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => vscodeUtilities.resolveNotebookDocumentClose(notebookDocument)));
 }
 
 export function endExecution(cell: vscode.NotebookCell, success: boolean) {
@@ -79,8 +74,5 @@ async function handleNotebookKernelChange(e: { document: vscode.NotebookDocument
         } catch (err) {
             vscode.window.showErrorMessage(`Failed to set document metadata for '${e.document.uri}': ${err}`);
         }
-    } else if (isStableBuild()) {
-        const kernelspecName = e.document.metadata?.custom?.metadata?.kernelspec?.name;
-        await offerToReOpen(e.document, kernelspecName);
     }
 }

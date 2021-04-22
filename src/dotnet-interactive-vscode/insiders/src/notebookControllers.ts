@@ -10,12 +10,14 @@ import * as diagnostics from './common/vscode/diagnostics';
 import * as utilities from './common/utilities';
 import * as versionSpecificFunctions from './versionSpecificFunctions';
 import * as vscodeUtilities from './common/vscode/vscodeUtilities';
-import { getSimpleLanguage, notebookCellLanguages } from './common/interactiveNotebook';
-import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, withDotNetKernelMetadata } from './common/ipynbUtilities';
+import { getSimpleLanguage, isDotnetInteractiveLanguage, notebookCellLanguages } from './common/interactiveNotebook';
+import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, isDotNetNotebook, withDotNetKernelMetadata } from './common/ipynbUtilities';
 import { reshapeOutputValueForVsCode } from './common/interfaces/utilities';
-import { isStableBuild } from './common/vscode/vscodeUtilities';
 
 const executionTasks: Map<vscode.Uri, vscode.NotebookCellExecutionTask> = new Map();
+
+const viewType = 'dotnet-interactive';
+const jupyterViewType = 'jupyter-notebook';
 
 export class DotNetNotebookKernel {
 
@@ -27,37 +29,29 @@ export class DotNetNotebookKernel {
         // .dib execution
         const dibController = vscode.notebook.createNotebookController(
             'dotnet-interactive',
-            { viewType: 'dotnet-interactive' },
+            viewType,
             '.NET Interactive',
             this.executeHandler.bind(this),
             preloads
         );
-        dibController.isPreferred = true;
         this.commonControllerInit(dibController);
 
-        // .ipynb execution via this extension
-        if (isStableBuild()) {
-            const ipynbController = vscode.notebook.createNotebookController(
-                'dotnet-interactive-jupyter',
-                { viewType: 'dotnet-interactive-jupyter' },
-                '.NET Interactive',
-                this.executeHandler.bind(this), // handler
-                preloads
-            );
-            ipynbController.isPreferred = false;
-            this.commonControllerInit(ipynbController);
-        }
-
-        // .ipynb execution via Jupyter extension
+        // .ipynb execution via Jupyter extension (optional)
         const jupyterController = vscode.notebook.createNotebookController(
             'dotnet-interactive-for-jupyter',
-            { viewType: 'jupyter-notebook' },
+            jupyterViewType,
             '.NET Interactive',
             this.executeHandler.bind(this),
             preloads
         );
-        jupyterController.isPreferred = false;
         jupyterController.onDidChangeNotebookAssociation(async e => {
+            // assign affinity
+            const affinity = isDotNetNotebook(e.notebook.metadata)
+                ? vscode.NotebookControllerAffinity.Preferred
+                : vscode.NotebookControllerAffinity.Default;
+            jupyterController.updateNotebookAffinity(e.notebook, affinity);
+
+            // update metadata
             if (e.selected) {
                 try {
                     // update various metadata
@@ -69,11 +63,6 @@ export class DotNetNotebookKernel {
                 } catch (err) {
                     vscode.window.showErrorMessage(`Failed to set document metadata for '${e.notebook.uri}': ${err}`);
                 }
-            } else if (isStableBuild()) {
-                // `e.notebook.metadata.custom` is deprecated but still used by the Jupyter extension; soon the metadata will change to something like this:
-                //    e.notebook.metadata['kernelspec']?.name;
-                const kernelspecName = e.notebook.metadata?.custom?.metadata?.kernelspec?.name;
-                await vscodeUtilities.offerToReOpen(e.notebook, kernelspecName);
             }
         });
         this.commonControllerInit(jupyterController);
@@ -106,7 +95,7 @@ export class DotNetNotebookKernel {
         this.disposables.push(controller);
     }
 
-    private async executeHandler(cells: vscode.NotebookCell[], controller: vscode.NotebookController): Promise<void> {
+    private async executeHandler(cells: vscode.NotebookCell[], document: vscode.NotebookDocument, controller: vscode.NotebookController): Promise<void> {
         for (const cell of cells) {
             await this.executeCell(cell, controller);
         }

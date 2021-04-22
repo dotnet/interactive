@@ -13,13 +13,12 @@ import { registerAcquisitionCommands, registerKernelCommands, registerFileComman
 import { getSimpleLanguage, isDotnetInteractiveLanguage } from '../interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
-import { executeSafe, isDotnetKernel, isDotNetUpToDate, processArguments } from '../utilities';
+import { executeSafe, isDotNetUpToDate, processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 
-import * as jupyter from './jupyter';
 import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 
-import { isInsidersBuild, isStableBuild } from './vscodeUtilities';
+import { isInsidersBuild } from './vscodeUtilities';
 
 export const KernelId = 'dotnet-interactive';
 
@@ -127,30 +126,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const hostVersionSuffix = isInsidersBuild() ? 'Insiders' : 'Stable';
     diagnosticsChannel.appendLine(`Extension started for VS Code ${hostVersionSuffix}.`);
-
-    const jupyterExtension = vscode.extensions.getExtension('ms-toolsai.jupyter');
-
-    // Default to using the Jupyter extension for .ipynb handling if the extension is present, unless the user has
-    // specified otherwise.
-    const jupyterExtensionIsPresent = jupyterExtension !== undefined;
-    let useJupyterExtension = jupyterExtensionIsPresent;
-    const forceDotNetIpynbHandling = config.get<boolean>('useDotNetInteractiveExtensionForIpynbFiles') || false;
-    if (forceDotNetIpynbHandling && isStableBuild()) {
-        useJupyterExtension = false;
-    }
-
-    let jupyterApi: jupyter.IJupyterExtensionApi | undefined = undefined;
-    if (useJupyterExtension) {
-        try {
-            jupyterApi = <jupyter.IJupyterExtensionApi>await jupyterExtension!.activate();
-            jupyterApi.registerNewNotebookContent({ defaultCellLanguage: 'dotnet-interactive.csharp' });
-        } catch (err) {
-            diagnosticsChannel.appendLine(`Error activating and registering with Jupyter extension: ${err}.  Defaulting to local file handling.`);
-            useJupyterExtension = false;
-            jupyterApi = undefined;
-        }
-    }
-
     const languageServiceDelay = config.get<number>('languageServiceDelay') || 500; // fall back to something reasonable
 
     // notebook kernels
@@ -159,9 +134,9 @@ export async function activate(context: vscode.ExtensionContext) {
         throw new Error(`Unable to find bootstrapper API expected at '${apiBootstrapperUri.fsPath}'.`);
     }
 
-    versionSpecificFunctions.registerWithVsCode(context, clientMapper, diagnosticsChannel, useJupyterExtension, apiBootstrapperUri);
+    versionSpecificFunctions.registerWithVsCode(context, clientMapper, diagnosticsChannel, apiBootstrapperUri);
 
-    registerFileCommands(context, clientMapper, jupyterApi);
+    registerFileCommands(context, clientMapper);
 
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(vscode.workspace.onDidRenameFiles(e => handleFileRenames(e, clientMapper)));
