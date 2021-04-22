@@ -19,7 +19,7 @@ function isDotNetCellMetadata(arg: any): arg is DotNetCellMetadata {
         && typeof arg.language === 'string';
 }
 
-export function getDotNetMetadata(metadata: CellMetadata | undefined): DotNetCellMetadata {
+export function getDotNetMetadata(metadata: any): DotNetCellMetadata {
     if (metadata &&
         metadata.custom &&
         metadata.custom.metadata &&
@@ -47,7 +47,7 @@ function isLanguageInfoMetadata(arg: any): arg is LanguageInfoMetadata {
         && typeof arg.name === 'string';
 }
 
-export function getLanguageInfoMetadata(metadata: DocumentMetadata | undefined): LanguageInfoMetadata {
+export function getLanguageInfoMetadata(metadata: any): LanguageInfoMetadata {
     let languageMetadata: LanguageInfoMetadata = {
         name: undefined,
     };

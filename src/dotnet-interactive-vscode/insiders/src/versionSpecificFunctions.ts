@@ -6,14 +6,12 @@ import * as contracts from './common/interfaces/contracts';
 import * as vscodeLike from './common/interfaces/vscode-like';
 import * as interactiveNotebook from './common/interactiveNotebook';
 import * as utilities from './common/utilities';
-import * as notebookContentProvider from './common/vscode/notebookContentProvider';
-import * as notebookKernel from './common/vscode/notebookKernel';
 import * as diagnostics from './common/vscode/diagnostics';
 import * as vscodeUtilities from './common/vscode/vscodeUtilities';
-
-export function registerAdditionalContentProvider(context: vscode.ExtensionContext, contentProvider: vscode.NotebookContentProvider) {
-    // empty for insiders
-}
+import * as notebookControllers from './notebookControllers';
+import * as notebookSerializers from './notebookSerializers';
+import { ClientMapper } from './common/clientMapper';
+import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
 
 export function cellAt(document: vscode.NotebookDocument, index: number): vscode.NotebookCell {
     return document.cellAt(index);
@@ -29,4 +27,14 @@ export function getCells(document: vscode.NotebookDocument | undefined): Array<v
     }
 
     return [];
+}
+
+export function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter, useJupyterExtension: boolean, ...preloadUris: vscode.Uri[]) {
+    context.subscriptions.push(new notebookControllers.DotNetNotebookKernel(clientMapper, preloadUris));
+    context.subscriptions.push(new notebookSerializers.DotNetDibNotebookSerializer(clientMapper, outputChannel));
+    //context.subscriptions.push(new notebookSerializers.DotNetIpynbNotebookSerializer(clientMapper, outputChannel)); // only stable uses our ipynb handler
+}
+
+export function endExecution(cell: vscode.NotebookCell, success: boolean) {
+    notebookControllers.endExecution(cell, success);
 }

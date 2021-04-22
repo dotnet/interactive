@@ -4,17 +4,17 @@
 import * as vscode from 'vscode';
 
 import { DotNetInteractiveNotebookKernel } from "./notebookKernel";
-import { configureWebViewMessaging } from "./vscodeUtilities";
-import { ClientMapper } from '../clientMapper';
-import { isDotNetKernelPreferred } from '../utilities';
+import { ClientMapper } from './common/clientMapper';
+import { isDotNetKernelPreferred } from './common/utilities';
+import { configureWebViewMessaging } from './notebookContentProvider';
 
 export class DotNetInteractiveNotebookKernelProvider implements vscode.NotebookKernelProvider<DotNetInteractiveNotebookKernel> {
     private preferredKernel: DotNetInteractiveNotebookKernel;
     private nonPreferredKernel: DotNetInteractiveNotebookKernel;
 
-    constructor(readonly apiBootstrapperUri: vscode.Uri, readonly clientMapper: ClientMapper) {
-        this.preferredKernel = new DotNetInteractiveNotebookKernel(clientMapper, this.apiBootstrapperUri, true);
-        this.nonPreferredKernel = new DotNetInteractiveNotebookKernel(clientMapper, this.apiBootstrapperUri, false);
+    constructor(preloadUris: vscode.Uri[], readonly clientMapper: ClientMapper) {
+        this.preferredKernel = new DotNetInteractiveNotebookKernel(clientMapper, preloadUris, true);
+        this.nonPreferredKernel = new DotNetInteractiveNotebookKernel(clientMapper, preloadUris, false);
     }
 
     onDidChangeKernels?: vscode.Event<vscode.NotebookDocument | undefined> | undefined;

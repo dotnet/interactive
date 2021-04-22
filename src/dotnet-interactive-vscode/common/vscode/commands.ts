@@ -6,10 +6,8 @@ import * as path from 'path';
 import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
 import { ClientMapper } from '../clientMapper';
-import { getEol, isUnsavedNotebook } from './vscodeUtilities';
-import { toNotebookDocument } from './notebookContentProvider';
-import { KernelId, endExecution } from './notebookKernel';
-import { DotNetPathManager } from './extension';
+import { getEol, isUnsavedNotebook, toNotebookDocument } from './vscodeUtilities';
+import { DotNetPathManager, KernelId } from './extension';
 import { computeToolInstallArguments, executeSafe, executeSafeAndLog } from '../utilities';
 
 import * as jupyter from './jupyter';
@@ -124,7 +122,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
 
         if (document) {
             for (const cell of versionSpecificFunctions.getCells(document)) {
-                endExecution(cell, false);
+                versionSpecificFunctions.endExecution(cell, false);
             }
 
             clientMapper.closeClient(document.uri);

@@ -104,7 +104,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.221503",
+          "default": "1.0.222102",
           "description": "The minimum required version of the .NET Interactive tool."
         }
       }
@@ -343,7 +343,7 @@
     "lint": "eslint src --ext ts",
     "watch": "tsc -watch -p ./",
     "integration-test": "node ./out/tests/integration/runTest.js",
-    "pretest": "npm run compile && npm run lint",
+    "pretest": "npm run compile",
     "test": "mocha --opts mocha.opts",
     "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json",
     "tdd": "npm test -- --watch",
