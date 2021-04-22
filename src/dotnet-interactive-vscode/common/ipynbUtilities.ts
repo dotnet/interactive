@@ -57,7 +57,7 @@ export function getLanguageInfoMetadata(metadata: any): LanguageInfoMetadata {
         metadata.custom.metadata &&
         metadata.custom.metadata.language_info &&
         isLanguageInfoMetadata(metadata.custom.metadata.language_info)) {
-        languageMetadata = metadata.custom.metadata.language_info;
+        languageMetadata = { ...metadata.custom.metadata.language_info };
     }
 
     languageMetadata.name = mapIpynbLanguageName(languageMetadata.name);
