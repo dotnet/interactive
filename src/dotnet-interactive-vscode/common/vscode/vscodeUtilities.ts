@@ -9,7 +9,6 @@ import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan, Noteboo
 import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import { getSimpleLanguage } from '../interactiveNotebook';
 import * as vscodeLike from '../interfaces/vscode-like';
-import { isDotnetKernel } from '../utilities';
 
 export function isInsidersBuild(): boolean {
     return vscode.version.indexOf('-insider') >= 0;
@@ -113,43 +112,5 @@ export function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCell
         };
 
         return cellOutput;
-    }
-}
-
-const notebookDocumentCloseResolvers: Map<vscode.Uri, { (): void }> = new Map();
-
-export async function offerToReOpen(notebookDocument: vscode.NotebookDocument, kernelspecName: any): Promise<void> {
-    if (isDotnetKernel(kernelspecName)) {
-        // if kernel looks suspicously like us, tell them to re-open with our editor
-        const reopenText = 'Re-open with .NET Interactive';
-        const extensionsWithViewType = vscode.extensions.all.filter(ex => {
-            const notebookProviders = ex.packageJSON?.contributes?.notebookProvider;
-            if (Array.isArray(notebookProviders)) {
-                const viewTypes = notebookProviders.map(p => p?.viewType);
-                return viewTypes.findIndex(v => v === notebookDocument.viewType) >= 0;
-            }
-
-            return false;
-        }).map(ex => <string | undefined>ex.packageJSON.displayName || ex.id);
-        const actualExtensionText = extensionsWithViewType.length === 0 ? '' : ` from the '${extensionsWithViewType[0]}' extension`;
-        const result = await vscode.window.showWarningMessage(`This notebook should be opened with the .NET Interactive Jupyter editor, but is currently open with '${notebookDocument.viewType}'${actualExtensionText}.  Do you want to re-open it now?`, reopenText);
-        if (result === reopenText) {
-            if (vscode.window.activeNotebookEditor?.document !== notebookDocument) {
-                await vscode.window.showNotebookDocument(notebookDocument.uri);
-            }
-
-            const closePromise = new Promise<void>(resolve => notebookDocumentCloseResolvers.set(notebookDocument.uri, resolve));
-            await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
-            await closePromise;
-            await vscode.commands.executeCommand('vscode.openWith', notebookDocument.uri, 'dotnet-interactive-jupyter');
-        }
-    }
-}
-
-export function resolveNotebookDocumentClose(notebookDocument: vscode.NotebookDocument) {
-    const resolve = notebookDocumentCloseResolvers.get(notebookDocument.uri);
-    if (resolve) {
-        notebookDocumentCloseResolvers.delete(notebookDocument.uri);
-        resolve();
     }
 }

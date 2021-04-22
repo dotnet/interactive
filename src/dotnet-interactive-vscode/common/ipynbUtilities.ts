@@ -3,7 +3,6 @@
 
 import * as path from 'path';
 import { getNotebookSpecificLanguage, isDotnetInteractiveLanguage, notebookCellLanguages } from "./interactiveNotebook";
-import { isDotnetKernel } from './utilities';
 
 // the shape of this is meant to match the cell metadata from VS Code
 interface CellMetadata {
@@ -149,24 +148,13 @@ export function isIpynbFile(filePath: string): boolean {
     return path.extname(filePath).toLowerCase() === '.ipynb';
 }
 
-export function validateNotebookShape(notebookData: any, notificationCallback: (isError: boolean, message: string) => void) {
-    const kernelspecName = notebookData?.metadata?.kernelspec?.name;
-    if (isDotnetKernel(kernelspecName)) {
-        // looks like us, check the cell languages
-        let hasLanguages = true;
-        for (const cell of notebookData?.cells) {
-            const cellLanguage = cell?.metadata?.dotnet_interactive?.language;
-            if (cell?.cell_type === 'code' && typeof cellLanguage !== 'string') {
-                hasLanguages = false;
-                break;
-            }
-        }
+function isDotnetKernel(kernelspecName: any): boolean {
+    return typeof kernelspecName === 'string' && kernelspecName.toLowerCase().startsWith('.net-');
+}
 
-        if (!hasLanguages) {
-            notificationCallback(false, `.NET Interactive could not determine the language of the notebook cells.  Please ensure each cell's language is correctly set.`);
-        }
-    } else {
-        // might be something else
-        notificationCallback(true, `Unexpected kernelspec name '${kernelspecName}' in notebook.  Right-click the notebook file and select 'Open With...' to select the correct editor.`);
-    }
+export function isDotNetNotebook(notebookMetadata: any): boolean {
+    const kernelName = notebookMetadata?.custom?.metadata?.kernelspec?.name;
+    const languageInfo = notebookMetadata?.custom?.metadata?.language_info?.name;
+    const isDotnetLanguageInfo = typeof languageInfo === 'string' && isDotnetInteractiveLanguage(languageInfo);
+    return isDotnetKernel(kernelName) || isDotnetLanguageInfo;
 }

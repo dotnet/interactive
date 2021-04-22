@@ -29,12 +29,9 @@ export function getCells(document: vscode.NotebookDocument | undefined): Array<v
     return [];
 }
 
-export function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter, useJupyterExtension: boolean, ...preloadUris: vscode.Uri[]) {
+export function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter, ...preloadUris: vscode.Uri[]) {
     context.subscriptions.push(new notebookControllers.DotNetNotebookKernel(clientMapper, preloadUris));
     context.subscriptions.push(new notebookSerializers.DotNetDibNotebookSerializer(clientMapper, outputChannel));
-    if (vscodeUtilities.isStableBuild()) {
-        context.subscriptions.push(new notebookSerializers.DotNetIpynbNotebookSerializer(clientMapper, outputChannel));
-    }
 }
 
 export function endExecution(cell: vscode.NotebookCell, success: boolean) {

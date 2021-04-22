@@ -49,9 +49,7 @@
     "onCommand:dotnet-interactive.saveAsNotebook"
   ],
   "main": "./out/src/common/vscode/extension.js",
-  "extensionDependencies": [
-    "ms-toolsai.jupyter"
-  ],
+  "extensionDependencies": [],
   "contributes": {
     "notebookProvider": [
       {
@@ -62,6 +60,20 @@
             "filenamePattern": "*.{dib,dotnet-interactive}"
           }
         ]
+      }
+    ],
+    "jupyter.kernels": [
+      {
+        "title": ".NET Interactive (C#)",
+        "defaultLanguage": "dotnet-interactive.csharp"
+      },
+      {
+        "title": ".NET Interactive (F#)",
+        "defaultLanguage": "dotnet-interactive.fsharp"
+      },
+      {
+        "title": ".NET Interactive (PowerShell)",
+        "defaultLanguage": "dotnet-interactive.pwsh"
       }
     ],
     "configuration": {
@@ -104,7 +116,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.222103",
+          "default": "1.0.222202",
           "description": "The minimum required version of the .NET Interactive tool."
         }
       }

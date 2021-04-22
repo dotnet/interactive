@@ -4,140 +4,54 @@
 import { expect } from 'chai';
 import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from '../../interfaces/contracts';
 import { isDisplayOutput, isErrorOutput, isTextOutput, reshapeOutputValueForVsCode } from '../../interfaces/utilities';
-import { isIpynbFile, requiredKernelspecData, validateNotebookShape } from '../../ipynbUtilities';
-import { debounce, executeSafe, isDotnetKernel, isDotNetKernelPreferred, isDotNetUpToDate, parse, processArguments, stringify } from '../../utilities';
+import { isDotNetNotebook, isIpynbFile } from '../../ipynbUtilities';
+import { debounce, executeSafe, isDotNetUpToDate, parse, processArguments, stringify } from '../../utilities';
 
 import * as vscodeLike from '../../interfaces/vscode-like';
 
 describe('Miscellaneous tests', () => {
-    describe('preferred kernel selection', () => {
-        it(`.dib file extension is always preferred`, () => {
-            const filename = 'notebook.dib';
-            const fileMetadata = {};
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
-        });
-
-        it(`.dotnet-interactive file extension is always preferred`, () => {
-            const filename = 'notebook.dotnet-interactive';
-            const fileMetadata = {};
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
-        });
-
-        it(`.ipynb file extension is preferred if metadata kernelspec matches`, () => {
-            const filename = 'notebook.ipynb';
-            const fileMetadata = {
-                custom: {
-                    metadata: {
-                        kernelspec: requiredKernelspecData
-                    }
-                }
-            };
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
-        });
-
-        it(`.ipynb file extension is preferred for F# kernelspec`, () => {
-            const filename = 'notebook.ipynb';
-            const fileMetadata = {
+    describe('.NET notebook detection', () => {
+        it('.NET notebook is detected by kernelspec', () => {
+            const metadata = {
                 custom: {
                     metadata: {
                         kernelspec: {
-                            display_name: '.NET (F#)',
-                            language: 'F#',
-                            name: '.net-fsharp',
+                            name: '.net-fsharp-dev'
                         }
                     }
                 }
             };
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
+            expect(isDotNetNotebook(metadata)).is.true;
         });
 
-        it(`.ipynb file extension is preferred improperly-cased kernelspec`, () => {
-            const filename = 'notebook.ipynb';
-            const fileMetadata = {
-                custom: {
-                    metadata: {
-                        kernelspec: {
-                            display_name: '.NET (C#)',
-                            language: 'C#',
-                            name: '.NET-CSHARP',
-                        }
-                    }
-                }
-            };
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
-        });
-
-        it(`.ipynb file extension is preferred for alternate F# kernelspec`, () => {
-            const filename = 'notebook.ipynb';
-            const fileMetadata = {
-                custom: {
-                    metadata: {
-                        kernelspec: {
-                            display_name: '.NET (F#) (dev)',
-                            language: 'F#',
-                            name: '.net-fsharp-dev',
-                        }
-                    }
-                }
-            };
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
-        });
-
-        it(`.ipynb file extension is preferred for PowerShell kernelspec`, () => {
-            const filename = 'notebook.ipynb';
-            const fileMetadata = {
-                custom: {
-                    metadata: {
-                        kernelspec: {
-                            display_name: '.NET (PowerShell)',
-                            language: 'pwsh',
-                            name: '.net-powershell',
-                        }
-                    }
-                }
-            };
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
-        });
-
-        it(`.ipynb file extension is not preferred if metadata kernelspec doesn't match`, () => {
-            const filename = 'notebook.ipynb';
-            const fileMetadata = {
-                custom: {
-                    metadata: {
-                        kernelspec: {
-                            display_name: 'python',
-                            name: 'python',
-                            language: 'python',
-                        }
-                    }
-                }
-            };
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.false;
-        });
-
-        it(`.ipynb file extension is not preferred if metadata kernelspec is missing`, () => {
-            const filename = 'notebook.ipynb';
-            const fileMetadata = {};
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.false;
-        });
-
-        it(`.ipynb file extension is preferred if metadata contains an acceptable language_info value`, () => {
-            const filename = 'notebook.ipynb';
-            const fileMetadata = {
+        it('.NET notebook is detected by language info', () => {
+            const metadata = {
                 custom: {
                     metadata: {
                         language_info: {
-                            name: 'dotnet-interactive.fsharp'
+                            name: 'dotnet-interactive.pwsh'
                         }
                     }
                 }
             };
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
+            expect(isDotNetNotebook(metadata)).is.true;
         });
 
-        it(`.ipynb file extension is not preferred if metadata contains an unacceptable language_info value`, () => {
-            const filename = 'notebook.ipynb';
-            const fileMetadata = {
+        it('non-.NET notebook is not detected by kernelspec', () => {
+            const metadata = {
+                custom: {
+                    metadata: {
+                        kernelspec: {
+                            name: 'python'
+                        }
+                    }
+                }
+            };
+            expect(isDotNetNotebook(metadata)).is.false;
+        });
+
+        it('non-.NET notebook is not detected by language info', () => {
+            const metadata = {
                 custom: {
                     metadata: {
                         language_info: {
@@ -146,19 +60,7 @@ describe('Miscellaneous tests', () => {
                     }
                 }
             };
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.false;
-        });
-
-        it(`unsupported file extension is not preferred even if metadata matches`, () => {
-            const filename = 'notebook.not-a-notebook-we-know-about';
-            const fileMetadata = {
-                custom: {
-                    metadata: {
-                        kernelspec: requiredKernelspecData
-                    }
-                }
-            };
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.false;
+            expect(isDotNetNotebook(metadata)).is.false;
         });
     });
 
@@ -365,128 +267,6 @@ describe('Miscellaneous tests', () => {
         it(`file extension of .dib doesn't match`, () => {
             expect(isIpynbFile('notebook.dib')).to.be.false;
             expect(isIpynbFile('notebook.dotnet-interactive')).to.be.false;
-        });
-
-        it(`.net notebook with languages doesn't trigger validation failure`, done => {
-            const notebookData = {
-                cells: [
-                    {
-                        cell_type: "code",
-                        metadata: {
-                            dotnet_interactive: {
-                                language: 'csharp'
-                            }
-                        }
-                    }
-                ],
-                metadata: {
-                    kernelspec: {
-                        name: '.net-csharp'
-                    }
-                }
-            };
-            validateNotebookShape(notebookData, (_isError, message) => {
-                done(`Unexpected validation failure: ${message}`);
-            });
-            done();
-        });
-
-        it(`.net notebook with markdown cells without languages doesn't trigger validation failure`, done => {
-            const notebookData = {
-                cells: [
-                    {
-                        cell_type: "markdown"
-                    }
-                ],
-                metadata: {
-                    kernelspec: {
-                        name: '.net-csharp'
-                    }
-                }
-            };
-            validateNotebookShape(notebookData, (_isError, message) => {
-                done(`Unexpected validation failure: ${message}`);
-            });
-            done();
-        });
-
-        it(`.net notebook with bad language triggers validation warning`, done => {
-            const notebookData = {
-                cells: [
-                    {
-                        cell_type: "code",
-                        metadata: {
-                            dotnet_interactive: {
-                                language: 42
-                            }
-                        }
-                    }
-                ],
-                metadata: {
-                    kernelspec: {
-                        name: '.net-csharp'
-                    }
-                }
-            };
-            validateNotebookShape(notebookData, (isError, _message) => {
-                if (isError) {
-                    done('failure should have been a warning');
-                } else {
-                    done();
-                }
-            });
-        });
-
-        it(`.net notebook without code cell metadata triggers validation warning`, done => {
-            const notebookData = {
-                cells: [
-                    {
-                        cell_type: "code",
-                        metadata: {}
-                    }
-                ],
-                metadata: {
-                    kernelspec: {
-                        name: '.net-csharp'
-                    }
-                }
-            };
-            validateNotebookShape(notebookData, (isError, _message) => {
-                if (isError) {
-                    done('failure should have been a warning');
-                } else {
-                    done();
-                }
-            });
-        });
-
-        it(`non-.net notebook triggers validation error`, done => {
-            const notebookData = {
-                cells: [],
-                metadata: {
-                    kernelspec: {
-                        name: 'python'
-                    }
-                }
-            };
-            validateNotebookShape(notebookData, (isError, _message) => {
-                if (!isError) {
-                    done('failure should have been an error');
-                } else {
-                    done();
-                }
-            });
-        });
-
-        it('.net kernelspec can be detected', () => {
-            expect(isDotnetKernel('.net-csharp')).to.be.true;
-            expect(isDotnetKernel('.net-fsharp')).to.be.true;
-        });
-
-        it(`non-.net kernelspec isn't detected`, () => {
-            expect(isDotnetKernel('python')).to.be.false;
-            expect(isDotnetKernel(42)).to.be.false;
-            expect(isDotnetKernel(undefined)).to.be.false;
         });
     });
 });
