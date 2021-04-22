@@ -128,26 +128,20 @@ export const requiredLanguageInfoData = {
 };
 
 export function withDotNetKernelMetadata(metadata: { [key: string]: any } | undefined): any | undefined {
-    // clone the existing metadata
-    let result: { [key: string]: any } = {};
-    if (metadata) {
-        for (const key in metadata) {
-            result[key] = metadata[key];
-        }
-    }
-
-    result.custom = {
-        ...result.custom,
-        metadata: {
-            ...result.custom?.metadata,
-            kernelspec: {
-                ...result.custom?.metadata?.kernelspec,
-                ...requiredKernelspecData,
+    const result = {
+        ...metadata,
+        custom: {
+            ...metadata?.custom,
+            metadata: {
+                ...metadata?.custom?.metadata,
+                kernelspec: {
+                    ...metadata?.custom?.metadata?.kernelspec,
+                    ...requiredKernelspecData,
+                },
+                language_info: requiredLanguageInfoData,
             },
-            language_info: requiredLanguageInfoData,
-        },
+        }
     };
-
     return result;
 }
 
