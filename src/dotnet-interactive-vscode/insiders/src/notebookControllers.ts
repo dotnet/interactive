@@ -11,7 +11,7 @@ import * as utilities from './common/utilities';
 import * as versionSpecificFunctions from './versionSpecificFunctions';
 import * as vscodeUtilities from './common/vscode/vscodeUtilities';
 import { getSimpleLanguage, isDotnetInteractiveLanguage, notebookCellLanguages } from './common/interactiveNotebook';
-import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, isDotNetNotebook, withDotNetKernelMetadata } from './common/ipynbUtilities';
+import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, isDotNetNotebookMetadata, withDotNetKernelMetadata } from './common/ipynbUtilities';
 import { reshapeOutputValueForVsCode } from './common/interfaces/utilities';
 
 const executionTasks: Map<vscode.Uri, vscode.NotebookCellExecutionTask> = new Map();
@@ -46,7 +46,7 @@ export class DotNetNotebookKernel {
         );
         jupyterController.onDidChangeNotebookAssociation(async e => {
             // assign affinity
-            const affinity = isDotNetNotebook(e.notebook.metadata)
+            const affinity = isDotNetNotebook(e.notebook)
                 ? vscode.NotebookControllerAffinity.Preferred
                 : vscode.NotebookControllerAffinity.Default;
             jupyterController.updateNotebookAffinity(e.notebook, affinity);
@@ -225,4 +225,23 @@ async function updateDocumentKernelspecMetadata(document: vscode.NotebookDocumen
     edit.replaceNotebookCells(document.uri, range, cellData);
 
     await vscode.workspace.applyEdit(edit);
+}
+
+function isDotNetNotebook(notebook: vscode.NotebookDocument): boolean {
+    if (isDotNetNotebookMetadata(notebook.metadata)) {
+        // metadata looked correct
+        return true;
+    }
+
+    if (notebook.uri.scheme === 'untitled' && notebook.cellCount === 1) {
+        // untitled with a single cell, check cell
+        const cell = notebook.cellAt(0);
+        if (isDotnetInteractiveLanguage(cell.document.languageId) && cell.document.getText() === '') {
+            // language was one of ours and cell was emtpy
+            return true;
+        }
+    }
+
+    // doesn't look like us
+    return false;
 }
