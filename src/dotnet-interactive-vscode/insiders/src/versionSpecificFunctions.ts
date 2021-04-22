@@ -32,7 +32,9 @@ export function getCells(document: vscode.NotebookDocument | undefined): Array<v
 export function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter, useJupyterExtension: boolean, ...preloadUris: vscode.Uri[]) {
     context.subscriptions.push(new notebookControllers.DotNetNotebookKernel(clientMapper, preloadUris));
     context.subscriptions.push(new notebookSerializers.DotNetDibNotebookSerializer(clientMapper, outputChannel));
-    //context.subscriptions.push(new notebookSerializers.DotNetIpynbNotebookSerializer(clientMapper, outputChannel)); // only stable uses our ipynb handler
+    if (vscodeUtilities.isStableBuild()) {
+        context.subscriptions.push(new notebookSerializers.DotNetIpynbNotebookSerializer(clientMapper, outputChannel));
+    }
 }
 
 export function endExecution(cell: vscode.NotebookCell, success: boolean) {

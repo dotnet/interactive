@@ -57,7 +57,7 @@ export function getLanguageInfoMetadata(metadata: any): LanguageInfoMetadata {
         metadata.custom.metadata &&
         metadata.custom.metadata.language_info &&
         isLanguageInfoMetadata(metadata.custom.metadata.language_info)) {
-        languageMetadata = metadata.custom.metadata.language_info;
+        languageMetadata = { ...metadata.custom.metadata.language_info };
     }
 
     languageMetadata.name = mapIpynbLanguageName(languageMetadata.name);
@@ -119,20 +119,29 @@ export const requiredKernelspecData: KernelspecMetadata = {
     name: '.net-csharp',
 };
 
+export const requiredLanguageInfoData = {
+    file_extension: '.cs',
+    mimetype: 'text/x-csharp',
+    name: 'C#',
+    pygments_lexer: 'csharp',
+    version: '9.0',
+};
+
 export function withDotNetKernelMetadata(metadata: { [key: string]: any } | undefined): any | undefined {
-    // clone the existing metadata
-    let result: { [key: string]: any } = {};
-    if (metadata) {
-        for (const key in metadata) {
-            result[key] = metadata[key];
+    const result = {
+        ...metadata,
+        custom: {
+            ...metadata?.custom,
+            metadata: {
+                ...metadata?.custom?.metadata,
+                kernelspec: {
+                    ...metadata?.custom?.metadata?.kernelspec,
+                    ...requiredKernelspecData,
+                },
+                language_info: requiredLanguageInfoData,
+            },
         }
-    }
-
-    result.custom ||= {};
-    result.custom.metadata ||= {};
-
-    // always set kernelspec data so that this notebook can be opened in Jupyter Lab
-    result.custom.metadata.kernelspec = { ...result.custom.metadata.kernelspec, ...requiredKernelspecData };
+    };
     return result;
 }
 

@@ -145,7 +145,14 @@ describe('ipynb metadata tests', () => {
                             display_name: '.NET (C#)',
                             language: 'C#',
                             name: '.net-csharp',
-                        }
+                        },
+                        language_info: {
+                            file_extension: '.cs',
+                            mimetype: 'text/x-csharp',
+                            name: 'C#',
+                            pygments_lexer: 'csharp',
+                            version: '9.0',
+                        },
                     }
                 }
             });
@@ -164,7 +171,14 @@ describe('ipynb metadata tests', () => {
                             display_name: '.NET (C#)',
                             language: 'C#',
                             name: '.net-csharp',
-                        }
+                        },
+                        language_info: {
+                            file_extension: '.cs',
+                            mimetype: 'text/x-csharp',
+                            name: 'C#',
+                            pygments_lexer: 'csharp',
+                            version: '9.0',
+                        },
                     }
                 }
             });
@@ -189,7 +203,14 @@ describe('ipynb metadata tests', () => {
                             language: 'C#',
                             name: '.net-csharp',
                             some_existing_key: 'some existing value',
-                        }
+                        },
+                        language_info: {
+                            file_extension: '.cs',
+                            mimetype: 'text/x-csharp',
+                            name: 'C#',
+                            pygments_lexer: 'csharp',
+                            version: '9.0',
+                        },
                     }
                 }
             });
@@ -216,6 +237,13 @@ describe('ipynb metadata tests', () => {
                             display_name: '.NET (C#)',
                             language: 'C#',
                             name: '.net-csharp',
+                        },
+                        language_info: {
+                            file_extension: '.cs',
+                            mimetype: 'text/x-csharp',
+                            name: 'C#',
+                            pygments_lexer: 'csharp',
+                            version: '9.0',
                         },
                         some_custom_metadata: {
                             key1: 'value 1'
@@ -254,6 +282,13 @@ describe('ipynb metadata tests', () => {
                             language: 'C#',
                             name: '.net-csharp',
                             some_existing_key: 'some existing value'
+                        },
+                        language_info: {
+                            file_extension: '.cs',
+                            mimetype: 'text/x-csharp',
+                            name: 'C#',
+                            pygments_lexer: 'csharp',
+                            version: '9.0',
                         },
                         some_custom_metadata: {
                             key1: 'value 1'
