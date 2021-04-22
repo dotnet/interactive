@@ -152,7 +152,7 @@ function isDotnetKernel(kernelspecName: any): boolean {
     return typeof kernelspecName === 'string' && kernelspecName.toLowerCase().startsWith('.net-');
 }
 
-export function isDotNetNotebook(notebookMetadata: any): boolean {
+export function isDotNetNotebookMetadata(notebookMetadata: any): boolean {
     const kernelName = notebookMetadata?.custom?.metadata?.kernelspec?.name;
     const languageInfo = notebookMetadata?.custom?.metadata?.language_info?.name;
     const isDotnetLanguageInfo = typeof languageInfo === 'string' && isDotnetInteractiveLanguage(languageInfo);

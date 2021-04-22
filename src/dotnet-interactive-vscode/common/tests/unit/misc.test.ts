@@ -4,7 +4,7 @@
 import { expect } from 'chai';
 import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from '../../interfaces/contracts';
 import { isDisplayOutput, isErrorOutput, isTextOutput, reshapeOutputValueForVsCode } from '../../interfaces/utilities';
-import { isDotNetNotebook, isIpynbFile } from '../../ipynbUtilities';
+import { isDotNetNotebookMetadata, isIpynbFile } from '../../ipynbUtilities';
 import { debounce, executeSafe, isDotNetUpToDate, parse, processArguments, stringify } from '../../utilities';
 
 import * as vscodeLike from '../../interfaces/vscode-like';
@@ -21,7 +21,7 @@ describe('Miscellaneous tests', () => {
                     }
                 }
             };
-            expect(isDotNetNotebook(metadata)).is.true;
+            expect(isDotNetNotebookMetadata(metadata)).is.true;
         });
 
         it('.NET notebook is detected by language info', () => {
@@ -34,7 +34,7 @@ describe('Miscellaneous tests', () => {
                     }
                 }
             };
-            expect(isDotNetNotebook(metadata)).is.true;
+            expect(isDotNetNotebookMetadata(metadata)).is.true;
         });
 
         it('non-.NET notebook is not detected by kernelspec', () => {
@@ -47,7 +47,7 @@ describe('Miscellaneous tests', () => {
                     }
                 }
             };
-            expect(isDotNetNotebook(metadata)).is.false;
+            expect(isDotNetNotebookMetadata(metadata)).is.false;
         });
 
         it('non-.NET notebook is not detected by language info', () => {
@@ -60,7 +60,7 @@ describe('Miscellaneous tests', () => {
                     }
                 }
             };
-            expect(isDotNetNotebook(metadata)).is.false;
+            expect(isDotNetNotebookMetadata(metadata)).is.false;
         });
     });
 

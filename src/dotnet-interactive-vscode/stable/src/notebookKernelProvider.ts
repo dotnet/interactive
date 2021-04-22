@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 import { DotNetInteractiveNotebookKernel } from "./notebookKernel";
 import { ClientMapper } from './common/clientMapper';
 import { configureWebViewMessaging } from './notebookContentProvider';
-import { isDotNetNotebook } from './common/ipynbUtilities';
+import { isDotNetNotebookMetadata } from './common/ipynbUtilities';
 
 export class DotNetInteractiveNotebookKernelProvider implements vscode.NotebookKernelProvider<DotNetInteractiveNotebookKernel> {
     private preferredKernel: DotNetInteractiveNotebookKernel;
@@ -27,7 +27,7 @@ export class DotNetInteractiveNotebookKernelProvider implements vscode.NotebookK
                 isPreferred = true;
                 break;
             case '.ipynb':
-                isPreferred = isDotNetNotebook(document.metadata);
+                isPreferred = isDotNetNotebookMetadata(document.metadata);
                 break;
         }
         if (isPreferred) {
