@@ -155,25 +155,30 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
 
     // update cell language
     let applyUpdate = false;
-    let cellDatas: Array<vscode.NotebookCellData> = [];
+    const edit = new vscode.WorkspaceEdit();
+    let cellPosition = 0;
     for (const cell of versionSpecificFunctions.getCells(document)) {
         const cellMetadata = getDotNetMetadata(cell.metadata);
         const cellText = cell.document.getText();
-        const newLanguage = getCellLanguage(cellText, cellMetadata, documentLanguageInfo, cell.document.languageId);
-        const cellData = new vscode.NotebookCellData(
-            cell.kind,
-            cellText,
-            newLanguage,
-            cell.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
-            cell.metadata,
-        );
-        cellDatas.push(cellData);
-        applyUpdate ||= cell.document.languageId !== newLanguage;
+        const newLanguage = cell.kind === vscode.NotebookCellKind.Code
+            ? getCellLanguage(cellText, cellMetadata, documentLanguageInfo, cell.document.languageId)
+            : cell.document.languageId;
+        if (cell.document.languageId !== newLanguage) {
+            const cellData = new vscode.NotebookCellData(
+                cell.kind,
+                cellText,
+                newLanguage,
+                cell.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
+                cell.metadata,
+            );
+            applyUpdate ||= true;
+            edit.replaceNotebookCells(document.uri, new vscode.NotebookRange(cellPosition, cellPosition + 1), [cellData]);
+        }
+        cellPosition++;
     }
 
     if (applyUpdate) {
-        const edit = new vscode.WorkspaceEdit();
-        edit.replaceNotebookCells(document.uri, new vscode.NotebookRange(0, document.cellCount), cellDatas);
+
         await vscode.workspace.applyEdit(edit);
     }
 }
