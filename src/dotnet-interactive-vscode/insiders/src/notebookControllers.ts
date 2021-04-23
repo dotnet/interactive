@@ -136,10 +136,7 @@ export class DotNetNotebookKernel {
 
                 return client.execute(source, getSimpleLanguage(cell.document.languageId), outputObserver, diagnosticObserver, { id: cell.document.uri.toString() }).then(() =>
                     endExecution(cell, true)
-                ).catch(() => endExecution(cell, false)
-                ).then(() => {
-                    return updateCellLanguages(cell.notebook);
-                });
+                ).catch(() => endExecution(cell, false));
             } catch (err) {
                 const errorOutput = utilities.createErrorOutput(`Error executing cell: ${err}`);
                 await updateCellOutputs(executionTask, cell, [errorOutput]);
@@ -154,28 +151,25 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
     const documentLanguageInfo = getLanguageInfoMetadata(document.metadata);
 
     // update cell language
-    let applyUpdate = false;
-    let cellDatas: Array<vscode.NotebookCellData> = [];
-    for (const cell of versionSpecificFunctions.getCells(document)) {
+    const edit = new vscode.WorkspaceEdit();
+    for (let i = 0; i < document.cellCount; i++) {
+        const cell = document.cellAt(i);
         const cellMetadata = getDotNetMetadata(cell.metadata);
         const cellText = cell.document.getText();
         const newLanguage = getCellLanguage(cellText, cellMetadata, documentLanguageInfo, cell.document.languageId);
-        const cellData = new vscode.NotebookCellData(
-            cell.kind,
-            cellText,
-            newLanguage,
-            cell.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
-            cell.metadata,
-        );
-        cellDatas.push(cellData);
-        applyUpdate ||= cell.document.languageId !== newLanguage;
+        if (cell.document.languageId !== newLanguage) {
+            const newCellData = new vscode.NotebookCellData(
+                cell.kind,
+                cellText,
+                newLanguage,
+                cell.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
+                cell.metadata,
+            );
+            edit.replaceNotebookCells(document.uri, new vscode.NotebookRange(i, i + 1), [newCellData]);
+        }
     }
 
-    if (applyUpdate) {
-        const edit = new vscode.WorkspaceEdit();
-        edit.replaceNotebookCells(document.uri, new vscode.NotebookRange(0, document.cellCount), cellDatas);
-        await vscode.workspace.applyEdit(edit);
-    }
+    await vscode.workspace.applyEdit(edit);
 }
 
 function setCellLockState(cell: vscode.NotebookCell, locked: boolean) {

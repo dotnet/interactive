@@ -173,7 +173,7 @@ async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocumen
     const notebook = candidateNotebookCellDocument.notebook;
     if (notebook && isDotnetInteractiveLanguage(candidateNotebookCellDocument.languageId)) {
         const cell = versionSpecificFunctions.getCells(notebook).find(c => c.document === candidateNotebookCellDocument);
-        if (cell) {
+        if (cell && cell.kind === vscode.NotebookCellKind.Code) {
             const newMetadata = cell.metadata.with({
                 custom: {
                     metadata: {
