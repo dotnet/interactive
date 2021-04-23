@@ -116,37 +116,25 @@ json"
         [InlineData(Language.FSharp, false)]
         [InlineData(Language.CSharp, true)]
         //[InlineData(Language.FSharp, true, Skip = "FSharp, relative is not relative to cwd.")]
-        public async Task it_can_load_assembly_references_using_r_directive_with_relative_path(Language language, bool changeWorkingDirectory)
+        public async Task it_can_load_assembly_references_using_r_directive_with_relative_path(Language language, bool changeCurrentDirectoryInUserCode)
         {
-            var workingDirectory = Directory.GetCurrentDirectory();
-            DisposeAfterTest(() => Directory.SetCurrentDirectory(workingDirectory));
+            var currentDirectory = Directory.GetCurrentDirectory();
+            DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
 
             var kernel = CreateKernel(language);
 
-            if (changeWorkingDirectory)
+            if (changeCurrentDirectoryInUserCode)
             {
+                //Even when a user changes the current directory, loading from a relative path is not affected.
                 await kernel.SendAsync(new SubmitCode("System.IO.Directory.SetCurrentDirectory(\"..\")"));
             }
 
-            var fullName = new FileInfo(typeof(JsonConvert).Assembly.Location).FullName;
-
-            var currentDirectoryName = new DirectoryInfo(Directory.GetCurrentDirectory()).Name;
-
-            var relativeDllPath = Path.GetRelativePath(
-                Directory.GetCurrentDirectory(),
-                fullName);
-
-            var relativePath =
-                Path.Combine(
-                    "..",
-                    currentDirectoryName,
-                    relativeDllPath)
-                .Replace("\\", "/");
+            var dllName = new FileInfo(typeof(JsonConvert).Assembly.Location).Name;
 
             var code = language switch
             {
-                Language.CSharp => $"#r \"{relativePath}\"",
-                Language.FSharp => $"#r \"{relativePath}\""
+                Language.CSharp => $"#r \"{dllName}\"",
+                Language.FSharp => $"#r \"{dllName}\""
             };
 
             var command = new SubmitCode(code);
@@ -155,6 +143,64 @@ json"
 
             KernelEvents.Should()
                         .ContainSingle<CommandSucceeded>(c => c.Command == command);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, false)]
+        [InlineData(Language.FSharp, false)]
+        [InlineData(Language.CSharp, true)]
+        [InlineData(Language.FSharp, true)]
+        public async Task it_can_load_script_files_using_load_directive_with_relative_path(Language language, bool changeCurrentDirectoryInUserCode)
+        {
+            var currentDirectory = Directory.GetCurrentDirectory();
+            DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
+
+            var kernel = CreateKernel(language);
+
+            if (changeCurrentDirectoryInUserCode)
+            {
+                //Even when a user changes the current directory, loading from a relative path is not affected.
+                await kernel.SendAsync(new SubmitCode("System.IO.Directory.SetCurrentDirectory(\"..\")"));
+            }
+
+            var code = language switch
+            {
+                Language.CSharp => $"#load \"RelativeLoadingSample.csx\"",
+                Language.FSharp => $"#load \"RelativeLoadingSample.fsx\""
+            };
+
+            var command = new SubmitCode(code);
+            await kernel.SendAsync(command);
+
+            KernelEvents.Should()
+                        .ContainSingle<StandardOutputValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        //Not implemented: [InlineData(Language.FSharp)]
+        public async Task it_can_load_script_files_using_load_directive_with_relative_path_after_command_changeWorkingDirectory(Language language)
+        {
+            var currentDirectory = Directory.GetCurrentDirectory();
+            DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
+
+            var kernel = CreateKernel(language);
+            var absolutePathOneLevelHigher = Directory.GetParent(currentDirectory).FullName;
+            await kernel.SendAsync(new ChangeWorkingDirectory(absolutePathOneLevelHigher));
+
+            var relativePath = Path.GetRelativePath(absolutePathOneLevelHigher, currentDirectory);
+
+            var code = language switch
+            {
+                Language.CSharp => $"#load \"{relativePath}/RelativeLoadingSample.csx\"",
+                Language.FSharp => $"#load \"{relativePath}/RelativeLoadingSample.fsx\""
+            };
+
+            var command = new SubmitCode(code);
+            await kernel.SendAsync(command);
+
+            KernelEvents.Should()
+                        .ContainSingle<StandardOutputValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
         }
 
         [Theory]
@@ -340,14 +386,14 @@ Formatter.Register<DataFrame>((df, writer) =>
         }
         rows.Add(cells);
     }
-    
+
     var t = table(
         thead(
             headers),
         tbody(
             rows.Select(
                 r => tr(r))));
-    
+
     writer.Write(t);
 }, ""text/html"");");
 

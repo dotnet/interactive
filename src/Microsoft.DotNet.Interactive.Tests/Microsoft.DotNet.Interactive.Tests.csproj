@@ -19,6 +19,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="RelativeLoadingSample.csx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="RelativeLoadingSample.fsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Assent" Version="1.7.0" />
     <PackageReference Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
     <PackageReference Include="FluentAssertions" Version="5.10.3" />

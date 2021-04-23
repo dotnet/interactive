@@ -36,7 +36,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<RequestHoverText>,
         IKernelCommandHandler<RequestSignatureHelp>,
-        IKernelCommandHandler<SubmitCode>
+        IKernelCommandHandler<SubmitCode>,
+        IKernelCommandHandler<ChangeWorkingDirectory>
     {
         internal const string DefaultKernelName = "csharp";
 
@@ -50,9 +51,20 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         private Lazy<PackageRestoreContext> _packageRestoreContext;
 
-        internal ScriptOptions ScriptOptions =
-            ScriptOptions.Default
-                         .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(Directory.GetCurrentDirectory()))
+        internal ScriptOptions ScriptOptions;
+
+        private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
+
+        private string _workingDirectory;
+
+        public CSharpKernel() : base(DefaultKernelName)
+        {
+            _workspace = new InteractiveWorkspace();
+
+            //For the VSCode-Add-In Directory.GetCurrentDirectory() would here return something like: c:\Users\<username>\AppData\Roaming\Code\User\globalStorage\ms-dotnettools.dotnet-interactive-vscode
+            //...so we wait for RunAsync to read Directory.GetCurrentDirectory() the first time.
+
+            ScriptOptions = ScriptOptions.Default
                          .WithLanguageVersion(LanguageVersion.Latest)
                          .AddImports(
                              "System",
@@ -68,14 +80,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              typeof(Kernel).Assembly,
                              typeof(CSharpKernel).Assembly,
                              typeof(PocketView).Assembly);
-
-        private readonly AssemblyBasedExtensionLoader _extensionLoader = new();
-        private string _currentDirectory;
-
-        public CSharpKernel() : base(DefaultKernelName)
-        {
-            _workspace = new InteractiveWorkspace();
-            _currentDirectory = Directory.GetCurrentDirectory();
 
             _packageRestoreContext = new Lazy<PackageRestoreContext>(() =>
             {
@@ -176,7 +180,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         {
             await EnsureWorkspaceIsInitializedAsync(context);
 
-            var document = _workspace.ForkDocumentForLanguageServices(command.Code); 
+            var document = _workspace.ForkDocumentForLanguageServices(command.Code);
             var signatureHelp = await SignatureHelpGenerator.GenerateSignatureInformation(document, command, context.CancellationToken);
             if (signatureHelp is { })
             {
@@ -257,7 +261,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 if (exception is CodeSubmissionCompilationErrorException { InnerException: CompilationErrorException innerCompilationException })
                 {
                     diagnostics = innerCompilationException.Diagnostics;
-                    // In the case of an error the diagnostics get attached to both the 
+                    // In the case of an error the diagnostics get attached to both the
                     // DiagnosticsProduced and CommandFailed events.
                     message =
                         string.Join(Environment.NewLine,
@@ -306,19 +310,23 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
         }
 
+        public Task HandleAsync(ChangeWorkingDirectory command, KernelInvocationContext context)
+        {
+            _workingDirectory = command.WorkingDirectory;
+            return Task.CompletedTask;
+        }
+
         private async Task RunAsync(
             string code,
             CancellationToken cancellationToken = default,
             Func<Exception, bool> catchException = default)
         {
-            var currentDirectory = Directory.GetCurrentDirectory();
-            if (_currentDirectory != currentDirectory)
-            {
-                _currentDirectory = currentDirectory;
-                ScriptOptions = ScriptOptions.WithMetadataResolver(
-                    CachingMetadataResolver.Default.WithBaseDirectory(
-                        _currentDirectory));
-            }
+            if (_workingDirectory == null)
+                _workingDirectory = Directory.GetCurrentDirectory();
+
+            ScriptOptions = ScriptOptions
+                .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(_workingDirectory))
+                .WithSourceResolver(new SourceFileResolver(ImmutableArray<string>.Empty, _workingDirectory));
 
             if (ScriptState is null)
             {
@@ -373,7 +381,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var document = _workspace.ForkDocumentForLanguageServices(code);
             var service = CompletionService.GetService(document);
             var completionList = await service.GetCompletionsAsync(document, cursorPosition, cancellationToken: contextCancellationToken);
-           
+
             if (completionList is null)
             {
                 return Enumerable.Empty<CompletionItem>();
