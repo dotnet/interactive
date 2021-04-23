@@ -45,12 +45,6 @@ export class DotNetNotebookKernel {
             preloads
         );
         jupyterController.onDidChangeNotebookAssociation(async e => {
-            // assign affinity
-            const affinity = isDotNetNotebook(e.notebook)
-                ? vscode.NotebookControllerAffinity.Preferred
-                : vscode.NotebookControllerAffinity.Default;
-            jupyterController.updateNotebookAffinity(e.notebook, affinity);
-
             // update metadata
             if (e.selected) {
                 try {
@@ -66,6 +60,15 @@ export class DotNetNotebookKernel {
             }
         });
         this.commonControllerInit(jupyterController);
+        this.disposables.push(vscode.notebook.onDidOpenNotebookDocument(notebook => {
+            if (notebook.viewType === jupyterViewType) {
+                // assign affinity
+                const affinity = isDotNetNotebook(notebook)
+                    ? vscode.NotebookControllerAffinity.Preferred
+                    : vscode.NotebookControllerAffinity.Default;
+                jupyterController.updateNotebookAffinity(notebook, affinity);
+            }
+        }));
     }
 
     dispose(): void {
