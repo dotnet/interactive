@@ -9,8 +9,6 @@ import { ClientMapper } from '../clientMapper';
 import { StdioKernelTransport } from '../stdioKernelTransport';
 import { registerLanguageProviders } from './languageProvider';
 import { registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
-
-import { getSimpleLanguage, isDotnetInteractiveLanguage } from '../interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
 import { executeSafe, isDotNetUpToDate, processArguments } from '../utilities';
@@ -142,7 +140,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.workspace.onDidRenameFiles(e => handleFileRenames(e, clientMapper)));
 
     // language registration
-    context.subscriptions.push(vscode.notebook.onDidOpenNotebookDocument(async e => await updateNotebookCellLanguageInMetadata(e)));
+    versionSpecificFunctions.onDocumentOpen(context);
     context.subscriptions.push(registerLanguageProviders(clientMapper, languageServiceDelay));
 }
 
@@ -166,29 +164,6 @@ async function waitForSdkInstall(requiredSdkVersion: string): Promise<void> {
             }
         }
     }
-}
-
-async function updateNotebookCellLanguageInMetadata(candidateNotebookDocument: vscode.NotebookDocument) {
-    const notebook = candidateNotebookDocument;
-    const edit = new vscode.WorkspaceEdit();
-    for (let cell of notebook.getCells()) {
-
-        if (cell.kind === vscode.NotebookCellKind.Code && isDotnetInteractiveLanguage(cell.document.languageId)) {
-            const newMetadata = cell.metadata.with({
-                custom: {
-                    metadata: {
-                        dotnet_interactive: {
-                            language: getSimpleLanguage(cell.document.languageId)
-                        }
-                    }
-                }
-            });
-
-            edit.replaceNotebookCellMetadata(notebook.uri, cell.index, newMetadata);
-
-        }
-    }
-    await vscode.workspace.applyEdit(edit);
 }
 
 function handleFileRenames(e: vscode.FileRenameEvent, clientMapper: ClientMapper) {

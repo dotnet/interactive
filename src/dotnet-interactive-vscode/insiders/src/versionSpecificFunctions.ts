@@ -12,6 +12,7 @@ import * as notebookControllers from './notebookControllers';
 import * as notebookSerializers from './notebookSerializers';
 import { ClientMapper } from './common/clientMapper';
 import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
+import { getSimpleLanguage, isDotnetInteractiveLanguage } from './common/interactiveNotebook';
 
 export function cellAt(document: vscode.NotebookDocument, index: number): vscode.NotebookCell {
     return document.cellAt(index);
@@ -37,3 +38,32 @@ export function registerWithVsCode(context: vscode.ExtensionContext, clientMappe
 export function endExecution(cell: vscode.NotebookCell, success: boolean) {
     notebookControllers.endExecution(cell, success);
 }
+
+export function onDocumentOpen(context: vscode.ExtensionContext) {
+    context.subscriptions.push(vscode.notebook.onDidOpenNotebookDocument(async e => await updateNotebookCellLanguageInMetadata(e)));
+}
+
+
+async function updateNotebookCellLanguageInMetadata(candidateNotebookDocument: vscode.NotebookDocument) {
+    const notebook = candidateNotebookDocument;
+    const edit = new vscode.WorkspaceEdit();
+    for (let cell of notebook.getCells()) {
+
+        if (cell.kind === vscode.NotebookCellKind.Code && isDotnetInteractiveLanguage(cell.document.languageId)) {
+            const newMetadata = cell.metadata.with({
+                custom: {
+                    metadata: {
+                        dotnet_interactive: {
+                            language: getSimpleLanguage(cell.document.languageId)
+                        }
+                    }
+                }
+            });
+
+            edit.replaceNotebookCellMetadata(notebook.uri, cell.index, newMetadata);
+
+        }
+    }
+    await vscode.workspace.applyEdit(edit);
+}
+

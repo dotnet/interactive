@@ -14,6 +14,7 @@ import { DotNetInteractiveNotebookKernelProvider } from './notebookKernelProvide
 import { DotNetInteractiveNotebookContentProvider } from './notebookContentProvider';
 import { ClientMapper } from './common/clientMapper';
 import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
+import { getSimpleLanguage, isDotnetInteractiveLanguage } from './common/interactiveNotebook';
 
 export function cellAt(document: vscode.NotebookDocument, index: number): vscode.NotebookCell {
     return document.cells[index];
@@ -73,6 +74,32 @@ async function handleNotebookKernelChange(e: { document: vscode.NotebookDocument
             await clientMapper.getOrAddClient(e.document.uri);
         } catch (err) {
             vscode.window.showErrorMessage(`Failed to set document metadata for '${e.document.uri}': ${err}`);
+        }
+    }
+}
+
+export function onDocumentOpen(context: vscode.ExtensionContext) {
+    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(async e => await updateNotebookCellLanguageInMetadata(e)));
+}
+
+// keep the cell's language in metadata in sync with what VS Code thinks it is
+async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocument: vscode.TextDocument) {
+    const notebook = candidateNotebookCellDocument.notebook;
+    if (notebook && isDotnetInteractiveLanguage(candidateNotebookCellDocument.languageId)) {
+        const cell = getCells(notebook).find(c => c.document === candidateNotebookCellDocument);
+        if (cell && cell.kind === vscode.NotebookCellKind.Code) {
+            const newMetadata = cell.metadata.with({
+                custom: {
+                    metadata: {
+                        dotnet_interactive: {
+                            language: getSimpleLanguage(candidateNotebookCellDocument.languageId)
+                        }
+                    }
+                }
+            });
+            const edit = new vscode.WorkspaceEdit();
+            edit.replaceNotebookCellMetadata(notebook.uri, cell.index, newMetadata);
+            await vscode.workspace.applyEdit(edit);
         }
     }
 }
