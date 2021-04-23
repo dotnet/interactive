@@ -5,12 +5,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ClientMapper } from './common/clientMapper';
-import { getSimpleLanguage, getNotebookSpecificLanguage, languageToCellKind, backupNotebook, defaultNotebookCellLanguage } from './common/interactiveNotebook';
+import { getNotebookSpecificLanguage, languageToCellKind, backupNotebook, defaultNotebookCellLanguage } from './common/interactiveNotebook';
 import { Eol } from './common/interfaces';
-import { NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookDocument } from './common/interfaces/contracts';
+import { NotebookCell, NotebookCellOutput } from './common/interfaces/contracts';
 import * as utilities from './common/interfaces/utilities';
 
-import { isIpynbFile, validateNotebookShape } from './common/ipynbUtilities';
+import { isIpynbFile } from './common/ipynbUtilities';
 import * as vscodeLike from './common/interfaces/vscode-like';
 import { getEol, isUnsavedNotebook, toNotebookDocument } from './common/vscode/vscodeUtilities';
 
@@ -45,20 +45,6 @@ export class DotNetInteractiveNotebookContentProvider implements vscode.Notebook
                 const fileName = path.basename(fileUri.fsPath);
                 const notebook = await client.parseNotebook(fileName, buffer);
                 notebookCells = notebook.cells;
-
-                // peek at kernelspec to see if it's possibly not us
-                if (isIpynbFile(fileUri.fsPath)) {
-                    const notebookObject = JSON.parse(buffer.toString());
-                    validateNotebookShape(
-                        notebookObject,
-                        (isError, message) => {
-                            if (isError) {
-                                vscode.window.showErrorMessage(message);
-                            } else {
-                                vscode.window.showWarningMessage(message);
-                            }
-                        });
-                }
             } catch (e) {
                 vscode.window.showErrorMessage(`Error opening file '${fileUri.fsPath}'; check the '${this.outputChannel.getName()}' output channel for details`);
                 this.outputChannel.appendLine(`Error opening file '${fileUri.fsPath}':\n${e?.message}`);

@@ -61,16 +61,20 @@
             "filenamePattern": "*.{dib,dotnet-interactive}"
           }
         ]
+      }
+    ],
+    "jupyter.kernels": [
+      {
+        "title": ".NET Interactive (C#)",
+        "defaultLanguage": "dotnet-interactive.csharp"
       },
       {
-        "viewType": "dotnet-interactive-jupyter",
-        "displayName": ".NET Interactive for Jupyter",
-        "selector": [
-          {
-            "filenamePattern": "*.ipynb"
-          }
-        ],
-        "priority": "option"
+        "title": ".NET Interactive (F#)",
+        "defaultLanguage": "dotnet-interactive.fsharp"
+      },
+      {
+        "title": ".NET Interactive (PowerShell)",
+        "defaultLanguage": "dotnet-interactive.pwsh"
       }
     ],
     "configuration": {
@@ -113,13 +117,8 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.222103",
+          "default": "1.0.222202",
           "description": "The minimum required version of the .NET Interactive tool."
-        },
-        "dotnet-interactive.useDotNetInteractiveExtensionForIpynbFiles": {
-          "type": "boolean",
-          "default": true,
-          "description": "(LEGACY) Use the .NET Interactive extension to handle .ipynb files (requires restart)."
         }
       }
     },
