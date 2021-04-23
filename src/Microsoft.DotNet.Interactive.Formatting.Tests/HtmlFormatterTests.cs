@@ -8,14 +8,11 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Text.Encodings.Web;
 using System.Text.Json;
 using FluentAssertions;
 using FluentAssertions.Extensions;
-using Microsoft.AspNetCore.Html;
 using Xunit;
 using Xunit.Abstractions;
-using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
@@ -1226,15 +1223,31 @@ string";
             }
 
             [Fact]
+            public void JsonDocument_and_JsonDocument_RootElement_output_the_same_HTML()
+            {
+                var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
+
+                var jsonDocument = JsonDocument.Parse(jsonString);
+                var jsonElement = JsonDocument.Parse(jsonString).RootElement;
+
+                var jsonDocumentHtml = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
+                var jsonElementHtml = jsonElement.ToDisplayString(HtmlFormatter.MimeType);
+
+                jsonDocumentHtml.Should().Be(jsonElementHtml);
+            }
+
+            [Fact]
             public void JSON_OBJECT()
             {
                 var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
 
-                var jsonElement = JsonDocument.Parse(jsonString).RootElement;
+                var jsonDocument = JsonDocument.Parse(jsonString);
 
-                var html = jsonElement.ToDisplayString(HtmlFormatter.MimeType);
+                var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
 
                 _output.WriteLine(html);
+
+
 
                 // FIX: (testname) write test
                 throw new NotImplementedException();
@@ -1245,9 +1258,9 @@ string";
             {
                 var jsonString = JsonSerializer.Serialize(new object[] { "apple", "banana", "cherry" });
 
-                var jsonElement = JsonDocument.Parse(jsonString).RootElement;
+                var jsonDocument = JsonDocument.Parse(jsonString);
 
-                var html = jsonElement.ToDisplayString(HtmlFormatter.MimeType);
+                var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
 
                 _output.WriteLine(html);
 

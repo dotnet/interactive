@@ -33,7 +33,6 @@ namespace Microsoft.DotNet.Interactive
 
             var displayedValue = new DisplayedValue(displayId, mimeType, context);
 
-
             return displayedValue;
         }
 
@@ -44,8 +43,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var formattedValues = new List<FormattedValue>
             {
-                new FormattedValue(
-                    PlainTextFormatter.MimeType, output)
+                new(PlainTextFormatter.MimeType, output)
             };
 
             context.Publish(
@@ -61,8 +59,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var formattedValues = new List<FormattedValue>
             {
-                new FormattedValue(
-                    PlainTextFormatter.MimeType, error)
+                new(PlainTextFormatter.MimeType, error)
             };
 
             context.Publish(
