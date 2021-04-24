@@ -165,8 +165,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultPlainTextFormatterSet.DefaultFormatters;
-
         internal static FormatterTable FormattersForAnyObject =
             new FormatterTable(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyObject));
 

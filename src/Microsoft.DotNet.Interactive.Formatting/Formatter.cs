@@ -109,9 +109,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
             // In the lists of default formatters, the highest priority ones come first,
             // so register those last.
             _defaultTypeFormatters.PushRange(TabularDataResourceFormatter.DefaultFormatters.Reverse().ToArray());
-            _defaultTypeFormatters.PushRange(HtmlFormatter.DefaultFormatters.Reverse().ToArray());
+            _defaultTypeFormatters.PushRange(DefaultHtmlFormatterSet.DefaultFormatters.Reverse().ToArray());
             _defaultTypeFormatters.PushRange(JsonFormatter.DefaultFormatters.Reverse().ToArray());
-            _defaultTypeFormatters.PushRange(PlainTextFormatter.DefaultFormatters.Reverse().ToArray());
+            _defaultTypeFormatters.PushRange(DefaultPlainTextFormatterSet.DefaultFormatters.Reverse().ToArray());
 
             // It is unclear if we need this default:
             _defaultPreferredMimeTypes.Push((typeof(string), PlainTextFormatter.MimeType));

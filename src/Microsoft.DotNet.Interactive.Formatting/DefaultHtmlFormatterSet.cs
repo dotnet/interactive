@@ -11,6 +11,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 using System.Numerics;
+using static Microsoft.DotNet.Interactive.Formatting.Html;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -185,7 +186,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     return true;
                 }),
 
-
                 new HtmlFormatter<JsonDocument>((doc, writer) =>
                 {
                     doc.RootElement.FormatTo(writer, HtmlFormatter.MimeType);
@@ -201,16 +201,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                             var keysAndValues = element.EnumerateObject().ToArray();
 
-                            view = details(
+                            view = details[@class: "dni-treeview"](
                                 summary(
-                                    span("{&nbsp;&nbsp;}&nbsp;".ToHtmlContent()), i($"{keysAndValues.Length} keys")),
-                                div[style: "margin-left:1.2em"](
-                                    Html.Table(
+                                    span[@class: "dni-code-hint"](code(element.ToString()))),
+                                div(
+                                    Table(
                                         headers: null,
                                         rows: keysAndValues.Select(
                                             a => (IHtmlContent)
                                                 tr(
-                                                    td[style: "word-wrap: break-word; max-width: 150px;"](a.Name), td(a.Value))).ToArray())));
+                                                    td(a.Name), td(a.Value))).ToArray())));
 
                             break;
 
@@ -218,14 +218,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                             var arrayEnumerator = element.EnumerateArray().ToArray();
 
-                            view = details(
+                            view = details[@class: "dni-treeview"](
                                 summary(
-                                    span("[&nbsp;&nbsp;]&nbsp;".ToHtmlContent()), i($"{arrayEnumerator.Length} items")),
-                                div[style: "margin-left:1.2em"](
-                                    Html.Table(
+                                    span[@class: "dni-code-hint"](code(element.ToString()))),
+                                div(
+                                    Table(
                                         headers: null,
                                         rows: arrayEnumerator.Select(
-                                            a => (IHtmlContent) tr(td[style: "word-wrap: break-word; max-width: 150px;"](a))).ToArray())));
+                                            a => (IHtmlContent) tr(td(a))).ToArray())));
 
                             break;
 
@@ -258,16 +258,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     view.WriteTo(writer, HtmlEncoder.Default);
 
-                    return true;
-                }),
-
-                new HtmlFormatter<JsonProperty>((context, property, writer) =>
-                {
-                    PocketView view =
-                        details(
-                            summary(property.Name + ":"),
-                            property.Value);
-                    view.WriteTo(writer, HtmlEncoder.Default);
                     return true;
                 }),
         };

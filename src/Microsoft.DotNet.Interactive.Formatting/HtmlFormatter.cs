@@ -52,10 +52,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             if (!string.IsNullOrEmpty(text))
             {
-                var tag = div;
+                PocketView tag = div(text);
                 tag.HtmlAttributes["class"] = "dni-plaintext";
-                var html = tag(text.HtmlEncode());
-                html.WriteTo(writer, HtmlEncoder.Default);
+                tag.WriteTo(writer, HtmlEncoder.Default);
             }
         }
 
@@ -66,8 +65,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             internal EmbeddedFormat(FormatContext context, object instance)
                 { Object = instance;  Context = context;  }
         }
-
-        internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultHtmlFormatterSet.DefaultFormatters;
 
         internal static FormatterTable FormattersForAnyObject =
             new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyObject));

@@ -1187,7 +1187,7 @@ string";
 
                 IEnumerator<KeyValuePair<int, string>> IEnumerable<KeyValuePair<int, string>>.GetEnumerator()
                 {
-                    return ((IEnumerable < KeyValuePair<int, string> > ) new KeyValuePair<int, string>[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
+                    return ((IEnumerable < KeyValuePair<int, string> > ) new[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
                 }
 
                 bool IDictionary<int, string>.Remove(int key)
@@ -1208,7 +1208,7 @@ string";
 
                 IEnumerator IEnumerable.GetEnumerator()
                 {
-                    return ((IEnumerable)new KeyValuePair<int, string>[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
+                    return ((IEnumerable)new[] { new KeyValuePair<int, string>(1, "2") }).GetEnumerator();
                 }
             }
         }
@@ -1237,7 +1237,7 @@ string";
             }
 
             [Fact]
-            public void JSON_OBJECT()
+            public void JSON_object_output_contains_a_text_summary()
             {
                 var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
 
@@ -1245,16 +1245,30 @@ string";
 
                 var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
 
-                _output.WriteLine(html);
-
-
-
-                // FIX: (testname) write test
-                throw new NotImplementedException();
+                html.Should().ContainAll(
+                    "<code>", 
+                    jsonString.HtmlEncode().ToString(),
+                    "</code>");
             }
 
             [Fact]
-            public void JSON_ARRAY()
+            public void JSON_object_output_contains_table_of_properties_within_details_tag()
+            {
+                var jsonString = JsonSerializer.Serialize(new { Name = "cherry", Deliciousness = 9000 });
+
+                var jsonDocument = JsonDocument.Parse(jsonString);
+
+                var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
+
+                html.Should().ContainAll(
+                    "<details",
+                    "<td>Name</td>",
+                    "<td><span>&quot;cherry&quot;</span></td>",
+                    "</details>");
+            }
+
+            [Fact]
+            public void JSON_array_output_contains_a_text_summary()
             {
                 var jsonString = JsonSerializer.Serialize(new object[] { "apple", "banana", "cherry" });
 
@@ -1262,43 +1276,23 @@ string";
 
                 var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
 
-                _output.WriteLine(html);
-
-                // FIX: (testname) write test
-                throw new NotImplementedException();
+                html.Should().ContainAll(
+                    "<code>",
+                    jsonString.HtmlEncode().ToString(),
+                    "</code>");
             }
-
+            
             [Fact]
-            public void JSON_MIXED()
+            public void JSON_array_output_contains_table_of_items_within_details_tag()
             {
-                var jsonString = JsonSerializer.Serialize(
-                    new
-                    {
-                        fruits = new object[]
-                        {
-                            "apple",
-                            "banana",
-                            new
-                            {
-                                cherry = new[]
-                                {
-                                    "bing",
-                                    "rainier"
-                                }
-                            }
-                        },
-                        exampleIsSilly = true,
-                        howSilly = 9000
-                    });
+                var jsonString = JsonSerializer.Serialize(new object[] { "apple", "banana", "cherry" });
 
-                var jsonElement = JsonDocument.Parse(jsonString).RootElement;
+                var jsonDocument = JsonDocument.Parse(jsonString);
 
-                var html = jsonElement.ToDisplayString(HtmlFormatter.MimeType);
+                var html = jsonDocument.ToDisplayString(HtmlFormatter.MimeType);
 
-                _output.WriteLine(html);
-
-                // FIX: (testname) write test
-                throw new NotImplementedException();
+                html.Should().Contain(
+                    "<tr><td><span>&quot;apple&quot;</span></td></tr><tr><td><span>&quot;banana&quot;</span></td></tr><tr><td><span>&quot;cherry&quot;</span></td></tr>");
             }
         }
     }
