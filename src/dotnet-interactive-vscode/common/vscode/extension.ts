@@ -10,7 +10,7 @@ import { StdioKernelTransport } from '../stdioKernelTransport';
 import { registerLanguageProviders } from './languageProvider';
 import { registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
 
-import { getSimpleLanguage, isDotnetInteractiveLanguage } from '../interactiveNotebook';
+import { getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType } from '../interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
 import { executeSafe, isDotNetUpToDate, processArguments } from '../utilities';
@@ -171,7 +171,9 @@ async function waitForSdkInstall(requiredSdkVersion: string): Promise<void> {
 // keep the cell's language in metadata in sync with what VS Code thinks it is
 async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocument: vscode.TextDocument) {
     const notebook = candidateNotebookCellDocument.notebook;
-    if (notebook && isDotnetInteractiveLanguage(candidateNotebookCellDocument.languageId)) {
+    if (notebook &&
+        isJupyterNotebookViewType(notebook.viewType) &&
+        isDotnetInteractiveLanguage(candidateNotebookCellDocument.languageId)) {
         const cell = versionSpecificFunctions.getCells(notebook).find(c => c.document === candidateNotebookCellDocument);
         if (cell && cell.kind === vscode.NotebookCellKind.Code) {
             const newMetadata = cell.metadata.with({
