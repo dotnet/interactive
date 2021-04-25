@@ -223,6 +223,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <summary>Create an object suitable for delayed expansion to HTML</summary>
         public static object embed(object obj, FormatContext context)
         {
+            // FIX: (embed) is this needed?
+
             return new HtmlFormatter.EmbeddedFormat(context, obj);
         }
     }
