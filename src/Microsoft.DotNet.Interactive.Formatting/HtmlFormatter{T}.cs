@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     IEnumerable<object> values =
                         reducedMembers.Select(m => m.GetValueOrException(instance))
-                                      .Select(v => td(Html.embed(v, innerContext)));
+                                      .Select(v => td(v));
 
                     PocketView t =
                         table(

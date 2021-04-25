@@ -475,27 +475,6 @@ string";
             }
 
             [Fact]
-            public void It_formats_nested_string_with_encoding_and_whitespace_but_without_a_span()
-            {
-                // Note: although the whitespace in the string is emitted, it is not
-                // yet in a `<pre>` section, so will be treated according the HTML whitespace
-                // rules.
-                //
-                // Note: the absence of a span is dubious in the inner position.  It comes from this:
-                //    case string s:
-                //        writer.Write(s.HtmlEncode());
-                //        break;
-                //
-                // This test is added to capture the status quo, rather than because this is necessarily correct.
-
-                var text = new Tuple<string>("hello<b>world  </b>  \n\n  ");
-
-                var html = text.ToDisplayString("text/html");
-
-                html.Should().BeEquivalentHtmlTo($"<table><thead><tr><th>Item1</th></tr></thead><tbody><tr><td>{PlainTextBegin}hello&lt;b&gt;world  &lt;/b&gt;  \n\n  {PlainTextEnd}</td></tr></tbody></table>");
-            }
-
-            [Fact]
             public void It_formats_string_arrays_correctly()
             {
                 var strings = new[] { "apple", "banana", "cherry" };

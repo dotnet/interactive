@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         // Note, embeds the keys and values as arbitrary objects into the HTML content,
                         // ultimately rendered by PocketView
                         headers.Add(th(pair.Key));
-                        values.Add(td(Html.embed(pair.Value, innerContext)));
+                        values.Add(td(embed(pair.Value, innerContext)));
                     }
 
                     PocketView view =
