@@ -71,19 +71,19 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     // Note, embeds the keys and values as arbitrary objects into the HTML content,
                     // ultimately rendered by PocketView, e.g. via ToDisplayString(PlainTextFormatter.MimeType)
-                    List<object> headers = 
-                        reducedMembers.Select(m => th(str(m.Member.Name)))
+                    List<IHtmlContent> headers = 
+                        reducedMembers.Select(m => (IHtmlContent)th(m.Member.Name))
                                       .ToList();
                     
                     // Add a '..' column if we elided some members due to size limitations
                     if (reducedMembers.Length < members.Length)
                     {
-                        headers.Add(th(str("..")));
+                        headers.Add(th(".."));
                     }
 
                     IEnumerable<object> values =
                         reducedMembers.Select(m => m.GetValueOrException(instance))
-                                      .Select(v => td(embed(v, innerContext)));
+                                      .Select(v => td(Html.embed(v, innerContext)));
 
                     PocketView t =
                         table(
@@ -95,6 +95,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                                     values)));
 
                     t.WriteTo(writer, HtmlEncoder.Default);
+
                     return true;
                 }
             });
@@ -209,7 +210,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     headers.Add(th(i("index")));
                     leftColumnValues = Enumerable.Range(0, rowData.Count)
-                                                 .Select(i => str(i.ToString()))
+                                                 .Select(i => (object) new HtmlString(i.ToString()))
                                                  .ToList();
                 }
 
@@ -266,7 +267,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     }
 
                     // Note, embeds the values as arbitrary objects into the HTML content.
-                    rows.Add(tr(rowValues.Select(r => td(embed(r, innerContext)))));
+                    rows.Add(tr(rowValues.Select(r => td(Html.embed(r, innerContext)))));
                 }
 
                 if (remainingCount > 0)

@@ -201,11 +201,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         writer.Write(s.HtmlEncode());
                         break;
 
-                    case PocketView html:
-                        // Maintain the contex while writing PocketView in case there are embedded objects.
-                        html.WriteTo(writer, HtmlEncoder.Default);
-                        break;
-
                     case IHtmlContent html:
                         html.WriteTo(writer, HtmlEncoder.Default);
                         break;
@@ -280,6 +275,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         ///   Renders the tag to the specified <see cref = "TextWriter" />.
         /// </summary>
         /// <param name = "writer">The writer.</param>
+        /// <param name="encoder">An HTML encoder.</param>
         public void WriteTo(TextWriter writer, HtmlEncoder encoder)
         {
             _htmlTag?.WriteTo(writer, encoder);

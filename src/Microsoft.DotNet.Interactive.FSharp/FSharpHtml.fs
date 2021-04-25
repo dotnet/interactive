@@ -223,7 +223,7 @@ module Html =
         /// the object will be rendered as HTML using the best available HTML formatter in 
         /// the given context, or else as plain text, and the results treated as encoded text.
         let embed (context: FormatContext) (value: obj) = 
-            (HtmlElement.Obj(PocketViewTags.embed(value, context)) :> IHtmlContent)
+            (HtmlElement.Obj(Html.embed(value, context)) :> IHtmlContent)
 
         /// Specifies an HTML element using an arbitrary object without a formatting context.
         ///

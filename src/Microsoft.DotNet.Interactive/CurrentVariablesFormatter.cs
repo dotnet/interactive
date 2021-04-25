@@ -38,8 +38,8 @@ namespace Microsoft.DotNet.Interactive
                              tr(
                                  // Note, embeds these as objects into the HTML content, ultimately rendered by PocketView 
                                  td(v.Name),
-                                 td(embed(v.Type, innerContext)),
-                                 td(embed(v.Value, innerContext))
+                                 td(Html.embed(v.Type, innerContext)),
+                                 td(Html.embed(v.Value, innerContext))
                              ))));
             }
             else

@@ -219,5 +219,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         headers ?? Array.Empty<IHtmlContent>())),
                 tbody(
                     rows));
+
+        /// <summary>Create an object suitable for delayed expansion to HTML</summary>
+        public static object embed(object obj, FormatContext context)
+        {
+            return new HtmlFormatter.EmbeddedFormat(context, obj);
+        }
     }
 }

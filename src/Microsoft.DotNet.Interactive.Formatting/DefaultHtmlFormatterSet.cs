@@ -43,8 +43,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     {
                         // Note, embeds the keys and values as arbitrary objects into the HTML content,
                         // ultimately rendered by PocketView
-                        headers.Add(th(str(pair.Key)));
-                        values.Add(td(embed(pair.Value, innerContext)));
+                        headers.Add(th(pair.Key));
+                        values.Add(td(Html.embed(pair.Value, innerContext)));
                     }
 
                     PocketView view =
@@ -186,9 +186,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     return true;
                 }),
 
-                new HtmlFormatter<JsonDocument>((doc, writer) =>
+                new HtmlFormatter<JsonDocument>((context, doc, writer) =>
                 {
-                    doc.RootElement.FormatTo(writer, HtmlFormatter.MimeType);
+                    doc.RootElement.FormatTo(context, writer, HtmlFormatter.MimeType);
+                    return true;
                 }),
 
                 new HtmlFormatter<JsonElement>((context, element, writer) =>
@@ -255,6 +256,27 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         default:
                             return false;
                     }
+
+                    // FIX: (DefaultFormatters) needs more style
+//                     PocketView css = style(new HtmlString(@"    
+// .dni-code-hint {
+//     font-style: italic;
+//     overflow: hidden;
+//     white-space: nowrap;
+// }
+//
+// .dni-treeview {
+//     white-space: nowrap;
+// }
+//
+// .dni-treeview td {
+//     vertical-align: top;
+// }
+//
+// details.dni-treeview {
+//     padding-left: 1em;
+// }"));
+//                     css.WriteTo(writer, HtmlEncoder.Default);
 
                     view.WriteTo(writer, HtmlEncoder.Default);
 

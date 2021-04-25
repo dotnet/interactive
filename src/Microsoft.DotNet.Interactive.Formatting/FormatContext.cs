@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         /// <summary>Indicates a request for other formatters to reduce their information content.</summary>
         public FormatContext ReduceContent(double proportion) =>
-            new FormatContext
+            new()
             {
                 ContentThreshold = ContentThreshold * (Math.Max(0.0, Math.Min(1.0, proportion)))
             };
