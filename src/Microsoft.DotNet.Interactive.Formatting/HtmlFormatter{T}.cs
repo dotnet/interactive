@@ -57,7 +57,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         .Take(Math.Max(0, HtmlFormatter.MaxProperties))
                         .ToArray();
 
-                if (reducedMembers.Length == 0 || context.ContentThreshold < 1.0)
+                if (reducedMembers.Length == 0 || 
+                    context.ContentThreshold < 1.0)
                 {
                     // This formatter refuses to format objects without members, and 
                     // refused to produce nested tables, or if no members are selected
@@ -83,7 +84,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     IEnumerable<object> values =
                         reducedMembers.Select(m => m.GetValueOrException(instance))
-                                      .Select(v => td(v));
+                                      .Select(v => td(
+                                                  div[@class: "dni-plaintext"](v.ToDisplayString("text/plain"))
+                                              ));
 
                     PocketView t =
                         table(
@@ -130,6 +133,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     // This formatter refuses to produce nested tables.
                     return false;
                 }
+
                 var innerContext = context.ReduceContent(FormatContext.NestedInTable);
 
                 var (rowData, remainingCount) = getValues(source)
@@ -145,7 +149,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 var valuesByHeader = new Dictionary<string, Dictionary<int, object>>();
                 var headerToSortIndex = new Dictionary<string, (int, int)>();
-                bool typesAreDifferent = false;
+                var typesAreDifferent = false;
                 var types = new Dictionary<Type, int>();
 
                 foreach (var (value, index) in rowData)

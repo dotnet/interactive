@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Contain($"<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}{{ BA = 456 }}{PlainTextEnd}</td></tr></tbody></table>");
+                      .Contain($"<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>{PlainTextBegin}123{PlainTextEnd}</td><td>{PlainTextBegin}{{ BA: 456 }}{PlainTextEnd}</td></tr></tbody></table>");
             }
 
             [Fact]
