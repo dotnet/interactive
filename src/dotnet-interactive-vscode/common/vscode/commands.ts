@@ -160,8 +160,8 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
     }
 
     // using .ipynb as default until https://github.com/microsoft/vscode/issues/121974 is fixed
-    //const [newNotebookExtension, newNotebookViewType] = ['.dib', 'dotnet-interactive'];
-    const [newNotebookExtension, newNotebookViewType] = ['.ipynb', 'jupyter-notebook'];
+    const [newNotebookExtension, newNotebookViewType] = ['.dib', 'dotnet-interactive'];
+    //const [newNotebookExtension, newNotebookViewType] = ['.ipynb', 'jupyter-notebook'];
 
     function getNewNotebookName(): string {
         let suffix = 1;
