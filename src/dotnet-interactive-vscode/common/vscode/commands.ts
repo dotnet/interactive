@@ -6,7 +6,7 @@ import * as path from 'path';
 import { acquireDotnetInteractive } from '../acquisition';
 import { InstallInteractiveArgs, InteractiveLaunchOptions } from '../interfaces';
 import { ClientMapper } from '../clientMapper';
-import { getEol, isUnsavedNotebook, toNotebookDocument } from './vscodeUtilities';
+import { getEol, isStableBuild, isUnsavedNotebook, toNotebookDocument } from './vscodeUtilities';
 import { DotNetPathManager, KernelId } from './extension';
 import { computeToolInstallArguments, executeSafe, executeSafeAndLog } from '../utilities';
 
@@ -159,25 +159,53 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
         }) >= 0;
     }
 
-    // using .ipynb as default until https://github.com/microsoft/vscode/issues/121974 is fixed
-    const [newNotebookExtension, newNotebookViewType] = ['.dib', 'dotnet-interactive'];
-    //const [newNotebookExtension, newNotebookViewType] = ['.ipynb', 'jupyter-notebook'];
+    const newDibNotebookText = `Create as '.dib'`;
+    const newIpynbNotebookText = `Create as '.ipynb'`;
 
-    function getNewNotebookName(): string {
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebook', async () => {
+        const selected = await vscode.window.showQuickPick([newDibNotebookText, newIpynbNotebookText]);
+        switch (selected) {
+            case newDibNotebookText:
+                await vscode.commands.executeCommand('dotnet-interactive.newNotebookDib');
+                break;
+            case newIpynbNotebookText:
+                await vscode.commands.executeCommand('dotnet-interactive.newNotebookIpynb');
+                break;
+            default:
+                break;
+        }
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebookDib', async () => {
+        await newNotebook('.dib', 'dotnet-interactive');
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebookIpynb', async () => {
+        // note, new .ipynb notebooks are currently affected by this bug: https://github.com/microsoft/vscode/issues/121974
+        await newNotebook('.ipynb', 'jupyter-notebook');
+        if (isStableBuild()) {
+            // on stable we can explicitly select our kernel
+            const extension = 'ms-dotnettools.dotnet-interactive-vscode';
+            const id = KernelId;
+            await vscode.commands.executeCommand('notebook.selectKernel', { extension, id });
+        }
+    }));
+
+    async function newNotebook(extension: string, viewType: string): Promise<void> {
+        const fileName = getNewNotebookName(extension);
+        const newUri = vscode.Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
+        await vscode.commands.executeCommand('vscode.openWith', newUri, viewType);
+    }
+
+    function getNewNotebookName(extension: string): string {
         let suffix = 1;
         let filename = '';
         do {
-            filename = `Untitled-${suffix++}${newNotebookExtension}`;
+            filename = `Untitled-${suffix++}${extension}`;
         } while (workspaceHasUnsavedNotebookWithName(filename));
 
         return filename;
     }
-
-    context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebook', async () => {
-        const fileName = getNewNotebookName();
-        const newUri = vscode.Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
-        await vscode.commands.executeCommand('vscode.openWith', newUri, newNotebookViewType);
-    }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
         // ensure we have a notebook uri
@@ -222,12 +250,6 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
             }
         }
     }));
-}
-
-async function switchToInteractiveKernel() {
-    const extension = 'ms-dotnettools.dotnet-interactive-vscode';
-    const id = KernelId;
-    await vscode.commands.executeCommand('notebook.selectKernel', { extension, id });
 }
 
 // callbacks used to install interactive tool

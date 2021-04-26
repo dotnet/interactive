@@ -36,23 +36,20 @@ export function registerWithVsCode(context: vscode.ExtensionContext, clientMappe
         viewType: ['dotnet-interactive'],
         filenamePattern: '*.{dib,dotnet-interactive}'
     };
-    const selectorIpynbWithJupyter = {
-        viewType: ['jupyter-notebook'],
-        filenamePattern: '*.ipynb'
-    };
     const selectorIpynbWithDotNetInteractive = {
-        viewType: ['dotnet-interactive-jupyter'],
+        viewType: ['jupyter-notebook'],
         filenamePatter: '*.ipynb'
     };
     const notebookContentProvider = new DotNetInteractiveNotebookContentProvider(diagnosticsChannel, clientMapper);
 
     // notebook content
     context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookContentProvider));
-    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive-jupyter', notebookContentProvider));
     const notebookKernelProvider = new DotNetInteractiveNotebookKernelProvider(preloadUris, clientMapper);
+
+    // register kernel for .NET Interactive and .dib
     context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorDib, notebookKernelProvider));
 
-    // always register as a possible .ipynb handler
+    // register kernel for .NET Interactive and .ipynb
     context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorIpynbWithDotNetInteractive, notebookKernelProvider));
 
     context.subscriptions.push(vscode.notebook.onDidChangeActiveNotebookKernel(async e => await handleNotebookKernelChange(e, clientMapper)));

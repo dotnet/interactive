@@ -60,14 +60,23 @@ export async function activate(context: vscode.ExtensionContext) {
 
     vscode.window.registerUriHandler({
         handleUri(uri: vscode.Uri): vscode.ProviderResult<void> {
+            const params = new URLSearchParams(uri.query);
             switch (uri.path) {
                 case '/newNotebook':
+                    // Examples:
+                    //   vscode://ms-dotnettools.dotnet-interactive-vscode/newNotebook?as=dib
+                    //   vscode://ms-dotnettools.dotnet-interactive-vscode/newNotebook?as=ipynb
+                    const asType = params.get('as');
                     vscode.commands.executeCommand('dotnet-interactive.acquire').then(() => {
-                        vscode.commands.executeCommand('dotnet-interactive.newNotebook').then(() => { });
+                        const commandName = asType === 'ipynb'
+                            ? 'dotnet-interactive.newNotebookIpynb'
+                            : 'dotnet-interactive.newNotebookDib';
+                        vscode.commands.executeCommand(commandName).then(() => { });
                     });
                     break;
                 case '/openNotebook':
-                    const params = new URLSearchParams(uri.query);
+                    // Example
+                    //   vscode://ms-dotnettools.dotnet-interactive-vscode/openNotebook?path=C%3A%5Cpath%5Cto%5Cnotebook.dib
                     const path = params.get('path');
                     if (path) {
                         vscode.commands.executeCommand('dotnet-interactive.acquire').then(() => {

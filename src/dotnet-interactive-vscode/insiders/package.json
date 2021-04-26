@@ -49,7 +49,9 @@
     "onCommand:dotnet-interactive.saveAsNotebook"
   ],
   "main": "./out/src/common/vscode/extension.js",
-  "extensionDependencies": [],
+  "extensionDependencies": [
+    "ms-toolsai.jupyter"
+  ],
   "contributes": {
     "notebookProvider": [
       {
