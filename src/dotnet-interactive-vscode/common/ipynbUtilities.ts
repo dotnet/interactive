@@ -127,28 +127,24 @@ export const requiredLanguageInfoData = {
 };
 
 export function withDotNetKernelMetadata(metadata: { [key: string]: any } | undefined): any | undefined {
-    let result = {
+    if (isDotnetKernel(metadata?.custom?.metadata?.kernelspec?.name)) {
+        return metadata; // don't change anything
+    }
+
+    const result = {
         ...metadata,
         custom: {
             ...metadata?.custom,
             metadata: {
                 ...metadata?.custom?.metadata,
                 kernelspec: {
-                    ...metadata?.custom?.metadata?.kernelspec
-                }
+                    ...metadata?.custom?.metadata?.kernelspec,
+                    ...requiredKernelspecData,
+                },
+                language_info: requiredLanguageInfoData,
             },
         }
     };
-    let name = result?.custom?.metadata?.kernelspec?.name
-
-    if (typeof name !== 'string' || !name.startsWith(".net-")) {
-        result.custom.metadata.kernelspec = {
-            ...metadata?.custom?.metadata?.kernelspec,
-            ...requiredKernelspecData,
-        };
-
-        result.custom.metadata.language_info = { ...requiredLanguageInfoData };
-    }
 
     return result;
 }
