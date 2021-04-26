@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
 {
     public static class AspNetCoreCSharpKernelExtensions
     {
-        private static readonly Assembly[] _references = new[]
+        private static readonly Assembly[] _references = 
         {
             typeof(Host).Assembly, // Microsoft.Extensions.Hosting
             typeof(WebHost).Assembly, // Microsoft.AspNetCore
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
             typeof(AspNetCoreCSharpKernelExtensions).Assembly, // Microsoft.DotNet.Interactive.AspNetCore
         };
 
-        private static readonly string[] _namespaces = new[]
+        private static readonly string[] _namespaces =
         {
             typeof(HttpContext).Namespace, // Microsoft.AspNetCore.Http
             typeof(IEndpointRouteBuilder).Namespace, // Microsoft.AspNetCore.Routing

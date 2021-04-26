@@ -99,7 +99,6 @@ namespace Microsoft.DotNet.Interactive.Http
                     kernel.DeferCommand(enableHttp);
                 }
 
-
                 kernel = kernel.UseHttpApi(httpPort, httpProbingSettings);
 
             });

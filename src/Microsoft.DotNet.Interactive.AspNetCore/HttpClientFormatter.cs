@@ -61,28 +61,33 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                 await requestMessage.Content.ReadAsStringAsync().ConfigureAwait(false) :
                 string.Empty;
 
-            var responseBodyString = await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-            static dynamic HeaderTable(HttpHeaders headers, HttpContentHeaders contentHeaders) =>
-                table(thead(tr(th("Name"), th("Value"))),
-                    tbody((contentHeaders is null ? headers : headers.Concat(contentHeaders)).Select(header => tr(
-                            td(header.Key), td(string.Join("; ", header.Value))))));
-
             var requestLine = h3($"{requestMessage.Method} ", a[href: requestUri](requestUri), $" HTTP/{requestMessage.Version}");
             var requestHeaders = details(summary("Headers"), HeaderTable(requestMessage.Headers, requestMessage.Content?.Headers));
-            
+
             var requestBody = details(
                 summary("Body"), 
                 pre(requestBodyString));
 
-            var responseLine = h3($"HTTP/{responseMessage.Version} {(int)responseMessage.StatusCode} {responseMessage.ReasonPhrase}");
+            var responseLine = h3($"HTTP/{responseMessage.Version} {(int) responseMessage.StatusCode} {responseMessage.ReasonPhrase}");
 
             var responseHeaders = details[open: true](
                 summary("Headers"), HeaderTable(responseMessage.Headers, responseMessage.Content.Headers));
 
+            var responseBodyString = await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
+            object responseObjToFormat;
+
+            try
+            {
+                responseObjToFormat = JsonDocument.Parse(responseBodyString);
+            }
+            catch (JsonException)
+            {
+                responseObjToFormat = responseBodyString;
+            }
+
             var responseBody = details[open: true](
-                summary("Body"), 
-                JsonDocument.Parse(responseBodyString));
+                summary("Body"),
+                responseObjToFormat);
 
             var output = div[@class: _containerClass](
                 style[type: "text/css"](_flexCss),
@@ -97,6 +102,8 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                 details[@class: _logContainerClass](summary("Logs"), aspnetLogs).WriteTo(textWriter, HtmlEncoder.Default);
             }
         }
+
+        private static dynamic HeaderTable(HttpHeaders headers, HttpContentHeaders contentHeaders) => table(thead(tr(th("Name"), th("Value"))), tbody((contentHeaders is null ? headers : headers.Concat(contentHeaders)).Select(header => tr(td(header.Key), td(string.Join("; ", header.Value))))));
 
         public static HttpClient CreateEnhancedHttpClient(string address, InteractiveLoggerProvider interactiveLoggerProvider) =>
             new(new LogCapturingHandler(interactiveLoggerProvider))
