@@ -219,7 +219,7 @@ module Html =
 
         /// Specifies an HTML element using an arbitrary object in a formatting context.
         ///
-        /// If the object is an IHtmlElement or a sequence of IHtmlElement that content is used. Otherwise 
+        /// If the object is an IHtmlContent or a sequence of IHtmlContent that content is used. Otherwise 
         /// the object will be rendered as HTML using the best available HTML formatter in 
         /// the given context, or else as plain text, and the results treated as encoded text.
         let embed (context: FormatContext) (value: obj) = 
@@ -227,7 +227,7 @@ module Html =
 
         /// Specifies an HTML element using an arbitrary object without a formatting context.
         ///
-        /// If the object is an IHtmlElement or a sequence of IHtmlElement that content is used. Otherwise 
+        /// If the object is an IHtmlContent or a sequence of IHtmlContent that content is used. Otherwise 
         /// the object will be rendered as HTML using the best available HTML formatter
         /// with no context, or else as plain text, and the results treated as encoded text.
         let embedNoContext (value: obj) = 

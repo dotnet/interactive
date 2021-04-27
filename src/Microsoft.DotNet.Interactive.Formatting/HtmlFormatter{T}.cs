@@ -235,8 +235,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     headers.Add((IHtmlContent)th(".."));
                 }
                 
-                var innerContext = context.ReduceContent(FormatContext.NestedInTable);
-                
                 var rows = new List<IHtmlContent>();
 
                 for (var rowIndex = 0; rowIndex < rowData.Count; rowIndex++)
@@ -265,8 +263,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         }
                     }
 
-                    // Note, embeds the values as arbitrary objects into the HTML content.
-                    rows.Add(tr(rowValues.Select(r => td(Html.embed(r, innerContext)))));
+                    rows.Add(tr(rowValues.Select(r => td(r))));
                 }
 
                 if (remainingCount > 0)
@@ -282,6 +279,5 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return true;
             }
         }
-
     }
 }
