@@ -89,14 +89,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             bool FormatObject(FormatContext context, T target, TextWriter writer)
             {
-
-                // Greatly reduce the number of properties to show. The `ToString()` 
-                // already counts as significant content.  
-                var maxProperties = 
-                    context.ContentThreshold <= FormatContext.NestedInTable
-                    ? 0 
-                    : (int)(MaxProperties * context.ContentThreshold * context.ContentThreshold);
-
                 var reducedAccessors = accessors.Take(Math.Max(0, MaxProperties)).ToArray();
 
                 // If we haven't got any members to show, just resort to ToString()

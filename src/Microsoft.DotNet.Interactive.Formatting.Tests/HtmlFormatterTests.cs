@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
     <thead>
        <tr><th>Count</th><th>Name</th></tr>
     </thead>
-    <tbody><tr><td>{PlainTextBegin}2{PlainTextEnd}</td><td>{PlainTextBegin}socks{PlainTextEnd}</td></tr>
+    <tbody><tr><td>{PlainTextBegin}2{PlainTextEnd}</td><td>socks</td></tr>
     </tbody>
 </table>");
             }

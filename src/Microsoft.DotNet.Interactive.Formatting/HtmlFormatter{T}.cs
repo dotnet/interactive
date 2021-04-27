@@ -129,8 +129,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     return false;
                 }
 
-                var innerContext = context.ReduceContent(FormatContext.NestedInTable);
-
                 var (rowData, remainingCount) = getValues(source)
                                                 .Cast<object>()
                                                 .Select((v, i) => (v, i))
@@ -236,7 +234,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     headers.Add((IHtmlContent)th(".."));
                 }
-
+                
+                var innerContext = context.ReduceContent(FormatContext.NestedInTable);
+                
                 var rows = new List<IHtmlContent>();
 
                 for (var rowIndex = 0; rowIndex < rowData.Count; rowIndex++)

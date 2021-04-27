@@ -38,13 +38,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     var headers = new List<IHtmlContent>();
                     var values = new List<IHtmlContent>();
 
-                    var innerContext = context.ReduceContent(FormatContext.NestedInTable);
                     foreach (var pair in value.OrderBy(p => p.Key))
                     {
                         // Note, embeds the keys and values as arbitrary objects into the HTML content,
                         // ultimately rendered by PocketView
                         headers.Add(th(pair.Key));
-                        values.Add(td(embed(pair.Value, innerContext)));
+                        values.Add(td(pair.Value));
                     }
 
                     PocketView view =
