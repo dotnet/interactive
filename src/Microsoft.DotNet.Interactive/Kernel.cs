@@ -546,7 +546,7 @@ namespace Microsoft.DotNet.Interactive
             DirectiveNode directiveNode,
             int requestPosition)
         {
-            var directiveParsers = new List<Parser>();
+            var directiveParsers = new List<DirectiveParser>();
 
             directiveParsers.AddRange(
                 GetDirectiveParsersForCompletion(directiveNode, requestPosition));
@@ -576,7 +576,7 @@ namespace Microsoft.DotNet.Interactive
                    .ToArray();
         }
 
-        private protected virtual IEnumerable<Parser> GetDirectiveParsersForCompletion(
+        private protected virtual IEnumerable<DirectiveParser> GetDirectiveParsersForCompletion(
             DirectiveNode directiveNode,
             int requestPosition)
         {

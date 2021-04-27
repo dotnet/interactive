@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
     public class SubmissionParser
     {
         private readonly Kernel _kernel;
-        private Parser _directiveParser;
+        private DirectiveParser _directiveParser;
         private RootCommand _rootCommand;
 
         public SubmissionParser(Kernel kernel)
@@ -231,14 +231,14 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
         }
 
-        internal IDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)> GetSubkernelDirectiveParsers()
+        internal IDictionary<string, (KernelUri kernelUri, Func<DirectiveParser> getParser)> GetSubkernelDirectiveParsers()
         {
             if (!(_kernel is CompositeKernel compositeKernel))
             {
                 return null;
             }
 
-            var dict = new Dictionary<string, (KernelUri , Func<Parser>)>();
+            var dict = new Dictionary<string, (KernelUri , Func<DirectiveParser>)>();
 
             for (var i = 0; i < compositeKernel.ChildKernels.Count; i++)
             {
@@ -252,36 +252,18 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     }
                 }
 
-                (KernelUri, Func<Parser>) GetParser() => (childKernel.Uri,() => childKernel.SubmissionParser.GetDirectiveParser());
+                (KernelUri, Func<DirectiveParser>) GetParser() => (childKernel.Uri,() => childKernel.SubmissionParser.GetDirectiveParser());
             }
 
             return dict;
         }
 
-        internal Parser GetDirectiveParser()
+        internal DirectiveParser GetDirectiveParser()
         {
             if (_directiveParser is null)
             {
                 EnsureRootCommandIsInitialized();
-
-                var commandLineBuilder =
-                    new CommandLineBuilder(_rootCommand)
-                        .ParseResponseFileAs(ResponseFileHandling.Disabled)
-                        .UseTypoCorrections()
-                        .UseHelpBuilder(bc => new DirectiveHelpBuilder(_rootCommand.Name))
-                        .UseHelp()
-                        .UseMiddleware(
-                            context =>
-                            {
-                                context.BindingContext
-                                       .AddService(
-                                           typeof(KernelInvocationContext),
-                                           _ => KernelInvocationContext.Current);
-                            });
-
-                commandLineBuilder.EnableDirectives = false;
-
-                _directiveParser = commandLineBuilder.Build();
+                _directiveParser = new DirectiveParser(_rootCommand);
             }
 
             return _directiveParser;

@@ -7,9 +7,9 @@ using System.CommandLine.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Parsing
 {
-    internal class DirectiveParser : Parser
+    internal class DirectiveParser
     {
-        private Parser _commandLineParser;
+        private readonly Parser _commandLineParser;
         public DirectiveParser(RootCommand rootCommand)
         {
             var commandLineBuilder =
@@ -53,5 +53,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             return doubleSlash;
         }
+
+        public CommandLineConfiguration Configuration => _commandLineParser.Configuration;
     }
 }

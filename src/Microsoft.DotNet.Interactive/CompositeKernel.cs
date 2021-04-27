@@ -253,7 +253,7 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private protected override IEnumerable<Parser> GetDirectiveParsersForCompletion(
+        private protected override IEnumerable<DirectiveParser> GetDirectiveParsersForCompletion(
             DirectiveNode directiveNode,
             int requestPosition)
         {
@@ -286,7 +286,7 @@ namespace Microsoft.DotNet.Interactive
                     yield return compositeKernelDirectiveParser;
                 }
 
-                bool IsDirectiveDefinedIn(Parser parser) =>
+                bool IsDirectiveDefinedIn(DirectiveParser parser) =>
                     parser.Configuration.RootCommand.Children.GetByAlias(directiveName) is { };
             }
             else

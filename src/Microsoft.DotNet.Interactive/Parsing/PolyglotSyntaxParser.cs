@@ -18,21 +18,21 @@ namespace Microsoft.DotNet.Interactive.Parsing
     {
         public string DefaultLanguage { get; }
         private readonly SourceText _sourceText;
-        private readonly Parser _rootKernelDirectiveParser;
-        private readonly IDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)> _subkernelInfoByKernelName;
+        private readonly DirectiveParser _rootKernelDirectiveParser;
+        private readonly IDictionary<string, (KernelUri kernelUri, Func<DirectiveParser> getParser)> _subkernelInfoByKernelName;
         private IReadOnlyList<SyntaxToken>? _tokens;
         private HashSet<string>? _kernelChooserDirectives;
 
         internal PolyglotSyntaxParser(
             SourceText sourceText,
             string defaultLanguage,
-            Parser rootKernelDirectiveParser,
-            IDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)> subkernelInfoByKernelName)
+            DirectiveParser rootKernelDirectiveParser,
+            IDictionary<string, (KernelUri kernelUri, Func<DirectiveParser> getParser)> subkernelInfoByKernelName)
         {
             DefaultLanguage = defaultLanguage;
             _sourceText = sourceText;
             _rootKernelDirectiveParser = rootKernelDirectiveParser;
-            _subkernelInfoByKernelName = subkernelInfoByKernelName ?? new ConcurrentDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)>();
+            _subkernelInfoByKernelName = subkernelInfoByKernelName ?? new ConcurrentDictionary<string, (KernelUri kernelUri, Func<DirectiveParser> getParser)>();
         }
 
         public PolyglotSyntaxTree Parse()
