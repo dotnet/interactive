@@ -67,15 +67,15 @@
     "jupyter.kernels": [
       {
         "title": ".NET Interactive (C#)",
-        "defaultLanguage": "dotnet-interactive.csharp"
+        "defaultlanguage": "dotnet-interactive.csharp"
       },
       {
         "title": ".NET Interactive (F#)",
-        "defaultLanguage": "dotnet-interactive.fsharp"
+        "defaultlanguage": "dotnet-interactive.fsharp"
       },
       {
         "title": ".NET Interactive (PowerShell)",
-        "defaultLanguage": "dotnet-interactive.pwsh"
+        "defaultlanguage": "dotnet-interactive.pwsh"
       }
     ],
     "configuration": {

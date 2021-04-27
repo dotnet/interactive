@@ -179,10 +179,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebookIpynb', async () => {
         // note, new .ipynb notebooks are currently affected by this bug: https://github.com/microsoft/vscode/issues/121974
         await newNotebook('.ipynb');
-        if (isStableBuild()) {
-            // on stable we can explicitly select our kernel
-            selectDotNetInteractiveKernel();
-        }
+        selectDotNetInteractiveKernel();
     }));
 
     async function newNotebook(extension: string): Promise<void> {
@@ -254,8 +251,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
     }));
 }
 
-async function selectDotNetInteractiveKernel(): Promise<void> {
-    // on stable we can explicitly select our kernel
+export async function selectDotNetInteractiveKernel(): Promise<void> {
     const extension = 'ms-dotnettools.dotnet-interactive-vscode';
     const id = KernelId;
     await vscode.commands.executeCommand('notebook.selectKernel', { extension, id });
