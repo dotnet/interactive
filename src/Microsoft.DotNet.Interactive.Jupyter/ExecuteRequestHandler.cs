@@ -105,7 +105,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             DiagnosticsProduced diagnosticsProduced)
         {
             // Space out the diagnostics and send them to stderr
-            if (diagnosticsProduced.FormattedDiagnostics.Count() > 0)
+            if (diagnosticsProduced.FormattedDiagnostics.Count > 0)
             {
                 var output =
                 Environment.NewLine +

@@ -17,8 +17,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     internal class DefaultPlainTextFormatterSet
     {
-        static internal ITypeFormatter[] DefaultFormatters =
-            new ITypeFormatter[]
+        internal static ITypeFormatter[] DefaultFormatters =
             {
                 new PlainTextFormatter<ExpandoObject>((context, expando, writer) =>
                     {

@@ -6,7 +6,7 @@ using System.IO;
 
 namespace Microsoft.DotNet.Interactive.CSharp
 {
-    internal static partial class TypeExtensions
+    internal static class TypeExtensions
     {
         public static void WriteCSharpDeclarationTo(
             this Type type,

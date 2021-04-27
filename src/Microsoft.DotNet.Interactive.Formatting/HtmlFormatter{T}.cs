@@ -57,7 +57,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         .Take(Math.Max(0, HtmlFormatter.MaxProperties))
                         .ToArray();
 
-                if (reducedMembers.Length == 0 || context.ContentThreshold < 1.0)
+                if (reducedMembers.Length == 0 || 
+                    context.ContentThreshold < 1.0)
                 {
                     // This formatter refuses to format objects without members, and 
                     // refused to produce nested tables, or if no members are selected
@@ -65,25 +66,22 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }
                 else
                 {
-                    // Reduce the content threshold for inner formatting, amon other things
-                    // ensures no nested tables get produced.
-                    var innerContext = context.ReduceContent(FormatContext.NestedInTable);
-
                     // Note, embeds the keys and values as arbitrary objects into the HTML content,
                     // ultimately rendered by PocketView, e.g. via ToDisplayString(PlainTextFormatter.MimeType)
-                    List<object> headers = 
-                        reducedMembers.Select(m => th(str(m.Member.Name)))
+                    List<IHtmlContent> headers = 
+                        reducedMembers.Select(m => (IHtmlContent)th(m.Member.Name))
                                       .ToList();
                     
                     // Add a '..' column if we elided some members due to size limitations
                     if (reducedMembers.Length < members.Length)
                     {
-                        headers.Add(th(str("..")));
+                        headers.Add(th(".."));
                     }
 
                     IEnumerable<object> values =
                         reducedMembers.Select(m => m.GetValueOrException(instance))
-                                      .Select(v => td(embed(v, innerContext)));
+                                      .Select(v => td(
+                                                  div[@class: "dni-plaintext"](v.ToDisplayString("text/plain"))));
 
                     PocketView t =
                         table(
@@ -95,6 +93,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                                     values)));
 
                     t.WriteTo(writer, HtmlEncoder.Default);
+
                     return true;
                 }
             });
@@ -112,7 +111,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             
             if (dictionaryGenericType is not null || dictionaryObjectType is not null)
             {
-                var dictType = (dictionaryGenericType ?? dictionaryObjectType);
+                var dictType = dictionaryGenericType ?? dictionaryObjectType;
                 var keysProperty = dictType.GetProperty("Keys");
                 getKeys = instance => (IEnumerable) keysProperty.GetValue(instance, null);
 
@@ -129,7 +128,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     // This formatter refuses to produce nested tables.
                     return false;
                 }
-                var innerContext = context.ReduceContent(FormatContext.NestedInTable);
 
                 var (rowData, remainingCount) = getValues(source)
                                                 .Cast<object>()
@@ -144,34 +142,50 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 var valuesByHeader = new Dictionary<string, Dictionary<int, object>>();
                 var headerToSortIndex = new Dictionary<string, (int, int)>();
-                bool typesAreDifferent = false;
+                var typesAreDifferent = false;
                 var types = new Dictionary<Type, int>();
 
                 foreach (var (value, index) in rowData)
                 {
-                    var destructurer = Destructurer.GetOrCreate(value?.GetType());
+                    IDictionary<string, object> keysAndValues;
 
-                    var destructured = destructurer.Destructure(value);
+                    if (value is { } &&
+                        Formatter.GetPreferredFormatterFor(value.GetType(), HtmlFormatter.MimeType) is { } formatter &&
+                        formatter.Type == typeof(object))
+                    {
+                        var destructurer = Destructurer.GetOrCreate(value?.GetType());
+
+                        keysAndValues = destructurer.Destructure(value);
+                    }
+                    else
+                    {
+                        keysAndValues = NonDestructurer.Instance.Destructure(value);
+                    }
 
                     if (value is not null)
                     {
                         var type = value.GetType();
                         if (!types.ContainsKey(type))
+                        {
                             types.Add(type, types.Count);
+                        }
 
                         typesAreDifferent = types.Count > 1;
                     }
 
-                    var typeIndex = (value is null) ? 0 : types[value.GetType()];
+                    var typeIndex = value is null ? 0 : types[value.GetType()];
 
                     var pairIndex = 0;
-                    foreach(var pair in destructured)
+
+                    foreach (var pair in keysAndValues)
                     {
                         if (!headerToSortIndex.ContainsKey(pair.Key))
+                        {
                             headerToSortIndex.Add(pair.Key, (typeIndex, pairIndex));
+                        }
 
                         valuesByHeader
-                            .GetOrAdd(pair.Key, key => new Dictionary<int, object>())
+                            .GetOrAdd(pair.Key, _ => new Dictionary<int, object>())
                             .Add(index, pair.Value);
                         pairIndex++;
                     }
@@ -193,8 +207,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     headers.Add(th(i("index")));
                     leftColumnValues = Enumerable.Range(0, rowData.Count)
-                                                 .Select(i => str(i.ToString()))
-                                                 .Cast<object>()
+                                                 .Select(i => (object) new HtmlString(i.ToString()))
                                                  .ToList();
                 }
 
@@ -221,7 +234,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     headers.Add((IHtmlContent)th(".."));
                 }
-
+                
+                var innerContext = context.ReduceContent(FormatContext.NestedInTable);
+                
                 var rows = new List<IHtmlContent>();
 
                 for (var rowIndex = 0; rowIndex < rowData.Count; rowIndex++)
@@ -251,8 +266,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     }
 
                     // Note, embeds the values as arbitrary objects into the HTML content.
-                    rows.Add(tr(rowValues.Select(r => td(embed(r, innerContext)))));
-
+                    rows.Add(tr(rowValues.Select(r => td(Html.embed(r, innerContext)))));
                 }
 
                 if (remainingCount > 0)
@@ -262,7 +276,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     rows.Add(tr(td[colspan: $"{headers.Count}"](more)));
                 }
 
-                var table = HtmlFormatter.Table(headers, rows);
+                var table = Html.Table(headers, rows);
 
                 table.WriteTo(writer, HtmlEncoder.Default);
                 return true;

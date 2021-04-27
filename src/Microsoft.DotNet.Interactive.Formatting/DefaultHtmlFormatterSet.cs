@@ -7,9 +7,11 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 using System.Numerics;
+using static Microsoft.DotNet.Interactive.Formatting.Html;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -36,13 +38,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     var headers = new List<IHtmlContent>();
                     var values = new List<IHtmlContent>();
 
-                    var innerContext = context.ReduceContent(FormatContext.NestedInTable);
                     foreach (var pair in value.OrderBy(p => p.Key))
                     {
                         // Note, embeds the keys and values as arbitrary objects into the HTML content,
                         // ultimately rendered by PocketView
-                        headers.Add(th(str(pair.Key)));
-                        values.Add(td(embed(pair.Value, innerContext)));
+                        headers.Add(th(pair.Key));
+                        values.Add(td(pair.Value));
                     }
 
                     PocketView view =
@@ -118,7 +119,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                             genericTypeDefinition.FullName.ToLower().Replace("+",".").Replace("`","-");
 
                         PocketView view = 
-                           span(a[href: $"https://docs.microsoft.com/dotnet/api/{typeLookupName}?view=netcore-3.0"](
+                           span(a[href: $"https://docs.microsoft.com/dotnet/api/{typeLookupName}?view=net-5.0"](
                                    text));
                         view.WriteTo(writer, HtmlEncoder.Default);
                     }
@@ -182,8 +183,104 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     HtmlFormatter.FormatObjectAsPlainText(context, value, writer);
                     return true;
-                })
+                }),
 
-            };            
+                new HtmlFormatter<JsonDocument>((context, doc, writer) =>
+                {
+                    doc.RootElement.FormatTo(context, writer, HtmlFormatter.MimeType);
+                    return true;
+                }),
+
+                new HtmlFormatter<JsonElement>((context, element, writer) =>
+                {
+                    IHtmlContent view = null;
+
+                    switch (element.ValueKind)
+                    {
+                        case JsonValueKind.Object:
+
+                            var keysAndValues = element.EnumerateObject().ToArray();
+
+                            view = details[@class: "dni-treeview"](
+                                summary(
+                                    span[@class: "dni-code-hint"](code(element.ToString()))),
+                                div(
+                                    Table(
+                                        headers: null,
+                                        rows: keysAndValues.Select(
+                                            a => (IHtmlContent)
+                                                tr(
+                                                    td(a.Name), td(a.Value))).ToArray())));
+
+                            break;
+
+                        case JsonValueKind.Array:
+
+                            var arrayEnumerator = element.EnumerateArray().ToArray();
+
+                            view = details[@class: "dni-treeview"](
+                                summary(
+                                    span[@class: "dni-code-hint"](code(element.ToString()))),
+                                div(
+                                    Table(
+                                        headers: null,
+                                        rows: arrayEnumerator.Select(
+                                            a => (IHtmlContent) tr(td(a))).ToArray())));
+
+                            break;
+
+                        case JsonValueKind.String:
+
+                            var value = element.GetString();
+                            view = span($"\"{value}\"");
+
+                            break;
+
+                        case JsonValueKind.Number:
+                            view = span(element.GetSingle());
+                            break;
+
+                        case JsonValueKind.True:
+                            view = span("true");
+                            break;
+
+                        case JsonValueKind.False:
+                            view = span("false");
+                            break;
+
+                        case JsonValueKind.Null:
+                            view = span(Formatter.NullString);
+                            break;
+
+                        default:
+                            return false;
+                    }
+
+                    // FIX: (DefaultFormatters) needs more style
+//                     PocketView css = style(new HtmlString(@"    
+// .dni-code-hint {
+//     font-style: italic;
+//     overflow: hidden;
+//     white-space: nowrap;
+// }
+//
+// .dni-treeview {
+//     white-space: nowrap;
+// }
+//
+// .dni-treeview td {
+//     vertical-align: top;
+// }
+//
+// details.dni-treeview {
+//     padding-left: 1em;
+// }"));
+//                     css.WriteTo(writer, HtmlEncoder.Default);
+
+                    view.WriteTo(writer, HtmlEncoder.Default);
+
+                    return true;
+                }),
+        };
     }
 }

@@ -3,7 +3,6 @@
 
 using System;
 using System.Linq;
-using Microsoft.AspNetCore.Html;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -12,30 +11,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
     /// </summary>
     public static class HtmlAttributesExtensions
     {
-        /// <summary>
-        ///   Sets or removes the "checked" attribute.
-        /// </summary>
-        /// <param name = "attributes">The attributes to modify.</param>
-        /// <param name = "value">Specifies whether to set the "checked" attribute. If set to false, this will remove the "checked" attribute.</param>
-        /// <returns>
-        ///   The modified <see cref = "HtmlAttributes" /> instance.
-        /// </returns>
-        public static HtmlAttributes Checked(
-            this HtmlAttributes attributes,
-            bool value = true)
-        {
-            if (value)
-            {
-                attributes["checked"] = "checked";
-            }
-            else
-            {
-                attributes.Remove("checked");
-            }
-
-            return attributes;
-        }
-
         /// <summary>
         ///   Adds the specified class or classes to the attributes.
         /// </summary>
@@ -79,47 +54,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 attributes.RemoveCssClass(classes);
             }
 
-            return attributes;
-        }
-
-        public static HtmlAttributes Data(this HtmlAttributes attributes, string key, object value)
-        {
-            var actualKey = key.StartsWith("data-") ? key : "data-" + key;
-            attributes.Add(actualKey, value.SerializeToJson());
-            return attributes;
-        }
-
-        /// <summary>
-        ///   Adds a data-* attribute to the tag with the value serialized to JSON.
-        /// </summary>
-        /// <param name = "attributes">The attributes to which to add the data.</param>
-        /// <param name = "key">The name of the attribute.</param>
-        /// <param name = "value">The value to be serialized to JSON and inserted into the attribute's value.</param>
-        /// <returns>The modified <see cref = "HtmlAttributes" /> instance.</returns>
-        public static HtmlAttributes Data(
-            this HtmlAttributes attributes,
-            string key,
-            string value)
-        {
-            var actualKey = key.StartsWith("data-") ? key : "data-" + key;
-            attributes.Add(actualKey, value);
-            return attributes;
-        }
-
-        /// <summary>
-        ///   Adds a data-* attribute to the tag with the value serialized to JSON.
-        /// </summary>
-        /// <param name = "attributes">The attributes to which to add the data.</param>
-        /// <param name = "key">The name of the attribute.</param>
-        /// <param name = "value">The value to be serialized to JSON and inserted into the attribute's value.</param>
-        /// <returns>The modified <see cref = "HtmlAttributes" /> instance.</returns>
-        public static HtmlAttributes Data(
-            this HtmlAttributes attributes,
-            string key,
-            IHtmlContent value)
-        {
-            var actualKey = key.StartsWith("data-") ? key : "data-" + key;
-            attributes.Add(actualKey, value);
             return attributes;
         }
 

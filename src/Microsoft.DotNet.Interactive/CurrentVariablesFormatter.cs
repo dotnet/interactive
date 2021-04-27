@@ -20,13 +20,8 @@ namespace Microsoft.DotNet.Interactive
         {
             PocketView output = null;
 
-        /// <summary>
-        ///   Renders the tag to the specified <see cref = "TextWriter" />.
-        /// </summary>
-        /// <param name = "writer">The writer.</param>
             if (instance.Detailed)
             {
-                var innerContext = context.ReduceContent(FormatContext.NestedInTable);
                 output = table(
                     thead(
                         tr(
@@ -36,10 +31,9 @@ namespace Microsoft.DotNet.Interactive
                     tbody(
                         instance.Select(v =>
                              tr(
-                                 // Note, embeds these as objects into the HTML content, ultimately rendered by PocketView 
                                  td(v.Name),
-                                 td(embed(v.Type, innerContext)),
-                                 td(embed(v.Value, innerContext))
+                                 td(v.Type),
+                                 td(div[@class: "dni-plaintext"](v.Value.ToDisplayString()))
                              ))));
             }
             else

@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     internal class FormatterTable
     {
-        private readonly ConcurrentDictionary<(Type type, bool flag), ITypeFormatter> _formatters = new ConcurrentDictionary<(Type type, bool flag), ITypeFormatter>();
+        private readonly ConcurrentDictionary<(Type type, bool flag), ITypeFormatter> _formatters = new();
         private readonly Type _genericDef;
         private readonly string _name;
 

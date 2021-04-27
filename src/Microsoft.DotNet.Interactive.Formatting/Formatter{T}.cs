@@ -37,6 +37,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <summary>
         /// Formats an object and writes it to the specified writer.
         /// </summary>
+        /// <param name="context">The context for the current format operation.</param>
         /// <param name="obj">The object to be formatted.</param>
         /// <param name="writer">The writer.</param>
         /// <param name="mimeType">The mime type to format to.</param>
@@ -54,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
 
             using var _ = Formatter.RecursionCounter.Enter();
-
+          
             // find a formatter for the object type, and possibly register one on the fly
             if (Formatter.RecursionCounter.Depth <= Formatter.RecursionLimit)
             {

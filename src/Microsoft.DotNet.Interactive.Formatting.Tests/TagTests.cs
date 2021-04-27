@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void Name_property_is_set_by_constructor()
         {
-            var tag = new Tag("label");
+            var tag = new HtmlTag("label");
 
             tag.Name.Should().Be("label");
         }
@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void ToString_renders_start_tag_when_there_is_no_content()
         {
-            var p = new Tag("p");
+            var p = new HtmlTag("p");
 
             p.ToString().Should().Contain("<p>");
         }
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void ToString_renders_end_tag_when_there_is_no_content()
         {
-            var p = new Tag("p");
+            var p = new HtmlTag("p");
 
             p.ToString().Should().Contain("<p></p>");
         }
@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void ToString_renders_text_content()
         {
-            var p = new Tag("p", "content");
+            var p = new HtmlTag("p", "content");
 
             p.ToString().Should().Be("<p>content</p>");
         }
@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void ToString_renders_Action_content()
         {
-            var p = new Tag("p", w => w.Write("content"));
+            var p = new HtmlTag("p", w => w.Write("content"));
 
             p.ToString().Should().Be("<p>content</p>");
         }
@@ -51,10 +51,10 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void Append_appends_content_to_existing_Tag_content()
         {
-            var tag = new Tag("div").Containing("initial content");
+            var tag = new HtmlTag("div").Containing("initial content");
 
             var html = tag
-                       .Append(new Tag("div").Containing("more content"))
+                       .Append(new HtmlTag("div").Containing("more content"))
                        .ToString();
 
             html.Should().Be("<div>initial content<div>more content</div></div>");
@@ -63,10 +63,10 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void Append_array_overload_appends_content_to_existing_Tag_content()
         {
-            var tag = new Tag("div").Containing("initial content");
+            var tag = new HtmlTag("div").Containing("initial content");
 
             var html = tag
-                       .Append(new Tag("div").Containing("more"), new Tag("div").Containing("content"))
+                       .Append(new HtmlTag("div").Containing("more"), new HtmlTag("div").Containing("content"))
                        .ToString();
 
             html.Should().Be("<div>initial content<div>more</div><div>content</div></div>");
@@ -91,8 +91,8 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void AppendTo_appends_content_to_target_Tag_content()
         {
-            var tag = new Tag("div").Containing("initial content");
-            new Tag("div").Containing("more content").AppendTo(tag);
+            var tag = new HtmlTag("div").Containing("initial content");
+            new HtmlTag("div").Containing("more content").AppendTo(tag);
             var html = tag.ToString();
 
             html.Should().Be("<div>initial content<div>more content</div></div>");
@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         public void AppendTo_appends_content_to_target_Tag_that_has_no_content()
         {
             var tag = "div".Tag();
-            new Tag("div").Containing("some content").AppendTo(tag);
+            new HtmlTag("div").Containing("some content").AppendTo(tag);
             var html = tag.ToString();
 
             html.Should().Be("<div><div>some content</div></div>");
@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         public void PrependTo_prepends_content_to_target_Tag_that_has_no_content()
         {
             var tag = "div".Tag();
-            new Tag("div").Containing("some content").PrependTo(tag);
+            new HtmlTag("div").Containing("some content").PrependTo(tag);
             var html = tag.ToString();
 
             html.Should().Be("<div><div>some content</div></div>");
@@ -121,14 +121,14 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void Append_returns_the_same_tag()
         {
-            var tag = new Tag("div");
+            var tag = new HtmlTag("div");
             tag.Append("a".Tag()).Should().Be(tag);
         }
 
         [Fact]
         public void AppendTo_returns_the_same_tag()
         {
-            var tag = new Tag("div");
+            var tag = new HtmlTag("div");
             tag.AppendTo("a".Tag()).Should().Be(tag);
         }
 
@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void Prepend_returns_the_same_tag()
         {
-            var tag = new Tag("div");
+            var tag = new HtmlTag("div");
 
             tag.Prepend("a".Tag()).Should().Be(tag);
         }
@@ -164,7 +164,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void PrependTo_returns_the_same_tag()
         {
-            var tag = new Tag("div");
+            var tag = new HtmlTag("div");
 
             tag.PrependTo("a".Tag()).Should().Be(tag);
         }
@@ -183,17 +183,17 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void WrapInner_returns_the_same_tag()
         {
-            var tag = new Tag("div");
+            var tag = new HtmlTag("div");
             tag.WrapInner("a".Tag()).Should().Be(tag);
         }
 
         [Fact]
         public void Prepend_prepends_content_to_existing_Tag_content()
         {
-            var tag = new Tag("div").Containing("initial content");
+            var tag = new HtmlTag("div").Containing("initial content");
 
             var after = tag
-                        .Prepend(new Tag("div").Containing("more content"))
+                        .Prepend(new HtmlTag("div").Containing("more content"))
                         .ToString();
 
             after.Should().Be("<div><div>more content</div>initial content</div>");
@@ -202,7 +202,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void WrapInner_wraps_inner_content_in_specified_tag()
         {
-            var tag = new Tag("div").Containing("initial content");
+            var tag = new HtmlTag("div").Containing("initial content");
 
             var after = tag
                         .WrapInner("a".Tag().WithAttributes("href", "#"))
@@ -214,7 +214,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void MergedAttributes_produces_a_tag_having_the_union_of_attributes_differing_by_name()
         {
-            var tag = new Tag("div");
+            var tag = new HtmlTag("div");
             tag.MergeAttributes(new HtmlAttributes { { "class", "error" } });
             tag.MergeAttributes(new HtmlAttributes { { "style", "display:block" } });
 
@@ -226,7 +226,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void WithAttributes_produces_a_tag_having_the_union_of_attributes_differing_by_name()
         {
-            var tag = new Tag("div")
+            var tag = new HtmlTag("div")
                       .WithAttributes(new HtmlAttributes { { "class", "error" } })
                       .WithAttributes(new HtmlAttributes { { "style", "display:block" } });
 
@@ -238,7 +238,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void When_called_more_than_once_with_attributes_of_the_same_name_MergeAttributes_does_not_overwrite_by_default()
         {
-            var tag = new Tag("div");
+            var tag = new HtmlTag("div");
             tag.MergeAttributes(new HtmlAttributes { { "class", "error" } });
             tag.MergeAttributes(new HtmlAttributes { { "class", "alert" } });
 
@@ -250,7 +250,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void When_called_more_than_once_with_attributes_of_the_same_name_WithAttributes_overwrites_by_default()
         {
-            var tag = new Tag("div")
+            var tag = new HtmlTag("div")
                       .WithAttributes(new HtmlAttributes { { "class", "error" } })
                       .WithAttributes(new HtmlAttributes { { "class", "alert" } });
 
@@ -262,7 +262,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void When_called_more_than_once_with_attributes_of_the_same_name_MergeAttributes_and_overwrite_is_set_to_true_it_overwrites()
         {
-            var tag = new Tag("div");
+            var tag = new HtmlTag("div");
             tag.MergeAttributes(new HtmlAttributes { { "class", "error" } });
             tag.MergeAttributes(new HtmlAttributes { { "class", "alert" } }, true);
 
@@ -285,7 +285,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         [Fact]
         public void IsSelfClosing_renders_full_tag_when_content()
         {
-            var tag = new Tag("pizza").Containing("some content");
+            var tag = new HtmlTag("pizza").Containing("some content");
             tag.IsSelfClosing = true;
 
             var after = tag.ToString();

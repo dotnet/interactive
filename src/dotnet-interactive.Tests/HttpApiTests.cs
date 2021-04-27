@@ -26,6 +26,7 @@ using Pocket;
 
 using Xunit;
 using Xunit.Abstractions;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Microsoft.DotNet.Interactive.App.Tests
 {
@@ -88,11 +89,11 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var tunnelUri = new Uri("http://choosen.one:1000/");
             var server = await GetServer(command: "stdio", port: 1000);
 
-            var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" }.SerializeToJson().ToString()));
+            var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(JsonSerializer.Serialize(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" })));
             using var scope = new AssertionScope();
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
-            var frontendEnvironment = (HtmlNotebookFrontendEnvironment)server.FrontendEnvironment;
+            var frontendEnvironment = (HtmlNotebookFrontendEnvironment) server.FrontendEnvironment;
 
             var apiUri = await frontendEnvironment.GetApiUriAsync();
             apiUri.Should().Be(tunnelUri);
@@ -104,7 +105,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var tunnelUri = new Uri("http://choosen.one:1000/");
             var server = await GetServer(command: "stdio", port: 1000);
 
-            var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" }.SerializeToJson().ToString()));
+            var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(JsonSerializer.Serialize(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" })));
 
             using var scope = new AssertionScope();
 
@@ -123,7 +124,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
             var tunnelUri = new Uri("http://choosen.one:1000/");
             var server = await GetServer(command: "stdio", port: 1000);
 
-            var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" }.SerializeToJson().ToString()));
+            var response = await server.HttpClient.PostAsync("/apitunnel", new StringContent(JsonSerializer.Serialize(new { tunnelUri = tunnelUri.AbsoluteUri, frontendType = "vscode" })));
             var responseBody = JObject.Parse(await response.Content.ReadAsStringAsync());
 
             var boostrapperUri = responseBody["bootstrapperUri"].Value<string>();
@@ -282,7 +283,7 @@ var f = new { Field= ""string value""};", Language.CSharp.LanguageName()));
         public async Task Variable_serialization_can_be_customized_using_Formatter()
         {
             Formatting.Formatter.Register<FileInfo>(
-                info => new { TheName = info.Name }.SerializeToJson().Value,
+                info => JsonSerializer.Serialize(new { TheName = info.Name }),
                 JsonFormatter.MimeType);
 
             var server = await GetServer();

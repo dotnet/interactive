@@ -160,7 +160,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             var defaultKernelOption = new Option<string>(
                 "--default-kernel",
                 description: "The default language for the kernel",
-                getDefaultValue: () => "csharp");
+                getDefaultValue: () => "csharp").AddSuggestions("fsharp", "csharp", "pwsh");
 
             var rootCommand = DotnetInteractive();
 

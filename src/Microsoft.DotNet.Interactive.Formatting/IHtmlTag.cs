@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Html;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    public interface ITag : IHtmlContent
+    public interface IHtmlTag : IHtmlContent
     {
         /// <summary>
         ///   Gets HTML tag type.
