@@ -13,6 +13,7 @@ import * as vscodeUtilities from './common/vscode/vscodeUtilities';
 import { getSimpleLanguage, isDotnetInteractiveLanguage, notebookCellLanguages } from './common/interactiveNotebook';
 import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, isDotNetNotebookMetadata, withDotNetKernelMetadata } from './common/ipynbUtilities';
 import { reshapeOutputValueForVsCode } from './common/interfaces/utilities';
+import { selectDotNetInteractiveKernel } from './common/vscode/commands';
 
 const executionTasks: Map<vscode.Uri, vscode.NotebookCellExecutionTask> = new Map();
 
@@ -47,26 +48,15 @@ export class DotNetNotebookKernel {
         jupyterController.onDidChangeNotebookAssociation(async e => {
             // update metadata
             if (e.selected) {
-                try {
-                    // update various metadata
-                    await updateDocumentKernelspecMetadata(e.notebook);
-                    await updateCellLanguages(e.notebook);
-
-                    // force creation of the client so we don't have to wait for the user to execute a cell to get the tool
-                    await clientMapper.getOrAddClient(e.notebook.uri);
-                } catch (err) {
-                    vscode.window.showErrorMessage(`Failed to set document metadata for '${e.notebook.uri}': ${err}`);
-                }
+                await updateNotebookMetadata(e.notebook, clientMapper);
             }
         });
         this.commonControllerInit(jupyterController);
-        this.disposables.push(vscode.notebook.onDidOpenNotebookDocument(notebook => {
-            if (notebook.viewType === jupyterViewType) {
-                // assign affinity
-                const affinity = isDotNetNotebook(notebook)
-                    ? vscode.NotebookControllerAffinity.Preferred
-                    : vscode.NotebookControllerAffinity.Default;
-                jupyterController.updateNotebookAffinity(notebook, affinity);
+        this.disposables.push(vscode.notebook.onDidOpenNotebookDocument(async notebook => {
+            if (notebook.viewType === jupyterViewType && isDotNetNotebook(notebook)) {
+                jupyterController.updateNotebookAffinity(notebook, vscode.NotebookControllerAffinity.Preferred);
+                await selectDotNetInteractiveKernel();
+                await updateNotebookMetadata(notebook, clientMapper);
             }
         }));
     }
@@ -144,6 +134,19 @@ export class DotNetNotebookKernel {
                 throw err;
             }
         }
+    }
+}
+
+async function updateNotebookMetadata(notebook: vscode.NotebookDocument, clientMapper: ClientMapper): Promise<void> {
+    try {
+        // update various metadata
+        await updateDocumentKernelspecMetadata(notebook);
+        await updateCellLanguages(notebook);
+
+        // force creation of the client so we don't have to wait for the user to execute a cell to get the tool
+        await clientMapper.getOrAddClient(notebook.uri);
+    } catch (err) {
+        vscode.window.showErrorMessage(`Failed to set document metadata for '${notebook.uri}': ${err}`);
     }
 }
 
