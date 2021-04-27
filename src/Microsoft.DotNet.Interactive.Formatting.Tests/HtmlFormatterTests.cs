@@ -212,7 +212,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
                 writer.ToString()
                       .Should()
-                      .Contain($"<td>{PlainTextBegin}System.Exception: not ok");
+                      .Contain($"<td>{PlainTextBegin}{{ System.Exception: not ok");
             }
 
             [Fact]

@@ -66,10 +66,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }
                 else
                 {
-                    // Reduce the content threshold for inner formatting, amon other things
-                    // ensures no nested tables get produced.
-                    var innerContext = context.ReduceContent(FormatContext.NestedInTable);
-
                     // Note, embeds the keys and values as arbitrary objects into the HTML content,
                     // ultimately rendered by PocketView, e.g. via ToDisplayString(PlainTextFormatter.MimeType)
                     List<IHtmlContent> headers = 
@@ -85,8 +81,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     IEnumerable<object> values =
                         reducedMembers.Select(m => m.GetValueOrException(instance))
                                       .Select(v => td(
-                                                  div[@class: "dni-plaintext"](v.ToDisplayString("text/plain"))
-                                              ));
+                                                  div[@class: "dni-plaintext"](v.ToDisplayString("text/plain"))));
 
                     PocketView t =
                         table(
