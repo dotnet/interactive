@@ -139,12 +139,8 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
 
     const eol = getEol();
 
-    const fileOpenFilters = {
+    const notebookFileFilters = {
         '.NET Interactive Notebooks': ['dib', 'dotnet-interactive'],
-    };
-
-    const fileSaveAsFilters = {
-        ...fileOpenFilters,
         'Jupyter Notebooks': ['ipynb'],
     };
 
@@ -177,24 +173,22 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebookDib', async () => {
-        await newNotebook('.dib', 'dotnet-interactive');
+        await newNotebook('.dib');
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebookIpynb', async () => {
         // note, new .ipynb notebooks are currently affected by this bug: https://github.com/microsoft/vscode/issues/121974
-        await newNotebook('.ipynb', 'jupyter-notebook');
+        await newNotebook('.ipynb');
         if (isStableBuild()) {
             // on stable we can explicitly select our kernel
-            const extension = 'ms-dotnettools.dotnet-interactive-vscode';
-            const id = KernelId;
-            await vscode.commands.executeCommand('notebook.selectKernel', { extension, id });
+            selectDotNetInteractiveKernel();
         }
     }));
 
-    async function newNotebook(extension: string, viewType: string): Promise<void> {
+    async function newNotebook(extension: string): Promise<void> {
         const fileName = getNewNotebookName(extension);
         const newUri = vscode.Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
-        await vscode.commands.executeCommand('vscode.openWith', newUri, viewType);
+        await openNotebook(newUri);
     }
 
     function getNewNotebookName(extension: string): string {
@@ -211,7 +205,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
         // ensure we have a notebook uri
         if (!notebookUri) {
             const uris = await vscode.window.showOpenDialog({
-                filters: fileOpenFilters
+                filters: notebookFileFilters
             });
 
             if (uris && uris.length > 0) {
@@ -224,13 +218,21 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
             }
         }
 
-        await vscode.commands.executeCommand('vscode.openWith', notebookUri, 'dotnet-interactive');
+        await openNotebook(notebookUri);
     }));
+
+    async function openNotebook(uri: vscode.Uri): Promise<void> {
+        const extension = path.extname(uri.fsPath);
+        const viewType = extension === '.dib' || extension === '.dotnet-interactive'
+            ? 'dotnet-interactive'
+            : 'jupyter-notebook';
+        await vscode.commands.executeCommand('vscode.openWith', uri, viewType);
+    }
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {
         if (vscode.window.activeNotebookEditor) {
             const uri = await vscode.window.showSaveDialog({
-                filters: fileSaveAsFilters
+                filters: notebookFileFilters
             });
 
             if (!uri) {
@@ -250,6 +252,13 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
             }
         }
     }));
+}
+
+async function selectDotNetInteractiveKernel(): Promise<void> {
+    // on stable we can explicitly select our kernel
+    const extension = 'ms-dotnettools.dotnet-interactive-vscode';
+    const id = KernelId;
+    await vscode.commands.executeCommand('notebook.selectKernel', { extension, id });
 }
 
 // callbacks used to install interactive tool
