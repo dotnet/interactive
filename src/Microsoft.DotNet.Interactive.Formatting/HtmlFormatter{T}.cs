@@ -57,8 +57,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         .Take(Math.Max(0, HtmlFormatter.MaxProperties))
                         .ToArray();
 
-                if (reducedMembers.Length == 0 || 
-                    context.ContentThreshold < 1.0)
+                if (reducedMembers.Length == 0)
+                {
+                    // This formatter refuses to format objects without members, and 
+                    // refused to produce nested tables, or if no members are selected
+                    return false;
+                }
+                else if (context.ContentThreshold < 1.0)
                 {
                     // This formatter refuses to format objects without members, and 
                     // refused to produce nested tables, or if no members are selected
