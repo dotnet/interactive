@@ -14,32 +14,36 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public class HtmlFormatter<T> : TypeFormatter<T>
     {
-        private readonly Func<FormatContext, T, TextWriter, bool> _format;
+        private readonly Func<T, TextWriter, FormatContext, bool> _format;
 
-        public HtmlFormatter(Func<FormatContext, T, TextWriter, bool> format)
+        public HtmlFormatter(Func<T, TextWriter, FormatContext, bool> format)
         {
             _format = format;
         }
 
         public HtmlFormatter(Action<T, TextWriter> format)
         {
-            _format = (context, instance, writer) => { format(instance, writer); return true; };
+            _format = FormatInstance;
+
+            bool FormatInstance(T instance, TextWriter writer, FormatContext context)
+            {
+                format(instance, writer);
+                return true;
+            }
         }
 
-        public HtmlFormatter(Func<T, string> format)
-        {
-            _format = (context, instance, writer) => { writer.Write(format(instance)); return true; };
-        }
-
-        public override bool Format(FormatContext context, T value, TextWriter writer)
+        public override bool Format(
+            T value,
+            TextWriter writer,
+            FormatContext context)
         {
             if (value is null)
             {
-                HtmlFormatter.FormatStringAsPlainText(Formatter.NullString, writer);
+                HtmlFormatter.FormatStringAsPlainText(Formatter.NullString, writer, context);
                 return true;
             }
 
-            return _format(context, value, writer);
+            return _format(value, writer, context);
         }
 
         public override string MimeType => HtmlFormatter.MimeType;
@@ -49,7 +53,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             var members = typeof(T).GetMembersToFormat(includeInternals)
                                    .GetMemberAccessors<T>();
 
-            return new HtmlFormatter<T>((context, instance, writer) =>
+            return new HtmlFormatter<T>((instance, writer, context) =>
             {
                 // Note the order of members is declaration order
                 var reducedMembers = 
@@ -86,7 +90,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     IEnumerable<object> values =
                         reducedMembers.Select(m => m.GetValueOrException(instance))
                                       .Select(v => td(
-                                                  div[@class: "dni-plaintext"](v.ToDisplayString("text/plain"))));
+                                                  div[@class: "dni-plaintext"](v.ToDisplayString(PlainTextFormatter.MimeType))));
 
                     PocketView t =
                         table(
@@ -126,7 +130,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return new HtmlFormatter<T>(BuildTable);
 
-            bool BuildTable(FormatContext context, T source, TextWriter writer)
+            bool BuildTable(T source, TextWriter writer, FormatContext context)
             {
                 if (context.ContentThreshold < 1.0)
                 {

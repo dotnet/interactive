@@ -10,13 +10,16 @@ using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class CurrentVariablesFormatter : ITypeFormatter<CurrentVariables>
+    internal class CurrentVariablesFormatter : HtmlFormatter<CurrentVariables>
     {
-        public string MimeType => "text/html";
+        public CurrentVariablesFormatter() : base(FormatCurrentVariables)
+        {
+        }
 
-        public Type Type => typeof(CurrentVariables);
-
-        public bool Format(FormatContext context, CurrentVariables instance, TextWriter writer)
+        private static bool FormatCurrentVariables(
+            CurrentVariables instance, 
+            TextWriter writer,
+            FormatContext context)
         {
             PocketView output = null;
 
@@ -30,11 +33,11 @@ namespace Microsoft.DotNet.Interactive
                             th("Value"))),
                     tbody(
                         instance.Select(v =>
-                             tr(
-                                 td(v.Name),
-                                 td(v.Type),
-                                 td(div[@class: "dni-plaintext"](v.Value.ToDisplayString()))
-                             ))));
+                                            tr(
+                                                td(v.Name),
+                                                td(v.Type),
+                                                td(div[@class: "dni-plaintext"](v.Value.ToDisplayString()))
+                                            ))));
             }
             else
             {
@@ -43,15 +46,6 @@ namespace Microsoft.DotNet.Interactive
 
             output.WriteTo(writer, HtmlEncoder.Default);
             return true;
-        }
-
-        public bool Format(FormatContext context, object instance, TextWriter writer)
-        {
-            if (instance is CurrentVariables variables)
-            {
-                return Format(context, variables, writer);
-            }
-            return false;
         }
     }
 }

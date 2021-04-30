@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <summary>
         /// Merges the specified attributes into the tag's existing attributes.
         /// </summary>
-        public static TTag WithAttributes<TTag>(this TTag tag, IDictionary<string, object> htmlAttributes) where TTag : IHtmlTag
+        public static TTag WithAttributes<TTag>(this TTag tag, IDictionary<string, object> htmlAttributes) where TTag : HtmlTag
         {
             tag.HtmlAttributes.MergeWith(htmlAttributes, true);
             return tag;
@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             this TTag tag,
             string name,
             object value)
-            where TTag : IHtmlTag
+            where TTag : HtmlTag
         {
             tag.HtmlAttributes.Add(name, value);
 
@@ -59,10 +59,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <summary>
         /// Creates a tag of the type specified by <paramref name="tagName" />.
         /// </summary>
-        public static HtmlTag Tag(this string tagName)
-        {
-            return new HtmlTag(tagName);
-        }
+        public static HtmlTag Tag(this string tagName) => new(tagName);
 
         /// <summary>
         /// Appends the specified tag to the source tag.
@@ -73,10 +70,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <returns><paramref name="toTag" />.</returns>
         public static TTag Append<TTag>(this TTag toTag, IHtmlContent content) where TTag : HtmlTag
         {
-            Action<TextWriter> writeOriginalContent = toTag.Content;
-            toTag.Content = writer =>
+            var writeOriginalContent = toTag.Content;
+            toTag.Content = (writer, context) =>
             {
-                writeOriginalContent?.Invoke(writer);
+                writeOriginalContent?.Invoke(writer, context);
                 writer.Write(content);
             };
             return toTag;
@@ -91,10 +88,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <returns> <paramref name="toTag" /> . </returns>
         public static TTag Append<TTag>(this TTag toTag, params IHtmlContent[] contents) where TTag : HtmlTag
         {
-            Action<TextWriter> writeOriginalContent = toTag.Content;
-            toTag.Content = writer =>
+            var writeOriginalContent = toTag.Content;
+            toTag.Content = (writer, context) =>
             {
-                writeOriginalContent?.Invoke(writer);
+                writeOriginalContent?.Invoke(writer, context);
 
                 for (int i = 0; i < contents.Length; i++)
                 {
@@ -111,7 +108,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="appendTag">The tag to be appended.</param>
         /// <param name="toTag">The tag to which to append <paramref name="appendTag" />.</param>
         /// <returns><paramref name="appendTag" />.</returns>
-        public static TTag AppendTo<TTag>(this TTag appendTag, HtmlTag toTag) where TTag : IHtmlTag
+        public static TTag AppendTo<TTag>(this TTag appendTag, HtmlTag toTag) where TTag : HtmlTag
         {
             toTag.Append(appendTag);
             return appendTag;
@@ -138,18 +135,18 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <returns>The same tag instance, with the contents set to the specified text.</returns>
         public static TTag Containing<TTag>(this TTag tag, IHtmlContent content) where TTag : HtmlTag
         {
-            tag.Content = writer => writer.Write(content.ToString());
+            tag.Content = (writer, context) => writer.Write(content.ToString(), context);
             return tag;
         }
 
-        internal static TTag Containing<TTag>(this TTag tag, params IHtmlTag[] tags) where TTag : HtmlTag
+        internal static TTag Containing<TTag>(this TTag tag, params HtmlTag[] tags) where TTag : HtmlTag
         {
-            return tag.Containing((IEnumerable<IHtmlTag>)tags);
+            return tag.Containing((IEnumerable<HtmlTag>)tags);
         }
 
-        internal static TTag Containing<TTag>(this TTag tag, IEnumerable<IHtmlTag> tags) where TTag : HtmlTag
+        internal static TTag Containing<TTag>(this TTag tag, IEnumerable<HtmlTag> tags) where TTag : HtmlTag
         {
-            tag.Content = writer =>
+            tag.Content = (writer, context) =>
             {
                 foreach (var childTag in tags)
                 {
@@ -159,7 +156,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return tag;
         }
 
-        internal static TTag Containing<TTag>(this TTag tag, Action<TextWriter> content) where TTag : HtmlTag
+        internal static TTag Containing<TTag>(this TTag tag, Action<TextWriter, FormatContext> content) 
+            where TTag : HtmlTag
         {
             tag.Content = content;
             return tag;
@@ -172,13 +170,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="toTag"> To tag to which other tags will be prepended. </param>
         /// <param name="content"> The tags to prepend. </param>
         /// <returns> <paramref name="toTag" /> . </returns>
-        public static TTag Prepend<TTag>(this TTag toTag, IHtmlContent content) where TTag : HtmlTag
+        public static TTag Prepend<TTag>(this TTag toTag, IHtmlContent content) 
+            where TTag : HtmlTag
         {
-            Action<TextWriter> writeOriginalContent = toTag.Content;
-            toTag.Content = writer =>
+            var writeOriginalContent = toTag.Content;
+            toTag.Content = (writer, context) =>
             {
                 writer.Write(content);
-                writeOriginalContent?.Invoke(writer);
+                writeOriginalContent?.Invoke(writer, context);
             };
             return toTag;
         }
@@ -190,7 +189,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="prependTag">The tag to be prepended.</param>
         /// <param name="toTag">The tag to which to prepend <paramref name="prependTag" />.</param>
         /// <returns><paramref name="prependTag" />.</returns>
-        public static TTag PrependTo<TTag>(this TTag prependTag, HtmlTag toTag) where TTag : IHtmlTag
+        public static TTag PrependTo<TTag>(this TTag prependTag, HtmlTag toTag) 
+            where TTag : HtmlTag
         {
             toTag.Prepend(prependTag);
             return prependTag;
@@ -203,10 +203,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="tag">The tag.</param>
         /// <param name="wrappingTag">The wrapping tag.</param>
         /// <returns></returns>
-        public static TTag WrapInner<TTag>(this TTag tag, HtmlTag wrappingTag) where TTag : HtmlTag
+        public static TTag WrapInner<TTag>(this TTag tag, HtmlTag wrappingTag) 
+            where TTag : HtmlTag
         {
             wrappingTag.Content = tag.Content;
-            tag.Content = writer => wrappingTag.WriteTo(writer, HtmlEncoder.Default);
+            tag.Content = (writer, context) => wrappingTag.WriteTo(writer, HtmlEncoder.Default);
             return tag;
         }
 

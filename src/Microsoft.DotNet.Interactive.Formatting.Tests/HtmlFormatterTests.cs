@@ -669,7 +669,7 @@ string";
                 var readOnlyMemory = new ReadOnlyMemory<int>(new[] { 7, 8, 9 });
 
                 formatter.Format(readOnlyMemory, writer);
-
+                
                 writer.ToString()
                       .Should()
                       .BeEquivalentHtmlTo(

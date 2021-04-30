@@ -14,10 +14,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
     /// <summary>
     /// Writes HTML using a C# DSL, bypassing the need for specialized parser and compiler infrastructure such as Razor.
     /// </summary>
-    public class PocketView : DynamicObject, IHtmlTag
+    public class PocketView : DynamicObject, IHtmlContent
     {
         private readonly Dictionary<string, TagTransform> _transforms = new();
-        private readonly HtmlTag _htmlTag;
         private TagTransform _transform;
 
         /// <summary>
@@ -30,10 +29,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 _transforms = nested._transforms;
             }
-            else
-            {
-                AddDefaultTransforms();
-            }
         }
 
         /// <summary>
@@ -43,19 +38,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="nested">A nested instance.</param>
         public PocketView(string tagName, PocketView nested = null) : this(nested)
         {
-            _htmlTag = tagName.Tag();
+            HtmlTag = tagName.Tag();
         }
 
-        private void AddDefaultTransforms()
+        protected PocketView(HtmlTag htmlTag)
         {
-            _transforms.Add("br", MakeSelfClosing);
-            _transforms.Add("input", MakeSelfClosing);
-
-            void MakeSelfClosing(HtmlTag t, dynamic _)
-            {
-                t.SelfClosing();
-            }
+            HtmlTag = htmlTag;
         }
+
+        public HtmlTag HtmlTag { get; }
 
         /// <summary>
         /// Writes an element.
@@ -91,7 +82,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 var content = ComposeContent(binder.CallInfo.ArgumentNames, args);
 
-                transform(pocketView._htmlTag, content);
+                transform(pocketView.HtmlTag, content, CurrentFormatContext);
             }
 
             result = pocketView;
@@ -108,7 +99,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             SetContent(args);
 
-            ApplyTransform(binder, args);
+            ApplyTransform(binder, args, CurrentFormatContext);
 
             result = this;
             return true;
@@ -116,7 +107,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         private void ApplyTransform(
             InvokeBinder binder,
-            object[] args)
+            object[] args, 
+            FormatContext formatContext)
         {
             if (_transform is not null)
             {
@@ -124,7 +116,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     binder?.CallInfo?.ArgumentNames,
                     args);
 
-                _transform(_htmlTag, content);
+                _transform(HtmlTag, content, formatContext);
 
                 // null out _transform so that it will only be applied once
                 _transform = null;
@@ -191,10 +183,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return;
             }
 
-            _htmlTag.Content = writer => Write(args, writer);
+            HtmlTag.Content = HtmlTagContent;
+
+            void HtmlTagContent(TextWriter writer, FormatContext context) => 
+                Write(args, writer, context);
         }
 
-        private void Write(IReadOnlyList<object> args, TextWriter writer)
+        private void Write(
+            IReadOnlyList<object> args, 
+            TextWriter writer, 
+            FormatContext context)
         {
             for (var i = 0; i < args.Count; i++)
             {
@@ -211,22 +209,22 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         break;
 
                     case IEnumerable<IHtmlContent> htmls:
-                        Write(htmls.ToArray(), writer);
+                        Write(htmls.ToArray(), writer, context);
                         break;
 
                     case HtmlFormatter.EmbeddedFormat embedded:
-                        embedded.Object.FormatTo(embedded.Context, writer, HtmlFormatter.MimeType);
+                        embedded.Object.FormatTo(writer, embedded.Context, HtmlFormatter.MimeType);
                         break;
 
                     default:
                         if (arg is IEnumerable<object> seq &&
                             seq.All(s => s is IHtmlContent))
                         {
-                            Write(seq.OfType<IHtmlContent>().ToArray(), writer);
+                            Write(seq.OfType<IHtmlContent>().ToArray(), writer, context);
                         }
                         else
                         {
-                            arg.FormatTo(writer, HtmlFormatter.MimeType);
+                            arg.FormatTo(writer, context, HtmlFormatter.MimeType);
                         }
 
                         break;
@@ -242,16 +240,18 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </returns>
         public override string ToString()
         {
-            if (_htmlTag is null)
+            if (HtmlTag is null)
             {
                 return "";
             }
             else
             {
-                ApplyTransform(null, null);
-                return _htmlTag.ToString();
+                ApplyTransform(null, null, CurrentFormatContext);
+                return HtmlTag.ToString();
             }
         }
+
+        private FormatContext CurrentFormatContext { get; set; }
 
         /// <summary>
         ///   Gets HTML tag type.
@@ -261,12 +261,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             get
             {
-                if (_htmlTag is null)
+                if (HtmlTag is null)
                 {
                     return "";
                 }
 
-                return _htmlTag.Name;
+                return HtmlTag.Name;
             }
         }
 
@@ -274,7 +274,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         ///   Gets the HTML attributes to be rendered into the tag.
         /// </summary>
         /// <value>The HTML attributes.</value>
-        public HtmlAttributes HtmlAttributes => _htmlTag.HtmlAttributes;
+        public HtmlAttributes HtmlAttributes => HtmlTag.HtmlAttributes;
 
         /// <summary>
         ///   Renders the tag to the specified <see cref = "TextWriter" />.
@@ -283,7 +283,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="encoder">An HTML encoder.</param>
         public void WriteTo(TextWriter writer, HtmlEncoder encoder)
         {
-            _htmlTag?.WriteTo(writer, encoder);
+            HtmlTag?.WriteTo(writer, encoder);
+        }
+        
+        public void WriteTo(TextWriter writer, FormatContext context)
+        {
+            HtmlTag?.WriteTo(writer, context);
         }
 
         /// <summary>
@@ -317,10 +322,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </example>
         public static object Transform(Action<HtmlTag, dynamic> transform)
         {
+            void TagTransform(HtmlTag tag, object contents, FormatContext _) => transform(tag, contents);
+
+            return new TagTransform(TagTransform);
+        }
+
+        public static object Transform(Action<HtmlTag, dynamic, FormatContext> transform)
+        {
             return new TagTransform(transform);
         }
 
-        private delegate void TagTransform(HtmlTag tag, object contents);
+        private delegate void TagTransform(HtmlTag tag, object contents, FormatContext context = null);
 
         private dynamic ComposeContent(
             IReadOnlyCollection<string> argumentNames,

@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         internal static ITypeFormatter[] DefaultFormatters =
             {
-                new PlainTextFormatter<ExpandoObject>((context, expando, writer) =>
+                new PlainTextFormatter<ExpandoObject>((expando, writer, context) =>
                     {
                         var singleLineFormatter = new SingleLinePlainTextFormatter();
                         singleLineFormatter.WriteStartObject(writer);
@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                             var pair = pairs[i];
                             writer.Write(pair.Key);
                             singleLineFormatter.WriteNameValueDelimiter(writer);
-                            pair.Value.FormatTo(context, writer);
+                            pair.Value.FormatTo(writer, context);
 
                             if (i < length - 1)
                             {
@@ -42,28 +42,28 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         return true;
                     }),
 
-                new PlainTextFormatter<IHtmlContent>((context, view, writer) =>
+                new PlainTextFormatter<IHtmlContent>((view, writer, context) =>
                 {
                     view.WriteTo(writer, HtmlEncoder.Default);
                     return true;
                 }),
 
-                new PlainTextFormatter<KeyValuePair<string, object>>((context, pair, writer) =>
+                new PlainTextFormatter<KeyValuePair<string, object>>((pair, writer, context) =>
                 {
                     var singleLineFormatter = new SingleLinePlainTextFormatter();
                     writer.Write(pair.Key);
                     singleLineFormatter.WriteNameValueDelimiter(writer);
-                    pair.Value.FormatTo(context, writer);
+                    pair.Value.FormatTo(writer, context);
                     return true;
                 }),
 
-                new PlainTextFormatter<ReadOnlyMemory<char>>((context, memory, writer) => 
+                new PlainTextFormatter<ReadOnlyMemory<char>>((memory, writer, context) => 
                 { 
                     writer.Write(memory.Span.ToString()); 
                     return true;
                 }),
 
-                new PlainTextFormatter<Type>((context, type, writer) =>
+                new PlainTextFormatter<Type>((type, writer, context) =>
                 {
                     if (type.IsAnonymous())
                     {
@@ -75,13 +75,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     return true;
                 }),
 
-                new PlainTextFormatter<DateTime>((context, value, writer) =>
+                new PlainTextFormatter<DateTime>((value, writer, context) =>
                 {
                     writer.Write(value.ToString("u"));
                     return true;
                 }),
 
-                new PlainTextFormatter<DateTimeOffset>((context, value, writer) =>
+                new PlainTextFormatter<DateTimeOffset>((value, writer, context) =>
                 {
                     writer.Write(value.ToString("u"));
                     return true;
@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 new AnonymousTypeFormatter<object>(type: typeof(ReadOnlyMemory<>),
                     mimeType: PlainTextFormatter.MimeType,
-                    format: (context, obj, writer) =>
+                    format: ( obj, writer, context) =>
                     {
                         var actualType = obj.GetType();
                         var toArray = Formatter.FormatReadOnlyMemoryMethod.MakeGenericMethod
@@ -97,25 +97,25 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                         var array = toArray.Invoke(null, new[] { obj });
 
-                        writer.Write(array.ToDisplayString(PlainTextFormatter.MimeType));
+                        array.FormatTo(writer, context, PlainTextFormatter.MimeType);
+                        
                         return true;
                     }),
 
-
-                new PlainTextFormatter<TextSpan>((context, span, writer) =>
+                new PlainTextFormatter<TextSpan>((span, writer, context) =>
                     {
                         writer.Write(span.ToString(OutputMode.Ansi));
                         return true;
                     }),
 
-                new PlainTextFormatter<JsonElement>((context, obj, writer) =>
+                new PlainTextFormatter<JsonElement>((obj, writer, context) =>
                     {
                         writer.Write(obj);
                         return true;
                     }),
 
                 // Fallback for IEnumerable
-                new PlainTextFormatter<IEnumerable>((context, obj, writer) =>
+                new PlainTextFormatter<IEnumerable>((obj, writer, context) =>
                 {
                     if (obj is null)
                     {
@@ -124,18 +124,18 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     }
                     var type = obj.GetType();
                     var formatter = PlainTextFormatter.GetDefaultFormatterForAnyEnumerable(type);
-                    return formatter.Format(context, obj, writer);
+                    return formatter.Format(obj, writer, context);
                 }),
 
                 // BigInteger should be displayed as plain text
-                new PlainTextFormatter<BigInteger>((context, value, writer) =>
+                new PlainTextFormatter<BigInteger>((value, writer, context) =>
                 {
-                    value.FormatTo(writer, PlainTextFormatter.MimeType);
+                    value.FormatTo(writer, context, PlainTextFormatter.MimeType);
                     return true;
                 }),
 
                 // Fallback for any object
-                new PlainTextFormatter<object>((context, obj, writer) =>
+                new PlainTextFormatter<object>((obj, writer, context) =>
                 {
                     if (obj is null)
                     {
@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     }
                     var type = obj.GetType();
                     var formatter = PlainTextFormatter.GetDefaultFormatterForAnyObject(type);
-                    return formatter.Format(context, obj, writer);
+                    return formatter.Format(obj, writer, context);
                 })
             };
     }

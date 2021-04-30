@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         private readonly Func<FormatContext, T, TextWriter, bool> _format;
 
-        public override bool Format(FormatContext context, T instance, TextWriter writer)
+        public override bool Format(T instance, TextWriter writer, FormatContext context)
         {
             return _format(context, instance, writer);
         }

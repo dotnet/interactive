@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using FluentAssertions;
 using System.Linq;
+using Microsoft.AspNetCore.Html;
 using Xunit;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
@@ -140,7 +142,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 (tag, model) =>
                 {
                     tag.Name = "div";
-                    tag.Content = writer =>
+                    tag.Content = (writer, context) =>
                     {
                         writer.Write(label[@for: model.name](model.name));
                         writer.Write(input[name: model.name, type: "text", value: model.value]);
@@ -289,6 +291,37 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             string output = br.ToString();
 
             output.Should().Be("<br />");
+        }
+
+        public class Styling
+        {
+            [Fact]
+            public void style_refs()
+            {
+                var css = "a.my-class { color: purple; }";
+                var linkStyle = style(css);
+
+                var ps = new[]
+                {
+                    "apple", "banana", "cherry"
+                }.Select(v => (IHtmlContent)a[linkStyle](v));
+
+                string html = div(ps).ToString();
+
+                html.Should().BeEquivalentHtmlTo($@"
+<div>
+    <style>
+        {css}
+    </style>
+    <p class=""my-class"">apple</p>
+    <p class=""my-class"">banana</p>
+    <p class=""my-class"">cherry</p>
+</div>
+");
+
+                // FIX: (Once_can_used_to_create_content_that_only_gets_rendered_once_per_top_level_format_operation) write test
+                throw new NotImplementedException();
+            }
         }
     }
 }

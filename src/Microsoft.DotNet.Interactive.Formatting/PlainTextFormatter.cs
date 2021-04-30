@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
             FormattersForAnyEnumerable.GetFormatter(type, false);
 
-        internal static Func<FormatContext, T, TextWriter, bool> CreateFormatDelegate<T>(MemberInfo[] forMembers)
+        internal static FormatDelegate<T> CreateFormatDelegate<T>(MemberInfo[] forMembers)
         {
             var accessors = forMembers.GetMemberAccessors<T>().ToArray();
 
@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             if (typeof(T).IsEnum)
             {
-                return (context, enumValue, writer) =>
+                return (enumValue, writer, context) =>
                 {
                     writer.Write(enumValue.ToString());
                     return true;
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return FormatObject;
 
-            bool FormatObject(FormatContext context, T target, TextWriter writer)
+            bool FormatObject(T target, TextWriter writer, FormatContext context)
             {
                 var reducedAccessors = accessors.Take(Math.Max(0, MaxProperties)).ToArray();
 
@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     Formatter.SingleLinePlainTextFormatter.WriteStartProperty(writer);
                     writer.Write(accessor.Member.Name);
                     Formatter.SingleLinePlainTextFormatter.WriteNameValueDelimiter(writer);
-                    value.FormatTo(context, writer);
+                    value.FormatTo(writer, context);
                     Formatter.SingleLinePlainTextFormatter.WriteEndProperty(writer);
 
                     if (i < accessors.Length - 1)
@@ -134,7 +134,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return true;
             }
 
-            bool FormatAnyTuple(FormatContext context, T target, TextWriter writer)
+            bool FormatAnyTuple(T target, TextWriter writer, FormatContext context)
             {
                 Formatter.SingleLinePlainTextFormatter.WriteStartTuple(writer);
 
@@ -142,7 +142,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     var value = accessors[i].GetValueOrException(target);
 
-                    value.FormatTo(context, writer);
+                    value.FormatTo(writer, context);
 
                     Formatter.SingleLinePlainTextFormatter.WriteEndProperty(writer);
 

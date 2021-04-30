@@ -40,21 +40,22 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
             FormattersForAnyEnumerable.GetFormatter(type, false);
 
-        internal static void FormatObjectAsPlainText(FormatContext context, object value, TextWriter writer)
+        internal static void FormatObjectAsPlainText(object value, TextWriter writer, FormatContext context)
         {
+            // FIX: (FormatObjectAsPlainText) don't create another writer
             using var swriter = Formatter.CreateWriter();
-            value.FormatTo(context, swriter, PlainTextFormatter.MimeType);
+            value.FormatTo(swriter, context, PlainTextFormatter.MimeType);
             var text = swriter.ToString();
-            FormatStringAsPlainText(text, writer);
+            FormatStringAsPlainText(text, writer, context);
         }
 
-        internal static void FormatStringAsPlainText(string text, TextWriter writer)
+        internal static void FormatStringAsPlainText(string text, TextWriter writer, FormatContext context)
         {
             if (!string.IsNullOrEmpty(text))
             {
                 PocketView tag = div(text);
                 tag.HtmlAttributes["class"] = "dni-plaintext";
-                tag.WriteTo(writer, HtmlEncoder.Default);
+                tag.WriteTo(writer, context);
             }
         }
 

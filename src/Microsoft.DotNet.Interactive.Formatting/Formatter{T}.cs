@@ -37,20 +37,20 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <summary>
         /// Formats an object and writes it to the specified writer.
         /// </summary>
-        /// <param name="context">The context for the current format operation.</param>
         /// <param name="obj">The object to be formatted.</param>
         /// <param name="writer">The writer.</param>
+        /// <param name="context">The context for the current format operation.</param>
         /// <param name="mimeType">The mime type to format to.</param>
         public static void FormatTo(
-            FormatContext context, 
             T obj,
             TextWriter writer,
+            FormatContext context,
             string mimeType = PlainTextFormatter.MimeType)
         {
             if (obj is null)
             {
                 var formatter = Formatter.GetPreferredFormatterFor(typeof(T), mimeType);
-                formatter.Format(context, null, writer);
+                formatter.Format(null, writer, context);
                 return;
             }
 
@@ -60,11 +60,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
             if (Formatter.RecursionCounter.Depth <= Formatter.RecursionLimit)
             {
                 var formatter = Formatter.GetPreferredFormatterFor(typeof(T), mimeType);
-                formatter.Format(context, obj, writer);
+                formatter.Format(obj, writer, context);
             }
             else
             {
-                PlainTextFormatter<T>.Default.Format(context, obj, writer);
+                PlainTextFormatter<T>.Default.Format(obj, writer, context);
             }
         }
 
