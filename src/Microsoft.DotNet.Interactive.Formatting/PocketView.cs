@@ -48,8 +48,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         private void AddDefaultTransforms()
         {
-            ((dynamic) this).br = Transform((t, u) => { t.SelfClosing(); });
-            ((dynamic) this).input = Transform((t, u) => { t.SelfClosing(); });
+            _transforms.Add("br", MakeSelfClosing);
+            _transforms.Add("input", MakeSelfClosing);
+
+            void MakeSelfClosing(HtmlTag t, dynamic _)
+            {
+                t.SelfClosing();
+            }
         }
 
         /// <summary>
