@@ -204,6 +204,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         writer.Write(s.HtmlEncode());
                         break;
 
+                    case PocketView view:
+                        view.WriteTo(writer, context);
+                        break;
+
                     case IHtmlContent html:
                         html.WriteTo(writer, HtmlEncoder.Default);
                         break;
