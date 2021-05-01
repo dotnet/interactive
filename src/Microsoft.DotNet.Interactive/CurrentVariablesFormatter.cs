@@ -44,7 +44,8 @@ namespace Microsoft.DotNet.Interactive
                 output = div(instance.Select(v => v.Name + "\t "));
             }
 
-            output.WriteTo(writer, HtmlEncoder.Default);
+            output.WriteTo(writer, context);
+
             return true;
         }
     }

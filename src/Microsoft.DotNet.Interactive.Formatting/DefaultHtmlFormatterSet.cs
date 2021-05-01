@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         PocketView view = 
                            span(a[href: $"https://docs.microsoft.com/dotnet/api/{typeLookupName}?view=net-5.0"](
                                    text));
-                        view.WriteTo(writer, HtmlEncoder.Default);
+                        view.WriteTo(writer, context);
                     }
 
                     return true;

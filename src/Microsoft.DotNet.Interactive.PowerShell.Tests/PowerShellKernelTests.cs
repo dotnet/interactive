@@ -13,7 +13,6 @@ using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
-using static Microsoft.DotNet.Interactive.PowerShell.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Tests
 {

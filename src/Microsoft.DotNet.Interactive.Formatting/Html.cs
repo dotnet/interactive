@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 foreach (var childTag in tags)
                 {
-                    childTag.WriteTo(writer, HtmlEncoder.Default);
+                    childTag.WriteTo(writer, context);
                 }
             };
             return tag;
@@ -207,7 +207,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             where TTag : HtmlTag
         {
             wrappingTag.Content = tag.Content;
-            tag.Content = (writer, context) => wrappingTag.WriteTo(writer, HtmlEncoder.Default);
+            tag.Content = (writer, context) => wrappingTag.WriteTo(writer, context);
             return tag;
         }
 

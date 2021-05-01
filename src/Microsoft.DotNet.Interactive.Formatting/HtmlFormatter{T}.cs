@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                                 tr(
                                     values)));
 
-                    t.WriteTo(writer, HtmlEncoder.Default);
+                    t.WriteTo(writer, context);
 
                     return true;
                 }
@@ -284,7 +284,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 var table = Html.Table(headers, rows);
 
-                table.WriteTo(writer, HtmlEncoder.Default);
+                table.WriteTo(writer, context);
                 return true;
             }
         }

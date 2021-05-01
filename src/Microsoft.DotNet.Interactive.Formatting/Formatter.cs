@@ -369,11 +369,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             SingleLinePlainTextFormatter.WriteEndSequence(writer);
         }
 
-        public static IEnumerable<string> RegisteredMimeTypesFor(Type type)
-        {
-            return _userTypeFormatters.Concat(_defaultTypeFormatters).Where(k => k.Type == type).Select(k => k.MimeType);
-        }
-
         /// <summary>
         /// Registers a formatter to be used when formatting.
         /// </summary>
