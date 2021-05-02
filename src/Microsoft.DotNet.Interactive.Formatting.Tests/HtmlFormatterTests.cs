@@ -928,7 +928,7 @@ string";
           </td>
           <td></td>
           <td>{PlainTextBegin}2{PlainTextEnd}</td>
-          <td>{PlainTextBegin}two{PlainTextEnd}</td>
+          <td>two</td>
           <td></td>
           <td></td>
         </tr>
@@ -951,8 +951,8 @@ string";
           <td></td>
           <td></td>
           <td></td>
-          <td>{PlainTextBegin}apple{PlainTextEnd}</td>
-          <td>{PlainTextBegin}green{PlainTextEnd}</td>
+          <td>apple</td>
+          <td>green</td>
         </tr>
       </tbody>
     </table>");
@@ -992,8 +992,8 @@ string";
         <tr>
           <td>0</td>
           <td>(anonymous)</td>
-          <td>{PlainTextBegin}apple{PlainTextEnd}</td>
-          <td>{PlainTextBegin}green{PlainTextEnd}</td>
+          <td>apple</td>
+          <td>green</td>
           <td></td>
           <td></td>
         </tr>
@@ -1005,7 +1005,7 @@ string";
             </span>
           </td>
           <td></td>
-          <td>{PlainTextBegin}two{PlainTextEnd}</td>
+          <td>two</td>
           <td>{PlainTextBegin}2{PlainTextEnd}</td>
           <td></td>
         </tr>
@@ -1091,9 +1091,7 @@ string";
       <td>
         <div class=""dni-plaintext"">123</div>
       </td>
-      <td>
-        <div class=""dni-plaintext"">two</div>
-      </td>
+      <td>two</td>
     </tr>
     <tr>
       <td>2</td>

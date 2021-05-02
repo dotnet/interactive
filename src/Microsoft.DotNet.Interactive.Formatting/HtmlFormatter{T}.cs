@@ -131,7 +131,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 if (context.TableDepth > 1)
                 {
-                    return false;
+                    HtmlFormatter.FormatObjectAsPlainText(source, writer, context);
+                    return true;
                 }
 
                 var (rowData, remainingCount) = getValues(source)
