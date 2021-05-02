@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <inheritdoc />
         public virtual void WriteTo(TextWriter writer, HtmlEncoder encoder)
         {
-            WriteTo(writer, new FormatContext());
+            WriteTo(writer, new FormatContext(writer));
         }
 
         public void WriteTo(TextWriter writer, FormatContext context)

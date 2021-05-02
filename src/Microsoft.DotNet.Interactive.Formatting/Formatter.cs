@@ -227,7 +227,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
 
             using var writer = CreateWriter();
-            var context = new FormatContext();
+            var context = new FormatContext(writer);
             FormatTo(obj, writer, context, mimeType);
             return writer.ToString();
         }
@@ -242,14 +242,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
 
             using var writer = CreateWriter();
-            var context = new FormatContext();
+            var context = new FormatContext(writer);
             formatter.Format(obj, writer, context);
             return writer.ToString();
         }
 
         public static void Format(this ITypeFormatter formatter, object instance, TextWriter writer)
         {
-            formatter.Format(instance, writer, new FormatContext());
+            formatter.Format(instance, writer, new FormatContext(writer));
         }
         
         /// <summary>Invoke the formatter</summary>

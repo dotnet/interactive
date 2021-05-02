@@ -12,6 +12,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         Type Type { get; }
 
+        // FIX: (ITypeFormatter) remove writer parameter
         bool Format(object instance, TextWriter writer, FormatContext context);
     }
 }

@@ -295,31 +295,66 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         public class Styling
         {
             [Fact]
-            public void style_refs()
+            public void When_style_is_linked_then_it_is_output_exactly_once_per_top_level_render()
             {
-                var css = "a.my-class { color: purple; }";
-                var linkStyle = style(css);
+                var css = @"a.my-class {
+  color: purple;
+}";
+                Style linkStyle = style(css);
 
                 var ps = new[]
                 {
                     "apple", "banana", "cherry"
-                }.Select(v => (IHtmlContent)a[linkStyle](v));
+                }.Select(v => (IHtmlContent)p[linkStyle.LinkAndApplyClass("my-class")](v));
 
                 string html = div(ps).ToString();
 
-                html.Should().BeEquivalentHtmlTo($@"
+                html.Should().BeExceptingWhitespace($@"
 <div>
-    <style>
-        {css}
-    </style>
     <p class=""my-class"">apple</p>
     <p class=""my-class"">banana</p>
     <p class=""my-class"">cherry</p>
 </div>
-");
+<style>
+{css}
+</style>");
+            }
 
-                // FIX: (Once_can_used_to_create_content_that_only_gets_rendered_once_per_top_level_format_operation) write test
-                throw new NotImplementedException();
+            [Fact]
+            public void Style_can_be_created_using_collection_initializer()
+            {
+                var style = new Style
+                {
+                    { "apple", ("color", "red"), ("text-align", "center") }
+                };
+
+                style.ToString()
+                     .Should()
+                     .BeExceptingWhitespace(@"
+<style>
+apple {
+  color: red;
+  text-align: center;
+}
+</style>");
+            }
+
+            [Fact]
+            public void Styles_aggregate_properties_when_add_is_called_repeatedly_using_the_same_selector()
+            {
+                var style = new Style();
+                style.Add("apple", ("color", "red"));
+                style.Add("apple", ("text-align", "center"));
+
+                style.ToString()
+                     .Should()
+                     .BeExceptingWhitespace(@"
+<style>
+apple {
+  color: red;
+  text-align: center;
+}
+</style>");
             }
         }
     }

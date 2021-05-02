@@ -1,6 +1,11 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+
 namespace Microsoft.DotNet.Interactive.Formatting
 {
     public static class PocketViewTags
@@ -103,16 +108,72 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        public class Style : PocketView
+        public class Style : PocketView, IEnumerable
         {
+            private readonly Dictionary<string, List<(string property, string value)>> _css = new();
+
             public Style() : base("style")
             {
+                HtmlTag.Content = WriteCss;
             }
 
-            public void AddCssDefinition(
+            private void WriteCss(TextWriter writer, FormatContext context)
+            {
+                writer.WriteLine();
+
+                foreach (var selectorAndProps in _css)
+                {
+                    writer.Write(selectorAndProps.Key);
+                    writer.WriteLine(" {");
+
+                    foreach (var prop in selectorAndProps.Value)
+                    {
+                        writer.WriteLine($"  {prop.property}: {prop.value};");
+                    }
+
+                    writer.WriteLine("}");
+                }
+            }
+
+            public void Add(
                 string selector,
                 params (string property, string value)[] properties)
             {
+                _css.GetOrAdd(selector, _ => new())
+                    .AddRange(properties);
+            }
+
+            public IDictionary<string, object> LinkAndApplyClass(string @class)
+            {  
+                return new HtmlAttributeLinker(this)
+                {
+                    ["class"] = @class
+                };
+            }
+
+            internal class HtmlAttributeLinker : HtmlAttributes
+            {
+                public HtmlAttributeLinker(Style style)
+                {
+                    StyleElement = style;
+                }
+
+                public Style StyleElement { get; set; }
+            }
+
+            public override void SetContent(object[] args)
+            {
+                if (_css.Count > 0)
+                {
+                    throw new InvalidOperationException("style tag contents have already been set.");
+                }
+
+                base.SetContent(args);
+            }
+
+            public IEnumerator GetEnumerator()
+            {
+                return _css.GetEnumerator();
             }
         }
     }

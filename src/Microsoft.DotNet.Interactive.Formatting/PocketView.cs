@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Encodings.Web;
@@ -18,6 +19,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         private readonly Dictionary<string, TagTransform> _transforms = new();
         private TagTransform _transform;
+        private List<IHtmlContent> _dependencies;
 
         /// <summary>
         ///   Initializes a new instance of the <see cref="PocketView" /> class.
@@ -82,7 +84,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 var content = ComposeContent(binder.CallInfo.ArgumentNames, args);
 
-                transform(pocketView.HtmlTag, content, CurrentFormatContext);
+                transform(pocketView.HtmlTag, content, null);
             }
 
             result = pocketView;
@@ -99,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             SetContent(args);
 
-            ApplyTransform(binder, args, CurrentFormatContext);
+            ApplyTransform(binder, args, null);
 
             result = this;
             return true;
@@ -154,6 +156,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 if (att is IDictionary<string, object> dict)
                 {
                     HtmlAttributes.MergeWith(dict);
+
+                    if (dict is PocketViewTags.Style.HtmlAttributeLinker linker)
+                    {
+                        AddDependency(linker);
+                    }
                 }
                 else
                 {
@@ -176,7 +183,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return true;
         }
 
-        public void SetContent(object[] args)
+        private void AddDependency(PocketViewTags.Style.HtmlAttributeLinker html) => 
+            (_dependencies ??= new()).Add(html.StyleElement);
+
+        public virtual void SetContent(object[] args)
         {
             if (args?.Length == 0)
             {
@@ -250,12 +260,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
             else
             {
-                ApplyTransform(null, null, CurrentFormatContext);
-                return HtmlTag.ToString();
+                var writer = new StringWriter(CultureInfo.InvariantCulture);
+                using (var formatContext = new FormatContext(writer))
+                {
+                    ApplyTransform(null, null, formatContext);
+                    HtmlTag.WriteTo(writer, formatContext);
+                }
+
+                return writer.ToString();
             }
         }
-
-        private FormatContext CurrentFormatContext { get; set; }
 
         /// <summary>
         ///   Gets HTML tag type.
@@ -293,6 +307,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public void WriteTo(TextWriter writer, FormatContext context)
         {
             HtmlTag?.WriteTo(writer, context);
+
+            if (_dependencies is not null)
+            {
+                for (var i = 0; i < _dependencies.Count; i++)
+                {
+                    var content = _dependencies[i];
+                    context.AddDependentContent(content);
+                }
+
+                _dependencies = null;
+            }
         }
 
         /// <summary>
