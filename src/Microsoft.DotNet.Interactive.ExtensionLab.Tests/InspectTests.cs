@@ -40,7 +40,7 @@ public class A
                   .Which
                   .Message
                   .Should()
-                  .ContainAll(",35): error CS1513: } expected");
+                  .ContainAll(",35): error CS1513:", "}");
         }
 
         [Fact]

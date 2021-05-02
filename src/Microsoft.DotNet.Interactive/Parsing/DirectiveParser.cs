@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             var parseResult = _commandLineParser.Parse(input);
             IReadOnlyList<string> unmatchedTokens;
             IReadOnlyCollection<ParseError> errors;
-            if (parseResult.UnmatchedTokens.Count == parseResult.Errors.Count && parseResult.UnmatchedTokens[0].StartsWith("//"))
+            if (parseResult.UnmatchedTokens.Count == parseResult.Errors.Count && parseResult.UnmatchedTokens.Count > 0 && parseResult.UnmatchedTokens[0].StartsWith("//"))
             {
                 unmatchedTokens = new List<string>();
                 errors = new List<ParseError>();
