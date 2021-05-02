@@ -483,10 +483,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     (actualType, mimeType),
                     tuple => InferPreferredFormatter(actualType, mimeType));
 
-        internal static bool ShouldSuppressDestructuring(this ITypeFormatter formatter) => // FIX: (ShouldSuppressDestructuring) needed?
-            _userTypeFormatters.Contains(formatter) ||
-            _defaultTypeFormatters.Contains(formatter);
-
         internal static ITypeFormatter InferPreferredFormatter(Type actualType, string mimeType)
         {
             // Try to find a user-specified type formatter, use the most specific type with a matching mime type

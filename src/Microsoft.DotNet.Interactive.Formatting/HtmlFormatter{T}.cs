@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -37,6 +36,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
             TextWriter writer,
             FormatContext context)
         {
+            using var _ = context.IncrementDepth();
+
             if (value is null)
             {
                 HtmlFormatter.FormatStringAsPlainText(Formatter.NullString, writer, context);
@@ -67,16 +68,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     // refused to produce nested tables, or if no members are selected
                     return false;
                 }
-                else if (context.ContentThreshold < 1.0)
-                {
-                    // This formatter refuses to format objects without members, and 
-                    // refused to produce nested tables, or if no members are selected
-                    return false;
-                }
                 else
                 {
                     // Note, embeds the keys and values as arbitrary objects into the HTML content,
-                    // ultimately rendered by PocketView, e.g. via ToDisplayString(PlainTextFormatter.MimeType)
                     List<IHtmlContent> headers = 
                         reducedMembers.Select(m => (IHtmlContent)th(m.Member.Name))
                                       .ToList();
@@ -113,14 +107,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
             Func<T, IEnumerable> getKeys = null;
             Func<T, IEnumerable> getValues = instance => (IEnumerable) instance;
 
-            var dictionaryGenericType = typeof(T).GetAllInterfaces()
-                                                 .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
-            var dictionaryObjectType = typeof(T).GetAllInterfaces()
-                                                .FirstOrDefault(i => i == typeof(IDictionary));
-            
-            if (dictionaryGenericType is not null || dictionaryObjectType is not null)
+            var dictType =
+                typeof(T).GetAllInterfaces()
+                         .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                ??
+                typeof(T).GetAllInterfaces()
+                         .FirstOrDefault(i => i == typeof(IDictionary));
+
+            if (dictType is not null)
             {
-                var dictType = dictionaryGenericType ?? dictionaryObjectType;
                 var keysProperty = dictType.GetProperty("Keys");
                 getKeys = instance => (IEnumerable) keysProperty.GetValue(instance, null);
 
@@ -132,9 +127,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             bool BuildTable(T source, TextWriter writer, FormatContext context)
             {
-                if (context.ContentThreshold < 1.0)
+                using var _ = context.IncrementTableDepth();
+
+                if (context.TableDepth > 1)
                 {
-                    // This formatter refuses to produce nested tables.
                     return false;
                 }
 

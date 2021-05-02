@@ -40,7 +40,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
             FormattersForAnyEnumerable.GetFormatter(type, false);
 
-        internal static void FormatObjectAsPlainText(object value, TextWriter writer, FormatContext context)
+        internal static void FormatObjectAsPlainText(
+            object value, 
+            TextWriter writer, 
+            FormatContext context)
         {
             // FIX: (FormatObjectAsPlainText) don't create another writer
             using var swriter = Formatter.CreateWriter();
@@ -49,7 +52,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
             FormatStringAsPlainText(text, writer, context);
         }
 
-        internal static void FormatStringAsPlainText(string text, TextWriter writer, FormatContext context)
+        internal static void FormatStringAsPlainText(
+            string text, 
+            TextWriter writer, 
+            FormatContext context)
         {
             if (!string.IsNullOrEmpty(text))
             {
@@ -67,11 +73,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 { Object = instance;  Context = context;  }
         }
 
-        internal static FormatterTable FormattersForAnyObject =
+        internal static FormatterMapByType FormattersForAnyObject =
             new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyObject));
 
-        internal static FormatterTable FormattersForAnyEnumerable =
+        internal static FormatterMapByType FormattersForAnyEnumerable =
             new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyEnumerable));
-
     }
 }

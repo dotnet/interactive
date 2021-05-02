@@ -56,7 +56,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             using var _ = Formatter.RecursionCounter.Enter();
           
-            // find a formatter for the object type, and possibly register one on the fly
             if (Formatter.RecursionCounter.Depth <= Formatter.RecursionLimit)
             {
                 var formatter = Formatter.GetPreferredFormatterFor(typeof(T), mimeType);

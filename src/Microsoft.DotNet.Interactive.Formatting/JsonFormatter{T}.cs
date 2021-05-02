@@ -9,16 +9,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public class JsonFormatter<T> : TypeFormatter<T>
     {
-        private readonly Func<FormatContext, T, TextWriter, bool> _format;
+        private readonly FormatDelegate<T> _format;
 
         public override bool Format(T instance, TextWriter writer, FormatContext context)
         {
-            return _format(context, instance, writer);
+            return _format(instance, writer, context);
         }
 
         public JsonFormatter()
         {
-            _format = (context, instance, writer) => {
+            _format = (instance, writer, context) => {
                 var json = JsonSerializer.Serialize(instance, JsonFormatter.SerializerOptions);
 
                 writer.Write(json);
@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             };
         }
 
-        public JsonFormatter(Func<FormatContext, T, TextWriter, bool> format)
+        public JsonFormatter(FormatDelegate<T> format)
         {
             _format = format;
         }

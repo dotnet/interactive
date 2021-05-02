@@ -172,17 +172,19 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     var formatter = HtmlFormatter.GetDefaultFormatterForAnyObject(type);
                     return formatter.Format(value, writer, context);
                 }),
-                
+
                 // Final last resort is to convert to plain text
                 new HtmlFormatter<object>((value, writer, context) =>
                 {
                     if (value is null)
                     {
                         HtmlFormatter.FormatStringAsPlainText(Formatter.NullString, writer, context);
-                        return true;
+                    }
+                    else
+                    {
+                        HtmlFormatter.FormatObjectAsPlainText(value, writer, context);
                     }
 
-                    HtmlFormatter.FormatObjectAsPlainText(value, writer, context);
                     return true;
                 }),
 

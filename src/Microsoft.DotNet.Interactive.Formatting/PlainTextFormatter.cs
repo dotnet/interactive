@@ -157,11 +157,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        internal static FormatterTable FormattersForAnyObject =
-            new FormatterTable(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyObject));
+        internal static FormatterMapByType FormattersForAnyObject =
+            new FormatterMapByType(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyObject));
 
-        internal static FormatterTable FormattersForAnyEnumerable =
-            new FormatterTable(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyEnumerable));
+        internal static FormatterMapByType FormattersForAnyEnumerable =
+            new FormatterMapByType(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyEnumerable));
 
     }
 }
