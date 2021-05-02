@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         {
             string output = ul(Enumerable.Range(1, 3).Select(i => li(i))).ToString();
 
-            output.Should().Be($"<ul><li>{PlainTextBegin}1{PlainTextEnd}</li><li>{PlainTextBegin}2{PlainTextEnd}</li><li>{PlainTextBegin}3{PlainTextEnd}</li></ul>");
+            output.Should().Be($"<ul><li>1</li><li>2</li><li>3</li></ul>");
         }
 
         [Fact]
@@ -141,10 +141,10 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 (tag, model) =>
                 {
                     tag.Name = "div";
-                    tag.Content = (writer, context) =>
+                    tag.Content = (context) =>
                     {
-                        writer.Write(label[@for: model.name](model.name));
-                        writer.Write(input[name: model.name, type: "text", value: model.value]);
+                        context.Writer.Write(label[@for: model.name](model.name));
+                        context.Writer.Write(input[name: model.name, type: "text", value: model.value]);
                     };
                 });
 

@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -12,7 +11,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         Type Type { get; }
 
-        // FIX: (ITypeFormatter) remove writer parameter
-        bool Format(object instance, TextWriter writer, FormatContext context);
+        bool Format(object instance, FormatContext context);
     }
 }

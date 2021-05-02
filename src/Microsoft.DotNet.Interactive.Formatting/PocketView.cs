@@ -195,13 +195,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             HtmlTag.Content = HtmlTagContent;
 
-            void HtmlTagContent(TextWriter writer, FormatContext context) => 
-                Write(args, writer, context);
+            void HtmlTagContent(FormatContext context) => 
+                Write(args, context);
         }
 
         private void Write(
             IReadOnlyList<object> args, 
-            TextWriter writer, 
             FormatContext context)
         {
             for (var i = 0; i < args.Count; i++)
@@ -211,34 +210,34 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 switch (arg)
                 {
                     case string s:
-                        writer.Write(s.HtmlEncode());
+                        context.Writer.Write(s.HtmlEncode());
                         break;
 
                     case PocketView view:
-                        view.WriteTo(writer, context);
+                        view.WriteTo(context);
                         break;
 
                     case IHtmlContent html:
-                        html.WriteTo(writer, HtmlEncoder.Default);
+                        html.WriteTo(context.Writer, HtmlEncoder.Default);
                         break;
 
                     case IEnumerable<IHtmlContent> htmls:
-                        Write(htmls.ToArray(), writer, context);
+                        Write(htmls.ToArray(), context);
                         break;
 
                     case HtmlFormatter.EmbeddedFormat embedded:
-                        embedded.Object.FormatTo(writer, embedded.Context, HtmlFormatter.MimeType);
+                        embedded.Object.FormatTo(embedded.Context, HtmlFormatter.MimeType);
                         break;
 
                     default:
                         if (arg is IEnumerable<object> seq &&
                             seq.All(s => s is IHtmlContent))
                         {
-                            Write(seq.OfType<IHtmlContent>().ToArray(), writer, context);
+                            Write(seq.OfType<IHtmlContent>().ToArray(), context);
                         }
                         else
                         {
-                            arg.FormatTo(writer, context, HtmlFormatter.MimeType);
+                            arg.FormatTo(context, HtmlFormatter.MimeType);
                         }
 
                         break;
@@ -264,7 +263,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 using (var formatContext = new FormatContext(writer))
                 {
                     ApplyTransform(null, null, formatContext);
-                    HtmlTag.WriteTo(writer, formatContext);
+                    HtmlTag.WriteTo(formatContext);
                 }
 
                 return writer.ToString();
@@ -304,9 +303,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
             HtmlTag?.WriteTo(writer, encoder);
         }
         
-        public void WriteTo(TextWriter writer, FormatContext context)
+        public void WriteTo(FormatContext context)
         {
-            HtmlTag?.WriteTo(writer, context);
+            HtmlTag?.WriteTo(context);
 
             if (_dependencies is not null)
             {

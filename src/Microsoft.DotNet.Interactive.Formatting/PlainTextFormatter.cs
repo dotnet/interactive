@@ -78,17 +78,19 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             if (typeof(T).IsEnum)
             {
-                return (enumValue, writer, context) =>
+                return (enumValue, context) =>
                 {
-                    writer.Write(enumValue.ToString());
+                    context.Writer.Write(enumValue.ToString());
                     return true;
                 };
             }
 
             return FormatObject;
 
-            bool FormatObject(T target, TextWriter writer, FormatContext context)
+            bool FormatObject(T target, FormatContext context)
             {
+                var writer = context.Writer;
+
                 var reducedAccessors = accessors.Take(Math.Max(0, MaxProperties)).ToArray();
 
                 // If we haven't got any members to show, just resort to ToString()
@@ -117,7 +119,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     Formatter.SingleLinePlainTextFormatter.WriteStartProperty(writer);
                     writer.Write(accessor.Member.Name);
                     Formatter.SingleLinePlainTextFormatter.WriteNameValueDelimiter(writer);
-                    value.FormatTo(writer, context);
+                    value.FormatTo(context);
                     Formatter.SingleLinePlainTextFormatter.WriteEndProperty(writer);
 
                     if (i < accessors.Length - 1)
@@ -134,15 +136,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return true;
             }
 
-            bool FormatAnyTuple(T target, TextWriter writer, FormatContext context)
+            bool FormatAnyTuple(T target, FormatContext context)
             {
+                var writer = context.Writer;
+
                 Formatter.SingleLinePlainTextFormatter.WriteStartTuple(writer);
 
                 for (var i = 0; i < accessors.Length; i++)
                 {
                     var value = accessors[i].GetValueOrException(target);
 
-                    value.FormatTo(writer, context);
+                    value.FormatTo(context);
 
                     Formatter.SingleLinePlainTextFormatter.WriteEndProperty(writer);
 

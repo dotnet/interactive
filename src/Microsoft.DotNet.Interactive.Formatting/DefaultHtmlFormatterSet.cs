@@ -19,21 +19,21 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         internal static readonly ITypeFormatter[] DefaultFormatters =
             {
-                new HtmlFormatter<DateTime>((dateTime, writer, context) =>
+                new HtmlFormatter<DateTime>((dateTime, context) =>
                 {
                     PocketView view = span(dateTime.ToString("u"));
-                    view.WriteTo(writer, context);
+                    view.WriteTo(context);
                     return true;
                 }),
 
-                new HtmlFormatter<DateTimeOffset>((dateTime, writer, context) =>
+                new HtmlFormatter<DateTimeOffset>((dateTime, context) =>
                 {
                     PocketView view = span(dateTime.ToString("u"));
-                    view.WriteTo(writer, context);
+                    view.WriteTo(context);
                     return true;
                 }),
 
-                new HtmlFormatter<ExpandoObject>((value, writer, context) =>
+                new HtmlFormatter<ExpandoObject>((value, context) =>
                 {
                     var headers = new List<IHtmlContent>();
                     var values = new List<IHtmlContent>();
@@ -55,46 +55,46 @@ namespace Microsoft.DotNet.Interactive.Formatting
                             tr(
                                 values)));
 
-                    view.WriteTo(writer, context);
+                    view.WriteTo(context);
                     return true;
                 }),
 
-                new HtmlFormatter<PocketView>((view, writer, context) =>
+                new HtmlFormatter<PocketView>((view, context) =>
                 {
-                    view.WriteTo(writer, context);
+                    view.WriteTo(context);
                     return true;
                 }),
 
-                new HtmlFormatter<IHtmlContent>((view, writer, context) =>
+                new HtmlFormatter<IHtmlContent>((view, context) =>
                 {
-                    view.WriteTo(writer, HtmlEncoder.Default);
+                    view.WriteTo(context.Writer, HtmlEncoder.Default);
                     return true;
                 }),
 
-                new HtmlFormatter<ReadOnlyMemory<char>>((memory, writer, context) =>
+                new HtmlFormatter<ReadOnlyMemory<char>>((memory, context) =>
                 {
                     PocketView view = span(memory.Span.ToString());
 
-                    view.WriteTo(writer, context);
+                    view.WriteTo(context);
                     return true;
                 }),
 
-                new HtmlFormatter<string>((s, writer, context) =>
+                new HtmlFormatter<string>((s, context) =>
                 {
                     // If PlainTextPreformat is true, then strings
                     // will have line breaks and white-space preserved
-                    HtmlFormatter.FormatStringAsPlainText(s, writer, context);
+                    HtmlFormatter.FormatStringAsPlainText(s, context);
                     return true;
                 }),
 
-                new HtmlFormatter<TimeSpan>((timespan, writer, context) =>
+                new HtmlFormatter<TimeSpan>((timespan, context) =>
                 {
                     PocketView view = span(timespan.ToString());
-                    view.WriteTo(writer, context);
+                    view.WriteTo(context);
                     return true;
                 }),
 
-                new HtmlFormatter<Type>((type, writer, context) =>
+                new HtmlFormatter<Type>((type, context) =>
                 {
                     var text = type.ToDisplayString(PlainTextFormatter.MimeType);
                     
@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     if (type.IsAnonymous() || !isKnownDocType)
                     {
-                        writer.Write(text.HtmlEncode());
+                        context.Writer.Write(text.HtmlEncode());
                     }
                     else
                     {
@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         PocketView view = 
                            span(a[href: $"https://docs.microsoft.com/dotnet/api/{typeLookupName}?view=net-5.0"](
                                    text));
-                        view.WriteTo(writer, context);
+                        view.WriteTo(context);
                     }
 
                     return true;
@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 // Transform ReadOnlyMemory to an array for formatting
                 new AnonymousTypeFormatter<object>(type: typeof(ReadOnlyMemory<>),
                     mimeType: HtmlFormatter.MimeType,
-                    format: (value, writer, context) =>
+                    format: (value, context) =>
                     {
                         var actualType = value.GetType();
                         var toArray = Formatter.FormatReadOnlyMemoryMethod.MakeGenericMethod
@@ -138,63 +138,63 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                         var array = toArray.Invoke(null, new[] { value });
 
-                        array.FormatTo(writer, context, HtmlFormatter.MimeType);
+                        array.FormatTo(context, HtmlFormatter.MimeType);
 
                         return true;
                     }),
 
-                new HtmlFormatter<Enum>((enumValue, writer, context) =>
+                new HtmlFormatter<Enum>((enumValue, context) =>
                 {
                     PocketView view = span(enumValue.ToString());
-                    view.WriteTo(writer, context);
+                    view.WriteTo(context);
                     return true;
                 }),
 
                 // Try to display enumerable results as tables. This will return false for nested tables.
-                new HtmlFormatter<IEnumerable>((value, writer, context) =>
+                new HtmlFormatter<IEnumerable>((value, context) =>
                 {
                     var type = value.GetType();
                     var formatter = HtmlFormatter.GetDefaultFormatterForAnyEnumerable(type);
-                    return formatter.Format(value, writer, context);
+                    return formatter.Format(value, context);
                 }),
 
                 // BigInteger should be displayed as plain text
-                new HtmlFormatter<BigInteger>((value, writer, context) =>
+                new HtmlFormatter<BigInteger>((value, context) =>
                 {
-                    HtmlFormatter.FormatObjectAsPlainText(value, writer, context);
+                    HtmlFormatter.FormatObjectAsPlainText(value, context);
                     return true;
                 }),
 
                 // Try to display object results as tables. This will return false for nested tables.
-                new HtmlFormatter<object>((value, writer, context) =>
+                new HtmlFormatter<object>((value, context) =>
                 {
                     var type = value.GetType();
                     var formatter = HtmlFormatter.GetDefaultFormatterForAnyObject(type);
-                    return formatter.Format(value, writer, context);
+                    return formatter.Format(value, context);
                 }),
 
                 // Final last resort is to convert to plain text
-                new HtmlFormatter<object>((value, writer, context) =>
+                new HtmlFormatter<object>((value, context) =>
                 {
                     if (value is null)
                     {
-                        HtmlFormatter.FormatStringAsPlainText(Formatter.NullString, writer, context);
+                        HtmlFormatter.FormatStringAsPlainText(Formatter.NullString, context);
                     }
                     else
                     {
-                        HtmlFormatter.FormatObjectAsPlainText(value, writer, context);
+                        HtmlFormatter.FormatObjectAsPlainText(value, context);
                     }
 
                     return true;
                 }),
 
-                new HtmlFormatter<JsonDocument>((doc, writer, context) =>
+                new HtmlFormatter<JsonDocument>((doc, context) =>
                 {
-                    doc.RootElement.FormatTo(writer, context, HtmlFormatter.MimeType);
+                    doc.RootElement.FormatTo(context, HtmlFormatter.MimeType);
                     return true;
                 }),
 
-                new HtmlFormatter<JsonElement>((element, writer, context) =>
+                new HtmlFormatter<JsonElement>((element, context) =>
                 {
                     PocketView view = null;
 
@@ -280,7 +280,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 // }"));
 //                     css.WriteTo(writer, HtmlEncoder.Default);
 
-                    view.WriteTo(writer, context);
+                    view.WriteTo(context);
 
                     return true;
                 }),

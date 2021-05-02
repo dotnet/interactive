@@ -43,14 +43,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="mimeType">The mime type to format to.</param>
         public static void FormatTo(
             T obj,
-            TextWriter writer,
             FormatContext context,
             string mimeType = PlainTextFormatter.MimeType)
         {
             if (obj is null)
             {
                 var formatter = Formatter.GetPreferredFormatterFor(typeof(T), mimeType);
-                formatter.Format(null, writer, context);
+                formatter.Format(null, context);
                 return;
             }
 
@@ -59,11 +58,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
             if (Formatter.RecursionCounter.Depth <= Formatter.RecursionLimit)
             {
                 var formatter = Formatter.GetPreferredFormatterFor(typeof(T), mimeType);
-                formatter.Format(obj, writer, context);
+                formatter.Format(obj, context);
             }
             else
             {
-                PlainTextFormatter<T>.Default.Format(obj, writer, context);
+                PlainTextFormatter<T>.Default.Format(obj, context);
             }
         }
 

@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             Content = Write;
 
-            void Write(TextWriter writer, FormatContext context) => writer.Write(text);
+            void Write(FormatContext context) => context.Writer.Write(text);
         }
 
         /// <summary>
@@ -43,12 +43,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </summary>
         /// <param name="name">Name of the tag.</param>
         /// <param name="content">The content.</param>
-        public HtmlTag(string name, Action<TextWriter, FormatContext> content) : this(name)
+        public HtmlTag(string name, Action<FormatContext> content) : this(name)
         {
             Content = content;
         }
 
-        public Action<TextWriter, FormatContext> Content { get; set; }
+        public Action<FormatContext> Content { get; set; }
 
         /// <summary>
         ///   Gets or sets a value indicating whether this instance is self closing.
@@ -81,20 +81,20 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <inheritdoc />
         public virtual void WriteTo(TextWriter writer, HtmlEncoder encoder)
         {
-            WriteTo(writer, new FormatContext(writer));
+            WriteTo(new FormatContext(writer));
         }
 
-        public void WriteTo(TextWriter writer, FormatContext context)
+        public void WriteTo(FormatContext context)
         {
             if (Content is null && IsSelfClosing)
             {
-                WriteSelfClosingTag(writer);
+                WriteSelfClosingTag(context.Writer);
                 return;
             }
 
-            WriteStartTag(writer);
-            WriteContentsTo(writer, context);
-            WriteEndTag(writer);
+            WriteStartTag(context.Writer);
+            WriteContentsTo(context);
+            WriteEndTag(context.Writer);
         }
 
         protected void WriteSelfClosingTag(TextWriter writer)
@@ -125,9 +125,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </summary>
         /// <param name = "writer">The writer.</param>
         /// <param name="context">The context for the current format operation.</param>
-        protected virtual void WriteContentsTo(TextWriter writer, FormatContext context)
+        protected virtual void WriteContentsTo(FormatContext context)
         {
-            Content?.Invoke(writer, context);
+            Content?.Invoke(context);
         }
 
         /// <summary>

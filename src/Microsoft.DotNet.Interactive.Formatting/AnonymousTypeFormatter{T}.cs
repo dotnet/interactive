@@ -26,9 +26,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _format = format ?? throw new ArgumentNullException(nameof(format));
         }
 
-        public override bool Format(T instance, TextWriter writer, FormatContext context)
+        public override bool Format(T instance, FormatContext context)
         {
-            return _format(instance, writer, context);
+            return _format(instance, context);
         }
 
         public override string MimeType { get; }

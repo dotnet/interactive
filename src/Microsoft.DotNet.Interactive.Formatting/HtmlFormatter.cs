@@ -42,26 +42,24 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static void FormatObjectAsPlainText(
             object value, 
-            TextWriter writer, 
             FormatContext context)
         {
             // FIX: (FormatObjectAsPlainText) don't create another writer
             using var swriter = Formatter.CreateWriter();
-            value.FormatTo(swriter, context, PlainTextFormatter.MimeType);
+            value.FormatTo(context, PlainTextFormatter.MimeType);
             var text = swriter.ToString();
-            FormatStringAsPlainText(text, writer, context);
+            FormatStringAsPlainText(text, context);
         }
 
         internal static void FormatStringAsPlainText(
             string text, 
-            TextWriter writer, 
             FormatContext context)
         {
             if (!string.IsNullOrEmpty(text))
             {
                 PocketView tag = div(text);
                 tag.HtmlAttributes["class"] = "dni-plaintext";
-                tag.WriteTo(writer, context);
+                tag.WriteTo(context);
             }
         }
 

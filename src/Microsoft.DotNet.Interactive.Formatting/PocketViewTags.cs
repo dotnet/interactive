@@ -117,8 +117,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 HtmlTag.Content = WriteCss;
             }
 
-            private void WriteCss(TextWriter writer, FormatContext context)
+            private void WriteCss(FormatContext context)
             {
+                var writer = context.Writer;
+
                 writer.WriteLine();
 
                 foreach (var selectorAndProps in _css)

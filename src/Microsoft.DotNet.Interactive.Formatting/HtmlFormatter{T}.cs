@@ -13,38 +13,37 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public class HtmlFormatter<T> : TypeFormatter<T>
     {
-        private readonly Func<T, TextWriter, FormatContext, bool> _format;
+        private readonly FormatDelegate<T> _format;
 
-        public HtmlFormatter(Func<T, TextWriter, FormatContext, bool> format)
+        public HtmlFormatter(FormatDelegate<T> format)
         {
             _format = format;
         }
 
-        public HtmlFormatter(Action<T, TextWriter> format)
+        public HtmlFormatter(Action<T, FormatContext> format)
         {
             _format = FormatInstance;
 
-            bool FormatInstance(T instance, TextWriter writer, FormatContext context)
+            bool FormatInstance(T instance, FormatContext context)
             {
-                format(instance, writer);
+                format(instance, context);
                 return true;
             }
         }
 
         public override bool Format(
             T value,
-            TextWriter writer,
             FormatContext context)
         {
             using var _ = context.IncrementDepth();
 
             if (value is null)
             {
-                HtmlFormatter.FormatStringAsPlainText(Formatter.NullString, writer, context);
+                HtmlFormatter.FormatStringAsPlainText(Formatter.NullString, context);
                 return true;
             }
 
-            return _format(value, writer, context);
+            return _format(value, context);
         }
 
         public override string MimeType => HtmlFormatter.MimeType;
@@ -54,7 +53,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             var members = typeof(T).GetMembersToFormat(includeInternals)
                                    .GetMemberAccessors<T>();
 
-            return new HtmlFormatter<T>((instance, writer, context) =>
+            return new HtmlFormatter<T>((instance, context) =>
             {
                 // Note the order of members is declaration order
                 var reducedMembers = 
@@ -95,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                                 tr(
                                     values)));
 
-                    t.WriteTo(writer, context);
+                    t.WriteTo(context);
 
                     return true;
                 }
@@ -125,13 +124,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return new HtmlFormatter<T>(BuildTable);
 
-            bool BuildTable(T source, TextWriter writer, FormatContext context)
+            bool BuildTable(T source, FormatContext context)
             {
                 using var _ = context.IncrementTableDepth();
 
                 if (context.TableDepth > 1)
                 {
-                    HtmlFormatter.FormatObjectAsPlainText(source, writer, context);
+                    HtmlFormatter.FormatObjectAsPlainText(source,  context);
                     return true;
                 }
 
@@ -142,7 +141,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 if (rowData.Count == 0)
                 {
-                    writer.Write(i("(empty)"));
+                    context.Writer.Write(i("(empty)"));
                     return true;
                 }
 
@@ -281,7 +280,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 var table = Html.Table(headers, rows);
 
-                table.WriteTo(writer, context);
+                table.WriteTo(context);
                 return true;
             }
         }

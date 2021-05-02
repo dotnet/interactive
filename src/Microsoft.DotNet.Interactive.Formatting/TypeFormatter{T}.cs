@@ -13,15 +13,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
             Type = type ?? typeof(T);
         }
 
-        public abstract bool Format(T value, TextWriter writer, FormatContext context);
+        public abstract bool Format(T value, FormatContext context);
 
         public Type Type { get; }
 
         public abstract string MimeType { get; }
 
-        bool ITypeFormatter.Format(object instance, TextWriter writer, FormatContext context)
+        bool ITypeFormatter.Format(object instance, FormatContext context)
         {
-            return Format((T) instance, writer, context);
+            return Format((T) instance, context);
         }
     }
 }

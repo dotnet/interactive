@@ -71,10 +71,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static TTag Append<TTag>(this TTag toTag, IHtmlContent content) where TTag : HtmlTag
         {
             var writeOriginalContent = toTag.Content;
-            toTag.Content = (writer, context) =>
+            toTag.Content = (context) =>
             {
-                writeOriginalContent?.Invoke(writer, context);
-                writer.Write(content);
+                writeOriginalContent?.Invoke(context);
+                context.Writer.Write(content);
             };
             return toTag;
         }
@@ -89,13 +89,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static TTag Append<TTag>(this TTag toTag, params IHtmlContent[] contents) where TTag : HtmlTag
         {
             var writeOriginalContent = toTag.Content;
-            toTag.Content = (writer, context) =>
+            toTag.Content = (context) =>
             {
-                writeOriginalContent?.Invoke(writer, context);
+                writeOriginalContent?.Invoke(context);
 
                 for (int i = 0; i < contents.Length; i++)
                 {
-                    writer.Write(contents[i]);
+                    context.Writer.Write(contents[i]);
                 }
             };
             return toTag;
@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <returns>The same tag instance, with the contents set to the specified text.</returns>
         public static TTag Containing<TTag>(this TTag tag, IHtmlContent content) where TTag : HtmlTag
         {
-            tag.Content = (writer, context) => writer.Write(content.ToString(), context);
+            tag.Content = (context) => context.Writer.Write(content.ToString(), context);
             return tag;
         }
 
@@ -146,17 +146,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static TTag Containing<TTag>(this TTag tag, IEnumerable<HtmlTag> tags) where TTag : HtmlTag
         {
-            tag.Content = (writer, context) =>
+            tag.Content = (context) =>
             {
                 foreach (var childTag in tags)
                 {
-                    childTag.WriteTo(writer, context);
+                    childTag.WriteTo(context);
                 }
             };
             return tag;
         }
 
-        internal static TTag Containing<TTag>(this TTag tag, Action<TextWriter, FormatContext> content) 
+        internal static TTag Containing<TTag>(this TTag tag, Action<FormatContext> content) 
             where TTag : HtmlTag
         {
             tag.Content = content;
@@ -174,10 +174,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
             where TTag : HtmlTag
         {
             var writeOriginalContent = toTag.Content;
-            toTag.Content = (writer, context) =>
+            toTag.Content = (context) =>
             {
-                writer.Write(content);
-                writeOriginalContent?.Invoke(writer, context);
+                context.Writer.Write(content);
+                writeOriginalContent?.Invoke(context);
             };
             return toTag;
         }
@@ -207,7 +207,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             where TTag : HtmlTag
         {
             wrappingTag.Content = tag.Content;
-            tag.Content = (writer, context) => wrappingTag.WriteTo(writer, context);
+            tag.Content = wrappingTag.WriteTo;
             return tag;
         }
 

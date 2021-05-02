@@ -11,19 +11,21 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         private readonly FormatDelegate<T> _format;
 
-        public override bool Format(T instance, TextWriter writer, FormatContext context)
+        public override bool Format(T instance, FormatContext context)
         {
-            return _format(instance, writer, context);
+            return _format(instance, context);
         }
 
         public JsonFormatter()
         {
-            _format = (instance, writer, context) => {
-                var json = JsonSerializer.Serialize(instance, JsonFormatter.SerializerOptions);
+            _format = FormatInstance;
 
-                writer.Write(json);
+            bool FormatInstance(T instance, FormatContext context)
+            {
+                var json = JsonSerializer.Serialize(instance, JsonFormatter.SerializerOptions);
+                context.Writer.Write(json);
                 return true;
-            };
+            }
         }
 
         public JsonFormatter(FormatDelegate<T> format)

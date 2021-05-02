@@ -9,10 +9,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         internal static readonly ITypeFormatter[] DefaultFormatters =
             {
-                new JsonFormatter<string>((s, writer, context) =>
+                new JsonFormatter<string>((s, context) =>
                 {
                     var data = JsonSerializer.Serialize(s, JsonFormatter.SerializerOptions);
-                    writer.Write(data);
+                    context.Writer.Write(data);
                     return true;
                 }),
                 new JsonFormatter<object>()

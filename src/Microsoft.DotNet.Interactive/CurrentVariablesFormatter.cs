@@ -2,9 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
 using System.Linq;
-using System.Text.Encodings.Web;
 using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -18,7 +16,6 @@ namespace Microsoft.DotNet.Interactive
 
         private static bool FormatCurrentVariables(
             CurrentVariables instance, 
-            TextWriter writer,
             FormatContext context)
         {
             PocketView output = null;
@@ -44,7 +41,7 @@ namespace Microsoft.DotNet.Interactive
                 output = div(instance.Select(v => v.Name + "\t "));
             }
 
-            output.WriteTo(writer, context);
+            output.WriteTo(context);
 
             return true;
         }
