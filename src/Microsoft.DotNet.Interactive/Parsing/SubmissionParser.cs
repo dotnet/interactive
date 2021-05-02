@@ -42,9 +42,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             var parser = new PolyglotSyntaxParser(
                 sourceText,
-                language ?? KernelLanguage,
-                GetDirectiveParser(),
-                GetSubkernelDirectiveParsers());
+                defaultLanguage: language ?? KernelLanguage,
+                rootKernelDirectiveParser: GetDirectiveParser(),
+                subkernelInfoByKernelName: GetSubkernelDirectiveParsers());
 
             return parser.Parse();
         }
@@ -296,7 +296,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             _directiveParser = null;
         }
 
-        public static CompletionItem CompletionItemFor(string name, ParseResult parseResult)
+        public static CompletionItem CompletionItemFor(string name, DirectiveParseResult parseResult)
         {
             var symbol = parseResult.CommandResult
                                     .Command

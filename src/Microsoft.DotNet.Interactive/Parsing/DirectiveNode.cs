@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 {
     public abstract class DirectiveNode : LanguageNode
     {
-        private ParseResult? _parseResult;
+        private DirectiveParseResult? _parseResult;
 
        
         internal DirectiveNode(
@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         internal DirectiveParser? DirectiveParser { get; set; }
 
-        public ParseResult GetDirectiveParseResult()
+        public DirectiveParseResult GetDirectiveParseResult()
         {
             if (DirectiveParser is null)
             {

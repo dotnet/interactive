@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Commands
     internal class DirectiveCommand : KernelCommand
     {
         internal DirectiveCommand(
-            ParseResult parseResult,
+            DirectiveParseResult parseResult,
             KernelCommand parent,
             DirectiveNode directiveNode = null) : base(null, parent)
         {
@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Commands
             KernelUri = directiveNode?.KernelUri;
         }
 
-        public ParseResult ParseResult { get; }
+        public DirectiveParseResult ParseResult { get; }
 
         public DirectiveNode DirectiveNode { get; }
 

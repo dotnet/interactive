@@ -13,6 +13,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive
 {
@@ -58,7 +59,7 @@ namespace Microsoft.DotNet.Interactive
 
             var value = command.LanguageNode.Text.Trim();
 
-            var options = ValueDirectiveOptions.Create(parseResult);
+            var options = ValueDirectiveOptions.Create(parseResult.ParseResult);
 
             if (options.FromFile is {})
             {

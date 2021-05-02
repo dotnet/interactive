@@ -118,23 +118,5 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
                   .Should()
                   .NotContain("#!hidden");
         }
-
-        [Fact]
-        public async Task r_executes_even_with_comment()
-        {
-            // Make sure the considered package gets successfully installed without comments afterwards
-            using var kernel1 = new FSharpKernel().UseNugetDirective();
-            var code1 = new SubmitCode("#r \"nuget:Plotly.NET.Interactive, 2.0.0-beta8\"");
-            var res1 = await kernel1.SendAsync(code1);
-            Expression<Func<KernelEvent, bool>> f1 = ev => ev is DisplayEvent && ((DisplayEvent)ev).ToDisplayString("text/plain").Contains("Installing");
-            res1.KernelEvents.ToSubscribedList().Should().Contain(f1);
-
-            // Now, let us add a comment after the command
-            using var kernel2 = new FSharpKernel().UseNugetDirective();
-            var code2 = new SubmitCode("#r \"nuget:Plotly.NET.Interactive, 2.0.0-beta8\" // ducks best!");
-            var res2 = await kernel2.SendAsync(code2);
-            Expression<Func<KernelEvent, bool>> f2 = ev => ev is DisplayEvent && ((DisplayEvent)ev).ToDisplayString("text/plain").Contains("Installing");
-            res2.KernelEvents.ToSubscribedList().Should().Contain(f2);
-        }
     }
 }

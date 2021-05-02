@@ -17,6 +17,7 @@ using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive
 {
+#pragma warning disable IDE1006 // Naming Styles: "i" and "r" are normal names in this case
     public static class KernelSupportsNugetExtensions
     {
         public static T UseNugetDirective<T>(this T kernel) 
@@ -291,4 +292,5 @@ namespace Microsoft.DotNet.Interactive
             }
         }
     }
+#pragma warning restore IDE1006 // Naming Styles
 }
