@@ -224,11 +224,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     case IEnumerable<IHtmlContent> htmls:
                         Write(htmls.ToArray(), context);
                         break;
-
-                    case HtmlFormatter.EmbeddedFormat embedded:
-                        embedded.Object.FormatTo(embedded.Context, HtmlFormatter.MimeType);
-                        break;
-
+                        
                     default:
                         if (arg is IEnumerable<object> seq &&
                             seq.All(s => s is IHtmlContent))

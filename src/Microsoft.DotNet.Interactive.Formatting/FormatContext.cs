@@ -35,13 +35,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal void AddDependentContent(IHtmlContent content) => (_dependentContent ??= new()).Add(content);
 
-        /// <summary>Indicates a request for other formatters to reduce their information content.</summary>
-        public FormatContext ReduceContent(double proportion) =>
-            new(Writer)
-            {
-                ContentThreshold = ContentThreshold * (Math.Max(0.0, Math.Min(1.0, proportion)))
-            };
-
         /// <summary>Indicates a typical setting to reduce content in inner positions of a table.</summary>
         /// <remarks>When this reduction is applied, further nested tables and property expansions are avoided.</remarks>
         public const double NestedInTable = 0.2;

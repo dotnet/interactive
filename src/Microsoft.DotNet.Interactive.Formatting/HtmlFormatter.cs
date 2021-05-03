@@ -63,14 +63,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        internal class EmbeddedFormat
-        {
-            internal FormatContext Context { get; }
-            internal object Object { get; }
-            internal EmbeddedFormat(FormatContext context, object instance)
-                { Object = instance;  Context = context;  }
-        }
-
         internal static FormatterMapByType FormattersForAnyObject =
             new(typeof(HtmlFormatter<>), nameof(HtmlFormatter<object>.CreateForAnyObject));
 

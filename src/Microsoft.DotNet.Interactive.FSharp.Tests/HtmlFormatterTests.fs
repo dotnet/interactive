@@ -23,7 +23,7 @@ type HtmlFormatterTests() =
 
     [<Fact>]
     member __.``HTML from string``() =
-        Assert.Equal("<div>d</div>", (div [] [str "d"]).ToString())
+        Assert.Equal("<div>d</div>", (div [] [ "d" ]).ToString())
 
     [<Fact>]
     // Note, the inner object is currently rendered using plaintext formatting
@@ -37,14 +37,8 @@ type HtmlFormatterTests() =
     [<Fact>]
     // Note, this test result will change in the future once F# formatting uses %A 
     // formatting by default for plaintext display
-    member __.``HTML from object rendered as plaintext``() =
-        Assert.Equal(sprintf "<div>%s[ 1, 2 ]%s</div>" PlainTextBegin PlainTextEnd, (div [] [embed (new FormatContext()) "[ 1, 2 ]"]).ToString())
-
-    [<Fact>]
-    // Note, this test result will change in the future once F# formatting uses %A 
-    // formatting by default for plaintext display
     member __.``HTML from inner object rendered as plaintext with encoded characters``() =
-        Assert.Equal(sprintf "<div>%s[ &gt;, &lt; ]%s</div>" PlainTextBegin PlainTextEnd, (div [] [embed (new FormatContext()) "[ >, < ]" ]).ToString())
+        Assert.Equal(sprintf "<div>[ &gt;, &lt; ]</div>", (div [] [  "[ >, < ]" ]).ToString())
 
     [<Fact>]
     member __.``HTML from content with attribute``() =
