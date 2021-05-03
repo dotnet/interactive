@@ -42,7 +42,6 @@ module Html =
                 let content = 
                     content 
                     |> List.toArray 
-                    |> Array.map (fun content -> content)
                 p.SetContent(content)
             (HtmlElement.Tagged p :> IHtmlContent)
 
