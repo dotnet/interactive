@@ -21,11 +21,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public FormatContext(TextWriter writer)
         {
             Writer = writer;
-            ContentThreshold = 1.0;
         }
-
-        /// <summary>Indicates the requested proportion of information to show in this context.</summary>
-        public double ContentThreshold { get; internal set; }
 
         internal int Depth { get; private set; }
 

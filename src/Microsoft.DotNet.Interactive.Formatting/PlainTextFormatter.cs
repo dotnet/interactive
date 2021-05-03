@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 var reducedAccessors = accessors.Take(Math.Max(0, MaxProperties)).ToArray();
 
                 // If we haven't got any members to show, just resort to ToString()
-                if (reducedAccessors.Length == 0 || context.ContentThreshold < 1.0)
+                if (reducedAccessors.Length == 0)
                 {
                     // Write using `ToString()`
                     writer.Write(target);
