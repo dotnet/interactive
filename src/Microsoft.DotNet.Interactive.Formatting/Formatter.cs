@@ -453,8 +453,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="mimeType">The MimeType for this formatter. If it is not specified it defaults to <see cref="PlainTextFormatter.MimeType"/></param>
         public static void Register<T>(
             Func<T, string> formatter,
-            string mimeType = PlainTextFormatter.MimeType,
-            bool addToDefaults = false)
+            string mimeType = PlainTextFormatter.MimeType)
         {
             Register(new AnonymousTypeFormatter<T>((value, context) =>
             {
