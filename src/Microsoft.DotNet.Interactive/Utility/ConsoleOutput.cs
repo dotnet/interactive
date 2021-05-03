@@ -17,7 +17,6 @@ namespace Microsoft.DotNet.Interactive.Utility
         private static TextWriter _originalErrorWriter;
 
         private static int _refCount = 0;
-        
 
         public static IDisposable Subscribe(Func<ObservableConsole, IDisposable> subscribe)
         {
@@ -27,8 +26,6 @@ namespace Microsoft.DotNet.Interactive.Utility
 
                 if (++_refCount == 1)
                 {
-                    // FIX: (Subscribe) remove debuggy stuff
-
                     _originalOutputWriter = Console.Out;
                     _originalErrorWriter = Console.Error;
                     _multiplexingOutputWriter = new MultiplexingTextWriter("out");

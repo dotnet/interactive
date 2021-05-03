@@ -259,31 +259,30 @@ namespace Microsoft.DotNet.Interactive.Formatting
                             return false;
                     }
 
-                    // FIX: (DefaultFormatters) needs more style
-//                     PocketView css = style(new HtmlString(@"    
-// .dni-code-hint {
-//     font-style: italic;
-//     overflow: hidden;
-//     white-space: nowrap;
-// }
-//
-// .dni-treeview {
-//     white-space: nowrap;
-// }
-//
-// .dni-treeview td {
-//     vertical-align: top;
-// }
-//
-// details.dni-treeview {
-//     padding-left: 1em;
-// }"));
-//                     css.WriteTo(writer, HtmlEncoder.Default);
+                    PocketView css = style(new HtmlString(@"    
+.dni-code-hint {
+    font-style: italic;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.dni-treeview {
+    white-space: nowrap;
+}
+
+.dni-treeview td {
+    vertical-align: top;
+}
+
+details.dni-treeview {
+    padding-left: 1em;
+}"));
+                    context.AddDependentContent(css);
 
                     view.WriteTo(context);
 
                     return true;
-                }),
+                })
         };
     }
 }

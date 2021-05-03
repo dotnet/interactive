@@ -157,9 +157,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     HtmlAttributes.MergeWith(dict);
 
-                    if (dict is PocketViewTags.Style.HtmlAttributeLinker linker)
+                    if (dict is PocketViewTags.Style.HtmlAttributeDependency linker)
                     {
-                        AddDependency(linker);
+                        AddDependency(linker.HtmlContent);
                     }
                 }
                 else
@@ -183,8 +183,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return true;
         }
 
-        private void AddDependency(PocketViewTags.Style.HtmlAttributeLinker html) => 
-            (_dependencies ??= new()).Add(html.StyleElement);
+        private void AddDependency(IHtmlContent html) => 
+            (_dependencies ??= new()).Add(html);
 
         public virtual void SetContent(object[] args)
         {

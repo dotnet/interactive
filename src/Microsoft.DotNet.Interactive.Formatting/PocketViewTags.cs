@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.AspNetCore.Html;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -147,20 +148,20 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             public IDictionary<string, object> LinkAndApplyClass(string @class)
             {  
-                return new HtmlAttributeLinker(this)
+                return new HtmlAttributeDependency(this)
                 {
                     ["class"] = @class
                 };
             }
 
-            internal class HtmlAttributeLinker : HtmlAttributes
+            internal class HtmlAttributeDependency : HtmlAttributes
             {
-                public HtmlAttributeLinker(Style style)
+                public HtmlAttributeDependency(IHtmlContent content)
                 {
-                    StyleElement = style;
+                    HtmlContent = content;
                 }
 
-                public Style StyleElement { get; set; }
+                public IHtmlContent HtmlContent { get; }
             }
 
             public override void SetContent(object[] args)
