@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public class FormatContext : IDisposable
     {
-        private HashSet<IHtmlContent> _dependentContent;
+        private Dictionary<string, IHtmlContent> _requiredContent;
 
         public FormatContext() : this(new StringWriter())
         {
@@ -29,11 +29,18 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public TextWriter Writer { get; }
 
-        internal void AddDependentContent(IHtmlContent content) => (_dependentContent ??= new()).Add(content);
+        internal void Require(string id, IHtmlContent content)
+        {
+            if (_requiredContent is null)
+            {
+                _requiredContent = new();
+            }
 
-        /// <summary>Indicates a typical setting to reduce content in inner positions of a table.</summary>
-        /// <remarks>When this reduction is applied, further nested tables and property expansions are avoided.</remarks>
-        public const double NestedInTable = 0.2;
+            if (!_requiredContent.ContainsKey(id))
+            {
+                _requiredContent.Add(id, content);
+            }
+        }
 
         internal IDisposable IncrementDepth()
         {
@@ -49,14 +56,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public void Dispose()
         {
-            if (_dependentContent is not null)
+            if (_requiredContent is not null)
             {
-                foreach (var content in _dependentContent)
+                foreach (var content in _requiredContent.Values)
                 {
                     content.WriteTo(Writer, HtmlEncoder.Default);
                 }
 
-                _dependentContent = null;
+                _requiredContent = null;
             }
         }
     }

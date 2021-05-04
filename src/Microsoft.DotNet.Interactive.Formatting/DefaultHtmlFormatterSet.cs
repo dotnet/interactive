@@ -259,7 +259,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
                             return false;
                     }
 
-                    PocketView css = style(new HtmlString(@"    
+                    var styleElementId = "dni-styles-JsonElement";
+                    PocketView css = style[id: styleElementId](new HtmlString(@"    
 .dni-code-hint {
     font-style: italic;
     overflow: hidden;
@@ -277,7 +278,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 details.dni-treeview {
     padding-left: 1em;
 }"));
-                    context.AddDependentContent(css);
+                    context.Require(styleElementId, css);
 
                     view.WriteTo(context);
 

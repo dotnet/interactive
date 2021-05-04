@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using FluentAssertions;
 using System.Linq;
 using Microsoft.AspNetCore.Html;
@@ -295,17 +296,19 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         public class Styling
         {
             [Fact]
-            public void When_style_is_linked_then_it_is_output_exactly_once_per_top_level_render()
+            public void When_style_element_is_required_more_than_once_it_is_output_exactly_once_per_top_level_render()
             {
                 var css = @"a.my-class {
   color: purple;
 }";
-                Style linkStyle = style(css);
 
-                var ps = new[]
-                {
-                    "apple", "banana", "cherry"
-                }.Select(v => (IHtmlContent)p[linkStyle.LinkAndApplyClass("my-class")](v));
+                IEnumerable<IHtmlContent> ps = new[] { "apple", "banana", "cherry" }
+                    .Select(text =>
+                    {
+                        PocketView content = p[@class: "my-class"](text);
+                        content.AddDependency("required-styles", style(css));
+                        return content;
+                    });
 
                 string html = div(ps).ToString();
 

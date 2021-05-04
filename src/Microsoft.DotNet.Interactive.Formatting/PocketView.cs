@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         private readonly Dictionary<string, TagTransform> _transforms = new();
         private TagTransform _transform;
-        private List<IHtmlContent> _dependencies;
+        private List<(string id, IHtmlContent content)> _dependentContent;
 
         /// <summary>
         ///   Initializes a new instance of the <see cref="PocketView" /> class.
@@ -156,11 +156,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 if (att is IDictionary<string, object> dict)
                 {
                     HtmlAttributes.MergeWith(dict);
-
-                    if (dict is PocketViewTags.Style.HtmlAttributeDependency linker)
-                    {
-                        AddDependency(linker.HtmlContent);
-                    }
                 }
                 else
                 {
@@ -183,8 +178,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return true;
         }
 
-        private void AddDependency(IHtmlContent html) => 
-            (_dependencies ??= new()).Add(html);
+        public void AddDependency(string id, IHtmlContent content)
+        {
+            if (_dependentContent is null)
+            {
+                _dependentContent = new();
+            }
+
+            _dependentContent.Add((id, content));
+        }
 
         public virtual void SetContent(object[] args)
         {
@@ -294,6 +296,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </summary>
         /// <param name = "writer">The writer.</param>
         /// <param name="encoder">An HTML encoder.</param>
+        public void WriteTo(TextWriter writer)
+        {
+            HtmlTag?.WriteTo(writer);
+        }
+        
+        /// <summary>
+        ///   Renders the tag to the specified <see cref = "TextWriter" />.
+        /// </summary>
+        /// <param name = "writer">The writer.</param>
+        /// <param name="encoder">An HTML encoder.</param>
         public void WriteTo(TextWriter writer, HtmlEncoder encoder)
         {
             HtmlTag?.WriteTo(writer, encoder);
@@ -303,15 +315,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             HtmlTag?.WriteTo(context);
 
-            if (_dependencies is not null)
+            if (_dependentContent is not null)
             {
-                for (var i = 0; i < _dependencies.Count; i++)
+                for (var i = 0; i < _dependentContent.Count; i++)
                 {
-                    var content = _dependencies[i];
-                    context.AddDependentContent(content);
+                    var item = _dependentContent[i];
+                    context.Require(item.id, item.content);
                 }
 
-                _dependencies = null;
+                _dependentContent = null;
             }
         }
 

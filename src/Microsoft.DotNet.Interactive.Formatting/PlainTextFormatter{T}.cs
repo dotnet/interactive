@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -80,7 +79,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Part of Pattern")]
         public static PlainTextFormatter<T> CreateForAnyEnumerable(bool _includeInternals)
         {
-            return new((T value, FormatContext context) =>
+            return new((value, context) =>
             {
                 if (value is string)
                 {
