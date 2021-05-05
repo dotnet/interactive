@@ -35,8 +35,8 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
         }
 
         [IntegrationTheory]
-        [InlineData(Language.CSharp, "<div class=\"dni-plaintext\">2</div>")]
-        [InlineData(Language.FSharp, "<div class=\"dni-plaintext\">2</div>")]
+        [InlineData(Language.CSharp, "2>")]
+        [InlineData(Language.FSharp, "2")]
         [InlineData(Language.PowerShell, "2")]
         public async Task dotnet_kernels_can_execute_code(Language language, string expected)
         {
