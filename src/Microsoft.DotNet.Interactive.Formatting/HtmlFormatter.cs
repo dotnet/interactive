@@ -38,27 +38,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
             FormattersForAnyEnumerable.GetFormatter(type, false);
 
-        internal static void FormatObjectAsPlainText(
-            object value, 
+        internal static void FormatAndStyleAsPlainText(
+            object text, 
             FormatContext context)
         {
-            // FIX: (FormatObjectAsPlainText) don't create another writer
-            using var swriter = Formatter.CreateWriter();
-            value.FormatTo(context, PlainTextFormatter.MimeType);
-            var text = swriter.ToString();
-            FormatStringAsPlainText(text, context);
-        }
-
-        internal static void FormatStringAsPlainText(
-            string text, 
-            FormatContext context)
-        {
-            if (!string.IsNullOrEmpty(text))
-            {
-                PocketView tag = div(text);
-                tag.HtmlAttributes["class"] = "dni-plaintext";
-                tag.WriteTo(context);
-            }
+            PocketView tag = div(text.ToDisplayString(PlainTextFormatter.MimeType));
+            tag.HtmlAttributes["class"] = "dni-plaintext";
+            tag.WriteTo(context);
         }
 
         internal static FormatterMapByType FormattersForAnyObject =

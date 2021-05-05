@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             if (value is null)
             {
-                HtmlFormatter.FormatStringAsPlainText(Formatter.NullString, context);
+                HtmlFormatter.FormatAndStyleAsPlainText(Formatter.NullString, context);
                 return true;
             }
 
@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 if (context.TableDepth > 1)
                 {
-                    HtmlFormatter.FormatObjectAsPlainText(source,  context);
+                    HtmlFormatter.FormatAndStyleAsPlainText(source,  context);
                     return true;
                 }
 

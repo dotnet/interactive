@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     // If PlainTextPreformat is true, then strings
                     // will have line breaks and white-space preserved
-                    HtmlFormatter.FormatStringAsPlainText(s, context);
+                    HtmlFormatter.FormatAndStyleAsPlainText(s, context);
                     return true;
                 }),
 
@@ -161,7 +161,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 // BigInteger should be displayed as plain text
                 new HtmlFormatter<BigInteger>((value, context) =>
                 {
-                    HtmlFormatter.FormatObjectAsPlainText(value, context);
+                    HtmlFormatter.FormatAndStyleAsPlainText(value, context);
                     return true;
                 }),
 
@@ -178,11 +178,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     if (value is null)
                     {
-                        HtmlFormatter.FormatStringAsPlainText(Formatter.NullString, context);
+                        HtmlFormatter.FormatAndStyleAsPlainText(Formatter.NullString, context);
                     }
                     else
                     {
-                        HtmlFormatter.FormatObjectAsPlainText(value, context);
+                        HtmlFormatter.FormatAndStyleAsPlainText(value, context);
                     }
 
                     return true;
