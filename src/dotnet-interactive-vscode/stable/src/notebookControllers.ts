@@ -25,7 +25,7 @@ export class DotNetNotebookKernel {
     private disposables: { dispose(): void }[] = [];
 
     constructor(private readonly clientMapper: ClientMapper, preloadUris: vscode.Uri[]) {
-        const preloads = preloadUris.map(uri => new vscode.NotebookKernelPreload(uri));
+        const preloads = preloadUris.map(uri => ({ uri }));
 
         // .dib execution
         const dibController = vscode.notebook.createNotebookController(
