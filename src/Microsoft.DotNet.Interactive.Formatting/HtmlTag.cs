@@ -6,13 +6,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text.Encodings.Web;
+using Microsoft.AspNetCore.Html;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
     /// <summary>
     ///   Represents an HTML tag.
     /// </summary>
-    public class HtmlTag : IHtmlTag
+    public class HtmlTag : IHtmlContent
     {
         private HtmlAttributes _htmlAttributes;
 
@@ -32,7 +33,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="text">The text contained by the tag.</param>
         public HtmlTag(string name, string text) : this(name)
         {
-            Content = writer => writer.Write(text);
+            Content = Write;
+
+            void Write(FormatContext context) => context.Writer.Write(text);
         }
 
         /// <summary>
@@ -40,12 +43,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </summary>
         /// <param name="name">Name of the tag.</param>
         /// <param name="content">The content.</param>
-        public HtmlTag(string name, Action<TextWriter> content) : this(name)
+        public HtmlTag(string name, Action<FormatContext> content) : this(name)
         {
             Content = content;
         }
 
-        public Action<TextWriter> Content { get; set; }
+        public Action<FormatContext> Content { get; set; }
 
         /// <summary>
         ///   Gets or sets a value indicating whether this instance is self closing.
@@ -75,21 +78,23 @@ namespace Microsoft.DotNet.Interactive.Formatting
             set => _htmlAttributes = value;
         }
 
-        /// <summary>
-        ///   Renders the tag to the specified <see cref = "TextWriter" />.
-        /// </summary>
-        /// <param name = "writer">The writer.</param>
-        public virtual void WriteTo(TextWriter writer, HtmlEncoder encoder)
+        /// <inheritdoc />
+        public virtual void WriteTo(TextWriter writer, HtmlEncoder encoder = null)
+        {
+            WriteTo(new FormatContext(writer));
+        }
+
+        public void WriteTo(FormatContext context)
         {
             if (Content is null && IsSelfClosing)
             {
-                WriteSelfClosingTag(writer);
+                WriteSelfClosingTag(context.Writer);
                 return;
             }
 
-            WriteStartTag(writer);
-            WriteContentsTo(writer);
-            WriteEndTag(writer);
+            WriteStartTag(context.Writer);
+            WriteContentsTo(context);
+            WriteEndTag(context.Writer);
         }
 
         protected void WriteSelfClosingTag(TextWriter writer)
@@ -119,9 +124,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
         ///   Writes the tag contents (without outer HTML elements) to the specified writer.
         /// </summary>
         /// <param name = "writer">The writer.</param>
-        protected virtual void WriteContentsTo(TextWriter writer)
+        /// <param name="context">The context for the current format operation.</param>
+        protected virtual void WriteContentsTo(FormatContext context)
         {
-            Content?.Invoke(writer);
+            Content?.Invoke(context);
         }
 
         /// <summary>

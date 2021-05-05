@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             .GetMethod("HasReturnValue", BindingFlags.Instance | BindingFlags.NonPublic);
 
         protected CSharpParseOptions _csharpParseOptions =
-            new CSharpParseOptions(LanguageVersion.Latest, kind: SourceCodeKind.Script);
+            new(LanguageVersion.Latest, kind: SourceCodeKind.Script);
 
         private InteractiveWorkspace _workspace;
 
@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         internal ScriptOptions ScriptOptions;
 
-        private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
+        private readonly AssemblyBasedExtensionLoader _extensionLoader = new();
 
         private string _workingDirectory;
 

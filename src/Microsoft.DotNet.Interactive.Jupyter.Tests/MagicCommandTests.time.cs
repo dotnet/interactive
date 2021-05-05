@@ -56,7 +56,7 @@ display(123);
                       .Should()
                       .ContainSingle(v =>
                                          v.MimeType == "text/html" &&
-                                         v.Value.ToString() == "<div class=\"dni-plaintext\">123</div>");
+                                         v.Value == "<div class=\"dni-plaintext\">123</div>");
 
                 events.Should()
                       .ContainSingle<DisplayedValueProduced>(

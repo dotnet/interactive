@@ -32,6 +32,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
             output.Should().Be("<div>&lt;hello&gt;</div>");
         }
+
         [Fact]
         public void Embedded_objects_are_not_formatted_using_custom_plaintext_formatter_when_formating_as_html()
         {
@@ -42,7 +43,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
             string output = div(date).ToString();
 
-            output.Should().Be($"<div><span>{date.ToString("u")}</span></div>");
+            output.Should().Be($"<div><span>{date:u}</span></div>");
         }
     }
 }

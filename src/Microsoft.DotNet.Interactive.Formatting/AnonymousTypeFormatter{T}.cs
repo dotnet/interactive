@@ -8,11 +8,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     internal class AnonymousTypeFormatter<T> : TypeFormatter<T>
     {
-        private readonly Func<FormatContext, T, TextWriter, bool> _format;
+        private readonly FormatDelegate<T> _format;
 
         public AnonymousTypeFormatter(
-            Func<FormatContext, T, TextWriter, bool> format, 
-            string mimeType, 
+            FormatDelegate<T> format,
+            string mimeType,
             Type type = null)
             : base(type)
         {
@@ -26,9 +26,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _format = format ?? throw new ArgumentNullException(nameof(format));
         }
 
-        public override bool Format(FormatContext context, T instance, TextWriter writer)
+        public override bool Format(T instance, FormatContext context)
         {
-            return _format(context, instance, writer);
+            return _format(instance, context);
         }
 
         public override string MimeType { get; }

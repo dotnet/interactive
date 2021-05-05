@@ -21,15 +21,6 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             return result;
         }
 
-        /// <summary>
-        /// Attempts to homogenize an HTML string by reducing whitespace for easier comparison.
-        /// </summary>
-        /// <param name="s">The string to be crunched.</param>
-        public static string Crunch(this IHtmlContent s)
-        {
-            return s.ToString().Crunch();
-        }
-
         public static string IndentHtml(this string html)
         {
             return XElement.Parse(html).ToString();
