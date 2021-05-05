@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.DotNet.Interactive;
+using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 
 namespace System
@@ -9,15 +10,37 @@ namespace System
     public static class DisplayExtensions
     {
         /// <summary>
-        /// Display the formatted value.
+        /// Formats an object using the <see cref="Formatter"/> into a string to be displayed. 
         /// </summary>
         /// <param name="value">The value to display.</param>
-        /// <param name="mimeType">The mimeType.</param>
+        /// <param name="mimeType">The MIME type.</param>
         /// <returns>An instance of <see cref="DisplayedValue"/> that can be used to later update the display.</returns>
         public static DisplayedValue Display(this object value,
             string mimeType = null)
         {
             return KernelInvocationContext.Current.Display(value, mimeType);
+        }
+
+        public static DisplayedValue DisplayAs(this string value, string mimeType)
+        {
+            var context = KernelInvocationContext.Current;
+
+            var displayId = Guid.NewGuid().ToString();
+
+            var formattedValue = new FormattedValue(
+                mimeType,
+                value);
+
+            context.Publish(
+                new DisplayedValueProduced(
+                    value,
+                    context?.Command,
+                    new[] { formattedValue },
+                    displayId));
+
+            var displayedValue = new DisplayedValue(displayId, mimeType, context);
+
+            return displayedValue;
         }
 
         /// <summary>
