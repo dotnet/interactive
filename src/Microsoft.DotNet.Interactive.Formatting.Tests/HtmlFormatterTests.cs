@@ -322,7 +322,7 @@ string";
 
                 writer.ToString()
                     .Should()
-                    .Be($"{PlainTextBegin}78923589327589332402359{PlainTextEnd}");
+                    .Be("78923589327589332402359");
             }
         }
 

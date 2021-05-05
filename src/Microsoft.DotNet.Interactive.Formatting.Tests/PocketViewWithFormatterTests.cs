@@ -5,7 +5,6 @@ using System;
 using FluentAssertions;
 using Xunit;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
-using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
@@ -18,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         {
             PocketView view = b(123);
 
-            view.ToDisplayString(mimeType).Should().Be($"<b>{PlainTextBegin}123{PlainTextEnd}</b>");
+            view.ToDisplayString(mimeType).Should().Be("<b>123</b>");
         }
 
         [Fact]
@@ -32,6 +31,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
             output.Should().Be("<div>&lt;hello&gt;</div>");
         }
+
         [Fact]
         public void Embedded_objects_are_not_formatted_using_custom_plaintext_formatter_when_formating_as_html()
         {
@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
 
             string output = div(date).ToString();
 
-            output.Should().Be($"<div><span>{date.ToString("u")}</span></div>");
+            output.Should().Be($"<div><span>{date:u}</span></div>");
         }
     }
 }
