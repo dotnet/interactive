@@ -14,7 +14,6 @@ using FluentAssertions.Extensions;
 using Xunit;
 using Xunit.Abstractions;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
-using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
@@ -73,7 +72,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
     <thead>
        <tr><th>Count</th><th>Name</th></tr>
     </thead>
-    <tbody><tr><td>2</td><td>socks</td></tr>
+    <tbody><tr><td>{PlainTextBegin}2{PlainTextEnd}</td><td>socks</td></tr>
     </tbody>
 </table>");
             }
@@ -322,7 +321,7 @@ string";
 
                 writer.ToString()
                     .Should()
-                    .Be("78923589327589332402359");
+                    .Be($"{PlainTextBegin}78923589327589332402359{PlainTextEnd}");
             }
         }
 
@@ -379,7 +378,7 @@ string";
 
                 writer.ToString()
                       .Should()
-                      .Contain($"<td>{listOfArrays.First().ToDisplayString("text/plain")}</td>");
+                      .Contain($"<td>{PlainTextBegin}{listOfArrays.First().ToDisplayString("text/plain")}{PlainTextEnd}</td>");
             }
             
             [Fact]
@@ -641,7 +640,7 @@ string";
                 var html = dict.ToDisplayString("text/html");
 
                 html.Should().BeEquivalentHtmlTo(
-                    $"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table>");
+                    $"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>{PlainTextBegin}1{PlainTextEnd}</td><td>2</td></tr></tbody></table>");
             }
 
             [Fact]
@@ -680,9 +679,9 @@ string";
     <tr><th><i>index</i></th><th>value</th></tr>
   </thead>
   <tbody>
-    <tr><td>0</td><td>7</td></tr>
-    <tr><td>1</td><td>8</td></tr>
-    <tr><td>2</td><td>9</td></tr>
+    <tr><td>0</td><td>{PlainTextBegin}7{PlainTextEnd}</td></tr>
+    <tr><td>1</td><td>{PlainTextBegin}8{PlainTextEnd}</td></tr>
+    <tr><td>2</td><td>{PlainTextBegin}9{PlainTextEnd}</td></tr>
   </tbody>
 </table>");
             }
@@ -704,9 +703,9 @@ string";
     <tr><th><i>index</i></th><th>value</th></tr>
   </thead>
   <tbody>
-    <tr><td>0</td><td>8</td></tr>
+    <tr><td>0</td><td>{PlainTextBegin}8{PlainTextEnd}</td></tr>
     <tr><td>1</td><td>{PlainTextBegin}&lt;null&gt;{PlainTextEnd}</td></tr>
-    <tr><td>2</td><td>9</td></tr>
+    <tr><td>2</td><td>{PlainTextBegin}9{PlainTextEnd}</td></tr>
   </tbody>
 </table>");
             }
@@ -811,7 +810,7 @@ string";
 
                 formatter.Format(new Dummy.DummyClassWithManyProperties(), writer);
 
-                writer.ToString().Should().Be("Dummy.DummyClassWithManyProperties");
+                writer.ToString().Should().Be($"{PlainTextBegin}Dummy.DummyClassWithManyProperties{PlainTextEnd}");
             }
 
             [Fact]
@@ -851,7 +850,7 @@ string";
               <a href={"\"https://docs.microsoft.com/dotnet/api/system.boolean?view=net-5.0\""}>System.Boolean</a>
             </span>
           </td>
-          <td>True</td>
+          <td>{PlainTextBegin}True{PlainTextEnd}</td>
         </tr>
         <tr>
           <td>1</td>
@@ -860,7 +859,7 @@ string";
               <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0\""}>System.Int32</a>
             </span>
           </td>
-          <td>99</td>
+          <td>{PlainTextBegin}99{PlainTextEnd}</td>
         </tr>
         <tr>
           <td>2</td>
@@ -914,7 +913,7 @@ string";
               <a href={"\"https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0\""}>System.Int32</a>
             </span>
           </td>
-          <td>1</td>
+          <td>{PlainTextBegin}1{PlainTextEnd}</td>
           <td></td>
           <td></td>
           <td></td>
@@ -928,7 +927,7 @@ string";
             </span>
           </td>
           <td></td>
-          <td>2</td>
+          <td>{PlainTextBegin}2{PlainTextEnd}</td>
           <td>two</td>
           <td></td>
           <td></td>
@@ -940,7 +939,7 @@ string";
               <a href={"\"https://docs.microsoft.com/dotnet/api/system.linq.enumerable.rangeiterator?view=net-5.0\""}>System.Linq.Enumerable+RangeIterator</a>
             </span>
           </td>
-          <td>[ 1, 2, 3 ]</td>
+          <td>{PlainTextBegin}[ 1, 2, 3 ]{PlainTextEnd}</td>
           <td></td>
           <td></td>
           <td></td>
@@ -1007,7 +1006,7 @@ string";
           </td>
           <td></td>
           <td>two</td>
-          <td>2</td>
+          <td>{PlainTextBegin}2{PlainTextEnd}</td>
           <td></td>
         </tr>
         <tr>
@@ -1020,7 +1019,7 @@ string";
           <td></td>
           <td></td>
           <td></td>
-          <td>1</td>
+          <td>{PlainTextBegin}1{PlainTextEnd}</td>
         </tr>
         <tr>
           <td>3</td>
@@ -1032,7 +1031,7 @@ string";
           <td></td>
           <td></td>
           <td></td>
-          <td>[ 1, 2, 3 ]</td>
+          <td>{PlainTextBegin}[ 1, 2, 3 ]{PlainTextEnd}</td>
         </tr>
       </tbody>
     </table>");
@@ -1089,7 +1088,9 @@ string";
         </span>
       </td>
       <td></td>
-      <td>123</td>
+      <td>
+        <div class=""dni-plaintext"">123</div>
+      </td>
       <td>two</td>
     </tr>
     <tr>
@@ -1099,7 +1100,9 @@ string";
           <a href=""https://docs.microsoft.com/dotnet/api/system.int32?view=net-5.0"">System.Int32</a>
         </span>
       </td>
-      <td>456</td>
+      <td>
+        <div class=""dni-plaintext"">456</div>
+      </td>
       <td></td>
       <td></td>
     </tr>
@@ -1110,7 +1113,9 @@ string";
           <a href=""https://docs.microsoft.com/dotnet/api/system.int32[]?view=net-5.0"">System.Int32[]</a>
         </span>
       </td>
-      <td>[ 7, 8, 9 ]</td>
+      <td>
+        <div class=""dni-plaintext"">[ 7, 8, 9 ]</div>
+      </td>
       <td></td>
       <td></td>
     </tr>
