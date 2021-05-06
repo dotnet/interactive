@@ -83,7 +83,9 @@ export function toNotebookDocument(document: vscode.NotebookDocument): NotebookD
 
 export function toNotebookCell(cell: vscode.NotebookCell): NotebookCell {
     return {
-        language: getSimpleLanguage(cell.document.languageId),
+        language: cell.kind === vscode.NotebookCellKind.Code
+            ? getSimpleLanguage(cell.document.languageId)
+            : 'markdown',
         contents: cell.document.getText(),
         outputs: cell.outputs.map(vsCodeCellOutputToContractCellOutput)
     };

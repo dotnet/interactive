@@ -159,7 +159,9 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
         const cell = document.cellAt(i);
         const cellMetadata = getDotNetMetadata(cell.metadata);
         const cellText = cell.document.getText();
-        const newLanguage = getCellLanguage(cellText, cellMetadata, documentLanguageInfo, cell.document.languageId);
+        const newLanguage = cell.kind === vscode.NotebookCellKind.Code
+            ? getCellLanguage(cellText, cellMetadata, documentLanguageInfo, cell.document.languageId)
+            : 'markdown';
         if (cell.document.languageId !== newLanguage) {
             const newCellData = new vscode.NotebookCellData(
                 cell.kind,
