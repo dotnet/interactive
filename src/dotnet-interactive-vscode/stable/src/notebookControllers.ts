@@ -15,7 +15,7 @@ import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, isDotNetNo
 import { reshapeOutputValueForVsCode } from './common/interfaces/utilities';
 import { selectDotNetInteractiveKernel } from './common/vscode/commands';
 
-const executionTasks: Map<vscode.Uri, vscode.NotebookCellExecutionTask> = new Map();
+const executionTasks: Map<string, vscode.NotebookCellExecutionTask> = new Map();
 
 const viewType = 'dotnet-interactive';
 const jupyterViewType = 'jupyter-notebook';
@@ -97,12 +97,12 @@ export class DotNetNotebookKernel {
     private async executeCell(cell: vscode.NotebookCell, controller: vscode.NotebookController): Promise<void> {
         const executionTask = controller.createNotebookCellExecutionTask(cell);
         if (executionTask) {
-            executionTasks.set(cell.document.uri, executionTask);
+            executionTasks.set(cell.document.uri.toString(), executionTask);
             try {
                 executionTask.start({
                     startTime: Date.now(),
                 });
-                setCellLockState(cell, true);
+
                 executionTask.clearOutput(cell.index);
                 const client = await this.clientMapper.getOrAddClient(cell.notebook.uri);
                 executionTask.token.onCancellationRequested(() => {
@@ -175,22 +175,17 @@ export async function updateCellLanguages(document: vscode.NotebookDocument): Pr
     await vscode.workspace.applyEdit(edit);
 }
 
-function setCellLockState(cell: vscode.NotebookCell, locked: boolean) {
-    const edit = new vscode.WorkspaceEdit();
-    edit.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, cell.metadata.with({ editable: !locked }));
-    return vscode.workspace.applyEdit(edit);
-}
-
 async function updateCellOutputs(executionTask: vscode.NotebookCellExecutionTask, cell: vscode.NotebookCell, outputs: Array<vscodeLike.NotebookCellOutput>): Promise<void> {
     const reshapedOutputs = outputs.map(o => new vscode.NotebookCellOutput(o.outputs.map(oi => generateVsCodeNotebookCellOutputItem(oi.mime, oi.value))));
     await executionTask.replaceOutput(reshapedOutputs, cell.index);
 }
 
 export function endExecution(cell: vscode.NotebookCell, success: boolean) {
-    setCellLockState(cell, false);
-    const executionTask = executionTasks.get(cell.document.uri);
+
+    const key = cell.document.uri.toString();
+    const executionTask = executionTasks.get(key);
     if (executionTask) {
-        executionTasks.delete(cell.document.uri);
+        executionTasks.delete(key);
         executionTask.end({
             success,
             endTime: Date.now(),
@@ -206,24 +201,7 @@ function generateVsCodeNotebookCellOutputItem(mimeType: string, value: unknown):
 async function updateDocumentKernelspecMetadata(document: vscode.NotebookDocument): Promise<void> {
     const edit = new vscode.WorkspaceEdit();
     const documentKernelMetadata = withDotNetKernelMetadata(document.metadata);
-
-    // workaround for https://github.com/microsoft/vscode/issues/115912; capture all cell data so we can re-apply it at the end
-    const cellData: Array<vscode.NotebookCellData> = versionSpecificFunctions.getCells(document).map(c => {
-        return new vscode.NotebookCellData(
-            c.kind,
-            c.document.getText(),
-            c.document.languageId,
-            c.outputs.concat(), // can't pass through a readonly property, so we have to make it a regular array
-            c.metadata,
-        );
-    });
-
     edit.replaceNotebookMetadata(document.uri, documentKernelMetadata);
-
-    // this is the re-application for the workaround mentioned above
-    const range = new vscode.NotebookRange(0, document.cellCount);
-    edit.replaceNotebookCells(document.uri, range, cellData);
-
     await vscode.workspace.applyEdit(edit);
 }
 

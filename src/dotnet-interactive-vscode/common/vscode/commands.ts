@@ -180,20 +180,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebookIpynb', async () => {
         // note, new .ipynb notebooks are currently affected by this bug: https://github.com/microsoft/vscode/issues/121974
 
-        const jupyterExtension = vscode.extensions.getExtension<IJupyterExtensionApi>("ms-toolsai.jupyter");
-
-        if (!vscode.extensions.getExtension("ms-toolsai.jupyter")?.isActive) {
-            await vscode.extensions.getExtension("ms-toolsai.jupyter")?.activate();
-        }
-
-        const jupyterExtensionExports = jupyterExtension?.exports;
-
-        if (jupyterExtensionExports) {
-            await jupyterExtensionExports.createBlankNotebook({ defaultCellLanguage: "dotnet-interactive.csharp" });
-        }
-        else {
-            await newNotebook('.ipynb');
-        }
+        await newNotebook('.ipynb');
 
         selectDotNetInteractiveKernel();
     }));
@@ -239,7 +226,28 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
         const viewType = extension === '.dib' || extension === '.dotnet-interactive'
             ? 'dotnet-interactive'
             : 'jupyter-notebook';
-        await vscode.commands.executeCommand('vscode.openWith', uri, viewType);
+
+        if (viewType === 'jupyter-notebook') {
+            await openNewNotebookWithJupyterEXtension();
+        } else {
+            await vscode.commands.executeCommand('vscode.openWith', uri, viewType);
+        }
+    }
+
+    async function openNewNotebookWithJupyterEXtension() {
+        const jupyterExtension = vscode.extensions.getExtension<IJupyterExtensionApi>('ms-toolsai.jupyter');
+
+        if (jupyterExtension) {
+            if (!jupyterExtension?.isActive) {
+                await jupyterExtension?.activate();
+            }
+
+            const jupyterExtensionExports = jupyterExtension?.exports;
+
+            if (jupyterExtensionExports) {
+                await jupyterExtensionExports.createBlankNotebook({ defaultCellLanguage: 'dotnet-interactive.csharp' });
+            }
+        }
     }
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.saveAsNotebook', async () => {
