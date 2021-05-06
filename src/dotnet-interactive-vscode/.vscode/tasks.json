@@ -5,6 +5,20 @@
   "tasks": [
     {
       "type": "npm",
+      "label": "clearUserData",
+      "script": "clearUserData",
+      "group": "build"
+    },
+    {
+      "label": "LaunchDebug",
+      "dependsOn": [
+        "clearUserData"
+      ],
+      "group": "build"
+    },
+    {
+      "label": "watch",
+      "type": "npm",
       "script": "watch",
       "problemMatcher": "$tsc-watch",
       "isBackground": true,

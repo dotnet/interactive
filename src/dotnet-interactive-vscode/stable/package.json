@@ -12,7 +12,7 @@
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
-    "vscode": "^1.55.0"
+    "vscode": "^1.56.0"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
@@ -118,7 +118,7 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.222603",
+          "default": "1.0.222802",
           "description": "The minimum required version of the .NET Interactive tool."
         }
       }
@@ -361,7 +361,8 @@
     "test": "mocha --opts mocha.opts",
     "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json",
     "tdd": "npm test -- --watch",
-    "package": "npx vsce package"
+    "package": "npx vsce package",
+    "clearUserData": "del-cli \"./userData/**/*\" \"!.gitignore\""
   },
   "devDependencies": {
     "@types/chai": "4.2.11",

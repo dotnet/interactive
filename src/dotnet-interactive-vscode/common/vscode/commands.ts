@@ -12,6 +12,7 @@ import { computeToolInstallArguments, executeSafe, executeSafeAndLog } from '../
 
 import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import { ReportChannel } from '../interfaces/vscode-like';
+import { IJupyterExtensionApi } from '../../jupyter';
 
 export function registerAcquisitionCommands(context: vscode.ExtensionContext, diagnosticChannel: ReportChannel) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
@@ -178,7 +179,22 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.newNotebookIpynb', async () => {
         // note, new .ipynb notebooks are currently affected by this bug: https://github.com/microsoft/vscode/issues/121974
-        await newNotebook('.ipynb');
+
+        const jupyterExtension = vscode.extensions.getExtension<IJupyterExtensionApi>("ms-toolsai.jupyter");
+
+        if (!vscode.extensions.getExtension("ms-toolsai.jupyter")?.isActive) {
+            await vscode.extensions.getExtension("ms-toolsai.jupyter")?.activate();
+        }
+
+        const jupyterExtensionExports = jupyterExtension?.exports;
+
+        if (jupyterExtensionExports) {
+            await jupyterExtensionExports.createBlankNotebook({ defaultCellLanguage: "dotnet-interactive.csharp" });
+        }
+        else {
+            await newNotebook('.ipynb');
+        }
+
         selectDotNetInteractiveKernel();
     }));
 
