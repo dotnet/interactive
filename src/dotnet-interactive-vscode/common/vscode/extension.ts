@@ -185,8 +185,11 @@ async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocumen
         isJupyterNotebookViewType(notebook.viewType) &&
         isDotnetInteractiveLanguage(candidateNotebookCellDocument.languageId)) {
         const cell = versionSpecificFunctions.getCells(notebook).find(c => c.document === candidateNotebookCellDocument);
-        if (cell && cell.kind === vscode.NotebookCellKind.Code) {
-            const cellLanguage = getSimpleLanguage(candidateNotebookCellDocument.languageId);
+        if (cell) {
+            const cellLanguage = cell.kind === vscode.NotebookCellKind.Code
+                ? getSimpleLanguage(candidateNotebookCellDocument.languageId)
+                : 'markdown';
+
             const dotnetMetadata = getDotNetMetadata(cell.metadata);
             if (dotnetMetadata.language !== cellLanguage) {
                 const newMetadata = cell.metadata.with({

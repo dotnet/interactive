@@ -227,7 +227,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
             ? 'dotnet-interactive'
             : 'jupyter-notebook';
 
-        if (viewType === 'jupyter-notebook') {
+        if (viewType === 'jupyter-notebook' && uri.scheme === 'untitled') {
             await openNewNotebookWithJupyterEXtension();
         } else {
             await vscode.commands.executeCommand('vscode.openWith', uri, viewType);
