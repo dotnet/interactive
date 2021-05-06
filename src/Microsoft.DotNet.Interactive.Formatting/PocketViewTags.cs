@@ -2,6 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using Microsoft.AspNetCore.Html;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -13,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static dynamic aside => _.aside;
         public static dynamic b => _.b;
         public static dynamic body => _.body;
-        public static dynamic br => _.br;
+        public static dynamic br => new Br();
         public static dynamic button => _.button;
         public static dynamic caption => _.caption;
         public static dynamic center => _.center;
@@ -44,7 +48,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static dynamic i => _.i;
         public static dynamic iframe => _.iframe;
         public static dynamic img => _.img;
-        public static dynamic input => _.input;
+        public static dynamic input => new Input();
         public static dynamic label => _.label;
         public static dynamic li => _.li;
         public static dynamic line => _.line;
@@ -69,7 +73,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static dynamic source => _.source;
         public static dynamic span => _.span;
         public static dynamic strike => _.strike;
-        public static dynamic style => _.style;
+        public static dynamic style => new Style();
         public static dynamic strong => _.strong;
         public static dynamic sub => _.sub;
         public static dynamic summary => _.summary;
@@ -88,5 +92,92 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public static dynamic u => _.u;
         public static dynamic ul => _.ul;
         public static dynamic video => _.video;
+
+        internal class Br : PocketView
+        {
+            public Br() : base("br")
+            {
+                HtmlTag.IsSelfClosing = true;
+            }
+        }
+
+        internal class Input : PocketView
+        {
+            public Input() : base("input")
+            {
+                HtmlTag.IsSelfClosing = true;
+            }
+        }
+
+        public class Style : PocketView, IEnumerable
+        {
+            private readonly Dictionary<string, List<(string property, string value)>> _css = new();
+
+            public Style() : base("style")
+            {
+                HtmlTag.Content = WriteCss;
+            }
+
+            private void WriteCss(FormatContext context)
+            {
+                var writer = context.Writer;
+
+                writer.WriteLine();
+
+                foreach (var selectorAndProps in _css)
+                {
+                    writer.Write(selectorAndProps.Key);
+                    writer.WriteLine(" {");
+
+                    foreach (var prop in selectorAndProps.Value)
+                    {
+                        writer.WriteLine($"  {prop.property}: {prop.value};");
+                    }
+
+                    writer.WriteLine("}");
+                }
+            }
+
+            public void Add(
+                string selector,
+                params (string property, string value)[] properties)
+            {
+                _css.GetOrAdd(selector, _ => new())
+                    .AddRange(properties);
+            }
+
+            public IDictionary<string, object> LinkAndApplyClass(string @class)
+            {  
+                return new HtmlAttributeDependency(this)
+                {
+                    ["class"] = @class
+                };
+            }
+
+            internal class HtmlAttributeDependency : HtmlAttributes
+            {
+                public HtmlAttributeDependency(IHtmlContent content)
+                {
+                    HtmlContent = content;
+                }
+
+                public IHtmlContent HtmlContent { get; }
+            }
+
+            public override void SetContent(object[] args)
+            {
+                if (_css.Count > 0)
+                {
+                    throw new InvalidOperationException("style tag contents have already been set.");
+                }
+
+                base.SetContent(args);
+            }
+
+            public IEnumerator GetEnumerator()
+            {
+                return _css.GetEnumerator();
+            }
+        }
     }
 }

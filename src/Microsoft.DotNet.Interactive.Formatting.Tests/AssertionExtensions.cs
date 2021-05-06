@@ -31,5 +31,24 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 subject.Should(),
                 subject);
         }
+
+        public static AndWhichConstraint<StringAssertions, string> BeExceptingWhitespace(
+            this StringAssertions assertions,
+            string expected)
+        {
+            Normalize(assertions.Subject)
+                .Should()
+                .Be(Normalize(expected));
+
+            return new AndWhichConstraint<StringAssertions, string>(
+                assertions.Subject.Should(),
+                assertions.Subject);
+
+            string Normalize(string value) => 
+                value
+                    .Trim()
+                    .Crunch()
+                    .Replace("\r\n", "\n");
+        }
     }
 }

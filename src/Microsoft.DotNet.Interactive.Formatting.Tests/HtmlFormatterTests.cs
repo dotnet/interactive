@@ -351,8 +351,8 @@ string";
      <tr><th><i>index</i></th><th>TypeName</th><th>Id</th></tr>
    </thead>
    <tbody>
-     <tr><td>0</td><td>{PlainTextBegin}entity one{PlainTextEnd}</td><td>{PlainTextBegin}123{PlainTextEnd}</td></tr>
-     <tr><td>1</td><td>{PlainTextBegin}entity two{PlainTextEnd}</td><td>{PlainTextBegin}456{PlainTextEnd}</td></tr>
+     <tr><td>0</td><td>entity one</td><td>123</td></tr>
+     <tr><td>1</td><td>entity two</td><td>456</td></tr>
    </tbody>
 </table>");
             }
@@ -399,7 +399,7 @@ string";
                 writer.ToString()
                       .Should()
                       .BeEquivalentHtmlTo(
-                          $"<table><thead><tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>{PlainTextBegin}first{PlainTextEnd}</td><td>{PlainTextBegin}entity one{PlainTextEnd}</td><td>{PlainTextBegin}123{PlainTextEnd}</td></tr><tr><td>{PlainTextBegin}second{PlainTextEnd}</td><td>{PlainTextBegin}entity two{PlainTextEnd}</td><td>{PlainTextBegin}456{PlainTextEnd}</td></tr></tbody></table>");
+                          $"<table><thead><tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr></thead><tbody><tr><td>first</td><td>entity one</td><td>123</td></tr><tr><td>second</td><td>entity two</td><td>456</td></tr></tbody></table>");
             }
 
             [Fact]
@@ -425,8 +425,8 @@ string";
        <tr><th><i>key</i></th><th>TypeName</th><th>Id</th></tr>
     </thead>
     <tbody>
-      <tr><td>{PlainTextBegin}first{PlainTextEnd}</td><td>{PlainTextBegin}entity one{PlainTextEnd}</td><td>{PlainTextBegin}123{PlainTextEnd}</td></tr>
-      <tr><td>{PlainTextBegin}second{PlainTextEnd}</td><td>{PlainTextBegin}entity two{PlainTextEnd}</td><td>{PlainTextBegin}456{PlainTextEnd}</td></tr>
+      <tr><td>first</td><td>entity one</td><td>123</td></tr>
+      <tr><td>second</td><td>entity two</td><td>456</td></tr>
     </tbody>
 </table>");
             }
@@ -488,9 +488,9 @@ string";
     <tr><th><i>index</i></th><th>value</th></tr>
   </thead>
   <tbody>
-    <tr><td>0</td><td>{PlainTextBegin}apple{PlainTextEnd}</td></tr>
-    <tr><td>1</td><td>{PlainTextBegin}banana{PlainTextEnd}</td></tr>
-    <tr><td>2</td><td>{PlainTextBegin}cherry{PlainTextEnd}</td></tr>
+    <tr><td>0</td><td>apple</td></tr>
+    <tr><td>1</td><td>banana</td></tr>
+    <tr><td>2</td><td>cherry</td></tr>
   </tbody>
 </table>");
             }
@@ -511,9 +511,9 @@ string";
      <tr><th><i>index</i></th><th>value</th></tr>
   </thead>
   <tbody>
-     <tr><td>0</td><td>{PlainTextBegin}kiwi{PlainTextEnd}</td></tr>
-     <tr><td>1</td><td>{PlainTextBegin}apple{PlainTextEnd}</td></tr>
-     <tr><td>2</td><td>{PlainTextBegin}plantain{PlainTextEnd}</td></tr>
+     <tr><td>0</td><td>kiwi</td></tr>
+     <tr><td>1</td><td>apple</td></tr>
+     <tr><td>2</td><td>plantain</td></tr>
   </tbody>
 </table>");
             }
@@ -640,7 +640,7 @@ string";
                 var html = dict.ToDisplayString("text/html");
 
                 html.Should().BeEquivalentHtmlTo(
-                    $"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>{PlainTextBegin}1{PlainTextEnd}</td><td>{PlainTextBegin}2{PlainTextEnd}</td></tr></tbody></table>");
+                    $"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>{PlainTextBegin}1{PlainTextEnd}</td><td>2</td></tr></tbody></table>");
             }
 
             [Fact]
@@ -669,7 +669,7 @@ string";
                 var readOnlyMemory = new ReadOnlyMemory<int>(new[] { 7, 8, 9 });
 
                 formatter.Format(readOnlyMemory, writer);
-
+                
                 writer.ToString()
                       .Should()
                       .BeEquivalentHtmlTo(
@@ -868,7 +868,7 @@ string";
               <a href={"\"https://docs.microsoft.com/dotnet/api/system.string?view=net-5.0\""}>System.String</a>
             </span>
           </td>
-          <td>{PlainTextBegin}Hello, World{PlainTextEnd}</td>
+          <td>Hello, World</td>
         </tr>
       </tbody>
     </table>");
@@ -928,7 +928,7 @@ string";
           </td>
           <td></td>
           <td>{PlainTextBegin}2{PlainTextEnd}</td>
-          <td>{PlainTextBegin}two{PlainTextEnd}</td>
+          <td>two</td>
           <td></td>
           <td></td>
         </tr>
@@ -951,8 +951,8 @@ string";
           <td></td>
           <td></td>
           <td></td>
-          <td>{PlainTextBegin}apple{PlainTextEnd}</td>
-          <td>{PlainTextBegin}green{PlainTextEnd}</td>
+          <td>apple</td>
+          <td>green</td>
         </tr>
       </tbody>
     </table>");
@@ -992,8 +992,8 @@ string";
         <tr>
           <td>0</td>
           <td>(anonymous)</td>
-          <td>{PlainTextBegin}apple{PlainTextEnd}</td>
-          <td>{PlainTextBegin}green{PlainTextEnd}</td>
+          <td>apple</td>
+          <td>green</td>
           <td></td>
           <td></td>
         </tr>
@@ -1005,7 +1005,7 @@ string";
             </span>
           </td>
           <td></td>
-          <td>{PlainTextBegin}two{PlainTextEnd}</td>
+          <td>two</td>
           <td>{PlainTextBegin}2{PlainTextEnd}</td>
           <td></td>
         </tr>
@@ -1091,9 +1091,7 @@ string";
       <td>
         <div class=""dni-plaintext"">123</div>
       </td>
-      <td>
-        <div class=""dni-plaintext"">two</div>
-      </td>
+      <td>two</td>
     </tr>
     <tr>
       <td>2</td>
@@ -1129,9 +1127,9 @@ string";
             {
                 string IDictionary<int, string>.this[int key] { get => "2"; set => throw new NotImplementedException(); }
 
-                ICollection<int> IDictionary<int, string>.Keys => new int[] { 1 };
+                ICollection<int> IDictionary<int, string>.Keys => new[] { 1 };
 
-                ICollection<string> IDictionary<int, string>.Values => new string[] { "2" };
+                ICollection<string> IDictionary<int, string>.Values => new[] { "2" };
 
                 int ICollection<KeyValuePair<int, string>>.Count => 1;
 

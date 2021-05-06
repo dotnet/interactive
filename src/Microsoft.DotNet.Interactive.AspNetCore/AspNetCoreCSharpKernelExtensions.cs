@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                 })
             });
 
-            Formatter.Register<HttpResponseMessage>((responseMessage, textWriter) =>
+            Formatter.Register<HttpResponseMessage>((responseMessage, context) =>
             {
                 // Formatter.Register() doesn't support async formatters yet.
                 // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
@@ -115,12 +115,16 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
 
                 try
                 {
-                    HttpClientFormatter.FormatHttpResponseMessage(responseMessage, textWriter).Wait();
+                    HttpClientFormatter.FormatHttpResponseMessage(
+                        responseMessage, 
+                        context).Wait();
                 }
                 finally
                 {
                     ExecutionContext.RestoreFlow();
                 }
+
+                return true;
             }, HtmlFormatter.MimeType);
 
             return kernel;

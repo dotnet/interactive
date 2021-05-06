@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
@@ -14,32 +13,37 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     public class HtmlFormatter<T> : TypeFormatter<T>
     {
-        private readonly Func<FormatContext, T, TextWriter, bool> _format;
+        private readonly FormatDelegate<T> _format;
 
-        public HtmlFormatter(Func<FormatContext, T, TextWriter, bool> format)
+        public HtmlFormatter(FormatDelegate<T> format)
         {
             _format = format;
         }
 
-        public HtmlFormatter(Action<T, TextWriter> format)
+        public HtmlFormatter(Action<T, FormatContext> format)
         {
-            _format = (context, instance, writer) => { format(instance, writer); return true; };
+            _format = FormatInstance;
+
+            bool FormatInstance(T instance, FormatContext context)
+            {
+                format(instance, context);
+                return true;
+            }
         }
 
-        public HtmlFormatter(Func<T, string> format)
+        public override bool Format(
+            T value,
+            FormatContext context)
         {
-            _format = (context, instance, writer) => { writer.Write(format(instance)); return true; };
-        }
+            using var _ = context.IncrementDepth();
 
-        public override bool Format(FormatContext context, T value, TextWriter writer)
-        {
             if (value is null)
             {
-                HtmlFormatter.FormatStringAsPlainText(Formatter.NullString, writer);
+                HtmlFormatter.FormatAndStyleAsPlainText(Formatter.NullString, context);
                 return true;
             }
 
-            return _format(context, value, writer);
+            return _format(value, context);
         }
 
         public override string MimeType => HtmlFormatter.MimeType;
@@ -49,7 +53,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             var members = typeof(T).GetMembersToFormat(includeInternals)
                                    .GetMemberAccessors<T>();
 
-            return new HtmlFormatter<T>((context, instance, writer) =>
+            return new HtmlFormatter<T>((instance, context) =>
             {
                 // Note the order of members is declaration order
                 var reducedMembers = 
@@ -57,8 +61,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         .Take(Math.Max(0, HtmlFormatter.MaxProperties))
                         .ToArray();
 
-                if (reducedMembers.Length == 0 || 
-                    context.ContentThreshold < 1.0)
+                if (reducedMembers.Length == 0)
                 {
                     // This formatter refuses to format objects without members, and 
                     // refused to produce nested tables, or if no members are selected
@@ -67,7 +70,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 else
                 {
                     // Note, embeds the keys and values as arbitrary objects into the HTML content,
-                    // ultimately rendered by PocketView, e.g. via ToDisplayString(PlainTextFormatter.MimeType)
                     List<IHtmlContent> headers = 
                         reducedMembers.Select(m => (IHtmlContent)th(m.Member.Name))
                                       .ToList();
@@ -81,7 +83,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     IEnumerable<object> values =
                         reducedMembers.Select(m => m.GetValueOrException(instance))
                                       .Select(v => td(
-                                                  div[@class: "dni-plaintext"](v.ToDisplayString("text/plain"))));
+                                                  div[@class: "dni-plaintext"](v.ToDisplayString(PlainTextFormatter.MimeType))));
 
                     PocketView t =
                         table(
@@ -92,7 +94,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                                 tr(
                                     values)));
 
-                    t.WriteTo(writer, HtmlEncoder.Default);
+                    t.WriteTo(context);
 
                     return true;
                 }
@@ -104,14 +106,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
             Func<T, IEnumerable> getKeys = null;
             Func<T, IEnumerable> getValues = instance => (IEnumerable) instance;
 
-            var dictionaryGenericType = typeof(T).GetAllInterfaces()
-                                                 .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
-            var dictionaryObjectType = typeof(T).GetAllInterfaces()
-                                                .FirstOrDefault(i => i == typeof(IDictionary));
-            
-            if (dictionaryGenericType is not null || dictionaryObjectType is not null)
+            var dictType =
+                typeof(T).GetAllInterfaces()
+                         .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                ??
+                typeof(T).GetAllInterfaces()
+                         .FirstOrDefault(i => i == typeof(IDictionary));
+
+            if (dictType is not null)
             {
-                var dictType = dictionaryGenericType ?? dictionaryObjectType;
                 var keysProperty = dictType.GetProperty("Keys");
                 getKeys = instance => (IEnumerable) keysProperty.GetValue(instance, null);
 
@@ -121,12 +124,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return new HtmlFormatter<T>(BuildTable);
 
-            bool BuildTable(FormatContext context, T source, TextWriter writer)
+            bool BuildTable(T source, FormatContext context)
             {
-                if (context.ContentThreshold < 1.0)
+                using var _ = context.IncrementTableDepth();
+
+                if (context.TableDepth > 1)
                 {
-                    // This formatter refuses to produce nested tables.
-                    return false;
+                    HtmlFormatter.FormatAndStyleAsPlainText(source,  context);
+                    return true;
                 }
 
                 var (rowData, remainingCount) = getValues(source)
@@ -136,7 +141,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 if (rowData.Count == 0)
                 {
-                    writer.Write(i("(empty)"));
+                    context.Writer.Write(i("(empty)"));
                     return true;
                 }
 
@@ -235,8 +240,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     headers.Add((IHtmlContent)th(".."));
                 }
                 
-                var innerContext = context.ReduceContent(FormatContext.NestedInTable);
-                
                 var rows = new List<IHtmlContent>();
 
                 for (var rowIndex = 0; rowIndex < rowData.Count; rowIndex++)
@@ -265,8 +268,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         }
                     }
 
-                    // Note, embeds the values as arbitrary objects into the HTML content.
-                    rows.Add(tr(rowValues.Select(r => td(Html.embed(r, innerContext)))));
+                    rows.Add(tr(rowValues.Select(r => td(r))));
                 }
 
                 if (remainingCount > 0)
@@ -278,10 +280,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 var table = Html.Table(headers, rows);
 
-                table.WriteTo(writer, HtmlEncoder.Default);
+                table.WriteTo(context);
                 return true;
             }
         }
-
     }
 }

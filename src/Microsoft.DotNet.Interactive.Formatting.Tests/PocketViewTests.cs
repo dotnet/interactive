@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using FluentAssertions;
 using System.Linq;
+using Microsoft.AspNetCore.Html;
 using Xunit;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 using static Microsoft.DotNet.Interactive.Formatting.Tests.Tags;
@@ -140,10 +142,10 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 (tag, model) =>
                 {
                     tag.Name = "div";
-                    tag.Content = writer =>
+                    tag.Content = (context) =>
                     {
-                        writer.Write(label[@for: model.name](model.name));
-                        writer.Write(input[name: model.name, type: "text", value: model.value]);
+                        context.Writer.Write(label[@for: model.name](model.name));
+                        context.Writer.Write(input[name: model.name, type: "text", value: model.value]);
                     };
                 });
 
@@ -289,6 +291,74 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
             string output = br.ToString();
 
             output.Should().Be("<br />");
+        }
+
+        public class Styling
+        {
+            [Fact]
+            public void When_style_element_is_required_more_than_once_it_is_output_exactly_once_per_top_level_render()
+            {
+                var css = @"a.my-class {
+  color: purple;
+}";
+
+                IEnumerable<IHtmlContent> ps = new[] { "apple", "banana", "cherry" }
+                    .Select(text =>
+                    {
+                        PocketView content = p[@class: "my-class"](text);
+                        content.AddDependency("required-styles", style(css));
+                        return content;
+                    });
+
+                string html = div(ps).ToString();
+
+                html.Should().BeExceptingWhitespace($@"
+<div>
+    <p class=""my-class"">apple</p>
+    <p class=""my-class"">banana</p>
+    <p class=""my-class"">cherry</p>
+</div>
+<style>
+{css}
+</style>");
+            }
+
+            [Fact]
+            public void Style_can_be_created_using_collection_initializer()
+            {
+                var style = new Style
+                {
+                    { "apple", ("color", "red"), ("text-align", "center") }
+                };
+
+                style.ToString()
+                     .Should()
+                     .BeExceptingWhitespace(@"
+<style>
+apple {
+  color: red;
+  text-align: center;
+}
+</style>");
+            }
+
+            [Fact]
+            public void Styles_aggregate_properties_when_add_is_called_repeatedly_using_the_same_selector()
+            {
+                var style = new Style();
+                style.Add("apple", ("color", "red"));
+                style.Add("apple", ("text-align", "center"));
+
+                style.ToString()
+                     .Should()
+                     .BeExceptingWhitespace(@"
+<style>
+apple {
+  color: red;
+  text-align: center;
+}
+</style>");
+            }
         }
     }
 }

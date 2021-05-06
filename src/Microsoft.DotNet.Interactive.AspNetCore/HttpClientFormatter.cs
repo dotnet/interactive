@@ -3,16 +3,14 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
-
+using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.AspNetCore
@@ -53,7 +51,9 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                 font-weight: 700;
             }}");
 
-        public static async Task FormatHttpResponseMessage(HttpResponseMessage responseMessage, TextWriter textWriter)
+        public static async Task FormatHttpResponseMessage(
+            HttpResponseMessage responseMessage, 
+            FormatContext context)
         {
             var requestMessage = responseMessage.RequestMessage;
             var requestUri = requestMessage.RequestUri.ToString();
@@ -89,17 +89,19 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                 summary("Body"),
                 responseObjToFormat);
 
-            var output = div[@class: _containerClass](
+            PocketView output = div[@class: _containerClass](
                 style[type: "text/css"](_flexCss),
                 div(h2("Request"), hr(), requestLine, requestHeaders, requestBody),
                 div(h2("Response"), hr(), responseLine, responseHeaders, responseBody));
 
-            output.WriteTo(textWriter, HtmlEncoder.Default);
+            output.WriteTo(context);
 
             if (requestMessage.Options.TryGetValue(new HttpRequestOptionsKey<ConcurrentQueue<LogMessage>>(_logKey), out var aspnetLogs)
                 && !aspnetLogs.IsEmpty)
             {
-                details[@class: _logContainerClass](summary("Logs"), aspnetLogs).WriteTo(textWriter, HtmlEncoder.Default);
+                PocketView logs = details[@class: _logContainerClass](summary("Logs"), aspnetLogs);
+
+                logs.WriteTo(context);
             }
         }
 

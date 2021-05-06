@@ -3,51 +3,62 @@
 
 using System;
 using System.Collections;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
+    public delegate bool FormatDelegate<in T>(T value, FormatContext context);
+
     public class PlainTextFormatter<T> : TypeFormatter<T>
     {
-        private readonly Func<FormatContext, T, TextWriter, bool> _format;
+        private readonly FormatDelegate<T> _format;
 
-        public PlainTextFormatter(Func<FormatContext, T, TextWriter, bool> format)
+        public PlainTextFormatter(FormatDelegate<T> format)
         {
             _format = format ?? throw new ArgumentNullException(nameof(format));
         }
 
-        public PlainTextFormatter(Action<T, TextWriter> format)
+        public PlainTextFormatter(Action<T, FormatContext> format)
         {
-            _format = (context, instance, writer) => { format(instance, writer); return true; };
+            _format = FormatInstance;
+
+            bool FormatInstance(T instance, FormatContext context)
+            {
+                format(instance, context);
+                return true;
+            }
         }
 
         public PlainTextFormatter(Func<T, string> format)
         {
-            _format = (context, instance, writer) => { writer.Write(format(instance)); return true; };
+            _format = (instance, context) =>
+            {
+                context.Writer.Write(format(instance));
+                return true;
+            };
         }
 
         public override string MimeType => PlainTextFormatter.MimeType;
 
-        public override bool Format(FormatContext context, T value, TextWriter writer)
+        public override bool Format(T value, FormatContext context)
         {
             if (value is null)
             {
-                writer.Write(Formatter.NullString);
+                context.Writer.Write(Formatter.NullString);
                 return true;
             }
 
-            return _format(context, value, writer);
+            return _format(value, context);
         }
 
         public static PlainTextFormatter<T> CreateForAnyObject(bool includeInternals = false)
         {
             if (typeof(T).IsScalar())
             {
-                return new PlainTextFormatter<T>((context, value, writer) =>
+                return new PlainTextFormatter<T>((value, context) =>
                 {
-                    writer.Write(value);
+                    context.Writer.Write(value);
                     return true;
                 });
             }
@@ -68,25 +79,23 @@ namespace Microsoft.DotNet.Interactive.Formatting
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Part of Pattern")]
         public static PlainTextFormatter<T> CreateForAnyEnumerable(bool _includeInternals)
         {
-            return new PlainTextFormatter<T>((FormatContext context, T value, TextWriter writer) =>
+            return new((value, context) =>
             {
                 if (value is string)
                 {
-                    writer.Write(value);
+                    context.Writer.Write(value);
                     return true;
                 }
 
                 switch (value)
                 {
                     case IEnumerable enumerable:
-                        Formatter.Join(
-                            context, 
-                            enumerable,
-                            writer,
-                            Formatter<T>.ListExpansionLimit);
+                        Formatter.Join(enumerable,
+                                       context.Writer,
+                                       context, Formatter<T>.ListExpansionLimit);
                         break;
                     default:
-                        writer.Write(value.ToString());
+                        context.Writer.Write(value.ToString());
                         break;
                 }
                 return true;

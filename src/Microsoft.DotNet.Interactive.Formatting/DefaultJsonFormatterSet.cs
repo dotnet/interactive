@@ -8,12 +8,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
     internal class DefaultJsonFormatterSet
     {
         internal static readonly ITypeFormatter[] DefaultFormatters =
-            new ITypeFormatter[]
             {
-                new JsonFormatter<string>((context, s, writer) =>
+                new JsonFormatter<string>((s, context) =>
                 {
                     var data = JsonSerializer.Serialize(s, JsonFormatter.SerializerOptions);
-                    writer.Write(data);
+                    context.Writer.Write(data);
                     return true;
                 }),
                 new JsonFormatter<object>()

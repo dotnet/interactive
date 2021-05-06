@@ -19,77 +19,77 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         internal static ITypeFormatter[] DefaultFormatters =
             {
-                new PlainTextFormatter<ExpandoObject>((context, expando, writer) =>
+                new PlainTextFormatter<ExpandoObject>((expando, context) =>
                     {
                         var singleLineFormatter = new SingleLinePlainTextFormatter();
-                        singleLineFormatter.WriteStartObject(writer);
+                        singleLineFormatter.WriteStartObject(context.Writer);
                         var pairs = expando.ToArray();
                         var length = pairs.Length;
                         for (var i = 0; i < length; i++)
                         {
                             var pair = pairs[i];
-                            writer.Write(pair.Key);
-                            singleLineFormatter.WriteNameValueDelimiter(writer);
-                            pair.Value.FormatTo(context, writer);
+                            context.Writer.Write(pair.Key);
+                            singleLineFormatter.WriteNameValueDelimiter(context.Writer);
+                            pair.Value.FormatTo(context);
 
                             if (i < length - 1)
                             {
-                                singleLineFormatter.WritePropertyDelimiter(writer);
+                                singleLineFormatter.WritePropertyDelimiter(context.Writer);
                             }
                         }
 
-                        singleLineFormatter.WriteEndObject(writer);
+                        singleLineFormatter.WriteEndObject(context.Writer);
                         return true;
                     }),
 
-                new PlainTextFormatter<IHtmlContent>((context, view, writer) =>
+                new PlainTextFormatter<IHtmlContent>((view, context) =>
                 {
-                    view.WriteTo(writer, HtmlEncoder.Default);
+                    view.WriteTo(context.Writer, HtmlEncoder.Default);
                     return true;
                 }),
 
-                new PlainTextFormatter<KeyValuePair<string, object>>((context, pair, writer) =>
+                new PlainTextFormatter<KeyValuePair<string, object>>((pair, context) =>
                 {
                     var singleLineFormatter = new SingleLinePlainTextFormatter();
-                    writer.Write(pair.Key);
-                    singleLineFormatter.WriteNameValueDelimiter(writer);
-                    pair.Value.FormatTo(context, writer);
+                    context.Writer.Write(pair.Key);
+                    singleLineFormatter.WriteNameValueDelimiter(context.Writer);
+                    pair.Value.FormatTo(context);
                     return true;
                 }),
 
-                new PlainTextFormatter<ReadOnlyMemory<char>>((context, memory, writer) => 
-                { 
-                    writer.Write(memory.Span.ToString()); 
+                new PlainTextFormatter<ReadOnlyMemory<char>>((memory, context) => 
+                {
+                    context.Writer.Write(memory.Span.ToString()); 
                     return true;
                 }),
 
-                new PlainTextFormatter<Type>((context, type, writer) =>
+                new PlainTextFormatter<Type>((type, context) =>
                 {
                     if (type.IsAnonymous())
                     {
-                        writer.Write("(anonymous)");
+                        context.Writer.Write("(anonymous)");
                         return true;
                     }
 
-                    type.WriteCSharpDeclarationTo(writer);
+                    type.WriteCSharpDeclarationTo(context.Writer);
                     return true;
                 }),
 
-                new PlainTextFormatter<DateTime>((context, value, writer) =>
+                new PlainTextFormatter<DateTime>((value, context) =>
                 {
-                    writer.Write(value.ToString("u"));
+                    context.Writer.Write(value.ToString("u"));
                     return true;
                 }),
 
-                new PlainTextFormatter<DateTimeOffset>((context, value, writer) =>
+                new PlainTextFormatter<DateTimeOffset>((value, context) =>
                 {
-                    writer.Write(value.ToString("u"));
+                    context.Writer.Write(value.ToString("u"));
                     return true;
                 }),
 
                 new AnonymousTypeFormatter<object>(type: typeof(ReadOnlyMemory<>),
                     mimeType: PlainTextFormatter.MimeType,
-                    format: (context, obj, writer) =>
+                    format: ( obj, context) =>
                     {
                         var actualType = obj.GetType();
                         var toArray = Formatter.FormatReadOnlyMemoryMethod.MakeGenericMethod
@@ -97,54 +97,54 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                         var array = toArray.Invoke(null, new[] { obj });
 
-                        writer.Write(array.ToDisplayString(PlainTextFormatter.MimeType));
+                        array.FormatTo(context, PlainTextFormatter.MimeType);
+                        
                         return true;
                     }),
 
-
-                new PlainTextFormatter<TextSpan>((context, span, writer) =>
+                new PlainTextFormatter<TextSpan>((span, context) =>
                     {
-                        writer.Write(span.ToString(OutputMode.Ansi));
+                        context.Writer.Write(span.ToString(OutputMode.Ansi));
                         return true;
                     }),
 
-                new PlainTextFormatter<JsonElement>((context, obj, writer) =>
+                new PlainTextFormatter<JsonElement>((obj, context) =>
                     {
-                        writer.Write(obj);
+                        context.Writer.Write(obj);
                         return true;
                     }),
 
                 // Fallback for IEnumerable
-                new PlainTextFormatter<IEnumerable>((context, obj, writer) =>
+                new PlainTextFormatter<IEnumerable>((obj, context) =>
                 {
                     if (obj is null)
                     {
-                        writer.Write(Formatter.NullString);
+                        context.Writer.Write(Formatter.NullString);
                         return true;
                     }
                     var type = obj.GetType();
                     var formatter = PlainTextFormatter.GetDefaultFormatterForAnyEnumerable(type);
-                    return formatter.Format(context, obj, writer);
+                    return formatter.Format(obj, context);
                 }),
 
                 // BigInteger should be displayed as plain text
-                new PlainTextFormatter<BigInteger>((context, value, writer) =>
+                new PlainTextFormatter<BigInteger>((value, context) =>
                 {
-                    value.FormatTo(writer, PlainTextFormatter.MimeType);
+                    value.FormatTo(context, PlainTextFormatter.MimeType);
                     return true;
                 }),
 
                 // Fallback for any object
-                new PlainTextFormatter<object>((context, obj, writer) =>
+                new PlainTextFormatter<object>((obj, context) =>
                 {
                     if (obj is null)
                     {
-                        writer.Write(Formatter.NullString);
+                        context.Writer.Write(Formatter.NullString);
                         return true;
                     }
                     var type = obj.GetType();
                     var formatter = PlainTextFormatter.GetDefaultFormatterForAnyObject(type);
-                    return formatter.Format(context, obj, writer);
+                    return formatter.Format(obj, context);
                 })
             };
     }

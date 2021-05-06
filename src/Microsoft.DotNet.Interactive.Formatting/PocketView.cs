@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Encodings.Web;
@@ -14,11 +15,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
     /// <summary>
     /// Writes HTML using a C# DSL, bypassing the need for specialized parser and compiler infrastructure such as Razor.
     /// </summary>
-    public class PocketView : DynamicObject, IHtmlTag
+    public class PocketView : DynamicObject, IHtmlContent
     {
         private readonly Dictionary<string, TagTransform> _transforms = new();
-        private readonly HtmlTag _htmlTag;
         private TagTransform _transform;
+        private List<(string id, IHtmlContent content)> _dependentContent;
 
         /// <summary>
         ///   Initializes a new instance of the <see cref="PocketView" /> class.
@@ -30,10 +31,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 _transforms = nested._transforms;
             }
-            else
-            {
-                AddDefaultTransforms();
-            }
         }
 
         /// <summary>
@@ -43,14 +40,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="nested">A nested instance.</param>
         public PocketView(string tagName, PocketView nested = null) : this(nested)
         {
-            _htmlTag = tagName.Tag();
+            HtmlTag = tagName.Tag();
         }
 
-        private void AddDefaultTransforms()
+        protected PocketView(HtmlTag htmlTag)
         {
-            ((dynamic) this).br = Transform((t, u) => { t.SelfClosing(); });
-            ((dynamic) this).input = Transform((t, u) => { t.SelfClosing(); });
+            HtmlTag = htmlTag;
         }
+
+        public HtmlTag HtmlTag { get; }
 
         /// <summary>
         /// Writes an element.
@@ -86,7 +84,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 var content = ComposeContent(binder.CallInfo.ArgumentNames, args);
 
-                transform(pocketView._htmlTag, content);
+                transform(pocketView.HtmlTag, content, null);
             }
 
             result = pocketView;
@@ -103,7 +101,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             SetContent(args);
 
-            ApplyTransform(binder, args);
+            ApplyTransform(binder, args, null);
 
             result = this;
             return true;
@@ -111,7 +109,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         private void ApplyTransform(
             InvokeBinder binder,
-            object[] args)
+            object[] args, 
+            FormatContext formatContext)
         {
             if (_transform is not null)
             {
@@ -119,7 +118,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     binder?.CallInfo?.ArgumentNames,
                     args);
 
-                _transform(_htmlTag, content);
+                _transform(HtmlTag, content, formatContext);
 
                 // null out _transform so that it will only be applied once
                 _transform = null;
@@ -179,17 +178,32 @@ namespace Microsoft.DotNet.Interactive.Formatting
             return true;
         }
 
-        public void SetContent(object[] args)
+        public void AddDependency(string id, IHtmlContent content)
+        {
+            if (_dependentContent is null)
+            {
+                _dependentContent = new();
+            }
+
+            _dependentContent.Add((id, content));
+        }
+
+        public virtual void SetContent(object[] args)
         {
             if (args?.Length == 0)
             {
                 return;
             }
 
-            _htmlTag.Content = writer => Write(args, writer);
+            HtmlTag.Content = HtmlTagContent;
+
+            void HtmlTagContent(FormatContext context) => 
+                Write(args, context);
         }
 
-        private void Write(IReadOnlyList<object> args, TextWriter writer)
+        private void Write(
+            IReadOnlyList<object> args, 
+            FormatContext context)
         {
             for (var i = 0; i < args.Count; i++)
             {
@@ -198,30 +212,30 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 switch (arg)
                 {
                     case string s:
-                        writer.Write(s.HtmlEncode());
+                        context.Writer.Write(s.HtmlEncode());
+                        break;
+
+                    case PocketView view:
+                        view.WriteTo(context);
                         break;
 
                     case IHtmlContent html:
-                        html.WriteTo(writer, HtmlEncoder.Default);
+                        html.WriteTo(context.Writer, HtmlEncoder.Default);
                         break;
 
                     case IEnumerable<IHtmlContent> htmls:
-                        Write(htmls.ToArray(), writer);
+                        Write(htmls.ToArray(), context);
                         break;
-
-                    case HtmlFormatter.EmbeddedFormat embedded:
-                        embedded.Object.FormatTo(embedded.Context, writer, HtmlFormatter.MimeType);
-                        break;
-
+                        
                     default:
                         if (arg is IEnumerable<object> seq &&
                             seq.All(s => s is IHtmlContent))
                         {
-                            Write(seq.OfType<IHtmlContent>().ToArray(), writer);
+                            Write(seq.OfType<IHtmlContent>().ToArray(), context);
                         }
                         else
                         {
-                            arg.FormatTo(writer, HtmlFormatter.MimeType);
+                            arg.FormatTo(context, HtmlFormatter.MimeType);
                         }
 
                         break;
@@ -237,14 +251,20 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </returns>
         public override string ToString()
         {
-            if (_htmlTag is null)
+            if (HtmlTag is null)
             {
                 return "";
             }
             else
             {
-                ApplyTransform(null, null);
-                return _htmlTag.ToString();
+                var writer = new StringWriter(CultureInfo.InvariantCulture);
+                using (var formatContext = new FormatContext(writer))
+                {
+                    ApplyTransform(null, null, formatContext);
+                    HtmlTag.WriteTo(formatContext);
+                }
+
+                return writer.ToString();
             }
         }
 
@@ -256,12 +276,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             get
             {
-                if (_htmlTag is null)
+                if (HtmlTag is null)
                 {
                     return "";
                 }
 
-                return _htmlTag.Name;
+                return HtmlTag.Name;
             }
         }
 
@@ -269,8 +289,18 @@ namespace Microsoft.DotNet.Interactive.Formatting
         ///   Gets the HTML attributes to be rendered into the tag.
         /// </summary>
         /// <value>The HTML attributes.</value>
-        public HtmlAttributes HtmlAttributes => _htmlTag.HtmlAttributes;
+        public HtmlAttributes HtmlAttributes => HtmlTag.HtmlAttributes;
 
+        /// <summary>
+        ///   Renders the tag to the specified <see cref = "TextWriter" />.
+        /// </summary>
+        /// <param name = "writer">The writer.</param>
+        /// <param name="encoder">An HTML encoder.</param>
+        public void WriteTo(TextWriter writer)
+        {
+            HtmlTag?.WriteTo(writer);
+        }
+        
         /// <summary>
         ///   Renders the tag to the specified <see cref = "TextWriter" />.
         /// </summary>
@@ -278,7 +308,23 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// <param name="encoder">An HTML encoder.</param>
         public void WriteTo(TextWriter writer, HtmlEncoder encoder)
         {
-            _htmlTag?.WriteTo(writer, encoder);
+            HtmlTag?.WriteTo(writer, encoder);
+        }
+        
+        public void WriteTo(FormatContext context)
+        {
+            HtmlTag?.WriteTo(context);
+
+            if (_dependentContent is not null)
+            {
+                for (var i = 0; i < _dependentContent.Count; i++)
+                {
+                    var item = _dependentContent[i];
+                    context.Require(item.id, item.content);
+                }
+
+                _dependentContent = null;
+            }
         }
 
         /// <summary>
@@ -312,10 +358,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </example>
         public static object Transform(Action<HtmlTag, dynamic> transform)
         {
+            void TagTransform(HtmlTag tag, object contents, FormatContext _) => transform(tag, contents);
+
+            return new TagTransform(TagTransform);
+        }
+
+        public static object Transform(Action<HtmlTag, dynamic, FormatContext> transform)
+        {
             return new TagTransform(transform);
         }
 
-        private delegate void TagTransform(HtmlTag tag, object contents);
+        private delegate void TagTransform(HtmlTag tag, object contents, FormatContext context = null);
 
         private dynamic ComposeContent(
             IReadOnlyCollection<string> argumentNames,
