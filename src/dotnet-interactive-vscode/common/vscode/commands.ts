@@ -228,13 +228,13 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
             : 'jupyter-notebook';
 
         if (viewType === 'jupyter-notebook' && uri.scheme === 'untitled') {
-            await openNewNotebookWithJupyterEXtension();
+            await openNewNotebookWithJupyterExtension();
         } else {
             await vscode.commands.executeCommand('vscode.openWith', uri, viewType);
         }
     }
 
-    async function openNewNotebookWithJupyterEXtension() {
+    async function openNewNotebookWithJupyterExtension() {
         const jupyterExtension = vscode.extensions.getExtension<IJupyterExtensionApi>('ms-toolsai.jupyter');
 
         if (jupyterExtension) {
