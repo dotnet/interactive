@@ -19,6 +19,7 @@ import { OutputChannelAdapter } from './OutputChannelAdapter';
 import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 
 import { isInsidersBuild } from './vscodeUtilities';
+import { getDotNetMetadata } from '../ipynbUtilities';
 
 export const KernelId = 'dotnet-interactive';
 
@@ -185,18 +186,22 @@ async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocumen
         isDotnetInteractiveLanguage(candidateNotebookCellDocument.languageId)) {
         const cell = versionSpecificFunctions.getCells(notebook).find(c => c.document === candidateNotebookCellDocument);
         if (cell && cell.kind === vscode.NotebookCellKind.Code) {
-            const newMetadata = cell.metadata.with({
-                custom: {
-                    metadata: {
-                        dotnet_interactive: {
-                            language: getSimpleLanguage(candidateNotebookCellDocument.languageId)
+            const cellLanguage = getSimpleLanguage(candidateNotebookCellDocument.languageId);
+            const dotnetMetadata = getDotNetMetadata(cell.metadata);
+            if (dotnetMetadata.language !== cellLanguage) {
+                const newMetadata = cell.metadata.with({
+                    custom: {
+                        metadata: {
+                            dotnet_interactive: {
+                                language: cellLanguage
+                            }
                         }
                     }
-                }
-            });
-            const edit = new vscode.WorkspaceEdit();
-            edit.replaceNotebookCellMetadata(notebook.uri, cell.index, newMetadata);
-            await vscode.workspace.applyEdit(edit);
+                });
+                const edit = new vscode.WorkspaceEdit();
+                edit.replaceNotebookCellMetadata(notebook.uri, cell.index, newMetadata);
+                await vscode.workspace.applyEdit(edit);
+            }
         }
     }
 }
