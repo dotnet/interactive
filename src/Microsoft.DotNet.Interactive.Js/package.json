@@ -48,7 +48,7 @@
     "mocha-multi-reporters": "1.1.7",
     "mocha-trx-reporter": "3.2.4",
     "mocha-typescript": "1.1.17",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "2.6.1",
     "requirejs": "2.3.6",
     "rollup": "2.47.0",
     "rollup-plugin-commonjs": "10.1.0",
