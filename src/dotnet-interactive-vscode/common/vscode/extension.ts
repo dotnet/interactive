@@ -19,6 +19,7 @@ import { OutputChannelAdapter } from './OutputChannelAdapter';
 import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 
 import { isInsidersBuild } from './vscodeUtilities';
+import { getDotNetMetadata } from '../ipynbUtilities';
 
 export const KernelId = 'dotnet-interactive';
 
@@ -60,14 +61,23 @@ export async function activate(context: vscode.ExtensionContext) {
 
     vscode.window.registerUriHandler({
         handleUri(uri: vscode.Uri): vscode.ProviderResult<void> {
+            const params = new URLSearchParams(uri.query);
             switch (uri.path) {
                 case '/newNotebook':
+                    // Examples:
+                    //   vscode://ms-dotnettools.dotnet-interactive-vscode/newNotebook?as=dib
+                    //   vscode://ms-dotnettools.dotnet-interactive-vscode/newNotebook?as=ipynb
+                    const asType = params.get('as');
                     vscode.commands.executeCommand('dotnet-interactive.acquire').then(() => {
-                        vscode.commands.executeCommand('dotnet-interactive.newNotebook').then(() => { });
+                        const commandName = asType === 'ipynb'
+                            ? 'dotnet-interactive.newNotebookIpynb'
+                            : 'dotnet-interactive.newNotebookDib';
+                        vscode.commands.executeCommand(commandName).then(() => { });
                     });
                     break;
                 case '/openNotebook':
-                    const params = new URLSearchParams(uri.query);
+                    // Example
+                    //   vscode://ms-dotnettools.dotnet-interactive-vscode/openNotebook?path=C%3A%5Cpath%5Cto%5Cnotebook.dib
                     const path = params.get('path');
                     if (path) {
                         vscode.commands.executeCommand('dotnet-interactive.acquire').then(() => {
@@ -175,19 +185,26 @@ async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocumen
         isJupyterNotebookViewType(notebook.viewType) &&
         isDotnetInteractiveLanguage(candidateNotebookCellDocument.languageId)) {
         const cell = versionSpecificFunctions.getCells(notebook).find(c => c.document === candidateNotebookCellDocument);
-        if (cell && cell.kind === vscode.NotebookCellKind.Code) {
-            const newMetadata = cell.metadata.with({
-                custom: {
-                    metadata: {
-                        dotnet_interactive: {
-                            language: getSimpleLanguage(candidateNotebookCellDocument.languageId)
+        if (cell) {
+            const cellLanguage = cell.kind === vscode.NotebookCellKind.Code
+                ? getSimpleLanguage(candidateNotebookCellDocument.languageId)
+                : 'markdown';
+
+            const dotnetMetadata = getDotNetMetadata(cell.metadata);
+            if (dotnetMetadata.language !== cellLanguage) {
+                const newMetadata = cell.metadata.with({
+                    custom: {
+                        metadata: {
+                            dotnet_interactive: {
+                                language: cellLanguage
+                            }
                         }
                     }
-                }
-            });
-            const edit = new vscode.WorkspaceEdit();
-            edit.replaceNotebookCellMetadata(notebook.uri, cell.index, newMetadata);
-            await vscode.workspace.applyEdit(edit);
+                });
+                const edit = new vscode.WorkspaceEdit();
+                edit.replaceNotebookCellMetadata(notebook.uri, cell.index, newMetadata);
+                await vscode.workspace.applyEdit(edit);
+            }
         }
     }
 }

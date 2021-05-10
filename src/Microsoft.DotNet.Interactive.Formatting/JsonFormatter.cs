@@ -33,6 +33,5 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultJsonFormatterSet.DefaultFormatters;
 
         public static JsonSerializerOptions SerializerOptions { get; }
-
     }
 }

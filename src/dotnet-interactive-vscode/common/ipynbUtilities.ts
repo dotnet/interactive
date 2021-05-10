@@ -127,6 +127,10 @@ export const requiredLanguageInfoData = {
 };
 
 export function withDotNetKernelMetadata(metadata: { [key: string]: any } | undefined): any | undefined {
+    if (isDotnetKernel(metadata?.custom?.metadata?.kernelspec?.name)) {
+        return metadata; // don't change anything
+    }
+
     const result = {
         ...metadata,
         custom: {
@@ -141,6 +145,7 @@ export function withDotNetKernelMetadata(metadata: { [key: string]: any } | unde
             },
         }
     };
+
     return result;
 }
 

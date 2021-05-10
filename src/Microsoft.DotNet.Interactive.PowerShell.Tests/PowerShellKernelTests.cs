@@ -13,7 +13,6 @@ using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
 using Xunit.Abstractions;
-using static Microsoft.DotNet.Interactive.PowerShell.Tests.Tags;
 
 namespace Microsoft.DotNet.Interactive.PowerShell.Tests
 {
@@ -236,7 +235,7 @@ for ($j = 0; $j -le 4; $j += 4 ) {
             var outputs = result.KernelEvents.ToSubscribedList();
 
             string mimeType = "text/html";
-            string formattedHtml = $"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>{PlainTextBegin}prop1{PlainTextEnd}</td><td>{PlainTextBegin}value1{PlainTextEnd}</td></tr><tr><td>{PlainTextBegin}prop2{PlainTextEnd}</td><td>{PlainTextBegin}value2{PlainTextEnd}</td></tr><tr><td>{PlainTextBegin}prop3{PlainTextEnd}</td><td>{PlainTextBegin}value3{PlainTextEnd}</td></tr></tbody></table>";
+            string formattedHtml = $"<table><thead><tr><th><i>key</i></th><th>value</th></tr></thead><tbody><tr><td>prop1</td><td>value1</td></tr><tr><td>prop2</td><td>value2</td></tr><tr><td>prop3</td><td>value3</td></tr></tbody></table>";
             FormattedValue fv = new FormattedValue(mimeType, formattedHtml);
 
             outputs.Should().SatisfyRespectively(

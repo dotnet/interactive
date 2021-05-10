@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             .GetMethod("HasReturnValue", BindingFlags.Instance | BindingFlags.NonPublic);
 
         protected CSharpParseOptions _csharpParseOptions =
-            new CSharpParseOptions(LanguageVersion.Latest, kind: SourceCodeKind.Script);
+            new(LanguageVersion.Latest, kind: SourceCodeKind.Script);
 
         private InteractiveWorkspace _workspace;
 
@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         internal ScriptOptions ScriptOptions;
 
-        private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
+        private readonly AssemblyBasedExtensionLoader _extensionLoader = new();
 
         private string _workingDirectory;
 
@@ -255,7 +255,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             if (!context.CancellationToken.IsCancellationRequested)
             {
-                var diagnostics = ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
+                ImmutableArray<CodeAnalysis.Diagnostic> diagnostics;
 
                 // Check for a compilation failure
                 if (exception is CodeSubmissionCompilationErrorException { InnerException: CompilationErrorException innerCompilationException })
@@ -375,7 +375,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
         private async Task<IEnumerable<CompletionItem>> GetCompletionList(string code,
             int cursorPosition, CancellationToken contextCancellationToken)
         {
-
             using var _ = new GCPressure(1024 * 1024);
 
             var document = _workspace.ForkDocumentForLanguageServices(code);

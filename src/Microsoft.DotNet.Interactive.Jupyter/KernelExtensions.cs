@@ -152,14 +152,14 @@ using static {typeof(TopLevelMethods).FullName};
                 k.AddDirective(lsmagic(k));
             });
 
-            Formatter.Register<SupportedDirectives>((directives, writer) =>
+            Formatter.Register<SupportedDirectives>((directives, context) =>
             {
                 var indentLevel = 1.5;
                 PocketView t = div(
                     h3(directives.KernelName + " kernel"),
                     div(directives.Commands.Select(v => div[style: $"text-indent:{indentLevel:##.#}em"](Summary(v, 0)))));
 
-                t.WriteTo(writer, HtmlEncoder.Default);
+                t.WriteTo(context);
 
                 IEnumerable<IHtmlContent> Summary(ICommand command, double offset)
                 {
@@ -189,6 +189,8 @@ using static {typeof(TopLevelMethods).FullName};
                     }
 
                 }
+
+                return true;
             }, "text/html");
 
             return kernel;

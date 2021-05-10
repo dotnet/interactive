@@ -2,22 +2,21 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
     public class TabularDataResourceFormatter<T> : TypeFormatter<T>
     {
-        private readonly Func<FormatContext, T, TextWriter, bool> _format;
+        private readonly FormatDelegate<T> _format;
 
-        public TabularDataResourceFormatter(Func<FormatContext, T, TextWriter, bool> format)
+        public TabularDataResourceFormatter(FormatDelegate<T> format)
         {
             _format = format;
         }
 
-        public override bool Format(FormatContext context, T value, TextWriter writer)
+        public override bool Format(T value, FormatContext context)
         {
-            return _format(context, value, writer);
+            return _format(value, context);
         }
 
         public override string MimeType => TabularDataResourceFormatter.MimeType;

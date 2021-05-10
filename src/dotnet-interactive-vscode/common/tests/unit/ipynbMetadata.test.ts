@@ -300,6 +300,58 @@ describe('ipynb metadata tests', () => {
                 }
             });
         });
+
+        it(`preserves original kernelspec when it is already present and is a .net kernelspec`, () => {
+            const documentMetadata = {
+                custom: {
+                    metadata: {
+                        kernelspec: {
+                            display_name: ".NET (PowerShell)",
+                            language: "PowerShell",
+                            name: ".net-powershell"
+                        },
+                        language_info: {
+                            file_extension: ".ps1",
+                            mimetype: "text/x-powershell",
+                            name: "PowerShell",
+                            pygments_lexer: "powershell",
+                            version: "7.0"
+                        },
+                        some_custom_metadata: {
+                            key1: 'value 1'
+                        }
+                    },
+                    some_other_custom_data: {
+                        key2: 'value 2'
+                    }
+                }
+            };
+            const newDocumentMetadata = withDotNetKernelMetadata(documentMetadata);
+            expect(newDocumentMetadata).to.deep.equal({
+                custom: {
+                    metadata: {
+                        kernelspec: {
+                            display_name: ".NET (PowerShell)",
+                            language: "PowerShell",
+                            name: ".net-powershell"
+                        },
+                        language_info: {
+                            file_extension: ".ps1",
+                            mimetype: "text/x-powershell",
+                            name: "PowerShell",
+                            pygments_lexer: "powershell",
+                            version: "7.0"
+                        },
+                        some_custom_metadata: {
+                            key1: 'value 1'
+                        }
+                    },
+                    some_other_custom_data: {
+                        key2: 'value 2'
+                    }
+                }
+            });
+        });
     });
 
     describe('cell metadata', () => {

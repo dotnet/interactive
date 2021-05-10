@@ -8,7 +8,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
@@ -24,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
 {
     public static class AspNetCoreCSharpKernelExtensions
     {
-        private static readonly Assembly[] _references = new[]
+        private static readonly Assembly[] _references = 
         {
             typeof(Host).Assembly, // Microsoft.Extensions.Hosting
             typeof(WebHost).Assembly, // Microsoft.AspNetCore
@@ -33,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
             typeof(AspNetCoreCSharpKernelExtensions).Assembly, // Microsoft.DotNet.Interactive.AspNetCore
         };
 
-        private static readonly string[] _namespaces = new[]
+        private static readonly string[] _namespaces =
         {
             typeof(HttpContext).Namespace, // Microsoft.AspNetCore.Http
             typeof(IEndpointRouteBuilder).Namespace, // Microsoft.AspNetCore.Routing
@@ -108,7 +107,7 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                 })
             });
 
-            Formatter.Register<HttpResponseMessage>((responseMessage, textWriter) =>
+            Formatter.Register<HttpResponseMessage>((responseMessage, context) =>
             {
                 // Formatter.Register() doesn't support async formatters yet.
                 // Prevent SynchronizationContext-induced deadlocks given the following sync-over-async code.
@@ -116,12 +115,16 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
 
                 try
                 {
-                    HttpClientFormatter.FormatHttpResponseMessage(responseMessage, textWriter).Wait();
+                    HttpClientFormatter.FormatHttpResponseMessage(
+                        responseMessage, 
+                        context).Wait();
                 }
                 finally
                 {
                     ExecutionContext.RestoreFlow();
                 }
+
+                return true;
             }, HtmlFormatter.MimeType);
 
             return kernel;

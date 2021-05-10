@@ -23,12 +23,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 }
 
                 var keyString = reader.GetString();
-                object itemValue;
 
                 reader.Read();
-                itemValue = GetValue(ref reader, options);
 
-                value.Add(keyString, itemValue);
+                value.Add(keyString, GetValue(ref reader, options));
             }
 
             throw new JsonException($"Cannot deserialize {typeToConvert.Name}");

@@ -4,75 +4,36 @@
 import * as vscode from 'vscode';
 import * as contracts from './common/interfaces/contracts';
 import * as vscodeLike from './common/interfaces/vscode-like';
-import * as utilities from './common/utilities';
-import * as notebookKernel from './notebookKernel';
 import * as interactiveNotebook from './common/interactiveNotebook';
+import * as utilities from './common/utilities';
 import * as diagnostics from './common/vscode/diagnostics';
 import * as vscodeUtilities from './common/vscode/vscodeUtilities';
-import { KernelId } from './common/vscode/extension';
-import { DotNetInteractiveNotebookKernelProvider } from './notebookKernelProvider';
-import { DotNetInteractiveNotebookContentProvider } from './notebookContentProvider';
+import * as notebookControllers from './notebookControllers';
+import * as notebookSerializers from './notebookSerializers';
 import { ClientMapper } from './common/clientMapper';
 import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
 
 export function cellAt(document: vscode.NotebookDocument, index: number): vscode.NotebookCell {
-    return document.cells[index];
+    return document.cellAt(index);
 }
 
 export function cellCount(document: vscode.NotebookDocument): number {
-    return document.cells.length;
+    return document.cellCount;
 }
 
 export function getCells(document: vscode.NotebookDocument | undefined): Array<vscode.NotebookCell> {
     if (document) {
-        return [...document.cells];
+        return [...document.getCells()];
     }
 
     return [];
 }
 
-export function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, diagnosticsChannel: OutputChannelAdapter, ...preloadUris: vscode.Uri[]) {
-    const selectorDib = {
-        viewType: ['dotnet-interactive'],
-        filenamePattern: '*.{dib,dotnet-interactive}'
-    };
-    const selectorIpynbWithJupyter = {
-        viewType: ['jupyter-notebook'],
-        filenamePattern: '*.ipynb'
-    };
-    const selectorIpynbWithDotNetInteractive = {
-        viewType: ['dotnet-interactive-jupyter'],
-        filenamePatter: '*.ipynb'
-    };
-    const notebookContentProvider = new DotNetInteractiveNotebookContentProvider(diagnosticsChannel, clientMapper);
-
-    // notebook content
-    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookContentProvider));
-    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive-jupyter', notebookContentProvider));
-    const notebookKernelProvider = new DotNetInteractiveNotebookKernelProvider(preloadUris, clientMapper);
-    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorDib, notebookKernelProvider));
-
-    // always register as a possible .ipynb handler
-    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorIpynbWithDotNetInteractive, notebookKernelProvider));
-
-    context.subscriptions.push(vscode.notebook.onDidChangeActiveNotebookKernel(async e => await handleNotebookKernelChange(e, clientMapper)));
+export function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter, ...preloadUris: vscode.Uri[]) {
+    context.subscriptions.push(new notebookControllers.DotNetNotebookKernel(clientMapper, preloadUris));
+    context.subscriptions.push(new notebookSerializers.DotNetDibNotebookSerializer(clientMapper, outputChannel));
 }
 
 export function endExecution(cell: vscode.NotebookCell, success: boolean) {
-    notebookKernel.endExecution(cell, success);
-}
-
-async function handleNotebookKernelChange(e: { document: vscode.NotebookDocument, kernel: vscode.NotebookKernel | undefined }, clientMapper: ClientMapper) {
-    if (e.kernel?.id === KernelId) {
-        try {
-            // update various metadata
-            await notebookKernel.updateDocumentKernelspecMetadata(e.document);
-            await notebookKernel.updateCellLanguages(e.document);
-
-            // force creation of the client so we don't have to wait for the user to execute a cell to get the tool
-            await clientMapper.getOrAddClient(e.document.uri);
-        } catch (err) {
-            vscode.window.showErrorMessage(`Failed to set document metadata for '${e.document.uri}': ${err}`);
-        }
-    }
+    notebookControllers.endExecution(cell, success);
 }

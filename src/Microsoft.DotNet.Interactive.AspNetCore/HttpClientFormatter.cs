@@ -3,15 +3,14 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
-
+using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive.AspNetCore
@@ -52,7 +51,9 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                 font-weight: 700;
             }}");
 
-        public static async Task FormatHttpResponseMessage(HttpResponseMessage responseMessage, TextWriter textWriter)
+        public static async Task FormatHttpResponseMessage(
+            HttpResponseMessage responseMessage, 
+            FormatContext context)
         {
             var requestMessage = responseMessage.RequestMessage;
             var requestUri = requestMessage.RequestUri.ToString();
@@ -60,35 +61,51 @@ namespace Microsoft.DotNet.Interactive.AspNetCore
                 await requestMessage.Content.ReadAsStringAsync().ConfigureAwait(false) :
                 string.Empty;
 
-            var responseBodyString = await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-            static dynamic HeaderTable(HttpHeaders headers, HttpContentHeaders contentHeaders) =>
-                table(thead(tr(th("Name"), th("Value"))),
-                    tbody((contentHeaders is null ? headers : headers.Concat(contentHeaders)).Select(header => tr(
-                            td(header.Key), td(string.Join("; ", header.Value))))));
-
             var requestLine = h3($"{requestMessage.Method} ", a[href: requestUri](requestUri), $" HTTP/{requestMessage.Version}");
             var requestHeaders = details(summary("Headers"), HeaderTable(requestMessage.Headers, requestMessage.Content?.Headers));
-            var requestBody = details(summary("Body"), pre(requestBodyString));
 
-            var responseLine = h3($"HTTP/{responseMessage.Version} {(int)responseMessage.StatusCode} {responseMessage.ReasonPhrase}");
+            var requestBody = details(
+                summary("Body"), 
+                pre(requestBodyString));
 
-            var responseHeaders = details[open: true](summary("Headers"), HeaderTable(responseMessage.Headers, responseMessage.Content.Headers));
-            var responseBody = details[open: true](summary("Body"), pre(responseBodyString));
+            var responseLine = h3($"HTTP/{responseMessage.Version} {(int) responseMessage.StatusCode} {responseMessage.ReasonPhrase}");
 
-            var output = div[@class: _containerClass](
+            var responseHeaders = details[open: true](
+                summary("Headers"), HeaderTable(responseMessage.Headers, responseMessage.Content.Headers));
+
+            var responseBodyString = await responseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
+            object responseObjToFormat;
+
+            try
+            {
+                responseObjToFormat = JsonDocument.Parse(responseBodyString);
+            }
+            catch (JsonException)
+            {
+                responseObjToFormat = responseBodyString;
+            }
+
+            var responseBody = details[open: true](
+                summary("Body"),
+                responseObjToFormat);
+
+            PocketView output = div[@class: _containerClass](
                 style[type: "text/css"](_flexCss),
                 div(h2("Request"), hr(), requestLine, requestHeaders, requestBody),
                 div(h2("Response"), hr(), responseLine, responseHeaders, responseBody));
 
-            output.WriteTo(textWriter, HtmlEncoder.Default);
+            output.WriteTo(context);
 
             if (requestMessage.Options.TryGetValue(new HttpRequestOptionsKey<ConcurrentQueue<LogMessage>>(_logKey), out var aspnetLogs)
                 && !aspnetLogs.IsEmpty)
             {
-                details[@class: _logContainerClass](summary("Logs"), aspnetLogs).WriteTo(textWriter, HtmlEncoder.Default);
+                PocketView logs = details[@class: _logContainerClass](summary("Logs"), aspnetLogs);
+
+                logs.WriteTo(context);
             }
         }
+
+        private static dynamic HeaderTable(HttpHeaders headers, HttpContentHeaders contentHeaders) => table(thead(tr(th("Name"), th("Value"))), tbody((contentHeaders is null ? headers : headers.Concat(contentHeaders)).Select(header => tr(td(header.Key), td(string.Join("; ", header.Value))))));
 
         public static HttpClient CreateEnhancedHttpClient(string address, InteractiveLoggerProvider interactiveLoggerProvider) =>
             new(new LogCapturingHandler(interactiveLoggerProvider))

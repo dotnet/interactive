@@ -9,13 +9,13 @@ using System.Reflection;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
-    internal class FormatterTable
+    internal class FormatterMapByType
     {
-        private readonly ConcurrentDictionary<(Type type, bool flag), ITypeFormatter> _formatters = new ConcurrentDictionary<(Type type, bool flag), ITypeFormatter>();
+        private readonly ConcurrentDictionary<(Type type, bool flag), ITypeFormatter> _formatters = new();
         private readonly Type _genericDef;
         private readonly string _name;
 
-        internal FormatterTable(Type genericDef, string name)
+        internal FormatterMapByType(Type genericDef, string name)
         {
             _genericDef = genericDef;
             _name = name;

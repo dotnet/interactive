@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using FluentAssertions;
-using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using Xunit;
@@ -661,9 +660,9 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         public void Formatting_can_be_chosen_based_on_mime_type()
         {
             Formatter.Register(
-                new PlainTextFormatter<DateTime>((time, writer) => writer.Write("plain")));
+                new PlainTextFormatter<DateTime>((time, c) => c.Writer.Write("plain")));
             Formatter.Register(
-                new HtmlFormatter<DateTime>((time, writer) => writer.Write("html")));
+                new HtmlFormatter<DateTime>((time, c) => c.Writer.Write("html")));
 
             var now = DateTime.Now;
 
