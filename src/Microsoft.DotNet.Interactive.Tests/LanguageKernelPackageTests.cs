@@ -257,12 +257,6 @@ json"
                 Language.FSharp => new CompositeKernel { new FSharpKernel().UseNugetDirective() }
             };
 
-            var expectedList = new[]
-            {
-                "Installing package",
-                "Microsoft.Extensions.Logging"
-            };
-
             var code = $@"
 #r ""nuget:Microsoft.Extensions.Logging, 2.2.0""
 {expression}".Trim();
