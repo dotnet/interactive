@@ -39,9 +39,13 @@ namespace Microsoft.DotNet.Interactive
         public static DisplayedValue DisplayAs(
             this KernelInvocationContext context,
             string value,
-            string mimeType = null)
+            string mimeType)
         {
-           
+            if (string.IsNullOrWhiteSpace(mimeType))
+            {
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(mimeType));
+            }
+
             var displayId = Guid.NewGuid().ToString();
 
             var formattedValue = new FormattedValue(
