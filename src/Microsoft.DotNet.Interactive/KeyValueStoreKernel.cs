@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (options.MimeType is { } mimeType)
             {
-                context.Display(value, mimeType);
+                context.DisplayAs(value, mimeType);
             }
         }
 

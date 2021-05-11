@@ -35,6 +35,30 @@ namespace Microsoft.DotNet.Interactive
 
             return displayedValue;
         }
+        
+        public static DisplayedValue DisplayAs(
+            this KernelInvocationContext context,
+            string value,
+            string mimeType = null)
+        {
+           
+            var displayId = Guid.NewGuid().ToString();
+
+            var formattedValue = new FormattedValue(
+                mimeType,
+                value);
+
+            context.Publish(
+                new DisplayedValueProduced(
+                    value,
+                    context?.Command,
+                    new[] { formattedValue },
+                    displayId));
+
+            var displayedValue = new DisplayedValue(displayId, mimeType, context);
+
+            return displayedValue;
+        }
 
         public static void DisplayStandardOut(
             this KernelInvocationContext context,
