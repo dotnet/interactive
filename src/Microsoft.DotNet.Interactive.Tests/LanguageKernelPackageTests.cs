@@ -257,6 +257,12 @@ json"
                 Language.FSharp => new CompositeKernel { new FSharpKernel().UseNugetDirective() }
             };
 
+            var expectedList = new[]
+            {
+                "Installing package",
+                "Microsoft.Extensions.Logging"
+            };
+
             var code = $@"
 #r ""nuget:Microsoft.Extensions.Logging, 2.2.0""
 {expression}".Trim();
@@ -265,19 +271,6 @@ json"
             var result = await kernel.SendAsync(command);
 
             using var events = result.KernelEvents.ToSubscribedList();
-
-            events
-                .Should()
-                .ContainSingle<DisplayedValueProduced>()
-                .Which
-                .Value
-                .As<string>()
-                .Should()
-                .Contain("Installing package Microsoft.Extensions.Logging");
-
-            events
-                .Should()
-                .ContainSingle<DisplayedValueUpdated>(e => e.Value.Equals("Installed package Microsoft.Extensions.Logging version 2.2.0"));
 
             events.OfType<PackageAdded>()
                   .Should()
@@ -480,7 +473,7 @@ Formatter.Register<DataFrame>((df, writer) =>
         [Theory]
         [InlineData(Language.CSharp)]
         [InlineData(Language.FSharp)]
-        public async Task Pound_i_nuget_with_multi_submissions_combines_the_Text_Produced(Language language)
+        public async Task Pound_i_nuget_with_multi_submissions_combines_the_text_produced(Language language)
         {
             var kernel = CreateKernel(language);
 
@@ -501,15 +494,13 @@ Formatter.Register<DataFrame>((df, writer) =>
             };
 
             using var events = result.KernelEvents.ToSubscribedList();
-
-            // For the DisplayedValueUpdated events strip out the restore sources
-            // Verify that they match the expected values
-            events.Should()
-                  .ContainSingle<DisplayedValueProduced>()
-                  .Which.FormattedValues
+            events.OfType<DisplayedValueProduced>()
                   .Should()
-                  .ContainSingle(e => e.MimeType == HtmlFormatter.MimeType)
+                  .ContainSingle(v => v.Value is InstallPackagesMessage)
                   .Which.Value
+                  .As<InstallPackagesMessage>()
+                  .RestoreSources
+                  .Aggregate((s, acc) => acc + " & " + s)
                   .Should()
                   .ContainAll(expectedList);
         }
@@ -541,13 +532,13 @@ Formatter.Register<DataFrame>((df, writer) =>
 
             using var events = result.KernelEvents.ToSubscribedList();
 
-            // For the DisplayedValueUpdated events strip out the restore sources
-            // Verify that they match the expected values
-            events.OfType<DisplayedValueUpdated>()
-                  .Last().FormattedValues
+            events.OfType<DisplayedValueProduced>()
                   .Should()
-                  .ContainSingle(e => e.MimeType == HtmlFormatter.MimeType)
+                  .ContainSingle(v => v.Value is InstallPackagesMessage)
                   .Which.Value
+                  .As<InstallPackagesMessage>()
+                  .RestoreSources
+                  .Aggregate((s, acc) => acc + " & " + s)
                   .Should()
                   .ContainAll(expectedList);
         }
@@ -888,16 +879,30 @@ using NodaTime.Extensions;");
         [InlineData(Language.FSharp)]
         public async Task Pound_r_nuget_with_no_version_displays_the_version_that_was_installed(Language language)
         {
+            var expectedList = new[]
+            {
+                "Its.Log, 2.10.1"
+            };
+
             var kernel = CreateKernel(language);
-
             using var events = kernel.KernelEvents.ToSubscribedList();
-
             await kernel.SubmitCodeAsync(@"#r ""nuget:Its.Log""");
 
             events.Should().NotContainErrors();
 
-            events.Should()
-                  .ContainSingle<DisplayedValueUpdated>(e => e.Value.Equals("Installed package Its.Log version 2.10.1"));
+            events.OfType<DisplayedValueUpdated>()
+                  .Where(v => v.Value is InstallPackagesMessage)
+                  .Last().Value
+                  .As<InstallPackagesMessage>()
+                  .InstalledPackages
+                  .Aggregate((p, acc) => acc + " & " + p)
+                  .Should()
+                  .ContainAll(expectedList);
+
+            events.OfType<PackageAdded>()
+                  .Should()
+                  .ContainSingle(e => e.PackageReference.PackageName == "Its.Log" &&
+                                      e.PackageReference.PackageVersion == "2.10.1");
         }
 
         [Theory]
@@ -919,8 +924,7 @@ using NodaTime.Extensions;");
                   .NotContain(e =>
                                   e is DisplayedValueUpdated &&
                                   e.As<DisplayedValueUpdated>()
-                                   .Value
-                                   .As<string>()
+                                   .Value.ToString()
                                    .StartsWith("Installing package Its.Log"));
         }
 
@@ -1095,7 +1099,7 @@ typeof(System.Device.Gpio.GpioController).Assembly.Location
                 .Be("Newtonsoft.Json");
 
             kernel.FindKernel("csharp").As<CSharpKernel>()
-                .RequestedPackageReferences
+                .ResolvedPackageReferences
                 .Should()
                 .ContainSingle(p => p.PackageName == "Newtonsoft.Json");
         }

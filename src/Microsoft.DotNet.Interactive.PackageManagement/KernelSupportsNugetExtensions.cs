@@ -36,7 +36,8 @@ namespace Microsoft.DotNet.Interactive
             return kernel;
         }
 
-        private static readonly string restoreSourcesPropertyName = "commandIHandler.RestoreSources";
+        private static readonly string installPackagesPropertyName = "commandIHandler.InstallPackages";
+
         private static Command i()
         {
             var iDirective = new Command("#i")
@@ -48,20 +49,6 @@ namespace Microsoft.DotNet.Interactive
                 if (context.HandlingKernel is ISupportNuget kernel)
                 {
                     kernel.AddRestoreSource(source.Replace("nuget:", ""));
-                    IHtmlContent content = div(
-                        strong("Restore sources"),
-                        ul(kernel.RestoreSources.Select(s => li(span(s)))));
-
-                    object displayed = null;
-                    if (!context.Command.Properties.TryGetValue(restoreSourcesPropertyName, out displayed))
-                    {
-                        displayed = context.Display(content, HtmlFormatter.MimeType);
-                        context.Command.Properties.Add(restoreSourcesPropertyName, displayed);
-                    }
-                    else
-                    {
-                        (displayed as DisplayedValue).Update(content);
-                    }
                 }
             });
             return iDirective;
@@ -178,6 +165,20 @@ namespace Microsoft.DotNet.Interactive
             public static IEqualityComparer<PackageReference> Instance { get; } = new PackageReferenceComparer();
         }
 
+        private static void CreateOrUpdateDisplayValue(KernelInvocationContext context, string name, object content)
+        {
+            object displayed = null;
+            if (!context.Command.Properties.TryGetValue(name, out displayed))
+            {
+                displayed = context.Display(content);
+                context.Command.Properties.Add(name, displayed);
+            }
+            else
+            {
+                (displayed as DisplayedValue).Update(content);
+            }
+        }
+
         internal static KernelCommandInvocation DoNugetRestore()
         {
             return async (command, invocationContext) =>
@@ -189,25 +190,14 @@ namespace Microsoft.DotNet.Interactive
                         return;
                     }
 
-                    var messages = new Dictionary<PackageReference, string>(new PackageReferenceComparer());
-                    var displayedValues = new Dictionary<string, DisplayedValue>();
-
-                    var newlyRequestedPackages =
+                    var install = new InstallPackagesMessage(
+                            kernel.RestoreSources.OrderBy(s => s).ToArray(),
+                            kernel.ResolvedPackageReferences.Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s),
                             kernel.RequestedPackageReferences
-                                          .Except(kernel.ResolvedPackageReferences, PackageReferenceComparer.Instance)
-                                          .ToArray();
+                                  .Except(kernel.ResolvedPackageReferences, PackageReferenceComparer.Instance)
+                                  .Select(s => s.PackageName).OrderBy(s => s), 0);
 
-                    var requestedPackageIds = new Dictionary<string, PackageReference>();
-
-                    foreach (var package in newlyRequestedPackages)
-                    {
-                        var id = PackageReferenceComparer.GetDisplayValueId(package);
-                        var message = InstallingPackageMessage(package) + "...";
-                        var displayedValue = context.Display(message);
-                        displayedValues[id] = displayedValue;
-                        messages.Add(package, message);
-                        requestedPackageIds.Add(id, package);
-                    }
+                    CreateOrUpdateDisplayValue(context, installPackagesPropertyName, install);
 
                     var restorePackagesTask = kernel.RestoreAsync();
 
@@ -216,26 +206,22 @@ namespace Microsoft.DotNet.Interactive
                     while (await Task.WhenAny(Task.Delay(delay), restorePackagesTask) != restorePackagesTask)
                     {
                         totalWaitMs += delay;
+                        install.Progress = 1 + install.Progress;
+                        CreateOrUpdateDisplayValue(context, installPackagesPropertyName, install);
+
                         if (totalWaitMs > TimeSpan.FromMinutes(1.5).TotalMilliseconds)
                         {
-                            throw new TimeoutException($"Package restore took longer than expected for packages: {string.Join(", ", newlyRequestedPackages.Select(p => p.PackageName))}.");
-                        }
-
-                        foreach (var package in messages.Keys.ToArray())
-                        {
-                            var id = PackageReferenceComparer.GetDisplayValueId(package);
-                            if (displayedValues.TryGetValue(id, out var displayedValue))
-                            {
-                                requestedPackageIds.Remove(id);
-                                var message = messages[package] + ".";
-                                messages[package] = message;
-                                displayedValue.Update(
-                                    message);
-                            }
+                            throw new TimeoutException($"Package restore took longer than expected for packages: {string.Join(", ", install.InstallingPackages)}.");
                         }
                     }
 
                     var result = await restorePackagesTask;
+
+                    var resultMessage = new InstallPackagesMessage(
+                            kernel.RestoreSources.OrderBy(s => s).ToArray(),
+                            kernel.ResolvedPackageReferences.Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s),
+                            Enumerable.Empty<string>(),
+                            0);
 
                     if (result.Succeeded)
                     {
@@ -243,52 +229,20 @@ namespace Microsoft.DotNet.Interactive
 
                         foreach (var resolvedReference in result.ResolvedReferences)
                         {
-                            if (displayedValues.TryGetValue(
-                                PackageReferenceComparer.GetDisplayValueId(resolvedReference), out var displayedValue))
-                            {
-                                displayedValue.Update(
-                                    $"Installed package {resolvedReference.PackageName} version {resolvedReference.PackageVersion}");
-                            }
-
                             context.Publish(new PackageAdded(resolvedReference, context.Command));
                         }
-
-                        foreach (var package in requestedPackageIds.Values)
-                        {
-                            if (displayedValues.TryGetValue(
-                                PackageReferenceComparer.GetDisplayValueId(package), out var displayedValue))
-                            {
-                                displayedValue.Update(
-                                    $"Installed package {package.PackageName} version {package.PackageVersion}");
-                            }
-                        }
+                        CreateOrUpdateDisplayValue(context, installPackagesPropertyName, resultMessage);
                     }
                     else
                     {
                         var errors = $"{string.Join(Environment.NewLine, result.Errors)}";
-
+                        CreateOrUpdateDisplayValue(context, installPackagesPropertyName, resultMessage);
                         context.Fail(message: errors);
                     }
                 };
 
                 await invocationContext.HandlingKernel.SendAsync(new AnonymousKernelCommand(restore));
             };
-
-            static string InstallingPackageMessage(PackageReference package)
-            {
-                string message = null;
-
-                if (!string.IsNullOrEmpty(package.PackageName))
-                {
-                    message = $"Installing package {package.PackageName}";
-                    if (!string.IsNullOrWhiteSpace(package.PackageVersion))
-                    {
-                        message += $", version {package.PackageVersion}";
-                    }
-                }
-
-                return message;
-            }
         }
     }
 }
