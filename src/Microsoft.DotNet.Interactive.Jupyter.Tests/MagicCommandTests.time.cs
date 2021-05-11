@@ -45,8 +45,8 @@ display(123);
                       .Should()
                       .ContainSingle(v =>
                                          v.MimeType == "text/plain" &&
-                                         v.Value.ToString().StartsWith("Wall time:") &&
-                                         v.Value.ToString().EndsWith("ms"));
+                                         v.Value.StartsWith("Wall time:") &&
+                                         v.Value.EndsWith("ms"));
 
                 events.Should()
                       .ContainSingle<DisplayedValueProduced>(

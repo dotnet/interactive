@@ -23,24 +23,7 @@ namespace System
 
         public static DisplayedValue DisplayAs(this string value, string mimeType)
         {
-            var context = KernelInvocationContext.Current;
-
-            var displayId = Guid.NewGuid().ToString();
-
-            var formattedValue = new FormattedValue(
-                mimeType,
-                value);
-
-            context.Publish(
-                new DisplayedValueProduced(
-                    value,
-                    context?.Command,
-                    new[] { formattedValue },
-                    displayId));
-
-            var displayedValue = new DisplayedValue(displayId, mimeType, context);
-
-            return displayedValue;
+             return KernelInvocationContext.Current.DisplayAs(value, mimeType);
         }
 
         /// <summary>
