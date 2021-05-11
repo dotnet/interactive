@@ -19,8 +19,11 @@ namespace Microsoft.DotNet.Interactive
     {
         private const string restoreTfm = "net5.0";
         private readonly ConcurrentDictionary<string, PackageReference> _requestedPackageReferences = new(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, ResolvedPackageReference> _resolvedPackageReferences = new(StringComparer.OrdinalIgnoreCase);
-        private readonly HashSet<string> _restoreSources = new();
+        private readonly ConcurrentDictionary<string, ResolvedPackageReference> _resolvedPackageReferences = new(StringComparer.OrdinalIgnoreCase);
+
+        private readonly ConcurrentDictionary<string, string> _requestedRestoreSources = new(StringComparer.Ordinal);
+        private readonly ConcurrentDictionary<string, string> _resolvedRestoreSources = new(StringComparer.Ordinal);
+
         private readonly DependencyProvider _dependencies;
 
         // Resolution will  after 3 minutes by default
@@ -54,7 +57,13 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        public void AddRestoreSource(string source) => _restoreSources.Add(source);
+        public void AddRestoreSource(string source)
+        {
+            if (!_resolvedRestoreSources.TryGetValue(source, out var _))
+            {
+                _requestedRestoreSources.TryAdd(source, source);
+            }
+        }
 
         public PackageReference GetOrAddPackageReference(
             string packageName,
@@ -78,7 +87,6 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
 
-            // we use a lock because we are going to be looking up and inserting
             if (_requestedPackageReferences.TryGetValue(key, out PackageReference existingPackage))
             {
                 if (string.Equals(existingPackage.PackageVersion.Trim(), packageVersion.Trim(), StringComparison.OrdinalIgnoreCase))
@@ -97,7 +105,7 @@ namespace Microsoft.DotNet.Interactive
             return newPackageRef;
         }
 
-        public IEnumerable<string> RestoreSources => _restoreSources;
+        public IEnumerable<string> RestoreSources => _requestedRestoreSources.Values.Concat(_resolvedRestoreSources.Values);
 
         public IEnumerable<PackageReference> RequestedPackageReferences => _requestedPackageReferences.Values;
 
@@ -112,7 +120,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 yield return Tuple.Create("i", rs);
             }
-            foreach (var pr in RequestedPackageReferences)
+            foreach (var pr in RequestedPackageReferences.Concat(ResolvedPackageReferences.Where(p => p.Requested).Select(p => new PackageReference(p.PackageName, p.PackageVersion))).OrderBy(r => r.PackageName))
             {
                 yield return Tuple.Create("r", $"Include={pr.PackageName}, Version={pr.PackageVersion}");
             }
@@ -176,9 +184,12 @@ namespace Microsoft.DotNet.Interactive
                         root.FullName
                     };
 
+                    // Was package requested
+                    bool requested = _requestedRestoreSources.ContainsKey(packageReference.PackageName);
                     yield return new ResolvedPackageReference(
                         packageReference.PackageName,
                         packageReference.PackageVersion,
+                        requested,
                         GetAssemblyPathsForPackage(root, resolutionsArray)
                             .Select(p => p.FullName)
                             .ToArray(),
@@ -215,15 +226,19 @@ namespace Microsoft.DotNet.Interactive
 
         public async Task<PackageRestoreResult> RestoreAsync()
         {
-            var newlyRequested = _requestedPackageReferences
+            var newlyRequestedPackageReferences = _requestedPackageReferences
                                  .Select(r => r.Value)
-                                 .Where(r => !_resolvedPackageReferences.ContainsKey(r.PackageName.ToLower(CultureInfo.InvariantCulture)))
+                                 .Where(r => !_resolvedPackageReferences.ContainsKey(r.PackageName))
+                                 .ToArray();
+
+            var newlyRequestedRestoreSources = _requestedRestoreSources
+                                 .Select(s => s.Value)
+                                 .Where(s => !_resolvedRestoreSources.ContainsKey(s))
                                  .ToArray();
 
             var errors = new List<string>();
-            
-            var result = await Task.Run(() => 	
-                ResolveAsync(GetPackageManagerLines(), restoreTfm, ReportError));
+
+            var result = await Task.Run(() => ResolveAsync(GetPackageManagerLines(), restoreTfm, ReportError));
 
             PackageRestoreResult packageRestoreResult;
 
@@ -232,8 +247,18 @@ namespace Microsoft.DotNet.Interactive
                 errors.AddRange(result.StdOut);
                 packageRestoreResult = new PackageRestoreResult(
                     succeeded: false,
-                    requestedPackages: newlyRequested,
+                    requestedPackages: newlyRequestedPackageReferences,
                     errors: errors);
+
+                foreach(var r in newlyRequestedPackageReferences)
+                {
+                    _requestedPackageReferences.TryRemove(r.PackageName, out var _);
+                }
+
+                foreach (var s in newlyRequestedRestoreSources)
+                {
+                    _requestedRestoreSources.TryRemove(s, out var _);
+                }
             }
             else
             {
@@ -244,13 +269,21 @@ namespace Microsoft.DotNet.Interactive
 
                 foreach (var reference in resolved)
                 {
-                    _resolvedPackageReferences.TryAdd(reference.PackageName.ToLower(CultureInfo.InvariantCulture), reference);
+                    _resolvedPackageReferences.TryAdd(reference.PackageName, reference);
+                    _requestedPackageReferences.TryRemove(reference.PackageName, out var _);
                 }
+
+                foreach (var s in newlyRequestedRestoreSources)
+                {
+                    _requestedRestoreSources.TryRemove(s, out var _);
+                    _resolvedRestoreSources.TryAdd(s, s);
+                }
+
 
                 packageRestoreResult =
                     new PackageRestoreResult(
                         succeeded: true,
-                        requestedPackages: newlyRequested,
+                        requestedPackages: newlyRequestedPackageReferences,
                         resolvedReferences: _resolvedPackageReferences
                                             .Values
                                             .Except(previouslyResolved)

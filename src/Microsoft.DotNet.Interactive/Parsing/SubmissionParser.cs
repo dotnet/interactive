@@ -151,6 +151,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                             directiveCommand.KernelUri = lastKernelUri;
                             directiveCommand.TargetKernelName = targetKernelName;
                             AddHoistedCommand(directiveCommand);
+                            nugetRestoreOnKernels.Add(targetKernelName);
                         }
                         else
                         {

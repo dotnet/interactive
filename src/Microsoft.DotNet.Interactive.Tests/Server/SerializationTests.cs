@@ -314,6 +314,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     new ResolvedPackageReference(
                         packageName: "ThePackage",
                         packageVersion: "1.2.3",
+                        false,
                         assemblyPaths: new[] { "/path/to/a.dll" },
                         packageRoot: "/the/package/root",
                         probingPaths: new[] { "/probing/path/1", "/probing/path/2" }),
