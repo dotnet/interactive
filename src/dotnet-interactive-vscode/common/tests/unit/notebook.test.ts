@@ -590,7 +590,7 @@ Console.WriteLine(1);
             'markdown'
         ];
         for (let language of markdownLanguages) {
-            expect(languageToCellKind(language)).to.equal(vscodeLike.NotebookCellKind.Markdown);
+            expect(languageToCellKind(language)).to.equal(vscodeLike.NotebookCellKind.Markup);
         }
     });
 });

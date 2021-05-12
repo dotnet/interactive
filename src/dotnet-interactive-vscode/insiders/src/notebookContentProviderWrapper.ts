@@ -47,8 +47,8 @@ export class DotNetNotebookContentProviderWrapper implements vscode.NotebookCont
             // ensure at least one cell
             notebookData = new vscode.NotebookData([{
                 kind: vscode.NotebookCellKind.Code,
-                source: '',
-                language: defaultNotebookCellLanguage,
+                value: '',
+                languageId: defaultNotebookCellLanguage,
             }]);
         }
 

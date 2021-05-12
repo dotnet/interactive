@@ -87,8 +87,8 @@ abstract class DotNetNotebookSerializer implements vscode.NotebookSerializer {
 function toNotebookCell(cell: vscode.NotebookCellData): contracts.NotebookCell {
     const outputs = cell.outputs || [];
     return {
-        language: getSimpleLanguage(cell.language),
-        contents: cell.source,
+        language: getSimpleLanguage(cell.languageId),
+        contents: cell.value,
         outputs: outputs.map(vsCodeCellOutputToContractCellOutput)
     };
 }
