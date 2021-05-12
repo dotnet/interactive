@@ -13,7 +13,6 @@ namespace Microsoft.DotNet.Interactive
         public ResolvedPackageReference(
             string packageName,
             string packageVersion,
-            bool requested,
             IReadOnlyList<string> assemblyPaths,
             string packageRoot = null,
             IReadOnlyList<string> probingPaths = null) : base(packageName, packageVersion)
@@ -32,7 +31,6 @@ namespace Microsoft.DotNet.Interactive
             {
                 PackageRoot = new FileInfo(path).Directory?.Parent?.Parent?.FullName;
             }
-            Requested = requested;
         }
 
         public IReadOnlyList<string> AssemblyPaths { get; }
@@ -40,7 +38,7 @@ namespace Microsoft.DotNet.Interactive
         public IReadOnlyList<string> ProbingPaths { get; }
 
         public string PackageRoot { get; }
-        internal bool Requested { get; }
+        public bool Requested { get; }
 
         public override string ToString() => $"{PackageName},{PackageVersion}";
     }
