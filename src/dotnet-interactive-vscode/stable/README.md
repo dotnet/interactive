@@ -23,3 +23,7 @@ To open an existing .NET notebook, bring up the Command Palette(`Ctrl+Shift+P`) 
 To create a new notebook, open the Command Palette(`Ctrl+Shift+P`), and select **.NET Interactive: Create new blank notebook**. You can also create a new notebook with `Ctrl+Shift+Alt+N` key combination.
 
 ![newnotebook](https://user-images.githubusercontent.com/2546640/94438730-833fed80-016d-11eb-94e6-da7b51abf58a.gif)
+
+## Telemetry
+
+The .NET Interactive extension for VS Code uses the `dotnet-interactive` tool which collects usage and sends telemetry to Microsoft to help us improve our products and services.  Read our [privacy statement](https://privacy.microsoft.com/privacystatement) to learn more.  See [here](https://github.com/dotnet/interactive/tree/main/docs#telemetry) to learn more about telemetry in .NET Interactive.
