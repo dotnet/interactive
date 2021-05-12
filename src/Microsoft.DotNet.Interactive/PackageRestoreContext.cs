@@ -120,7 +120,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 yield return Tuple.Create("i", rs);
             }
-            foreach (var pr in RequestedPackageReferences.Concat(ResolvedPackageReferences.Where(p => p.Requested).Select(p => new PackageReference(p.PackageName, p.PackageVersion))).OrderBy(r => r.PackageName))
+            foreach (var pr in RequestedPackageReferences.Concat(ResolvedPackageReferences.Select(p => new PackageReference(p.PackageName, p.PackageVersion))).OrderBy(r => r.PackageName))
             {
                 yield return Tuple.Create("r", $"Include={pr.PackageName}, Version={pr.PackageVersion}");
             }
@@ -184,12 +184,9 @@ namespace Microsoft.DotNet.Interactive
                         root.FullName
                     };
 
-                    // Was package requested
-                    bool requested = _requestedRestoreSources.ContainsKey(packageReference.PackageName);
                     yield return new ResolvedPackageReference(
                         packageReference.PackageName,
                         packageReference.PackageVersion,
-                        requested,
                         GetAssemblyPathsForPackage(root, resolutionsArray)
                             .Select(p => p.FullName)
                             .ToArray(),
