@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive
             AssemblyPaths = assemblyPaths ?? throw new ArgumentNullException(nameof(assemblyPaths));
             ProbingPaths = probingPaths ?? Array.Empty<string>();
             PackageRoot = packageRoot;
-            
+
             if (PackageRoot is null && 
                 AssemblyPaths.FirstOrDefault() is {} path)
             {
@@ -38,7 +38,6 @@ namespace Microsoft.DotNet.Interactive
         public IReadOnlyList<string> ProbingPaths { get; }
 
         public string PackageRoot { get; }
-        public bool Requested { get; }
 
         public override string ToString() => $"{PackageName},{PackageVersion}";
     }
