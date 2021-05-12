@@ -19,6 +19,11 @@ function SetNpmVersionNumber([PSCustomObject]$packageJsonContents, [string]$pack
 
 function AddGitShaToDescription([PSCustomObject]$packageJsonContents, [string]$gitSha) {
     Write-Host "Appending git SHA $gitSha to description."
+    $shaIndex = $packageJsonContents.description.IndexOf("  Git SHA ")
+    if ($shaIndex -ge 0) {
+        $packageJsonContents.description = $packageJsonContents.description.Substring(0, $shaIndex)
+    }
+
     $packageJsonContents.description += "  Git SHA $gitSha"
 }
 

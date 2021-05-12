@@ -14,13 +14,21 @@ NuGet packages produced from every build of `main` are auto-published to the NuG
 
 ## Publish VS Code Extension
 
-The repo produces two versions of the VS Code extension on every build; one for Stable, the other for Insiders, and they both target the same backing tool.
+The signed build produces three versions of the VS Code extension, 2 against Stable VS Code and 1 against Insiders.  Both versions against Stable append a `"0"` character to the extension version number and Insiders appends a `"1"` character.
 
-The Stable version of the extension can be published from a specified build via [this](https://dev.azure.com/dnceng/internal/_release?_a=releases&view=mine&definitionId=86) release definition.  The extension version number for Stable will always be the version of the internal tool plus another `"0"` character, e.g., if the tool version is `1.0.123456`, then the Stable extension will be version `1.0.1234560`.  Due to how the VS Code marketplace handles extensions, this _also_ will publish the corresponding Insiders version.
+### Stable with locked tool version
 
-The Insiders version of the extension can be published from a specified build via [this](https://dev.azure.com/dnceng/internal/_release?_a=releases&view=mine&definitionId=103) release definition.  The extension number for Insiders will always be the version of the internal tool plus another `"1"` character, e.g., if the tool version is `1.0.123456`, then the Insiders extension will be version `1.0.1234561`.
+The Stable extension with the locked tool version can be published via [this](https://dev.azure.com/dnceng/internal/_release?_a=releases&view=mine&definitionId=86) release definition.  **This will also immediately publish the corresponding Insiders version of the extension.**
 
-Once either of those release definitions are invoked, the new extension will appear in the VS Code marketplace approximately 10 minutes later, after the marketplace has run their own internal validation.
+### Stable with latest tool
+
+The Stable extension with the latest tool can be published via [this](https://dev.azure.com/dnceng/internal/_release?_a=releases&view=mine&definitionId=115) release definition.  **This will also immediately publish the corresponding Insiders version of the extension.**
+
+### Insiders with latest tool
+
+The Insiders extension with the latest tool can be published via [this](https://dev.azure.com/dnceng/internal/_release?_a=releases&view=mine&definitionId=103) release definition.
+
+Once any of those release definitions are invoked, the new extension will appear in the VS Code marketplace approximately 10 minutes later, after the marketplace has run their own internal validation.
 
 The publish/verification script is located in this repo at [`eng/publish/PublishVSCodeExtension.ps1`](eng/publish/PublishVSCodeExtension.ps1).
 

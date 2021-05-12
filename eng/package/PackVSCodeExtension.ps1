@@ -8,7 +8,7 @@ param (
 Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
 
-function Build-VsCodeExtension([string] $packageDirectory, [string] $packageVersionNumber, [string] $kernelVersionNumber) {
+function Build-VsCodeExtension([string] $packageDirectory, [string] $outputSubDirectory = "", [string] $packageVersionNumber, [string] $kernelVersionNumber = "") {
     Push-Location $packageDirectory
 
     $packageJsonPath = Join-Path (Get-Location) "package.json"
@@ -17,17 +17,22 @@ function Build-VsCodeExtension([string] $packageDirectory, [string] $packageVers
     AddGitShaToDescription -packageJsonContents $packageJsonContents -gitSha $gitSha
 
     # set tool version
-    Write-Host "Setting tool version to $kernelVersionNumber"
-    $packageJsonContents.contributes.configuration.properties."dotnet-interactive.minimumInteractiveToolVersion"."default" = $kernelVersionNumber
+    if ($kernelVersionNumber -Ne "") {
+        Write-Host "Setting tool version to $kernelVersionNumber"
+        $packageJsonContents.contributes.configuration.properties."dotnet-interactive.minimumInteractiveToolVersion"."default" = $kernelVersionNumber
+    }
 
     SaveJson -packageJsonPath $packagejsonPath -packageJsonContents $packageJsonContents
 
     # create destination
-    EnsureCleanDirectory -location "$outDir\$packageDirectory"
+    if ($outputSubDirectory -Eq "") {
+        $outputSubDirectory = $packageDirectory
+    }
+    EnsureCleanDirectory -location "$outDir\$outputSubDirectory"
 
     # pack
     Write-Host "Packing extension"
-    npx vsce package --out "$outDir\$packageDirectory\dotnet-interactive-vscode-$packageVersionNumber.vsix"
+    npx vsce package --out "$outDir\$outputSubDirectory\dotnet-interactive-vscode-$packageVersionNumber.vsix"
 
     Pop-Location
 }
@@ -41,6 +46,7 @@ try {
 
     $stablePackageVersion = "${stableToolVersionNumber}0"
     $insidersPackageVersion = "${stableToolVersionNumber}1"
+    Build-VsCodeExtension -packageDirectory "stable" -outputSubDirectory "stable-locked" -packageVersionNumber $stablePackageVersion
     Build-VsCodeExtension -packageDirectory "stable" -packageVersionNumber $stablePackageVersion -kernelVersionNumber $stableToolVersionNumber
     Build-VsCodeExtension -packageDirectory "insiders" -packageVersionNumber $insidersPackageVersion -kernelVersionNumber $stableToolVersionNumber
 }
