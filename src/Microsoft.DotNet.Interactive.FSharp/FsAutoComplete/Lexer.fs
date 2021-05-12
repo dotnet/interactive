@@ -1,6 +1,6 @@
 namespace FsAutoComplete
 
-open FSharp.Compiler.SourceCodeServices
+open FSharp.Compiler.Tokenization
 
 type internal SymbolKind =
     | Ident

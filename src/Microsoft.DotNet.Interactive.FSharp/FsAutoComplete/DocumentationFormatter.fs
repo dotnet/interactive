@@ -5,7 +5,11 @@ open System.Text.RegularExpressions
 module internal DocumentationFormatter =
 
     open FSharp.Compiler
-    open FSharp.Compiler.SourceCodeServices
+    open FSharp.Compiler.CodeAnalysis
+    open FSharp.Compiler.EditorServices
+    open FSharp.Compiler.Symbols
+    open FSharp.Compiler.Syntax
+    open FSharp.Compiler.Tokenization
     open System
     open System.Text
 
@@ -162,9 +166,9 @@ module internal DocumentationFormatter =
         with :? InvalidOperationException -> p.DisplayName, p.DisplayName.Length
 
     let getUnioncaseSignature displayContext (unionCase:FSharpUnionCase) =
-        if unionCase.UnionCaseFields.Count > 0 then
+        if unionCase.Fields.Count > 0 then
             let typeList =
-                unionCase.UnionCaseFields
+                unionCase.Fields
                 |> Seq.map (fun unionField ->
                     if unionField.Name.StartsWith "Item" then //TODO: Some better way of dettecting default names for the union cases' fields
                         unionField.FieldType |> format displayContext |> fst
@@ -507,7 +511,7 @@ module internal DocumentationFormatter =
                 |> Seq.collect (fun f ->
                     seq {
                         yield getFuncSignatureForTypeSignature displayContext f false false
-                        yield! f.Overloads false |> Option.map (Seq.map (fun f -> getFuncSignatureForTypeSignature displayContext f false false)) |> Option.defaultValue Seq.empty
+                        yield! f.GetOverloads false |> Option.map (Seq.map (fun f -> getFuncSignatureForTypeSignature displayContext f false false)) |> Option.defaultValue Seq.empty
                     })
 
                 |> Seq.toArray
@@ -551,7 +555,7 @@ module internal DocumentationFormatter =
                         [
                           for f in v do
                             yield getFuncSignatureForTypeSignature displayContext f false false
-                            yield! f.Overloads false |> Option.map (Seq.map (fun f -> getFuncSignatureForTypeSignature displayContext f false false)) |> Option.defaultValue Seq.empty
+                            yield! f.GetOverloads false |> Option.map (Seq.map (fun f -> getFuncSignatureForTypeSignature displayContext f false false)) |> Option.defaultValue Seq.empty
                         ])
                 |> Seq.toArray
 

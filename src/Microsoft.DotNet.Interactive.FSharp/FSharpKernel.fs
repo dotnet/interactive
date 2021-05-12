@@ -23,10 +23,14 @@ open Microsoft.DotNet.Interactive.Events
 open Microsoft.DotNet.Interactive.Extensions
 open Microsoft.DotNet.Interactive.FSharp.ScriptHelpers
 
+open FSharp.Compiler.Diagnostics
+open FSharp.Compiler.EditorServices
 open FSharp.Compiler.Interactive.Shell
-open FSharp.Compiler.SourceCodeServices
-open FSharp.Compiler.Text.Pos
+open FSharp.Compiler.Text.Position
+
 open FsAutoComplete
+open FSharp.Compiler.Symbols
+open FSharp.Compiler.Syntax
 
 type FSharpKernel () as this =
 
@@ -72,7 +76,7 @@ type FSharpKernel () as this =
         | FSharpGlyph.ExtensionMethod -> WellKnownTags.ExtensionMethod
         | FSharpGlyph.Error -> WellKnownTags.Error
 
-    let getFilterText (declarationItem: FSharpDeclarationListItem) =
+    let getFilterText (declarationItem: DeclarationListItem) =
         match declarationItem.NamespaceToOpen, declarationItem.Name.Split '.' with
         // There is no namespace to open and the item name does not contain dots, so we don't need to pass special FilterText to Roslyn.
         | None, [|_|] -> null
@@ -108,15 +112,15 @@ type FSharpKernel () as this =
                 | null -> None
                 | summaryNode -> Some summaryNode.InnerText)
 
-    let tryGetDocumentationByToolTipElementData (dataList: FSharpToolTipElementData<string> list) =
+    let tryGetDocumentationByToolTipElementData (dataList: ToolTipElementData list) =
         let text =
             let xmlData =
                 dataList
                 |> List.map (fun data ->
                     match data.XmlDoc with
-                    | FSharpXmlDoc.Text(_, xmlLines) when xmlLines.Length > 0 ->
-                        sprintf "%s" (String.concat "" xmlLines)
-                    | FSharpXmlDoc.XmlDocFileSignature(file, key) ->
+                    | FSharpXmlDoc.FromXmlText xmlDoc when xmlDoc.UnprocessedLines.Length > 0 ->
+                        sprintf "%s" (String.concat "" xmlDoc.UnprocessedLines)
+                    | FSharpXmlDoc.FromXmlFile (file, key) ->
                         let xmlFile = Path.ChangeExtension(file, "xml")
                         match tryGetDocumentationByXmlFileAndKey xmlFile key with
                         | Some docText -> sprintf "%s" docText
@@ -131,15 +135,15 @@ type FSharpKernel () as this =
         if String.IsNullOrWhiteSpace(text) then None
         else Some text
 
-    let getDocumentation (declarationItem: FSharpDeclarationListItem) =
+    let getDocumentation (declarationItem: DeclarationListItem) =
         async {
-            match declarationItem.DescriptionText with
-            | FSharpToolTipText(elements) ->
+            match declarationItem.Description with
+            | ToolTipText(elements) ->
                 return
                     elements
                     |> List.choose (fun element ->
                         match element with
-                        | FSharpToolTipElement.Group(dataList) ->
+                        | ToolTipElement.Group(dataList) ->
                             tryGetDocumentationByToolTipElementData dataList
                         | _ ->
                             None
@@ -147,7 +151,7 @@ type FSharpKernel () as this =
                     |> String.concat ""
         }
 
-    let getCompletionItem (declarationItem: FSharpDeclarationListItem) =
+    let getCompletionItem (declarationItem: DeclarationListItem) =
         async {
             let kind = getKindString declarationItem.Glyph
             let filterText = getFilterText declarationItem
@@ -235,7 +239,7 @@ type FSharpKernel () as this =
 
     let handleRequestHoverText (requestHoverText: RequestHoverText) (context: KernelInvocationContext) =
         async {
-            let! (parse, check, _ctx) = script.Value.Fsi.ParseAndCheckInteraction(requestHoverText.Code)
+            let parse, check, _ctx = script.Value.Fsi.ParseAndCheckInteraction(requestHoverText.Code)
 
             let res = FsAutoComplete.ParseAndCheckResults(parse, check, EntityCache())
             let text = FSharp.Compiler.Text.SourceText.ofString requestHoverText.Code
@@ -351,8 +355,8 @@ type FSharpKernel () as this =
 
     let handleRequestDiagnostics (requestDiagnostics: RequestDiagnostics) (context: KernelInvocationContext) =
         async {
-            let! (_parseResults, checkFileResults, _checkProjectResults) = script.Value.Fsi.ParseAndCheckInteraction(requestDiagnostics.Code)
-            let errors = checkFileResults.Errors
+            let _parseResults, checkFileResults, _checkProjectResults = script.Value.Fsi.ParseAndCheckInteraction(requestDiagnostics.Code)
+            let errors = checkFileResults.Diagnostics
             let diagnostics = errors |> Array.map getDiagnostic |> fun x -> x.ToImmutableArray()
             context.Publish(DiagnosticsProduced(diagnostics, requestDiagnostics))
         }

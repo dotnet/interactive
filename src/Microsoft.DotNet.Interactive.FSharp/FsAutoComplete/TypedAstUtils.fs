@@ -3,7 +3,10 @@ namespace FsAutoComplete
 
 open System
 open System.Text.RegularExpressions
-open FSharp.Compiler.SourceCodeServices
+open FSharp.Compiler.CodeAnalysis
+open FSharp.Compiler.EditorServices
+open FSharp.Compiler.Symbols
+open FSharp.Compiler.Syntax
 
 
 [<AutoOpen>]
@@ -158,7 +161,7 @@ module internal TypedAstExtensionHelpers =
             | None -> None
             |> Option.map (fun fullDisplayName -> String.Join (".", fullDisplayName))
 
-        member x.TryGetFullCompiledOperatorNameIdents() : Idents option =
+        member x.TryGetFullCompiledOperatorNameIdents() : ShortIdents option =
             // For operator ++ displayName is ( ++ ) compiledName is op_PlusPlus
             if isOperator x.DisplayName && x.DisplayName <> x.CompiledName then
                 x.DeclaringEntity
@@ -234,7 +237,7 @@ module internal TypedAstExtensionHelpers =
             | :? FSharpUnionCase as fsu -> fsu.XmlDoc
             | :? FSharpActivePatternCase as apc -> apc.XmlDoc
             | :? FSharpGenericParameter as gp -> gp.XmlDoc
-            | _ -> ResizeArray() :> Collections.Generic.IList<_>
+            | _ -> FSharpXmlDoc.None
 
     type FSharpGenericParameterMemberConstraint with
         member x.IsProperty =

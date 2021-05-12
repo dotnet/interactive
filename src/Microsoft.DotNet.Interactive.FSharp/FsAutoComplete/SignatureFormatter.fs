@@ -1,5 +1,10 @@
 namespace FsAutoComplete
 
+open FSharp.Compiler.CodeAnalysis
+open FSharp.Compiler.Symbols
+open FSharp.Compiler.Syntax
+open FSharp.Compiler.Tokenization
+
 [<AutoOpen>]
 module internal PrintParameter =
     let print sb = Printf.bprintf sb "%s"
@@ -7,7 +12,7 @@ module internal PrintParameter =
 
 module internal SignatureFormatter =
     open FSharp.Compiler
-    open FSharp.Compiler.SourceCodeServices
+    open FSharp.Compiler.EditorServices
     open System
     open System.Text
 
@@ -140,9 +145,9 @@ module internal SignatureFormatter =
         sb.ToString()
 
     let getUnioncaseSignature (displayContext: FSharpDisplayContext) (unionCase:FSharpUnionCase) =
-        if unionCase.UnionCaseFields.Count > 0 then
+        if unionCase.Fields.Count > 0 then
             let typeList =
-                unionCase.UnionCaseFields
+                unionCase.Fields
                 |> Seq.map (fun unionField ->
                     if unionField.Name.StartsWith "Item" then //TODO: Some better way of dettecting default names for the union cases' fields
                         formatFSharpType displayContext unionField.FieldType
