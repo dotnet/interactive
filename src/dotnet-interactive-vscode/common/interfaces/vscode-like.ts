@@ -4,7 +4,7 @@
 // set to match vscode notebook types
 
 export enum NotebookCellKind {
-    Markdown = 1,
+    Markup = 1,
     Code = 2
 }
 
