@@ -23,11 +23,11 @@ namespace Microsoft.DotNet.Interactive.Jupyter.Tests
             var latexSource = @"\begin{equation}
 F(k) = \int_{-\infty}^{\infty} f(x) e^{2\pi i k} dx
 \end{equation}";
-            var laTex = new LaTeXString(latexSource);
-            var writer = new StringWriter();
-            laTex.FormatTo(writer, "text/latex");
-            var s = writer.ToString();
-            s.Should().Be(latexSource);
+
+            new LaTeXString(latexSource)
+                .ToDisplayString("text/latex")
+                .Should()
+                .Be(latexSource);
         }
     }
 
@@ -43,11 +43,11 @@ F(k) = \int_{-\infty}^{\infty} f(x) e^{2\pi i k} dx
                 "text/latex");
 
             var mathSource = @"F(k) = \int_{-\infty}^{\infty} f(x) e^{2\pi i k} dx";
-            var math = new MathString(mathSource);
-            var writer = new StringWriter();
-            math.FormatTo(writer, "text/latex");
-            var s = writer.ToString();
-            s.Should().Be($"$${mathSource}$$");
+
+            new MathString(mathSource)
+                .ToDisplayString("text/latex")
+                .Should()
+                .Be($"$${mathSource}$$");
         }
     }
 }

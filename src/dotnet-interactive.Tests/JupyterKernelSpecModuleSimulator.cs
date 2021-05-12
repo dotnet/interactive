@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.App.Tests
                 InstalledKernelSpecs.Add(File.ReadAllText(kernelSpec.FullName));
             }
 
-            if (!_success && _withException != null)
+            if (!_success && _withException is not null)
             {
                 throw _withException;
             }

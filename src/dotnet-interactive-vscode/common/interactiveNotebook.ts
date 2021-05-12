@@ -41,10 +41,14 @@ export function isDotnetInteractiveLanguage(language: string): boolean {
     return language.startsWith(notebookLanguagePrefix);
 }
 
+export function isJupyterNotebookViewType(viewType: string): boolean {
+    return viewType === 'jupyter-notebook';
+}
+
 export function languageToCellKind(language: string): NotebookCellKind {
     switch (language) {
         case 'markdown':
-            return NotebookCellKind.Markdown;
+            return NotebookCellKind.Markup;
         default:
             return NotebookCellKind.Code;
     }
@@ -73,10 +77,10 @@ export function backupNotebook(rawData: Uint8Array, location: string): Promise<N
     });
 }
 
-export function notebookCellChanged(clientMapper: ClientMapper, document: Document, language: string, diagnosticDelay: number, callback: (diagnostics: Array<Diagnostic>) => void) {
-    debounce(document.uri.toString(), diagnosticDelay, async () => {
-        const client = await clientMapper.getOrAddClient(document.uri);
-        const diagnostics = await client.getDiagnostics(language, document.getText());
+export function notebookCellChanged(clientMapper: ClientMapper, cellDocument: Document, language: string, diagnosticDelay: number, callback: (diagnostics: Array<Diagnostic>) => void) {
+    debounce(`diagnostics-${cellDocument.uri.toString()}`, diagnosticDelay, async () => {
+        const client = await clientMapper.getOrAddClient(cellDocument.uri);
+        const diagnostics = await client.getDiagnostics(language, cellDocument.getText());
         callback(diagnostics);
     });
 }

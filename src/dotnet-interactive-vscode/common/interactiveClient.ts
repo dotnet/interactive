@@ -52,7 +52,7 @@ import {
     Cancel
 } from './interfaces/contracts';
 import { Eol } from './interfaces';
-import { createErrorOutput, createOutput, debounce } from './utilities';
+import { clearDebounce, createErrorOutput, createOutput } from './utilities';
 
 import * as vscodeLike from './interfaces/vscode-like';
 
@@ -96,9 +96,17 @@ export class InteractiveClient {
         return serializedNotebook.rawData;
     }
 
+    private clearExistingLanguageServiceRequests(requestId: string) {
+        clearDebounce(requestId);
+        clearDebounce(`completion-${requestId}`);
+        clearDebounce(`diagnostics-${requestId}`);
+        clearDebounce(`hover-${requestId}`);
+        clearDebounce(`sighelp-${requestId}`);
+    }
+
     execute(source: string, language: string, outputObserver: { (outputs: Array<vscodeLike.NotebookCellOutput>): void }, diagnosticObserver: (diags: Array<Diagnostic>) => void, configuration: { token?: string | undefined, id?: string | undefined } | undefined): Promise<void> {
         if (configuration !== undefined && configuration.id !== undefined) {
-            debounce(configuration.id, 0, () => { });
+            this.clearExistingLanguageServiceRequests(configuration.id);
         }
         return new Promise((resolve, reject) => {
             let diagnostics: Array<Diagnostic> = [];

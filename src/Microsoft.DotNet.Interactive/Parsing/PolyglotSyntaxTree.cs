@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         public string? GetLanguageAtPosition(int position)
         {
-            if (_root == null)
+            if (_root is null)
             {
                 return null;
             }

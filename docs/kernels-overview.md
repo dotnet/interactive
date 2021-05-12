@@ -6,7 +6,7 @@ A kernel doesn't have to run in its own process. The default `dotnet-interactive
 
 The `dotnet-interactive` tool also provides a number of protocols, including the [Jupyter message protocol](https://jupyter-client.readthedocs.io/en/stable/messaging.html) and a JSON protocol that can be accessed over either standard I/O or HTTP. These multiple protocols allow the core set of capabilities to be fairly portable.
 
-![image](https://user-images.githubusercontent.com/547415/94998579-9c7adc80-0567-11eb-8b90-aa64a790ca01.png)
+![image](https://user-images.githubusercontent.com/547415/111683649-00762200-87e3-11eb-9767-e445b97fa1c5.png)
 
 
 ## Commands and events
@@ -34,7 +34,7 @@ You can see some additional examples of command and event interactions in the fo
 
 In the standard configuration, .NET Interactive uses multiple, nested kernels. These kernels share a common set of interfaces which allow them to be composed into different kinds of pipelines. This is the basis for supporting multiple languages, among other features. A user of a .NET Interactive notebook can specify the language for a code submission by prefixing a block of code with a [magic command](magic-commands.md) such as `#!csharp`, `#!fsharp`, or `#!pwsh`, or by using the language selector in the lower right corner of a Visual Studio Code notebook cell.
 
-<img src="https://user-images.githubusercontent.com/547415/82159474-276e6b00-9843-11ea-8ec0-f3f5bcee7547.png" width="40%">
+<img src="https://user-images.githubusercontent.com/547415/111684048-737f9880-87e3-11eb-9b02-67b4bf926bca.png" width="40%">
 
 The language-selection magic commands will even allow you to submit code for multiple languages in a single notebook cell. Once again, the submission will be split into several commands, just like in the `#!time` example above. Consider this submission:
 

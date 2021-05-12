@@ -20,6 +20,8 @@ variables:
     value: .NETCore
   - name: DotNetSdkVersion
     value: '5.0.100'
+  - name: PocketLoggerLogPath
+    value: $(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)
   - name: TryDotNetPackagesPath
     value: $(Build.SourcesDirectory)/artifacts/.trydotnet/packages
   - name: NodeJSVersion
@@ -45,7 +47,7 @@ stages:
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCoreInternal-Pool
             queue: buildpool.windows.10.amd64.vs2019
-        timeoutInMinutes: 300
+        timeoutInMinutes: 90
         variables:
         # Enable signing for internal, non-PR builds
         - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -76,6 +78,10 @@ stages:
             value: Test
           - name: _BuildArgs
             value: /p:SignType=$(_SignType)
+        # SkipTests
+        - ${{ if ne(variables['SkipTests'], 'true') }}:
+          - name: _TestArgs
+            value: -test
         steps:
         - script: git config --global core.longpaths true
           displayName: Enable `git clean` to handle long paths
@@ -110,15 +116,17 @@ stages:
             -configuration $(_BuildConfig)
             -prepareMachine
             -sign
-            -test
+            $(_TestArgs)
             $(_BuildArgs)
           displayName: Build / Test
           env:
+            POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
 
         - script: npm run ciTest
           displayName: NPM tests
           workingDirectory: "$(Build.SourcesDirectory)/src/Microsoft.DotNet.Interactive.Js"
+          condition: ne(variables['SkipTests'], 'true')
 
         # build and test VS Code extension
         - script: npm install
@@ -128,6 +136,7 @@ stages:
         - script: npm run ciTest
           displayName: npm test (VS Code stable)
           workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode/stable"
+          condition: ne(variables['SkipTests'], 'true')
 
         - script: npm install
           displayName: npm install (VS Code insiders)
@@ -136,6 +145,7 @@ stages:
         - script: npm run ciTest
           displayName: npm test (VS Code insiders)
           workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-vscode/insiders"
+          condition: ne(variables['SkipTests'], 'true')
 
         # build and test npm package
         - script: npm install
@@ -145,6 +155,7 @@ stages:
         - script: npm run ciTest
           displayName: npm test (npm package)
           workingDirectory: "$(Build.SourcesDirectory)/src/dotnet-interactive-npm"
+          condition: ne(variables['SkipTests'], 'true')
 
         # publish VS Code and npm test results
         - task: PublishTestResults@2
@@ -231,6 +242,10 @@ stages:
             value: Test
           - name: _BuildArgs
             value: /p:SignType=$(_SignType)
+        # SkipTests
+        - ${{ if ne(variables['SkipTests'], 'true') }}:
+          - name: _TestArgs
+            value: --test
         steps:
         - script: git config --global core.longpaths true
           displayName: Enable `git clean` to handle long paths
@@ -258,14 +273,16 @@ stages:
         - script: ./eng/cibuild.sh
             --configuration $(_BuildConfig)
             --prepareMachine
-            --test
+            $(_TestArgs)
           displayName: Build / Test
           env:
+            POCKETLOGGER_LOG_PATH: $(PocketLoggerLogPath)
             TRYDOTNET_PACKAGES_PATH: $(TryDotNetPackagesPath)
 
         - script: npm run ciTest
           displayName: NPM tests
           workingDirectory: "$(Build.SourcesDirectory)/src/Microsoft.DotNet.Interactive.Js"
+          condition: ne(variables['SkipTests'], 'true')
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
@@ -321,7 +338,7 @@ stages:
       jobs:
       - job: IntegrationTest
         dependsOn: Windows_NT
-        condition: succeeded()
+        condition: and(succeeded(), ne(variables['SkipTests'], 'true'))
         pool:
           vmImage: ubuntu-latest
         variables:
@@ -382,3 +399,15 @@ stages:
       enableSymbolValidation: false
       # SourceLink improperly looks for generated files.  See https://github.com/dotnet/arcade/issues/3069
       enableSourceLinkValidation: false
+
+#---------------------------------------------------------------------------------------------------------------------#
+#                                                    NPM Publish                                                      #
+#---------------------------------------------------------------------------------------------------------------------#
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  - template: eng/publish/publish-npm.yml
+    parameters:
+      packageName: microsoft-dotnet-interactive-*.tgz
+      registryUrl: pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/npm/registry/
+      registryUser: dnceng
+      registryEmail: dnceng@microsoft.com
+      publishingBranch: main

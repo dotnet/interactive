@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Interactive
 
         public override int GetHashCode()
         {
-            return (_stringValue != null ? _stringValue.GetHashCode() : 0);
+            return (_stringValue is not null ? _stringValue.GetHashCode() : 0);
         }
 
         private readonly string _stringValue;

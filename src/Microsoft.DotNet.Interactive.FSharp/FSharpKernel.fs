@@ -50,6 +50,8 @@ type FSharpKernel () as this =
 
     let xmlDocuments = ConcurrentDictionary<string, XmlDocument>(StringComparer.OrdinalIgnoreCase)
 
+    [<DefaultValue>] val mutable workingDirectory : string
+
     let getKindString (glyph: FSharpGlyph) =
         match glyph with
         | FSharpGlyph.Class -> WellKnownTags.Class
@@ -171,6 +173,12 @@ type FSharpKernel () as this =
             | FSharpDiagnosticSeverity.Info -> DiagnosticSeverity.Info
         let errorId = sprintf "FS%04i" error.ErrorNumber
         Diagnostic(linePositionSpan, severity, errorId, error.Message)
+
+    let handleChangeWorkingDirectory (changeDirectory: ChangeWorkingDirectory) (context: KernelInvocationContext) =
+        async {
+            this.workingDirectory <- changeDirectory.WorkingDirectory;
+            return Task.CompletedTask;
+        }
 
     let handleSubmitCode (codeSubmission: SubmitCode) (context: KernelInvocationContext) =
         async {
@@ -401,6 +409,9 @@ type FSharpKernel () as this =
 
     interface IKernelCommandHandler<SubmitCode> with
         member this.HandleAsync(command: SubmitCode, context: KernelInvocationContext) = handleSubmitCode command context |> Async.StartAsTask :> Task
+
+    interface IKernelCommandHandler<ChangeWorkingDirectory> with
+        member this.HandleAsync(command: ChangeWorkingDirectory, context: KernelInvocationContext) = handleChangeWorkingDirectory command context |> Async.StartAsTask :> Task
 
     interface ISupportNuget with
         member _.AddRestoreSource(source: string) =

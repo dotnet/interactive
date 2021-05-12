@@ -4,8 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Web;
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
 
@@ -16,7 +18,7 @@ namespace Microsoft.DotNet.Interactive.Http
         private readonly TimeSpan _getApiUriTimeout;
         private readonly TaskCompletionSource<Uri> _completionSource;
         private Dictionary<string, (KernelInvocationContext Context, TaskCompletionSource CompletionSource)> _tokenToInvocationContext;
-
+       
         public HtmlNotebookFrontendEnvironment(TimeSpan? apiUriTimeout = null)
         {
             RequiresAutomaticBootstrapping = true;
@@ -36,6 +38,7 @@ namespace Microsoft.DotNet.Interactive.Http
         {
             _completionSource.TrySetResult(apiUri);
         }
+
 
         public Task<Uri> GetApiUriAsync()
         {
@@ -60,8 +63,17 @@ if (typeof window.createDotnetInteractiveClient === typeof Function) {{
         const notebookScope = getDotnetInteractiveScope('{apiUri.AbsoluteUri}');
         try {{
 
-".Replace("\r\n", "\n");
-            var codePostlude = $@"
+await Object.getPrototypeOf(async function() {{}}).constructor(
+    ""interactive"",
+    ""console"",
+    ""notebookScope"",
+    """.Replace("\r\n", "\n");
+            var codePostlude = $@"""
+)(
+    interactive,
+    console,
+    notebookScope
+);
 
         }} catch (err) {{
             interactive.failCommand(err, '{commandToken}');
@@ -72,7 +84,7 @@ if (typeof window.createDotnetInteractiveClient === typeof Function) {{
     }});
 }}
 ".Replace("\r\n", "\n");
-            var wrappedCode = $"{codePrelude}{code}{codePostlude}";
+            var wrappedCode = $"{codePrelude}{HttpUtility.JavaScriptStringEncode(code)}{codePostlude}";
             var executionCompletionSource = new TaskCompletionSource();
             _tokenToInvocationContext[commandToken] = (context, executionCompletionSource);
             IHtmlContent content = PocketViewTags.script[type: "text/javascript"](wrappedCode.ToHtmlContent());
@@ -100,5 +112,6 @@ if (typeof window.createDotnetInteractiveClient === typeof Function) {{
 
             _tokenToInvocationContext.Remove(token);
         }
+
     }
 }

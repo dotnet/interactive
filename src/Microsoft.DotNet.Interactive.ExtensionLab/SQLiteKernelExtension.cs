@@ -15,18 +15,8 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         {
             if (kernel is CompositeKernel compositeKernel)
             {
-                // this is a formatter for SQL data
-                Formatter.Register
-                <IEnumerable /* tables*/
-                    <IEnumerable /* rows */
-                        <IEnumerable /* fields */<(string, object)>>>>((source, writer) =>
-                {
-                    // TODO: (RegisterFormatters) do all the tables...
-
-                    writer.Write(source.First()
-                                       .ToTabularJsonString()
-                                       .ToDisplayString(HtmlFormatter.MimeType));
-                }, HtmlFormatter.MimeType);
+                kernel.UseNteractDataExplorer();
+                kernel.UseSandDanceExplorer();
 
                 compositeKernel
                     .UseKernelClientConnection(new SQLiteKernelConnection());

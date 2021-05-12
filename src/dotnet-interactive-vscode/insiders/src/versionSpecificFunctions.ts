@@ -4,19 +4,36 @@
 import * as vscode from 'vscode';
 import * as contracts from './common/interfaces/contracts';
 import * as vscodeLike from './common/interfaces/vscode-like';
-import * as utilities from './common/interfaces/utilities';
-import { contractCellOutputToVsCodeCellOutput } from './common/vscode/notebookContentProvider';
+import * as interactiveNotebook from './common/interactiveNotebook';
+import * as utilities from './common/utilities';
+import * as diagnostics from './common/vscode/diagnostics';
+import * as vscodeUtilities from './common/vscode/vscodeUtilities';
+import * as notebookControllers from './notebookControllers';
+import * as notebookSerializers from './notebookSerializers';
+import { ClientMapper } from './common/clientMapper';
+import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
 
-export function getCellKind(cell: vscode.NotebookCell): vscode.NotebookCellKind {
-    return cell.kind;
+export function cellAt(document: vscode.NotebookDocument, index: number): vscode.NotebookCell {
+    return document.cellAt(index);
 }
 
-export function createVsCodeNotebookCellData(cellData: { cellKind: vscodeLike.NotebookCellKind, source: string, language: string, outputs: contracts.NotebookCellOutput[], metadata: any }): vscode.NotebookCellData {
-    return new vscode.NotebookCellData(
-        cellData.cellKind,
-        cellData.source,
-        cellData.language,
-        cellData.outputs.map(contractCellOutputToVsCodeCellOutput),
-        cellData.metadata,
-    );
+export function cellCount(document: vscode.NotebookDocument): number {
+    return document.cellCount;
+}
+
+export function getCells(document: vscode.NotebookDocument | undefined): Array<vscode.NotebookCell> {
+    if (document) {
+        return [...document.getCells()];
+    }
+
+    return [];
+}
+
+export function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter, ...preloadUris: vscode.Uri[]) {
+    context.subscriptions.push(new notebookControllers.DotNetNotebookKernel(clientMapper, preloadUris));
+    context.subscriptions.push(new notebookSerializers.DotNetDibNotebookSerializer(clientMapper, outputChannel));
+}
+
+export function endExecution(cell: vscode.NotebookCell, success: boolean) {
+    notebookControllers.endExecution(cell, success);
 }

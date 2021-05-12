@@ -7,6 +7,7 @@ import * as path from 'path';
 import { v4 as uuid } from 'uuid';
 import { InstallInteractiveArgs, ProcessStart } from "./interfaces";
 import { ErrorOutputMimeType, NotebookCellOutput, NotebookCellOutputItem, ReportChannel, Uri } from './interfaces/vscode-like';
+import { isDotnetInteractiveLanguage } from './interactiveNotebook';
 
 export function executeSafe(command: string, args: Array<string>, workingDirectory?: string | undefined): Promise<{ code: number, output: string, error: string }> {
     return new Promise<{ code: number, output: string, error: string }>(resolve => {
@@ -174,6 +175,34 @@ export function debounce(key: string, timeout: number, callback: () => void) {
     debounceTimeoutMap.set(key, newTimeout);
 }
 
+export function clearDebounce(key: string) {
+    rejectPendingPromise(key);
+    debounce(key, 0, () => { });
+}
+
+function rejectPendingPromise(key: string) {
+    const promiseRejection = lastPromiseRejections.get(key);
+    lastPromiseRejections.delete(key);
+    if (promiseRejection) {
+        promiseRejection();
+    }
+}
+
+let lastPromiseRejections: Map<string, ((reason?: any) => void)> = new Map();
+
+export function debounceAndReject<T>(key: string, timeout: number, callback: () => Promise<T>): Promise<T> {
+    const newPromise = new Promise<T>((resolve, reject) => {
+        rejectPendingPromise(key);
+        lastPromiseRejections.set(key, reject);
+        debounce(key, timeout, async () => {
+            const result = await callback();
+            lastPromiseRejections.delete(key);
+            resolve(result);
+        });
+    });
+    return newPromise;
+}
+
 export function createUri(fsPath: string): Uri {
     return {
         fsPath,
@@ -203,24 +232,6 @@ export function stringify(value: any): string {
 
         return value;
     });
-}
-
-export function isDotNetKernelPreferred(filename: string, fileMetadata: any): boolean {
-    const extension = path.extname(filename);
-    switch (extension) {
-        // always preferred for our own extension
-        case '.dib':
-        case '.dotnet-interactive':
-            return true;
-        // maybe preferred if the kernelspec data matches
-        case '.ipynb':
-            const kernelName = fileMetadata?.custom?.metadata?.kernelspec?.name;
-            return typeof kernelName === 'string'
-                && kernelName.toLowerCase().startsWith('.net-');
-        // never preferred if it's an unknown extension
-        default:
-            return false;
-    }
 }
 
 export function computeToolInstallArguments(args: InstallInteractiveArgs | string | undefined): InstallInteractiveArgs {

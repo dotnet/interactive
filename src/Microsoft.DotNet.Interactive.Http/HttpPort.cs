@@ -19,6 +19,6 @@ namespace Microsoft.DotNet.Interactive.Http
 
         public int? PortNumber { get; }
 
-        public bool IsAuto => PortNumber == null;
+        public bool IsAuto => PortNumber is null;
     }
 }

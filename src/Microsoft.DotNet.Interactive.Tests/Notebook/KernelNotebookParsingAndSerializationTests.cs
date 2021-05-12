@@ -13,7 +13,6 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests.Notebook
 {
-    [LogTestNamesToPocketLogger]
     public class KernelNotebookParsingAndSerializationTests : LanguageKernelTestBase
     {
         public KernelNotebookParsingAndSerializationTests(ITestOutputHelper output)

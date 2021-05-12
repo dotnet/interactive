@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
         public override Dictionary<string, PSObject> Prompt(string caption, string message, Collection<FieldDescription> descriptions)
         {
             string paramName = nameof(descriptions);
-            if (descriptions == null)
+            if (descriptions is null)
             {
                 throw new ArgumentNullException(paramName);
             }
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
                     WriteLine(message);
                 }
 
-                if (descriptions.Any(d => d != null && !string.IsNullOrEmpty(d.HelpMessage)))
+                if (descriptions.Any(d => d is not null && !string.IsNullOrEmpty(d.HelpMessage)))
                 {
                     WriteLine("(Type !? for Help.)");
                 }
@@ -176,7 +176,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
                 SecureString secureString = ReadPassword(fieldPrompt).GetSecureStringPassword();
                 convertedObj = secureString;
 
-                if (isListInput && secureString != null && secureString.Length == 0)
+                if (isListInput && secureString is not null && secureString.Length == 0)
                 {
                     listInputDone = true;
                 }
@@ -191,7 +191,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
                     targetName: string.Empty);
 
                 convertedObj = credential;
-                if (isListInput && credential != null && credential.Password.Length == 0)
+                if (isListInput && credential is not null && credential.Password.Length == 0)
                 {
                     listInputDone = true;
                 }
@@ -318,7 +318,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
             string choicesParamName = nameof(choices);
             string defaultChoiceParamName = nameof(defaultChoice);
 
-            if (choices == null)
+            if (choices is null)
             {
                 throw new ArgumentNullException(choicesParamName);
             }
@@ -410,7 +410,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
             string choicesParamName = nameof(choices);
             string defaultChoicesParamName = nameof(defaultChoices);
 
-            if (choices == null)
+            if (choices is null)
             {
                 throw new ArgumentNullException(choicesParamName);
             }
@@ -423,7 +423,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
             }
 
             var defaultChoiceKeys = new Dictionary<int, bool>();
-            if (defaultChoices != null)
+            if (defaultChoices is not null)
             {
                 foreach (int defaultChoice in defaultChoices)
                 {

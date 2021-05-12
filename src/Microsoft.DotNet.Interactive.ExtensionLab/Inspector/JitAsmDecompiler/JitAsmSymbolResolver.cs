@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Inspector.JitAsmDecompiler
             }
 
             var method = _runtime.GetMethodByAddress(address);
-            if (method == null)
+            if (method is null)
             {
                 symbol = default;
                 return false;

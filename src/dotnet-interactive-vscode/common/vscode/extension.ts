@@ -6,23 +6,22 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { ClientMapper } from '../clientMapper';
 
-import { DotNetInteractiveNotebookContentProvider } from './notebookContentProvider';
 import { StdioKernelTransport } from '../stdioKernelTransport';
 import { registerLanguageProviders } from './languageProvider';
 import { registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
 
-import { getSimpleLanguage, isDotnetInteractiveLanguage } from '../interactiveNotebook';
+import { getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType } from '../interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
-import { DotNetCellMetadata, withDotNetMetadata } from '../ipynbUtilities';
 import { executeSafe, isDotNetUpToDate, processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
-import { KernelId, updateCellLanguages, updateDocumentKernelspecMetadata } from './notebookKernel';
-import { DotNetInteractiveNotebookKernelProvider } from './notebookKernelProvider';
 
-import * as jupyter from './jupyter';
+import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 
 import { isInsidersBuild } from './vscodeUtilities';
+import { getDotNetMetadata } from '../ipynbUtilities';
+
+export const KernelId = 'dotnet-interactive';
 
 export class CachedDotNetPathManager {
     private dotNetPath: string = 'dotnet'; // default to global tool if possible
@@ -50,15 +49,48 @@ export const DotNetPathManager = new CachedDotNetPathManager();
 
 export async function activate(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration('dotnet-interactive');
+    const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion') || '5.0';
     const diagnosticsChannel = new OutputChannelAdapter(vscode.window.createOutputChannel('.NET Interactive : diagnostics'));
     DotNetPathManager.setOutputChannelAdapter(diagnosticsChannel);
+
+    // pause if an sdk installation is currently running
+    await waitForSdkInstall(minDotNetSdkVersion);
 
     // this must happen early, because some following functions use the acquisition command
     registerAcquisitionCommands(context, diagnosticsChannel);
 
+    vscode.window.registerUriHandler({
+        handleUri(uri: vscode.Uri): vscode.ProviderResult<void> {
+            const params = new URLSearchParams(uri.query);
+            switch (uri.path) {
+                case '/newNotebook':
+                    // Examples:
+                    //   vscode://ms-dotnettools.dotnet-interactive-vscode/newNotebook?as=dib
+                    //   vscode://ms-dotnettools.dotnet-interactive-vscode/newNotebook?as=ipynb
+                    const asType = params.get('as');
+                    vscode.commands.executeCommand('dotnet-interactive.acquire').then(() => {
+                        const commandName = asType === 'ipynb'
+                            ? 'dotnet-interactive.newNotebookIpynb'
+                            : 'dotnet-interactive.newNotebookDib';
+                        vscode.commands.executeCommand(commandName).then(() => { });
+                    });
+                    break;
+                case '/openNotebook':
+                    // Example
+                    //   vscode://ms-dotnettools.dotnet-interactive-vscode/openNotebook?path=C%3A%5Cpath%5Cto%5Cnotebook.dib
+                    const path = params.get('path');
+                    if (path) {
+                        vscode.commands.executeCommand('dotnet-interactive.acquire').then(() => {
+                            vscode.commands.executeCommand('dotnet-interactive.openNotebook', vscode.Uri.file(path)).then(() => { });
+                        });
+                    }
+                    break;
+            }
+        }
+    });
+
     // register with VS Code
     const clientMapper = new ClientMapper(async (notebookPath) => {
-        const minDotNetSdkVersion = config.get<string>('minimumDotNetSdkVersion');
         if (!await checkForDotNetSdk(minDotNetSdkVersion!)) {
             const message = 'Unable to find appropriate .NET SDK.';
             vscode.window.showErrorMessage(message);
@@ -104,48 +136,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const hostVersionSuffix = isInsidersBuild() ? 'Insiders' : 'Stable';
     diagnosticsChannel.appendLine(`Extension started for VS Code ${hostVersionSuffix}.`);
-
-    const jupyterExtension = vscode.extensions.getExtension('ms-toolsai.jupyter');
-
-    // Default to using the Jupyter extension for .ipynb handling if the extension is present, unless the user has
-    // specified otherwise.
-    const jupyterExtensionIsPresent = jupyterExtension !== undefined;
-    let useJupyterExtension = jupyterExtensionIsPresent;
-    const forceDotNetIpynbHandling = config.get<boolean>('useDotNetInteractiveExtensionForIpynbFiles') || false;
-    if (forceDotNetIpynbHandling) {
-        useJupyterExtension = false;
-    }
-
-    let jupyterApi: jupyter.IJupyterExtensionApi | undefined = undefined;
-    if (useJupyterExtension) {
-        try {
-            jupyterApi = <jupyter.IJupyterExtensionApi>await jupyterExtension!.activate();
-            jupyterApi.registerNewNotebookContent({ defaultCellLanguage: 'dotnet-interactive.csharp' });
-        } catch (err) {
-            diagnosticsChannel.appendLine(`Error activating and registering with Jupyter extension: ${err}.  Defaulting to local file handling.`);
-            useJupyterExtension = false;
-            jupyterApi = undefined;
-        }
-    }
-
-    const diagnosticDelay = config.get<number>('liveDiagnosticDelay') || 500; // fall back to something reasonable
-    const selectorDib = {
-        viewType: ['dotnet-interactive'],
-        filenamePattern: '*.{dib,dotnet-interactive}'
-    };
-    const selectorIpynbWithJupyter = {
-        viewType: ['jupyter-notebook'],
-        filenamePattern: '*.ipynb'
-    };
-    const selectorIpynbWithDotNetInteractive = {
-        viewType: ['dotnet-interactive-jupyter'],
-        filenamePatter: '*.ipynb'
-    };
-    const notebookContentProvider = new DotNetInteractiveNotebookContentProvider(diagnosticsChannel, clientMapper);
-
-    // notebook content
-    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive', notebookContentProvider));
-    context.subscriptions.push(vscode.notebook.registerNotebookContentProvider('dotnet-interactive-jupyter', notebookContentProvider));
+    const languageServiceDelay = config.get<number>('languageServiceDelay') || 500; // fall back to something reasonable
 
     // notebook kernels
     const apiBootstrapperUri = vscode.Uri.file(path.join(context.extensionPath, 'resources', 'kernelHttpApiBootstrapper.js'));
@@ -153,57 +144,67 @@ export async function activate(context: vscode.ExtensionContext) {
         throw new Error(`Unable to find bootstrapper API expected at '${apiBootstrapperUri.fsPath}'.`);
     }
 
-    const notebookKernelProvider = new DotNetInteractiveNotebookKernelProvider(apiBootstrapperUri, clientMapper);
-    context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorDib, notebookKernelProvider));
-    if (useJupyterExtension) {
-        context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorIpynbWithJupyter, notebookKernelProvider));
-    } else {
-        context.subscriptions.push(vscode.notebook.registerNotebookKernelProvider(selectorIpynbWithDotNetInteractive, notebookKernelProvider));
-    }
+    versionSpecificFunctions.registerWithVsCode(context, clientMapper, diagnosticsChannel, apiBootstrapperUri);
 
-    registerFileCommands(context, clientMapper, jupyterApi);
+    registerFileCommands(context, clientMapper);
 
-    context.subscriptions.push(vscode.notebook.onDidChangeActiveNotebookKernel(async e => await updateDocumentMetadata(e, clientMapper)));
     context.subscriptions.push(vscode.notebook.onDidCloseNotebookDocument(notebookDocument => clientMapper.closeClient(notebookDocument.uri)));
     context.subscriptions.push(vscode.workspace.onDidRenameFiles(e => handleFileRenames(e, clientMapper)));
 
     // language registration
-    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(async e => updateNotebookCellLanguageInMetadata(e)));
-    context.subscriptions.push(registerLanguageProviders(clientMapper, diagnosticDelay));
+    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(async e => await updateNotebookCellLanguageInMetadata(e)));
+    context.subscriptions.push(registerLanguageProviders(clientMapper, languageServiceDelay));
 }
 
 export function deactivate() {
 }
 
-// keep the cell's language in metadata in sync with what VS Code thinks it is
-async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocument: vscode.TextDocument) {
-    const notebook = candidateNotebookCellDocument.notebook;
-    if (notebook && isDotnetInteractiveLanguage(candidateNotebookCellDocument.languageId)) {
-        const cellIndex = notebook.cells.findIndex(c => c.document === candidateNotebookCellDocument);
-        if (cellIndex >= 0) {
-            const cell = notebook.cells[cellIndex];
-            const edit = new vscode.WorkspaceEdit();
-            const cellMetadata: DotNetCellMetadata = {
-                language: getSimpleLanguage(candidateNotebookCellDocument.languageId),
-            };
-            const metadata = withDotNetMetadata(cell.metadata, cellMetadata);
-            edit.replaceNotebookCellMetadata(candidateNotebookCellDocument.uri, cellIndex, metadata);
-            await vscode.workspace.applyEdit(edit);
+interface DotnetPackExtensionExports {
+    getDotnetPath(version?: string): Promise<string | undefined>;
+}
+
+async function waitForSdkInstall(requiredSdkVersion: string): Promise<void> {
+    const sdkExtension = vscode.extensions.getExtension<DotnetPackExtensionExports | undefined>("ms-dotnettools.vscode-dotnet-pack");
+    if (sdkExtension) {
+        const sdkExports = sdkExtension.isActive
+            ? sdkExtension.exports
+            : await sdkExtension.activate();
+        if (sdkExports) {
+            const dotnetPath = await sdkExports.getDotnetPath(requiredSdkVersion);
+            if (dotnetPath) {
+                DotNetPathManager.setDotNetPath(dotnetPath);
+            }
         }
     }
 }
 
-async function updateDocumentMetadata(e: { document: vscode.NotebookDocument, kernel: vscode.NotebookKernel | undefined }, clientMapper: ClientMapper) {
-    if (e.kernel?.id === KernelId) {
-        try {
-            // update various metadata
-            await updateDocumentKernelspecMetadata(e.document);
-            await updateCellLanguages(e.document);
+// keep the cell's language in metadata in sync with what VS Code thinks it is
+async function updateNotebookCellLanguageInMetadata(candidateNotebookCellDocument: vscode.TextDocument) {
+    const notebook = candidateNotebookCellDocument.notebook;
+    if (notebook &&
+        isJupyterNotebookViewType(notebook.viewType) &&
+        isDotnetInteractiveLanguage(candidateNotebookCellDocument.languageId)) {
+        const cell = versionSpecificFunctions.getCells(notebook).find(c => c.document === candidateNotebookCellDocument);
+        if (cell) {
+            const cellLanguage = cell.kind === vscode.NotebookCellKind.Code
+                ? getSimpleLanguage(candidateNotebookCellDocument.languageId)
+                : 'markdown';
 
-            // force creation of the client so we don't have to wait for the user to execute a cell to get the tool
-            await clientMapper.getOrAddClient(e.document.uri);
-        } catch (err) {
-            vscode.window.showErrorMessage(`Failed to set document metadata for '${e.document.uri}': ${err}`);
+            const dotnetMetadata = getDotNetMetadata(cell.metadata);
+            if (dotnetMetadata.language !== cellLanguage) {
+                const newMetadata = cell.metadata.with({
+                    custom: {
+                        metadata: {
+                            dotnet_interactive: {
+                                language: cellLanguage
+                            }
+                        }
+                    }
+                });
+                const edit = new vscode.WorkspaceEdit();
+                edit.replaceNotebookCellMetadata(notebook.uri, cell.index, newMetadata);
+                await vscode.workspace.applyEdit(edit);
+            }
         }
     }
 }

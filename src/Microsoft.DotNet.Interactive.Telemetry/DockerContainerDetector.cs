@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
                         using (RegistryKey subkey
                             = Registry.LocalMachine.OpenSubKey("System\\CurrentControlSet\\Control"))
                         {
-                            return subkey?.GetValue("ContainerType") != null
+                            return subkey?.GetValue("ContainerType") is not null
                                 ? IsDockerContainerResult.True
                                 : IsDockerContainerResult.False;
                         }

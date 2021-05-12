@@ -116,37 +116,25 @@ json"
         [InlineData(Language.FSharp, false)]
         [InlineData(Language.CSharp, true)]
         //[InlineData(Language.FSharp, true, Skip = "FSharp, relative is not relative to cwd.")]
-        public async Task it_can_load_assembly_references_using_r_directive_with_relative_path(Language language, bool changeWorkingDirectory)
+        public async Task it_can_load_assembly_references_using_r_directive_with_relative_path(Language language, bool changeCurrentDirectoryInUserCode)
         {
-            var workingDirectory = Directory.GetCurrentDirectory();
-            DisposeAfterTest(() => Directory.SetCurrentDirectory(workingDirectory));
+            var currentDirectory = Directory.GetCurrentDirectory();
+            DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
 
             var kernel = CreateKernel(language);
 
-            if (changeWorkingDirectory)
+            if (changeCurrentDirectoryInUserCode)
             {
+                //Even when a user changes the current directory, loading from a relative path is not affected.
                 await kernel.SendAsync(new SubmitCode("System.IO.Directory.SetCurrentDirectory(\"..\")"));
             }
 
-            var fullName = new FileInfo(typeof(JsonConvert).Assembly.Location).FullName;
-
-            var currentDirectoryName = new DirectoryInfo(Directory.GetCurrentDirectory()).Name;
-
-            var relativeDllPath = Path.GetRelativePath(
-                Directory.GetCurrentDirectory(),
-                fullName);
-
-            var relativePath =
-                Path.Combine(
-                    "..",
-                    currentDirectoryName,
-                    relativeDllPath)
-                .Replace("\\", "/");
+            var dllName = new FileInfo(typeof(JsonConvert).Assembly.Location).Name;
 
             var code = language switch
             {
-                Language.CSharp => $"#r \"{relativePath}\"",
-                Language.FSharp => $"#r \"{relativePath}\""
+                Language.CSharp => $"#r \"{dllName}\"",
+                Language.FSharp => $"#r \"{dllName}\""
             };
 
             var command = new SubmitCode(code);
@@ -155,6 +143,64 @@ json"
 
             KernelEvents.Should()
                         .ContainSingle<CommandSucceeded>(c => c.Command == command);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, false)]
+        [InlineData(Language.FSharp, false)]
+        [InlineData(Language.CSharp, true)]
+        [InlineData(Language.FSharp, true)]
+        public async Task it_can_load_script_files_using_load_directive_with_relative_path(Language language, bool changeCurrentDirectoryInUserCode)
+        {
+            var currentDirectory = Directory.GetCurrentDirectory();
+            DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
+
+            var kernel = CreateKernel(language);
+
+            if (changeCurrentDirectoryInUserCode)
+            {
+                //Even when a user changes the current directory, loading from a relative path is not affected.
+                await kernel.SendAsync(new SubmitCode("System.IO.Directory.SetCurrentDirectory(\"..\")"));
+            }
+
+            var code = language switch
+            {
+                Language.CSharp => $"#load \"RelativeLoadingSample.csx\"",
+                Language.FSharp => $"#load \"RelativeLoadingSample.fsx\""
+            };
+
+            var command = new SubmitCode(code);
+            await kernel.SendAsync(command);
+
+            KernelEvents.Should()
+                        .ContainSingle<StandardOutputValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        //Not implemented: [InlineData(Language.FSharp)]
+        public async Task it_can_load_script_files_using_load_directive_with_relative_path_after_command_changeWorkingDirectory(Language language)
+        {
+            var currentDirectory = Directory.GetCurrentDirectory();
+            DisposeAfterTest(() => Directory.SetCurrentDirectory(currentDirectory));
+
+            var kernel = CreateKernel(language);
+            var absolutePathOneLevelHigher = Directory.GetParent(currentDirectory).FullName;
+            await kernel.SendAsync(new ChangeWorkingDirectory(absolutePathOneLevelHigher));
+
+            var relativePath = Path.GetRelativePath(absolutePathOneLevelHigher, currentDirectory);
+
+            var code = language switch
+            {
+                Language.CSharp => $"#load \"{relativePath}/RelativeLoadingSample.csx\"",
+                Language.FSharp => $"#load \"{relativePath}/RelativeLoadingSample.fsx\""
+            };
+
+            var command = new SubmitCode(code);
+            await kernel.SendAsync(command);
+
+            KernelEvents.Should()
+                        .ContainSingle<StandardOutputValueProduced>(e => e.FormattedValues.Any(v => v.Value.Contains("hello!")));
         }
 
         [Theory]
@@ -340,14 +386,14 @@ Formatter.Register<DataFrame>((df, writer) =>
         }
         rows.Add(cells);
     }
-    
+
     var t = table(
         thead(
             headers),
         tbody(
             rows.Select(
                 r => tr(r))));
-    
+
     writer.Write(t);
 }, ""text/html"");");
 
@@ -425,18 +471,86 @@ Formatter.Register<DataFrame>((df, writer) =>
 
             using var events = kernel.KernelEvents.ToSubscribedList();
 
-            await kernel.SubmitCodeAsync(@"#i ""nuget:https://completelyFakerestoreSource""");
+            await kernel.SubmitCodeAsync(@"
+#i ""nuget:https://completelyFakerestoreSource1""
+#i ""nuget:https://completelyFakerestoreSource2""
+");
+            events.OfType<DisplayEvent>().Select(e => e.GetType()).Should().ContainInOrder(typeof(DisplayedValueProduced), typeof(DisplayedValueUpdated));
+        }
 
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_i_nuget_with_multi_submissions_combines_the_Text_Produced(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            await kernel.SubmitCodeAsync(@"
+#i ""nuget:https://completelyFakerestoreSourceCommand1.1""
+#i ""nuget:https://completelyFakerestoreSourceCommand1.2""
+");
+
+            var result = await kernel.SubmitCodeAsync(@"
+#i ""nuget:https://completelyFakerestoreSourceCommand2.1""
+");
+
+            var expectedList = new[]
+            {
+                "https://completelyFakerestoreSourceCommand1.1",
+                "https://completelyFakerestoreSourceCommand1.2",
+                "https://completelyFakerestoreSourceCommand2.1"
+            };
+
+            using var events = result.KernelEvents.ToSubscribedList();
+
+            // For the DisplayedValueUpdated events strip out the restore sources
+            // Verify that they match the expected values
             events.Should()
                   .ContainSingle<DisplayedValueProduced>()
-                  .Which
-                  .FormattedValues
+                  .Which.FormattedValues
                   .Should()
-                  .ContainSingle(v => v.MimeType == "text/html")
-                  .Which
-                  .Value
+                  .ContainSingle(e => e.MimeType == HtmlFormatter.MimeType)
+                  .Which.Value
                   .Should()
-                  .ContainAll("Restore sources", "https://completelyFakerestoreSource");
+                  .ContainAll(expectedList);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task Pound_i_nuget_with_multi_submissions_combines_the_Text_Updates(Language language)
+        {
+            var kernel = CreateKernel(language);
+
+            await kernel.SubmitCodeAsync(@"
+#i ""nuget:https://completelyFakerestoreSourceCommand1.1""
+#i ""nuget:https://completelyFakerestoreSourceCommand1.2""
+");
+
+            var result = await kernel.SubmitCodeAsync(@"
+#i ""nuget:https://completelyFakerestoreSourceCommand2.1""
+#i ""nuget:https://completelyFakerestoreSourceCommand2.2""
+");
+
+            var expectedList = new[]
+            {
+                "https://completelyFakerestoreSourceCommand1.1",
+                "https://completelyFakerestoreSourceCommand1.2",
+                "https://completelyFakerestoreSourceCommand2.1",
+                "https://completelyFakerestoreSourceCommand2.2"
+            };
+
+            using var events = result.KernelEvents.ToSubscribedList();
+
+            // For the DisplayedValueUpdated events strip out the restore sources
+            // Verify that they match the expected values
+            events.OfType<DisplayedValueUpdated>()
+                  .Last().FormattedValues
+                  .Should()
+                  .ContainSingle(e => e.MimeType == HtmlFormatter.MimeType)
+                  .Which.Value
+                  .Should()
+                  .ContainAll(expectedList);
         }
 
         [Theory]
@@ -813,17 +927,11 @@ using NodaTime.Extensions;");
 
         [Theory]
         [InlineData(Language.CSharp)]
-        //[InlineData(Language.FSharp)]   /// Reenable when --- https://github.com/dotnet/fsharp/issues/8775
+        [InlineData(Language.FSharp)]
         public async Task Pound_r_nuget_does_not_accept_invalid_keys(Language language)
         {
             var kernel = CreateKernel(language);
 
-            // C# and F# should both fail, but the messages will be different because they handle it differently internally.
-            var expectedMessage = language switch
-            {
-                Language.CSharp => "Metadata file 'nugt:System.Text.Json' could not be found",
-                Language.FSharp => "interactive error Package manager key 'nugt' was not registered"
-            };
             using var events = kernel.KernelEvents.ToSubscribedList();
 
             // nugt is an invalid provider key should fail
@@ -838,7 +946,14 @@ using NodaTime.Extensions;");
                  .Which
                  .Value
                  .Should()
-                 .Contain(expectedMessage);
+                 .ContainAll(
+                    // C# and F# should both fail, but the messages will be different because they handle it differently internally.
+                    language switch
+                    { 
+                        Language.CSharp => new[] { "CS0006", "nugt:System.Text.Json" },
+                        Language.FSharp => new[] { "interactive error", "nugt" }
+                    }
+                );
         }
 
         [Theory]
@@ -859,7 +974,7 @@ using NodaTime.Extensions;");
                   .Which
                   .Message
                   .Should()
-                  .Contain($"error NU1101: Unable to find package {nonexistentPackageName}. No packages exist with this id in source(s): ");
+                  .Contain($"error NU1101:", nonexistentPackageName);
         }
 
         [Theory]

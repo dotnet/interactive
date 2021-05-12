@@ -4,6 +4,7 @@
 using System;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Server
 {

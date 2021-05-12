@@ -31,14 +31,14 @@ namespace Microsoft.DotNet.Interactive.Http
                 })
                 .ConfigureServices(c =>
                 {
-                    if (enableHttpApi && httpProbingSettings != null)
+                    if (enableHttpApi && httpProbingSettings is not null)
                     {
                         c.AddSingleton(httpProbingSettings);
                     }
 
                     c.AddSingleton(httpStartupOptions);
 
-                    if (services != null)
+                    if (services is not null)
                     {
                         foreach (var serviceDescriptor in services)
                         {
@@ -98,7 +98,6 @@ namespace Microsoft.DotNet.Interactive.Http
                     enableHttp.PublishInternalEvents();
                     kernel.DeferCommand(enableHttp);
                 }
-
 
                 kernel = kernel.UseHttpApi(httpPort, httpProbingSettings);
 

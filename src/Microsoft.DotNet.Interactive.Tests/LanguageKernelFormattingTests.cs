@@ -17,7 +17,6 @@ using Xunit.Abstractions;
 #pragma warning disable 8509
 namespace Microsoft.DotNet.Interactive.Tests
 {
-    [LogTestNamesToPocketLogger]
     public class LanguageKernelFormattingTests : LanguageKernelTestBase
     {
         public const string PlainTextBegin = "<div class=\"dni-plaintext\">";
@@ -117,6 +116,38 @@ using {typeof(PocketView).Namespace};
                 .ContainSingle(v =>
                                    v.MimeType == "text/plain" &&
                                    v.Value.ToString().Contains(expectedContent));
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp, "{ \"hello\": 123 ", "application/json")]
+        [InlineData(Language.CSharp, "<span class=\"test\">hello!&nbsp;</span>", "text/html")]
+        public async Task String_is_rendered_as_specified_mime_type_DisplayAs(
+            Language language,
+            string stringValue,
+            string mimeType)
+        {
+            var kernel = CreateKernel(language, openTestingNamespaces: true);
+
+            await kernel.FindKernel("csharp").As<CSharpKernel>()
+                        .SetVariableAsync(nameof(stringValue), stringValue);
+
+            var code = $"stringValue.DisplayAs(\"{mimeType}\");";
+
+            var result = await kernel.SendAsync(new SubmitCode(code));
+
+            var events = result
+                         .KernelEvents
+                         .ToSubscribedList();
+
+            events
+                .Should()
+                .ContainSingle<DisplayedValueProduced>()
+                .Which
+                .FormattedValues
+                .Should()
+                .ContainSingle(v =>
+                                   v.MimeType == mimeType &&
+                                   v.Value == stringValue);
         }
 
         [Theory]

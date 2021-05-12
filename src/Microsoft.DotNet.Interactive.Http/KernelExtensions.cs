@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Interactive.Http
                 {
                     if (context.Command is SubmitCode submitCode)
                     {
-                        var probingUrls = httpProbingSettings != null
+                        var probingUrls = httpProbingSettings is not null
                             ? httpProbingSettings.AddressList
                             : new[]
                             {

@@ -1,7 +1,6 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Help;
@@ -12,9 +11,9 @@ namespace Microsoft.DotNet.Interactive.Parsing
     public class DirectiveHelpBuilder : HelpBuilder
     {
         private readonly string _rootCommandName;
-        private readonly Dictionary<ISymbol, string> _directiveHelp = new Dictionary<ISymbol, string>();
+        private readonly Dictionary<ISymbol, string> _directiveHelp = new();
 
-        public DirectiveHelpBuilder(IConsole console, string rootCommandName) : base(new SystemConsole())
+        public DirectiveHelpBuilder(string rootCommandName) : base(new SystemConsole())
         {
             _rootCommandName = rootCommandName;
         }
@@ -43,7 +42,10 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     helpBuilder.Write(command);
                     break;
                 case IOption option:
-                    helpBuilder.Write(option);
+                    var helpItem = GetHelpItem(option);
+
+                    console.Out.WriteLine($"{helpItem.Descriptor} {helpItem.Description}");
+
                     break;
             }
 

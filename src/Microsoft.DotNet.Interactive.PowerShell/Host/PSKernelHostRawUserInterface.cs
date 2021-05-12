@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host
 
         public override int LengthInBufferCells(string source, int offset)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

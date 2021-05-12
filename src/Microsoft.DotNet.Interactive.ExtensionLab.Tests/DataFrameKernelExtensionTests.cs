@@ -3,7 +3,6 @@
 
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Threading.Tasks;
 
 using Assent;
@@ -12,7 +11,6 @@ using Microsoft.Data.Analysis;
 using Microsoft.DotNet.Interactive.Formatting;
 
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 {
@@ -21,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
         private readonly Configuration _configuration;
 
-        public DataFrameKernelExtensionTests(ITestOutputHelper output)
+        public DataFrameKernelExtensionTests()
         {
             _configuration = new Configuration()
                 .SetInteractive(Debugger.IsAttached)
@@ -44,7 +42,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests
 
             var dataFrame = DataFrame.LoadCsv(stream);
 
-            var formatted = dataFrame.ToDisplayString(TabularDataFormatter.MimeType);
+            var formatted = dataFrame.ToDisplayString(TabularDataResourceFormatter.MimeType);
 
             this.Assent(formatted, _configuration);
         }

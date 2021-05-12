@@ -4,17 +4,20 @@
 import { ClientMapper } from './../clientMapper';
 import { HoverResult, PositionLike } from './interfaces';
 import { Document } from '../interfaces/vscode-like';
+import { debounceAndReject } from '../utilities';
 
-export async function provideHover(clientMapper: ClientMapper, language: string, document: Document, position: PositionLike, token?: string | undefined): Promise<HoverResult> {
-    let client = await clientMapper.getOrAddClient(document.uri);
-    let hoverText = await client.hover(language, document.getText(), position.line, position.character, token);
-    let content = hoverText.content.sort((a, b) => mimeTypeToPriority(a.mimeType) - mimeTypeToPriority(b.mimeType))[0];
-    let hoverResult = {
-        contents: content.value,
-        isMarkdown: content.mimeType === 'text/markdown' || content.mimeType === 'text/x-markdown',
-        range: hoverText.linePositionSpan
-    };
-    return hoverResult;
+export function provideHover(clientMapper: ClientMapper, language: string, document: Document, position: PositionLike, languageServiceDelay: number, token?: string | undefined): Promise<HoverResult> {
+    return debounceAndReject(`hover-${document.uri.toString()}`, languageServiceDelay, async () => {
+        const client = await clientMapper.getOrAddClient(document.uri);
+        const hoverText = await client.hover(language, document.getText(), position.line, position.character, token);
+        const content = hoverText.content.sort((a, b) => mimeTypeToPriority(a.mimeType) - mimeTypeToPriority(b.mimeType))[0];
+        const hoverResult = {
+            contents: content.value,
+            isMarkdown: content.mimeType === 'text/markdown' || content.mimeType === 'text/x-markdown',
+            range: hoverText.linePositionSpan
+        };
+        return hoverResult;
+    });
 }
 
 function mimeTypeToPriority(mimeType: string): number {

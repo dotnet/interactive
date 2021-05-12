@@ -9,6 +9,7 @@ using System.CommandLine.Parsing;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,14 +26,18 @@ namespace Microsoft.DotNet.Interactive
     {
         private readonly Subject<KernelEvent> _kernelEvents = new();
         private readonly CompositeDisposable _disposables;
-
         private readonly Dictionary<Type, KernelCommandInvocation> _dynamicHandlers = new();
+        private readonly HashSet<Type> _registeredCommandTypes;
+        private IKernelScheduler<KernelCommand, KernelCommandResult> _fastPathScheduler;
         private FrontendEnvironment _frontendEnvironment;
         private ChooseKernelDirective _chooseKernelDirective;
         private KernelScheduler<KernelCommand, KernelCommandResult> _commandScheduler;
-
         private readonly ConcurrentQueue<KernelCommand> _deferredCommands = new();
-       
+        private static readonly List<KernelCommand> EmptyCommandList = new(0);
+        private readonly SemaphoreSlim _fastPathSchedulerLock = new(1);
+        private KernelInvocationContext _inFlightContext;
+        private int _countOfLanguageServiceCommandsInFlight = 0;
+
         protected Kernel(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -47,6 +52,8 @@ namespace Microsoft.DotNet.Interactive
             _disposables = new CompositeDisposable();
 
             Pipeline = new KernelCommandPipeline(this);
+            
+            _registeredCommandTypes = new HashSet<Type>(GetSupportedCommandTypesFromInterfaceImplementation());
 
             _disposables.Add(Disposable.Create(
                 () => _kernelEvents.OnCompleted()
@@ -65,7 +72,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void DeferCommand(KernelCommand command)
         {
-            if (command == null)
+            if (command is null)
             {
                 throw new ArgumentNullException(nameof(command));
             }
@@ -178,6 +185,8 @@ namespace Microsoft.DotNet.Interactive
             set => _frontendEnvironment = value;
         }
 
+        protected bool IsDisposed => _disposables.IsDisposed;
+
         public IObservable<KernelEvent> KernelEvents => _kernelEvents;
 
         public string Name { get; set; }
@@ -201,7 +210,31 @@ namespace Microsoft.DotNet.Interactive
         public void RegisterCommandType<TCommand>()
             where TCommand : KernelCommand
         {
-            KernelCommandEnvelope.RegisterCommandTypeReplacingIfNecessary<TCommand>();
+            if (_registeredCommandTypes.Add(typeof(TCommand)))
+            {
+                KernelCommandEnvelope.RegisterCommandTypeForSerialization<TCommand>();
+                var defaultHandler = CreateDefaultHandlerForCommandType<TCommand>() ?? throw new InvalidOperationException("CreateDefaultHandlerForCommandType should not return null");
+                
+                _dynamicHandlers[typeof(TCommand)] = (command, context) => defaultHandler((TCommand)command, context);
+            }
+        }
+
+        protected virtual Func<TCommand, KernelInvocationContext, Task> CreateDefaultHandlerForCommandType<TCommand>() where TCommand : KernelCommand
+        {
+            return (_,_) => Task.CompletedTask;
+        }
+
+        public virtual IEnumerable<Type> SupportedCommands()
+        {
+            return  _registeredCommandTypes;
+        }
+
+        private IEnumerable<Type> GetSupportedCommandTypesFromInterfaceImplementation()
+        {
+            var interfaces = GetType().GetInterfaces();
+            var types = interfaces.Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IKernelCommandHandler<>))
+                .SelectMany(i => i.GenericTypeArguments);
+            return types;
         }
 
         internal virtual async Task HandleAsync(
@@ -216,14 +249,13 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             CancellationToken cancellationToken)
         {
-            if (command == null)
+            if (command is null)
             {
                 throw new ArgumentNullException(nameof(command));
             }
 
-            var scheduler = Scheduler;
             var context = KernelInvocationContext.Establish(command);
-           
+
             // only subscribe for the root command 
             var currentCommandOwnsContext = context.Command == command;
 
@@ -233,7 +265,7 @@ namespace Microsoft.DotNet.Interactive
             {
                 disposable = context.KernelEvents.Subscribe(PublishEvent);
 
-                if (cancellationToken != CancellationToken.None && 
+                if (cancellationToken != CancellationToken.None &&
                     cancellationToken != default)
                 {
                     cancellationToken.Register(() =>
@@ -251,6 +283,8 @@ namespace Microsoft.DotNet.Interactive
             {
                 if (TryPreprocessCommands(command, context, out var commands))
                 {
+                    SetHandlingKernel(command, context);
+
                     foreach (var c in commands)
                     {
                         switch (c)
@@ -264,12 +298,51 @@ namespace Microsoft.DotNet.Interactive
                             case Cancel cancel:
                                 cancel.KernelUri = Uri;
                                 cancel.TargetKernelName = Name;
-                                scheduler.CancelCurrentOperation();
+                                Scheduler.CancelCurrentOperation();
                                 await InvokePipelineAndCommandHandler(cancel);
                                 break;
 
+                            case RequestDiagnostics _:
+                                {
+                                    if (_countOfLanguageServiceCommandsInFlight > 0)
+                                    {
+                                    
+                                        context.CancelWithSuccess();
+                                        return context.Result;
+                                    }
+
+                                    if (_inFlightContext is { } inflight)
+                                    {
+                                        inflight.Complete(inflight.Command);
+                                    }
+
+                                    _inFlightContext = context;
+
+                                    await RunOnFastPath(context, c, cancellationToken);
+
+                                    _inFlightContext = null;
+                                }
+                                break;
+                            case RequestHoverText _:
+                            case RequestCompletions _:
+                            case RequestSignatureHelp _:
+                                // FIX: (SendAsync) 
+                                {
+                                    if (_inFlightContext is { } inflight)
+                                    {
+                                        inflight.CancelWithSuccess();
+                                    }
+
+                                    Interlocked.Increment(ref _countOfLanguageServiceCommandsInFlight);
+
+                                    await RunOnFastPath(context, c, cancellationToken);
+
+                                    Interlocked.Decrement(ref _countOfLanguageServiceCommandsInFlight);
+                                }
+                                break;
+
                             default:
-                                await scheduler.RunAsync(
+                                await Scheduler.RunAsync(
                                     c,
                                     InvokePipelineAndCommandHandler,
                                     c.KernelUri.ToString(),
@@ -293,6 +366,47 @@ namespace Microsoft.DotNet.Interactive
             }
 
             return context.Result;
+        }
+
+        private async Task RunOnFastPath(KernelInvocationContext context,
+            KernelCommand command, CancellationToken cancellationToken)
+        {
+            var fastPathScheduler = await context.HandlingKernel.GetFastPathSchedulerAsync(context);
+            await fastPathScheduler.RunAsync(
+                    command,
+                    InvokePipelineAndCommandHandler,
+                    command.KernelUri.ToString(),
+                    cancellationToken: cancellationToken)
+                .ContinueWith(t =>
+                {
+                    if (t.IsCanceled)
+                    {
+                        context.Cancel();
+                    }
+                }, cancellationToken);
+        }
+
+        private async Task<IKernelScheduler<KernelCommand, KernelCommandResult>> GetFastPathSchedulerAsync(
+            KernelInvocationContext invocationContext)
+        {
+            await _fastPathSchedulerLock.WaitAsync();
+            try
+            {
+                if (_fastPathScheduler is null)
+                {
+                    await SendAsync(
+                        new AnonymousKernelCommand((_, _) => Task.CompletedTask, invocationContext.HandlingKernel.Name,
+                            invocationContext.Command), invocationContext.CancellationToken);
+                    _fastPathScheduler = new ImmediateScheduler<KernelCommand, KernelCommandResult>();
+
+                }
+            }
+            finally
+            {
+                _fastPathSchedulerLock.Release();
+            }
+
+            return _fastPathScheduler;
         }
 
         internal async Task<KernelCommandResult> InvokePipelineAndCommandHandler(KernelCommand command)
@@ -341,39 +455,40 @@ namespace Microsoft.DotNet.Interactive
             _commandScheduler = scheduler;
 
             _commandScheduler.RegisterDeferredOperationSource(GetDeferredOperations, InvokePipelineAndCommandHandler);
-
-            IEnumerable<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
-            {
-                if (!command.KernelUri.Contains(Uri))
-                {
-                    yield break;
-                }
-
-                while (_deferredCommands.TryDequeue(out var kernelCommand))
-                {
-                    kernelCommand.TargetKernelName = Name;
-                    kernelCommand.KernelUri = Uri;
-                    var currentInvocationContext = KernelInvocationContext.Current;
-                    if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
-                    {
-                        foreach (var cmd in commands)
-                        {
-                            yield return cmd;
-                        }
-                    }
-                }
-            }
         }
 
-        private protected virtual KernelUri GetHandlingKernelUri(
-            KernelCommand command)
+        protected IReadOnlyList<KernelCommand> GetDeferredOperations(KernelCommand command, string scope)
+        {
+            if (!command.KernelUri.Contains(Uri))
+            {
+                return EmptyCommandList;
+            }
+
+            var splitCommands = new List<KernelCommand>();
+
+            while (_deferredCommands.TryDequeue(out var kernelCommand))
+            {
+                kernelCommand.TargetKernelName = Name;
+                kernelCommand.KernelUri = Uri;
+                var currentInvocationContext = KernelInvocationContext.Current;
+
+                if (TryPreprocessCommands(kernelCommand, currentInvocationContext, out var commands))
+                {
+                    splitCommands.AddRange(commands);
+                }
+            }
+
+            return splitCommands;
+        }
+
+        private protected virtual KernelUri GetHandlingKernelUri(KernelCommand command)
         {
             return Uri;
         }
 
         protected internal void PublishEvent(KernelEvent kernelEvent)
         {
-            if (kernelEvent == null)
+            if (kernelEvent is null)
             {
                 throw new ArgumentNullException(nameof(kernelEvent));
             }
@@ -385,7 +500,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void RegisterForDisposal(IDisposable disposable)
         {
-            if (disposable == null)
+            if (disposable is null)
             {
                 throw new ArgumentNullException(nameof(disposable));
             }
@@ -472,7 +587,7 @@ namespace Microsoft.DotNet.Interactive
             KernelCommand command,
             KernelInvocationContext context)
         {
-            if (command.Handler == null)
+            if (command.Handler is null)
             {
                 switch (command, this)
                 {
@@ -480,7 +595,8 @@ namespace Microsoft.DotNet.Interactive
                         SetHandler(parseNotebookHandler, parseNotebook);
                         break;
 
-                    case (SerializeNotebook serializeNotebook, IKernelCommandHandler<SerializeNotebook> serializeNotebookHandler):
+                    case (SerializeNotebook serializeNotebook, IKernelCommandHandler<SerializeNotebook>
+                        serializeNotebookHandler):
                         SetHandler(serializeNotebookHandler, serializeNotebook);
                         break;
 
@@ -488,24 +604,32 @@ namespace Microsoft.DotNet.Interactive
                         SetHandler(submitCodeHandler, submitCode);
                         break;
 
-                    case (RequestCompletions { LanguageNode: DirectiveNode } rq, _):
+                    case (RequestCompletions {LanguageNode: DirectiveNode} rq, _):
                         rq.Handler = (__, ___) => HandleRequestCompletionsAsync(rq, context);
                         break;
 
-                    case (RequestCompletions requestCompletion, IKernelCommandHandler<RequestCompletions> requestCompletionHandler):
+                    case (RequestCompletions requestCompletion, IKernelCommandHandler<RequestCompletions>
+                        requestCompletionHandler):
                         SetHandler(requestCompletionHandler, requestCompletion);
                         break;
 
-                    case (RequestDiagnostics requestDiagnostics, IKernelCommandHandler<RequestDiagnostics> requestDiagnosticsHandler):
+                    case (RequestDiagnostics requestDiagnostics, IKernelCommandHandler<RequestDiagnostics>
+                        requestDiagnosticsHandler):
                         SetHandler(requestDiagnosticsHandler, requestDiagnostics);
                         break;
 
-                    case (RequestHoverText hoverCommand, IKernelCommandHandler<RequestHoverText> requestHoverTextHandler):
+                    case (RequestHoverText hoverCommand, IKernelCommandHandler<RequestHoverText> requestHoverTextHandler
+                        ):
                         SetHandler(requestHoverTextHandler, hoverCommand);
                         break;
 
-                    case (RequestSignatureHelp requestSignatureHelp, IKernelCommandHandler<RequestSignatureHelp> requestSignatureHelpHandler):
+                    case (RequestSignatureHelp requestSignatureHelp, IKernelCommandHandler<RequestSignatureHelp>
+                        requestSignatureHelpHandler):
                         SetHandler(requestSignatureHelpHandler, requestSignatureHelp);
+                        break;
+
+                    case (ChangeWorkingDirectory changeWorkingDirectory, IKernelCommandHandler<ChangeWorkingDirectory> changeWorkingDirectoryHandler):
+                        SetHandler(changeWorkingDirectoryHandler, changeWorkingDirectory);
                         break;
 
                     default:

@@ -9,15 +9,19 @@ namespace System.Collections.Generic
 {
     public static class EnumerableExtensions
     {
-        public static SandDanceExplorer ExploreWithSandDance<T>(this IEnumerable<T> source)
+        public static SandDanceDataExplorer ExploreWithSandDance<T>(this IEnumerable<T> source)
         {
-            var explorer = new SandDanceExplorer();
-            explorer.LoadData(source);
-            return explorer;
+            return source.ToTabularDataResource().ExploreWithSandDance();
         }
+
+        public static NteractDataExplorer ExploreWithNteract<T>(this IEnumerable<T> source)
+        {
+            return source.ToTabularDataResource().ExploreWithNteract();
+        }
+
         public static void Explore<T>(this IEnumerable<T> source)
         {
-            source.ToTabularJsonString().Explore();
+            source.ExploreWithNteract();
         }
 
         public static IReadOnlyList<IDictionary<string, object>> ToTable(this IEnumerable<IEnumerable<(string name, object value)>> source)

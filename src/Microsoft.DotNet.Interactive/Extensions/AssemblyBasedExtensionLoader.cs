@@ -24,17 +24,17 @@ namespace Microsoft.DotNet.Interactive.Extensions
             Kernel kernel,
             KernelInvocationContext context)
         {
-            if (directory == null)
+            if (directory is null)
             {
                 throw new ArgumentNullException(nameof(directory));
             }
 
-            if (kernel == null)
+            if (kernel is null)
             {
                 throw new ArgumentNullException(nameof(kernel));
             }
 
-            if (context == null)
+            if (context is null)
             {
                 throw new ArgumentNullException(nameof(context));
             }
@@ -87,12 +87,12 @@ namespace Microsoft.DotNet.Interactive.Extensions
             Kernel kernel,
             KernelInvocationContext context)
         {
-            if (assemblyFile == null)
+            if (assemblyFile is null)
             {
                 throw new ArgumentNullException(nameof(assemblyFile));
             }
 
-            if (kernel == null)
+            if (kernel is null)
             {
                 throw new ArgumentNullException(nameof(kernel));
             }

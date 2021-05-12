@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Http
 {
     public class KernelHubConnection : IDisposable
     {
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
         private readonly SignalRBackchannelKernelClient _backchannelKernelClient;
         private bool _registered;
         public Kernel Kernel { get; }

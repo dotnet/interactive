@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.Http
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .Select(s =>
                 {
-                    var uriString = httpPort != null ? $"http://{s}:{httpPort}/" : $"http://{s}/";
+                    var uriString = httpPort is not null ? $"http://{s}:{httpPort}/" : $"http://{s}/";
                     if (Uri.TryCreate(uriString, UriKind.Absolute, out var uri))
                     {
                         return uri;
@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
                     return null;
                 })
-                .Where(u => u != null)
+                .Where(u => u is not null)
                 .ToArray();
 
             return addresses;

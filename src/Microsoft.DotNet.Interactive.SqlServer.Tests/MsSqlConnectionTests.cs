@@ -1,19 +1,20 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 
 namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 {
-    public class MsSqlConnectionTests
+    public class MsSqlConnectionTests : IDisposable
     {
         private async Task<CompositeKernel> CreateKernel()
         {
@@ -31,8 +32,10 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
             };
 
             kernel.DefaultKernelName = csharpKernel.Name;
-
+           
             kernel.UseKernelClientConnection(new MsSqlKernelConnection());
+            kernel.UseNteractDataExplorer();
+            kernel.UseSandDanceExplorer();
 
             return kernel;
         }
@@ -94,8 +97,8 @@ SELECT TOP 100 * FROM Person.Person
                 .NotContainErrors()
                 .And
                 .ContainSingle<DisplayedValueProduced>(e =>
-                    e.FormattedValues.Any(f => f.MimeType == "text/html"))
-                .Which.FormattedValues.Single(f => f.MimeType == "text/html")
+                    e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
+                .Which.FormattedValues.Single(f => f.MimeType == HtmlFormatter.MimeType)
                 .Value
                 .Should()
                 .Contain("#!sql-adventureworks")
@@ -146,7 +149,7 @@ SELECT TOP 100 * FROM Person.Person
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks --mime-type {TabularDataFormatter.MimeType}
+#!sql-adventureworks --mime-type {TabularDataResourceFormatter.MimeType}
 select * from sys.databases
 ");
 
@@ -159,14 +162,14 @@ select * from sys.databases
                         e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
                               .Which;
 
-            var tables = (IEnumerable<IEnumerable<IEnumerable<(string, object)>>>)value.Value;
-
-            var table = tables.Single().ToTable();
-
-            foreach (var row in table)
-            {
-                row["database_id"].Should().BeOfType<int>();
-            }
+            var table = ((NteractDataExplorer)value.Value).Data;
+            
+            table.Schema.Fields.Should()
+                .ContainSingle(f => f.Name == "database_id")
+                .Which
+                .Type
+                .Should()
+                .Be(TableSchemaFieldType.Integer);
         }
 
         [MsSqlFact]
@@ -183,7 +186,7 @@ select * from sys.databases
                   .NotContainErrors();
 
             result = await kernel.SubmitCodeAsync($@"
-#!sql-adventureworks --mime-type {TabularDataFormatter.MimeType}
+#!sql-adventureworks --mime-type {TabularDataResourceFormatter.MimeType}
 use tempdb;
 create table dbo.EmptyTable(column1 int, column2 int, column3 int);
 select * from dbo.EmptyTable;
@@ -197,6 +200,11 @@ drop table dbo.EmptyTable;
                 .And
                     .ContainSingle<DisplayedValueProduced>(e =>
                         e.FormattedValues.Any(f => f.MimeType == PlainTextFormatter.MimeType && f.Value.ToString().StartsWith("Info")));
+        }
+
+        public void Dispose()
+        {
+            Formatter.ResetToDefault();
         }
     }
 }

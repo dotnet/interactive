@@ -33,6 +33,33 @@ namespace Microsoft.DotNet.Interactive
 
             var displayedValue = new DisplayedValue(displayId, mimeType, context);
 
+            return displayedValue;
+        }
+        
+        public static DisplayedValue DisplayAs(
+            this KernelInvocationContext context,
+            string value,
+            string mimeType)
+        {
+            if (string.IsNullOrWhiteSpace(mimeType))
+            {
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(mimeType));
+            }
+
+            var displayId = Guid.NewGuid().ToString();
+
+            var formattedValue = new FormattedValue(
+                mimeType,
+                value);
+
+            context.Publish(
+                new DisplayedValueProduced(
+                    value,
+                    context?.Command,
+                    new[] { formattedValue },
+                    displayId));
+
+            var displayedValue = new DisplayedValue(displayId, mimeType, context);
 
             return displayedValue;
         }
@@ -44,8 +71,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var formattedValues = new List<FormattedValue>
             {
-                new FormattedValue(
-                    PlainTextFormatter.MimeType, output)
+                new(PlainTextFormatter.MimeType, output)
             };
 
             context.Publish(
@@ -61,8 +87,7 @@ namespace Microsoft.DotNet.Interactive
         {
             var formattedValues = new List<FormattedValue>
             {
-                new FormattedValue(
-                    PlainTextFormatter.MimeType, error)
+                new(PlainTextFormatter.MimeType, error)
             };
 
             context.Publish(

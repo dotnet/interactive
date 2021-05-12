@@ -4,133 +4,63 @@
 import { expect } from 'chai';
 import { NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellTextOutput } from '../../interfaces/contracts';
 import { isDisplayOutput, isErrorOutput, isTextOutput, reshapeOutputValueForVsCode } from '../../interfaces/utilities';
-import { requiredKernelspecData } from '../../ipynbUtilities';
-import { debounce, executeSafe, isDotNetKernelPreferred, isDotNetUpToDate, parse, processArguments, stringify } from '../../utilities';
+import { isDotNetNotebookMetadata, isIpynbFile } from '../../ipynbUtilities';
+import { debounce, executeSafe, isDotNetUpToDate, parse, processArguments, stringify } from '../../utilities';
 
 import * as vscodeLike from '../../interfaces/vscode-like';
 
 describe('Miscellaneous tests', () => {
-    describe('preferred kernel selection', () => {
-        it(`.dib file extension is always preferred`, () => {
-            const filename = 'notebook.dib';
-            const fileMetadata = {};
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
-        });
-
-        it(`.dotnet-interactive file extension is always preferred`, () => {
-            const filename = 'notebook.dotnet-interactive';
-            const fileMetadata = {};
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
-        });
-
-        it(`.ipynb file extension is preferred if metadata kernelspec matches`, () => {
-            const filename = 'notebook.ipynb';
-            const fileMetadata = {
-                custom: {
-                    metadata: {
-                        kernelspec: requiredKernelspecData
-                    }
-                }
-            };
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
-        });
-
-        it(`.ipynb file extension is preferred for F# kernelspec`, () => {
-            const filename = 'notebook.ipynb';
-            const fileMetadata = {
+    describe('.NET notebook detection', () => {
+        it('.NET notebook is detected by kernelspec', () => {
+            const metadata = {
                 custom: {
                     metadata: {
                         kernelspec: {
-                            display_name: '.NET (F#)',
-                            language: 'F#',
-                            name: '.net-fsharp',
+                            name: '.net-fsharp-dev'
                         }
                     }
                 }
             };
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
+            expect(isDotNetNotebookMetadata(metadata)).is.true;
         });
 
-        it(`.ipynb file extension is preferred improperly-cased kernelspec`, () => {
-            const filename = 'notebook.ipynb';
-            const fileMetadata = {
+        it('.NET notebook is detected by language info', () => {
+            const metadata = {
                 custom: {
                     metadata: {
-                        kernelspec: {
-                            display_name: '.NET (C#)',
-                            language: 'C#',
-                            name: '.NET-CSHARP',
+                        language_info: {
+                            name: 'dotnet-interactive.pwsh'
                         }
                     }
                 }
             };
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
+            expect(isDotNetNotebookMetadata(metadata)).is.true;
         });
 
-        it(`.ipynb file extension is preferred for alternate F# kernelspec`, () => {
-            const filename = 'notebook.ipynb';
-            const fileMetadata = {
+        it('non-.NET notebook is not detected by kernelspec', () => {
+            const metadata = {
                 custom: {
                     metadata: {
                         kernelspec: {
-                            display_name: '.NET (F#) (dev)',
-                            language: 'F#',
-                            name: '.net-fsharp-dev',
+                            name: 'python'
                         }
                     }
                 }
             };
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
+            expect(isDotNetNotebookMetadata(metadata)).is.false;
         });
 
-        it(`.ipynb file extension is preferred for PowerShell kernelspec`, () => {
-            const filename = 'notebook.ipynb';
-            const fileMetadata = {
+        it('non-.NET notebook is not detected by language info', () => {
+            const metadata = {
                 custom: {
                     metadata: {
-                        kernelspec: {
-                            display_name: '.NET (PowerShell)',
-                            language: 'pwsh',
-                            name: '.net-powershell',
+                        language_info: {
+                            name: 'python'
                         }
                     }
                 }
             };
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.true;
-        });
-
-        it(`.ipynb file extension is not preferred if metadata kernelspec doesn't match`, () => {
-            const filename = 'notebook.ipynb';
-            const fileMetadata = {
-                custom: {
-                    metadata: {
-                        kernelspec: {
-                            display_name: 'python',
-                            name: 'python',
-                            language: 'python',
-                        }
-                    }
-                }
-            };
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.false;
-        });
-
-        it(`.ipynb file extension is not preferred if metadata kernelspec is missing`, () => {
-            const filename = 'notebook.ipynb';
-            const fileMetadata = {};
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.false;
-        });
-
-        it(`unsupported file extension is not preferred even if metadata matches`, () => {
-            const filename = 'notebook.not-a-notebook-we-know-about';
-            const fileMetadata = {
-                custom: {
-                    metadata: {
-                        kernelspec: requiredKernelspecData
-                    }
-                }
-            };
-            expect(isDotNetKernelPreferred(filename, fileMetadata)).is.false;
+            expect(isDotNetNotebookMetadata(metadata)).is.false;
         });
     });
 
@@ -325,6 +255,18 @@ describe('Miscellaneous tests', () => {
         it('version number check crashed', () => {
             const isSupported = isDotNetUpToDate('5.0', { code: -1, output: '' });
             expect(isSupported).to.be.false;
+        });
+    });
+
+    describe('.ipynb helpers', () => {
+        it('file extension of .ipynb matches', () => {
+            expect(isIpynbFile('notebook.ipynb')).to.be.true;
+            expect(isIpynbFile('NOTEBOOK.IPYNB')).to.be.true;
+        });
+
+        it(`file extension of .dib doesn't match`, () => {
+            expect(isIpynbFile('notebook.dib')).to.be.false;
+            expect(isIpynbFile('notebook.dotnet-interactive')).to.be.false;
         });
     });
 });

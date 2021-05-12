@@ -4,11 +4,18 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
 import { Eol, WindowsEol, NonWindowsEol } from "../interfaces";
-import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan } from '../interfaces/contracts';
-import { ClientMapper } from '../clientMapper';
+import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan, NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookDocument } from '../interfaces/contracts';
+
+import * as versionSpecificFunctions from '../../versionSpecificFunctions';
+import { getSimpleLanguage } from '../interactiveNotebook';
+import * as vscodeLike from '../interfaces/vscode-like';
 
 export function isInsidersBuild(): boolean {
     return vscode.version.indexOf('-insider') >= 0;
+}
+
+export function isStableBuild(): boolean {
+    return !isInsidersBuild();
 }
 
 function convertToPosition(linePosition: LinePosition): vscode.Position {
@@ -68,22 +75,44 @@ export function getEol(): Eol {
 export function isUnsavedNotebook(uri: vscode.Uri): boolean {
     return uri.scheme === 'untitled';
 }
+export function toNotebookDocument(document: vscode.NotebookDocument): NotebookDocument {
+    return {
+        cells: versionSpecificFunctions.getCells(document).map(toNotebookCell)
+    };
+}
 
-export function configureWebViewMessaging(webview: vscode.NotebookCommunication, documentUri: vscode.Uri, clientMapper: ClientMapper) {
-    webview.onDidReceiveMessage(async (message) => {
-        switch (message.command) {
-            case "getHttpApiEndpoint":
-                const client = await clientMapper.tryGetClient(documentUri);
-                if (client) {
-                    const uri = client.tryGetProperty<vscode.Uri>("externalUri");
-                    webview.postMessage({ command: "configureFactories", endpointUri: uri?.toString() });
+export function toNotebookCell(cell: vscode.NotebookCell): NotebookCell {
+    return {
+        language: cell.kind === vscode.NotebookCellKind.Code
+            ? getSimpleLanguage(cell.document.languageId)
+            : 'markdown',
+        contents: cell.document.getText(),
+        outputs: cell.outputs.map(vsCodeCellOutputToContractCellOutput)
+    };
+}
 
-                    clientMapper.onClientCreate(documentUri, async (client) => {
-                        const uri = client.tryGetProperty<vscode.Uri>("externalUri");
-                        await webview.postMessage({ command: "resetFactories", endpointUri: uri?.toString() });
-                    });
-                }
-                break;
+export function vsCodeCellOutputToContractCellOutput(output: vscode.NotebookCellOutput): NotebookCellOutput {
+    const errorOutputItems = output.outputs.filter(oi => oi.mime === vscodeLike.ErrorOutputMimeType || oi.metadata?.mimeType === vscodeLike.ErrorOutputMimeType);
+    if (errorOutputItems.length > 0) {
+        // any error-like output takes precedence
+        const errorOutputItem = errorOutputItems[0];
+        const error: NotebookCellErrorOutput = {
+            errorName: 'Error',
+            errorValue: '' + errorOutputItem.value,
+            stackTrace: [],
+        };
+        return error;
+    } else {
+        //otherwise build the mime=>value dictionary
+        const data: { [key: string]: any } = {};
+        for (const outputItem of output.outputs) {
+            data[outputItem.mime] = outputItem.value;
         }
-    });
+
+        const cellOutput: NotebookCellDisplayOutput = {
+            data,
+        };
+
+        return cellOutput;
+    }
 }

@@ -16,13 +16,13 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
         public static bool IsInStaticContext(this SyntaxNode node)
         {
             // this/base calls are always static.
-            if (node.FirstAncestorOrSelf<ConstructorInitializerSyntax>() != null)
+            if (node.FirstAncestorOrSelf<ConstructorInitializerSyntax>() is not null)
             {
                 return true;
             }
 
             var memberDeclaration = node.FirstAncestorOrSelf<MemberDeclarationSyntax>();
-            if (memberDeclaration == null)
+            if (memberDeclaration is null)
             {
                 return false;
             }
@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
             }
 
             // Global statements are not a static context.
-            if (node.FirstAncestorOrSelf<GlobalStatementSyntax>() != null)
+            if (node.FirstAncestorOrSelf<GlobalStatementSyntax>() is not null)
             {
                 return false;
             }
@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
 
         public static SyntaxTokenList GetModifiers(SyntaxNode member)
         {
-            if (member != null)
+            if (member is not null)
             {
                 switch (member.Kind())
                 {
@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
            where TParent : SyntaxNode
         {
             var ancestor = node.GetAncestor<TParent>();
-            if (ancestor == null)
+            if (ancestor is null)
             {
                 return false;
             }
@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
            where TNode : SyntaxNode
         {
             var current = node.Parent;
-            while (current != null)
+            while (current is not null)
             {
                 if (current is TNode tNode)
                 {
@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
             where TNode : SyntaxNode
         {
             var current = node;
-            while (current != null)
+            while (current is not null)
             {
                 if (current is TNode tNode)
                 {

@@ -12,7 +12,7 @@
   "//version": "The version '42.42.42' is auto-set during CI package creation.",
   "version": "42.42.42",
   "engines": {
-    "vscode": "^1.54.0"
+    "vscode": "^1.56.0"
   },
   "bugs": {
     "url": "https://github.com/dotnet/interactive/issues"
@@ -40,8 +40,8 @@
     "PowerShell"
   ],
   "activationEvents": [
+    "onUri",
     "onNotebook:dotnet-interactive",
-    "onNotebook:dotnet-interactive-jupyter",
     "onNotebook:*",
     "onCommand:dotnet-interactive.acquire",
     "onCommand:dotnet-interactive.newNotebook",
@@ -49,7 +49,9 @@
     "onCommand:dotnet-interactive.saveAsNotebook"
   ],
   "main": "./out/src/common/vscode/extension.js",
-  "extensionDependencies": [],
+  "extensionDependencies": [
+    "ms-toolsai.jupyter"
+  ],
   "contributes": {
     "notebookProvider": [
       {
@@ -60,16 +62,20 @@
             "filenamePattern": "*.{dib,dotnet-interactive}"
           }
         ]
+      }
+    ],
+    "jupyter.kernels": [
+      {
+        "title": ".NET Interactive (C#)",
+        "defaultlanguage": "dotnet-interactive.csharp"
       },
       {
-        "viewType": "dotnet-interactive-jupyter",
-        "displayName": ".NET Interactive for Jupyter",
-        "selector": [
-          {
-            "filenamePattern": "*.ipynb"
-          }
-        ],
-        "priority": "option"
+        "title": ".NET Interactive (F#)",
+        "defaultlanguage": "dotnet-interactive.fsharp"
+      },
+      {
+        "title": ".NET Interactive (PowerShell)",
+        "defaultlanguage": "dotnet-interactive.pwsh"
       }
     ],
     "configuration": {
@@ -95,10 +101,10 @@
           "default": "{global_storage_path}",
           "description": "The working directory in which the kernel transport process is started."
         },
-        "dotnet-interactive.liveDiagnosticDelay": {
+        "dotnet-interactive.languageServiceDelay": {
           "type": "number",
           "default": 500,
-          "description": "The delay in ms after the last cell edit before live diagnostics are requested."
+          "description": "The delay in ms before language services are invoked."
         },
         "dotnet-interactive.interactiveToolSource": {
           "type": "string",
@@ -112,13 +118,8 @@
         },
         "dotnet-interactive.minimumInteractiveToolVersion": {
           "type": "string",
-          "default": "1.0.215801",
+          "default": "1.0.225503",
           "description": "The minimum required version of the .NET Interactive tool."
-        },
-        "dotnet-interactive.useDotNetInteractiveExtensionForIpynbFiles": {
-          "type": "boolean",
-          "default": false,
-          "description": "(LEGACY) Use the .NET Interactive extension to handle .ipynb files (requires restart)."
         }
       }
     },
@@ -225,93 +226,176 @@
       {
         "language": "dotnet-interactive",
         "scopeName": "source.dotnet-interactive",
-        "path": "./syntaxes/source.dotnet-interactive.tmGrammar.json"
+        "path": "./syntaxes/source.dotnet-interactive.tmGrammar.json",
+        "embeddedLanguages": {
+          "language.switch.csharp": "dotnet-interactive.csharp",
+          "language.switch.fsharp": "dotnet-interactive.fsharp",
+          "language.switch.html": "dotnet-interactive.html",
+          "language.switch.javascript": "dotnet-interactive.javascript",
+          "language.switch.markdown": "dotnet-interactive.markdown",
+          "language.switch.powershell": "dotnet-interactive.pwsh",
+          "language.switch.sql": "dotnet-interactive.sql"
+        }
       },
       {
         "language": "dotnet-interactive.csharp",
         "scopeName": "source.dotnet-interactive.csharp",
-        "path": "./syntaxes/source.dotnet-interactive.csharp.tmGrammar.json"
+        "path": "./syntaxes/source.dotnet-interactive.csharp.tmGrammar.json",
+        "embeddedLanguages": {
+          "language.switch.csharp": "dotnet-interactive.csharp",
+          "language.switch.fsharp": "dotnet-interactive.fsharp",
+          "language.switch.html": "dotnet-interactive.html",
+          "language.switch.javascript": "dotnet-interactive.javascript",
+          "language.switch.markdown": "dotnet-interactive.markdown",
+          "language.switch.powershell": "dotnet-interactive.pwsh",
+          "language.switch.sql": "dotnet-interactive.sql"
+        }
       },
       {
         "language": "dotnet-interactive.fsharp",
         "scopeName": "source.dotnet-interactive.fsharp",
-        "path": "./syntaxes/source.dotnet-interactive.fsharp.tmGrammar.json"
+        "path": "./syntaxes/source.dotnet-interactive.fsharp.tmGrammar.json",
+        "embeddedLanguages": {
+          "language.switch.csharp": "dotnet-interactive.csharp",
+          "language.switch.fsharp": "dotnet-interactive.fsharp",
+          "language.switch.html": "dotnet-interactive.html",
+          "language.switch.javascript": "dotnet-interactive.javascript",
+          "language.switch.markdown": "dotnet-interactive.markdown",
+          "language.switch.powershell": "dotnet-interactive.pwsh",
+          "language.switch.sql": "dotnet-interactive.sql"
+        }
       },
       {
         "language": "dotnet-interactive.html",
         "scopeName": "source.dotnet-interactive.html",
-        "path": "./syntaxes/source.dotnet-interactive.html.tmGrammar.json"
+        "path": "./syntaxes/source.dotnet-interactive.html.tmGrammar.json",
+        "embeddedLanguages": {
+          "language.switch.csharp": "dotnet-interactive.csharp",
+          "language.switch.fsharp": "dotnet-interactive.fsharp",
+          "language.switch.html": "dotnet-interactive.html",
+          "language.switch.javascript": "dotnet-interactive.javascript",
+          "language.switch.markdown": "dotnet-interactive.markdown",
+          "language.switch.powershell": "dotnet-interactive.pwsh",
+          "language.switch.sql": "dotnet-interactive.sql"
+        }
       },
       {
         "language": "dotnet-interactive.javascript",
         "scopeName": "source.dotnet-interactive.javascript",
-        "path": "./syntaxes/source.dotnet-interactive.javascript.tmGrammar.json"
+        "path": "./syntaxes/source.dotnet-interactive.javascript.tmGrammar.json",
+        "embeddedLanguages": {
+          "language.switch.csharp": "dotnet-interactive.csharp",
+          "language.switch.fsharp": "dotnet-interactive.fsharp",
+          "language.switch.html": "dotnet-interactive.html",
+          "language.switch.javascript": "dotnet-interactive.javascript",
+          "language.switch.markdown": "dotnet-interactive.markdown",
+          "language.switch.powershell": "dotnet-interactive.pwsh",
+          "language.switch.sql": "dotnet-interactive.sql"
+        }
       },
       {
         "language": "dotnet-interactive.magic-commands",
         "scopeName": "source.dotnet-interactive.magic-commands",
-        "path": "./syntaxes/source.dotnet-interactive.magic-commands.tmGrammar.json"
+        "path": "./syntaxes/source.dotnet-interactive.magic-commands.tmGrammar.json",
+        "embeddedLanguages": {
+          "language.switch.csharp": "dotnet-interactive.csharp",
+          "language.switch.fsharp": "dotnet-interactive.fsharp",
+          "language.switch.html": "dotnet-interactive.html",
+          "language.switch.javascript": "dotnet-interactive.javascript",
+          "language.switch.markdown": "dotnet-interactive.markdown",
+          "language.switch.powershell": "dotnet-interactive.pwsh",
+          "language.switch.sql": "dotnet-interactive.sql"
+        }
       },
       {
         "language": "dotnet-interactive.markdown",
         "scopeName": "source.dotnet-interactive.markdown",
-        "path": "./syntaxes/source.dotnet-interactive.markdown.tmGrammar.json"
+        "path": "./syntaxes/source.dotnet-interactive.markdown.tmGrammar.json",
+        "embeddedLanguages": {
+          "language.switch.csharp": "dotnet-interactive.csharp",
+          "language.switch.fsharp": "dotnet-interactive.fsharp",
+          "language.switch.html": "dotnet-interactive.html",
+          "language.switch.javascript": "dotnet-interactive.javascript",
+          "language.switch.markdown": "dotnet-interactive.markdown",
+          "language.switch.powershell": "dotnet-interactive.pwsh",
+          "language.switch.sql": "dotnet-interactive.sql"
+        }
       },
       {
         "language": "dotnet-interactive.pwsh",
         "scopeName": "source.dotnet-interactive.powershell",
-        "path": "./syntaxes/source.dotnet-interactive.powershell.tmGrammar.json"
+        "path": "./syntaxes/source.dotnet-interactive.powershell.tmGrammar.json",
+        "embeddedLanguages": {
+          "language.switch.csharp": "dotnet-interactive.csharp",
+          "language.switch.fsharp": "dotnet-interactive.fsharp",
+          "language.switch.html": "dotnet-interactive.html",
+          "language.switch.javascript": "dotnet-interactive.javascript",
+          "language.switch.markdown": "dotnet-interactive.markdown",
+          "language.switch.powershell": "dotnet-interactive.pwsh",
+          "language.switch.sql": "dotnet-interactive.sql"
+        }
       },
       {
         "language": "dotnet-interactive.sql",
         "scopeName": "source.dotnet-interactive.sql",
-        "path": "./syntaxes/source.dotnet-interactive.sql.tmGrammar.json"
+        "path": "./syntaxes/source.dotnet-interactive.sql.tmGrammar.json",
+        "embeddedLanguages": {
+          "language.switch.csharp": "dotnet-interactive.csharp",
+          "language.switch.fsharp": "dotnet-interactive.fsharp",
+          "language.switch.html": "dotnet-interactive.html",
+          "language.switch.javascript": "dotnet-interactive.javascript",
+          "language.switch.markdown": "dotnet-interactive.markdown",
+          "language.switch.powershell": "dotnet-interactive.pwsh",
+          "language.switch.sql": "dotnet-interactive.sql"
+        }
       }
     ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "compile": "npm run lint && tsc -p ./",
     "lint": "eslint src --ext ts",
     "watch": "tsc -watch -p ./",
     "integration-test": "node ./out/tests/integration/runTest.js",
-    "pretest": "npm run compile && npm run lint",
+    "pretest": "npm run compile",
     "test": "mocha --opts mocha.opts",
     "ciTest": "npm test -- --reporter mocha-multi-reporters --reporter-options configFile=testConfig.json",
     "tdd": "npm test -- --watch",
-    "package": "npx vsce package"
+    "package": "npx vsce package",
+    "clearUserData": "del-cli \"./userData/**/*\" \"!.gitignore\""
   },
   "devDependencies": {
     "@types/chai": "4.2.11",
-    "@types/chai-as-promised": "^7.1.3",
+    "@types/chai-as-promised": "7.1.3",
     "@types/chai-fs": "2.0.2",
     "@types/glob": "7.1.1",
     "@types/mocha": "7.0.2",
     "@types/node": "13.11.0",
-    "@types/node-fetch": "^2.5.7",
+    "@types/node-fetch": "2.5.7",
     "@types/tmp": "0.2.0",
-    "@types/uuid": "^8.3.0",
+    "@types/uuid": "8.3.0",
     "@typescript-eslint/eslint-plugin": "2.26.0",
     "@typescript-eslint/parser": "2.26.0",
     "chai": "4.2.0",
-    "chai-as-promised": "^7.1.1",
+    "chai-as-promised": "7.1.1",
     "chai-fs": "2.0.0",
-    "del-cli": "^3.0.1",
+    "del-cli": "3.0.1",
     "eslint": "6.8.0",
+    "eslint-plugin-deprecation": "1.2.0",
     "glob": "7.1.6",
     "mocha": "7.1.1",
     "mocha-multi-reporters": "1.1.7",
     "mocha-trx-reporter": "3.2.4",
     "tmp": "0.2.1",
     "typescript": "4.1.3",
-    "vsce": "1.75.0",
+    "vsce": "1.88.0",
     "vscode-oniguruma": "1.3.1",
     "vscode-test": "1.3.0",
     "vscode-textmate": "5.1.1"
   },
   "dependencies": {
     "compare-versions": "3.6.0",
-    "node-fetch": "^2.6.1",
-    "uuid": "^8.3.2"
+    "node-fetch": "2.6.1",
+    "uuid": "8.3.2"
   }
 }

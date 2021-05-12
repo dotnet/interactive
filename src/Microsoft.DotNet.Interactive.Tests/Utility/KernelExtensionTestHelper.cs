@@ -137,7 +137,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Utility
                                .Where(f => f.Directory.Name != "ref")
                                .Single();
 
-            if (copyDllTo != null)
+            if (copyDllTo is not null)
             {
                 if (!copyDllTo.Exists)
                 {

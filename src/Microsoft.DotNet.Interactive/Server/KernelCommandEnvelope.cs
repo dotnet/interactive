@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Server
     public abstract class KernelCommandEnvelope : IKernelCommandEnvelope
     {
         private static readonly ConcurrentDictionary<Type, Func<KernelCommand, IKernelCommandEnvelope>> _envelopeFactories =
-            new ConcurrentDictionary<Type, Func<KernelCommand, IKernelCommandEnvelope>>();
+            new();
 
         private static ConcurrentDictionary<string, Type> _envelopeTypesByCommandTypeName;
 
@@ -40,16 +40,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         KernelCommand IKernelCommandEnvelope.Command => _command;
 
-        public static void RegisterCommandType<T>(string commandTypeName) where T : KernelCommand
-        {
-            var commandEnvelopeType = typeof(KernelCommandEnvelope<T>);
-            var commandType = typeof(T);
-
-            _envelopeTypesByCommandTypeName.TryAdd(commandTypeName, commandEnvelopeType);
-            _commandTypesByCommandTypeName.TryAdd(commandTypeName, commandType);
-        }
-
-        internal static void RegisterCommandTypeReplacingIfNecessary<T>() where T : KernelCommand
+        internal static void RegisterCommandTypeForSerialization<T>() where T : KernelCommand
         {
             var commandEnvelopeType = typeof(KernelCommandEnvelope<T>);
             var commandType = typeof(T);
@@ -125,7 +116,7 @@ namespace Microsoft.DotNet.Interactive.Server
         internal static IKernelCommandEnvelope Deserialize(JsonElement json)
         {
             var commandTypeJson = string.Empty;
-            var commandJson = string.Empty;
+            string commandJson;
             var token = string.Empty;
             
             if (json.TryGetProperty("commandType", out var commandTypeProperty))
@@ -156,7 +147,7 @@ namespace Microsoft.DotNet.Interactive.Server
             {
                 token = tokenProperty.GetString();
             }
-            if (token != null)
+            if (token is not null)
             {
                 command.SetToken(token);
             }

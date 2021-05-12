@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Interactive.InterfaceGen.App
 
         public static bool IsNullable(this Type type)
         {
-            return Nullable.GetUnderlyingType(type) != null;
+            return Nullable.GetUnderlyingType(type) is not null;
         }
 
         public static bool ShouldBeArray(this Type type)

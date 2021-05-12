@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 {
     public class NamedPipeConnectionTests : IDisposable
     {
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
 
         public NamedPipeConnectionTests(ITestOutputHelper output)
         {

@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Interactive.Http
 
         public FileProvider(Kernel kernel, Assembly rootProviderAssembly)
         {
-            if (kernel == null) throw new ArgumentNullException(nameof(kernel));
+            if (kernel is null) throw new ArgumentNullException(nameof(kernel));
 
             _root = new EmbeddedFileProvider(rootProviderAssembly ?? typeof(FileProvider).Assembly);
             _eventSubscription = kernel.KernelEvents

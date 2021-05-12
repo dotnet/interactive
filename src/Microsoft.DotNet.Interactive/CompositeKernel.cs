@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Interactive
         private void ListenForPackagesToScanForExtensions() =>
             RegisterForDisposal(KernelEvents
                                 .OfType<PackageAdded>()
-                                .Where(pa => pa?.PackageReference.PackageRoot != null)
+                                .Where(pa => pa?.PackageReference.PackageRoot is not null)
                                 .Distinct(pa => pa.PackageReference.PackageRoot)
                                 .Subscribe(added => _packagesToCheckForExtensions.Enqueue(added)));
 
@@ -65,12 +65,12 @@ namespace Microsoft.DotNet.Interactive
 
         public void Add(Kernel kernel, IReadOnlyCollection<string> aliases = null)
         {
-            if (kernel == null)
+            if (kernel is null)
             {
                 throw new ArgumentNullException(nameof(kernel));
             }
 
-            if (kernel.ParentKernel != null)
+            if (kernel.ParentKernel is not null)
             {
                 throw new InvalidOperationException($"Kernel \"{kernel.Name}\" already has a parent: \"{kernel.ParentKernel.Name}\".");
             }
@@ -187,7 +187,7 @@ namespace Microsoft.DotNet.Interactive
 
             Kernel kernel;
 
-            if (targetKernelName != null)
+            if (targetKernelName is not null)
             {
                 _kernelsByNameOrAlias.TryGetValue(targetKernelName, out kernel);
             }
@@ -324,12 +324,11 @@ namespace Microsoft.DotNet.Interactive
             ConnectKernelCommand<TOptions> connectionCommand)
             where TOptions : KernelConnectionOptions
         {
-            // FIX: (AddKernelConnection) use a global option
             var kernelNameOption = new Option<string>(
                 "--kernel-name",
                 "The name of the subkernel to be added");
 
-            if (_connectDirective == null)
+            if (_connectDirective is null)
             {
                 _connectDirective = new Command(
                     "#!connect",

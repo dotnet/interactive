@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Interactive.Commands
 
         public virtual Task InvokeAsync(KernelInvocationContext context)
         {
-            if (Handler == null)
+            if (Handler is null)
             {
                 throw new NoSuitableKernelException(this);
             }

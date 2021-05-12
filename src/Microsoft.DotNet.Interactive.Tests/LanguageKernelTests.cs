@@ -19,6 +19,7 @@ using Microsoft.DotNet.Interactive.Tests.Utility;
 
 using Xunit;
 using Xunit.Abstractions;
+using DiagnosticsProduced = Microsoft.DotNet.Interactive.Events.DiagnosticsProduced;
 
 #pragma warning disable 8509
 #pragma warning disable 8524
@@ -252,9 +253,9 @@ f();"
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "CS0103", "The name 'aaaadd' does not exist in the current context", "(1,1): error CS0103: The name 'aaaadd' does not exist in the current context")]
-        [InlineData(Language.FSharp, "FS0039", "The value or constructor 'aaaadd' is not defined.", "input.fsx (1,1)-(1,7) typecheck error The value or constructor 'aaaadd' is not defined.")]
-        public async Task when_code_contains_compile_time_error_diagnostics_are_produced(Language language, string code, string diagnosticMessage, string errorMessage)
+        [InlineData(Language.CSharp, "CS0103", "aaaadd", "(1,1): error CS0103:")]
+        [InlineData(Language.FSharp, "FS0039", "aaaadd", "input.fsx (1,1)-(1,7) typecheck error")]
+        public async Task when_code_contains_compile_time_error_diagnostics_are_produced(Language language, string code, string diagnosticMessageFragment, string errorMessageFragment)
         {
             var kernel = CreateKernel(language);
 
@@ -288,7 +289,7 @@ f();"
                 .Which
                 .Message
                 .Should()
-                .Be(errorMessage);
+                .Contain(errorMessageFragment);
 
             // The Diagnostics of DiagnosticsProduced event are populated
             KernelEvents
@@ -300,7 +301,7 @@ f();"
                 .ContainSingle(diag =>
                     diag.LinePositionSpan == diagnosticRange &&
                     diag.Code == code &&
-                    diag.Message == diagnosticMessage);
+                    diag.Message.Contains(diagnosticMessageFragment));
 
             // The FormattedValues are populated of DiagnosticsProduced event are populated
             KernelEvents
@@ -313,14 +314,14 @@ f();"
                 .Which
                 .Value
                 .Should()
-                .Be(errorMessage);
+                .Contain(errorMessageFragment);
 
         }
 
         [Theory]
-        [InlineData(Language.CSharp, "'AppDomain.GetCurrentThreadId()' is obsolete: 'AppDomain.GetCurrentThreadId has been deprecated")]
-        [InlineData(Language.FSharp, "This construct is deprecated. AppDomain.GetCurrentThreadId has been deprecated")]
-        public async Task when_code_contains_compile_time_warnings_diagnostics_are_produced(Language language, string diagnosticMessage)
+        [InlineData(Language.CSharp, "AppDomain.GetCurrentThreadId()", "'AppDomain.GetCurrentThreadId has been deprecated")]
+        [InlineData(Language.FSharp, "AppDomain.GetCurrentThreadId has been deprecated")]
+        public async Task when_code_contains_compile_time_warnings_diagnostics_are_produced(Language language, params string[] diagnosticMessageFragments)
         {
             var kernel = CreateKernel(language);
 
@@ -355,7 +356,7 @@ f();"
                 .Which
                 .Message
                 .Should()
-                .StartWith(diagnosticMessage);
+                .ContainAll(diagnosticMessageFragments);
         }
 
         [Fact]
@@ -403,13 +404,13 @@ int SomeFunction(int n)
     };
 }
 
-", "The switch expression does not handle all possible values of its input type")]
+", "CS8509", "switch", "1")]
         [InlineData(Language.FSharp, @"
 let x n =
     match n with
     | 0 -> ()
-", "Incomplete pattern matches on this expression.")]
-        public async Task diagnostics_are_produced_on_command_succeeded(Language language, string code, string diagnosticText)
+", "FS0025", "1")]
+        public async Task diagnostics_are_produced_on_command_succeeded(Language language, string code, string errorCode, params string[] diagnosticMessageFragments)
         {
             var kernel = CreateKernel(language);
 
@@ -427,7 +428,11 @@ let x n =
                 .Which
                 .Diagnostics
                 .Should()
-                .ContainSingle(diag => diag.Message.Contains(diagnosticText));
+                .ContainSingle(diag =>
+                diag.Code == errorCode &&
+                diagnosticMessageFragments.All(
+                    frag => diag.Message.Contains(frag)
+                ));
         }
 
         [Fact(Skip = "The first failed sub-command cancels all subsequent command executions; the second kernel doesn't get a chance to report.")]
@@ -631,6 +636,62 @@ $${languageSpecificCode}
                 .Diagnostics
                 .Should()
                 .ContainSingle(diag => diag.LinePositionSpan.Start.Line == line);
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        [InlineData(Language.PowerShell)]
+        public async Task when_a_sequence_of_diagnostics_requests_is_fired_diagnostics_are_produced_only_for_the_latest_request(Language language)
+        {
+            var kernel = CreateKernel(language);
+           
+            var results = await Task.WhenAll(
+                kernel.SendAsync(new RequestDiagnostics("C")),
+                kernel.SendAsync(new RequestDiagnostics("Co")),
+                kernel.SendAsync(new RequestDiagnostics("Con")),
+                kernel.SendAsync(new RequestDiagnostics("Cons")), 
+                kernel.SendAsync(new RequestDiagnostics("Conso"))
+            );
+
+           var events = results.SelectMany(r => r.KernelEvents.ToSubscribedList()).ToList();
+
+           events.Select(e => e.GetType())
+               .Where(t => t == typeof(CommandSucceeded)).Should()
+               .HaveCount(5);
+
+           events.Should().ContainSingle<DiagnosticsProduced>()
+                .Which
+                .Command
+                .As<RequestDiagnostics>()
+                .Code
+                .Should()
+                .Be("Conso");
+        }
+
+        [Theory]
+        [InlineData(Language.CSharp)]
+        [InlineData(Language.FSharp)]
+        public async Task RequestCompletions_prevents_RequestDiagnostics_from_producing_events(Language language)
+        {
+            var kernel = CreateKernel(language);
+            MarkupTestFile.GetLineAndColumn("Console.$$", out var output, out var line, out var column);
+
+            var requestDiagnosticsCommand = new RequestDiagnostics(output);
+
+            var results = await  Task.WhenAll(
+                kernel.SendAsync(new RequestCompletions(output, new LinePosition(line,column))),
+                kernel.SendAsync(requestDiagnosticsCommand)
+            );
+
+            var events = results.SelectMany(r => r.KernelEvents.ToSubscribedList()).ToList();
+
+            events.Select(e => e.GetType())
+                .Where(t => t == typeof(CommandSucceeded)).Should()
+                .HaveCount(2);
+
+            events.Should()
+                .NotContain(e => e.GetType() == typeof(DiagnosticsProduced) && e.Command == requestDiagnosticsCommand);
         }
 
         [Theory]
@@ -944,11 +1005,10 @@ Console.Write(""value three"");"
         {
             var kernel = CreateKernel(language, openTestingNamespaces: true);
 
-            var (source, error) = language switch
+            var (source, errorFragments) = language switch
             {
-                Language.CSharp => ("using Not.A.Namespace;", "(1,7): error CS0246: The type or namespace name 'Not' could not be found (are you missing a using directive or an assembly reference?)"),
-                Language.FSharp => ("open Not.A.Namespace", @"input.fsx (1,6)-(1,9) typecheck error The namespace or module 'Not' is not defined. Maybe you want one of the following:
-   Net")
+                Language.CSharp => ("using Not.A.Namespace;", new[] { "(1,7): error CS0246:", "Not", "using" }),
+                Language.FSharp => ("open Not.A.Namespace", new[] { @"input.fsx (1,6)-(1,9) typecheck error", "Not" })
             };
 
             await SubmitCode(kernel, source);
@@ -963,7 +1023,7 @@ Console.Write(""value three"");"
                 .Which
                 .Value
                 .Should()
-                .Be(error);
+                .ContainAll(errorFragments);
         }
 
         [Theory]
@@ -1033,6 +1093,8 @@ Console.Write(2);
                 timeStampedEvents
                     .Where(e => e.Value is StandardOutputValueProduced)
                     .ToArray();
+
+            events.Should().HaveCount(2);
 
             var diff = events[1].Timestamp - events[0].Timestamp;
 
@@ -1132,11 +1194,11 @@ Console.Write(2);
             await kernel.SendAsync(new RequestCompletions("al", new LinePosition(0, 2)));
 
             KernelEvents
-                        .OfType<CompletionsProduced>()
-                        .Single()
-                        .Completions
-                        .Should()
-                        .Contain(i => i.DisplayText == "alpha");
+                .OfType<CompletionsProduced>()
+                .Single()
+                .Completions
+                .Should()
+                .Contain(i => i.DisplayText == "alpha");
         }
 
         [Fact]

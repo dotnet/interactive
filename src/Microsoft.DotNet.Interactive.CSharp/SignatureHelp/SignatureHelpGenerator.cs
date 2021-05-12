@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -14,9 +15,10 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
 {
     internal static class SignatureHelpGenerator
     {
-        public static async Task<SignatureHelpProduced> GenerateSignatureInformation(Document document, RequestSignatureHelp command)
+        public static async Task<SignatureHelpProduced> GenerateSignatureInformation(Document document,
+            RequestSignatureHelp command, CancellationToken cancellationToken)
         {
-            var invocation = await GetInvocation(document, command.LinePosition);
+            var invocation = await GetInvocation(document, command.LinePosition, cancellationToken);
             if (invocation is null)
             {
                 return null;
@@ -41,18 +43,16 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
             var bestScoreIndex = 0;
 
             var types = invocation.ArgumentTypes;
-            ISymbol throughSymbol = null;
-            ISymbol throughType = null;
             var methodGroup = invocation.SemanticModel.GetMemberGroup(invocation.Receiver).OfType<IMethodSymbol>();
             if (invocation.Receiver is MemberAccessExpressionSyntax)
             {
                 var throughExpression = ((MemberAccessExpressionSyntax)invocation.Receiver).Expression;
-                throughSymbol = invocation.SemanticModel.GetSpeculativeSymbolInfo(invocation.Position, throughExpression, SpeculativeBindingOption.BindAsExpression).Symbol;
-                throughType = invocation.SemanticModel.GetSpeculativeTypeInfo(invocation.Position, throughExpression, SpeculativeBindingOption.BindAsTypeOrNamespace).Type;
-                var includeInstance = (throughSymbol != null && !(throughSymbol is ITypeSymbol)) ||
+                var throughSymbol = invocation.SemanticModel.GetSpeculativeSymbolInfo(invocation.Position, throughExpression, SpeculativeBindingOption.BindAsExpression).Symbol;
+                ISymbol throughType = invocation.SemanticModel.GetSpeculativeTypeInfo(invocation.Position, throughExpression, SpeculativeBindingOption.BindAsTypeOrNamespace).Type;
+                var includeInstance = (throughSymbol is not null && !(throughSymbol is ITypeSymbol)) ||
                     throughExpression is LiteralExpressionSyntax ||
                     throughExpression is TypeOfExpressionSyntax;
-                var includeStatic = (throughSymbol is INamedTypeSymbol) || throughType != null;
+                var includeStatic = (throughSymbol is INamedTypeSymbol) || throughType is not null;
                 methodGroup = methodGroup.Where(m => (m.IsStatic && includeStatic) || (!m.IsStatic && includeInstance));
             }
             else if (invocation.Receiver is SimpleNameSyntax && invocation.IsInStaticContext)
@@ -80,32 +80,33 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
                 activeParameter);
         }
 
-        private static async Task<InvocationContext> GetInvocation(Document document, LinePosition linePosition)
+        private static async Task<InvocationContext> GetInvocation(Document document, LinePosition linePosition,
+            CancellationToken cancellationToken)
         {
-            var text = await document.GetTextAsync();
+            var text = await document.GetTextAsync(cancellationToken);
             var position = Math.Max(text.Lines.GetPosition(linePosition.ToCodeAnalysisLinePosition()) - 1, 0); // backtrack into the actual invocation
-            var tree = await document.GetSyntaxTreeAsync();
-            var root = await tree.GetRootAsync();
+            var tree = await document.GetSyntaxTreeAsync(cancellationToken);
+            var root = await tree.GetRootAsync(cancellationToken);
             var node = root.FindToken(position).Parent;
 
             // Walk up until we find a node that we're interested in.
-            while (node != null)
+            while (node is not null)
             {
                 if (node is InvocationExpressionSyntax invocation && invocation.ArgumentList.Span.Contains(position))
                 {
-                    var semanticModel = await document.GetSemanticModelAsync();
+                    var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
                     return new InvocationContext(semanticModel, position, invocation.Expression, invocation.ArgumentList, invocation.IsInStaticContext());
                 }
 
                 if (node is ObjectCreationExpressionSyntax objectCreation && objectCreation.ArgumentList.Span.Contains(position))
                 {
-                    var semanticModel = await document.GetSemanticModelAsync();
+                    var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
                     return new InvocationContext(semanticModel, position, objectCreation, objectCreation.ArgumentList, objectCreation.IsInStaticContext());
                 }
 
                 if (node is AttributeSyntax attributeSyntax && attributeSyntax.ArgumentList.Span.Contains(position))
                 {
-                    var semanticModel = await document.GetSemanticModelAsync();
+                    var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
                     return new InvocationContext(semanticModel, position, attributeSyntax, attributeSyntax.ArgumentList, attributeSyntax.IsInStaticContext());
                 }
 
@@ -128,7 +129,7 @@ namespace Microsoft.DotNet.Interactive.CSharp.SignatureHelp
             var definitionEnum = parameters.GetEnumerator();
             while (invocationEnum.MoveNext() && definitionEnum.MoveNext())
             {
-                if (invocationEnum.Current.ConvertedType == null)
+                if (invocationEnum.Current.ConvertedType is null)
                 {
                     // 1 point for having a parameter
                     score += 1;

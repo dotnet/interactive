@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 Getter = obj =>
                 {
-                    if (obj == null)
+                    if (obj is null)
                     {
                         return Formatter.NullString;
                     }

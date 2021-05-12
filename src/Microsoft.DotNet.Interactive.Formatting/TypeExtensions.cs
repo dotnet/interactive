@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public static string MemberName<T, TValue>(this Expression<Func<T, TValue>> expression)
         {
-            if (expression == null)
+            if (expression is null)
             {
                 throw new ArgumentNullException(nameof(expression));
             }
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             if (expression.Body is UnaryExpression unaryExpression)
             {
                 memberExpression = unaryExpression.Operand as MemberExpression;
-                if (memberExpression != null)
+                if (memberExpression is not null)
                 {
                     return memberExpression.Member.Name;
                 }
@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             var allMembers = typeof(T).GetMembersToFormat(true).ToArray();
 
-            if (forProperties == null || !forProperties.Any())
+            if (forProperties is null || !forProperties.Any())
             {
                 return allMembers;
             }
@@ -106,9 +106,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             var baseChain = actualType;
 
-            while (baseChain != null)
+            while (baseChain is not null)
             {
-                if (baseChain.IsGenericType && baseChain.GetGenericTypeDefinition().Equals(type))
+                if (baseChain.IsGenericType && baseChain.GetGenericTypeDefinition() == type)
                 {
                     return true;
                 }
@@ -118,7 +118,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             foreach (var i in actualType.GetInterfaces())
             {
-                if (i.IsGenericType && i.GetGenericTypeDefinition().Equals(type))
+                if (i.IsGenericType && i.GetGenericTypeDefinition() == type)
                 {
                     return true;
                 }
@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public static bool IsAnonymous(this Type type)
         {
-            if (type == null)
+            if (type is null)
             {
                 throw new ArgumentNullException(nameof(type));
             }
@@ -154,7 +154,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public static bool IsValueTuple(this Type type)
         {
-            if (type == null)
+            if (type is null)
             {
                 throw new ArgumentNullException(nameof(type));
             }
@@ -164,7 +164,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         
         public static bool IsTuple(this Type type)
         {
-            if (type == null)
+            if (type is null)
             {
                 throw new ArgumentNullException(nameof(type));
             }

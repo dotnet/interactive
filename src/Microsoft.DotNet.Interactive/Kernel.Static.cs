@@ -1,12 +1,13 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
+using System;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Html;
 using Microsoft.DotNet.Interactive.Commands;
-using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
+
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive
@@ -15,11 +16,13 @@ namespace Microsoft.DotNet.Interactive
     {
         public static Kernel Current => KernelInvocationContext.Current.HandlingKernel;
 
+        public static Kernel Root => KernelInvocationContext.Current.HandlingKernel?.ParentKernel ?? KernelInvocationContext.Current.HandlingKernel;
+
         public static DisplayedValue display(
             object value,
             string mimeType = null)
         {
-            return KernelInvocationContext.Current.Display(value, mimeType);
+            return value.Display(mimeType);
         }
 
         public static IHtmlContent HTML(string content) => content.ToHtmlContent();
@@ -61,9 +64,5 @@ namespace Microsoft.DotNet.Interactive
                 await kernel.SendAsync(new DisplayValue(formatted));
             }).Wait(context.CancellationToken);
         }
-
-        public static Kernel GetKernel(string name) =>
-            Current.FindKernel(name) ??
-            throw new KeyNotFoundException($"Kernel \"{name}\" was not found.");
     }
 }

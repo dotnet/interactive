@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>The demo thing</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+
+</head>
+
+<body>
+
+    <script>
+        let loader = (require.config({ 'paths': { 'context': '1.0.0', 'mermaidUri': 'http://127.0.0.1:8080/dist/mermaidapi', 'urlArgs': 'cacheBuster=10000' } }) || require);
+        loader(['mermaidUri'], (mermaid) => {
+
+            let target = document.getElementById('result');
+            mermaid.render('the-id', `    graph TD
+    A[Client] --> B[Load Balancer]
+    B --> C[Server1]
+    B --> D[Server2]`,
+                g => {
+                    target.innerHTML = g;
+                });
+        },
+            (error) => {
+                console.log(error);
+            });
+
+    </script>
+    <div id="result">
+    </div>
+
+</body>
+
+</html>

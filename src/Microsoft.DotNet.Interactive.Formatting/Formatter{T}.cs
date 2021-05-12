@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -39,31 +38,30 @@ namespace Microsoft.DotNet.Interactive.Formatting
         /// </summary>
         /// <param name="obj">The object to be formatted.</param>
         /// <param name="writer">The writer.</param>
+        /// <param name="context">The context for the current format operation.</param>
         /// <param name="mimeType">The mime type to format to.</param>
         public static void FormatTo(
-            FormatContext context, 
             T obj,
-            TextWriter writer,
+            FormatContext context,
             string mimeType = PlainTextFormatter.MimeType)
         {
-            if (obj == null)
+            if (obj is null)
             {
                 var formatter = Formatter.GetPreferredFormatterFor(typeof(T), mimeType);
-                formatter.Format(context, null, writer);
+                formatter.Format(null, context);
                 return;
             }
 
             using var _ = Formatter.RecursionCounter.Enter();
-
-            // find a formatter for the object type, and possibly register one on the fly
+          
             if (Formatter.RecursionCounter.Depth <= Formatter.RecursionLimit)
             {
                 var formatter = Formatter.GetPreferredFormatterFor(typeof(T), mimeType);
-                formatter.Format(context, obj, writer);
+                formatter.Format(obj, context);
             }
             else
             {
-                PlainTextFormatter<T>.Default.Format(context, obj, writer);
+                PlainTextFormatter<T>.Default.Format(obj, context);
             }
         }
 

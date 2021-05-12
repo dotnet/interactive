@@ -9,6 +9,7 @@ using FluentAssertions;
 using System.Linq;
 using FluentAssertions.Extensions;
 using Xunit;
+using System.Numerics;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests
 {
@@ -343,6 +344,22 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 formatter.Format(timespan, writer);
 
                 writer.ToString().Should().Be(timespan.ToString());
+            }
+
+            [Fact]
+            public void PlainTextFormatter_returns_plain_for_BigInteger()
+            {
+                var formatter = PlainTextFormatter.GetPreferredFormatterFor(typeof(BigInteger));
+
+                var writer = new StringWriter();
+
+                var instance = BigInteger.Parse("78923589327589332402359");
+
+                formatter.Format(instance, writer);
+
+                writer.ToString()
+                    .Should()
+                    .Be("78923589327589332402359");
             }
         }
 

@@ -142,7 +142,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             {
                 return new CompletionItem(
                     item.Label,
-                    item.Kind != null ? Enum.GetName(typeof(SqlCompletionItemKind), item.Kind) : string.Empty,
+                    item.Kind is not null ? Enum.GetName(typeof(SqlCompletionItemKind), item.Kind) : string.Empty,
                     item.FilterText,
                     item.SortText,
                     item.InsertText,

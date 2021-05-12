@@ -34,7 +34,7 @@
     	CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(NCrunch)' != '1'">
     <Content Include="$(PkgPackageManagement)\**"
              Exclude="$(PkgPackageManagement)\**\*.nupkg;$(PkgPackageManagement)\**\*.nuspec;$(PkgPackageManagement)\**\*.sha512;$(PkgPackageManagement)\**\fullclr\**"
              Link="Modules\PackageManagement\%(RecursiveDir)%(FileName)%(Extension)"
@@ -75,8 +75,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.IO.Pipelines" Version="4.7.2" />
-    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.1.2" />
+    <PackageReference Include="System.IO.Pipelines" Version="5.0.0" />
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.1.3" />
   </ItemGroup>
 
 </Project>

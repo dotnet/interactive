@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         public static IDestructurer GetOrCreate(Type type)
         {
-            if (type == null)
+            if (type is null)
             {
                 return NonDestructurer.Instance;
             }

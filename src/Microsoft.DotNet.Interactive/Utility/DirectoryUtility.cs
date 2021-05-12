@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Interactive.Utility
     {
         public static DirectoryInfo EnsureExists(this DirectoryInfo directory)
         {
-            if (directory == null)
+            if (directory is null)
             {
                 throw new ArgumentNullException(nameof(directory));
             }

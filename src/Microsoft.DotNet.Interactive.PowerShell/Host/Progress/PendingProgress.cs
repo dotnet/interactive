@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
 
             internal static void VisitNodes(List<ProgressNode> nodes, NodeVisitor v)
             {
-                if (nodes == null)
+                if (nodes is null)
                 {
                     return;
                 }
@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
                         return;
                     }
 
-                    if (node.Children != null)
+                    if (node.Children is not null)
                     {
                         VisitNodes(node.Children, v);
                     }
@@ -93,7 +93,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
                 int indexWhereFound = -1;
                 ProgressNode foundNode = FindNodeById(sourceId, record.ActivityId, out listWhereFound, out indexWhereFound);
 
-                if (foundNode != null)
+                if (foundNode is not null)
                 {
                     if (record.RecordType == ProgressRecordType.Completed)
                     {
@@ -142,9 +142,9 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
                 if (newNode.ParentActivityId >= 0)
                 {
                     ProgressNode parentNode = FindNodeById(newNode.SourceId, newNode.ParentActivityId);
-                    if (parentNode != null)
+                    if (parentNode is not null)
                     {
-                        if (parentNode.Children == null)
+                        if (parentNode.Children is null)
                         {
                             parentNode.Children = new List<ProgressNode>();
                         }
@@ -173,7 +173,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
             int indexWhereFound = -1;
 
             ProgressNode oldestNode = FindOldestLeafmostNode(out listWhereFound, out indexWhereFound);
-            if (oldestNode == null)
+            if (oldestNode is null)
             {
                 // Well that's a surprise.  There's got to be at least one node there that's older than 0.
                 Debug.Assert(false, "Must be an old node in the tree somewhere");
@@ -205,12 +205,12 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
         private void RemoveNodeAndPromoteChildren(List<ProgressNode> nodes, int indexToRemove)
         {
             ProgressNode nodeToRemove = (ProgressNode)nodes[indexToRemove];
-            if (nodeToRemove == null)
+            if (nodeToRemove is null)
             {
                 return;
             }
 
-            if (nodeToRemove.Children != null)
+            if (nodeToRemove.Children is not null)
             {
                 // promote the children.
                 for (int i = 0; i < nodeToRemove.Children.Count; ++i)
@@ -293,7 +293,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
             do
             {
                 result = FindOldestLeafmostNodeHelper(treeToSearch, out listWhereFound, out indexWhereFound);
-                if (result == null || result.Children == null || result.Children.Count == 0)
+                if (result is null || result.Children is null || result.Children.Count == 0)
                 {
                     break;
                 }
@@ -394,7 +394,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
         /// </returns>
         private ProgressNode FindOldestNodeOfGivenStyle(List<ProgressNode> nodes, int oldestSoFar, RenderStyle style)
         {
-            if (nodes == null)
+            if (nodes is null)
             {
                 return null;
             }
@@ -403,7 +403,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
             for (int i = 0; i < nodes.Count; ++i)
             {
                 ProgressNode node = (ProgressNode)nodes[i];
-                Debug.Assert(node != null, "nodes should not contain null elements");
+                Debug.Assert(node is not null, "nodes should not contain null elements");
 
                 if (node.Age >= oldestSoFar && node.Style == style)
                 {
@@ -411,11 +411,11 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
                     oldestSoFar = found.Age;
                 }
 
-                if (node.Children != null)
+                if (node.Children is not null)
                 {
                     ProgressNode child = FindOldestNodeOfGivenStyle(node.Children, oldestSoFar, style);
 
-                    if (child != null)
+                    if (child is not null)
                     {
                         // In this universe, parents can be younger than their children. We found a child older than us.
 
@@ -474,7 +474,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
         /// </returns>
         internal List<string> Render(int maxWidth, int maxHeight, PSKernelHostUserInterface ui)
         {
-            if (_topLevelNodes == null || _topLevelNodes.Count == 0)
+            if (_topLevelNodes is null || _topLevelNodes.Count == 0)
             {
                 // we have nothing to render.
                 return null;
@@ -529,7 +529,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
         /// </param>
         private void RenderHelper(List<string> strings, List<ProgressNode> nodes, int indentation, int maxWidth, PSHostRawUserInterface rawUI)
         {
-            if (nodes == null)
+            if (nodes is null)
             {
                 return;
             }
@@ -540,7 +540,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
 
                 node.Render(strings, indentation, maxWidth, rawUI);
 
-                if (node.Children != null)
+                if (node.Children is not null)
                 {
                     // indent only if the rendering of node actually added lines to the strings.
                     int indentationIncrement = (strings.Count > lines) ? 2 : 0;
@@ -644,7 +644,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell.Host.Progress
             do
             {
                 ProgressNode node = FindOldestNodeOfGivenStyle(_topLevelNodes, age, priorStyle);
-                if (node == null)
+                if (node is null)
                 {
                     // We've compressed every node of the prior style already.
                     break;

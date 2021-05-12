@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
-using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
@@ -261,7 +260,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         internal Parser GetDirectiveParser()
         {
-            if (_directiveParser == null)
+            if (_directiveParser is null)
             {
                 EnsureRootCommandIsInitialized();
 
@@ -269,7 +268,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     new CommandLineBuilder(_rootCommand)
                         .ParseResponseFileAs(ResponseFileHandling.Disabled)
                         .UseTypoCorrections()
-                        .UseHelpBuilder(bc => new DirectiveHelpBuilder(bc.Console, _rootCommand.Name))
+                        .UseHelpBuilder(bc => new DirectiveHelpBuilder(_rootCommand.Name))
                         .UseHelp()
                         .UseMiddleware(
                             context =>
@@ -290,7 +289,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
         public void AddDirective(Command command)
         {
-            if (command == null)
+            if (command is null)
             {
                 throw new ArgumentNullException(nameof(command));
             }
@@ -330,7 +329,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
             };
 
             var helpBuilder = new DirectiveHelpBuilder(
-                new TestConsole(),
                 parseResult.Parser.Configuration.RootCommand.Name);
 
             return new CompletionItem(
@@ -340,7 +338,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 sortText: name,
                 insertText: name,
                 documentation:
-                symbol != null
+                symbol is not null
                     ? helpBuilder.GetHelpForSymbol(symbol)
                     : null);
         }

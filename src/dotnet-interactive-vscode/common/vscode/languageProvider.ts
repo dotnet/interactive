@@ -9,15 +9,16 @@ import { notebookCellLanguages, getSimpleLanguage, notebookCellChanged } from '.
 import { convertToRange, toVsCodeDiagnostic } from './vscodeUtilities';
 import { getDiagnosticCollection } from './diagnostics';
 import { provideSignatureHelp } from './../languageServices/signatureHelp';
+import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 
 export class CompletionItemProvider implements vscode.CompletionItemProvider {
     static readonly triggerCharacters = ['.'];
 
-    constructor(readonly clientMapper: ClientMapper) {
+    constructor(readonly clientMapper: ClientMapper, private languageServiceDelay: number) {
     }
 
     provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
-        const completionPromise = provideCompletion(this.clientMapper, getSimpleLanguage(document.languageId), document, position);
+        const completionPromise = provideCompletion(this.clientMapper, getSimpleLanguage(document.languageId), document, position, this.languageServiceDelay);
         return ensureErrorsAreRejected(completionPromise, result => {
             let range: vscode.Range | undefined = undefined;
             if (result.linePositionSpan) {
@@ -69,11 +70,11 @@ export class CompletionItemProvider implements vscode.CompletionItemProvider {
 }
 
 export class HoverProvider implements vscode.HoverProvider {
-    constructor(readonly clientMapper: ClientMapper) {
+    constructor(readonly clientMapper: ClientMapper, private languageServiceDelay: number) {
     }
 
     provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Hover> {
-        const hoverPromise = provideHover(this.clientMapper, getSimpleLanguage(document.languageId), document, position);
+        const hoverPromise = provideHover(this.clientMapper, getSimpleLanguage(document.languageId), document, position, this.languageServiceDelay);
         return ensureErrorsAreRejected(hoverPromise, result => {
             const contents = result.isMarkdown
                 ? new vscode.MarkdownString(result.contents)
@@ -87,11 +88,11 @@ export class HoverProvider implements vscode.HoverProvider {
 export class SignatureHelpProvider implements vscode.SignatureHelpProvider {
     static readonly triggerCharacters = ['(', ','];
 
-    constructor(readonly clientMapper: ClientMapper) {
+    constructor(readonly clientMapper: ClientMapper, private languageServiceDelay: number) {
     }
 
     provideSignatureHelp(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.SignatureHelpContext): vscode.ProviderResult<vscode.SignatureHelp> {
-        const sigHelpPromise = provideSignatureHelp(this.clientMapper, getSimpleLanguage(document.languageId), document, position);
+        const sigHelpPromise = provideSignatureHelp(this.clientMapper, getSimpleLanguage(document.languageId), document, position, this.languageServiceDelay);
         return ensureErrorsAreRejected(sigHelpPromise, result => {
             const signatures: Array<vscode.SignatureInformation> = result.signatures.map(sig => {
                 const parameters: Array<vscode.ParameterInformation> = sig.parameters.map(p => new vscode.ParameterInformation(p.label, p.documentation.value));
@@ -122,18 +123,18 @@ function ensureErrorsAreRejected<TInterimResult, TFinalResult>(promise: Promise<
     });
 }
 
-export function registerLanguageProviders(clientMapper: ClientMapper, diagnosticDelay: number): vscode.Disposable {
+export function registerLanguageProviders(clientMapper: ClientMapper, languageServiceDelay: number): vscode.Disposable {
     const disposables: Array<vscode.Disposable> = [];
 
     let languages = [...notebookCellLanguages, "dotnet-interactive.magic-commands"];
-    disposables.push(vscode.languages.registerCompletionItemProvider(languages, new CompletionItemProvider(clientMapper), ...CompletionItemProvider.triggerCharacters));
-    disposables.push(vscode.languages.registerHoverProvider(languages, new HoverProvider(clientMapper)));
-    disposables.push(vscode.languages.registerSignatureHelpProvider(languages, new SignatureHelpProvider(clientMapper), ...SignatureHelpProvider.triggerCharacters));
+    disposables.push(vscode.languages.registerCompletionItemProvider(languages, new CompletionItemProvider(clientMapper, languageServiceDelay), ...CompletionItemProvider.triggerCharacters));
+    disposables.push(vscode.languages.registerHoverProvider(languages, new HoverProvider(clientMapper, languageServiceDelay)));
+    disposables.push(vscode.languages.registerSignatureHelpProvider(languages, new SignatureHelpProvider(clientMapper, languageServiceDelay), ...SignatureHelpProvider.triggerCharacters));
     disposables.push(vscode.workspace.onDidChangeTextDocument(e => {
         if (vscode.languages.match(notebookCellLanguages, e.document)) {
-            const cell = vscode.window.activeNotebookEditor?.document.cells.find(cell => cell.document === e.document);
+            const cell = versionSpecificFunctions.getCells(vscode.window.activeNotebookEditor?.document).find(cell => cell.document === e.document);
             if (cell) {
-                notebookCellChanged(clientMapper, e.document, getSimpleLanguage(cell.document.languageId), diagnosticDelay, diagnostics => {
+                notebookCellChanged(clientMapper, e.document, getSimpleLanguage(cell.document.languageId), languageServiceDelay, diagnostics => {
                     const collection = getDiagnosticCollection(e.document.uri);
                     collection.set(e.document.uri, diagnostics.map(toVsCodeDiagnostic));
                 });

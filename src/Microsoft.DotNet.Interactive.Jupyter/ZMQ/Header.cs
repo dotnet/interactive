@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter.ZMQ
         public static Header Create<T>(T messageContent, string session)
             where T : Protocol.Message
         {
-            if (messageContent == null)
+            if (messageContent is null)
             {
                 throw new ArgumentNullException(nameof(messageContent));
             }

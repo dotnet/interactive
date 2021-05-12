@@ -1,0 +1,32 @@
+{
+  "profile": "tabular-data-resource",
+  "schema": {
+    "primaryKey": [],
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "age",
+        "type": "number"
+      },
+      {
+        "name": "salary",
+        "type": "number"
+      },
+      {
+        "name": "active",
+        "type": "boolean"
+      }
+    ]
+  },
+  "data": [
+    {
+      "name": "mitch",
+      "age": 42,
+      "salary": 10,
+      "active": true
+    }
+  ]
+}

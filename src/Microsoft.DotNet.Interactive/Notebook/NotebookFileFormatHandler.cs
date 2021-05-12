@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using Microsoft.DotNet.Interactive.Extensions;
+using Microsoft.DotNet.Interactive.Formatting;
 
 namespace Microsoft.DotNet.Interactive.Notebook
 {
@@ -143,7 +144,7 @@ namespace Microsoft.DotNet.Interactive.Notebook
                             ? sourceLines[0].Substring(2)
                             : null;
 
-                        var (cellLanguage, cellSourceLines) = possibleCellLanguage != null && kernelLanguageAliases.TryGetValue(possibleCellLanguage, out var actualCellLanguage)
+                        var (cellLanguage, cellSourceLines) = possibleCellLanguage is not null && kernelLanguageAliases.TryGetValue(possibleCellLanguage, out var actualCellLanguage)
                             ? (actualCellLanguage, sourceLines.Skip(1))
                             : (languageFromMetadata ?? defaultLanguage, sourceLines);
 
@@ -188,7 +189,7 @@ namespace Microsoft.DotNet.Interactive.Notebook
                                 }
 
                                 return null;
-                            }).Where(x => x != null);
+                            }).Where(x => x is not null);
                         }
                         cells.Add(new NotebookCell(cellLanguage, source, outputs.ToArray()));
                         break;
@@ -300,7 +301,7 @@ namespace Microsoft.DotNet.Interactive.Notebook
                                     text = textOutput.Text,
                                 },
                                 _ => null
-                            }).Where(x => x != null);
+                            }).Where(x => x is not null);
                         cells.Add(new
                         {
                             cell_type = "code",

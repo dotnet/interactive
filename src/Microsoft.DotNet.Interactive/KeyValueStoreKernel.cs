@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Interactive
     {
         internal const string DefaultKernelName = "value";
 
-        private readonly ConcurrentDictionary<string, object> _values = new ConcurrentDictionary<string, object>();
+        private readonly ConcurrentDictionary<string, object> _values = new();
 
         public KeyValueStoreKernel() : base(DefaultKernelName)
         {
@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.Interactive
 
             if (options.MimeType is { } mimeType)
             {
-                context.Display(value, mimeType);
+                context.DisplayAs(value, mimeType);
             }
         }
 
@@ -136,7 +136,7 @@ namespace Microsoft.DotNet.Interactive
 
             var mimeTypeOption = new Option<string>(
                     "--mime-type",
-                    "A mime type for the value. If specified, displays the value immediately as a cell output using the specified mime type.")
+                    "A mime type for the value. If specified, displays the value immediately as an output using the specified mime type.")
                 .AddSuggestions((_,__) => new[]
                 {
                     "application/json",

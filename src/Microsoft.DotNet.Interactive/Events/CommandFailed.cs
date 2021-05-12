@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Interactive.Events
             KernelCommand command,
             string message = null) : base(command)
         {
-            if (command == null)
+            if (command is null)
             {
                 throw new ArgumentNullException(nameof(command));
             }

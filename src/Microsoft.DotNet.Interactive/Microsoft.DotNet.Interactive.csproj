@@ -18,7 +18,7 @@
     <SystemRuntimeLoaderVersion>4.3.0</SystemRuntimeLoaderVersion>	
     <SystemCollectionsImmutableVersion>5.0.0</SystemCollectionsImmutableVersion>	
     <SystemReflectionMetadataVersion>5.0.0</SystemReflectionMetadataVersion>	
-    <SystemCommandLineVersion>2.0.0-beta1.21118.1</SystemCommandLineVersion>	
+    <SystemCommandLineVersion>2.0.0-beta1.21216.1</SystemCommandLineVersion>	
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,7 +29,7 @@
     <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisCommonVersion)" />
-    <PackageReference Include="PocketLogger" Version="0.4.0">
+    <PackageReference Include="PocketLogger" Version="0.4.1">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="PocketLogger.Subscribe" Version="0.7.0">
@@ -39,7 +39,7 @@
     <PackageReference Include="FSharp.Compiler.Service">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="System.Text.Json" Version="5.0.1" />
+    <PackageReference Include="System.Text.Json" Version="5.0.2" />
   </ItemGroup>
 
    <ItemGroup>	

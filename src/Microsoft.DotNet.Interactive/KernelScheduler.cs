@@ -6,20 +6,21 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Pocket;
 
 namespace Microsoft.DotNet.Interactive
 {
-    public class KernelScheduler<T, U> : IDisposable
+    public class KernelScheduler<T, TResult> : IDisposable, IKernelScheduler<T, TResult>
     {
-        private readonly List<DeferredOperation> _deferredOperationSources = new();
+        private static readonly Logger Log = new("KernelScheduler");
+        private readonly List<DeferredOperationSource> _deferredOperationSources = new();
         private readonly CancellationTokenSource _schedulerDisposalSource = new();
         private readonly Task _runLoopTask;
         private readonly AsyncLocal<ScheduledOperation> _currentTopLevelOperation = new();
 
         private readonly BlockingCollection<ScheduledOperation> _topLevelScheduledOperations = new();
-        private readonly Barrier _barrier = new(2);
         private ScheduledOperation _currentlyRunningOperation;
-
+        
         public KernelScheduler()
         {
             _runLoopTask = Task.Factory.StartNew(
@@ -33,29 +34,20 @@ namespace Microsoft.DotNet.Interactive
             if (_currentlyRunningOperation is { } operation)
             {
                 operation.TaskCompletionSource.TrySetCanceled(_schedulerDisposalSource.Token);
+                _currentlyRunningOperation = null;
             }
         }
 
-        public Task<U> RunAsync(
+        public Task<TResult> RunAsync(
             T value,
-            OnExecuteDelegate onExecuteAsync,
+            KernelSchedulerDelegate<T, TResult> onExecuteAsync,
             string scope = "default",
             CancellationToken cancellationToken = default)
         {
             ThrowIfDisposed();
 
             ScheduledOperation operation;
-            if (_currentTopLevelOperation.Value is not { })
-            {
-                operation = new ScheduledOperation(
-                    value,
-                    onExecuteAsync,
-                    ExecutionContext.Capture(),
-                    scope: scope,
-                    cancellationToken: cancellationToken);
-                _topLevelScheduledOperations.Add(operation, cancellationToken);
-            }
-            else
+            if (_currentTopLevelOperation.Value is { })
             {
                 // recursive scheduling
                 operation = new ScheduledOperation(
@@ -65,6 +57,16 @@ namespace Microsoft.DotNet.Interactive
                     scope,
                     cancellationToken);
                 RunPreemptively(operation);
+            }
+            else
+            {
+                operation = new ScheduledOperation(
+                    value,
+                    onExecuteAsync,
+                    ExecutionContext.Capture(),
+                    scope: scope,
+                    cancellationToken: cancellationToken);
+                _topLevelScheduledOperations.Add(operation, cancellationToken);
             }
 
             return operation.TaskCompletionSource.Task;
@@ -87,6 +89,7 @@ namespace Microsoft.DotNet.Interactive
                 }
 
                 _currentlyRunningOperation = operation;
+
                 try
                 {
                     ExecutionContext.Run(
@@ -94,11 +97,11 @@ namespace Microsoft.DotNet.Interactive
                         _ => RunScheduledOperationAndDeferredOperations(operation),
                         operation);
 
-                    operation.TaskCompletionSource.Task.ContinueWith(_ =>
-                    {
-                        _barrier.SignalAndWait(_schedulerDisposalSource.Token);
-                    });
-                    _barrier.SignalAndWait(_schedulerDisposalSource.Token);
+                    operation.TaskCompletionSource.Task.Wait(_schedulerDisposalSource.Token);
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e);
                 }
                 finally
                 {
@@ -115,22 +118,29 @@ namespace Microsoft.DotNet.Interactive
                 _currentTopLevelOperation.Value = operation;
             }
 
+            using var logOp = Log.OnEnterAndConfirmOnExit($"Run: {operation.Value}");
+
             try
             {
                 var operationTask = operation
-                                  .ExecuteAsync()
-                                  .ContinueWith(t =>
-                                  {
-                                      if (t.IsCompletedSuccessfully && !operation.TaskCompletionSource.Task.IsCompleted)
-                                      {
-                                          operation.TaskCompletionSource.TrySetResult(t.Result);
-                                      }
-                                  });
+                                    .ExecuteAsync()
+                                    .ContinueWith(t =>
+                                    {
+                                        if (!operation.TaskCompletionSource.Task.IsCompleted)
+                                        {
+                                            if (t.IsCompletedSuccessfully)
+                                            {
+                                                operation.TaskCompletionSource.TrySetResult(t.Result);
+                                            }
+                                        }
+                                    });
 
                 Task.WaitAny(new[] {
                     operationTask,
                     operation.TaskCompletionSource.Task
                 }, _schedulerDisposalSource.Token);
+
+                logOp.Succeed();
             }
             catch (Exception exception)
             {
@@ -143,12 +153,26 @@ namespace Microsoft.DotNet.Interactive
 
         private void RunScheduledOperationAndDeferredOperations(ScheduledOperation operation)
         {
-            foreach (var deferredOperation in OperationsToRunBefore(operation))
+            try
             {
-                Run(deferredOperation);
-            }
+                foreach (var deferredOperation in OperationsToRunBefore(operation))
+                {
+                    Run(deferredOperation);
 
-            Run(operation);
+                    if (!deferredOperation.TaskCompletionSource.Task.IsCompletedSuccessfully)
+                    {
+                        Log.Error(
+                            "Deferred operation failed",
+                            deferredOperation.TaskCompletionSource.Task.Exception);
+                    }
+                }
+
+                Run(operation);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception);
+            }
         }
 
         private void RunPreemptively(ScheduledOperation operation)
@@ -178,11 +202,11 @@ namespace Microsoft.DotNet.Interactive
 
         public void RegisterDeferredOperationSource(
             GetDeferredOperationsDelegate getDeferredOperations,
-            OnExecuteDelegate onExecuteAsync)
+            KernelSchedulerDelegate<T, TResult> kernelSchedulerOnExecuteAsync)
         {
             ThrowIfDisposed();
 
-            _deferredOperationSources.Add(new DeferredOperation(onExecuteAsync, getDeferredOperations));
+            _deferredOperationSources.Add(new DeferredOperationSource(kernelSchedulerOnExecuteAsync, getDeferredOperations));
         }
 
         public void Dispose()
@@ -194,21 +218,19 @@ namespace Microsoft.DotNet.Interactive
         {
             if (_schedulerDisposalSource.IsCancellationRequested)
             {
-                throw new ObjectDisposedException($"{nameof(KernelScheduler<T, U>)} has been disposed.");
+                throw new ObjectDisposedException($"{nameof(KernelScheduler<T, TResult>)} has been disposed.");
             }
         }
 
-        public delegate Task<U> OnExecuteDelegate(T value);
-
-        public delegate IEnumerable<T> GetDeferredOperationsDelegate(T operationToExecute, string queueName);
+        public delegate IReadOnlyList<T> GetDeferredOperationsDelegate(T operationToExecute, string queueName);
 
         private class ScheduledOperation
         {
-            private readonly OnExecuteDelegate _onExecuteAsync;
+            private readonly KernelSchedulerDelegate<T,TResult> _onExecuteAsync;
 
             public ScheduledOperation(
                 T value,
-                OnExecuteDelegate onExecuteAsync,
+                KernelSchedulerDelegate<T, TResult> onExecuteAsync,
                 ExecutionContext executionContext = default,
                 string scope = "default",
                 CancellationToken cancellationToken = default)
@@ -229,7 +251,7 @@ namespace Microsoft.DotNet.Interactive
                 }
             }
 
-            public TaskCompletionSource<U> TaskCompletionSource { get; }
+            public TaskCompletionSource<TResult> TaskCompletionSource { get; }
 
             public T Value { get; }
 
@@ -237,7 +259,7 @@ namespace Microsoft.DotNet.Interactive
 
             public string Scope { get; }
 
-            public Task<U> ExecuteAsync() => _onExecuteAsync(Value);
+            public Task<TResult> ExecuteAsync() => _onExecuteAsync(Value);
 
             public override string ToString()
             {
@@ -245,17 +267,17 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
-        private class DeferredOperation
+        private class DeferredOperationSource
         {
-            public DeferredOperation(OnExecuteDelegate onExecuteAsync, GetDeferredOperationsDelegate getDeferredOperations)
+            public DeferredOperationSource(KernelSchedulerDelegate<T, TResult> kernelSchedulerOnExecuteAsync, GetDeferredOperationsDelegate getDeferredOperations)
             {
-                OnExecuteAsync = onExecuteAsync;
+                OnExecuteAsync = kernelSchedulerOnExecuteAsync;
                 GetDeferredOperations = getDeferredOperations;
             }
 
             public GetDeferredOperationsDelegate GetDeferredOperations { get; }
 
-            public OnExecuteDelegate OnExecuteAsync { get; }
+            public KernelSchedulerDelegate<T, TResult> OnExecuteAsync { get; }
         }
     }
 }

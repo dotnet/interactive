@@ -4,56 +4,69 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Pocket;
 
 namespace Microsoft.DotNet.Interactive.Utility
 {
+    [DebuggerDisplay(nameof(MultiplexingTextWriter))]
     public class MultiplexingTextWriter : TextWriter
     {
         private static volatile UnicodeEncoding _encoding;
 
         private readonly Func<TextWriter> _createTextWriter;
-
-        private readonly ConcurrentDictionary<int, TextWriter> _writers = new ConcurrentDictionary<int, TextWriter>();
+        private readonly string _name;
+        private readonly ConcurrentDictionary<int, TextWriter> _writers = new();
 
         private readonly TextWriter _defaultWriter;
 
         public MultiplexingTextWriter(
+            string name,
             Func<TextWriter> createTextWriter = null,
             TextWriter defaultWriter = null)
-        {
-            _createTextWriter = createTextWriter ?? (() => new ObservableStringWriter());
+        {   
+            _createTextWriter = createTextWriter ?? DefaultCreateTextWriter;
+            _name = name;
             _defaultWriter = defaultWriter ?? Null;
+        }
+
+        private TextWriter DefaultCreateTextWriter()
+        {
+            return new ObservableStringWriter();
         }
 
         public IDisposable EnsureInitializedForCurrentAsyncContext()
         {
-            if (AsyncContext.TryEstablish(out var id))
+            AsyncContext.TryEstablish(out var id);
+
+            return Disposable.Create(() =>
             {
-                return Disposable.Create(() =>
+                var success = _writers.TryGetValue(id, out var writer);
+
+                if (success)
                 {
-                    _writers.TryRemove(id, out var writer);
-                    writer?.Dispose();
-                });
-            }
-            else
-            {
-                return Disposable.Empty;
-            }
+                    writer.Dispose();
+                    _writers.TryRemove(id, out _);
+                }
+            });
         }
 
         private TextWriter GetCurrentWriter()
         {
-            if (AsyncContext.Id is { } key)
+
+            if (AsyncContext.Id is { } asyncContextId)
             {
-                return _writers.GetOrAdd(
-                    key,
+                var writer = _writers.GetOrAdd(
+                    asyncContextId,
                     _ => _createTextWriter());
+
+                return writer;
             }
 
             return _defaultWriter;
@@ -66,6 +79,7 @@ namespace Microsoft.DotNet.Interactive.Utility
                 return observable;
             }
 
+            // FIX: (GetObservable) needed?
             if (_defaultWriter is IObservable<string> observable3)
             {
                 return observable3;
@@ -74,20 +88,9 @@ namespace Microsoft.DotNet.Interactive.Utility
             return Observable.Empty<string>();
         }
 
-        public override Encoding Encoding
-        {
-            get
-            {
-                if (_encoding == null)
-                {
-                    _encoding = new UnicodeEncoding(false, false);
-                }
+        public override Encoding Encoding => _encoding ?? (_encoding = new UnicodeEncoding(false, false));
 
-                return _encoding;
-            }
-        }
-
-        public IEnumerable<TextWriter> Writers => _writers.Values;
+        public IEnumerable<TextWriter> Writers => _writers.Select(w => w.Value);
 
         public override void Write(char value)
         {
@@ -199,7 +202,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             return GetCurrentWriter().WriteAsync(buffer, index, count);
         }
 
-        public override Task WriteAsync(ReadOnlyMemory<char> buffer, CancellationToken cancellationToken = new CancellationToken())
+        public override Task WriteAsync(ReadOnlyMemory<char> buffer, CancellationToken cancellationToken = new())
         {
             return GetCurrentWriter().WriteAsync(buffer, cancellationToken);
         }
@@ -309,7 +312,7 @@ namespace Microsoft.DotNet.Interactive.Utility
             return GetCurrentWriter().WriteLineAsync(buffer, index, count);
         }
 
-        public override Task WriteLineAsync(ReadOnlyMemory<char> buffer, CancellationToken cancellationToken = new CancellationToken())
+        public override Task WriteLineAsync(ReadOnlyMemory<char> buffer, CancellationToken cancellationToken = new())
         {
             return GetCurrentWriter().WriteLineAsync(buffer, cancellationToken);
         }
@@ -319,11 +322,27 @@ namespace Microsoft.DotNet.Interactive.Utility
             return GetCurrentWriter().WriteLineAsync(value);
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                var writers = _writers.Values.ToArray();
+                _writers.Clear();
+                foreach (var writer in writers)
+                {
+                    writer.Dispose();
+                }
+            }
+
+            base.Dispose(disposing);
+        }
+
         public override string ToString()
         {
-            if (AsyncContext.Id is { } key &&
-                _writers.TryGetValue(key, out var writer))
+            if (AsyncContext.Id is { } asyncContextId &&
+                _writers.TryGetValue(asyncContextId, out var writer))
             {
+
                 return writer.ToString();
             }
 

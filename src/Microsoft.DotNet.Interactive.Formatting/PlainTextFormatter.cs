@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
             FormattersForAnyEnumerable.GetFormatter(type, false);
 
-        internal static Func<FormatContext, T, TextWriter, bool> CreateFormatDelegate<T>(MemberInfo[] forMembers)
+        internal static FormatDelegate<T> CreateFormatDelegate<T>(MemberInfo[] forMembers)
         {
             var accessors = forMembers.GetMemberAccessors<T>().ToArray();
 
@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 // filter out internal values from the Data dictionary, since they're intended to be surfaced in other ways
                 var dataAccessor = accessors.SingleOrDefault(a => a.Member.Name == "Data");
-                if (dataAccessor != null)
+                if (dataAccessor is not null)
                 {
                     var originalGetData = dataAccessor.Getter;
                     dataAccessor.Getter = e => ((IDictionary) originalGetData(e))
@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                 // replace the default stack trace with the full stack trace when present
                 var stackTraceAccessor = accessors.SingleOrDefault(a => a.Member.Name == "StackTrace");
-                if (stackTraceAccessor != null)
+                if (stackTraceAccessor is not null)
                 {
                     stackTraceAccessor.Getter = e =>
                     {
@@ -78,29 +78,23 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             if (typeof(T).IsEnum)
             {
-                return (context, enumValue, writer) =>
+                return (enumValue, context) =>
                 {
-                    writer.Write(enumValue.ToString());
+                    context.Writer.Write(enumValue.ToString());
                     return true;
                 };
             }
 
             return FormatObject;
 
-            bool FormatObject(FormatContext context, T target, TextWriter writer)
+            bool FormatObject(T target, FormatContext context)
             {
-
-                // Greatly reduce the number of properties to show. The `ToString()` 
-                // already counts as significant content.  
-                var maxProperties = 
-                    context.ContentThreshold <= FormatContext.NestedInTable
-                    ? 0 
-                    : (int)(MaxProperties * context.ContentThreshold * context.ContentThreshold);
+                var writer = context.Writer;
 
                 var reducedAccessors = accessors.Take(Math.Max(0, MaxProperties)).ToArray();
 
                 // If we haven't got any members to show, just resort to ToString()
-                if (reducedAccessors.Length == 0 || context.ContentThreshold < 1.0)
+                if (reducedAccessors.Length == 0)
                 {
                     // Write using `ToString()`
                     writer.Write(target);
@@ -125,7 +119,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                     Formatter.SingleLinePlainTextFormatter.WriteStartProperty(writer);
                     writer.Write(accessor.Member.Name);
                     Formatter.SingleLinePlainTextFormatter.WriteNameValueDelimiter(writer);
-                    value.FormatTo(context, writer);
+                    value.FormatTo(context);
                     Formatter.SingleLinePlainTextFormatter.WriteEndProperty(writer);
 
                     if (i < accessors.Length - 1)
@@ -142,15 +136,17 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 return true;
             }
 
-            bool FormatAnyTuple(FormatContext context, T target, TextWriter writer)
+            bool FormatAnyTuple(T target, FormatContext context)
             {
+                var writer = context.Writer;
+
                 Formatter.SingleLinePlainTextFormatter.WriteStartTuple(writer);
 
                 for (var i = 0; i < accessors.Length; i++)
                 {
                     var value = accessors[i].GetValueOrException(target);
 
-                    value.FormatTo(context, writer);
+                    value.FormatTo(context);
 
                     Formatter.SingleLinePlainTextFormatter.WriteEndProperty(writer);
 
@@ -165,13 +161,11 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultPlainTextFormatterSet.DefaultFormatters;
+        internal static FormatterMapByType FormattersForAnyObject =
+            new FormatterMapByType(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyObject));
 
-        internal static FormatterTable FormattersForAnyObject =
-            new FormatterTable(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyObject));
-
-        internal static FormatterTable FormattersForAnyEnumerable =
-            new FormatterTable(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyEnumerable));
+        internal static FormatterMapByType FormattersForAnyEnumerable =
+            new FormatterMapByType(typeof(PlainTextFormatter<>), nameof(PlainTextFormatter<object>.CreateForAnyEnumerable));
 
     }
 }

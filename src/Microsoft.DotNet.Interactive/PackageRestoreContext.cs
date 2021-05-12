@@ -203,7 +203,7 @@ namespace Microsoft.DotNet.Interactive
         {
             IDependencyManagerProvider iDependencyManager = _dependencies.TryFindDependencyManagerByKey(Enumerable.Empty<string>(), "", reportError, "nuget");
 
-            if (iDependencyManager == null)
+            if (iDependencyManager is null)
             {
                 // If this happens it is because of a bug in the Dependency provider. or deployment failed to deploy the nuget provider dll.
                 // We guarantee the presence of the nuget provider, by shipping it with the notebook product

@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         {
             var operation = Log.OnEnterAndExit();
 
-            if (services == null)
+            if (services is null)
             {
                 throw new ArgumentNullException(nameof(services));
             }
@@ -160,7 +160,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
             var defaultKernelOption = new Option<string>(
                 "--default-kernel",
                 description: "The default language for the kernel",
-                getDefaultValue: () => "csharp");
+                getDefaultValue: () => "csharp").AddSuggestions("fsharp", "csharp", "pwsh");
 
             var rootCommand = DotnetInteractive();
 
@@ -241,7 +241,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 Task<int> JupyterHandler(StartupOptions startupOptions, JupyterOptions options, IConsole console, InvocationContext context, CancellationToken cancellationToken)
                 {
                     var frontendEnvironment = new HtmlNotebookFrontendEnvironment();
-                    var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
+                    var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, null);
                     services.AddKernel(kernel);
 
                     services.AddSingleton(c => ConnectionInformation.Load(options.ConnectionFile))
@@ -302,7 +302,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                     (startupOptions, options, console, context) =>
                     {
                         var frontendEnvironment = new BrowserFrontendEnvironment();
-                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
+                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, null);
                         services.AddKernel(kernel);
 
                         onServerStarted ??= () =>
@@ -377,8 +377,10 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                         FrontendEnvironment frontendEnvironment = startupOptions.EnableHttpApi 
                             ? new HtmlNotebookFrontendEnvironment() 
                             : new BrowserFrontendEnvironment();
-                        
-                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions);
+
+                        var clientSideKernelClient = startupOptions.EnableHttpApi  ? new SignalRBackchannelKernelClient(): null;
+
+                        var kernel = CreateKernel(options.DefaultKernel, frontendEnvironment, startupOptions, clientSideKernelClient);
                         services.AddKernel(kernel);
 
                         kernel.UseQuitCommand();
@@ -387,15 +389,14 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
 
                         if (startupOptions.EnableHttpApi)
                         {
-                            if (context.ParseResult.Directives.Contains("vscode"))
-                            {
-                                ((HtmlNotebookFrontendEnvironment) frontendEnvironment).RequiresAutomaticBootstrapping =
-                                    false;
-                            }
-
-                            var clientSideKernelClient = new SignalRBackchannelKernelClient();
                             services.AddSingleton(clientSideKernelClient);
                             kernel.UseKernelClientConnection(new ConnectClientKernel(clientSideKernelClient));
+
+                            if (context.ParseResult.Directives.Contains("vscode"))
+                            {
+                                ((HtmlNotebookFrontendEnvironment)frontendEnvironment).RequiresAutomaticBootstrapping =
+                                    false;
+                            }
 
                             kernelServer.Start();
                             onServerStarted ??= () =>
@@ -453,7 +454,8 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
         private static CompositeKernel CreateKernel(
             string defaultKernelName,
             FrontendEnvironment frontendEnvironment,
-            StartupOptions startupOptions)
+            StartupOptions startupOptions,
+            KernelClientBase kernelClient)
         {
             using var _ = Log.OnEnterAndExit("Creating Kernels");
 
@@ -493,7 +495,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                 new[] { "powershell" });
 
             compositeKernel.Add(
-                new JavaScriptKernel(),
+                new JavaScriptKernel(kernelClient),
                 new[] { "js" });
 
             compositeKernel.Add(

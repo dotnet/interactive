@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.Interactive.Telemetry
     {
         public static void SendFiltered(this ITelemetry telemetry, ITelemetryFilter filter, object o)
         {
-            if (o == null || !telemetry.Enabled || filter == null)
+            if (o is null || !telemetry.Enabled || filter is null)
             {
                 return;
             }

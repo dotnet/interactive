@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.Jupyter
             JupyterRequestContextScheduler scheduler,
             ConnectionInformation connectionInformation)
         {
-            if (connectionInformation == null)
+            if (connectionInformation is null)
             {
                 throw new ArgumentNullException(nameof(connectionInformation));
             }

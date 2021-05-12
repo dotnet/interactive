@@ -14,7 +14,6 @@ using Pocket;
 using Xunit;
 using Xunit.Abstractions;
 using static Pocket.Logger<Microsoft.DotNet.Interactive.Tests.KernelSchedulerTests>;
-using Microsoft.DotNet.Interactive.Commands;
 
 namespace Microsoft.DotNet.Interactive.Tests
 {
@@ -103,7 +102,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             using var scheduler = new KernelScheduler<int, int>();
             scheduler.RegisterDeferredOperationSource(
-                (v, _) => Enumerable.Repeat(v * 10, v), PerformWork);
+                (v, _) => Enumerable.Repeat(v * 10, v).ToList(), PerformWork);
 
             for (var i = 1; i <= 3; i++)
             {
@@ -333,7 +332,7 @@ namespace Microsoft.DotNet.Interactive.Tests
 
             using var scheduler = new KernelScheduler<int, int>();
             scheduler.RegisterDeferredOperationSource(
-                (v, scope) => scope == "scope2" ? Enumerable.Repeat(v * 10, v) : Enumerable.Empty<int>(), PerformWork);
+                (v, scope) => scope == "scope2" ? Enumerable.Repeat(v * 10, v).ToList() : Enumerable.Empty<int>().ToList(), PerformWork);
 
             for (var i = 1; i <= 3; i++)
             {
@@ -504,49 +503,6 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .HaveCount(3)
                 .And
                 .AllBeEquivalentTo(asyncIdForScheduledWork);
-        }
-
-
-        [Fact]
-        public async Task EXPERIMENT()
-        {
-            await using KernelInvocationContext invocationContext = KernelInvocationContext.Establish(new SubmitCode("hello!"));
-
-            AsyncContext.TryEstablish(out var id);
-
-            Log.Info($"AsyncContext.Id: {AsyncContext.Id.ToLogString()}");
-            Log.Info($"KernelInvocationContext is {KernelInvocationContext.Current.ToLogString()}");
-
-            var executionContext = ExecutionContext.Capture();
-            var flow = ExecutionContext.SuppressFlow();
-            Log.Info("SUPPRESSING");
-
-            await Task.Yield();
-
-            Log.Info($"AsyncContext.Id: {AsyncContext.Id.ToLogString()}");
-            Log.Info($"KernelInvocationContext is {KernelInvocationContext.Current.ToLogString()}");
-
-            Log.Info("Running a task");
-            ExecutionContext.Run(executionContext, _ => Write(), null);
-
-            // flow.Undo();
-            Log.Info("RESTORING");
-
-            ExecutionContext.Restore(executionContext);
-
-            Log.Info($"AsyncContext.Id: {AsyncContext.Id.ToLogString()}");
-            Log.Info($"KernelInvocationContext is {KernelInvocationContext.Current.ToLogString()}");
-
-            Task.Run(() =>
-            {
-                Write();
-            }).Wait();
-
-            void Write()
-            {
-                Log.Info($"AsyncContext.Id: {AsyncContext.Id.ToLogString()}");
-                Log.Info($"KernelInvocationContext is {KernelInvocationContext.Current.ToLogString()}");
-            }
         }
     }
 }

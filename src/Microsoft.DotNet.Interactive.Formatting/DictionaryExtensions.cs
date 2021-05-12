@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -30,7 +29,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             IEqualityComparer<TKey> comparer = null)
         {
             IDictionary<TKey, TValue> result;
-            if (comparer == null)
+            if (comparer is null)
             {
                 result = new Dictionary<TKey, TValue>();
             }

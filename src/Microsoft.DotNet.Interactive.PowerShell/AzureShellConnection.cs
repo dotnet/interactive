@@ -176,7 +176,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
         private TaskCompletionSource<object> _codeExecutedTaskSource;
 
         internal AzShellConnectionUtils(string tenantId)
-            : this(tenantId != null && tenantId != _cachedTenantId)
+            : this(tenantId is not null && tenantId != _cachedTenantId)
         {
             _requestedTenantId = tenantId;
         }
@@ -197,17 +197,17 @@ namespace Microsoft.DotNet.Interactive.PowerShell
 
         public void Dispose()
         {
-            if (_httpClient != null)
+            if (_httpClient is not null)
             {
                 _httpClient.Dispose();
             }
 
-            if (_socket != null)
+            if (_socket is not null)
             {
                 _socket.Dispose();
             }
 
-            if (_tokenRenewTimer != null)
+            if (_tokenRenewTimer is not null)
             {
                 _tokenRenewTimer.Stop();
                 _tokenRenewTimer.Elapsed -= OnTimedEvent;
@@ -223,7 +223,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
 
             Console.WriteLine("Authenticating with Azure...");
-            if (_cachedAccessToken != null)
+            if (_cachedAccessToken is not null)
             {
                 try
                 {
@@ -238,7 +238,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 }
             }
 
-            if (_cachedAccessToken == null)
+            if (_cachedAccessToken is null)
             {
                 await GetDeviceCode().ConfigureAwait(false);
                 _cachedTenantId = _requestedTenantId ?? await GetTenantId().ConfigureAwait(false);
@@ -246,7 +246,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             }
 
             var userSettings = await ReadCloudShellUserSettings().ConfigureAwait(false);
-            if (userSettings?.properties == null || userSettings.properties.storageProfile == null)
+            if (userSettings?.properties is null || userSettings.properties.storageProfile is null)
             {
                 Console.Error.WriteLine("It seems you haven't setup your Azure Cloud Shell account yet. Navigate to https://shell.azure.com to complete account setup.");
                 return false;
@@ -423,7 +423,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 {
                     // Look for a EOL in the buffer
                     var position = buffer.PositionOf((byte)'\n');
-                    if (position == null)
+                    if (position is null)
                     {
                         break;
                     }
@@ -743,7 +743,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             _httpClient.DefaultRequestHeaders.Clear();
             _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
 
-            if (token != null)
+            if (token is not null)
             {
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
             }
@@ -754,7 +754,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
                 Method = method
             };
 
-            if (body != null)
+            if (body is not null)
             {
                 request.Content = new StringContent(body, Encoding.UTF8, contentType);
             }
@@ -769,7 +769,7 @@ namespace Microsoft.DotNet.Interactive.PowerShell
             byte[] bytes = await response.Content.ReadAsByteArrayAsync();
             var badRequest = JsonSerializer.Deserialize<FailedRequest>(bytes);
 
-            string detailedError = badRequest?.error == null
+            string detailedError = badRequest?.error is null
                 ? response.ReasonPhrase
                 : $"{response.ReasonPhrase}: {badRequest.error.code}. {badRequest.error.message}.";
 

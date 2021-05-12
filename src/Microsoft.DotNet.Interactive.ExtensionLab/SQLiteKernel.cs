@@ -8,6 +8,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Formatting;
 using Enumerable = System.Linq.Enumerable;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab
@@ -17,6 +18,7 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
         IKernelCommandHandler<SubmitCode>
     {
         private readonly string _connectionString;
+        private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> tables;
 
         public SQLiteKernel(string name, string connectionString) : base(name)
         {
@@ -43,9 +45,13 @@ namespace Microsoft.DotNet.Interactive.ExtensionLab
 
             dbCommand.CommandText = submitCode.Code;
 
-            var results = Execute(dbCommand);
+            tables = Execute(dbCommand);
 
-            context.Display(results);
+            foreach (var table in tables)
+            {
+                var explorer = new NteractDataExplorer(table.ToTabularDataResource());
+                context.Display(explorer, HtmlFormatter.MimeType);
+            }
         }
 
         private IEnumerable<IEnumerable<IEnumerable<(string name, object value)>>> Execute(IDbCommand command)

@@ -36,7 +36,8 @@ namespace Microsoft.DotNet.Interactive.CSharp
         IKernelCommandHandler<RequestDiagnostics>,
         IKernelCommandHandler<RequestHoverText>,
         IKernelCommandHandler<RequestSignatureHelp>,
-        IKernelCommandHandler<SubmitCode>
+        IKernelCommandHandler<SubmitCode>,
+        IKernelCommandHandler<ChangeWorkingDirectory>
     {
         internal const string DefaultKernelName = "csharp";
 
@@ -44,15 +45,26 @@ namespace Microsoft.DotNet.Interactive.CSharp
             .GetMethod("HasReturnValue", BindingFlags.Instance | BindingFlags.NonPublic);
 
         protected CSharpParseOptions _csharpParseOptions =
-            new CSharpParseOptions(LanguageVersion.Latest, kind: SourceCodeKind.Script);
+            new(LanguageVersion.Latest, kind: SourceCodeKind.Script);
 
         private InteractiveWorkspace _workspace;
 
         private Lazy<PackageRestoreContext> _packageRestoreContext;
 
-        internal ScriptOptions ScriptOptions =
-            ScriptOptions.Default
-                         .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(Directory.GetCurrentDirectory()))
+        internal ScriptOptions ScriptOptions;
+
+        private readonly AssemblyBasedExtensionLoader _extensionLoader = new();
+
+        private string _workingDirectory;
+
+        public CSharpKernel() : base(DefaultKernelName)
+        {
+            _workspace = new InteractiveWorkspace();
+
+            //For the VSCode-Add-In Directory.GetCurrentDirectory() would here return something like: c:\Users\<username>\AppData\Roaming\Code\User\globalStorage\ms-dotnettools.dotnet-interactive-vscode
+            //...so we wait for RunAsync to read Directory.GetCurrentDirectory() the first time.
+
+            ScriptOptions = ScriptOptions.Default
                          .WithLanguageVersion(LanguageVersion.Latest)
                          .AddImports(
                              "System",
@@ -68,14 +80,6 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              typeof(Kernel).Assembly,
                              typeof(CSharpKernel).Assembly,
                              typeof(PocketView).Assembly);
-
-        private readonly AssemblyBasedExtensionLoader _extensionLoader = new AssemblyBasedExtensionLoader();
-        private string _currentDirectory;
-
-        public CSharpKernel() : base(DefaultKernelName)
-        {
-            _workspace = new InteractiveWorkspace();
-            _currentDirectory = Directory.GetCurrentDirectory();
 
             _packageRestoreContext = new Lazy<PackageRestoreContext>(() =>
             {
@@ -143,15 +147,17 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
         public async Task HandleAsync(RequestHoverText command, KernelInvocationContext context)
         {
+            await EnsureWorkspaceIsInitializedAsync(context);
+
             using var _ = new GCPressure(1024 * 1024);
 
-            var document = _workspace.UpdateWorkingDocument(command.Code);
-            var text = await document.GetTextAsync();
+            var document = _workspace.ForkDocumentForLanguageServices(command.Code);
+            var text = await document.GetTextAsync(context.CancellationToken);
             var cursorPosition = text.Lines.GetPosition(command.LinePosition.ToCodeAnalysisLinePosition());
             var service = QuickInfoService.GetService(document);
-            var info = await service.GetQuickInfoAsync(document, cursorPosition);
+            var info = await service.GetQuickInfoAsync(document, cursorPosition, context.CancellationToken);
             
-            if (info == null)
+            if (info is null)
             {
                 return;
             }
@@ -168,17 +174,33 @@ namespace Microsoft.DotNet.Interactive.CSharp
                         new FormattedValue("text/markdown", info.ToMarkdownString())
                     },
                     correctedLinePosSpan));
-            
-            
         }
 
         public async Task HandleAsync(RequestSignatureHelp command, KernelInvocationContext context)
         {
-            var document = _workspace.UpdateWorkingDocument(command.Code);
-            var signatureHelp = await SignatureHelpGenerator.GenerateSignatureInformation(document, command);
+            await EnsureWorkspaceIsInitializedAsync(context);
+
+            var document = _workspace.ForkDocumentForLanguageServices(command.Code);
+            var signatureHelp = await SignatureHelpGenerator.GenerateSignatureInformation(document, command, context.CancellationToken);
             if (signatureHelp is { })
             {
                 context.Publish(signatureHelp);
+            }
+        }
+
+        private async Task EnsureWorkspaceIsInitializedAsync(KernelInvocationContext context)
+        {
+            if (ScriptState is null)
+            {
+                ScriptState = await CSharpScript.RunAsync(
+                        string.Empty,
+                        ScriptOptions,
+                        cancellationToken: context.CancellationToken)
+                    .UntilCancelled(context.CancellationToken) ?? ScriptState;
+                if (ScriptState is not null)
+                {
+                    _workspace.UpdateWorkspace(ScriptState);
+                }
             }
         }
 
@@ -233,18 +255,17 @@ namespace Microsoft.DotNet.Interactive.CSharp
 
             if (!context.CancellationToken.IsCancellationRequested)
             {
-                var diagnostics = ImmutableArray<CodeAnalysis.Diagnostic>.Empty;
+                ImmutableArray<CodeAnalysis.Diagnostic> diagnostics;
 
                 // Check for a compilation failure
-                if (exception is CodeSubmissionCompilationErrorException compilationError &&
-                    compilationError.InnerException is CompilationErrorException innerCompilationException)
+                if (exception is CodeSubmissionCompilationErrorException { InnerException: CompilationErrorException innerCompilationException })
                 {
                     diagnostics = innerCompilationException.Diagnostics;
-                    // In the case of an error the diagnostics get attached to both the 
+                    // In the case of an error the diagnostics get attached to both the
                     // DiagnosticsProduced and CommandFailed events.
                     message =
                         string.Join(Environment.NewLine,
-                                    innerCompilationException.Diagnostics.Select(d => d.ToString()) ?? Enumerable.Empty<string>());
+                                    innerCompilationException.Diagnostics.Select(d => d.ToString()));
                 }
                 else
                 {
@@ -266,13 +287,13 @@ namespace Microsoft.DotNet.Interactive.CSharp
                 }
 
                 // Report the compilation failure or exception
-                if (exception != null)
+                if (exception is not null)
                 {
                     context.Fail(exception, message);
                 }
                 else
                 {
-                    if (ScriptState != null && HasReturnValue)
+                    if (ScriptState is not null && HasReturnValue)
                     {
                         var formattedValues = FormattedValue.FromObject(ScriptState.ReturnValue);
                         context.Publish(
@@ -289,27 +310,31 @@ namespace Microsoft.DotNet.Interactive.CSharp
             }
         }
 
+        public Task HandleAsync(ChangeWorkingDirectory command, KernelInvocationContext context)
+        {
+            _workingDirectory = command.WorkingDirectory;
+            return Task.CompletedTask;
+        }
+
         private async Task RunAsync(
             string code,
             CancellationToken cancellationToken = default,
             Func<Exception, bool> catchException = default)
         {
-            var currentDirectory = Directory.GetCurrentDirectory();
-            if (_currentDirectory != currentDirectory)
-            {
-                _currentDirectory = currentDirectory;
-                ScriptOptions = ScriptOptions.WithMetadataResolver(
-                    CachingMetadataResolver.Default.WithBaseDirectory(
-                        _currentDirectory));
-            }
+            if (_workingDirectory == null)
+                _workingDirectory = Directory.GetCurrentDirectory();
 
-            if (ScriptState == null)
+            ScriptOptions = ScriptOptions
+                .WithMetadataResolver(CachingMetadataResolver.Default.WithBaseDirectory(_workingDirectory))
+                .WithSourceResolver(new SourceFileResolver(ImmutableArray<string>.Empty, _workingDirectory));
+
+            if (ScriptState is null)
             {
                 ScriptState = await CSharpScript.RunAsync(
                                                     code,
                                                     ScriptOptions,
                                                     cancellationToken: cancellationToken)
-                    .UntilCancelled(cancellationToken)?? ScriptState;
+                    .UntilCancelled(cancellationToken) ?? ScriptState;
             }
             else
             {
@@ -318,7 +343,12 @@ namespace Microsoft.DotNet.Interactive.CSharp
                                                    ScriptOptions,
                                                    catchException: catchException,
                                                    cancellationToken: cancellationToken)
-                    .UntilCancelled(cancellationToken)?? ScriptState;
+                    .UntilCancelled(cancellationToken) ?? ScriptState;
+            }
+
+            if (IsDisposed)
+            {
+                return;
             }
 
             if (ScriptState is not null && ScriptState.Exception is null)
@@ -331,25 +361,26 @@ namespace Microsoft.DotNet.Interactive.CSharp
             RequestCompletions command,
             KernelInvocationContext context)
         {
+            await EnsureWorkspaceIsInitializedAsync(context);
+
             var completionList =
                 await GetCompletionList(
                     command.Code,
-                    SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.LinePosition));
+                    SourceUtilities.GetCursorOffsetFromPosition(command.Code, command.LinePosition),
+                    context.CancellationToken);
 
             context.Publish(new CompletionsProduced(completionList, command));
         }
 
-        private async Task<IEnumerable<CompletionItem>> GetCompletionList(
-            string code,
-            int cursorPosition)
+        private async Task<IEnumerable<CompletionItem>> GetCompletionList(string code,
+            int cursorPosition, CancellationToken contextCancellationToken)
         {
-
             using var _ = new GCPressure(1024 * 1024);
 
-            var document = _workspace.UpdateWorkingDocument(code);
+            var document = _workspace.ForkDocumentForLanguageServices(code);
             var service = CompletionService.GetService(document);
-            var completionList = await service.GetCompletionsAsync(document, cursorPosition);
-           
+            var completionList = await service.GetCompletionsAsync(document, cursorPosition, cancellationToken: contextCancellationToken);
+
             if (completionList is null)
             {
                 return Enumerable.Empty<CompletionItem>();
@@ -358,7 +389,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
             var items = new List<CompletionItem>();
             foreach (var item in completionList.Items)
             {
-                var description = await service.GetDescriptionAsync(document, item);
+                var description = await service.GetDescriptionAsync(document, item, contextCancellationToken);
                 var completionItem = item.ToModel(description);
                 items.Add(completionItem);
             }
@@ -384,9 +415,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
             RequestDiagnostics command,
             KernelInvocationContext context)
         {
-            var document = _workspace.UpdateWorkingDocument(command.Code);
-            var semanticModel = await document.GetSemanticModelAsync();
-            var diagnostics = semanticModel.GetDiagnostics();
+            await EnsureWorkspaceIsInitializedAsync(context);
+
+            var document = _workspace.ForkDocumentForLanguageServices(command.Code);
+            var semanticModel = await document.GetSemanticModelAsync(context.CancellationToken);
+            var diagnostics = semanticModel.GetDiagnostics(cancellationToken:context.CancellationToken);
             context.Publish(GetDiagnosticsProduced(command, diagnostics));
         }
 
@@ -403,7 +436,7 @@ namespace Microsoft.DotNet.Interactive.CSharp
         public PackageRestoreContext PackageRestoreContext => _packageRestoreContext.Value;
 
         private bool HasReturnValue =>
-            ScriptState != null &&
+            ScriptState is not null &&
             (bool)_hasReturnValueMethod.Invoke(ScriptState.Script, null);
 
         void ISupportNuget.AddRestoreSource(string source) => _packageRestoreContext.Value.AddRestoreSource(source);
@@ -419,6 +452,11 @@ namespace Microsoft.DotNet.Interactive.CSharp
                              .SelectMany(r => r.AssemblyPaths)
                              .Select(r => CachingMetadataResolver.ResolveReferenceWithXmlDocumentationProvider(r))
                              .ToArray();
+
+            foreach (var reference in references)
+            {
+                _workspace.AddPackageManagerReference(reference);
+            }
 
             ScriptOptions = ScriptOptions.AddReferences(references);
         }

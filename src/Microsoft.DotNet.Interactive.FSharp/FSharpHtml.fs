@@ -3,6 +3,7 @@
 
 namespace Microsoft.DotNet.Interactive.FSharp.FSharpKernelHelpers
 
+open System
 open Microsoft.AspNetCore.Html
 open Microsoft.DotNet.Interactive.Formatting
 
@@ -31,7 +32,7 @@ module Html =
     [<AutoOpen>]
     module HtmlElements =
         type internal IMarker = interface end
-        let private makeElement name (attrs: HtmlAttribute list) (content: IHtmlContent list) = 
+        let private makeElement name (attrs: HtmlAttribute list) (content: Object list) = 
             let p = new PocketView(tagName=name)
             for (tag, value) in attrs do
                 p.HtmlAttributes.[tag] <- value
@@ -41,14 +42,6 @@ module Html =
                 let content = 
                     content 
                     |> List.toArray 
-                    |> Array.map (fun content -> 
-                         match content with 
-                         | :? HtmlElement as s -> 
-                            // Prefer to pass the object over for 
-                            match s with 
-                            | Obj o -> o
-                            | _ -> box s
-                         | _ -> box content)
                 p.SetContent(content)
             (HtmlElement.Tagged p :> IHtmlContent)
 
@@ -217,17 +210,9 @@ module Html =
         /// Specifies a custom HTML element
         let custom tag attrs content = makeElement tag attrs content
 
-        /// Specifies an HTML element using an arbitrary object in a formatting context.
-        ///
-        /// If the object is an IHtmlElement or a sequence of IHtmlElement that content is used. Otherwise 
-        /// the object will be rendered as HTML using the best available HTML formatter in 
-        /// the given context, or else as plain text, and the results treated as encoded text.
-        let embed (context: FormatContext) (value: obj) = 
-            (HtmlElement.Obj(PocketViewTags.embed(value, context)) :> IHtmlContent)
-
         /// Specifies an HTML element using an arbitrary object without a formatting context.
         ///
-        /// If the object is an IHtmlElement or a sequence of IHtmlElement that content is used. Otherwise 
+        /// If the object is an IHtmlContent or a sequence of IHtmlContent that content is used. Otherwise 
         /// the object will be rendered as HTML using the best available HTML formatter
         /// with no context, or else as plain text, and the results treated as encoded text.
         let embedNoContext (value: obj) = 

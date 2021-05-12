@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
+// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -9,8 +9,8 @@ using System.CommandLine.Parsing;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab;
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
         {
             if (connParams.OwnerUri.Equals(_tempFileUri.AbsolutePath))
             {
-                if (connParams.ErrorMessage != null)
+                if (connParams.ErrorMessage is not null)
                 {
                     _connectionCompleted.SetException(new Exception(connParams.ErrorMessage));
                 }
@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         private void HandleQueryComplete(object sender, QueryCompleteParams queryParams)
         {
-            if (_queryCompletionHandler != null)
+            if (_queryCompletionHandler is not null)
             {
                 Task.Run(() => _queryCompletionHandler(queryParams)).Wait();
             }
@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
         private void HandleQueryMessage(object sender, MessageParams messageParams)
         {
-            if (_queryMessageHandler != null)
+            if (_queryMessageHandler is not null)
             {
                 Task.Run(() => _queryMessageHandler(messageParams)).Wait();
             }
@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
 
             // If a query handler is already defined, then it means another query is already running in parallel.
             // We only want to run one query at a time, so we display an error here instead.
-            if (_queryCompletionHandler != null)
+            if (_queryCompletionHandler is not null)
             {
                 context.Display("Error: Another query is currently running. Please wait for that query to complete before re-running this cell.");
                 return;
@@ -157,7 +157,11 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                                 };
                                 var subsetResult = await _serviceClient.ExecuteQueryExecuteSubsetAsync(subsetParams);
                                 var tables = GetEnumerableTables(resultSummary.ColumnInfo, subsetResult.ResultSubset.Rows);
-                                context.Display(tables);
+                                foreach (var table in tables)
+                                {
+                                    var explorer = new NteractDataExplorer(table.ToTabularDataResource());
+                                    context.Display(explorer, HtmlFormatter.MimeType);
+                                }
                             }
                             else
                             {
@@ -199,9 +203,10 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             try
             {
                 await _serviceClient.ExecuteQueryStringAsync(_tempFileUri, command.Code);
-               
-                context.CancellationToken.Register(() => {
-                  
+
+                context.CancellationToken.Register(() =>
+                {
+
                     _serviceClient.CancelQueryExecutionAsync(_tempFileUri)
                         .Wait(TimeSpan.FromSeconds(10));
 
@@ -289,7 +294,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
             context.Publish(new CompletionsProduced(completionItems, command));
         }
 
-        protected override ChooseKernelDirective CreateChooseKernelDirective() => 
+        protected override ChooseKernelDirective CreateChooseKernelDirective() =>
             new ChooseMsSqlKernelDirective(this);
 
         private class ChooseMsSqlKernelDirective : ChooseKernelDirective
@@ -299,7 +304,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer
                 Add(MimeTypeOption);
             }
 
-            private Option<string> MimeTypeOption { get; } = new (
+            private Option<string> MimeTypeOption { get; } = new(
                 "--mime-type",
                 description: "Specify the MIME type to use for the data.",
                 getDefaultValue: () => HtmlFormatter.MimeType);
