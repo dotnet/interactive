@@ -179,6 +179,8 @@ namespace Microsoft.DotNet.Interactive
             }
         }
 
+        private static IReadOnlyList<string> emptyList = Enumerable.Empty<string>().ToList();
+
         internal static KernelCommandInvocation DoNugetRestore()
         {
             return async (command, invocationContext) =>
@@ -190,12 +192,14 @@ namespace Microsoft.DotNet.Interactive
                         return;
                     }
 
+                    InstallPackagesMessage.RegisterInstallPackagesMimeType(PlainTextFormatter.MimeType);
+
                     var install = new InstallPackagesMessage(
-                            kernel.RestoreSources.OrderBy(s => s).ToArray(),
-                            kernel.ResolvedPackageReferences.Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s),
+                            kernel.RestoreSources.OrderBy(s => s).ToList(),
+                            kernel.ResolvedPackageReferences.Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
                             kernel.RequestedPackageReferences
                                   .Except(kernel.ResolvedPackageReferences, PackageReferenceComparer.Instance)
-                                  .Select(s => s.PackageName).OrderBy(s => s), 0);
+                                  .Select(s => s.PackageName).OrderBy(s => s).ToList(), 0);
 
                     CreateOrUpdateDisplayValue(context, installPackagesPropertyName, install);
 
@@ -219,8 +223,8 @@ namespace Microsoft.DotNet.Interactive
 
                     var resultMessage = new InstallPackagesMessage(
                             kernel.RestoreSources.OrderBy(s => s).ToArray(),
-                            kernel.ResolvedPackageReferences.Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s),
-                            Enumerable.Empty<string>(),
+                            kernel.ResolvedPackageReferences.Select(s => $"{s.PackageName}, {s.PackageVersion}").OrderBy(s => s).ToList(),
+                            emptyList,
                             0);
 
                     if (result.Succeeded)

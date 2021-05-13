@@ -15,22 +15,15 @@ namespace Microsoft.DotNet.Interactive
     // Data bag containing the data to be displayed when reporting nuget resolve progress 
     public class InstallPackagesMessage
     {
-        static InstallPackagesMessage ()
-        {
-            Formatter.Register<InstallPackagesMessage>(m => m.FormatAsPlainText(), PlainTextFormatter.MimeType);
-            Formatter.Register<InstallPackagesMessage>(m => m.FormatAsHtml(), HtmlFormatter.MimeType);
-            Formatter.SetPreferredMimeTypeFor(typeof(InstallPackagesMessage), PlainTextFormatter.MimeType);
-        }
-
-        public IEnumerable<string> RestoreSources;
-        public IEnumerable<string> InstalledPackages;
-        public IEnumerable<string> InstallingPackages;
+        public IReadOnlyList<string> RestoreSources;
+        public IReadOnlyList<string> InstalledPackages;
+        public IReadOnlyList<string> InstallingPackages;
         public int Progress;
 
         public InstallPackagesMessage(
-                IEnumerable<string> restoreSources,
-                IEnumerable<string> installedPackages,
-                IEnumerable<string> installingPackages,
+                IReadOnlyList<string> restoreSources,
+                IReadOnlyList<string> installedPackages,
+                IReadOnlyList<string> installingPackages,
                 int progress)
         {
             RestoreSources = restoreSources;
@@ -60,13 +53,13 @@ namespace Microsoft.DotNet.Interactive
             items.Add(InstallMessage("Restore sources", RestoreSources));
             items.Add(InstallMessage("Installed Packages", InstalledPackages));
             items.Add(InstallMessage("Installing Packages", InstallingPackages, progress));
-            return div(items).ToString();
+            return div(items).ToDisplayString();
         }
 
         private string FormatAsPlainText()
         {
             var result = new StringBuilder();
-            if (RestoreSources.Count() > 0)
+            if (RestoreSources.Count > 0)
             {
                 result.Append("Restore sources");
                 foreach (var source in RestoreSources)
@@ -77,7 +70,7 @@ namespace Microsoft.DotNet.Interactive
                 result.Append(System.Environment.NewLine);
             }
 
-            if (InstalledPackages.Count() > 0)
+            if (InstalledPackages.Count > 0)
             {
                 result.Append("Installed Packages");
                 foreach (var installed in InstalledPackages)
@@ -88,7 +81,7 @@ namespace Microsoft.DotNet.Interactive
                 result.Append(System.Environment.NewLine);
             }
 
-            if (InstallingPackages.Count() > 0)
+            if (InstallingPackages.Count > 0)
             {
                 result.Append("Installing Packages");
                 foreach (var installing in InstallingPackages)
@@ -100,6 +93,13 @@ namespace Microsoft.DotNet.Interactive
                 result.Append(System.Environment.NewLine);
             }
             return result.ToString();
+        }
+
+        static public void RegisterInstallPackagesMimeType(string mimeType)
+        {
+            Formatter.Register<InstallPackagesMessage>(m => m.FormatAsPlainText(), PlainTextFormatter.MimeType);
+            Formatter.Register<InstallPackagesMessage>(m => m.FormatAsHtml(), HtmlFormatter.MimeType);
+            Formatter.SetPreferredMimeTypeFor(typeof(InstallPackagesMessage), PlainTextFormatter.MimeType);
         }
     }
 }
