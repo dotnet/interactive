@@ -135,8 +135,9 @@ namespace Microsoft.DotNet.Interactive
             var packageName = packageRoot?.Parent?.Name;
             var packageVersion = packageRoot?.Name;
 
-            if (!string.IsNullOrWhiteSpace(packageName) && 
-                !string.IsNullOrWhiteSpace(packageVersion))
+            if (!string.IsNullOrWhiteSpace(packageName) &&              // Name not empty
+                !string.IsNullOrWhiteSpace(packageVersion) &&           // Version not empty
+                Char.IsDigit(packageVersion.Trim()[0]))                 // Version starts with a number
             {
                 try
                 {
