@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Server;
 using Microsoft.DotNet.Interactive.Tests;
 using Microsoft.DotNet.Interactive.Tests.Utility;
 using Xunit;
@@ -17,9 +18,9 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
 {
     public class StdioKernelTests
     {
-        private async Task<TestStdioClient> CreateClient()
+        private async Task<StdioKernelClient> CreateClient()
         {
-            var psi = new ProcessStartInfo()
+            var psi = new ProcessStartInfo
             {
                 FileName = "dotnet-interactive",
                 Arguments = "stdio",
@@ -28,9 +29,9 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
             };
-            var process = Process.Start(psi);
-            var client = new TestStdioClient(process);
-            await client.WaitForReady();
+
+            var client = psi.CreateStdioKernelClient();
+            await client.StartAsync();
             return client;
         }
 
@@ -42,9 +43,9 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
         {
             using var client = await CreateClient();
 
-            var events = client.Events.ToSubscribedList();
+            var events = client.KernelEvents.ToSubscribedList();
 
-            client.SubmitCommand(new SubmitCode("1+1", targetKernelName: language.LanguageName()));
+            await client.SendAsync(new SubmitCode("1+1", targetKernelName: language.LanguageName()));
 
             events
                 .Should()
@@ -58,9 +59,9 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
         {
             using var client = await CreateClient();
 
-            var events = client.Events.ToSubscribedList();
+            var events = client.KernelEvents.ToSubscribedList();
 
-            client.SubmitCommand(new SubmitCode("System.Console.InputEncoding.EncodingName + \"/\" + System.Console.OutputEncoding.EncodingName"));
+            await client.SendAsync(new SubmitCode("System.Console.InputEncoding.EncodingName + \"/\" + System.Console.OutputEncoding.EncodingName"));
             var expected = Encoding.UTF8.EncodingName + "/" + Encoding.UTF8.EncodingName;
 
             events

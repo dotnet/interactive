@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Interactive.Server
 
         public override IObservable<KernelEvent> KernelEvents => _kernelEvents;
 
-        public async override Task SendAsync(KernelCommand command, string token = null)
+        public override async Task SendAsync(KernelCommand command, string token = null)
         {
             if (!string.IsNullOrWhiteSpace(token))
             {

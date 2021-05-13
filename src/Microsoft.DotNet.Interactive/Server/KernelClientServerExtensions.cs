@@ -35,25 +35,6 @@ namespace Microsoft.DotNet.Interactive.Server
             return kernelServer;
         }
 
-        public static KernelClient CreateKernelClient(this Process remote)
-        {
-            if (remote is null)
-            {
-                throw new ArgumentNullException(nameof(remote));
-            }
-
-            if (!remote.StartInfo.RedirectStandardInput || !remote.StartInfo.RedirectStandardOutput)
-            {
-                throw new InvalidOperationException("StandardInput and StandardOutput must be redirected");
-            }
-
-            var input = new TextReaderInputStream(remote.StandardOutput);
-            var output = new TextWriterOutputStream(remote.StandardInput);
-            var kernelClient = new KernelClient(input, output);
-
-            return kernelClient;
-        }
-
         public static T UseNamedPipeKernelServer<T>(this T kernel, string pipeName, DirectoryInfo workingDir) where T : Kernel
         {
             if (kernel is null)
@@ -98,6 +79,31 @@ namespace Microsoft.DotNet.Interactive.Server
             var input = new SignalRInputTextStream(hubConnection);
             var output = new SignalROutputTextStream(hubConnection);
             var kernelClient = new KernelClient(input, output);
+            return kernelClient;
+        }
+
+        public static StdioKernelClient CreateStdioKernelClient(this ProcessStartInfo processStartInfo)
+        {
+            var client = new StdioKernelClient(processStartInfo);
+            return client;
+        }
+
+        public static KernelClient CreateKernelClient(this Process remote)
+        {
+            if (remote is null)
+            {
+                throw new ArgumentNullException(nameof(remote));
+            }
+
+            if (!remote.StartInfo.RedirectStandardInput || !remote.StartInfo.RedirectStandardOutput)
+            {
+                throw new InvalidOperationException("StandardInput and StandardOutput must be redirected");
+            }
+
+            var input = new TextReaderInputStream(remote.StandardOutput);
+            var output = new TextWriterOutputStream(remote.StandardInput);
+            var kernelClient = new KernelClient(input, output);
+
             return kernelClient;
         }
     }
