@@ -82,12 +82,6 @@ namespace Microsoft.DotNet.Interactive.Server
             return kernelClient;
         }
 
-        public static StdioKernelClient CreateStdioKernelClient(this ProcessStartInfo processStartInfo)
-        {
-            var client = new StdioKernelClient(processStartInfo);
-            return client;
-        }
-
         public static KernelClient CreateKernelClient(this Process remote)
         {
             if (remote is null)

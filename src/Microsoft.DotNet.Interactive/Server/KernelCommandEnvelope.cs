@@ -113,7 +113,7 @@ namespace Microsoft.DotNet.Interactive.Server
             return Deserialize(jsonObject.RootElement);
         }
 
-        internal static IKernelCommandEnvelope Deserialize(JsonElement json)
+        public static IKernelCommandEnvelope Deserialize(JsonElement json)
         {
             var commandTypeJson = string.Empty;
             string commandJson;

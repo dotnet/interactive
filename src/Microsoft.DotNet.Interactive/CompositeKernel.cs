@@ -76,6 +76,8 @@ namespace Microsoft.DotNet.Interactive
             }
 
             kernel.ParentKernel = this;
+            kernel.RootKernel = RootKernel;
+
             kernel.AddMiddleware(LoadExtensions);
             kernel.SetScheduler(Scheduler);
 
