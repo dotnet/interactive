@@ -10,7 +10,13 @@ using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class KernelCommandAndEventTextStreamSender
+    public interface IKernelCommandAndEventSender
+    {
+        Task SendAsync(KernelCommand kernelCommand);
+        Task SendAsync(KernelEvent kernelEvent);
+    }
+
+    public class KernelCommandAndEventTextStreamSender : IKernelCommandAndEventSender
     {
         private readonly TextWriter _writer;
 
@@ -24,6 +30,8 @@ namespace Microsoft.DotNet.Interactive.Connection
             await _writer.WriteAsync(KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)));
 
             await _writer.WriteAsync(Delimiter);
+
+            await _writer.FlushAsync();
         }
 
         public async Task SendAsync(KernelEvent kernelEvent)

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -36,11 +37,11 @@ namespace Microsoft.DotNet.Interactive.Connection
 
     public sealed class ProxyKernel2 : Kernel
     {
-        private readonly KernelCommandAndEventTextStreamReceiver _receiver;
-        private readonly KernelCommandAndEventTextStreamSender _sender;
+        private readonly IKernelCommandAndEventReceiver _receiver;
+        private readonly IKernelCommandAndEventSender _sender;
         private readonly CancellationTokenSource _cancellationTokenSource = new ();
 
-        public ProxyKernel2(string name, KernelCommandAndEventTextStreamReceiver receiver, KernelCommandAndEventTextStreamSender sender) : base(name)
+        public ProxyKernel2(string name, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender) : base(name)
         {
             _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
             _sender = sender ?? throw new ArgumentNullException(nameof(sender));
@@ -84,7 +85,26 @@ namespace Microsoft.DotNet.Interactive.Connection
         {
             var targetKernelName = command.TargetKernelName;
             command.TargetKernelName = null;
-            await _sender.SendAsync(command);
+            var token = command.GetToken();
+            var completionSource = new TaskCompletionSource<bool>();
+            var sub = KernelEvents
+                .Where(e => e.Command.GetToken() == token)
+                .Subscribe(kernelEvent =>
+                {
+                    switch (kernelEvent)
+                    {
+                        case CommandFailed _:
+                        case CommandSucceeded _:
+                            completionSource.TrySetResult(true);
+                            break;
+
+                    }
+                });
+            
+            var _ =  _sender.SendAsync(command);
+            await completionSource.Task;
+            sub.Dispose();
+
             command.TargetKernelName = targetKernelName;
         }
     }

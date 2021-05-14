@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.CommandLine;
+using System.IO;
 using System.IO.Pipes;
 using System.Security.Principal;
 using System.Threading.Tasks;
@@ -27,10 +28,28 @@ namespace Microsoft.DotNet.Interactive.Connection
 
             await clientStream.ConnectAsync();
             clientStream.ReadMode = PipeTransmissionMode.Message;
+
+
+            var proxyKernel = CreateProxyKernel2(options, clientStream);
+
+            return proxyKernel;
+        }
+
+        private static ProxyKernel2 CreateProxyKernel2(NamedPipeConnectionOptions options, NamedPipeClientStream clientStream)
+        {
+            var receiver = new KernelCommandAndEventTextStreamReceiver(new StreamReader(clientStream));
+
+            var sender = new KernelCommandAndEventTextStreamSender(new StreamWriter(clientStream));
+            var proxyKernel = new ProxyKernel2(options.KernelName, receiver, sender);
+
+            var _ = proxyKernel.RunAsync();
+            return proxyKernel;
+        }
+
+        private static ProxyKernel CreateProxyKernel(NamedPipeConnectionOptions options, NamedPipeClientStream clientStream)
+        {
             var client = clientStream.CreateKernelClient();
             var proxyKernel = new ProxyKernel(options.KernelName, client);
-
-            proxyKernel.RegisterForDisposal(client);
             return proxyKernel;
         }
     }
