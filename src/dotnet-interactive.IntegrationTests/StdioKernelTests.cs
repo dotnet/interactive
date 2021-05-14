@@ -38,7 +38,14 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
 
             var receiver = new KernelCommandAndEventTextStreamReceiver(process.StandardOutput);
             var sender = new KernelCommandAndEventTextStreamSender(process.StandardInput);
+            
             var kernel = new ProxyKernel2("proxy", receiver, sender);
+            
+            kernel.RegisterForDisposal(() =>
+            {
+                process.Kill(true);
+                process.Dispose();
+            });
 
             var _ = kernel.RunAsync();
 
