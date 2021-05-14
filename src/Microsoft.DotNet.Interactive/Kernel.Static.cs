@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive
     {
         public static Kernel Current => KernelInvocationContext.Current.HandlingKernel;
 
-        public static Kernel Root => KernelInvocationContext.Current.HandlingKernel?.ParentKernel ?? KernelInvocationContext.Current.HandlingKernel;
+        public static Kernel Root => KernelInvocationContext.Current.HandlingKernel?.RootKernel;
 
         public static DisplayedValue display(
             object value,

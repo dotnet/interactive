@@ -114,19 +114,29 @@ namespace Microsoft.DotNet.Interactive.Server
         {
             var jsonObject = JsonDocument.Parse(json).RootElement;
 
+            return Deserialize(jsonObject);
+        }
+
+        public static IKernelEventEnvelope Deserialize(JsonElement jsonObject)
+        {
             var commandJson = jsonObject.GetProperty(nameof(SerializationModel.command));
 
             var commandEnvelope = commandJson.ValueKind == JsonValueKind.Null ? null : KernelCommandEnvelope.Deserialize(commandJson);
 
             var command = commandEnvelope?.Command;
 
-            return DeserializeWithCommand(json, command);
+            return DeserializeWithCommand(jsonObject, command);
         }
 
         public static IKernelEventEnvelope DeserializeWithCommand(string json, KernelCommand command)
         {
             var jsonObject = JsonDocument.Parse(json).RootElement;
 
+            return DeserializeWithCommand(jsonObject, command);
+        }
+
+        public static IKernelEventEnvelope DeserializeWithCommand(JsonElement jsonObject, KernelCommand command)
+        {
             var eventJson = jsonObject.GetProperty(nameof(SerializationModel.@event));
 
             var eventTypeName = jsonObject.GetProperty(nameof(SerializationModel.eventType)).GetString();

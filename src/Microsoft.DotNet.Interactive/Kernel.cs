@@ -45,6 +45,8 @@ namespace Microsoft.DotNet.Interactive
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
             }
 
+            RootKernel = this;
+
             Name = name;
 
             SubmissionParser = new SubmissionParser(this);
@@ -63,6 +65,8 @@ namespace Microsoft.DotNet.Interactive
         internal KernelCommandPipeline Pipeline { get; }
 
         public CompositeKernel ParentKernel { get; internal set; }
+
+        public Kernel RootKernel { get; internal set; }
 
         public SubmissionParser SubmissionParser { get; }
 
