@@ -28,7 +28,12 @@ namespace Microsoft.DotNet.Interactive.Connection
         }
     };
 
-    public class KernelCommandAndEventTextStreamReceiver
+    public interface IKernelCommandAndEventReceiver
+    {
+        IAsyncEnumerable<CommandOrEvent> CommandsOrEventsAsync();
+    }
+
+    public class KernelCommandAndEventTextStreamReceiver : IKernelCommandAndEventReceiver
     {
         private readonly TextReader _reader;
 

@@ -69,6 +69,8 @@ x");
 
             await localCompositeKernel.SendAsync(connectToRemoteKernel);
             await localCompositeKernel.SendAsync(codeSubmissionForRemoteKernel);
+            
+            events.Should().NotContainErrors();
 
             remoteDefaultKernelInvoked.Should()
                                       .BeTrue();
