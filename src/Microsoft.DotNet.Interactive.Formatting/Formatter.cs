@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         private static int _defaultListExpansionLimit;
         private static int _recursionLimit;
 
-        internal static readonly RecursionCounter RecursionCounter = new();
+        private static string _defaultMimeType;
 
         private static string _defaultMimeType = HtmlFormatter.MimeType;
 

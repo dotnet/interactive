@@ -35,8 +35,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
             T value,
             FormatContext context)
         {
-            using var _ = context.IncrementDepth();
-
             if (value is null)
             {
                 HtmlFormatter.FormatAndStyleAsPlainText(Formatter.NullString, context);
