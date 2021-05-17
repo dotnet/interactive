@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace Microsoft.DotNet.Interactive.Parsing
 {
     [DebuggerStepThrough]
-    public class ProxyKernelNameDirectiveNode : DirectiveNode
+    public class ProxyKernelNameDirectiveNode : KernelNameDirectiveNode
     {
         internal ProxyKernelNameDirectiveNode(
             DirectiveToken directiveToken,

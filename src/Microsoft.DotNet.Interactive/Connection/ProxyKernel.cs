@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Events;
+using Microsoft.DotNet.Interactive.Parsing;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
@@ -83,6 +84,13 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         internal override async Task HandleAsync(KernelCommand command, KernelInvocationContext context)
         {
+            switch (command)
+            {
+                case DirectiveCommand {DirectiveNode: KernelNameDirectiveNode}:
+                    await base.HandleAsync(command, context);
+                    return;
+            }
+
             var targetKernelName = command.TargetKernelName;
             command.TargetKernelName = null;
             var token = command.GetToken();
