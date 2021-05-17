@@ -82,6 +82,8 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                 directiveNode =
                                     new ProxyKernelNameDirectiveNode(directiveToken, _sourceText, rootNode.SyntaxTree);
                                 currentKernelIsProxy = true;
+                                
+                                AssignDirectiveParser(directiveNode);
                                 rootNode.Add(directiveNode);
                             }
                             else
@@ -131,21 +133,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                     directiveNode.Add(directiveArgs);
                                 }
 
-                                var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
-
-                                if (IsDefinedInRootKernel(directiveName))
-                                {
-                                    directiveNode.DirectiveParser = _rootKernelDirectiveParser;
-                                }
-                                else if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty,
-                                    out var info))
-                                {
-                                    directiveNode.DirectiveParser = info.getParser();
-                                }
-                                else
-                                {
-                                    directiveNode.DirectiveParser = _rootKernelDirectiveParser;
-                                }
+                                AssignDirectiveParser(directiveNode);
 
                                 if (directiveToken.Text == "#r")
                                 {
@@ -210,6 +198,25 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     languageNode.Add(nodeOrToken);
 
                     rootNode.Add(languageNode);
+                }
+            }
+
+            void AssignDirectiveParser(DirectiveNode? directiveNode)
+            {
+                var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
+
+                if (IsDefinedInRootKernel(directiveName))
+                {
+                    directiveNode.DirectiveParser = _rootKernelDirectiveParser;
+                }
+                else if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty,
+                    out var info))
+                {
+                    directiveNode.DirectiveParser = info.getParser();
+                }
+                else
+                {
+                    directiveNode.DirectiveParser = _rootKernelDirectiveParser;
                 }
             }
         }
