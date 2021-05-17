@@ -11,23 +11,6 @@ using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class CommandOrEvent
-    {
-        public KernelCommand Command { get; }
-        public KernelEvent Event { get; }
-
-        public CommandOrEvent(KernelCommand kernelCommand, KernelEvent kernelEvent)
-        {
-            if (!(kernelCommand is not null ^ kernelEvent is not null))
-            {
-                throw new InvalidOperationException(
-                    $"Only one of {nameof(kernelCommand)} and {nameof(kernelEvent)} must be not null");
-            }
-            Command = kernelCommand;
-            Event = kernelEvent;
-        }
-    };
-
     public interface IKernelCommandAndEventReceiver
     {
         IAsyncEnumerable<CommandOrEvent> CommandsOrEventsAsync();
@@ -76,7 +59,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                         $"Error while parsing Envelope: {ex.Message}\n{message}", KernelCommand.None);
                 }
 
-                yield return new CommandOrEvent(kernelCommand, kernelEvent);
+                yield return kernelCommand is null? new CommandOrEvent(kernelEvent) : new CommandOrEvent(kernelCommand);
             }
         }
 

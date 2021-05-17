@@ -56,11 +56,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
             }
         }
 
-        private void LexDirective()
+        private bool IsDirective()
         {
             if (GetNextChar() != '#')
             {
-                return;
+                return false;
             }
 
             switch (GetPreviousChar())
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 case '\r':
                     break;
                 default:
-                    return;
+                    return false;
             }
 
             // look ahead to see if this is a directive
@@ -79,15 +79,57 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             if (!textIsLongEnoughToContainDirective)
             {
-                return;
+                return false;
             }
 
             if (!IsShebangAndNoFollowingWhitespace(_textWindow.End + 1, '!') &&
                 !IsCharacterThenWhitespace('r') &&
                 !IsCharacterThenWhitespace('i'))
             {
-                return;
+                return false;
             }
+
+            return true;
+
+            bool IsShebangAndNoFollowingWhitespace(int position, char value)
+            {
+                var next = position + 1;
+
+                if (_sourceText[position] != value)
+                {
+                    return false;
+                }
+
+                if (_sourceText.Length <= next)
+                {
+                    return true;
+                }
+
+                return !char.IsWhiteSpace(_sourceText[next]);
+            }
+
+            bool IsCharacterThenWhitespace(char value)
+            {
+                var isChar = _sourceText[_textWindow.End + 1] == value;
+
+                if (!isChar)
+                {
+                    return false;
+                }
+
+                var isFollowedByWhitespace = char.IsWhiteSpace(_sourceText[_textWindow.End + 2]);
+
+                if (!isFollowedByWhitespace)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        private void LexDirective()
+        {
 
             if (!_textWindow.IsEmpty)
             {
@@ -107,6 +149,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                     case '\r':
                     case '\n':
                         FlushToken(TokenKind.Directive);
+                        LexTrivia();
                         return;
 
                     default:
@@ -117,41 +160,6 @@ namespace Microsoft.DotNet.Interactive.Parsing
 
             FlushToken(TokenKind.Directive);
 
-            bool IsShebangAndNoFollowingWhitespace(int position, char value)
-            {
-                var next = position + 1;
-
-                if (_sourceText[position] != value)
-                {
-                    return false;
-                }
-
-                if (_sourceText.Length <= next)
-                {
-                    return true;
-                }
-
-                return !char.IsWhiteSpace(_sourceText[next]);
-            }
-            
-            bool IsCharacterThenWhitespace(char value)
-            {
-                var isChar = _sourceText[_textWindow.End + 1] == value;
-
-                if (!isChar)
-                {
-                    return false;
-                }
-
-                var isFollowedByWhitespace = char.IsWhiteSpace(_sourceText[_textWindow.End + 2]);
-
-                if (!isFollowedByWhitespace)
-                {
-                    return false;
-                }
-
-                return true;
-            }
         }
 
         private void LexDirectiveArgs()
@@ -207,9 +215,11 @@ namespace Microsoft.DotNet.Interactive.Parsing
         {
             while (More())
             {
-                LexDirective();
-
-                if (More())
+                if (IsDirective())
+                {
+                    LexDirective();
+                }
+                else if(More())
                 {
                     _textWindow.Advance();
                 }
