@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Interactive.Tests
                 .Which
                 .ScriptValue
                 .Should()
-                .Be($"\n{scriptContent}");
+                .Be($"{scriptContent}");
         }
 
 

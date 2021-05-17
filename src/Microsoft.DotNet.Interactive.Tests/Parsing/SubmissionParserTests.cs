@@ -324,7 +324,7 @@ let x = 123
         }
 
         [Fact]
-        public void commands_targeting_proxy_kernels_are_not_split()
+        public void Commands_targeting_proxy_kernels_are_not_split()
         {
 
             var proxyKernel = new ProxyKernel2(
@@ -333,12 +333,8 @@ let x = 123
                 new NullKernelCommandAndEventSender());
 
             var parser = CreateSubmissionParser(additionalKernels:new Kernel[]{proxyKernel});
-
-            var code = $@"
-#!{proxyKernel.Name}
-#!r ""nuget:mypackage""
-#!i ""nuget:mysource""
-Console.WriteLine(""Hello from Proxy"");
+            
+            var code = @"Console.WriteLine(""Hello from Proxy"");
 
 #!time
 var a = 12;
@@ -346,29 +342,86 @@ var a = 12;
 #!time
 var b = 22;";
 
-            var tree = parser.Parse(code);
+            var submission = $@"#!{proxyKernel.Name}
+{code}";
 
+            var tree = parser.Parse(submission);
 
-            tree.GetRoot()
-                .ChildNodes
+            var nodes = tree.GetRoot()
+                .ChildNodes.ToList();
+
+            nodes
+                .First()
+                .As<ProxyKernelNameDirectiveNode>()
                 .Should()
-                .ContainSingle<LanguageNode>()
+                .NotBeNull();
+
+            nodes
+                .Should()
+                .ContainSingle<LanguageNode>(n => n.GetType() == typeof(LanguageNode))
                 .Which
                 .Text
                 .Should()
                 .Be(code);
         }
 
-        private static SubmissionParser CreateSubmissionParser(
-            string defaultLanguage = "csharp", Kernel[] additionalKernels = null)
+        [Fact]
+        public void When_targeting_a_local_kernel_after_targeting_a_proxy_kernel_splitting_resumes()
         {
-            using var compositeKernel = new CompositeKernel();
 
-            compositeKernel.DefaultKernelName = defaultLanguage;
+            var proxyKernel = new ProxyKernel2(
+                "proxyKernel",
+                new NullKernelCommandAndEventReceiver(),
+                new NullKernelCommandAndEventSender());
+
+            var parser = CreateSubmissionParser(additionalKernels: new Kernel[] { proxyKernel });
+
+            var proxyCode = @"Console.WriteLine(""Hello from Proxy"");
+
+#!time
+var a = 12;
+
+#!time
+var b = 22;";
+
+            var submission = $@"#!{proxyKernel.Name}
+{proxyCode}
+#!csharp
+var d = 12;
+#!time
+Console.WriteLine(d);
+";
+
+            var tree = parser.Parse(submission);
+
+            var nodes = tree.GetRoot()
+                .ChildNodes.ToList();
+
+            var codeNodes = nodes.Where(n => n.GetType() == typeof(LanguageNode)).Select(n => n.Text). ToList();
+
+
+            codeNodes.Should().BeEquivalentTo(
+                $@"{proxyCode}
+", 
+                @"var d = 12;
+", 
+                @"Console.WriteLine(d);
+");
+
+            nodes.Should().ContainSingle<DirectiveNode>( n => n.Text.StartsWith("#!time"));
+
+        }
+
+        private static SubmissionParser CreateSubmissionParser(
+            string defaultLanguage = "csharp", IEnumerable<Kernel> additionalKernels = null)
+        {
+            using var compositeKernel = new CompositeKernel {DefaultKernelName = defaultLanguage};
+
 
             compositeKernel.Add(
                 new CSharpKernel()
-                    .UseNugetDirective(),
+                    .UseNugetDirective()
+                    .UseWho(),
                 new[] { "c#", "C#" });
 
             compositeKernel.Add(

@@ -8,8 +8,7 @@ let loadMermaid_00000000000000000000000000000000 = () => {
             let renderTarget = document.getElementById('00000000000000000000000000000000');
             mermaid.render( 
                 'mermaid_00000000000000000000000000000000', 
-                `
-    graph TD
+                `graph TD
     A[Client] --> B[Load Balancer]
     B --> C[Server1]
     B --> D[Server2]

@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
     public class KernelCommandAndEventTextStreamReceiverTests
     {
         [Fact]
-        public async Task when_a_KernelEventEnvelope_is_received_it_reads_the_event()
+        public async Task when_a_KernelEventEnvelope_is_received_it_publishes_the_event()
         {
             var kernelEvent = new CommandSucceeded(new SubmitCode("x=1"));
             var message = KernelEventEnvelope.Serialize( KernelEventEnvelope.Create(kernelEvent));
@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
     public class KernelCommandAndEventTextStreamSenderTests
     {
         [Fact]
-        public async Task when_a_KernelEvent_is_sent_it_sends_a_KernelEventEnvelope()
+        public async Task when_a_KernelEvent_is_sent_it_writes_a_KernelEventEnvelope()
         {
             var kernelEvent = new CommandSucceeded(new SubmitCode("x=1"));
             var buffer = new StringBuilder();
@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         }
 
         [Fact]
-        public async Task when_a_KernelCommand_is_sent_it_sends_a_KernelCommandEnvelope()
+        public async Task when_a_KernelCommand_is_sent_it_writes_a_KernelCommandEnvelope()
         {
             var kernelCommand = new SubmitCode("x=1");
             var buffer = new StringBuilder();

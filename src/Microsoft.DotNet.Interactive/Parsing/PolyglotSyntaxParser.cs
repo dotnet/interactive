@@ -9,6 +9,7 @@ using System.CommandLine.Parsing;
 using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.DotNet.Interactive.Connection;
 
 #nullable enable
 
@@ -21,7 +22,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
         private readonly Parser _rootKernelDirectiveParser;
         private readonly IDictionary<string, (KernelUri kernelUri, Func<Parser> getParser)> _subkernelInfoByKernelName;
         private IReadOnlyList<SyntaxToken>? _tokens;
-        private HashSet<string>? _kernelChooserDirectives;
+        private Dictionary<string, ChooseKernelDirectiveInfo>? _kernelChooserDirectives;
 
         internal PolyglotSyntaxParser(
             SourceText sourceText,
@@ -57,6 +58,12 @@ namespace Microsoft.DotNet.Interactive.Parsing
         {
             var currentKernelName = DefaultLanguage;
             _subkernelInfoByKernelName.TryGetValue(currentKernelName ?? "", out var currentKernelInfo);
+            
+            var currentKernelIsProxy = false;
+            if (TryGetChooseKernelDirectiveInfo(currentKernelName?? "", out var chooseKernelDirectiveInfo))
+            {
+                currentKernelIsProxy = chooseKernelDirectiveInfo.IsProxyKernel;
+            }
 
             for (var i = 0; i < _tokens!.Count; i++)
             {
@@ -66,11 +73,24 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 {
                     case DirectiveToken directiveToken:
 
-                        DirectiveNode directiveNode;
+                        DirectiveNode? directiveNode;
 
-                        if (IsChooseKernelDirective(directiveToken))
+                        if (IsChooseKernelDirective(directiveToken, out var isProxyKernel))
                         {
-                            directiveNode = new KernelNameDirectiveNode(directiveToken, _sourceText, rootNode.SyntaxTree);
+                            if (isProxyKernel)
+                            {
+                                directiveNode =
+                                    new ProxyKernelNameDirectiveNode(directiveToken, _sourceText, rootNode.SyntaxTree);
+                                currentKernelIsProxy = true;
+                                rootNode.Add(directiveNode);
+                            }
+                            else
+                            {
+                                directiveNode =
+                                    new KernelNameDirectiveNode(directiveToken, _sourceText, rootNode.SyntaxTree);
+                                currentKernelIsProxy = false;
+                            }
+
                             currentKernelName = directiveToken.DirectiveName;
                             if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty, out currentKernelInfo))
                             {
@@ -84,68 +104,79 @@ namespace Microsoft.DotNet.Interactive.Parsing
                                 _sourceText,
                                 currentKernelName ?? DefaultLanguage,
                                 rootNode.SyntaxTree);
-                            if (_subkernelInfoByKernelName.TryGetValue(directiveNode.KernelName ?? string.Empty, out currentKernelInfo))
+                            if (_subkernelInfoByKernelName.TryGetValue(directiveNode.KernelName ?? string.Empty,
+                                out currentKernelInfo))
                             {
                                 directiveNode.KernelUri = currentKernelInfo.kernelUri;
                             }
+
                         }
 
-                        if (_tokens.Count > i + 1 &&
-                            _tokens[i + 1] is TriviaToken triviaNode)
+                        switch (directiveNode)
                         {
-                            i += 1;
-
-                            directiveNode.Add(triviaNode);
-                        }
-
-                        if (_tokens.Count > i + 1 &&
-                            _tokens[i + 1] is DirectiveArgsToken directiveArgs)
-                        {
-                            i += 1;
-
-                            directiveNode.Add(directiveArgs);
-                        }
-
-                        var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
-
-                        if (IsDefinedInRootKernel(directiveName))
-                        {
-                            directiveNode.DirectiveParser = _rootKernelDirectiveParser;
-                        }
-                        else if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty, out var info))
-                        {
-                            directiveNode.DirectiveParser = info.getParser();
-                        }
-                        else
-                        {
-                            directiveNode.DirectiveParser = _rootKernelDirectiveParser;
-                        }
-
-                        if (directiveToken.Text == "#r")
-                        {
-                            var parseResult = directiveNode.GetDirectiveParseResult();
-                            if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty, out currentKernelInfo))
-                            {
-                                directiveNode.KernelUri = currentKernelInfo.kernelUri;
-                            }
-                            if (parseResult.Errors.Count == 0)
-                            {
-                                var value = parseResult.ValueForArgument<PackageReferenceOrFileInfo>("package");
-
-                                if (value?.Value is FileInfo)
+                            case { } _ when !currentKernelIsProxy:
+                                if (_tokens.Count > i + 1 &&
+    _tokens[i + 1] is TriviaToken triviaNode)
                                 {
-                                    // #r <file> is treated as a LanguageNode to be handled by the compiler
-                                    AppendAsLanguageNode(directiveNode);
+                                    i += 1;
 
-                                    break;
+                                    directiveNode.Add(triviaNode);
                                 }
-                            }
-                        }
 
-                        rootNode.Add(directiveNode);
+                                if (_tokens.Count > i + 1 &&
+                                    _tokens[i + 1] is DirectiveArgsToken directiveArgs)
+                                {
+                                    i += 1;
+
+                                    directiveNode.Add(directiveArgs);
+                                }
+
+                                var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
+
+                                if (IsDefinedInRootKernel(directiveName))
+                                {
+                                    directiveNode.DirectiveParser = _rootKernelDirectiveParser;
+                                }
+                                else if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty,
+                                    out var info))
+                                {
+                                    directiveNode.DirectiveParser = info.getParser();
+                                }
+                                else
+                                {
+                                    directiveNode.DirectiveParser = _rootKernelDirectiveParser;
+                                }
+
+                                if (directiveToken.Text == "#r")
+                                {
+                                    var parseResult = directiveNode.GetDirectiveParseResult();
+                                    if (_subkernelInfoByKernelName.TryGetValue(currentKernelName ?? string.Empty,
+                                        out currentKernelInfo))
+                                    {
+                                        directiveNode.KernelUri = currentKernelInfo.kernelUri;
+                                    }
+
+                                    if (parseResult.Errors.Count == 0)
+                                    {
+                                        var value = parseResult.ValueForArgument<PackageReferenceOrFileInfo>("package");
+
+                                        if (value?.Value is FileInfo)
+                                        {
+                                            // #r <file> is treated as a LanguageNode to be handled by the compiler
+                                            AppendAsLanguageNode(directiveNode);
+
+                                            break;
+                                        }
+                                    }
+                                }
+                                rootNode.Add(directiveNode);
+                                break;
+                            case { } node when currentKernelIsProxy && node is not ProxyKernelNameDirectiveNode:
+                                AppendAsLanguageNode(node);
+                                break;
+                        }
 
                         break;
-
                     case LanguageToken languageToken:
                         AppendAsLanguageNode(languageToken);
                         break;
@@ -163,6 +194,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
             {
                 if (rootNode.ChildNodes.LastOrDefault() is LanguageNode previousLanguageNode &&
                     previousLanguageNode is not KernelNameDirectiveNode &&
+                    previousLanguageNode is not ProxyKernelNameDirectiveNode &&
                     previousLanguageNode.KernelName == currentKernelName)
                 {
                     previousLanguageNode.Add(nodeOrToken);
@@ -192,20 +224,36 @@ namespace Microsoft.DotNet.Interactive.Parsing
                    .Any(c => c.HasAlias(directiveName));
         }
 
-        private bool IsChooseKernelDirective(DirectiveToken directiveToken)
+        private bool IsChooseKernelDirective(DirectiveToken directiveToken, out bool isProxyKernel)
+        {
+            if (TryGetChooseKernelDirectiveInfo(directiveToken.Text, out var chooseKernelDirectiveInfo))
+            {
+                isProxyKernel = chooseKernelDirectiveInfo.IsProxyKernel;
+                return true;
+            }
+
+            isProxyKernel = false;
+            return false;
+        }
+
+        private bool TryGetChooseKernelDirectiveInfo(string kernelAlias, out ChooseKernelDirectiveInfo chooseKernelDirectiveInfo)
         {
             if (_kernelChooserDirectives is null)
             {
-                _kernelChooserDirectives = new HashSet<string>(
+                _kernelChooserDirectives =
                     _rootKernelDirectiveParser
                         .Configuration
                         .RootCommand
                         .Children
                         .OfType<ChooseKernelDirective>()
-                        .SelectMany(c => c.Aliases));
+                        .SelectMany(c => c.Aliases.Select(kernelAlias => new ChooseKernelDirectiveInfo(kernelAlias, c.Kernel is ProxyKernel2)))
+                        .ToDictionary(info => info.KernelAlias);
             }
 
-            return _kernelChooserDirectives?.Contains(directiveToken.Text) == true;
+
+            return _kernelChooserDirectives.TryGetValue(kernelAlias, out chooseKernelDirectiveInfo);
         }
+
+        private record ChooseKernelDirectiveInfo(string KernelAlias, bool IsProxyKernel);
     }
 }
