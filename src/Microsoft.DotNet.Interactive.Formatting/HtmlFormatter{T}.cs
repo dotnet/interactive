@@ -30,6 +30,15 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
+        public HtmlFormatter(Func<T, string> format)
+        {
+            _format = (instance, context) =>
+            {
+                context.Writer.Write(format(instance));
+                return true;
+            };
+        }
+
         public override bool Format(
             T value,
             FormatContext context)
