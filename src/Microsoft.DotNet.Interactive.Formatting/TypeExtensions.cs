@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 {
     internal static class TypeExtensions
     {
-        private static readonly HashSet<Type> _typesToTreatAsScalar = new HashSet<Type>
+        private static readonly HashSet<Type> _typesToTreatAsScalar = new()
         {
             typeof(decimal),
             typeof(Guid),

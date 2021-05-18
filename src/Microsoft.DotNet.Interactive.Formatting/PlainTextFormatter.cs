@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -13,10 +12,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         static PlainTextFormatter()
         {
-            Formatter.Clearing += (obj, sender) =>
-            {
-                MaxProperties = DefaultMaxProperties;
-            };
+            Formatter.Clearing += Initialize;
+
+            void Initialize() => MaxProperties = DefaultMaxProperties;
         }
 
         public static ITypeFormatter GetPreferredFormatterFor(Type type) =>

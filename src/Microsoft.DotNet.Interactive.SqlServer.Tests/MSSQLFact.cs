@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Interactive.SqlServer.Tests
         {
             _skipReason = TestConnectionAndReturnSkipReason();
         }
-
+        
         public MsSqlFact()
         {
             if (_skipReason is not null)

@@ -4,7 +4,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Html;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;

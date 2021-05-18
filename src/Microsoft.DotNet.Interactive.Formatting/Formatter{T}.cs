@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             Initialize();
 
-            Formatter.Clearing += (o, e) => Initialize();
+            Formatter.Clearing += Initialize;
         }
 
         /// <summary>

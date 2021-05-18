@@ -10,10 +10,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
     {
         static HtmlFormatter()
         {
-            Formatter.Clearing += (obj, sender) =>
-            {
-                MaxProperties = DefaultMaxProperties;
-            };
+            Formatter.Clearing += Initialize;
+
+            void Initialize() => MaxProperties = DefaultMaxProperties;
         }
 
         /// <summary>

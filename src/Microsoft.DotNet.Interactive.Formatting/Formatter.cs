@@ -21,8 +21,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         private static string _defaultMimeType;
 
-        private static string _defaultMimeType = HtmlFormatter.MimeType;
-
         // user specification
         private static readonly ConcurrentStack<(Type type, string mimeType)> _preferredMimeTypes = new();
         private static readonly ConcurrentStack<(Type type, string mimeType)> _defaultPreferredMimeTypes = new();
@@ -94,13 +92,14 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        internal static event EventHandler Clearing;
+        internal static event Action Clearing;
 
         /// <summary>
         /// Resets all formatters and formatter settings to their default values.
         /// </summary>
         public static void ResetToDefault()
         {
+            DefaultMimeType = HtmlFormatter.MimeType;
             ClearComputedState();
             _userTypeFormatters.Clear();
             _preferredMimeTypes.Clear();
@@ -122,7 +121,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             RecursionLimit = 6;
             NullString = "<null>";
 
-            Clearing?.Invoke(null, EventArgs.Empty);
+            Clearing?.Invoke();
         }
 
         internal static void ClearComputedState()
@@ -174,14 +173,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 var type1 = _typeKey(inp1);
                 var type2 = _typeKey(inp2);
-                var index1 = _indexKey(inp1);
-                var index2 = _indexKey(inp2);
 
-                if (type1.IsRelevantFormatterFor(type2) && type2.IsRelevantFormatterFor(type1))
+                var isType1RelevantForType2 = type1.IsRelevantFormatterFor(type2);
+
+                if (isType1RelevantForType2 && type2.IsRelevantFormatterFor(type1))
                 {
+                    var index1 = _indexKey(inp1);
+                    var index2 = _indexKey(inp2);
                     return Comparer<int>.Default.Compare(index1, index2);
                 }
-                else if (type1.IsRelevantFormatterFor(type2))
+                else if (isType1RelevantForType2)
                 {
                     return 1;
                 }
