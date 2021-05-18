@@ -27,3 +27,9 @@ To create a new notebook, open the Command Palette(`Ctrl+Shift+P`), and select *
 ## Telemetry
 
 The .NET Interactive extension for VS Code uses the `dotnet-interactive` tool which collects usage and sends telemetry to Microsoft to help us improve our products and services.  Read our [privacy statement](https://privacy.microsoft.com/privacystatement) to learn more.  See [here](https://github.com/dotnet/interactive/tree/main/docs#telemetry) to learn more about telemetry in .NET Interactive.
+
+## License
+
+Copyright © .NET Foundation, and contributors.
+
+The source code to this extension is available on [https://github.com/dotnet/interactive](https://github.com/dotnet/interactive) and licensed under the [MIT license](https://github.com/dotnet/interactive/blob/main/License.txt).
