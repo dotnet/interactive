@@ -10,7 +10,6 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text.Json;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -26,6 +25,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         private static readonly ConcurrentStack<(Type type, string mimeType)> _defaultPreferredMimeTypes = new();
         internal static readonly ConcurrentStack<ITypeFormatter> _userTypeFormatters = new();
         internal static readonly ConcurrentStack<ITypeFormatter> _defaultTypeFormatters = new();
+        internal static readonly ConcurrentDictionary<Type, IReadOnlyList<ITypeFormatter>> _typesThatHaveBeenCheckedForFormatters = new();
 
         // computed state
         private static readonly ConcurrentDictionary<Type, string> _preferredMimeTypesTable = new();
@@ -115,7 +115,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             // It is unclear if we need this default:
             _defaultPreferredMimeTypes.Push((typeof(string), PlainTextFormatter.MimeType));
-            _defaultPreferredMimeTypes.Push((typeof(JsonElement), JsonFormatter.MimeType));
 
             ListExpansionLimit = 20;
             RecursionLimit = 6;
@@ -479,7 +478,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
         }
 
-        public static ITypeFormatter GetPreferredFormatterFor(Type actualType, string mimeType = PlainTextFormatter.MimeType) =>
+        public static ITypeFormatter GetPreferredFormatterFor(Type actualType, string mimeType) =>
             _typeFormattersTable
                 .GetOrAdd(
                     (actualType, mimeType),
@@ -492,7 +491,29 @@ namespace Microsoft.DotNet.Interactive.Formatting
             {
                 return userFormatter;
             }
-            
+
+            if (!_typesThatHaveBeenCheckedForFormatters.ContainsKey(actualType))
+            {
+                var customAttributes = actualType.GetCustomAttributes(typeof(TypeFormatterSourceAttribute));
+
+                foreach (var attribute in customAttributes)
+                {
+                    if (attribute is TypeFormatterSourceAttribute formatterSourceAttribute)
+                    {
+                        var formatterSource = (ITypeFormatterSource) Activator.CreateInstance(formatterSourceAttribute.FormatterSourceType);
+
+                        var formatters = formatterSource.CreateTypeFormatters();
+
+                        foreach (var formatter in formatters)
+                        {
+                            _defaultTypeFormatters.Push(formatter);
+                        }
+                    }
+                }
+
+                // FIX: (InferPreferredFormatter) 
+            }
+
             // Try to find a default built-in type formatter, use the most specific type with a matching mime type
             if (TryInferPreferredFormatter(actualType, mimeType, _defaultTypeFormatters) is { } defaultFormatter)
             {
