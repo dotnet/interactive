@@ -88,7 +88,8 @@ namespace Microsoft.DotNet.Interactive.Tests
         }
 
         [Fact]
-        public async Task Packages_from_previous_requests_are_not_returned_in_subsequent_results()
+        public async Task A_failing_package_restore_does_not_cause_future_resolves_to_fail()
+
         {
             using var restoreContext = new PackageRestoreContext();
             var added = restoreContext.GetOrAddPackageReference("FluentAssertions", "5.7.0");
