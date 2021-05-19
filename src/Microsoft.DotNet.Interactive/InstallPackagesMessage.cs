@@ -1,24 +1,26 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.Interactive.Formatting;
 using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Html;
+using Microsoft.DotNet.Interactive.Formatting;
 using static Microsoft.DotNet.Interactive.Formatting.PocketViewTags;
 
 namespace Microsoft.DotNet.Interactive
 {
     // Data bag containing the data to be displayed when reporting nuget resolve progress 
+
+    [TypeFormatterSource(typeof(InstallPackagesMessageFormatterSource))]
     public class InstallPackagesMessage
     {
-        public IReadOnlyList<string> RestoreSources;
-        public IReadOnlyList<string> InstalledPackages;
-        public IReadOnlyList<string> InstallingPackages;
-        public int Progress;
+        public IReadOnlyList<string> RestoreSources { get; set; }
+        public IReadOnlyList<string> InstalledPackages { get; set; }
+        public IReadOnlyList<string> InstallingPackages { get; set; }
+        public int Progress { get; set; }
 
         public InstallPackagesMessage(
                 IReadOnlyList<string> restoreSources,
@@ -94,12 +96,17 @@ namespace Microsoft.DotNet.Interactive
             }
             return result.ToString();
         }
+    }
 
-        static public void RegisterInstallPackagesMimeType(string mimeType)
+    class InstallPackagesMessageFormatterSource : ITypeFormatterSource
+    {
+        public IEnumerable<ITypeFormatter> CreateTypeFormatters()
         {
-            Formatter.Register<InstallPackagesMessage>(m => m.FormatAsPlainText(), PlainTextFormatter.MimeType);
-            Formatter.Register<InstallPackagesMessage>(m => m.FormatAsHtml(), HtmlFormatter.MimeType);
-            Formatter.SetPreferredMimeTypeFor(typeof(InstallPackagesMessage), PlainTextFormatter.MimeType);
+            return new ITypeFormatter[]
+            {
+                new PlainTextFormatter<InstallPackagesMessage>(m => m.FormatAsPlainText()),
+                new HtmlFormatter<InstallPackagesMessage>(m => m.FormatAsHtml())
+            };
         }
     }
 }

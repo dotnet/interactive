@@ -59,10 +59,7 @@ namespace Microsoft.DotNet.Interactive
 
         public void AddRestoreSource(string source)
         {
-            if (!_resolvedRestoreSources.TryGetValue(source, out var _))
-            {
-                _requestedRestoreSources.TryAdd(source, source);
-            }
+            _resolvedRestoreSources.GetOrAdd(source, source);
         }
 
         public PackageReference GetOrAddPackageReference(
