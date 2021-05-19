@@ -52,6 +52,11 @@
   "extensionDependencies": [
     "ms-toolsai.jupyter"
   ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
   "contributes": {
     "notebooks": [
       {
