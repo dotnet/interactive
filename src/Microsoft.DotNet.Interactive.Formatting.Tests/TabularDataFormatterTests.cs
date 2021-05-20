@@ -33,7 +33,8 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 new { Name = "T", IsValid = false, Cost = double.PositiveInfinity }
             };
 
-            var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
+            var formattedData = data.ToTabularDataResource()
+                                    .ToDisplayString(TabularDataResourceFormatter.MimeType);
 
             this.Assent(formattedData, _configuration);
         }
@@ -50,7 +51,9 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 new { Name = "T", IsValid = false, Cost = 10.0 }
             };
 
-            var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
+            var formattedData = data
+                                .ToTabularDataResource()
+                                .ToDisplayString(TabularDataResourceFormatter.MimeType);
 
             this.Assent(formattedData, _configuration);
         }
@@ -132,7 +135,9 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 ["two"] = 2
             };
 
-            var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
+            var formattedData = data
+                                .ToTabularDataResource()
+                                .ToDisplayString(TabularDataResourceFormatter.MimeType);
 
             this.Assent(formattedData, _configuration);
         }
@@ -141,6 +146,5 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
         {
             Formatter.ResetToDefault();
         }
-
     }
 }
