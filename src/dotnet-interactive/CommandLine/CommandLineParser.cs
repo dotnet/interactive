@@ -398,7 +398,7 @@ namespace Microsoft.DotNet.Interactive.App.CommandLine
                                     false;
                             }
 
-                            kernelServer.Start();
+                            var _ = kernelServer.RunAsync();
                             onServerStarted ??= () =>
                             {
                                 kernelServer.NotifyIsReady();

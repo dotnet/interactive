@@ -2,12 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.DotNet.Interactive.Connection;
 
 namespace Microsoft.DotNet.Interactive.Server
 {
@@ -17,19 +16,17 @@ namespace Microsoft.DotNet.Interactive.Server
         {
             Console.InputEncoding = Encoding.UTF8;
             Console.OutputEncoding = Encoding.UTF8;
-            return kernel.CreateKernelServer(Console.In, Console.Out, workingDir);
+            return kernel.CreateKernelServer(new KernelCommandAndEventTextReceiver(Console.In), new KernelCommandAndEventTextStreamSender(Console.Out), workingDir);
         }
 
-        public static KernelServer CreateKernelServer(this Kernel kernel, TextReader inputStream, TextWriter outputStream, DirectoryInfo workingDir)
+        public static KernelServer CreateKernelServer(this Kernel kernel, IKernelCommandAndEventReceiver receiver, IKernelCommandAndEventSender sender, DirectoryInfo workingDir)
         {
             if (kernel is null)
             {
                 throw new ArgumentNullException(nameof(kernel));
             }
-
-            var input = new TextReaderInputStream(inputStream);
-            var output = new TextWriterOutputStream(outputStream);
-            var kernelServer = new KernelServer(kernel, input, output, workingDir);
+            
+            var kernelServer = new KernelServer(kernel, receiver, sender, workingDir);
 
             kernel.RegisterForDisposal(kernelServer);
             return kernelServer;
@@ -51,54 +48,15 @@ namespace Microsoft.DotNet.Interactive.Server
             Task.Run(() =>
             {
                 serverStream.WaitForConnection();
-                var input = new PipeStreamInputStream(serverStream);
-                var output = new PipeStreamOutputStream(serverStream);
-                var kernelServer = new KernelServer(kernel, input, output, workingDir);
+                var kernelCommandAndEventPipeStreamReceiver = new KernelCommandAndEventPipeStreamReceiver(serverStream);
+                var kernelCommandAndEventPipeStreamSender = new KernelCommandAndEventPipeStreamSender(serverStream);
+                var kernelServer = new KernelServer(kernel, kernelCommandAndEventPipeStreamReceiver,
+                    kernelCommandAndEventPipeStreamSender, workingDir);
+                var _ = kernelServer.RunAsync();
                 kernel.RegisterForDisposal(kernelServer);
+                kernel.RegisterForDisposal(serverStream);
             });
             return kernel;
-        }
-
-        public static KernelClient CreateKernelClient(this NamedPipeClientStream remote)
-        {
-            if (remote is null)
-            {
-                throw new ArgumentNullException(nameof(remote));
-            }
-
-            var input = new PipeStreamInputStream(remote);
-            var output = new PipeStreamOutputStream(remote);
-            var kernelClient = new KernelClient(input, output);
-            return kernelClient;
-        }
-
-        public static KernelClient CreateKernelClient(this HubConnection hubConnection)
-        {
-            if (hubConnection is null) throw new ArgumentNullException(nameof(hubConnection));
-
-            var input = new SignalRInputTextStream(hubConnection);
-            var output = new SignalROutputTextStream(hubConnection);
-            var kernelClient = new KernelClient(input, output);
-            return kernelClient;
-        }
-
-        public static KernelClient CreateKernelClient(this Process remote)
-        {
-            if (remote is null)
-            {
-                throw new ArgumentNullException(nameof(remote));
-            }
-
-            if (!remote.StartInfo.RedirectStandardInput || !remote.StartInfo.RedirectStandardOutput)
-            {
-                throw new InvalidOperationException("StandardInput and StandardOutput must be redirected");
-            }
-
-            var input = new TextReaderInputStream(remote.StandardOutput);
-            var output = new TextWriterOutputStream(remote.StandardInput);
-            var kernelClient = new KernelClient(input, output);
-
-            return kernelClient;
         }
     }
 }

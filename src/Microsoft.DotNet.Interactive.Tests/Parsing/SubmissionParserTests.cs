@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -324,7 +325,7 @@ let x = 123
         }
 
         [Fact]
-        public void Commands_targeting_proxy_kernels_are_not_split()
+        public void Submissions_targeting_proxy_kernels_are_not_split_prior_to_sending()
         {
 
             var proxyKernel = new ProxyKernel2(
@@ -448,7 +449,7 @@ Console.WriteLine(d);
 
         private class  NullKernelCommandAndEventReceiver: IKernelCommandAndEventReceiver
         {
-            public IAsyncEnumerable<CommandOrEvent> CommandsOrEventsAsync()
+            public IAsyncEnumerable<CommandOrEvent> CommandsOrEventsAsync(CancellationToken cancellationToken)
             {
                 throw new NotImplementedException();
             }
@@ -456,12 +457,12 @@ Console.WriteLine(d);
 
         private class NullKernelCommandAndEventSender : IKernelCommandAndEventSender
         {
-            public Task SendAsync(KernelCommand kernelCommand)
+            public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
             {
                 throw new NotImplementedException();
             }
 
-            public Task SendAsync(KernelEvent kernelEvent)
+            public Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
             {
                 throw new NotImplementedException();
             }

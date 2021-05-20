@@ -18,17 +18,15 @@ namespace Microsoft.DotNet.Interactive.Server
             try
             {
                 var byteMemory = new Memory<byte>(buffer);
-                using (var ms = new MemoryStream())
+                await using var ms = new MemoryStream();
+                do
                 {
-                    do
-                    {
-                        var readBytes = await stream.ReadAsync(byteMemory, cancellationToken);
-                        await ms.WriteAsync(byteMemory.Slice(0, readBytes), cancellationToken);
-                    }
-                    while (!stream.IsMessageComplete);
-
-                    return System.Text.Encoding.Default.GetString(ms.ToArray());
+                    var readBytes = await stream.ReadAsync(byteMemory, cancellationToken);
+                    await ms.WriteAsync(byteMemory[..readBytes], cancellationToken);
                 }
+                while (!stream.IsMessageComplete);
+
+                return System.Text.Encoding.Default.GetString(ms.ToArray());
             }
             finally
             {

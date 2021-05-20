@@ -201,7 +201,7 @@ namespace Microsoft.DotNet.Interactive.Parsing
                 }
             }
 
-            void AssignDirectiveParser(DirectiveNode? directiveNode)
+            void AssignDirectiveParser(DirectiveNode directiveNode)
             {
                 var directiveName = directiveNode.ChildNodesAndTokens[0].Text;
 

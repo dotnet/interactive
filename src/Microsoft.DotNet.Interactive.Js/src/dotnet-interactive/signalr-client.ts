@@ -26,6 +26,7 @@ export async function signalTransportFactory(rootUrl: string): Promise<KernelTra
     let eventObservers: { [key: string]: KernelEventEnvelopeObserver } = {};
     let commandObservers: { [key: string]: KernelCommandEnvelopeObserver } = {};
 
+    // deprecated
     connection.on("kernelEvent", (message: string) => {
         let eventEnvelope = <KernelEventEnvelope>JSON.parse(message);
         let keys = Object.keys(eventObservers);
@@ -35,12 +36,31 @@ export async function signalTransportFactory(rootUrl: string): Promise<KernelTra
         }
     });
 
+    // deprecated
     connection.on("submitCommand", (message: string) => {
         let commandEnvelope = <KernelCommandEnvelope>JSON.parse(message);
         let keys = Object.keys(commandObservers);
         for (let key of keys) {
             let observer = commandObservers[key];
             observer(commandEnvelope);
+        }
+    });
+
+    connection.on("commandFromServer", (message: string) => {
+        let commandEnvelope = <KernelCommandEnvelope>JSON.parse(message);
+        let keys = Object.keys(commandObservers);
+        for (let key of keys) {
+            let observer = commandObservers[key];
+            observer(commandEnvelope);
+        }
+    });
+
+    connection.on("eventFromServer", (message: string) => {
+        let eventEnvelope = <KernelEventEnvelope>JSON.parse(message);
+        let keys = Object.keys(eventObservers);
+        for (let key of keys) {
+            let observer = eventObservers[key];
+            observer(eventEnvelope);
         }
     });
 

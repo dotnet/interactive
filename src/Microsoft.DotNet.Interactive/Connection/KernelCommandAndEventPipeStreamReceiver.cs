@@ -2,26 +2,25 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
+using System.IO.Pipes;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class KernelCommandAndEventTextReceiver : KernelCommandAndEventReceiverBase
+    public class KernelCommandAndEventPipeStreamReceiver : KernelCommandAndEventReceiverBase
     {
-        private readonly TextReader _reader;
+        private readonly PipeStream _reader;
 
-        public KernelCommandAndEventTextReceiver(TextReader reader)
+        public KernelCommandAndEventPipeStreamReceiver(PipeStream reader)
         {
             _reader = reader ?? throw new ArgumentNullException(nameof(reader));
         }
 
-
         protected override Task<string> ReadMessageAsync(CancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            return _reader.ReadLineAsync();
+            return _reader.ReadMessageAsync(cancellationToken);
         }
     }
 }

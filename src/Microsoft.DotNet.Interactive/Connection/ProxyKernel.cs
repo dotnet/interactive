@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Interactive.Connection
 
         private async Task ReceiveAndDispatchCommandsAndEvents()
         {
-            await foreach (var d in _receiver.CommandsOrEventsAsync())
+            await foreach (var d in _receiver.CommandsOrEventsAsync(_cancellationTokenSource.Token))
             {
                 if (_cancellationTokenSource.IsCancellationRequested)
                 {
@@ -75,8 +75,8 @@ namespace Microsoft.DotNet.Interactive.Connection
                 else if (d.Command is not null)
                 {
                     var kernel = RootKernel;
-                    var result = await kernel.SendAsync(d.Command);
-                    result.KernelEvents.Subscribe(async e => await _sender.SendAsync(e));
+                    var result = await kernel.SendAsync(d.Command,_cancellationTokenSource.Token);
+                    result.KernelEvents.Subscribe(async e => await _sender.SendAsync(e, _cancellationTokenSource.Token));
                 }
             }
         }
@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.Interactive.Connection
                     }
                 });
             
-            var _ =  _sender.SendAsync(command);
+            var _ =  _sender.SendAsync(command, context.CancellationToken);
             await completionSource.Task;
             sub.Dispose();
 

@@ -4,9 +4,9 @@
 using System.CommandLine;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.DotNet.Interactive.Server;
+using Microsoft.DotNet.Interactive.Connection;
 
-namespace Microsoft.DotNet.Interactive.Connection
+namespace Microsoft.DotNet.Interactive.Http
 {
     public class ConnectSignalR : ConnectKernelCommand<SignalRConnectionOptions>
     {

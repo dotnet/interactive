@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Interactive.App.IntegrationTests
             TaskCompletionSource<bool> ready = new();
             process.Start();
 
-            var receiver = new KernelCommandAndEventTextStreamReceiver(process.StandardOutput);
+            var receiver = new KernelCommandAndEventTextReceiver(process.StandardOutput);
             var sender = new KernelCommandAndEventTextStreamSender(process.StandardInput);
             
             var kernel = new ProxyKernel2("proxy", receiver, sender);
