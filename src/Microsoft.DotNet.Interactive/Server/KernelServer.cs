@@ -4,8 +4,9 @@
 using System;
 using System.IO;
 using System.Reactive.Disposables;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.Events;
 
 namespace Microsoft.DotNet.Interactive.Server
@@ -13,95 +14,71 @@ namespace Microsoft.DotNet.Interactive.Server
     public class KernelServer : IDisposable
     {
         private readonly Kernel _kernel;
-        private readonly IInputTextStream _input;
-        private readonly IOutputTextStream _output;
-        private readonly CompositeDisposable _disposables;
+        private readonly IKernelCommandAndEventReceiver _receiver;
+        private readonly IKernelCommandAndEventSender _sender;
+        private readonly CompositeDisposable _disposables = new();
+        private readonly CancellationTokenSource _cancellationTokenSource = new();
 
-        public KernelServer(
-            Kernel kernel,
-            IInputTextStream input,
-            IOutputTextStream output,
+        public KernelServer(Kernel kernel,
+            IKernelCommandAndEventReceiver receiver,
+            IKernelCommandAndEventSender sender,
             DirectoryInfo workingDir)
         {
-            _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
-            _input = input ?? throw new ArgumentNullException(nameof(input));
-            _output = output ?? throw new ArgumentNullException(nameof(output));
-
             if (workingDir is null)
             {
                 throw new ArgumentNullException(nameof(workingDir));
             }
 
-            _disposables = new CompositeDisposable
-            {
-                _input.Subscribe(async line =>
-                {
-                    await DeserializeAndSendCommand(line);
-                }),
-                _kernel.KernelEvents.Subscribe(WriteEventToOutput),
-                _input
-            };
-
+            _kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
+            _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
+            _sender = sender ?? throw new ArgumentNullException(nameof(sender));
             Environment.CurrentDirectory = workingDir.FullName;
+
+            _disposables.Add(_kernel.KernelEvents.Subscribe(async kernelEvent =>
+            {
+                if (kernelEvent is ReturnValueProduced {Value: DisplayedValue})
+                {
+                    return;
+                }
+
+                await _sender.SendAsync(kernelEvent, _cancellationTokenSource.Token);
+            }));
+
+
+            _disposables.Add(Disposable.Create(() =>
+            {
+                _cancellationTokenSource.Cancel();
+                _cancellationTokenSource.Dispose();
+            }));
         }
 
         public void NotifyIsReady()
         {
-            WriteEventToOutput(new KernelReady());
+            _sender.SendAsync(new KernelReady(), _cancellationTokenSource.Token)
+                .Wait(_cancellationTokenSource.Token);
         }
 
-        public bool IsStarted => _input.IsStarted;
-
-        public IObservable<string> Input => _input;
-
-        public Task WriteAsync(string text) => DeserializeAndSendCommand(text);
-
-        public IObservable<string> Output => _output.OutputObservable; 
-
-        private async Task DeserializeAndSendCommand(string line)
+        public Task RunAsync()
         {
-            IKernelCommandEnvelope kernelCommandEnvelope;
-            try
+            return Task.Run(async() =>
             {
-                kernelCommandEnvelope = KernelCommandEnvelope.Deserialize(line);
-            }
-            catch (Exception ex)
-            {
-                WriteEventToOutput(
-                    new DiagnosticLogEntryProduced(
-                        $"Error while parsing command: {ex.Message}\n{line}", KernelCommand.None));
-                
-                return;
-            }
-            
-            await _kernel.SendAsync(kernelCommandEnvelope.Command);
+                await foreach (var commandOrEvent in _receiver.CommandsOrEventsAsync(_cancellationTokenSource.Token))
+                {
+                    if (commandOrEvent.IsParseError)
+                    {
+                       await _sender.SendAsync(commandOrEvent.Event, _cancellationTokenSource.Token);
+                    }else if (commandOrEvent.Command is { })
+                    {
+                        await _kernel.SendAsync(commandOrEvent.Command, _cancellationTokenSource.Token);
+                    }
+                }
+            }, _cancellationTokenSource.Token);
         }
 
-        private void WriteEventToOutput(KernelEvent kernelEvent)
-        {
-            if (kernelEvent is ReturnValueProduced rvp && rvp.Value is DisplayedValue)
-            {
-                return;
-            }
-
-            var envelope = KernelEventEnvelope.Create(kernelEvent);
-
-            var serialized = KernelEventEnvelope.Serialize(envelope);
-
-            _output.Write(serialized);
-        }
-      
         public void Dispose()
         {
             _disposables.Dispose();
         }
-
-        public void Start()
-        {
-            if (_input is InputTextStream pollingInputTextStream)
-            {
-                pollingInputTextStream.Start();
-            }
-        }
     }
+   
 }

@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using FluentAssertions;
 using Microsoft.DotNet.Interactive.Commands;
 using Microsoft.DotNet.Interactive.Connection;
@@ -25,9 +26,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var message = KernelEventEnvelope.Serialize( KernelEventEnvelope.Create(kernelEvent));
 
             using var stringReader = new StringReader(message);
-            var receiver = new KernelCommandAndEventTextStreamReceiver(stringReader);
+            var receiver = new KernelCommandAndEventTextReceiver(stringReader);
 
-            var d = await receiver.CommandsOrEventsAsync().FirstAsync();
+            var d = await receiver.CommandsOrEventsAsync(CancellationToken.None).FirstAsync();
 
             d.Event.Should().BeEquivalentTo(kernelEvent);
         }
@@ -39,9 +40,9 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var message = KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand));
 
             using var stringReader = new StringReader(message);
-            var receiver = new KernelCommandAndEventTextStreamReceiver(stringReader);
+            var receiver = new KernelCommandAndEventTextReceiver(stringReader);
 
-            var d = await receiver.CommandsOrEventsAsync().FirstAsync();
+            var d = await receiver.CommandsOrEventsAsync(CancellationToken.None).FirstAsync();
 
             d.Command.Should().BeEquivalentTo(kernelCommand);
         }
@@ -56,7 +57,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var buffer = new StringBuilder();
 
             var sender = new KernelCommandAndEventTextStreamSender(new StringWriter(buffer));
-            await sender.SendAsync(kernelEvent);
+            await sender.SendAsync(kernelEvent,CancellationToken.None);
 
             var envelopeMessage = buffer.ToString();
 
@@ -71,7 +72,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var buffer = new StringBuilder();
 
             var sender = new KernelCommandAndEventTextStreamSender(new StringWriter(buffer));
-            await sender.SendAsync(kernelCommand);
+            await sender.SendAsync(kernelCommand,CancellationToken.None);
 
             var envelopeMessage = buffer.ToString();
 

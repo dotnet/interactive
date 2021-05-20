@@ -11,6 +11,7 @@ namespace Microsoft.DotNet.Interactive.Connection
     {
         public KernelCommand Command { get; }
         public KernelEvent Event { get; }
+        public bool IsParseError { get; }
 
         public CommandOrEvent(KernelCommand kernelCommand)
         {
@@ -18,10 +19,11 @@ namespace Microsoft.DotNet.Interactive.Connection
             Event = null;
         }
 
-        public CommandOrEvent(KernelEvent kernelEvent)
+        public CommandOrEvent(KernelEvent kernelEvent, bool isParseError = false)
         {
             Command = null;
             Event = kernelEvent ?? throw new ArgumentNullException(nameof(kernelEvent));
+            IsParseError = isParseError;
         }
     };
 }

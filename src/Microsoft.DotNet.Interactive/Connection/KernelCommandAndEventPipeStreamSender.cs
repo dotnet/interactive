@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.IO;
+using System.IO.Pipes;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
@@ -11,35 +11,29 @@ using Microsoft.DotNet.Interactive.Server;
 
 namespace Microsoft.DotNet.Interactive.Connection
 {
-    public class KernelCommandAndEventTextStreamSender : IKernelCommandAndEventSender
+    public class KernelCommandAndEventPipeStreamSender : IKernelCommandAndEventSender
     {
-        private readonly TextWriter _writer;
+        private readonly PipeStream _sender;
 
-        public KernelCommandAndEventTextStreamSender(TextWriter writer)
+        public KernelCommandAndEventPipeStreamSender(PipeStream sender)
         {
-            _writer = writer ?? throw new ArgumentNullException(nameof(writer));
+            _sender = sender ?? throw new ArgumentNullException(nameof(sender));
         }
 
         public async Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            await _writer.WriteAsync(KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)));
+            _sender.WriteMessage(KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)));
 
-            await _writer.WriteAsync(Delimiter);
-
-            await _writer.FlushAsync();
+            await _sender.FlushAsync(cancellationToken);
         }
 
         public async Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            await _writer.WriteAsync(KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)));
+            _sender.WriteMessage(KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)));
 
-            await _writer.WriteAsync(Delimiter);
-
-            await _writer.FlushAsync();
+            await _sender.FlushAsync(cancellationToken);
         }
-
-        public static string Delimiter => "\r\n";
     }
 }

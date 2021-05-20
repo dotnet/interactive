@@ -2,12 +2,18 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Reactive.Linq;
 using FluentAssertions;
 using System.Linq;
+using System.Reactive.Concurrency;
+using System.Reactive.Subjects;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Interactive.Commands;
+using Microsoft.DotNet.Interactive.Connection;
 using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.Formatting;
@@ -20,15 +26,19 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Interactive.Tests.Server
 {
+
     public class KernelServerTests : IDisposable
     {
-        private readonly KernelServer _kernelServer;
-        private readonly SubscribedList<IKernelEventEnvelope> _kernelEvents;
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
+        private readonly CompositeDisposable _disposables = new();
+        private readonly RecordingKernelCommandAndEventSender _serverOutputChannel;
+        private readonly RecordingKernelCommandAndEventReceiver _serverInputChannel;
+        private readonly CompositeKernel _kernel;
+
+        private IList<IKernelEventEnvelope> KernelEvents => _serverOutputChannel.KernelEvents.ToList();
 
         public KernelServerTests(ITestOutputHelper output)
         {
-            var kernel = new CompositeKernel
+            _kernel = new CompositeKernel
             {
                 new CSharpKernel()
                     .UseKernelHelpers()
@@ -36,30 +46,16 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                     .UseDefaultMagicCommands()
             };
 
-            
-            _kernelServer = kernel.CreateKernelServer(new StreamReader(new MemoryStream()), new StringWriter(), new DirectoryInfo(Environment.CurrentDirectory));
-            
-            _kernelEvents = _kernelServer
-                            .Output
-                            .Where(s => !string.IsNullOrWhiteSpace(s))
-                            .Select(KernelEventEnvelope.Deserialize)
-                            .ToSubscribedList();
+            _serverOutputChannel = new RecordingKernelCommandAndEventSender();
+            _serverInputChannel = new RecordingKernelCommandAndEventReceiver();
+            var kernelServer = _kernel.CreateKernelServer(_serverInputChannel, _serverOutputChannel, new DirectoryInfo(Environment.CurrentDirectory));
+            _kernel.RegisterForDisposal(kernelServer);
+            var _ = kernelServer.RunAsync();
 
-            _disposables.Add(_kernelServer);
             _disposables.Add(output.SubscribeToPocketLogger());
-            _disposables.Add(kernel.LogEventsToPocketLogger());
-            _disposables.Add(kernel);
+            _disposables.Add(_kernel.LogEventsToPocketLogger());
+            _disposables.Add(_kernel);
         }
-
-        [Fact]
-        public void The_server_is_started_after_creation()
-        {
-            _kernelServer
-                .IsStarted
-                .Should()
-                .BeTrue();
-        }
-
 
         [Fact]
         public async Task It_produces_a_unique_CommandHandled_for_root_command()
@@ -67,9 +63,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var command = new SubmitCode("#!time\ndisplay(1543); display(4567);");
             command.SetToken("abc");
 
-            await _kernelServer.WriteAsync(command);
+            _serverInputChannel.Send(command);
 
-            _kernelEvents
+            await WaitForCompletion();
+
+            KernelEvents
                 .Should()
                 .ContainSingle<KernelEventEnvelope<CommandSucceeded>>()
                 .Which
@@ -80,12 +78,15 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
                 .Be("abc");
         }
 
+
         [Fact]
         public async Task It_does_not_publish_ReturnValueProduced_events_if_the_value_is_DisplayedValue()
         {
-            await _kernelServer.WriteAsync(new SubmitCode("display(1543)"));
+            _serverInputChannel.Send(new SubmitCode("display(1543)"));
 
-            _kernelEvents
+            await WaitForCompletion();
+
+            KernelEvents
                 .Should()
                 .NotContain(e => e.Event is ReturnValueProduced);
         }
@@ -95,9 +96,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         {
             var invalidJson = "{ hello";
 
-            await _kernelServer.WriteAsync(invalidJson);
+            _serverInputChannel.Send(invalidJson);
 
-            _kernelEvents
+            await Task.Delay(1000);
+
+            KernelEvents
                 .Should()
                 .ContainSingle<KernelEventEnvelope<DiagnosticLogEntryProduced>>()
                 .Which
@@ -113,9 +116,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var command = new SubmitCode(@"var a = 12");
             command.SetToken("abc");
 
-            await _kernelServer.WriteAsync(command);
+            _serverInputChannel.Send(command);
 
-            _kernelEvents
+            await WaitForCompletion();
+
+            KernelEvents
                 .Should()
                 .ContainSingle<KernelEventEnvelope<IncompleteCodeSubmissionReceived>>(e => e.Event.Command.GetToken() == "abc");
         }
@@ -126,9 +131,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var command = new SubmitCode("DOES NOT COMPILE");
             command.SetToken("abc");
 
-            await _kernelServer.WriteAsync(command);
+            _serverInputChannel.Send(command);
 
-            _kernelEvents
+            await WaitForCompletion();
+
+            KernelEvents
                 .Should()
                 .ContainSingle<KernelEventEnvelope<CommandFailed>>()
                 .Which
@@ -142,16 +149,31 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         [Fact]
         public async Task It_can_eval_function_instances()
         {
-            await _kernelServer.WriteAsync(new SubmitCode(@"Func<int> func = () => 1;"));
+            _serverInputChannel.Send(new SubmitCode(@"Func<int> func = () => 1;"));
 
-            await _kernelServer.WriteAsync(new SubmitCode(@"func()"));
+            await WaitForCompletion();
 
-            await _kernelServer.WriteAsync(new SubmitCode(@"func"));
+            _serverInputChannel.Send(new SubmitCode(@"func()"));
+            var kernelCommand = new SubmitCode(@"func");
+            kernelCommand.SetToken("finalCommand");
+            _serverInputChannel.Send(kernelCommand);
 
-            _kernelEvents
+            await WaitForCompletion("finalCommand");
+
+            KernelEvents
                 .Count(e => e.Event is ReturnValueProduced)
                 .Should()
                 .Be(2);
+        }
+
+        private async Task WaitForCompletion()
+        {
+            await _kernel.KernelEvents.ObserveOn(TaskPoolScheduler.Default).FirstAsync(e => e is CommandSucceeded or CommandFailed);
+        }
+
+        private async Task WaitForCompletion(string commandToken)
+        {
+            await _kernel.KernelEvents.ObserveOn(TaskPoolScheduler.Default).FirstAsync(e => e is CommandSucceeded or CommandFailed && e.Command.GetToken() == commandToken);
         }
 
         [Fact]
@@ -160,12 +182,14 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             var command = new SubmitCode(@"#r ""nuget:Microsoft.Spark, 0.4.0""");
             command.SetToken("abc");
 
-            await _kernelServer.WriteAsync(command);
+            _serverInputChannel.Send(command);
 
-            _kernelEvents
+            await WaitForCompletion();
+
+            KernelEvents
                 .Should()
                 .ContainSingle<KernelEventEnvelope<PackageAdded>>(
-                    where: e => e.Event.Command.GetToken() == "abc" && 
+                    where: e => e.Event.Command.GetToken() == "abc" &&
                                 e.Event.PackageReference.PackageName == "Microsoft.Spark");
         }
 
@@ -176,9 +200,11 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
             var command = new SubmitCode($"Console.Write(\"{guid}\");");
 
-            await _kernelServer.WriteAsync(command);
+            _serverInputChannel.Send(command);
 
-            _kernelEvents
+            await WaitForCompletion();
+
+            KernelEvents
                 .Should()
                 .ContainSingle<KernelEventEnvelope<StandardOutputValueProduced>>()
                 .Which
@@ -192,6 +218,74 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
         public void Dispose()
         {
             _disposables.Dispose();
+        }
+
+        class RecordingKernelCommandAndEventSender : IKernelCommandAndEventSender
+        {
+            private readonly ConcurrentQueue<IKernelCommandEnvelope> _commands;
+            private readonly ConcurrentQueue<IKernelEventEnvelope> _events;
+            public IEnumerable<IKernelEventEnvelope> KernelEvents => _events;
+            public IEnumerable<IKernelCommandEnvelope> KernelCommands => _commands;
+
+            public RecordingKernelCommandAndEventSender()
+            {
+                _commands = new ConcurrentQueue<IKernelCommandEnvelope>();
+                _events = new ConcurrentQueue<IKernelEventEnvelope>();
+            }
+            public Task SendAsync(KernelCommand kernelCommand, CancellationToken cancellationToken)
+            {
+                _commands.Enqueue(KernelCommandEnvelope.Create(kernelCommand));
+                return Task.CompletedTask;
+            }
+
+            public Task SendAsync(KernelEvent kernelEvent, CancellationToken cancellationToken)
+            {
+                _events.Enqueue(KernelEventEnvelope.Create(kernelEvent));
+                return Task.CompletedTask;
+            }
+        }
+
+        class RecordingKernelCommandAndEventReceiver : KernelCommandAndEventReceiverBase
+        {
+            private readonly Subject<string> _receiver = new();
+            private readonly ConcurrentQueue<string> _queue;
+
+            public RecordingKernelCommandAndEventReceiver()
+            {
+                _queue = new ConcurrentQueue<string>();
+                _receiver.Subscribe(message =>
+                {
+                    _queue.Enqueue(message);
+                });
+            }
+
+            public void Send(string kernelCommandOrEvent)
+            {
+                _receiver.OnNext(kernelCommandOrEvent);
+            }
+
+            public void Send(KernelCommand kernelCommand)
+            {
+                _receiver.OnNext(KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)));
+            }
+
+            public void Send(KernelEvent kernelEvent)
+            {
+                _receiver.OnNext(KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)));
+            }
+
+            protected override async Task<string> ReadMessageAsync(CancellationToken cancellationToken)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (_queue.TryDequeue(out var message))
+                {
+                    return message;
+                }
+                await _receiver.FirstAsync();
+                _queue.TryDequeue(out message);
+                return message;
+            }
         }
     }
 }
