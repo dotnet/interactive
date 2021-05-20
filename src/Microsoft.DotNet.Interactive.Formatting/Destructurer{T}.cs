@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         IDestructurer<T>,
         IDestructurer
     {
-        private static readonly object lockObj = new object();
+        private static readonly object lockObj = new();
         private static IDictionary<string, Func<T, object>> getters;
 
         internal readonly IDictionary<string, Func<T, object>> _instanceGetters;
@@ -70,11 +70,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public IDictionary<string, object> Destructure(T instance)
         {
             var dictionary = _instanceGetters.ToDictionary(p => p.Key, p => p.Value(instance));
-
-            if (dictionary.Count == 0)
-            {
-                return new Dictionary<string, object> { { "", instance } };
-            }
 
             return dictionary;
         }

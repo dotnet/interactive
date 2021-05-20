@@ -3,6 +3,7 @@
 
 
 using Microsoft.DotNet.Interactive.ExtensionLab;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {

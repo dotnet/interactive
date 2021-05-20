@@ -3,7 +3,7 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting.TabularData
 {
     public class TableDataFieldDescriptors : List<TableSchemaFieldDescriptor>
     {

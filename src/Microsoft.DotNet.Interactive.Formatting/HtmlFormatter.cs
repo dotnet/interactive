@@ -32,10 +32,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
         public const string MimeType = "text/html";
 
         internal static ITypeFormatter GetDefaultFormatterForAnyObject(Type type, bool includeInternals = false) =>
-            FormattersForAnyObject.GetFormatter(type, includeInternals);
+            FormattersForAnyObject.GetOrCreateFormatterForType(type, includeInternals);
 
         internal static ITypeFormatter GetDefaultFormatterForAnyEnumerable(Type type) =>
-            FormattersForAnyEnumerable.GetFormatter(type, false);
+            FormattersForAnyEnumerable.GetOrCreateFormatterForType(type, false);
 
         internal static void FormatAndStyleAsPlainText(
             object text, 

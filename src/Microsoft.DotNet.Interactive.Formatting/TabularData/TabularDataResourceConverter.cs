@@ -2,10 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting.TabularData
 {
     public class TabularDataResourceConverter : JsonConverter<TabularDataResource>
     {
@@ -21,7 +21,9 @@ namespace Microsoft.DotNet.Interactive.Formatting
             writer.WritePropertyName("schema");
             JsonSerializer.Serialize(writer, value.Schema, options);
             writer.WritePropertyName("data");
-            JsonSerializer.Serialize(writer, value.Data, options);
+
+            // The cast to IEnumerable avoids a NullReferenceException:
+            JsonSerializer.Serialize(writer, (IEnumerable)value.Data, options);
             writer.WriteEndObject();
         }
     }

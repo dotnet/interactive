@@ -4,7 +4,7 @@
 using System.Runtime.InteropServices;
 using Xunit;
 
-namespace Microsoft.DotNet.Interactive.Tests
+namespace Microsoft.DotNet.Interactive.Tests.Utility
 {
     public sealed class FactSkipLinux : FactAttribute
     {

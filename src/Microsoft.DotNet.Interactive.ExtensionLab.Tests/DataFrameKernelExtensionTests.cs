@@ -9,7 +9,7 @@ using Assent;
 
 using Microsoft.Data.Analysis;
 using Microsoft.DotNet.Interactive.Formatting;
-
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.ExtensionLab.Tests

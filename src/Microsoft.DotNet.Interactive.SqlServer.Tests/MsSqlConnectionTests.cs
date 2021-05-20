@@ -10,7 +10,9 @@ using Microsoft.DotNet.Interactive.CSharp;
 using Microsoft.DotNet.Interactive.Events;
 using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Microsoft.DotNet.Interactive.Tests.Utility;
+using Xunit;
 
 namespace Microsoft.DotNet.Interactive.SqlServer.Tests
 {
@@ -70,8 +72,6 @@ SELECT TOP 100 * FROM Person.Person
                 .ContainSingle<DisplayedValueProduced>(e =>
                     e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType));
         }
-
-
 
         [MsSqlFact]
         public async Task sending_query_to_sql_will_generate_suggestions()
@@ -162,14 +162,17 @@ select * from sys.databases
                         e.FormattedValues.Any(f => f.MimeType == HtmlFormatter.MimeType))
                               .Which;
 
-            var table = ((NteractDataExplorer)value.Value).Data;
-            
-            table.Schema.Fields.Should()
-                .ContainSingle(f => f.Name == "database_id")
-                .Which
-                .Type
-                .Should()
-                .Be(TableSchemaFieldType.Integer);
+            var table = (NteractDataExplorer) value.Value;
+
+            table.Data
+                 .Schema
+                 .Fields
+                 .Should()
+                 .ContainSingle(f => f.Name == "database_id")
+                 .Which
+                 .Type
+                 .Should()
+                 .Be(TableSchemaFieldType.Integer);
         }
 
         [MsSqlFact]

@@ -4,6 +4,7 @@
 using System.Linq;
 using Microsoft.DotNet.Interactive.ExtensionLab;
 using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace System.Collections.Generic
 {

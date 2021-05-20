@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 
 namespace Microsoft.DotNet.Interactive.Formatting
 {
@@ -25,7 +26,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         private static readonly ConcurrentStack<(Type type, string mimeType)> _defaultPreferredMimeTypes = new();
         internal static readonly ConcurrentStack<ITypeFormatter> _userTypeFormatters = new();
         internal static readonly ConcurrentStack<ITypeFormatter> _defaultTypeFormatters = new();
-        internal static readonly ConcurrentDictionary<Type, IReadOnlyList<ITypeFormatter>> _typesThatHaveBeenCheckedForFormatters = new();
+        internal static readonly ConcurrentDictionary<Type, bool> _typesThatHaveBeenCheckedForFormatters = new();
 
         // computed state
         private static readonly ConcurrentDictionary<Type, string> _preferredMimeTypesTable = new();
@@ -101,6 +102,8 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
             DefaultMimeType = HtmlFormatter.MimeType;
             ClearComputedState();
+
+            _typesThatHaveBeenCheckedForFormatters.Clear();
             _userTypeFormatters.Clear();
             _preferredMimeTypes.Clear();
             _defaultTypeFormatters.Clear();
@@ -494,6 +497,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             if (!_typesThatHaveBeenCheckedForFormatters.ContainsKey(actualType))
             {
+                var foundFormatter = false;
                 var customAttributes = actualType.GetCustomAttributes(typeof(TypeFormatterSourceAttribute));
 
                 foreach (var attribute in customAttributes)
@@ -507,11 +511,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
                         foreach (var formatter in formatters)
                         {
                             _defaultTypeFormatters.Push(formatter);
+                            foundFormatter = true;
                         }
                     }
                 }
 
-                // FIX: (InferPreferredFormatter) 
+                _typesThatHaveBeenCheckedForFormatters.TryAdd(actualType, foundFormatter);
             }
 
             // Try to find a default built-in type formatter, use the most specific type with a matching mime type

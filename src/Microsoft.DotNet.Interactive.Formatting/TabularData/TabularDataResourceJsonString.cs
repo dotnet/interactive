@@ -2,10 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting.TabularData
 {
     public class TabularDataResourceJsonString : JsonString
     {
@@ -14,7 +13,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
         {
         }
 
-        public static TabularDataResourceJsonString Create(IReadOnlyDictionary<string , Type> fields, IEnumerable data)
+        public static TabularDataResourceJsonString Create(IReadOnlyDictionary<string, Type> fields, IEnumerable<IDictionary<string, object>> data)
         {
             var schema = new TableSchema();
 
@@ -24,7 +23,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
             }
             var tabularDataSet = new TabularDataResource(schema, data);
 
-            return tabularDataSet.ToJson();
+            return tabularDataSet.ToJsonString();
         }
     }
 }

@@ -21,10 +21,10 @@ namespace Microsoft.DotNet.Interactive.Formatting
             _name = name;
         }
 
-        internal ITypeFormatter GetFormatter(Type type, bool flag)
+        internal ITypeFormatter GetOrCreateFormatterForType(Type type, bool includeInternals)
         {
             return
-                _formatters.GetOrAdd((type, flag),
+                _formatters.GetOrAdd((type, includeInternals),
                                      tup =>
                                      {
                                          return
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Interactive.Formatting
                                              _genericDef
                                                  .MakeGenericType(tup.type)
                                                  .GetMethod(_name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
-                                                 .Invoke(null, new object[] { flag });
+                                                 .Invoke(null, new object[] { includeInternals });
                                      });
         }
     }

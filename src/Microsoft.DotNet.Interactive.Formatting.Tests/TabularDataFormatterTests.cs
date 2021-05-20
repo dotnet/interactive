@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Assent;
+using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Xunit;
 
 namespace Microsoft.DotNet.Interactive.Formatting.Tests

@@ -2,15 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.DotNet.Interactive.Formatting
+namespace Microsoft.DotNet.Interactive.Formatting.TabularData
 {
     public static class TabularDataResourceFormatter
     {
@@ -38,24 +36,19 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
         internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultTabularDataFormatterSet.DefaultFormatters;
 
-        public static TabularDataResourceJsonString ToTabularDataResourceJsonString<T>(this IEnumerable<T> source)
-        {
-            var tabularDataSet = source.ToTabularDataResource();
-            return tabularDataSet.ToJson();
-        }
-
         public static TabularDataResource ToTabularDataResource<T>(this IEnumerable<T> source)
         {
             var (schema, data) = Generate(source);
+            
            return new TabularDataResource(schema, data);
         }
 
-        private static (TableSchema schema, IEnumerable data) Generate<T>(IEnumerable<T> source)
+        private static (TableSchema schema, IEnumerable<IDictionary<string, object>> data) Generate<T>(IEnumerable<T> source)
         {
             var schema = new TableSchema();
             var fields = new HashSet<string>();
             var members = new HashSet<(string name, Type type)>();
-            var data = new List<object>();
+            var data = new List<IDictionary<string, object>>();
 
             foreach (var item in source)
             {
@@ -95,23 +88,13 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
                     default:
                         {
-                            foreach (var memberInfo in item
-                                .GetType()
-                                .GetMembers(BindingFlags.Public | BindingFlags.Instance))
-                            {
-                                switch (memberInfo)
-                                {
-                                    case PropertyInfo pi:
-                                        members.Add((memberInfo.Name, pi.PropertyType));
-                                        break;
-                                    case FieldInfo fi:
-                                        members.Add((memberInfo.Name, fi.FieldType));
-                                        break;
-                                }
-                            }
+                            var destructurer = new Destructurer<T>();
 
-                            EnsureFieldsAreInitializedFromMembers();
-                            data.Add(item);
+                            var dict = destructurer.Destructure(item);
+
+                            EnsureFieldsAreInitializedFromMembers(dict);
+
+                            data.Add(dict);
                         }
                         break;
                 }
@@ -119,13 +102,16 @@ namespace Microsoft.DotNet.Interactive.Formatting
 
             return (schema, data);
 
-            void EnsureFieldsAreInitializedFromMembers()
+            // FIX: (Generate) these have a bug if the first item for a given field name is null
+
+            void EnsureFieldsAreInitializedFromMembers(IDictionary<string, object> dictionary)
             {
-                foreach (var memberInfo in members)
+                foreach (var key in dictionary.Keys)
                 {
-                    if (fields.Add(memberInfo.name))
+                    if (fields.Add(key))
                     {
-                        schema.Fields.Add(new TableSchemaFieldDescriptor(memberInfo.name, memberInfo.type.ToTableSchemaFieldType()));
+                        var type = dictionary[key]?.GetType();
+                        schema.Fields.Add(new TableSchemaFieldDescriptor(key, type?.ToTableSchemaFieldType()));
                     }
                 }
             }
@@ -164,7 +150,6 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 { } t when t == typeof(uint) => TableSchemaFieldType.Integer,
                 { } t when t == typeof(ulong) => TableSchemaFieldType.Integer,
                 { } t when t == typeof(long) => TableSchemaFieldType.Integer,
-                { } t when t == typeof(float) => TableSchemaFieldType.Number,
                 { } t when t == typeof(float) => TableSchemaFieldType.Number,
                 { } t when t == typeof(double) => TableSchemaFieldType.Number,
                 { } t when t == typeof(decimal) => TableSchemaFieldType.Number,
