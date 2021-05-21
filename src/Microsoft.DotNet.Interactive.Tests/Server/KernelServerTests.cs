@@ -50,6 +50,7 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             _serverInputChannel = new RecordingKernelCommandAndEventReceiver();
             var kernelServer = _kernel.CreateKernelServer(_serverInputChannel, _serverOutputChannel, new DirectoryInfo(Environment.CurrentDirectory));
             _kernel.RegisterForDisposal(kernelServer);
+            _kernel.RegisterForDisposal(_serverInputChannel);
             var _ = kernelServer.RunAsync();
 
             _disposables.Add(output.SubscribeToPocketLogger());
@@ -168,12 +169,30 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
 
         private async Task WaitForCompletion()
         {
-            await _kernel.KernelEvents.ObserveOn(TaskPoolScheduler.Default).FirstAsync(e => e is CommandSucceeded or CommandFailed);
+            var semaphore = new SemaphoreSlim(0, 1);
+            var sub = _kernel.KernelEvents.ObserveOn(TaskPoolScheduler.Default).Where(e => e is CommandSucceeded or CommandFailed).Take(1).Subscribe(
+                _ =>
+                {
+                    semaphore.Release();
+                });
+
+            await semaphore.WaitAsync();
+            sub.Dispose();
+            semaphore.Dispose();
         }
 
         private async Task WaitForCompletion(string commandToken)
         {
-            await _kernel.KernelEvents.ObserveOn(TaskPoolScheduler.Default).FirstAsync(e => e is CommandSucceeded or CommandFailed && e.Command.GetToken() == commandToken);
+            var semaphore = new SemaphoreSlim(0, 1);
+            var sub = _kernel.KernelEvents.ObserveOn(TaskPoolScheduler.Default).Where(e => e is CommandSucceeded or CommandFailed && e.Command.GetToken() == commandToken).Take(1).Subscribe(
+                 _ =>
+                 {
+                     semaphore.Release();
+                 });
+
+             await semaphore.WaitAsync();
+             sub.Dispose();
+             semaphore.Dispose();
         }
 
         [Fact]
@@ -245,46 +264,41 @@ namespace Microsoft.DotNet.Interactive.Tests.Server
             }
         }
 
-        class RecordingKernelCommandAndEventReceiver : KernelCommandAndEventReceiverBase
+        class RecordingKernelCommandAndEventReceiver : IKernelCommandAndEventReceiver,IDisposable
         {
-            private readonly Subject<string> _receiver = new();
-            private readonly ConcurrentQueue<string> _queue;
+            private readonly Subject<string> _queue = new();
+            private readonly KernelCommandAndEventObservableReceiver _internalReceiver;
 
             public RecordingKernelCommandAndEventReceiver()
             {
-                _queue = new ConcurrentQueue<string>();
-                _receiver.Subscribe(message =>
-                {
-                    _queue.Enqueue(message);
-                });
+                _internalReceiver = new KernelCommandAndEventObservableReceiver(_queue);
+
             }
 
             public void Send(string kernelCommandOrEvent)
             {
-                _receiver.OnNext(kernelCommandOrEvent);
+                _queue.OnNext(kernelCommandOrEvent);
             }
 
             public void Send(KernelCommand kernelCommand)
             {
-                _receiver.OnNext(KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)));
+                Send(KernelCommandEnvelope.Serialize(KernelCommandEnvelope.Create(kernelCommand)));
             }
 
             public void Send(KernelEvent kernelEvent)
             {
-                _receiver.OnNext(KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)));
+                Send(KernelEventEnvelope.Serialize(KernelEventEnvelope.Create(kernelEvent)));
             }
 
-            protected override async Task<string> ReadMessageAsync(CancellationToken cancellationToken)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
 
-                if (_queue.TryDequeue(out var message))
-                {
-                    return message;
-                }
-                await _receiver.FirstAsync();
-                _queue.TryDequeue(out message);
-                return message;
+            public void Dispose()
+            {
+                _internalReceiver.Dispose();
+            }
+
+            public IAsyncEnumerable<CommandOrEvent> CommandsOrEventsAsync(CancellationToken cancellationToken)
+            {
+                return _internalReceiver.CommandsOrEventsAsync(cancellationToken);
             }
         }
     }

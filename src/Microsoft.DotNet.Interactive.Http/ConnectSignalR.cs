@@ -25,11 +25,12 @@ namespace Microsoft.DotNet.Interactive.Http
 
             await connection.StartAsync();
 
-            var client = connection.CreateKernelClient();
-            var proxyKernel = new ProxyKernel(options.KernelName, client);
             await connection.SendAsync("connect");
 
-            proxyKernel.RegisterForDisposal(client);
+            var receiver = new KernelCommandAndEventSignalRHubConnectionReceiver(connection);
+            var sender = new KernelCommandAndEventSignalRHubConnectionSender(connection);
+            var proxyKernel = new ProxyKernel2(options.KernelName, receiver, sender);
+            proxyKernel.RegisterForDisposal(receiver);
             proxyKernel.RegisterForDisposal(async () =>
             {
                 await connection.DisposeAsync();
