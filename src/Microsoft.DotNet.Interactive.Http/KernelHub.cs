@@ -25,7 +25,26 @@ namespace Microsoft.DotNet.Interactive.Http
             await _connection.Kernel.SendAsync(command);
         }
 
+        public async Task KernelCommandFromServer(string kernelCommandEnvelope)
+        {
+            var envelope = KernelCommandEnvelope.Deserialize(kernelCommandEnvelope);
+            var command = envelope.Command;
+            await _connection.Kernel.SendAsync(command);
+        }
+
+        public async Task KernelEventFromRemote(string kernelEventEnvelope)
+        {
+            var envelope = KernelEventEnvelope.Deserialize(kernelEventEnvelope);
+            await _connection.HandleKernelEventFromClientAsync(envelope);
+        }
+
         public async Task KernelEvent(string kernelEventEnvelope)
+        {
+            var envelope = KernelEventEnvelope.Deserialize(kernelEventEnvelope);
+            await _connection.HandleKernelEventFromClientAsync(envelope);
+        }
+
+        public async Task KernelEventFromRemoteEvent(string kernelEventEnvelope)
         {
             var envelope = KernelEventEnvelope.Deserialize(kernelEventEnvelope);
             await _connection.HandleKernelEventFromClientAsync(envelope);
