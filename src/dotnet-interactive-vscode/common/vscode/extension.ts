@@ -125,13 +125,13 @@ export async function activate(context: vscode.ExtensionContext) {
         });
 
         await transport.waitForReady();
-
+        let externalUri = vscode.Uri.parse(`http://127.0.0.1:${transport.httpPort}`);
         try {
-            let externalUri = vscode.Uri.parse(`http://127.0.0.1:${transport.httpPort}`);
+
             await transport.setExternalUri(externalUri);
         }
         catch (e) {
-            vscode.window.showErrorMessage(`Error configuring http connection with .NET Interactive on ${kernelUri.toString()} : ${e.message}`);
+            vscode.window.showErrorMessage(`Error configuring http connection with .NET Interactive on ${externalUri.toString()} : ${e.message}`);
         }
 
         return transport;
