@@ -123,11 +123,16 @@ export async function activate(context: vscode.ExtensionContext) {
         const transport = new StdioKernelTransport(notebookPath, processStart, diagnosticsChannel, vscode.Uri.parse, notification, (pid, code, signal) => {
             clientMapper.closeClient({ fsPath: notebookPath }, false);
         });
+
         await transport.waitForReady();
 
-        let externalUri = await vscode.env.asExternalUri(vscode.Uri.parse(`http://localhost:${transport.httpPort}`));
-        //create tunnel for teh kernel transport
-        await transport.setExternalUri(externalUri);
+        try {
+            let externalUri = vscode.Uri.parse(`http://127.0.0.1:${transport.httpPort}`);
+            await transport.setExternalUri(externalUri);
+        }
+        catch (e) {
+            vscode.window.showErrorMessage(`Error configuring http connection with .NET Interactive on ${kernelUri.toString()} : ${e.message}`);
+        }
 
         return transport;
     }, diagnosticsChannel);
