@@ -9,6 +9,7 @@ import { provideCompletion } from './../../languageServices/completion';
 import { provideHover } from './../../languageServices/hover';
 import { provideSignatureHelp } from '../../languageServices/signatureHelp';
 import { CommandSucceededType, CompletionsProducedType, HoverTextProducedType, SignatureHelpProducedType } from '../../interfaces/contracts';
+import { createUri } from '../../utilities';
 
 describe('LanguageProvider tests', () => {
     it('CompletionProvider', async () => {
@@ -39,11 +40,11 @@ describe('LanguageProvider tests', () => {
                 }
             ]
         }));
-        clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        clientMapper.getOrAddClient(createUri('test/path'));
 
         let code = 'Math.';
         let document = {
-            uri: { fsPath: 'test/path' },
+            uri: createUri('test/path'),
             getText: () => code
         };
         let position = {
@@ -102,11 +103,11 @@ describe('LanguageProvider tests', () => {
                 }
             ]
         }));
-        clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        clientMapper.getOrAddClient(createUri('test/path'));
 
         let code = 'var x = 1234;';
         let document = {
-            uri: { fsPath: 'test/path' },
+            uri: createUri('test/path'),
             getText: () => code,
         };
         let position = {
@@ -169,11 +170,11 @@ describe('LanguageProvider tests', () => {
                 }
             ]
         }));
-        clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        clientMapper.getOrAddClient(createUri('test/path'));
 
         let code = 'Console.WriteLine(true';
         let document = {
-            uri: { fsPath: 'test/path' },
+            uri: createUri('test/path'),
             getText: () => code,
         };
         let position = {

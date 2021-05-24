@@ -2,8 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import * as fs from 'fs';
-import * as vscode from 'vscode';
+import * as os from 'os';
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { ClientMapper } from '../clientMapper';
 
 import { StdioKernelTransport } from '../stdioKernelTransport';
@@ -13,15 +14,15 @@ import { registerAcquisitionCommands, registerKernelCommands, registerFileComman
 import { getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType } from '../interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
-import { executeSafe, isDotNetUpToDate, processArguments } from '../utilities';
+import { executeSafe, getWorkingDirectoryForNotebook, isDotNetUpToDate, processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 
 import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 
-import { isInsidersBuild } from './vscodeUtilities';
+import { isInsidersBuild, isStableBuild } from './vscodeUtilities';
 import { getDotNetMetadata } from '../ipynbUtilities';
 
-export const KernelId = 'dotnet-interactive';
+export const KernelIdForJupyter = 'dotnet-interactive-for-jupyter';
 
 export class CachedDotNetPathManager {
     private dotNetPath: string = 'dotnet'; // default to global tool if possible
@@ -90,7 +91,7 @@ export async function activate(context: vscode.ExtensionContext) {
     });
 
     // register with VS Code
-    const clientMapper = new ClientMapper(async (notebookPath) => {
+    const clientMapper = new ClientMapper(async (notebookUri) => {
         if (!await checkForDotNetSdk(minDotNetSdkVersion!)) {
             const message = 'Unable to find appropriate .NET SDK.';
             vscode.window.showErrorMessage(message);
@@ -110,18 +111,20 @@ export async function activate(context: vscode.ExtensionContext) {
             workingDirectory: config.get<string>('kernelTransportWorkingDirectory')!
         };
 
-        // ensure a reasonable working directory is selected
-        const fallbackWorkingDirectory = (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0)
-            ? vscode.workspace.workspaceFolders[0].uri.fsPath
-            : '.';
+        // try to use $HOME/Downloads as a fallback for remote notebooks, but use the home directory if all else fails
+        const homeDir = os.homedir();
+        const downloadsDir = path.join(homeDir, 'Downloads');
+        const fallbackWorkingDirectory = fs.existsSync(downloadsDir) ? downloadsDir : homeDir;
 
-        const processStart = processArguments(argsTemplate, notebookPath, fallbackWorkingDirectory, DotNetPathManager.getDotNetPath(), launchOptions!.workingDirectory);
+        const workspaceFolderUris = vscode.workspace.workspaceFolders?.map(folder => folder.uri) || [];
+        const workingDirectory = getWorkingDirectoryForNotebook(notebookUri, workspaceFolderUris, fallbackWorkingDirectory);
+        const processStart = processArguments(argsTemplate, workingDirectory, DotNetPathManager.getDotNetPath(), launchOptions!.workingDirectory);
         let notification = {
             displayError: async (message: string) => { await vscode.window.showErrorMessage(message, { modal: false }); },
             displayInfo: async (message: string) => { await vscode.window.showInformationMessage(message, { modal: false }); },
         };
-        const transport = new StdioKernelTransport(notebookPath, processStart, diagnosticsChannel, vscode.Uri.parse, notification, (pid, code, signal) => {
-            clientMapper.closeClient({ fsPath: notebookPath }, false);
+        const transport = new StdioKernelTransport(notebookUri.toString(), processStart, diagnosticsChannel, vscode.Uri.parse, notification, (pid, code, signal) => {
+            clientMapper.closeClient(notebookUri, false);
         });
 
         await transport.waitForReady();

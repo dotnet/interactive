@@ -76,7 +76,7 @@ abstract class DotNetNotebookSerializer implements vscode.NotebookSerializer {
     }
 
     private getClient(): Promise<InteractiveClient> {
-        return this.clientMapper.getOrAddClient({ fsPath: this.serializerId });
+        return this.clientMapper.getOrAddClient({ toString: () => this.serializerId });
     }
 
     private getNotebookName(): string {

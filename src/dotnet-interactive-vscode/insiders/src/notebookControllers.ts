@@ -10,15 +10,14 @@ import * as diagnostics from './common/vscode/diagnostics';
 import * as utilities from './common/utilities';
 import * as versionSpecificFunctions from './versionSpecificFunctions';
 import * as vscodeUtilities from './common/vscode/vscodeUtilities';
-import { getSimpleLanguage, isDotnetInteractiveLanguage, notebookCellLanguages } from './common/interactiveNotebook';
+import { getSimpleLanguage, isDotnetInteractiveLanguage, jupyterViewType, notebookCellLanguages } from './common/interactiveNotebook';
 import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, isDotNetNotebookMetadata, withDotNetKernelMetadata } from './common/ipynbUtilities';
 import { reshapeOutputValueForVsCode } from './common/interfaces/utilities';
-import { selectDotNetInteractiveKernel } from './common/vscode/commands';
+import { selectDotNetInteractiveKernelForJupyter } from './common/vscode/commands';
 
 const executionTasks: Map<string, vscode.NotebookCellExecutionTask> = new Map();
 
 const viewType = 'dotnet-interactive';
-const jupyterViewType = 'jupyter-notebook';
 
 export class DotNetNotebookKernel {
 
@@ -55,7 +54,7 @@ export class DotNetNotebookKernel {
         this.disposables.push(vscode.notebook.onDidOpenNotebookDocument(async notebook => {
             if (notebook.viewType === jupyterViewType && isDotNetNotebook(notebook)) {
                 jupyterController.updateNotebookAffinity(notebook, vscode.NotebookControllerAffinity.Preferred);
-                await selectDotNetInteractiveKernel();
+                await selectDotNetInteractiveKernelForJupyter();
                 await updateNotebookMetadata(notebook, clientMapper);
             }
         }));
