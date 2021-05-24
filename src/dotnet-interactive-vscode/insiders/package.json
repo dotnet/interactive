@@ -56,7 +56,7 @@
     "untrustedWorkspaces": {
       "supported": true
     },
-    "virtualWorkspaces": false
+    "virtualWorkspaces": true
   },
   "contributes": {
     "notebooks": [

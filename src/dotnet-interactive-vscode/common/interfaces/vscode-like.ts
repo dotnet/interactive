@@ -45,6 +45,7 @@ export interface NotebookCellMetadata {
 
 export interface Uri {
     fsPath: string;
+    scheme: string;
     toString: () => string;
 }
 

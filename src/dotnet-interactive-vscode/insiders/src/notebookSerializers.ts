@@ -11,7 +11,7 @@ import { defaultNotebookCellLanguage, getNotebookSpecificLanguage, getSimpleLang
 import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
 import { getEol, vsCodeCellOutputToContractCellOutput } from './common/vscode/vscodeUtilities';
 import { Eol } from './common/interfaces';
-import { DotNetNotebookContentProviderWrapper } from './notebookContentProviderWrapper';
+import { createUri } from './common/utilities';
 
 abstract class DotNetNotebookSerializer implements vscode.NotebookSerializer {
 
@@ -21,19 +21,12 @@ abstract class DotNetNotebookSerializer implements vscode.NotebookSerializer {
 
     constructor(
         notebookType: string,
-        registerAsSerializer: boolean,
         private readonly clientMapper: ClientMapper,
         private readonly outputChannel: OutputChannelAdapter,
         private readonly extension: string,
     ) {
         this.eol = getEol();
-        if (registerAsSerializer) {
-            this.disposable = vscode.notebook.registerNotebookSerializer(notebookType, this);
-        } else {
-            // temporarly workaround for https://github.com/microsoft/vscode/issues/121974
-            const contentProviderWrapper = new DotNetNotebookContentProviderWrapper(this, this.outputChannel);
-            this.disposable = vscode.notebook.registerNotebookContentProvider(notebookType, contentProviderWrapper);
-        }
+        this.disposable = vscode.notebook.registerNotebookSerializer(notebookType, this);
     }
 
     dispose(): void {
@@ -76,7 +69,7 @@ abstract class DotNetNotebookSerializer implements vscode.NotebookSerializer {
     }
 
     private getClient(): Promise<InteractiveClient> {
-        return this.clientMapper.getOrAddClient({ fsPath: this.serializerId });
+        return this.clientMapper.getOrAddClient(createUri(this.serializerId));
     }
 
     private getNotebookName(): string {
@@ -95,7 +88,7 @@ function toNotebookCell(cell: vscode.NotebookCellData): contracts.NotebookCell {
 
 export class DotNetDibNotebookSerializer extends DotNetNotebookSerializer {
     constructor(clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
-        super('dotnet-interactive', false, clientMapper, outputChannel, '.dib');
+        super('dotnet-interactive', clientMapper, outputChannel, '.dib');
     }
 }
 

@@ -9,7 +9,7 @@ export class ClientMapper {
     private clientMap: Map<string, Promise<InteractiveClient>> = new Map();
     private clientCreationCallbackMap: Map<string, (client: InteractiveClient) => Promise<void>> = new Map();
 
-    constructor(readonly kernelTransportCreator: (notebookPath: string) => Promise<KernelTransport>, readonly diagnosticChannel?: ReportChannel) {
+    constructor(readonly kernelTransportCreator: (notebookUri: Uri) => Promise<KernelTransport>, readonly diagnosticChannel?: ReportChannel) {
     }
 
     private writeDiagnosticMessage(message: string) {
@@ -19,7 +19,7 @@ export class ClientMapper {
     }
 
     static keyFromUri(uri: Uri): string {
-        return uri.fsPath;
+        return uri.toString();
     }
 
     tryGetClient(uri: Uri): Promise<InteractiveClient | undefined> {
@@ -41,7 +41,7 @@ export class ClientMapper {
             this.writeDiagnosticMessage(`creating client for '${key}'`);
             clientPromise = new Promise<InteractiveClient>(async (resolve, reject) => {
                 try {
-                    const transport = await this.kernelTransportCreator(uri.fsPath);
+                    const transport = await this.kernelTransportCreator(uri);
                     const client = new InteractiveClient(transport);
 
                     let onCreate = this.clientCreationCallbackMap.get(key);
@@ -98,6 +98,7 @@ export class ClientMapper {
     }
 
     isDotNetClient(uri: Uri): boolean {
-        return this.clientMap.has(uri.fsPath);
+        const key = ClientMapper.keyFromUri(uri);
+        return this.clientMap.has(key);
     }
 }

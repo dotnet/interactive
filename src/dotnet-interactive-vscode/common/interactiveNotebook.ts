@@ -41,8 +41,10 @@ export function isDotnetInteractiveLanguage(language: string): boolean {
     return language.startsWith(notebookLanguagePrefix);
 }
 
+export const jupyterViewType = 'jupyter-notebook';
+
 export function isJupyterNotebookViewType(viewType: string): boolean {
-    return viewType === 'jupyter-notebook';
+    return viewType === jupyterViewType;
 }
 
 export function languageToCellKind(language: string): NotebookCellKind {

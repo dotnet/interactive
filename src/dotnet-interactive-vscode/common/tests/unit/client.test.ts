@@ -10,7 +10,7 @@ import { ClientMapper } from '../../clientMapper';
 import { TestKernelTransport } from './testKernelTransport';
 import { CallbackTestKernelTransport } from './callbackTestKernelTransport';
 import { CodeSubmissionReceivedType, CompleteCodeSubmissionReceivedType, CommandSucceededType, DisplayedValueProducedType, ReturnValueProducedType, DisplayedValueUpdatedType, CommandFailedType } from '../../interfaces/contracts';
-import { debounce, wait } from '../../utilities';
+import { createUri, debounce, wait } from '../../utilities';
 import * as vscodeLike from '../../interfaces/vscode-like';
 
 describe('InteractiveClient tests', () => {
@@ -70,7 +70,7 @@ describe('InteractiveClient tests', () => {
                 }
             ]
         }));
-        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let client = await clientMapper.getOrAddClient(createUri('test/path'));
         let result: Array<vscodeLike.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
@@ -150,7 +150,7 @@ describe('InteractiveClient tests', () => {
                 }
             ]
         }));
-        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let client = await clientMapper.getOrAddClient(createUri('test/path'));
         let result: Array<vscodeLike.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
@@ -245,7 +245,7 @@ describe('InteractiveClient tests', () => {
                 }
             ]
         }));
-        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let client = await clientMapper.getOrAddClient(createUri('test/path'));
         let result: Array<vscodeLike.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
@@ -325,7 +325,7 @@ describe('InteractiveClient tests', () => {
                 }
             ]
         }));
-        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let client = await clientMapper.getOrAddClient(createUri('test/path'));
 
         // execute first command
         let result1: Array<vscodeLike.NotebookCellOutput> = [];
@@ -372,7 +372,7 @@ describe('InteractiveClient tests', () => {
                 }
             ]
         }));
-        clientMapper.getOrAddClient({ fsPath: 'test/path' }).then(client => {
+        clientMapper.getOrAddClient(createUri('test/path')).then(client => {
             client.execute('bad-code-that-will-fail', 'csharp', _ => { }, _ => { }, { token }).then(result => {
                 done(`expected execution to fail promise, but passed with: ${result}`);
             }).catch(_err => {
@@ -391,9 +391,9 @@ describe('InteractiveClient tests', () => {
             transportCreated = true;
             return new TestKernelTransport({});
         });
-        clientMapper.getOrAddClient({ fsPath: 'test-path.dib' }).then(_client => {
-            clientMapper.reassociateClient({ fsPath: 'test-path.dib' }, { fsPath: 'updated-path.dib' });
-            clientMapper.getOrAddClient({ fsPath: 'updated-path.dib' }).then(_reassociatedClient => {
+        clientMapper.getOrAddClient(createUri('test-path.dib')).then(_client => {
+            clientMapper.reassociateClient(createUri('test-path.dib'), createUri('updated-path.dib'));
+            clientMapper.getOrAddClient(createUri('updated-path.dib')).then(_reassociatedClient => {
                 done();
             });
         });
@@ -409,11 +409,11 @@ describe('InteractiveClient tests', () => {
             transportCreated = true;
             return new TestKernelTransport({});
         });
-        await clientMapper.getOrAddClient({ fsPath: 'test-path.dib' });
-        clientMapper.reassociateClient({ fsPath: 'not-a-tracked-file.txt' }, { fsPath: 'also-not-a-tracked-file.txt' });
-        const _existingClient = await clientMapper.getOrAddClient({ fsPath: 'test-path.dib' });
-        expect(clientMapper.isDotNetClient({ fsPath: 'not-a-tracked-file.txt' })).to.be.false;
-        expect(clientMapper.isDotNetClient({ fsPath: 'also-not-a-tracked-file.txt' })).to.be.false;
+        await clientMapper.getOrAddClient(createUri('test-path.dib'));
+        clientMapper.reassociateClient(createUri('not-a-tracked-file.txt'), createUri('also-not-a-tracked-file.txt'));
+        const _existingClient = await clientMapper.getOrAddClient(createUri('test-path.dib'));
+        expect(clientMapper.isDotNetClient(createUri('not-a-tracked-file.txt'))).to.be.false;
+        expect(clientMapper.isDotNetClient(createUri('also-not-a-tracked-file.txt'))).to.be.false;
     });
 
     it('execution prevents diagnostics request forwarding', async () => {
@@ -435,7 +435,7 @@ describe('InteractiveClient tests', () => {
             diagnosticsCallbackFired = true;
         });
 
-        const client = await clientMapper.getOrAddClient({ fsPath: 'test-path.dib' });
+        const client = await clientMapper.getOrAddClient(createUri('test-path.dib'));
         await client.execute("1+1", "csharp", (_outputs) => { }, (_diagnostics) => { }, { token: token, id: "id0" });
         await wait(1000);
         expect(diagnosticsCallbackFired).to.be.false;
@@ -448,7 +448,7 @@ describe('InteractiveClient tests', () => {
                 throw new Error('expected exception during submit');
             },
         }));
-        clientMapper.getOrAddClient({ fsPath: 'test-path.dib' }).then(client => {
+        clientMapper.getOrAddClient(createUri('test-path.dib')).then(client => {
             expect(client.execute("1+1", "csharp", _outputs => { }, _diagnostics => { }, { token, id: '' })).eventually.rejectedWith('expected exception during submit').notify(done);
         });
     });
@@ -461,7 +461,7 @@ describe('InteractiveClient tests', () => {
             },
         }));
         let seenOutputs: Array<vscodeLike.NotebookCellOutput> = [];
-        clientMapper.getOrAddClient({ fsPath: 'test-path.dib' }).then(client => {
+        clientMapper.getOrAddClient(createUri('test-path.dib')).then(client => {
             expect(client.execute("1+1", "csharp", outputs => { seenOutputs = outputs; }, _diagnostics => { }, { token, id: '' })).eventually.rejected.then(() => {
                 try {
                     expect(seenOutputs).to.deep.equal([{
@@ -483,7 +483,7 @@ describe('InteractiveClient tests', () => {
         const clientMapper = new ClientMapper(async _notebookPath => {
             throw new Error('simulated error during transport creation');
         });
-        expect(clientMapper.getOrAddClient({ fsPath: 'fake-notebook' })).eventually.rejectedWith('simulated error during transport creation').notify(done);
+        expect(clientMapper.getOrAddClient(createUri('fake-notebook'))).eventually.rejectedWith('simulated error during transport creation').notify(done);
     });
 
 });

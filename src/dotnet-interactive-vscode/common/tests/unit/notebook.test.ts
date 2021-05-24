@@ -23,6 +23,7 @@ import {
     StandardOutputValueProducedType,
 } from '../../interfaces/contracts';
 import { withFakeGlobalStorageLocation } from './utilities';
+import { createUri } from '../../utilities';
 import { backupNotebook, languageToCellKind } from '../../interactiveNotebook';
 import * as vscodeLike from '../../interfaces/vscode-like';
 
@@ -67,7 +68,7 @@ describe('Notebook tests', () => {
                     }
                 ]
             }));
-            let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
+            let client = await clientMapper.getOrAddClient(createUri('test/path'));
             let result: Array<vscodeLike.NotebookCellOutput> = [];
             await client.execute(code, language, outputs => result = outputs, _ => { }, { token });
             expect(result).to.deep.equal([
@@ -153,7 +154,7 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let client = await clientMapper.getOrAddClient(createUri('test/path'));
         let result: Array<vscodeLike.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
@@ -247,7 +248,7 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let client = await clientMapper.getOrAddClient(createUri('test/path'));
         let result: Array<vscodeLike.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
@@ -311,7 +312,7 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let client = await clientMapper.getOrAddClient(createUri('test/path'));
         let result: Array<vscodeLike.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
@@ -381,7 +382,7 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        clientMapper.getOrAddClient({ fsPath: 'test/path' }).then(client => {
+        clientMapper.getOrAddClient(createUri('test/path')).then(client => {
             let diagnostics: Array<Diagnostic> = [];
             client.execute(code, 'csharp', _ => { }, diags => diagnostics = diags, { token }).then(result => {
                 done(`expected execution to fail, but it passed with: ${result}`);
@@ -457,7 +458,7 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let client = await clientMapper.getOrAddClient(createUri('test/path'));
         let diagnostics: Array<Diagnostic> = [];
         await client.execute(code, 'csharp', _ => { }, diags => diagnostics = diags, { token });
         expect(diagnostics).to.deep.equal([
@@ -514,7 +515,7 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = await clientMapper.getOrAddClient({ fsPath: 'test/path' });
+        let client = await clientMapper.getOrAddClient(createUri('test/path'));
         const diagnostics = await client.getDiagnostics('csharp', code, token);
         expect(diagnostics).to.deep.equal([
             {
