@@ -22,17 +22,17 @@ import {
     ReturnValueProducedType,
     StandardOutputValueProducedType,
 } from '../../interfaces/contracts';
-import { withFakeGlobalStorageLocation } from './utilities';
+import { createKernelTransportConfig, withFakeGlobalStorageLocation } from './utilities';
 import { createUri } from '../../utilities';
 import { backupNotebook, languageToCellKind } from '../../interactiveNotebook';
 import * as vscodeLike from '../../interfaces/vscode-like';
 
 describe('Notebook tests', () => {
-    for (let language of ['csharp', 'fsharp']) {
+    for (const language of ['csharp', 'fsharp']) {
         it(`executes and returns expected value: ${language}`, async () => {
-            let token = '123';
-            let code = '1+1';
-            let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
+            const token = '123';
+            const code = '1+1';
+            const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
                 'SubmitCode': [
                     {
                         eventType: CodeSubmissionReceivedType,
@@ -68,7 +68,8 @@ describe('Notebook tests', () => {
                     }
                 ]
             }));
-            let client = await clientMapper.getOrAddClient(createUri('test/path'));
+            const clientMapper = new ClientMapper(config);
+            const client = await clientMapper.getOrAddClient(createUri('test/path'));
             let result: Array<vscodeLike.NotebookCellOutput> = [];
             await client.execute(code, language, outputs => result = outputs, _ => { }, { token });
             expect(result).to.deep.equal([
@@ -86,13 +87,13 @@ describe('Notebook tests', () => {
     }
 
     it('multiple stdout values cause the output to grow', async () => {
-        let token = '123';
-        let code = `
+        const token = '123';
+        const code = `
 Console.WriteLine(1);
 Console.WriteLine(1);
 Console.WriteLine(1);
 `;
-        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
+        const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -154,7 +155,8 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = await clientMapper.getOrAddClient(createUri('test/path'));
+        const clientMapper = new ClientMapper(config);
+        const client = await clientMapper.getOrAddClient(createUri('test/path'));
         let result: Array<vscodeLike.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
@@ -189,9 +191,9 @@ Console.WriteLine(1);
     });
 
     it('updated values are replaced instead of added', async () => {
-        let token = '123';
-        let code = '#r nuget:Newtonsoft.Json';
-        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
+        const token = '123';
+        const code = '#r nuget:Newtonsoft.Json';
+        const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -248,7 +250,8 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = await clientMapper.getOrAddClient(createUri('test/path'));
+        const clientMapper = new ClientMapper(config);
+        const client = await clientMapper.getOrAddClient(createUri('test/path'));
         let result: Array<vscodeLike.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
@@ -274,9 +277,9 @@ Console.WriteLine(1);
     });
 
     it('returned json is properly parsed', async () => {
-        let token = '123';
-        let code = 'JObject.FromObject(new { a = 1, b = false })';
-        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
+        const token = '123';
+        const code = 'JObject.FromObject(new { a = 1, b = false })';
+        const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -312,7 +315,8 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = await clientMapper.getOrAddClient(createUri('test/path'));
+        const clientMapper = new ClientMapper(config);
+        const client = await clientMapper.getOrAddClient(createUri('test/path'));
         let result: Array<vscodeLike.NotebookCellOutput> = [];
         await client.execute(code, 'csharp', outputs => result = outputs, _ => { }, { token });
         expect(result).to.deep.equal([
@@ -332,9 +336,9 @@ Console.WriteLine(1);
     });
 
     it('diagnostics are reported on CommandFailed', (done) => {
-        let token = '123';
-        let code = 'Console.WriteLin();';
-        let clientMapper = new ClientMapper(async (_notebookPath) => new TestKernelTransport({
+        const token = '123';
+        const code = 'Console.WriteLin();';
+        const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -382,6 +386,7 @@ Console.WriteLine(1);
                 }
             ]
         }));
+        const clientMapper = new ClientMapper(config);
         clientMapper.getOrAddClient(createUri('test/path')).then(client => {
             let diagnostics: Array<Diagnostic> = [];
             client.execute(code, 'csharp', _ => { }, diags => diagnostics = diags, { token }).then(result => {
@@ -410,9 +415,9 @@ Console.WriteLine(1);
     });
 
     it('diagnostics are reported on CommandSucceeded', async () => {
-        let token = '123';
-        let code = 'Console.WriteLine();';
-        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
+        const token = '123';
+        const code = 'Console.WriteLine();';
+        const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
             'SubmitCode': [
                 {
                     eventType: CodeSubmissionReceivedType,
@@ -458,7 +463,8 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = await clientMapper.getOrAddClient(createUri('test/path'));
+        const clientMapper = new ClientMapper(config);
+        const client = await clientMapper.getOrAddClient(createUri('test/path'));
         let diagnostics: Array<Diagnostic> = [];
         await client.execute(code, 'csharp', _ => { }, diags => diagnostics = diags, { token });
         expect(diagnostics).to.deep.equal([
@@ -481,9 +487,9 @@ Console.WriteLine(1);
     });
 
     it('diagnostics are reported when directly requested', async () => {
-        let token = '123';
-        let code = 'Console.WriteLine();';
-        let clientMapper = new ClientMapper(async (notebookPath) => new TestKernelTransport({
+        const token = '123';
+        const code = 'Console.WriteLine();';
+        const config = createKernelTransportConfig(async (_notebookPath) => new TestKernelTransport({
             'RequestDiagnostics': [
                 {
                     eventType: DiagnosticsProducedType,
@@ -515,7 +521,8 @@ Console.WriteLine(1);
                 }
             ]
         }));
-        let client = await clientMapper.getOrAddClient(createUri('test/path'));
+        const clientMapper = new ClientMapper(config);
+        const client = await clientMapper.getOrAddClient(createUri('test/path'));
         const diagnostics = await client.getDiagnostics('csharp', code, token);
         expect(diagnostics).to.deep.equal([
             {

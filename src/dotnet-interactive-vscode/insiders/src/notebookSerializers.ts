@@ -92,6 +92,12 @@ export class DotNetDibNotebookSerializer extends DotNetNotebookSerializer {
     }
 }
 
+export class DotNetLegacyNotebookSerializer extends DotNetNotebookSerializer {
+    constructor(clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
+        super('dotnet-interactive-legacy', clientMapper, outputChannel, '.dib');
+    }
+}
+
 function toVsCodeNotebookCellData(cell: contracts.NotebookCell): vscode.NotebookCellData {
     return new vscode.NotebookCellData(
         <number>languageToCellKind(cell.language),

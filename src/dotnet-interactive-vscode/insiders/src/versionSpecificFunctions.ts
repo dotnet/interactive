@@ -12,6 +12,7 @@ import * as notebookControllers from './notebookControllers';
 import * as notebookSerializers from './notebookSerializers';
 import { ClientMapper } from './common/clientMapper';
 import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
+import { ErrorOutputCreator } from './common/interactiveClient';
 
 export function cellAt(document: vscode.NotebookDocument, index: number): vscode.NotebookCell {
     return document.cellAt(index);
@@ -29,9 +30,15 @@ export function getCells(document: vscode.NotebookDocument | undefined): Array<v
     return [];
 }
 
-export function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter, ...preloadUris: vscode.Uri[]) {
-    context.subscriptions.push(new notebookControllers.DotNetNotebookKernel(clientMapper, preloadUris));
+export function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter, createErrorOutput: ErrorOutputCreator, ...preloadUris: vscode.Uri[]) {
+    const config = {
+        clientMapper,
+        preloadUris,
+        createErrorOutput,
+    };
+    context.subscriptions.push(new notebookControllers.DotNetNotebookKernel(config));
     context.subscriptions.push(new notebookSerializers.DotNetDibNotebookSerializer(clientMapper, outputChannel));
+    context.subscriptions.push(new notebookSerializers.DotNetLegacyNotebookSerializer(clientMapper, outputChannel));
 }
 
 export function endExecution(cell: vscode.NotebookCell, success: boolean) {

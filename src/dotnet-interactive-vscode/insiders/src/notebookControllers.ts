@@ -7,24 +7,30 @@ import { ClientMapper } from './common/clientMapper';
 import * as contracts from './common/interfaces/contracts';
 import * as vscodeLike from './common/interfaces/vscode-like';
 import * as diagnostics from './common/vscode/diagnostics';
-import * as utilities from './common/utilities';
-import * as versionSpecificFunctions from './versionSpecificFunctions';
 import * as vscodeUtilities from './common/vscode/vscodeUtilities';
 import { getSimpleLanguage, isDotnetInteractiveLanguage, jupyterViewType, notebookCellLanguages } from './common/interactiveNotebook';
 import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, isDotNetNotebookMetadata, withDotNetKernelMetadata } from './common/ipynbUtilities';
 import { reshapeOutputValueForVsCode } from './common/interfaces/utilities';
 import { selectDotNetInteractiveKernelForJupyter } from './common/vscode/commands';
+import { ErrorOutputCreator } from './common/interactiveClient';
 
 const executionTasks: Map<string, vscode.NotebookCellExecutionTask> = new Map();
 
 const viewType = 'dotnet-interactive';
+const legacyViewType = 'dotnet-interactive-legacy';
+
+export interface DotNetNotebookKernelConfiguration {
+    clientMapper: ClientMapper,
+    preloadUris: vscode.Uri[],
+    createErrorOutput: ErrorOutputCreator,
+}
 
 export class DotNetNotebookKernel {
 
     private disposables: { dispose(): void }[] = [];
 
-    constructor(private readonly clientMapper: ClientMapper, preloadUris: vscode.Uri[]) {
-        const preloads = preloadUris.map(uri => new vscode.NotebookKernelPreload(uri));
+    constructor(readonly config: DotNetNotebookKernelConfiguration) {
+        const preloads = config.preloadUris.map(uri => new vscode.NotebookKernelPreload(uri));
 
         // .dib execution
         const dibController = vscode.notebook.createNotebookController(
@@ -35,6 +41,16 @@ export class DotNetNotebookKernel {
             preloads
         );
         this.commonControllerInit(dibController);
+
+        // .dotnet-interactive execution
+        const legacyController = vscode.notebook.createNotebookController(
+            'dotnet-interactive-legacy',
+            legacyViewType,
+            '.NET Interactive',
+            this.executeHandler.bind(this),
+            preloads
+        );
+        this.commonControllerInit(legacyController);
 
         // .ipynb execution via Jupyter extension (optional)
         const jupyterController = vscode.notebook.createNotebookController(
@@ -47,7 +63,7 @@ export class DotNetNotebookKernel {
         jupyterController.onDidChangeNotebookAssociation(async e => {
             // update metadata
             if (e.selected) {
-                await updateNotebookMetadata(e.notebook, clientMapper);
+                await updateNotebookMetadata(e.notebook, this.config.clientMapper);
             }
         });
         this.commonControllerInit(jupyterController);
@@ -55,7 +71,7 @@ export class DotNetNotebookKernel {
             if (notebook.viewType === jupyterViewType && isDotNetNotebook(notebook)) {
                 jupyterController.updateNotebookAffinity(notebook, vscode.NotebookControllerAffinity.Preferred);
                 await selectDotNetInteractiveKernelForJupyter();
-                await updateNotebookMetadata(notebook, clientMapper);
+                await updateNotebookMetadata(notebook, this.config.clientMapper);
             }
         }));
     }
@@ -70,12 +86,12 @@ export class DotNetNotebookKernel {
             const documentUri = e.editor.document.uri;
             switch (e.message.command) {
                 case "getHttpApiEndpoint":
-                    this.clientMapper.tryGetClient(documentUri).then(client => {
+                    this.config.clientMapper.tryGetClient(documentUri).then(client => {
                         if (client) {
                             const uri = client.tryGetProperty<vscode.Uri>("externalUri");
                             controller.postMessage({ command: "configureFactories", endpointUri: uri?.toString() });
 
-                            this.clientMapper.onClientCreate(documentUri, async (client) => {
+                            this.config.clientMapper.onClientCreate(documentUri, async (client) => {
                                 const uri = client.tryGetProperty<vscode.Uri>("externalUri");
                                 await controller.postMessage({ command: "resetFactories", endpointUri: uri?.toString() });
                             });
@@ -102,10 +118,11 @@ export class DotNetNotebookKernel {
                     startTime: Date.now(),
                 });
 
+
                 executionTask.clearOutput(cell.index);
-                const client = await this.clientMapper.getOrAddClient(cell.notebook.uri);
+                const client = await this.config.clientMapper.getOrAddClient(cell.notebook.uri);
                 executionTask.token.onCancellationRequested(() => {
-                    const errorOutput = utilities.createErrorOutput("Cell execution cancelled by user");
+                    const errorOutput = this.config.createErrorOutput("Cell execution cancelled by user");
                     const resultPromise = () => updateCellOutputs(executionTask, cell, [...cell.outputs, errorOutput])
                         .then(() => endExecution(cell, false));
                     client.cancel()
@@ -127,7 +144,7 @@ export class DotNetNotebookKernel {
                     endExecution(cell, true)
                 ).catch(() => endExecution(cell, false));
             } catch (err) {
-                const errorOutput = utilities.createErrorOutput(`Error executing cell: ${err}`);
+                const errorOutput = this.config.createErrorOutput(`Error executing cell: ${err}`);
                 await updateCellOutputs(executionTask, cell, [errorOutput]);
                 endExecution(cell, false);
                 throw err;

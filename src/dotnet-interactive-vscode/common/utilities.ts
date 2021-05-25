@@ -73,15 +73,6 @@ export function createOutput(outputItems: Array<NotebookCellOutputItem>, outputI
     return output;
 }
 
-export function createErrorOutput(message: string, outputId?: string): NotebookCellOutput {
-    const outputItem: NotebookCellOutputItem = {
-        mime: ErrorOutputMimeType,
-        value: message,
-    };
-    const output = createOutput([outputItem], outputId);
-    return output;
-}
-
 export function isDotNetUpToDate(minVersion: string, commandResult: { code: number, output: string }): boolean {
     return commandResult.code === 0 && compareVersions.compare(commandResult.output, minVersion, '>=');
 }

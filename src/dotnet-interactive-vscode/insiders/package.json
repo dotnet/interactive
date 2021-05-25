@@ -42,6 +42,7 @@
   "activationEvents": [
     "onUri",
     "onNotebook:dotnet-interactive",
+    "onNotebook:dotnet-interactive-legacy",
     "onNotebook:*",
     "onCommand:dotnet-interactive.acquire",
     "onCommand:dotnet-interactive.newNotebook",
@@ -65,7 +66,16 @@
         "displayName": ".NET Interactive Notebook",
         "selector": [
           {
-            "filenamePattern": "*.{dib,dotnet-interactive}"
+            "filenamePattern": "*.dib"
+          }
+        ]
+      },
+      {
+        "viewType": "dotnet-interactive-legacy",
+        "displayName": ".NET Interactive Notebook",
+        "selector": [
+          {
+            "filenamePattern": "*.dotnet-interactive"
           }
         ]
       }

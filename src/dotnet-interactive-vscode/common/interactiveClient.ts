@@ -52,9 +52,18 @@ import {
     Cancel
 } from './interfaces/contracts';
 import { Eol } from './interfaces';
-import { clearDebounce, createErrorOutput, createOutput } from './utilities';
+import { clearDebounce, createOutput } from './utilities';
 
 import * as vscodeLike from './interfaces/vscode-like';
+
+export interface ErrorOutputCreator {
+    (message: string, outputId?: string): vscodeLike.NotebookCellOutput;
+}
+
+export interface InteractiveClientConfiguration {
+    readonly transport: KernelTransport,
+    readonly createErrorOutput: ErrorOutputCreator,
+}
 
 export class InteractiveClient {
     private nextOutputId: number = 1;
@@ -63,13 +72,13 @@ export class InteractiveClient {
     private deferredOutput: Array<vscodeLike.NotebookCellOutput> = [];
     private valueIdMap: Map<string, { idx: number, outputs: Array<vscodeLike.NotebookCellOutput>, observer: { (outputs: Array<vscodeLike.NotebookCellOutput>): void } }> = new Map<string, { idx: number, outputs: Array<vscodeLike.NotebookCellOutput>, observer: { (outputs: Array<vscodeLike.NotebookCellOutput>): void } }>();
 
-    constructor(readonly kernelTransport: KernelTransport) {
-        kernelTransport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
+    constructor(readonly config: InteractiveClientConfiguration) {
+        config.transport.subscribeToKernelEvents(eventEnvelope => this.eventListener(eventEnvelope));
     }
 
     public tryGetProperty<T>(propertyName: string): T | null {
         try {
-            return <T>((<any>this.kernelTransport)[propertyName]);
+            return <T>((<any>this.config.transport)[propertyName]);
         }
         catch {
             return null;
@@ -134,7 +143,7 @@ export class InteractiveClient {
                     case CommandFailedType:
                         {
                             const err = <CommandFailed>eventEnvelope.event;
-                            const errorOutput = createErrorOutput(err.message, this.getNextOutputId());
+                            const errorOutput = this.config.createErrorOutput(err.message, this.getNextOutputId());
                             outputs.push(errorOutput);
                             reportOutputs();
                             reject(err);
@@ -190,7 +199,7 @@ export class InteractiveClient {
                         break;
                 }
             }, configuration?.token).catch(e => {
-                const errorOutput = createErrorOutput('' + e, this.getNextOutputId());
+                const errorOutput = this.config.createErrorOutput('' + e, this.getNextOutputId());
                 outputs.push(errorOutput);
                 reportOutputs();
                 reject(e);
@@ -251,7 +260,7 @@ export class InteractiveClient {
         };
         token = token || this.getNextToken();
         let disposable = this.subscribeToKernelTokenEvents(token, observer);
-        await this.kernelTransport.submitCommand(command, SubmitCodeType, token);
+        await this.config.transport.submitCommand(command, SubmitCodeType, token);
         return disposable;
     }
 
@@ -266,7 +275,7 @@ export class InteractiveClient {
     }
 
     dispose() {
-        this.kernelTransport.dispose();
+        this.config.transport.dispose();
     }
 
     private submitCommandAndGetResult<TEvent extends KernelEvent>(command: KernelCommand, commandType: KernelCommandType, expectedEventType: KernelEventType, token: string | undefined): Promise<TEvent> {
@@ -300,7 +309,7 @@ export class InteractiveClient {
                         break;
                 }
             });
-            await this.kernelTransport.submitCommand(command, commandType, token);
+            await this.config.transport.submitCommand(command, commandType, token);
         });
     }
 
@@ -322,7 +331,7 @@ export class InteractiveClient {
                         break;
                 }
             });
-            await this.kernelTransport.submitCommand(command, commandType, token);
+            await this.config.transport.submitCommand(command, commandType, token);
         });
     }
 

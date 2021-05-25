@@ -1,10 +1,12 @@
 // Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import * as contracts from '../interfaces/contracts';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import * as vscodeLike from '../interfaces/vscode-like';
 import { ClientMapper } from '../clientMapper';
 
 import { StdioKernelTransport } from '../stdioKernelTransport';
@@ -14,7 +16,7 @@ import { registerAcquisitionCommands, registerKernelCommands, registerFileComman
 import { getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType } from '../interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
-import { executeSafe, getWorkingDirectoryForNotebook, isDotNetUpToDate, processArguments } from '../utilities';
+import { createOutput, executeSafe, getWorkingDirectoryForNotebook, isDotNetUpToDate, processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 
 import * as versionSpecificFunctions from '../../versionSpecificFunctions';
@@ -90,8 +92,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    // register with VS Code
-    const clientMapper = new ClientMapper(async (notebookUri) => {
+    async function kernelTransportCreator(notebookUri: vscodeLike.Uri): Promise<contracts.KernelTransport> {
         if (!await checkForDotNetSdk(minDotNetSdkVersion!)) {
             const message = 'Unable to find appropriate .NET SDK.';
             vscode.window.showErrorMessage(message);
@@ -129,6 +130,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         await transport.waitForReady();
         let externalUri = vscode.Uri.parse(`http://127.0.0.1:${transport.httpPort}`);
+        //let externalUri = vscode.Uri.parse(`http://localhost:${transport.httpPort}`);
         try {
 
             await transport.setExternalUri(externalUri);
@@ -138,7 +140,22 @@ export async function activate(context: vscode.ExtensionContext) {
         }
 
         return transport;
-    }, diagnosticsChannel);
+    }
+
+    function createErrorOutput(message: string, outputId?: string): vscodeLike.NotebookCellOutput {
+        const error = { name: 'Error', message };
+        const errorItem = vscode.NotebookCellOutputItem.error(error);
+        const cellOutput = createOutput([errorItem], outputId);
+        return cellOutput;
+    }
+
+    // register with VS Code
+    const clientMapperConfig = {
+        kernelTransportCreator,
+        createErrorOutput,
+        diagnosticsChannel,
+    };
+    const clientMapper = new ClientMapper(clientMapperConfig);
 
     registerKernelCommands(context, clientMapper);
 
@@ -152,7 +169,7 @@ export async function activate(context: vscode.ExtensionContext) {
         throw new Error(`Unable to find bootstrapper API expected at '${apiBootstrapperUri.fsPath}'.`);
     }
 
-    versionSpecificFunctions.registerWithVsCode(context, clientMapper, diagnosticsChannel, apiBootstrapperUri);
+    versionSpecificFunctions.registerWithVsCode(context, clientMapper, diagnosticsChannel, createErrorOutput, apiBootstrapperUri);
 
     registerFileCommands(context, clientMapper);
 
