@@ -4,7 +4,6 @@
 import { KernelTransport } from './interfaces/contracts';
 import { ErrorOutputCreator, InteractiveClient } from "./interactiveClient";
 import { ReportChannel, Uri } from "./interfaces/vscode-like";
-import { vsCodeCellOutputToContractCellOutput } from './vscode/vscodeUtilities';
 
 export interface ClientMapperConfiguration {
     kernelTransportCreator: (notebookUri: Uri) => Promise<KernelTransport>,
