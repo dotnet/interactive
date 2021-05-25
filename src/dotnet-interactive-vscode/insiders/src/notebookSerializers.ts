@@ -16,21 +16,14 @@ import { createUri } from './common/utilities';
 abstract class DotNetNotebookSerializer implements vscode.NotebookSerializer {
 
     private serializerId = '*DOTNET-INTERACTIVE-NOTEBOOK-SERIALIZATION*';
-    private disposable: vscode.Disposable;
     private eol: Eol;
 
     constructor(
-        notebookType: string,
         private readonly clientMapper: ClientMapper,
         private readonly outputChannel: OutputChannelAdapter,
         private readonly extension: string,
     ) {
         this.eol = getEol();
-        this.disposable = vscode.notebook.registerNotebookSerializer(notebookType, this);
-    }
-
-    dispose(): void {
-        this.disposable.dispose();
     }
 
     async deserializeNotebook(content: Uint8Array, token: vscode.CancellationToken): Promise<vscode.NotebookData> {
@@ -88,13 +81,31 @@ function toNotebookCell(cell: vscode.NotebookCellData): contracts.NotebookCell {
 
 export class DotNetDibNotebookSerializer extends DotNetNotebookSerializer {
     constructor(clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
-        super('dotnet-interactive', clientMapper, outputChannel, '.dib');
+        super(clientMapper, outputChannel, '.dib');
+    }
+
+    static registerNotebookSerializer(context: vscode.ExtensionContext, notebookType: string, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
+        const serializer = new DotNetDibNotebookSerializer(clientMapper, outputChannel);
+        const notebookSerializer = vscode.notebook.registerNotebookSerializer(notebookType, serializer);
+        context.subscriptions.push(notebookSerializer);
     }
 }
 
 export class DotNetLegacyNotebookSerializer extends DotNetNotebookSerializer {
     constructor(clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
-        super('dotnet-interactive-legacy', clientMapper, outputChannel, '.dib');
+        super(clientMapper, outputChannel, '.dib');
+    }
+
+    static registerNotebookSerializer(context: vscode.ExtensionContext, notebookType: string, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
+        const serializer = new DotNetLegacyNotebookSerializer(clientMapper, outputChannel);
+        const notebookSerializer = vscode.notebook.registerNotebookSerializer(notebookType, serializer);
+        context.subscriptions.push(notebookSerializer);
+    }
+}
+
+export class DotNetJupyterNotebookSerializer extends DotNetNotebookSerializer {
+    constructor(clientMapper: ClientMapper, outputChannel: OutputChannelAdapter) {
+        super(clientMapper, outputChannel, '.ipynb');
     }
 }
 

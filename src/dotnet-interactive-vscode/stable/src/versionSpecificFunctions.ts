@@ -62,3 +62,7 @@ function getNewNotebookName(extension: string): string {
     } while (workspaceHasUnsavedNotebookWithName(filename));
     return filename;
 }
+
+export async function openNotebookFromUrl(notebookUrl: string, clientMapper: ClientMapper, diagnosticsChannel: OutputChannelAdapter): Promise<void> {
+    // NOOP
+}
