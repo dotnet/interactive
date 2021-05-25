@@ -13,7 +13,7 @@ import { StdioKernelTransport } from '../stdioKernelTransport';
 import { registerLanguageProviders } from './languageProvider';
 import { registerAcquisitionCommands, registerKernelCommands, registerFileCommands } from './commands';
 
-import { getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType } from '../interactiveNotebook';
+import { getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType, jupyterViewType } from '../interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
 import { executeSafe, getWorkingDirectoryForNotebook, isDotNetUpToDate, processArguments } from '../utilities';
@@ -61,36 +61,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // this must happen early, because some following functions use the acquisition command
     registerAcquisitionCommands(context, diagnosticsChannel);
-
-    vscode.window.registerUriHandler({
-        handleUri(uri: vscode.Uri): vscode.ProviderResult<void> {
-            const params = new URLSearchParams(uri.query);
-            switch (uri.path) {
-                case '/newNotebook':
-                    // Examples:
-                    //   vscode://ms-dotnettools.dotnet-interactive-vscode/newNotebook?as=dib
-                    //   vscode://ms-dotnettools.dotnet-interactive-vscode/newNotebook?as=ipynb
-                    const asType = params.get('as');
-                    vscode.commands.executeCommand('dotnet-interactive.acquire').then(() => {
-                        const commandName = asType === 'ipynb'
-                            ? 'dotnet-interactive.newNotebookIpynb'
-                            : 'dotnet-interactive.newNotebookDib';
-                        vscode.commands.executeCommand(commandName).then(() => { });
-                    });
-                    break;
-                case '/openNotebook':
-                    // Example
-                    //   vscode://ms-dotnettools.dotnet-interactive-vscode/openNotebook?path=C%3A%5Cpath%5Cto%5Cnotebook.dib
-                    const path = params.get('path');
-                    if (path) {
-                        vscode.commands.executeCommand('dotnet-interactive.acquire').then(() => {
-                            vscode.commands.executeCommand('dotnet-interactive.openNotebook', vscode.Uri.file(path)).then(() => { });
-                        });
-                    }
-                    break;
-            }
-        }
-    });
 
     async function kernelTransportCreator(notebookUri: vscodeLike.Uri): Promise<contracts.KernelTransport> {
         if (!await checkForDotNetSdk(minDotNetSdkVersion!)) {
@@ -149,6 +119,41 @@ export async function activate(context: vscode.ExtensionContext) {
         diagnosticsChannel,
     };
     const clientMapper = new ClientMapper(clientMapperConfig);
+
+    vscode.window.registerUriHandler({
+        handleUri(uri: vscode.Uri): vscode.ProviderResult<void> {
+            const params = new URLSearchParams(uri.query);
+            switch (uri.path) {
+                case '/newNotebook':
+                    // Examples:
+                    //   vscode://ms-dotnettools.dotnet-interactive-vscode/newNotebook?as=dib
+                    //   vscode://ms-dotnettools.dotnet-interactive-vscode/newNotebook?as=ipynb
+                    const asType = params.get('as');
+                    vscode.commands.executeCommand('dotnet-interactive.acquire').then(() => {
+                        const commandName = asType === 'ipynb'
+                            ? 'dotnet-interactive.newNotebookIpynb'
+                            : 'dotnet-interactive.newNotebookDib';
+                        vscode.commands.executeCommand(commandName).then(() => { });
+                    });
+                    break;
+                case '/openNotebook':
+                    // Open a local notebook
+                    //   vscode://ms-dotnettools.dotnet-interactive-vscode/openNotebook?path=C%3A%5Cpath%5Cto%5Cnotebook.dib
+                    // New untitled notebook from remote source
+                    //   vscode://ms-dotnettools.dotnet-interactive-vscode/openNotebook?url=http%3A%2F%2Fexample.com%2Fnotebook.dib
+                    const notebookPath = params.get('path');
+                    const url = params.get('url');
+                    if (notebookPath) {
+                        vscode.commands.executeCommand('dotnet-interactive.acquire').then(() => {
+                            vscode.commands.executeCommand('dotnet-interactive.openNotebook', vscode.Uri.file(notebookPath)).then(() => { });
+                        });
+                    } else if (url) {
+                        versionSpecificFunctions.openNotebookFromUrl(url, clientMapper, diagnosticsChannel).then(() => { });
+                    }
+                    break;
+            }
+        }
+    });
 
     registerKernelCommands(context, clientMapper);
 
