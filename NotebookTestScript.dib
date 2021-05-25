@@ -1,0 +1,143 @@
+#!markdown
+
+# Execute the following cell.
+
+You'll notice a counter that appears and starts incrementing.  After a second or two, stop the cell.  Your output should look similar to:
+
+```
+5
+Error: Comamnd cancelled
+```
+
+#!csharp
+
+using System.Threading.Tasks;
+using Microsoft.DotNet.Interactive;
+
+var output = string.Empty.Display("text/plain");
+var counter = 1;
+while (!KernelInvocationContext.Current.CancellationToken.IsCancellationRequested)
+{
+    await Task.Delay(500, KernelInvocationContext.Current.CancellationToken);
+    output.Update($"{counter++}");
+}
+
+#!markdown
+
+# Execute the next two cells.
+
+#!csharp
+
+var x = 123;
+
+#!html
+
+<div id="output"></div>
+
+#!markdown
+
+# Execute the next cell.  After execution, the output immediately above this should read:
+
+```
+The value is 123.
+```
+
+#!javascript
+
+const x = await interactive.csharp.getVariable("x");
+document.getElementById("output").innerText = `The value is ${x}.`;
+
+#!markdown
+
+# Execute the next cell and verify the following error appears:
+
+```
+Error: input.fsx (1,11)-(1,12) parse error Unexpected token '+' or incomplete expression
+```
+
+#!fsharp
+
+let x = 1 +
+
+#!markdown
+
+# Check this manual scenario:
+
+1. `Ctrl+Shift+P` => ".NET Interactive: Create new blank notebook"
+2. Select "Create as .dib"
+3. Select "F#"
+4. You should have a new empty notebook named something like "Untitled-1.dib" with a single cell of type "F# (Interactive)".
+5. Set the cell contents to `1+1` and execute.
+6. Verify output of `2`.
+7. Save to disk.
+8. Open that file in notepad.
+9. The contents should look like this:
+
+   ```
+   #!fsharp
+
+   1+1
+   ```
+
+#!markdown
+
+# Execute the above scenario again with the following changes:
+
+2. Select "Create as .ipynb"
+4. File should be named something like "Untitled-1.ipynb".
+
+(new steps)
+
+9. The contents should look like this:
+
+``` json
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "dotnet_interactive": {
+     "language": "fsharp"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": "<div class=\"dni-plaintext\">2</div>"
+     },
+     "output_type": "unknown"
+    }
+   ],
+   "source": [
+    "1+1"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".NET (C#)",
+   "language": "C#",
+   "name": ".net-csharp"
+  },
+  "language_info": {
+   "file_extension": ".cs",
+   "mimetype": "text/x-csharp",
+   "name": "C#",
+   "pygments_lexer": "csharp",
+   "version": "9.0"
+  },
+  "orig_nbformat": 2
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
+```
+
+#!markdown
+
+# Open the two previously saved notebooks via the following:
+
+1. `Ctrl+Shift+P` => ".NET Interactive: Open notebook"
+2. Select the "Untitled-1.dib"/"Untitled-1.ipynb" from before.
+3. Verify that it contains a single F# cell with the contents "1+1" and that it can execute.
