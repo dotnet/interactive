@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
                 }
             };
         }
-        
+
         public static JsonSerializerOptions JsonSerializerOptions { get; }
 
         internal static ITypeFormatter[] DefaultFormatters { get; } = DefaultTabularDataFormatterSet.DefaultFormatters;
@@ -39,63 +39,63 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
         public static TabularDataResource ToTabularDataResource<T>(this IEnumerable<T> source)
         {
             var (schema, data) = Generate(source);
-            
-           return new TabularDataResource(schema, data);
+
+            return new TabularDataResource(schema, data);
         }
 
         private static (TableSchema schema, IEnumerable<IDictionary<string, object>> data) Generate<T>(IEnumerable<T> source)
         {
             var schema = new TableSchema();
             var fields = new HashSet<string>();
-            var members = new HashSet<(string name, Type type)>();
             var data = new List<IDictionary<string, object>>();
+            IDestructurer destructurer = default;
 
             foreach (var item in source)
             {
                 switch (item)
                 {
                     case IEnumerable<(string name, object value)> valueTuples:
+                    {
+                        var tuples = valueTuples.ToArray();
+
+                        EnsureFieldsAreInitializedFromValueTuples(tuples);
+
+                        var obj = new Dictionary<string, object>();
+                        foreach (var (name, value) in tuples)
                         {
-                            var tuples = valueTuples.ToArray();
-
-                            EnsureFieldsAreInitializedFromValueTuples(tuples);
-
-                            var obj = new Dictionary<string, object>();
-                            foreach (var (name, value) in tuples)
-                            {
-                                obj.Add(name, value);
-                            }
-
-                            data.Add(obj);
+                            obj.Add(name, value);
                         }
+
+                        data.Add(obj);
+                    }
                         break;
 
                     case IEnumerable<KeyValuePair<string, object>> keyValuePairs:
+                    {
+                        var pairs = keyValuePairs.ToArray();
+
+                        EnsureFieldsAreInitializedFromKeyValuePairs(pairs);
+
+                        var obj = new Dictionary<string, object>();
+                        foreach (var pair in pairs)
                         {
-                            var pairs = keyValuePairs.ToArray();
-
-                            EnsureFieldsAreInitializedFromKeyValuePairs(pairs);
-
-                            var obj = new Dictionary<string, object>();
-                            foreach (var pair in pairs)
-                            {
-                                obj.Add(pair.Key, pair.Value);
-                            }
-
-                            data.Add(obj);
+                            obj.Add(pair.Key, pair.Value);
                         }
+
+                        data.Add(obj);
+                    }
                         break;
 
                     default:
-                        {
-                            var destructurer = new Destructurer<T>();
+                    {
+                        destructurer ??= Destructurer.GetOrCreate(item.GetType());
 
-                            var dict = destructurer.Destructure(item);
+                        var dict = destructurer.Destructure(item);
 
-                            EnsureFieldsAreInitializedFromMembers(dict);
+                        EnsureFieldsAreInitializedFromDictionary(dict);
 
-                            data.Add(dict);
-                        }
+                        data.Add(dict);
+                    }
                         break;
                 }
             }
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
 
             // FIX: (Generate) these have a bug if the first item for a given field name is null
 
-            void EnsureFieldsAreInitializedFromMembers(IDictionary<string, object> dictionary)
+            void EnsureFieldsAreInitializedFromDictionary(IDictionary<string, object> dictionary)
             {
                 foreach (var key in dictionary.Keys)
                 {
@@ -133,12 +133,39 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
                 {
                     if (fields.Add(keyValuePair.Key))
                     {
-                        schema.Fields.Add(new TableSchemaFieldDescriptor(keyValuePair.Key, keyValuePair.Value?.GetType().ToTableSchemaFieldType()));
-                    }
+                        var fieldDescriptor = new TableSchemaFieldDescriptor(
+                            keyValuePair.Key,
+                            GetTableSchemaFieldType(keyValuePair.Value));
 
+                        schema.Fields.Add(fieldDescriptor);
+                    }
                 }
             }
         }
+
+        private static TableSchemaFieldType GetTableSchemaFieldType(object value)
+        {
+            return value switch
+            {
+                JsonElement j => j.ValueKind.ToTableSchemaFieldType(),
+                null => TableSchemaFieldType.Null,
+                _ => value.GetType().ToTableSchemaFieldType()
+            };
+        }
+
+        public static TableSchemaFieldType ToTableSchemaFieldType(this JsonValueKind kind) =>
+            kind switch
+            {
+                JsonValueKind.Undefined => TableSchemaFieldType.Any,
+                JsonValueKind.Object => TableSchemaFieldType.Object,
+                JsonValueKind.Array => TableSchemaFieldType.Array,
+                JsonValueKind.String => TableSchemaFieldType.String,
+                JsonValueKind.Number => TableSchemaFieldType.Number,
+                JsonValueKind.True => TableSchemaFieldType.Boolean,
+                JsonValueKind.False => TableSchemaFieldType.Boolean,
+                JsonValueKind.Null => TableSchemaFieldType.Null,
+                _ => TableSchemaFieldType.Any
+            };
 
         public static TableSchemaFieldType ToTableSchemaFieldType(this Type type) =>
             type switch
@@ -157,6 +184,5 @@ namespace Microsoft.DotNet.Interactive.Formatting.TabularData
                 { } t when t == typeof(ReadOnlyMemory<char>) => TableSchemaFieldType.String,
                 _ => TableSchemaFieldType.Any
             };
-
     }
 }

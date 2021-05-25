@@ -20,16 +20,37 @@ namespace System.Text.Json
                 throw new InvalidOperationException("input must be a valid array of object");
             }
 
-            var collection = new List<object>();
+            var dictionaries = new List<Dictionary<string, object>>();
 
             foreach (var element in jsonElement.EnumerateArray())
             {
-                var dataObject = JsonSerializer.Deserialize<Dictionary<string, object>>(element.GetRawText(),
-                    TabularDataResourceFormatter.JsonSerializerOptions);
-                collection.Add(dataObject);
+                if (element.ValueKind == JsonValueKind.Object)
+                {
+                    var dict = new Dictionary<string, object>();
+
+                    foreach (var property in element.EnumerateObject())
+                    {
+                        dict.Add(
+                            property.Name,
+                            property.Value.ValueKind switch
+                            {
+                                JsonValueKind.String => property.Value.GetString(),
+                                JsonValueKind.Number => property.Value.GetSingle(),
+                                JsonValueKind.True => true,
+                                JsonValueKind.False => false,
+                                JsonValueKind.Null => null,
+                                JsonValueKind.Undefined => property.Value,
+                                JsonValueKind.Object => property.Value,
+                                JsonValueKind.Array => property.Value,
+                                _ => throw new ArgumentOutOfRangeException()
+                            });
+                    }
+
+                    dictionaries.Add(dict);
+                }
             }
 
-            return collection.ToTabularDataResource();
+            return dictionaries.ToTabularDataResource();
         }
     }
 }

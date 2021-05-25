@@ -504,9 +504,12 @@ namespace Microsoft.DotNet.Interactive.Formatting
                 {
                     if (attribute is TypeFormatterSourceAttribute formatterSourceAttribute)
                     {
-                        var formatterSource = (ITypeFormatterSource) Activator.CreateInstance(formatterSourceAttribute.FormatterSourceType);
+                        if (Activator.CreateInstance(formatterSourceAttribute.FormatterSourceType) is not ITypeFormatterSource source)
+                        {
+                            throw new InvalidOperationException($"The formatter source specified on '{actualType}' does not implement {nameof(ITypeFormatterSource)}");
+                        }
 
-                        var formatters = formatterSource.CreateTypeFormatters();
+                        var formatters = source.CreateTypeFormatters();
 
                         foreach (var formatter in formatters)
                         {

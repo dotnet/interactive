@@ -4,7 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text.Json;
 using Assent;
+using FluentAssertions;
 using Microsoft.DotNet.Interactive.Formatting.TabularData;
 using Xunit;
 
@@ -33,8 +35,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 new { Name = "T", IsValid = false, Cost = double.PositiveInfinity }
             };
 
-            var formattedData = data.ToTabularDataResource()
-                                    .ToDisplayString(TabularDataResourceFormatter.MimeType);
+            var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
 
             this.Assent(formattedData, _configuration);
         }
@@ -51,9 +52,7 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 new { Name = "T", IsValid = false, Cost = 10.0 }
             };
 
-            var formattedData = data
-                                .ToTabularDataResource()
-                                .ToDisplayString(TabularDataResourceFormatter.MimeType);
+            var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
 
             this.Assent(formattedData, _configuration);
         }
@@ -135,11 +134,35 @@ namespace Microsoft.DotNet.Interactive.Formatting.Tests
                 ["two"] = 2
             };
 
-            var formattedData = data
-                                .ToTabularDataResource()
-                                .ToDisplayString(TabularDataResourceFormatter.MimeType);
+            var formattedData = data.ToDisplayString(TabularDataResourceFormatter.MimeType);
 
             this.Assent(formattedData, _configuration);
+        }
+
+        [Fact]
+        public void Tabular_data_resource_with_differently_ordered_properties_are_aligned_to_the_correct_columns()
+        {
+            var tabularDataResource = JsonDocument.Parse(@"
+[
+  {
+      ""name"": ""Granny Smith apple"", 
+      ""deliciousness"": 12, 
+      ""color"":""green"", 
+      ""available"":true 
+  },
+  { 
+      ""name"": ""Rainier cherry"",
+      ""deliciousness"": 9000, 
+      ""available"":true, 
+      ""color"":""yellow""  
+  }
+]").ToTabularDataResource();
+
+            tabularDataResource
+                .ToDisplayString("text/html")
+                .Should()
+                .Be(
+                    "<table><thead><tr><td><span>name</span></td><td><span>deliciousness</span></td><td><span>color</span></td><td><span>available</span></td></tr></thead><tbody><tr><td>Granny Smith apple</td><td><div class=\"dni-plaintext\">12</div></td><td><div class=\"dni-plaintext\">green</div></td><td><div class=\"dni-plaintext\">True</div></td></tr><tr><td>Rainier cherry</td><td><div class=\"dni-plaintext\">9000</div></td><td><div class=\"dni-plaintext\">yellow</div></td><td><div class=\"dni-plaintext\">True</div></td></tr></tbody></table>");
         }
 
         public void Dispose()
