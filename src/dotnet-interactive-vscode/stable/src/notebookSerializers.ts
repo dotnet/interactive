@@ -11,6 +11,7 @@ import { defaultNotebookCellLanguage, getNotebookSpecificLanguage, getSimpleLang
 import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
 import { getEol, vsCodeCellOutputToContractCellOutput } from './common/vscode/vscodeUtilities';
 import { Eol } from './common/interfaces';
+import { createUri } from './common/utilities';
 import { DotNetNotebookContentProviderWrapper } from './notebookContentProviderWrapper';
 
 abstract class DotNetNotebookSerializer implements vscode.NotebookSerializer {
@@ -76,7 +77,7 @@ abstract class DotNetNotebookSerializer implements vscode.NotebookSerializer {
     }
 
     private getClient(): Promise<InteractiveClient> {
-        return this.clientMapper.getOrAddClient({ toString: () => this.serializerId });
+        return this.clientMapper.getOrAddClient(createUri(this.serializerId));
     }
 
     private getNotebookName(): string {

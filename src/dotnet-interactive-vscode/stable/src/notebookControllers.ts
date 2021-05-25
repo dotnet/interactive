@@ -13,7 +13,8 @@ import * as vscodeUtilities from './common/vscode/vscodeUtilities';
 import { getSimpleLanguage, isDotnetInteractiveLanguage, notebookCellLanguages } from './common/interactiveNotebook';
 import { getCellLanguage, getDotNetMetadata, getLanguageInfoMetadata, isDotNetNotebookMetadata, withDotNetKernelMetadata } from './common/ipynbUtilities';
 import { reshapeOutputValueForVsCode } from './common/interfaces/utilities';
-import { selectDotNetInteractiveKernel } from './common/vscode/commands';
+import { selectDotNetInteractiveKernelForJupyter } from './common/vscode/commands';
+import { ErrorOutputCreator } from './common/interactiveClient';
 
 const executionTasks: Map<string, vscode.NotebookCellExecutionTask> = new Map();
 
@@ -24,7 +25,7 @@ export class DotNetNotebookKernel {
 
     private disposables: { dispose(): void }[] = [];
 
-    constructor(private readonly clientMapper: ClientMapper, preloadUris: vscode.Uri[]) {
+    constructor(private readonly clientMapper: ClientMapper, private readonly createErrorOutput: ErrorOutputCreator, preloadUris: vscode.Uri[]) {
         const preloads = preloadUris.map(uri => ({ uri }));
 
         // .dib execution
@@ -55,7 +56,7 @@ export class DotNetNotebookKernel {
         this.disposables.push(vscode.notebook.onDidOpenNotebookDocument(async notebook => {
             if (notebook.viewType === jupyterViewType && isDotNetNotebook(notebook)) {
                 jupyterController.updateNotebookAffinity(notebook, vscode.NotebookControllerAffinity.Preferred);
-                await selectDotNetInteractiveKernel();
+                await selectDotNetInteractiveKernelForJupyter();
                 await updateNotebookMetadata(notebook, clientMapper);
             }
         }));
@@ -106,7 +107,7 @@ export class DotNetNotebookKernel {
                 executionTask.clearOutput(cell.index);
                 const client = await this.clientMapper.getOrAddClient(cell.notebook.uri);
                 executionTask.token.onCancellationRequested(() => {
-                    const errorOutput = utilities.createErrorOutput("Cell execution cancelled by user");
+                    const errorOutput = this.createErrorOutput("Cell execution cancelled by user");
                     const resultPromise = () => updateCellOutputs(executionTask, cell, [...cell.outputs, errorOutput])
                         .then(() => endExecution(cell, false));
                     client.cancel()
@@ -128,7 +129,7 @@ export class DotNetNotebookKernel {
                     endExecution(cell, true)
                 ).catch(() => endExecution(cell, false));
             } catch (err) {
-                const errorOutput = utilities.createErrorOutput(`Error executing cell: ${err}`);
+                const errorOutput = this.createErrorOutput(`Error executing cell: ${err}`);
                 await updateCellOutputs(executionTask, cell, [errorOutput]);
                 endExecution(cell, false);
                 throw err;

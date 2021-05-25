@@ -9,7 +9,6 @@ import { ClientMapper } from '../clientMapper';
 import { getEol, toNotebookDocument } from './vscodeUtilities';
 import { DotNetPathManager, KernelIdForJupyter } from './extension';
 import { computeToolInstallArguments, executeSafe, executeSafeAndLog } from '../utilities';
-import { mapIpynbLanguageName } from '../ipynbUtilities';
 
 import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import { ReportChannel } from '../interfaces/vscode-like';
@@ -174,47 +173,7 @@ export function registerFileCommands(context: vscode.ExtensionContext, clientMap
     }));
 
     async function newNotebook(extension: string): Promise<void> {
-        const viewType = extension === '.dib' || extension === '.dotnet-interactive'
-            ? 'dotnet-interactive'
-            : jupyterViewType;
-
-        // get language
-        const newNotebookCSharp = `C#`;
-        const newNotebookFSharp = `F#`;
-        const newNotebookPowerShell = `PowerShell`;
-        const notebookLanguage = await vscode.window.showQuickPick([newNotebookCSharp, newNotebookFSharp, newNotebookPowerShell], { title: 'Default Language' });
-        if (!notebookLanguage) {
-            return;
-        }
-
-        const ipynbLanguageName = mapIpynbLanguageName(notebookLanguage);
-        const cellMetadata = new vscode.NotebookCellMetadata().with({
-            custom: {
-                metadata: {
-                    dotnet_interactive: {
-                        language: ipynbLanguageName
-                    }
-                }
-            }
-        });
-        const cell = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, '', `dotnet-interactive.${ipynbLanguageName}`, undefined, cellMetadata);
-        const documentMetadata = new vscode.NotebookDocumentMetadata().with({
-            custom: {
-                metadata: {
-                    kernelspec: {
-                        display_name: `.NET (${notebookLanguage})`,
-                        language: notebookLanguage,
-                        name: `.net-${ipynbLanguageName}`
-                    },
-                    language_info: {
-                        name: notebookLanguage
-                    }
-                }
-            }
-        });
-        const content = new vscode.NotebookData([cell], documentMetadata);
-        const notebook = await vscode.notebook.openNotebookDocument(viewType, content); // TODO: suggest file extension
-        const _editor = await vscode.window.showNotebookDocument(notebook);
+        versionSpecificFunctions.createNewBlankNotebook(extension, openNotebook);
     }
 
     context.subscriptions.push(vscode.commands.registerCommand('dotnet-interactive.openNotebook', async (notebookUri: vscode.Uri | undefined) => {
