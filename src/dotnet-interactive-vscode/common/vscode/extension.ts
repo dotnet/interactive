@@ -16,7 +16,7 @@ import { registerAcquisitionCommands, registerKernelCommands, registerFileComman
 import { getSimpleLanguage, isDotnetInteractiveLanguage, isJupyterNotebookViewType } from '../interactiveNotebook';
 import { InteractiveLaunchOptions, InstallInteractiveArgs } from '../interfaces';
 
-import { createOutput, executeSafe, getWorkingDirectoryForNotebook, isDotNetUpToDate, processArguments } from '../utilities';
+import { executeSafe, getWorkingDirectoryForNotebook, isDotNetUpToDate, processArguments } from '../utilities';
 import { OutputChannelAdapter } from './OutputChannelAdapter';
 
 import * as versionSpecificFunctions from '../../versionSpecificFunctions';
@@ -142,17 +142,10 @@ export async function activate(context: vscode.ExtensionContext) {
         return transport;
     }
 
-    function createErrorOutput(message: string, outputId?: string): vscodeLike.NotebookCellOutput {
-        const error = { name: 'Error', message };
-        const errorItem = vscode.NotebookCellOutputItem.error(error);
-        const cellOutput = createOutput([errorItem], outputId);
-        return cellOutput;
-    }
-
     // register with VS Code
     const clientMapperConfig = {
         kernelTransportCreator,
-        createErrorOutput,
+        createErrorOutput: versionSpecificFunctions.createErrorOutput,
         diagnosticsChannel,
     };
     const clientMapper = new ClientMapper(clientMapperConfig);
@@ -169,7 +162,7 @@ export async function activate(context: vscode.ExtensionContext) {
         throw new Error(`Unable to find bootstrapper API expected at '${apiBootstrapperUri.fsPath}'.`);
     }
 
-    versionSpecificFunctions.registerWithVsCode(context, clientMapper, diagnosticsChannel, createErrorOutput, apiBootstrapperUri);
+    versionSpecificFunctions.registerWithVsCode(context, clientMapper, diagnosticsChannel, clientMapperConfig.createErrorOutput, apiBootstrapperUri);
 
     registerFileCommands(context, clientMapper);
 

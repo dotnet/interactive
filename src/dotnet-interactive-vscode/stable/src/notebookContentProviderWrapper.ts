@@ -5,7 +5,6 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { backupNotebook, defaultNotebookCellLanguage } from './common/interactiveNotebook';
-import { isUnsavedNotebook } from './common/vscode/vscodeUtilities';
 import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
 
 // a thin wrapper around the new `vscode.NotebookSerializer` api
@@ -14,7 +13,7 @@ export class DotNetNotebookContentProviderWrapper implements vscode.NotebookCont
     }
 
     async openNotebook(uri: vscode.Uri, openContext: vscode.NotebookDocumentOpenContext, token: vscode.CancellationToken): Promise<vscode.NotebookData> {
-        let fileUri: vscode.Uri | undefined = isUnsavedNotebook(uri)
+        let fileUri: vscode.Uri | undefined = uri.scheme === 'untitled'
             ? undefined
             : uri;
         if (openContext.backupId) {
