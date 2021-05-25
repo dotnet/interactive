@@ -6,7 +6,6 @@ import * as vscode from 'vscode';
 import { Eol, WindowsEol, NonWindowsEol } from "../interfaces";
 import { Diagnostic, DiagnosticSeverity, LinePosition, LinePositionSpan, NotebookCell, NotebookCellDisplayOutput, NotebookCellErrorOutput, NotebookCellOutput, NotebookDocument } from '../interfaces/contracts';
 
-import * as versionSpecificFunctions from '../../versionSpecificFunctions';
 import { getSimpleLanguage } from '../interactiveNotebook';
 import * as vscodeLike from '../interfaces/vscode-like';
 
@@ -74,7 +73,7 @@ export function getEol(): Eol {
 
 export function toNotebookDocument(document: vscode.NotebookDocument): NotebookDocument {
     return {
-        cells: versionSpecificFunctions.getCells(document).map(toNotebookCell)
+        cells: document.getCells().map(toNotebookCell)
     };
 }
 

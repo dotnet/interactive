@@ -15,22 +15,6 @@ import { ClientMapper } from './common/clientMapper';
 import { OutputChannelAdapter } from './common/vscode/OutputChannelAdapter';
 import { ErrorOutputCreator } from './common/interactiveClient';
 
-export function cellAt(document: vscode.NotebookDocument, index: number): vscode.NotebookCell {
-    return document.cellAt(index);
-}
-
-export function cellCount(document: vscode.NotebookDocument): number {
-    return document.cellCount;
-}
-
-export function getCells(document: vscode.NotebookDocument | undefined): Array<vscode.NotebookCell> {
-    if (document) {
-        return [...document.getCells()];
-    }
-
-    return [];
-}
-
 export function registerWithVsCode(context: vscode.ExtensionContext, clientMapper: ClientMapper, outputChannel: OutputChannelAdapter, createErrorOutput: ErrorOutputCreator, ...preloadUris: vscode.Uri[]) {
     context.subscriptions.push(new notebookControllers.DotNetNotebookKernel(clientMapper, createErrorOutput, preloadUris));
     context.subscriptions.push(new notebookSerializers.DotNetDibNotebookSerializer(clientMapper, outputChannel));

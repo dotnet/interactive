@@ -122,7 +122,7 @@ export function registerKernelCommands(context: vscode.ExtensionContext, clientM
         }
 
         if (document) {
-            for (const cell of versionSpecificFunctions.getCells(document)) {
+            for (const cell of document.getCells()) {
                 versionSpecificFunctions.endExecution(cell, false);
             }
 
