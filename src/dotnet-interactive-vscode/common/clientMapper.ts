@@ -2,19 +2,26 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { KernelTransport } from './interfaces/contracts';
-import { InteractiveClient } from "./interactiveClient";
+import { ErrorOutputCreator, InteractiveClient } from "./interactiveClient";
 import { ReportChannel, Uri } from "./interfaces/vscode-like";
+import { vsCodeCellOutputToContractCellOutput } from './vscode/vscodeUtilities';
+
+export interface ClientMapperConfiguration {
+    kernelTransportCreator: (notebookUri: Uri) => Promise<KernelTransport>,
+    createErrorOutput: ErrorOutputCreator,
+    diagnosticChannel?: ReportChannel,
+}
 
 export class ClientMapper {
     private clientMap: Map<string, Promise<InteractiveClient>> = new Map();
     private clientCreationCallbackMap: Map<string, (client: InteractiveClient) => Promise<void>> = new Map();
 
-    constructor(readonly kernelTransportCreator: (notebookUri: Uri) => Promise<KernelTransport>, readonly diagnosticChannel?: ReportChannel) {
+    constructor(readonly config: ClientMapperConfiguration) {
     }
 
     private writeDiagnosticMessage(message: string) {
-        if (this.diagnosticChannel) {
-            this.diagnosticChannel.appendLine(message);
+        if (this.config.diagnosticChannel) {
+            this.config.diagnosticChannel.appendLine(message);
         }
     }
 
@@ -41,8 +48,12 @@ export class ClientMapper {
             this.writeDiagnosticMessage(`creating client for '${key}'`);
             clientPromise = new Promise<InteractiveClient>(async (resolve, reject) => {
                 try {
-                    const transport = await this.kernelTransportCreator(uri);
-                    const client = new InteractiveClient(transport);
+                    const transport = await this.config.kernelTransportCreator(uri);
+                    const config = {
+                        transport,
+                        createErrorOutput: this.config.createErrorOutput,
+                    };
+                    const client = new InteractiveClient(config);
 
                     let onCreate = this.clientCreationCallbackMap.get(key);
                     if (onCreate) {

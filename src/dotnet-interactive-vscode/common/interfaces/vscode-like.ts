@@ -8,17 +8,18 @@ export enum NotebookCellKind {
     Code = 2
 }
 
-export const ErrorOutputMimeType = 'application/x.notebook.error-traceback';
+export const ErrorOutputMimeType = 'application/vnd.code.notebook.error';
 
 export interface NotebookCellOutputItem {
     readonly mime: string;
-    readonly value: unknown;
-    readonly metadata?: Record<string, string | number | boolean | unknown>;
+    readonly value: Uint8Array | unknown;
+    readonly metadata?: { [key: string]: any };
 }
 
 export interface NotebookCellOutput {
-    readonly id: string;
-    readonly outputs: NotebookCellOutputItem[];
+    id: string;
+    outputs: NotebookCellOutputItem[];
+    metadata?: { [key: string]: any };
 }
 
 export enum NotebookCellRunState {
